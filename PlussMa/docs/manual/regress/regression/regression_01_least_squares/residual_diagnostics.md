@@ -22,7 +22,7 @@ The program fits the same straight line to three response series, each the line 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -84,7 +84,7 @@ Shuffling the rows leaves the coefficients, the standard errors, skewness, kurto
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -131,7 +131,7 @@ The omnibus test needs at least eight residuals, and the Jarque–Bera and momen
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

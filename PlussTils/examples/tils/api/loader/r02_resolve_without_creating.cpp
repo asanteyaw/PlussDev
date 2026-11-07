@@ -1,6 +1,6 @@
 // Resolving the path to a file that does not exist yet. Resolution only computes the location; it does
 // not create anything. A loader that writes the file later can name it now and check for it later.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>

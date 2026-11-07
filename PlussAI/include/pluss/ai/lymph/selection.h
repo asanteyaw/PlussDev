@@ -3,7 +3,7 @@
 #include "pluss/ai/lymph/common.h"
 #include "pluss/ai/lymph/metrics.h"
 #include "pluss/ai/lymph/model.h"
-#include "pluss/tils/aux/transmit.h"
+#include "pluss/tils/auxiliary/transmit.h"
 
 #include <cmath>
 #include <functional>

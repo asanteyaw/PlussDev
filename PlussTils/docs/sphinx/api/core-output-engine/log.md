@@ -31,7 +31,7 @@ None. A line below the minimum is dropped silently.
 Example 1 writes an info line and an error line.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -62,7 +62,7 @@ Each line carries its level's tag.
 Example 2 sets a minimum level of warning and logs at debug and warning.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -96,7 +96,7 @@ The debug line is dropped, and the warning is kept.
 Example 3 turns the tags off and logs an info line.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

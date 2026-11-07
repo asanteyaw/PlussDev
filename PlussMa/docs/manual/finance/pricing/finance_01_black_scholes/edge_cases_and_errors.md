@@ -23,7 +23,7 @@ A zero volatility is an error, not the limit of the formula; use a small positiv
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <limits>
 
@@ -82,7 +82,7 @@ The formula is evaluated stably at the extremes: far out of the money the price 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;

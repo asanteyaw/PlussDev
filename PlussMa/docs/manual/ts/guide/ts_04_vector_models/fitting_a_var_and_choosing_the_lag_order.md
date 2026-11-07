@@ -97,7 +97,7 @@ The second program fits the VAR(1) and prints everything the fit holds beside th
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 
 namespace ts = pluss::subsp::stats::ts;

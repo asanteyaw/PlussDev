@@ -3,7 +3,7 @@
 [Back to Scalar casts](../core-scalar-cast.md) · [Core Utilities API Reference](../../api_reference.md)
 
 ```cpp
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 ```
 
 `Series as_<dtype>(T value, Config cfg = {})` builds a one-element series directly from a host value of the matching type `T`, without converting through another dtype first. Use it when you already have the host value and need it as a one-element series of a specific dtype, such as a parameter for a call that expects a `Series`.
@@ -33,7 +33,7 @@ Example 1 builds a one-element series from a large integer and from a double.
 // Creating a one-element Series from a host value of a chosen type. The scalar form keeps the value's
 // type exact, so a count stored as int64 stays an integer on the way in and out.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <cstdint>
 #include <iostream>
@@ -68,7 +68,7 @@ Example 2 builds a one-element series from a complex host value.
 // Complex numbers keep both parts through a Series and back out. A signal's gain is a complex value,
 // and the program stores it, reads it back, and checks both parts survived unchanged.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 

@@ -1,6 +1,6 @@
 // split_loaders does the same partition as split_fields and wraps each part in its own DataLoader,
 // so you get three ready-to-use loaders in one call instead of three field lists to wrap yourself.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

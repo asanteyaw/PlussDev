@@ -19,7 +19,7 @@ A path is one *point* of the sequence and each time step is one *dimension*; a H
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace rng = pluss::subsp::stats::rng;
 using namespace pluss::tils;
@@ -57,7 +57,7 @@ A deterministic quasi-random set has no random error to measure, only an error a
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -136,7 +136,7 @@ For a pseudo-random run the `seed` selects the stream. For a deterministic quasi
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;

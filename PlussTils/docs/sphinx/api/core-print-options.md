@@ -31,7 +31,7 @@ None from the struct itself. `OutputEngine::writef` and `writelnf` refuse a patt
 Example 1 reads the defaults of a freshly built value.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -68,7 +68,7 @@ Every optional field is unset, the width is zero, the alignment is Inherit, and 
 Example 2 builds a value with designated initializers and passes it to a call.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -99,7 +99,7 @@ The number is shown fixed to two decimals and grouped by thousands, both set by 
 Example 3 sets an engine baseline, then overrides every field the baseline set.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -132,7 +132,7 @@ The baseline formats the first line, and the call's own options replace both fie
 Example 4 sets only one field on the call, leaving the rest of the baseline in place.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -164,7 +164,7 @@ The precision changes to the call's value, and the grouping still comes from the
 Example 5 leaves alignment at Inherit and only sets a width.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>

@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <cstddef>
 #include <vector>

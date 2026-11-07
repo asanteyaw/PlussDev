@@ -2,7 +2,7 @@
 // and the extraction reads it back as a plain number. A Series with more than one element cannot be
 // read as one number, and the extraction refuses it.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <exception>
 #include <iostream>

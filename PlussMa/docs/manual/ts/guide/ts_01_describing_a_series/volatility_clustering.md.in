@@ -61,7 +61,7 @@ The test statistic hides *why* it rejects. Compare the autocorrelations of the v
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <iostream>
@@ -103,7 +103,7 @@ A rolling standard deviation makes the clustering visible without any test. For 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <utility>
 #include <vector>

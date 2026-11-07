@@ -45,7 +45,7 @@ A non-positive `batch_size`, `shuffle` and `sampler` set together, or `prefetch_
 Example 1 sets batch_size and reads the resulting batch plan.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -94,7 +94,7 @@ Seven samples in batches of three give three batches, the last one smaller.
 Example 2 compares drop_last on and off.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -138,7 +138,7 @@ Keeping the partial batch adds one more batch than dropping it, and the kept one
 Example 3 shuffles with a seed, and shows the shuffle is reproducible per epoch.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -206,7 +206,7 @@ The same seed gives the same order, every sample is visited once, and a later ep
 Example 4 sets a custom sampler, and shows it is rejected together with shuffle.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -284,7 +284,7 @@ A sequential sampler visits every index in order, a subset sampler visits only i
 Example 5 sets collate_fn to transform every assembled batch.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -357,7 +357,7 @@ The collated loader delivers only the field the function kept, instead of every 
 Example 6 runs with background workers, a prefetch depth, and a worker_init_fn.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <atomic>
@@ -420,7 +420,7 @@ The prefetching loader delivers the same batches, in the same order, as a synchr
 Example 7 sets a target dtype so every batch is converted on the way out.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -469,7 +469,7 @@ Batches from the unconfigured loader keep the source dtype, and batches from the
 Example 8 triggers three refusals together: prefetch_factor without workers, a batch index past the end, and a zero batch size.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -540,7 +540,7 @@ Example 9 sets pin_memory and checks the documented no-op.
 // pin_memory is accepted and calls pin_memory() on every field of every batch, but the header
 // itself documents this as a no-op today: the underlying engine's pin_memory() returns its input
 // unchanged, and is_pinned() always reports false. This example confirms that is still the case.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -575,7 +575,7 @@ Example 10 sets in_order to false with several workers.
 // in_order set to false allows a worker to deliver a batch as soon as it finishes, rather than
 // waiting for strict index order. Every batch still arrives exactly once; only the arrival order
 // may differ from a run with in_order left at its default of true.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -622,7 +622,7 @@ Example 11 sets persistent_workers and iterates two epochs in a row.
 // persistent_workers keeps worker threads alive between epochs instead of joining and respawning
 // them. Both epochs still deliver every batch; the option changes how the threads are managed, not
 // what is delivered.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

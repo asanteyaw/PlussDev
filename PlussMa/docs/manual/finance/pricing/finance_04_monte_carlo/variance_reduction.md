@@ -12,7 +12,7 @@ Three options of `MonteCarloOptions` reduce the variance of the estimate without
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -96,7 +96,7 @@ The spread of one run falls from 0.148 for plain simulation to 0.071 with antith
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;

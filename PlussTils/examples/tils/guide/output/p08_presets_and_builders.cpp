@@ -1,6 +1,6 @@
 // The same value shown three ways: as a plain value, as a debug representation, and as a table
 // cell. Presets are named starting points, and builder calls adjust them in a chain.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <optional>

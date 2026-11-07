@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 shows the four built-in boolean styles.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -63,7 +63,7 @@ Each style writes true and false in its own words.
 Example 2 sets custom text for the custom style.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -94,7 +94,7 @@ The custom words replace true and false.
 Example 3 compares the default and a custom null text.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -126,7 +126,7 @@ The default reads nullopt, and the custom text replaces it.
 Example 4 wraps optionals in the tagged form.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>

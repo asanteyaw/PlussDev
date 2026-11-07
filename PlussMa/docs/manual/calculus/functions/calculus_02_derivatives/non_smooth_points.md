@@ -19,7 +19,7 @@ Away from the corner every policy gives the same answer, the sign of `u` times `
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 
@@ -74,7 +74,7 @@ The function relu(x) = (x + |x|)/2 is the usual rectifier. Its derivative is 0 f
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 
@@ -120,7 +120,7 @@ Strict       complex derivative is undefined at zero
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 

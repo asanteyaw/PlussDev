@@ -26,7 +26,7 @@ The program fits the two-predictor data of the previous page and prints the libr
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace distr = pluss::subsp::stats::distr;
@@ -98,7 +98,7 @@ When the model has no intercept the line is forced through the origin, so the ba
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -142,7 +142,7 @@ Some statistics need more observations than parameters, or some spread in the re
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

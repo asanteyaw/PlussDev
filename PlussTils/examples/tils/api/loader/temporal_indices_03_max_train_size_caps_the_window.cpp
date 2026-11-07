@@ -1,6 +1,6 @@
 // Without max_train_size, each later fold's training window grows to include everything before it.
 // With it set, the window is capped to a fixed size, so it slides forward instead of growing.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

@@ -18,7 +18,7 @@ Away from the corner every policy gives the same answer, the sign of `u` times `
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 
@@ -60,7 +60,7 @@ The function relu(x) = (x + |x|)/2 is the usual rectifier. Its derivative is 0 f
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 
@@ -97,7 +97,7 @@ int main() {
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 

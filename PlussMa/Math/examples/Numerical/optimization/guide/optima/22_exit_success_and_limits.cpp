@@ -3,7 +3,7 @@
 // asked it to stop (Stopped), or it reached an objective value the caller said was good enough
 // (ObjectiveTargetReached).
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 #include <utility>

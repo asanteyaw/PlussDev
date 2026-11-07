@@ -23,7 +23,7 @@ At τ = 0.5 the two weights τ² and (1 − τ)² are both 0.25, the sandwich co
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -71,7 +71,7 @@ Given the reported f₀ and the residuals, both formulas are a few lines of matr
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace linalg = pluss::subsp::math::linalg;
@@ -134,7 +134,7 @@ A quantile fit is equivariant to the scale of the response: multiplying `y` by 2
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

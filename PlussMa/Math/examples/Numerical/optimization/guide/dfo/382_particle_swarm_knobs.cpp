@@ -7,7 +7,7 @@
 //   velocity_clamp_ratio       0 = no clamp; otherwise the speed limit as a fraction of the box width
 //   time_varying_acceleration  true moves cognitive/social to final_cognitive/final_social over the run
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <utility>

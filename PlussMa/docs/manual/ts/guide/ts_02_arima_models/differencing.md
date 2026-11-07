@@ -74,7 +74,7 @@ Differencing a series that is already stationary does damage that is easy to mis
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <utility>
 #include <vector>

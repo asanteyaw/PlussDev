@@ -1,6 +1,6 @@
 // Converting down to a narrower float type. The values are the same numbers, stored in a smaller type.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 

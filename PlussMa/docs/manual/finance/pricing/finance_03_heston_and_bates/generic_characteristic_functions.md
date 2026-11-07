@@ -23,7 +23,7 @@ A characteristic function that is Gaussian, φ(u) = exp(i u μ − σ² T u² / 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -69,7 +69,7 @@ and, unlike most models, its price is also known as a series: a Poisson-weighted
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -132,7 +132,7 @@ For a supplied function, the interval [a, b] of the COS expansion is built from 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;

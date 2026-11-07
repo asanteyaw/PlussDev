@@ -1,7 +1,7 @@
 // Creating a one-element Series from a host value of a chosen type. The scalar form keeps the value's
 // type exact, so a count stored as int64 stays an integer on the way in and out.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <cstdint>
 #include <iostream>

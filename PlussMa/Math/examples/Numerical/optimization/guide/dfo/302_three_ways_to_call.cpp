@@ -2,7 +2,7 @@
 // and `DfoOptions` you fill in), and `DfoBuilder` (chained setters). They run the same method with the same seed, so
 // the answers and the evaluation counts are identical.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <utility>
 #include <vector>

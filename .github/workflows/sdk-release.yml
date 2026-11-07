@@ -16,6 +16,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            PlussAI
+            PlussMa
+            PlussMic
+            PlussPl
+            PlussQit
+            PlussTils
+            ExLibs
+            cmake
+            docs
+            examples
+            include
+            pluss
+            tools
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,7 +51,7 @@ jobs:
           fi
 
       - name: Build PlussII C++ Archives
-        run: cmake --build build --target pluss_sdk_archive -j1
+        run: cmake --build build --target plussii_distribution_archive -j1
 
       - name: Validate Downloadable Archive
         run: |

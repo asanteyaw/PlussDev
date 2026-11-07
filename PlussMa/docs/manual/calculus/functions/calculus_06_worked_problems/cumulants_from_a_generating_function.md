@@ -20,7 +20,7 @@ That is calculus on a function, and it needs exact high-order derivatives at one
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 
@@ -84,7 +84,7 @@ The cumulants of a family come from the same function by giving the parameter an
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

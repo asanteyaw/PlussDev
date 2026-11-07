@@ -33,7 +33,7 @@ The last rule contains `log(u)`: differentiating a power whose exponent is a var
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <functional>
 #include <string>
@@ -110,7 +110,7 @@ so that ∂h/∂x = 2x/y + y x^(y−1) − 2/x² and ∂h/∂y = −x²/y² − 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 
@@ -157,7 +157,7 @@ A function in which one sub-expression appears twice, such as `s + s` with `s = 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -193,7 +193,7 @@ Differentiating a formula without limit can produce an enormous graph, because e
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 

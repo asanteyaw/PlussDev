@@ -4,7 +4,7 @@
 // chosen for you; `mesh_adaptive_direct_search_minimizer` takes the scheme from `config.poll_scheme`. Rosenbrock and a
 // non-smooth function (the sum of absolute deviations), same budget.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <utility>

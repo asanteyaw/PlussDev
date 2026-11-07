@@ -14,7 +14,7 @@ With no predictors the maximum-likelihood estimate of the mean is the sample mea
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -46,7 +46,7 @@ Twelve counts rise with a covariate x. The program fits the model and checks the
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace linalg = pluss::subsp::math::linalg;
@@ -111,7 +111,7 @@ The Poisson family fixes the variance at the mean, and `dispersion` is held at 1
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

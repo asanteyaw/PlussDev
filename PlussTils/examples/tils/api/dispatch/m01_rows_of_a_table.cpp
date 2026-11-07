@@ -1,7 +1,7 @@
 // Summing each row of a small table. The table holds three weeks of sales for two stores. map_axis
 // hands the function one row at a time, so the function sees a single store's week as a vector.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <iostream>
 #include <vector>

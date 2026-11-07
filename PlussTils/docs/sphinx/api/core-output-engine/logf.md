@@ -32,7 +32,7 @@ A pattern whose placeholder count disagrees with the arguments is refused in str
 Example 1 writes a formatted warning.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -61,7 +61,7 @@ The placeholders fill in order, and the line carries the warning tag.
 Example 2 sets a minimum level of error and logs an info line and an error line.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -95,7 +95,7 @@ The info line is dropped, and the error line is kept.
 Example 3 passes a trailing options value with a percentage.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

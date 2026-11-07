@@ -12,7 +12,7 @@ The tests so far ask about a location or a spread. These ask about the whole dis
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -63,7 +63,7 @@ The largest gap between machine A's empirical distribution function and the norm
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -108,7 +108,7 @@ Machines A and B give D = 0.5278 (all of it D⁻) and p = 0.1423, so the test ke
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;
 using namespace pluss::tils;
@@ -149,7 +149,7 @@ The simulation draws 2000 normal samples of 25 observations, so every null hypot
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 #include <cmath>
 
 namespace hyp = pluss::subsp::stats::inference::hypothesis;

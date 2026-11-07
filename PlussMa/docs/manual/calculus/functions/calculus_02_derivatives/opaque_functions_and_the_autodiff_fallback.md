@@ -19,7 +19,7 @@ The program differentiates `sin(x) · exp(x)`, written as `Series` code, to firs
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 
@@ -73,7 +73,7 @@ The option belongs to `DiffOptions`, so it is accepted by every differential ope
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

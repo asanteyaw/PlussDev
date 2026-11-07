@@ -1,7 +1,7 @@
 // The flags that mean the solver could not deliver a solution. Each comes with the program
 // state that triggers it, and the result still carries the last point reached.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 #include <utility>

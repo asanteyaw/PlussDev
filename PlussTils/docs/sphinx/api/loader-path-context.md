@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 enum class RootResolve { WorkingDirectory, CallerFile };
 
@@ -54,7 +54,7 @@ Example 1 pins a project root in the process-wide, global sense, for contrast wi
 ```cpp
 // Pinning a project root so every relative path resolves under one directory. Paths printed here are
 // shown relative to the root, so the output is the same wherever the project is checked out.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -98,7 +98,7 @@ Example 2 builds two PathContext values for two projects open at once, and check
 ```cpp
 // Two projects open at once, each with its own root. A PathContext holds its own root, so it does not
 // disturb the global one, and each context resolves paths under its own directory.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -143,7 +143,7 @@ Example 3 builds a UrlContext and joins paths onto it, including a named map.
 ```cpp
 // Remote data lives under a URL instead of a folder. A URL context keeps the base address and adds a
 // relative path to it, so a loader can name a remote file the same way it names a local one.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <iostream>
 

@@ -29,7 +29,7 @@ None.
 Example 1 scales byte counts in binary units.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -61,7 +61,7 @@ The value scales from bytes up to gibibytes as the count grows.
 Example 2 scales byte counts in decimal units.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -93,7 +93,7 @@ The same magnitude reads differently in decimal units than in binary ones.
 Example 3 scales a duration in nanoseconds.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>

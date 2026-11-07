@@ -20,7 +20,7 @@ The potential P(x, y) = x³ + xy + y² has the gradient (3x² + y, x + 2y). The 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -72,7 +72,7 @@ The gradient has one entry per selected variable, however many variables the fun
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

@@ -19,7 +19,7 @@ The first program evaluates the density of eight families at the same four point
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -55,7 +55,7 @@ Many families are special cases of others, and the library gives the same number
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -90,7 +90,7 @@ The practical difference between families is often in the tails, because that is
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -134,7 +134,7 @@ Discrete families are reached the same way; `pdf` is the mass function and the s
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 

@@ -1,4 +1,4 @@
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 

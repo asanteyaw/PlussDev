@@ -39,7 +39,7 @@ None.
 Example 1 reads the defaults of a new options value.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -75,7 +75,7 @@ The defaults are a single space, tags on, and the standard info tag.
 Example 2 replaces every level tag with a short one.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -108,7 +108,7 @@ Each log line uses the short tag for its level.
 Example 3 sets a minimum level and turns on auto flush.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

@@ -30,7 +30,7 @@ None.
 Example 1 sets a grouping baseline that every call uses.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -62,7 +62,7 @@ Both numbers are grouped with underscores, with no option on either call.
 Example 2 sets a baseline and then overrides it on one call.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -94,7 +94,7 @@ The baseline prints one decimal, and the call's option prints four.
 Example 3 clears the baseline with an empty value.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

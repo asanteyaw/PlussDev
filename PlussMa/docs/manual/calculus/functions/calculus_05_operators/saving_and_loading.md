@@ -26,7 +26,7 @@ A saved function keeps its variables, its constants (including array constants o
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <filesystem>
 #include <sstream>
@@ -102,7 +102,7 @@ Every artifact begins with a header that names its kind and a schema version, an
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <functional>
 #include <sstream>
@@ -180,7 +180,7 @@ The restored operator behaves exactly like the original:
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <sstream>
 
@@ -238,7 +238,7 @@ bool operators::bind(std::string_view key, std::uint32_t version, Loader loader)
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <sstream>
 #include <string>

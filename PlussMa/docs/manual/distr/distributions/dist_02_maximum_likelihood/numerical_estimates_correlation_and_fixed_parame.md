@@ -19,7 +19,7 @@ The gamma has a mean `shape × scale` that data determine much more precisely th
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -70,7 +70,7 @@ A held-fixed parameter is a modelling decision, and getting it wrong is not caug
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -111,7 +111,7 @@ The beta distribution is fitted on the support stored in the object (`Beta{low, 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -169,7 +169,7 @@ The gamma shape is the harder of the two parameters to pin down. The program rep
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 

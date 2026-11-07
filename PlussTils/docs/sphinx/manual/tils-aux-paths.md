@@ -25,7 +25,7 @@ Every relative path in a run should resolve under the project. This program pins
 ```cpp
 // Pinning a project root so every relative path resolves under one directory. Paths printed here are
 // shown relative to the root, so the output is the same wherever the project is checked out.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -69,7 +69,7 @@ A loader may name an output file before it writes it. Resolution computes the lo
 ```cpp
 // Resolving the path to a file that does not exist yet. Resolution only computes the location; it does
 // not create anything. A loader that writes the file later can name it now and check for it later.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -111,7 +111,7 @@ A run writes its reports into a dated folder that may not exist yet. This progra
 ```cpp
 // Making the output folder that a run needs. Asking for a directory with create_dirs makes it at the
 // moment of the call, so the later writes do not have to check for it first.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -156,7 +156,7 @@ A configuration value can contain a path that climbs out of the project. This pr
 ```cpp
 // Keeping a run inside its root. A path that climbs out of the root is refused before anything is
 // opened, which stops a bad configuration value from reading a file it should never see.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <exception>
 #include <filesystem>
@@ -205,7 +205,7 @@ A team wants every run to create the folders it needs. This program reads the de
 ```cpp
 // A team sets one policy for every path in a run: whether directories are created on demand and
 // whether the root is canonicalized. The policy is read back so a run can log what it is using.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -254,7 +254,7 @@ A run reads several inputs by name. This program joins path parts into one path,
 ```cpp
 // Building several paths at once from a list and from a name map. A run that reads three inputs can
 // name them once and look them up by name, and a duplicate name is refused instead of overwritten.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <exception>
 #include <filesystem>
@@ -307,7 +307,7 @@ A loader can read data from a web address the same way it reads a folder. This p
 ```cpp
 // Remote data lives under a URL instead of a folder. A URL context keeps the base address and adds a
 // relative path to it, so a loader can name a remote file the same way it names a local one.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <iostream>
 
@@ -342,7 +342,7 @@ Two projects can be open at the same time. This program creates a path context f
 ```cpp
 // Two projects open at once, each with its own root. A PathContext holds its own root, so it does not
 // disturb the global one, and each context resolves paths under its own directory.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>

@@ -16,7 +16,7 @@ The program fits the 3rd, 10th, 25th, 50th, 75th, 90th and 97th percentile curve
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -75,7 +75,7 @@ With the curves fitted, a child is placed by comparing their height with the cur
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

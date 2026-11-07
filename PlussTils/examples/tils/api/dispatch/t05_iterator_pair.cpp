@@ -1,6 +1,6 @@
 // Transforming a part of a container. Two iterators mark the start and the end, so only the middle
 // of a list is changed. The rest of the list is not visited at all.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 #include <string>

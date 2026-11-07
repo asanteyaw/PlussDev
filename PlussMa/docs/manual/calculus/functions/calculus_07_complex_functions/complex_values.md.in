@@ -23,7 +23,7 @@ A polynomial and an exponential are written once. At a complex point the same gr
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;
@@ -53,7 +53,7 @@ The real argument 0.5 gives a real result, 1.898721. The complex argument gives 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;
@@ -87,7 +87,7 @@ int main() {
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 using namespace pluss::tils;

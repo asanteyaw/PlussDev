@@ -2,7 +2,7 @@
 // (the 2-D Rosenbrock valley) three different budgets and shows each ending: converged, out of evaluations, out of
 // iterations. `evaluations` counts calls of the objective, which is the cost that matters when the objective is slow.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <utility>
 #include <vector>

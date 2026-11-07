@@ -1,6 +1,6 @@
 // empty, field_count, sample_count, batch_size, and options read back what the loader was built
 // with, without changing anything.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

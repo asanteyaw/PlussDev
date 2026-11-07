@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 overrides the separator for one call.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -59,7 +59,7 @@ The first line uses the slash separator, and the second reverts to the engine de
 Example 2 adds text after the last value, before the newline.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -89,7 +89,7 @@ The estimated note is written right after the number, still on the same line.
 Example 3 wraps the whole line with a prefix and a suffix.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -119,7 +119,7 @@ The prefix opens the line and the suffix closes it.
 Example 4 repeats a line prefix on each physical line of a multiline value.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -153,7 +153,7 @@ Every line of the rendered list begins with the same marker.
 Example 5 forces a flush after one call.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>

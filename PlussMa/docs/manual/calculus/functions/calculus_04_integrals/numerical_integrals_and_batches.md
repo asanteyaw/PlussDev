@@ -26,7 +26,7 @@ The anchored form `integral(x, a)` is a function of its upper limit. For a numer
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 
@@ -74,7 +74,7 @@ The integral is evaluated in the precision and on the platform of its Series arg
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

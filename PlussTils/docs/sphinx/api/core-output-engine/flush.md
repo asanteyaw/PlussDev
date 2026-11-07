@@ -28,7 +28,7 @@ None.
 Example 1 flushes in the middle of a chain.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -59,7 +59,7 @@ The flush returns the engine, so the chain continues.
 Example 2 checks that text written before a flush is in the sink.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -91,7 +91,7 @@ The sink holds the line after the flush.
 Example 3 flushes through a per-call option.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

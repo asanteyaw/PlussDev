@@ -1,4 +1,4 @@
-name: SDK Platform Verification
+name: PlussII Distribution Verification
 
 on:
   push:
@@ -37,7 +37,7 @@ permissions:
   contents: read
 
 jobs:
-  verify-sdk:
+  verify-distribution:
     strategy:
       fail-fast: false
       matrix:
@@ -48,6 +48,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            PlussAI
+            PlussMa
+            PlussMic
+            PlussPl
+            PlussQit
+            PlussTils
+            ExLibs
+            cmake
+            docs
+            examples
+            include
+            pluss
+            tools
 
       - name: Check CMake version
         run: cmake --version
@@ -56,7 +71,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF
 
       - name: Stage distribution
-        run: cmake --build build --config Release --target pluss_sdk_stage --parallel 2
+        run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2
 
       - name: Package and validate downloadable ZIP
-        run: cmake "-DSDK_BUILD_DIR=${{ github.workspace }}/build" "-DSDK_SOURCE_DIR=${{ github.workspace }}" -P cmake/VerifyStagedSdk.cmake
+        run: cmake "-DDISTRIBUTION_BUILD_DIR=${{ github.workspace }}/build" "-DDISTRIBUTION_SOURCE_DIR=${{ github.workspace }}" -P cmake/VerifyStagedDistribution.cmake

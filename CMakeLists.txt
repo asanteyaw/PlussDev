@@ -502,7 +502,7 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/PlussMa/Math/Numerical/optimization/
 )
 
 install(FILES
-    ${CMAKE_SOURCE_DIR}/docs/sdk_install.md
+    ${CMAKE_SOURCE_DIR}/docs/plussii_install.md
     DESTINATION ${PLUSS_INSTALL_DOCDIR}
     RENAME installation.md
 )
@@ -549,8 +549,8 @@ set(CPACK_PACKAGE_FILE_NAME "plussii-cpp-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}
 set(CPACK_GENERATOR "TGZ;ZIP")
 
 set(PLUSS_SDK_STAGING_DIR
-    "${CMAKE_BINARY_DIR}/sdk/${CPACK_PACKAGE_FILE_NAME}"
-    CACHE PATH "Directory used by the pluss_sdk_stage target"
+    "${CMAKE_BINARY_DIR}/plussii-cpp/${CPACK_PACKAGE_FILE_NAME}"
+    CACHE PATH "Directory used to stage the PlussII C++ distribution"
 )
 
 set(PLUSS_SDK_CONSUMER_SOURCE_DIR
@@ -563,7 +563,7 @@ set(PLUSS_SDK_CONSUMER_BUILD_DIR
     CACHE PATH "Build directory used by the standalone SDK consumer smoke test"
 )
 
-add_custom_target(pluss_sdk_stage
+add_custom_target(plussii_distribution_stage
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PLUSS_SDK_STAGING_DIR}"
     COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --prefix "${PLUSS_SDK_STAGING_DIR}"
     DEPENDS
@@ -572,22 +572,25 @@ add_custom_target(pluss_sdk_stage
         PlussMic
         PlussTils
     USES_TERMINAL
-    COMMENT "Staging pluss SDK at ${PLUSS_SDK_STAGING_DIR}"
+    COMMENT "Staging PlussII C++ distribution at ${PLUSS_SDK_STAGING_DIR}"
 )
+add_custom_target(pluss_sdk_stage DEPENDS plussii_distribution_stage)
 
-add_custom_target(pluss_sdk_archive
-    COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}" --target pluss_sdk_stage -j1
+get_filename_component(_pluss_distribution_stage_parent "${PLUSS_SDK_STAGING_DIR}" DIRECTORY)
+add_custom_target(plussii_distribution_archive
     COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/${CPACK_PACKAGE_FILE_NAME}.zip"
     COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/${CPACK_PACKAGE_FILE_NAME}.tar.gz"
-    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/sdk"
-            zip -qry "${CMAKE_BINARY_DIR}/${CPACK_PACKAGE_FILE_NAME}.zip" "${CPACK_PACKAGE_FILE_NAME}"
-    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_BINARY_DIR}/sdk"
+    COMMAND ${CMAKE_COMMAND} -E chdir "${_pluss_distribution_stage_parent}"
+            ${CMAKE_COMMAND} -E tar cf "${CMAKE_BINARY_DIR}/${CPACK_PACKAGE_FILE_NAME}.zip"
+            --format=zip "${CPACK_PACKAGE_FILE_NAME}"
+    COMMAND ${CMAKE_COMMAND} -E chdir "${_pluss_distribution_stage_parent}"
             ${CMAKE_COMMAND} -E tar "cfz" "${CMAKE_BINARY_DIR}/${CPACK_PACKAGE_FILE_NAME}.tar.gz" "${CPACK_PACKAGE_FILE_NAME}"
-    DEPENDS pluss_sdk_stage
+    DEPENDS plussii_distribution_stage
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     USES_TERMINAL
-    COMMENT "Creating pluss SDK archives"
+    COMMENT "Creating PlussII C++ distribution archives"
 )
+add_custom_target(pluss_sdk_archive DEPENDS plussii_distribution_archive)
 
 add_custom_target(pluss_sdk_consumer_smoke
     COMMAND ${CMAKE_COMMAND}

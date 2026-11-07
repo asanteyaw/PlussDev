@@ -22,7 +22,7 @@ The program prices calls and puts at volatilities from 5% to 200%, at three stri
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -67,7 +67,7 @@ All 42 prices, calls and puts at three strikes and seven volatilities, return a 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -109,7 +109,7 @@ With `Series` arguments each element is solved independently, and an element wit
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;

@@ -4,7 +4,7 @@
 // variable when the variables have very different ranges (Off, RangeLog, NupsDynamic). The problem here has one variable
 // of order 1 and one of order 1000, with bounds so that the ranges are known.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <utility>
 #include <vector>

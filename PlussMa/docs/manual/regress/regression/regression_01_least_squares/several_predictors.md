@@ -12,7 +12,7 @@ The response is built from y = 2 + 1.5 x₁ − 0.8 x₂ plus a fixed pattern of
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace linalg = pluss::subsp::math::linalg;
@@ -72,7 +72,7 @@ The coefficient of x₁ in the two-predictor model equals the slope obtained by 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -130,7 +130,7 @@ The off-diagonal entries of `covariance` say how the estimation errors of two co
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

@@ -1,6 +1,6 @@
 // A house style for a finance team: every number groups thousands and shows two decimals. The
 // style is set once on the engine. One call overrides it, and the rest keep it.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 

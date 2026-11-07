@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 std::filesystem::path root_path();
 void set_root_path(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
@@ -70,7 +70,7 @@ Example 1 resolves a path that does not exist yet, without creating anything.
 ```cpp
 // Resolving the path to a file that does not exist yet. Resolution only computes the location; it does
 // not create anything. A loader that writes the file later can name it now and check for it later.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -112,7 +112,7 @@ Example 2 creates a directory on demand with file_dir, then resolves a file insi
 ```cpp
 // Making the output folder that a run needs. Asking for a directory with create_dirs makes it at the
 // moment of the call, so the later writes do not have to check for it first.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -157,7 +157,7 @@ Example 3 tries three requests, one normal and two that climb out of the root.
 ```cpp
 // Keeping a run inside its root. A path that climbs out of the root is refused before anything is
 // opened, which stops a bad configuration value from reading a file it should never see.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <exception>
 #include <filesystem>
@@ -206,7 +206,7 @@ Example 4 reads the default policy, changes auto_create_dirs, and applies it.
 ```cpp
 // A team sets one policy for every path in a run: whether directories are created on demand and
 // whether the root is canonicalized. The policy is read back so a run can log what it is using.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>
@@ -255,7 +255,7 @@ Example 5 joins path parts, and resolves a named map of two inputs, including a 
 ```cpp
 // Building several paths at once from a list and from a name map. A run that reads three inputs can
 // name them once and look them up by name, and a duplicate name is refused instead of overwritten.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <exception>
 #include <filesystem>
@@ -306,9 +306,9 @@ The joined path concatenates the parts, the map holds the named entries, and the
 Example 6 resolves a file path and a directory with create_dirs from a loader example.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <fstream>
@@ -374,7 +374,7 @@ Example 7 shows force_replace_dirs clearing an existing directory, and that it h
 // force_replace_dirs removes and recreates an existing directory instead of leaving it, when
 // directory creation is in effect. It only affects file_dir; file_path never creates a directory
 // outright, so the flag has nothing to act on there.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <fstream>

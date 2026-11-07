@@ -128,7 +128,7 @@ Granger causality is about *prediction*, and prediction can be borrowed. If a th
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 

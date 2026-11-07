@@ -1,7 +1,7 @@
 // A second dtype, to show the config form is uniform across the family: every as_<dtype>(Config)
 // sets the same field on the configuration, whichever type you pick.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 

@@ -1,7 +1,7 @@
 // Summing many columns at once across threads. The parallel result must match the sequential one,
 // so the program compares the two before trusting the parallel answer.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <cstddef>
 #include <iostream>

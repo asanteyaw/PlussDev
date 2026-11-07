@@ -29,7 +29,7 @@ None.
 Example 1 shows the four built-in styles.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -65,7 +65,7 @@ Each style writes its own words for true and false.
 Example 2 sets custom words.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>

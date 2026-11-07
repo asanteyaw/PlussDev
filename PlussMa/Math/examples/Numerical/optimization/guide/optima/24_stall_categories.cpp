@@ -2,7 +2,7 @@
 // the run. This program triggers each of the ten categories and prints its name, the exit flag, and the
 // measure the solver recorded. A healthy run reports "none".
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 #include <utility>

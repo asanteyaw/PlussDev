@@ -29,7 +29,7 @@ None.
 Example 1 sets a theme and checks that it does not yet color a number.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>

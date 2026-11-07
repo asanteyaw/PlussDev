@@ -31,7 +31,7 @@ The program asks for the implied volatility of a series of prices for a call wit
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <limits>
 
@@ -88,7 +88,7 @@ The answer is searched for between `lower_vol` and `upper_vol`. A price whose vo
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -124,7 +124,7 @@ A bracket that contains 1.2 returns it, including a bracket whose end is 1.2 (th
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -185,7 +185,7 @@ Deep out of the money the price hardly depends on σ, so the vega is almost zero
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;

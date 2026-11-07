@@ -1,6 +1,6 @@
 // Capturing output into a string instead of printing it. This is how a test checks what a report
 // would say, or how a program saves a summary to a file it writes itself.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

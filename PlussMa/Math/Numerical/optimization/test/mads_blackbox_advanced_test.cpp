@@ -1,4 +1,4 @@
-#include <pluss/tils/aux/scalar_cast_compat.h>
+#include <pluss/tils/auxiliary/scalar_cast_compat.h>
 #include "../mads_blackbox_minimizers.h"
 
 #include <cmath>

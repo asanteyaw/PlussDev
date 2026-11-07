@@ -5,7 +5,7 @@
 ```cpp
 #include <pluss/bi/specs.h>
 
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 template <class F> auto map_axis(F&& fn, const Series& x, std::int64_t axis, transmit_options opts = {});
 template <class F> auto map_axis(F&& fn, const Note& x, std::int64_t axis, transmit_options opts = {});
@@ -43,7 +43,7 @@ Example 1 sums each row of a small table of numbers.
 // Summing each row of a small table. The table holds three weeks of sales for two stores. map_axis
 // hands the function one row at a time, so the function sees a single store's week as a vector.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <iostream>
 #include <vector>
@@ -84,7 +84,7 @@ Example 2 cuts the same table two ways, by its last axis and by its first.
 // The same table can be cut two ways. Along the last axis each slice is a row, and along the first
 // axis each slice is a column. A negative axis counts from the end, so -1 is the last axis.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <iostream>
 #include <vector>
@@ -129,7 +129,7 @@ Example 3 uses a callable that takes the slice's position as a second argument.
 // Labelling each slice by its position. When the function takes a second argument, map_axis passes the
 // position of the slice, so the output can say which row it describes.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <iostream>
 #include <sstream>
@@ -173,7 +173,7 @@ Example 4 cuts a table of text into rows.
 // Working with text. A grid of region names is cut into rows, and each row is a note of its own, so a
 // function can count or join the names that belong together.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <iostream>
 #include <string>
@@ -210,7 +210,7 @@ Example 5 cuts a one-dimensional timeline.
 // A one-dimensional timeline has a single slice along its only axis, which holds every tick. The
 // function receives all the timestamps at once, so it can find the span they cover.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <iostream>
 #include <vector>
@@ -244,7 +244,7 @@ Example 6 sums many columns sequentially and in parallel, and compares the resul
 // Summing many columns at once across threads. The parallel result must match the sequential one,
 // so the program compares the two before trusting the parallel answer.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <cstddef>
 #include <iostream>
@@ -292,7 +292,7 @@ Example 7 asks for an axis a two-dimensional table does not have.
 // Asking for an axis the table does not have. The table is two-dimensional, so axis 2 is refused, and
 // the error names the operation so the caller can find the bad call.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <exception>
 #include <iostream>

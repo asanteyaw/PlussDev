@@ -29,7 +29,7 @@ None.
 Example 1 shows the default behavior off a terminal, where nothing is written.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>
@@ -62,7 +62,7 @@ No escape sequence appears, because Never suppresses them.
 Example 2 forces color on.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>

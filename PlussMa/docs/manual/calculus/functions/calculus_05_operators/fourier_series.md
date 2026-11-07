@@ -32,7 +32,7 @@ For `f(x) = x` on `[0, π]` the sine coefficients are `B_k = 2(−1)^{k+1}/k` an
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -77,7 +77,7 @@ On `[−π, π]` the odd function `x` has only sine terms, and the even function
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace fourier = pluss::operators::fourier;

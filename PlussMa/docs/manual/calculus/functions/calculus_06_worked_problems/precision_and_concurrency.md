@@ -10,7 +10,7 @@ A function has no precision of its own. Evaluating it on `Float32` arguments com
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 
@@ -58,7 +58,7 @@ A `Function` is immutable: building it records a graph, and evaluating it only r
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <atomic>
 #include <cmath>

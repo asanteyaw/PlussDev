@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 shows every notation on a representative number.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -73,7 +73,7 @@ Each notation produces its own form, from fixed decimals to a hexadecimal digit 
 Example 2 compares the default fixed precision with an explicit one.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -105,7 +105,7 @@ The default is six digits, and setting precision to two shortens it.
 Example 3 shows the three sign styles on a positive and a negative number.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -139,7 +139,7 @@ Only the negative number ever shows a minus by default; the other styles add mor
 Example 4 adds the base prefix to hexadecimal, octal, and binary numbers.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -175,7 +175,7 @@ Each base gets its own prefix, 0x, 0o, or 0b.
 Example 5 shows uppercase affecting hex digits and a scientific exponent.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -209,7 +209,7 @@ The hex digits and the exponent letter both switch to uppercase.
 Example 6 groups digits with two different characters and group sizes.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -243,7 +243,7 @@ The default group size is three digits; setting it to four changes where the sep
 Example 7 changes the decimal point character.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -275,7 +275,7 @@ The fraction is separated by a comma instead of a period.
 Example 8 trims trailing zeros from a fixed value.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -307,7 +307,7 @@ The untrimmed value keeps its zeros, and the trimmed one drops them.
 Example 9 sets custom text for not-a-number and both infinities.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>

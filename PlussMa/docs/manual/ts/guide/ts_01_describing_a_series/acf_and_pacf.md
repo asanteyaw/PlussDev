@@ -22,7 +22,7 @@ The first program draws 200 observations from an AR(1) with coefficient 0.7 and 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <iomanip>
@@ -74,7 +74,7 @@ The cut-off rules are easiest to see by putting two processes next to each other
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 
@@ -125,7 +125,7 @@ Two common shapes show up in the ACF before they show up anywhere else. A series
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iomanip>
 #include <iostream>

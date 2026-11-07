@@ -78,7 +78,7 @@ endif()
 if(NOT _pluss_needs_arrow EQUAL -1 AND NOT TARGET Arrow::arrow AND NOT TARGET Arrow::arrow_shared)
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
-      "Pluss SDK requires Arrow for PlussMic parquet support, but Arrow CMake targets were not found. "
+      "PlussII C++ requires Arrow for PlussMic parquet support, but Arrow CMake targets were not found. "
       "Install Arrow/Parquet and add their prefix to CMAKE_PREFIX_PATH (for example your conda env).")
   return()
 endif()
@@ -86,7 +86,7 @@ endif()
 if(NOT _pluss_needs_parquet EQUAL -1 AND NOT TARGET Parquet::parquet AND NOT TARGET Parquet::parquet_shared)
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
-      "Pluss SDK requires Parquet for PlussMic parquet support, but Parquet CMake targets were not found. "
+      "PlussII C++ requires Parquet for PlussMic parquet support, but Parquet CMake targets were not found. "
       "Install Arrow/Parquet and add their prefix to CMAKE_PREFIX_PATH (for example your conda env).")
   return()
 endif()
@@ -94,24 +94,24 @@ endif()
 if(NOT _pluss_needs_curl EQUAL -1 AND NOT TARGET CURL::libcurl)
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
-      "Pluss SDK requires libcurl for URL loading support, but CURL::libcurl was not found. "
-      "Install libcurl (or build Pluss SDK with bundled curl enabled) and retry.")
+      "PlussII C++ requires libcurl for URL loading support, but CURL::libcurl was not found. "
+      "Install libcurl (or build PlussII C++ with bundled curl enabled) and retry.")
   return()
 endif()
 
 if(NOT _pluss_needs_fmt EQUAL -1 AND NOT TARGET fmt::fmt)
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
-      "Pluss SDK was built with fmt-enabled public headers, but fmt::fmt was not found. "
-      "Install fmt and add its prefix to CMAKE_PREFIX_PATH, or restage the SDK with PLUSSQIT_USE_FMT=OFF.")
+      "PlussII C++ was built with fmt-enabled public headers, but fmt::fmt was not found. "
+      "Install fmt and add its prefix to CMAKE_PREFIX_PATH, or rebuild the distribution with PLUSSQIT_USE_FMT=OFF.")
   return()
 endif()
 
 if(NOT _pluss_needs_sqlite3 EQUAL -1 AND NOT TARGET SQLite::SQLite3)
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
-      "Pluss SDK requires SQLite3 for DataFrame SQL / Nexus query support, but SQLite::SQLite3 was not found. "
-      "Install SQLite development files and add their prefix to CMAKE_PREFIX_PATH, or restage the SDK without SQL support.")
+      "PlussII C++ requires SQLite3 for DataFrame SQL / Nexus query support, but SQLite::SQLite3 was not found. "
+      "Install SQLite development files and add their prefix to CMAKE_PREFIX_PATH, or rebuild the distribution without SQL support.")
   return()
 endif()
 
@@ -119,9 +119,9 @@ if((NOT _pluss_needs_torch_library EQUAL -1 OR NOT _pluss_needs_torch_target EQU
    AND (NOT TARGET torch OR NOT TARGET torch_library))
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
-      "Pluss SDK was built with LibTorch-enabled CodeM exports, but Torch CMake targets were not found. "
+      "PlussII C++ was built with LibTorch-enabled CodeM exports, but Torch CMake targets were not found. "
       "Install LibTorch (or use your torch Python environment) and add Torch_DIR/CMAKE_PREFIX_PATH, "
-      "or restage the SDK with PLUSS_ENABLE_TORCH=OFF.")
+      "or rebuild the distribution with PLUSS_ENABLE_TORCH=OFF.")
   return()
 endif()
 
@@ -130,7 +130,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/PlussTargets.cmake")
 
 if(NOT TARGET Pluss::SDK AND TARGET Pluss::pluss)
   add_library(Pluss::SDK INTERFACE IMPORTED)
-  # Default SDK surface for <pluss/pluss.h>: Qit + Mic + Pl.
+  # Default C++ link surface for <pluss/pluss.h>: Qit + Mic + Pl.
   set(_pluss_sdk_link_libs "Pluss::pluss")
   if(TARGET Pluss::PlussMic)
     list(APPEND _pluss_sdk_link_libs "Pluss::PlussMic")

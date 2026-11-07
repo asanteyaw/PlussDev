@@ -23,7 +23,7 @@ The program prices a call and a put and recomputes both from the formula, with t
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace distr = pluss::subsp::stats::distr;
@@ -63,7 +63,7 @@ A call bought and a put sold at the same strike and maturity replicate a forward
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
@@ -109,7 +109,7 @@ The price must lie between the discounted forward intrinsic value and the discou
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;

@@ -1,6 +1,6 @@
 // temporal_split_fields applies the same fold plan to real Series fields, so each fold's train and
 // test are ready-to-use data, in time order, with no shuffling anywhere in the process.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

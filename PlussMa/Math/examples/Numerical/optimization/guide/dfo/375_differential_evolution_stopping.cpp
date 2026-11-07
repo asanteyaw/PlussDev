@@ -4,7 +4,7 @@
 // Converged. Requiring the spread as well keeps a population that is still exploring from stopping on a lucky plateau.
 // With check_every = 0 the test is off and only the budgets apply.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <utility>

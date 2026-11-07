@@ -30,7 +30,7 @@ None.
 Example 1 writes a line in two calls and ends it with endln.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -61,7 +61,7 @@ Two calls make one line, and endln ends it.
 Example 2 writes three values joined by the separator.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -91,7 +91,7 @@ The values are separated by a single space, and no newline is added.
 Example 3 chains several writes in one statement.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

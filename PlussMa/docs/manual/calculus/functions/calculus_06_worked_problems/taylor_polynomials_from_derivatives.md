@@ -8,7 +8,7 @@ This program expands f(x) = exp(sin x) about a = 0, a function whose derivatives
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <vector>

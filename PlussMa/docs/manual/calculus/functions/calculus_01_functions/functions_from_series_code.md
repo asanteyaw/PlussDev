@@ -21,7 +21,7 @@ Pass a callable of exactly one `Series` parameter that returns a `Series`. The r
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -89,7 +89,7 @@ An opaque function is a deliberately narrow tool, and the library says so rather
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <sstream>
 #include <string>

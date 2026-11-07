@@ -1,7 +1,7 @@
 // A one-dimensional timeline has a single slice along its only axis, which holds every tick. The
 // function receives all the timestamps at once, so it can find the span they cover.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <iostream>
 #include <vector>

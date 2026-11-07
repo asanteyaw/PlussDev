@@ -3,7 +3,7 @@
 [Back to Scalar casts](../core-scalar-cast.md) · [Core Utilities API Reference](../../api_reference.md)
 
 ```cpp
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 template <class T> T to_scalar(const Series& x);
 template <class T> inline constexpr bool is_scalar_extractable_v;
@@ -36,7 +36,7 @@ Example 1 checks the trait for an extractable and a non-extractable type, then e
 // to_scalar is the general form of the extraction. It names the type you want, and a trait tells you
 // which types can be extracted at all. Here the program checks the traits before it asks.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <cstdint>
 #include <iostream>

@@ -1,6 +1,6 @@
 // Pinning a project root so every relative path resolves under one directory. Paths printed here are
 // shown relative to the root, so the output is the same wherever the project is checked out.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>

@@ -14,7 +14,7 @@ With a single indicator the maximum-likelihood fitted mean of each group is its 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace distr = pluss::subsp::stats::distr;
@@ -95,7 +95,7 @@ The summary report of the fit puts these quantities in one place:
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

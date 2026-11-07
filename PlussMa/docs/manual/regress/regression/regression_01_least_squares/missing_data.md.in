@@ -18,7 +18,7 @@ The program puts a `NaN` in the response of one row and an infinity in a predict
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <limits>
 
@@ -57,7 +57,7 @@ With `drop_missing = false` the same data are an error, which is the safer setti
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <limits>
 

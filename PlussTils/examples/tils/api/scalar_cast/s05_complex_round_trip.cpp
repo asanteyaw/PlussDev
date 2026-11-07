@@ -1,7 +1,7 @@
 // Complex numbers keep both parts through a Series and back out. A signal's gain is a complex value,
 // and the program stores it, reads it back, and checks both parts survived unchanged.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 

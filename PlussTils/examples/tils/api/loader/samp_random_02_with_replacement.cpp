@@ -1,6 +1,6 @@
 // With replacement, num_samples may exceed the dataset size, and the same index can appear more
 // than once.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

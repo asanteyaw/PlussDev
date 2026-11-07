@@ -35,7 +35,7 @@ For `∫ W dW` the three conventions have exact discrete values on any sampled p
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -91,7 +91,7 @@ Both are built from `differential`, so they differentiate and save like any `Fun
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace stochastic = pluss::operators::stochastic;
@@ -125,7 +125,7 @@ These three operators are deterministic calculus on a `Function`: no path is sam
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace stochastic = pluss::operators::stochastic;

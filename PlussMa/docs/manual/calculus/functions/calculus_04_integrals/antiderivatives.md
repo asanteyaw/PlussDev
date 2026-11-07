@@ -30,7 +30,7 @@ A formula built only from these, such as `x³ + sin x` or `3 y x²`, has an exac
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <functional>
 
@@ -112,7 +112,7 @@ An exact antiderivative is a `Structural` function like any other. It can be eva
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -151,7 +151,7 @@ An integrand outside the table still has an antiderivative function, but it is d
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 

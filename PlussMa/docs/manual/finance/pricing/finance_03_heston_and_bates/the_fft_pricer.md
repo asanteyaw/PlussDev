@@ -30,7 +30,7 @@ The log strikes are centred on the spot, ln K_j = ln S + (j − *N*/2) Δk, so t
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -87,7 +87,7 @@ The transform integrates up to the frequency *N* Δu, and the integrand must hav
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -148,7 +148,7 @@ The damped transform exists only if the model has a finite moment E[S_T^(α + 1)
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -198,7 +198,7 @@ The moment can be lost for any characteristic function you supply, not only Hest
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;

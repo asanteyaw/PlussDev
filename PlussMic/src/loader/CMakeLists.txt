@@ -130,7 +130,7 @@ endif()
 if(PLUSSMIC_CURL_TARGET)
   target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_CURL=1)
 
-  # Export a stable SDK-owned curl link surface so downstream consumers do not
+  # Export a stable PlussII curl link surface so downstream consumers do not
   # see raw unresolved "CURL::libcurl" tokens at link time.
   add_library(plussmic_curl_link INTERFACE)
   target_link_libraries(plussmic_curl_link INTERFACE
@@ -140,9 +140,15 @@ if(PLUSSMIC_CURL_TARGET)
   set(_plussmic_curl_install_link "")
 
   # If curl came from FetchContent (non-imported target), install/export it with
-  # the SDK. If curl came from find_package(CURL), copy the resolved artifact
-  # into the SDK and link to that installed file in install interface.
-  get_target_property(_plussmic_curl_imported ${PLUSSMIC_CURL_TARGET} IMPORTED)
+  # the distribution. If curl came from find_package(CURL), copy the resolved
+  # artifact and link to that installed file in the install interface.
+  get_target_property(_plussmic_curl_aliased_target ${PLUSSMIC_CURL_TARGET} ALIASED_TARGET)
+  if(_plussmic_curl_aliased_target)
+    set(_plussmic_curl_real_target ${_plussmic_curl_aliased_target})
+  else()
+    set(_plussmic_curl_real_target ${PLUSSMIC_CURL_TARGET})
+  endif()
+  get_target_property(_plussmic_curl_imported ${_plussmic_curl_real_target} IMPORTED)
   if(_plussmic_curl_imported)
     set(_plussmic_curl_location "")
     foreach(_plussmic_curl_prop
@@ -187,21 +193,21 @@ if(PLUSSMIC_CURL_TARGET)
     else()
       message(WARNING
         "PlussMic loader: could not resolve a concrete curl library file from "
-        "${PLUSSMIC_CURL_TARGET}. SDK export will reference ${PLUSSMIC_CURL_TARGET} directly, "
+        "${PLUSSMIC_CURL_TARGET}. The distribution will reference ${PLUSSMIC_CURL_TARGET} directly, "
         "so downstream must provide curl via find_package(CURL).")
       set(_plussmic_curl_install_link
         $<INSTALL_INTERFACE:${PLUSSMIC_CURL_TARGET}>
       )
     endif()
   else()
-    install(TARGETS ${PLUSSMIC_CURL_TARGET}
+    install(TARGETS ${_plussmic_curl_real_target}
       EXPORT PlussTargets
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
     set(_plussmic_curl_install_link
-      $<INSTALL_INTERFACE:Pluss::${PLUSSMIC_CURL_TARGET}>
+      $<INSTALL_INTERFACE:Pluss::${_plussmic_curl_real_target}>
     )
   endif()
 

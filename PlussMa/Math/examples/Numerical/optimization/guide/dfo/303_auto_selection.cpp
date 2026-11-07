@@ -2,7 +2,7 @@
 // has bounds, and how many variables it has. `selection_reason` says which rule fired. The rules are the same ones
 // listed in the chapter; this program prints them for a spread of problems.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 

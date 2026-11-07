@@ -57,7 +57,7 @@ The swarm covers the whole box, finds the global minimum of this Rastrigin funct
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <utility>
@@ -185,7 +185,7 @@ At 3 variables the classic swarm finds the global minimum exactly on every seed 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <utility>

@@ -1,7 +1,7 @@
 // Asking for an axis the table does not have. The table is two-dimensional, so axis 2 is refused, and
 // the error names the operation so the caller can find the bad call.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/translate.h>
+#include <pluss/tils/auxiliary/translate.h>
 
 #include <exception>
 #include <iostream>

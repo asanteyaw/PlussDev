@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 shows the default behavior off a terminal.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>
@@ -60,7 +60,7 @@ No escape sequence is written, because the mode is set to Never.
 Example 2 forces color on and shows the escape sequence.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>
@@ -98,7 +98,7 @@ The escape byte is replaced with an exclamation mark here so the sequence is rea
 Example 3 combines several style fields and checks equality.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>
@@ -138,7 +138,7 @@ A default style is empty, and a style with fields set is not. Two default styles
 Example 4 sets a 24-bit color, which overrides a named one.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>
@@ -177,7 +177,7 @@ The escape sequence carries the exact RGB numbers, not the name.
 Example 5 sets a syntax theme and checks that it does not yet color a number.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>

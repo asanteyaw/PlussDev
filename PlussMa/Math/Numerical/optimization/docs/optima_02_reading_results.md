@@ -94,7 +94,7 @@ Four flags describe a run that behaved as designed: it finished, it ran out of i
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 #include <utility>
@@ -157,7 +157,7 @@ Five flags mean the solver could not deliver. Each is triggered here by a specif
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 #include <utility>
@@ -229,7 +229,7 @@ The exit flag is coarse. The stall category says what went wrong underneath. The
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 #include <utility>

@@ -8,7 +8,7 @@
 // lives in PlussTils, not PlussAI -- it is purpose-built to pair with nn
 // training and documented as the nn/data family, so it belongs behind this
 // same single include.
-#include "pluss/tils/aux/data_loader.h"
+#include "pluss/tils/auxiliary/data_loader.h"
 
 #include "NodeK/NN/modules/Module.h"
 #include "NodeK/NN/modules/activation/Activation.h"

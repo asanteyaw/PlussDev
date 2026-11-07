@@ -31,7 +31,7 @@ None.
 Example 1 moves between epochs with set_epoch and checks that the shuffle order is reproducible per epoch.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -101,7 +101,7 @@ Example 2 advances the epoch with reset.
 ```cpp
 // reset() moves to the next epoch and rewinds the cursor, the same way begin() does automatically
 // when reshuffle_each_epoch is on. set_epoch jumps to a chosen epoch instead of the next one.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

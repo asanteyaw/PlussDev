@@ -1,7 +1,7 @@
 // to_scalar is the general form of the extraction. It names the type you want, and a trait tells you
 // which types can be extracted at all. Here the program checks the traits before it asks.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <cstdint>
 #include <iostream>

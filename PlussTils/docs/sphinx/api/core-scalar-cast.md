@@ -3,7 +3,7 @@
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
 ```cpp
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 ```
 
 The scalar-cast family names a dtype directly in the function name, `as_bool`, `as_f32`, `as_f64`, `as_i8`, `as_i16`, `as_i32`, `as_i64`, `as_u8`, `as_u16`, `as_u32`, `as_u64`, `as_c64`, and `as_c128`. Every one of these thirteen names has the same four overloads, which differ only in what you hand it: a `Config` to tag with the dtype, an existing `Series` to convert, a host value to build a one-element `Series` from, or a one-element `Series` to read back out as a host value. Pick the overload by the argument you have, not by looking for a differently named function.
@@ -32,7 +32,7 @@ Example 1 sets the dtype on a Config and builds a series from it.
 // Choosing the element type of a new Series. Each as_ function with a Config argument returns that
 // configuration with the element type set, so it can be passed straight to a factory call.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 #include <vector>
@@ -67,7 +67,7 @@ Example 2 builds a one-element series from a host value, keeping its exact type.
 // Creating a one-element Series from a host value of a chosen type. The scalar form keeps the value's
 // type exact, so a count stored as int64 stays an integer on the way in and out.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <cstdint>
 #include <iostream>
@@ -102,7 +102,7 @@ Example 3 converts an existing column to another dtype.
 // Converting a whole column to a different element type. Sensor counts arrive as floats, and the
 // database wants integers. The conversion truncates toward zero, so 2.9 becomes 2.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 #include <vector>
@@ -138,7 +138,7 @@ Example 4 reads one host value back out of a one-element series, and shows the r
 // and the extraction reads it back as a plain number. A Series with more than one element cannot be
 // read as one number, and the extraction refuses it.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <exception>
 #include <iostream>
@@ -177,7 +177,7 @@ Example 5 names the dtype as a runtime value with as_dtype.
 // as_dtype(Config, ScalarType) is the generic form the named helpers (as_f64, as_i32, ...) call
 // internally. Use it when the dtype is chosen at runtime, not known at the call site.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 

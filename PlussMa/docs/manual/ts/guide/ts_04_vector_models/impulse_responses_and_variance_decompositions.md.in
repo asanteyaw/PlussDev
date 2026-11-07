@@ -23,7 +23,7 @@ The program prints the response of both series to a shock in each, under both me
 @@run@@
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 

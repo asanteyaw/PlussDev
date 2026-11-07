@@ -6,7 +6,7 @@
 // earlier, so the mesh_tolerance rows switch it off with check_every = 0). `opportunistic` stops a poll at the first improvement;
 // off, the whole poll is evaluated and the best point taken. Same 4-variable quadratic for every row; its minimum value is 1.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <utility>

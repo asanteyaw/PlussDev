@@ -12,7 +12,7 @@ The correlation ρ tilts the smile. With ρ < 0, falling prices come with rising
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -56,7 +56,7 @@ The volatility of variance σ controls how much the variance moves, and with it 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -98,7 +98,7 @@ The skew flattens with maturity: the variance has time to revert and the effect 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;

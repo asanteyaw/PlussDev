@@ -28,7 +28,7 @@ None.
 Example 1 reads the defaults of a new engine.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -63,7 +63,7 @@ A new engine uses a single space, has levels enabled, and has the minimum level 
 Example 2 reads the configuration after two changes.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -97,7 +97,7 @@ The separator and the levels setting show the values set on the engine.
 Example 3 edits a copy and checks the engine.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

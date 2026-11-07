@@ -93,10 +93,10 @@ git clone https://github.com/asanteyaw/PlussDev.git
 cd PlussDev
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF
-cmake --build build --config Release --target pluss_sdk_stage --parallel 4
+cmake --build build --config Release --target plussii_distribution_stage --parallel 4
 ```
 
-The result is `build/sdk/plussii-cpp-0.1.0-<system>-<architecture>/`. That
+The result is `build/plussii-cpp/plussii-cpp-0.1.0-<system>-<architecture>/`. That
 folder has the same layout as the extracted binary archive and can be passed
 to another project's `CMAKE_PREFIX_PATH`.
 
@@ -108,31 +108,30 @@ cmake --workflow --preset cpp_env_build
 
 ## Make ZIP and tar archives
 
-The existing `pluss_sdk_stage` and `pluss_sdk_archive` target names remain for
-build script compatibility. The resulting archive is named PlussII C++.
+The resulting archives are named PlussII C++.
 
 ```bash
-cmake --build build --target pluss_sdk_archive --parallel 1
+cmake --build build --target plussii_distribution_archive --parallel 1
 ```
 
-The archives are written to `build/`. The staged folder remains under `build/sdk/`.
+The archives are written to `build/`. The staged folder remains under `build/plussii-cpp/`.
 
 ## Build a Torch-enabled distribution
 
 Use a separate build directory for Torch builds:
 
 ```bash
-cmake -S . -B build-torch-sdk \
+cmake -S . -B build-torch \
   -DPLUSS_ENABLE_TORCH=ON \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
-cmake --build build-torch-sdk --target pluss_sdk_stage -j
+cmake --build build-torch --target plussii_distribution_stage -j
 ```
 
 If Torch is not in a default CMake search location, pass `Torch_DIR`:
 
 ```bash
-cmake -S . -B build-torch-sdk \
+cmake -S . -B build-torch \
   -DPLUSS_ENABLE_TORCH=ON \
   -DTorch_DIR=/path/to/torch/share/cmake/Torch
 ```
@@ -146,7 +145,6 @@ Torch-enabled distribution exports the compile definitions needed for
 The installed package exposes:
 
 - `Pluss::PlussII`: full-stack target for new applications.
-- `Pluss::SDK`: compatibility target for existing applications.
 - `Pluss::pluss`: lower-level installed core target.
 
 Applications should link `Pluss::PlussII`.

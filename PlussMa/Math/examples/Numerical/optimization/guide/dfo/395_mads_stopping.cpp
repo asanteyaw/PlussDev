@@ -3,7 +3,7 @@
 // `relative_improvement_tolerance` (relatively) over the window. The window test can stop a run that is still creeping
 // along a narrow valley; set `check_every` to 0 to rely on the frame alone.
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <utility>

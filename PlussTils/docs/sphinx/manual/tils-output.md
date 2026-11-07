@@ -25,7 +25,7 @@ A batch job needs a log that says what happened, and that can be quieter in prod
 ```cpp
 // A run logger for a batch job. It writes levelled lines to standard output, filters out debug
 // lines below its minimum level, and shows how a custom prefix changes the look of one level.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 
@@ -66,7 +66,7 @@ A report is read as a table, so its columns must line up. This program writes a 
 ```cpp
 // A monthly sales report whose columns line up. Each row is written with the format path, so the
 // widths and alignments are part of the pattern, and the totals use grouping and fixed decimals.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <string>
@@ -128,7 +128,7 @@ When you ask someone to look at a problem, a dump of the settings is more useful
 ```cpp
 // Dumping a configuration and a lookup table for a support ticket. Containers print in a readable
 // form, maps can be sorted by key, long lists can be capped, and multiline output is indented.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <map>
@@ -183,7 +183,7 @@ Raw byte counts and nanosecond durations are hard to read. This program prints t
 ```cpp
 // Sizes and durations for a storage report. Raw counts are hard to read, so the output options
 // turn them into IEC bytes, SI bytes, metric counts, and durations.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 
@@ -222,7 +222,7 @@ A test, or a program that saves its summary to a file, needs the text rather tha
 ```cpp
 // Capturing output into a string instead of printing it. This is how a test checks what a report
 // would say, or how a program saves a summary to a file it writes itself.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -264,7 +264,7 @@ A finance team wants every number to group thousands and show two decimals. Sett
 ```cpp
 // A house style for a finance team: every number groups thousands and shows two decimals. The
 // style is set once on the engine. One call overrides it, and the rest keep it.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 
@@ -302,7 +302,7 @@ A format string in a configuration file can drift from the values it is given, a
 ```cpp
 // Format strings in a configuration file can drift from the values they are given. Strict mode
 // turns a mismatch into an error, and a missing argument can be shown as a visible marker instead.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -342,7 +342,7 @@ A tool that reports build status uses color to make a failure stand out. This pr
 // Colored status lines for a terminal tool. Color is forced on here so the escape sequences show
 // up in the captured output. In a real terminal, color_mode Auto colors only when the output is a
 // TTY, which is the usual choice.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

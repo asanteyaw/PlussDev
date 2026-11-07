@@ -1,6 +1,6 @@
 // next() pulls one batch and advances the loader's own cursor, so repeated calls walk through the
 // epoch without a range-for. It returns nullopt once every batch has been delivered.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

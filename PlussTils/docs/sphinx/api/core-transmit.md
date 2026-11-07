@@ -5,7 +5,7 @@
 ```cpp
 #include <pluss/bi/specs.h>
 
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 enum class transmit_exec { seq, par };
 struct transmit_options { transmit_exec exec{seq}; std::size_t grain_size{4096}; std::size_t workers{0}; };
@@ -48,7 +48,7 @@ Example 1 maps a function over a vector, the ordinary range form.
 ```cpp
 // Scaling sensor readings to a share of the largest one. The same callable runs over every reading,
 // and transmit returns a new vector of the results, so the original readings are untouched.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <algorithm>
 #include <iostream>
@@ -87,7 +87,7 @@ Example 2 uses a callable that takes the element's position as a second argument
 ```cpp
 // Numbering the entries of a checklist. When the callable takes a second argument, transmit passes the
 // position of each element, so the label can depend on where the entry sits in the list.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 #include <string>
@@ -125,7 +125,7 @@ Example 3 streams the results to an output iterator with transmit_into, instead 
 ```cpp
 // Writing results straight to an output iterator, so no intermediate vector is built. A report that
 // may be very long can stream its lines to a file, a socket, or the terminal as it computes them.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 #include <iterator>
@@ -160,7 +160,7 @@ Each result is written to standard output as it is produced; no intermediate vec
 Example 4 confirms that transmit_into returns the output iterator, advanced past what it wrote.
 
 ```cpp
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 #include <vector>
@@ -193,7 +193,7 @@ Example 5 pairs two ranges of different lengths.
 ```cpp
 // Pairing two lists element by element. A price list and a quantity list are combined into line
 // totals. When the lists differ in length, the result stops at the shorter one.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 #include <vector>
@@ -229,7 +229,7 @@ Example 6 passes an iterator pair that marks the middle of a container.
 ```cpp
 // Transforming a part of a container. Two iterators mark the start and the end, so only the middle
 // of a list is changed. The rest of the list is not visited at all.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 #include <string>
@@ -271,7 +271,7 @@ Example 7 runs the same transform sequentially and in parallel over two hundred 
 // Running a slow transformation across all cores. The parallel result must match the sequential one
 // exactly, so the program checks that before trusting the speedup. The sum uses integers, so the
 // comparison is exact.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <cstdint>
 #include <iostream>
@@ -308,7 +308,7 @@ The parallel result has the same length and the same values as the sequential on
 Example 8 reads the default execution options.
 
 ```cpp
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 
@@ -342,7 +342,7 @@ Example 9 passes one value that is not a range.
 // transmit also works on one value that is not a range. It calls the function on the value and
 // returns the result, so the same call reads the same whether the input is one value or many.
 // A string is a range of characters, so it takes the range form instead; see the pitfalls.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 

@@ -1,6 +1,6 @@
 // split_fields also accepts a Dataset or a SeriesDataset directly, reading its batch_dim from the
 // dataset instead of the options, so a dataset you already built can be split without unpacking it.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

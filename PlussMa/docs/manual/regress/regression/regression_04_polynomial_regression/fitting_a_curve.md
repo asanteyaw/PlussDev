@@ -20,7 +20,7 @@ The data are y = 1 − 2x + 0.5x² with no noise, at nine points. A quadratic re
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -73,7 +73,7 @@ Real data scatter about the curve. The program adds a fixed pattern of noise to 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

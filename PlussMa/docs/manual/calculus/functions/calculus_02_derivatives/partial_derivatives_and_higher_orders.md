@@ -23,7 +23,7 @@ f(x, y) = x² · sin(xy) · exp(cos x)
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -72,7 +72,7 @@ Because the result is a `Function` with the same variables, a derivative can be 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -121,7 +121,7 @@ The two mixed partials are identical and equal to 6xy² at every point, and `g_x
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -168,7 +168,7 @@ The third derivative matches 60x² − 12 at all four points, the fifth derivati
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 
@@ -210,7 +210,7 @@ The order must be positive, the variable name non-empty, and the variable must b
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <functional>
 #include <string>

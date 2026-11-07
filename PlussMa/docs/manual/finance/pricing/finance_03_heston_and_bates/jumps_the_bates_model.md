@@ -31,7 +31,7 @@ With no jumps (`jump_intensity = 0`) the price is the Heston price. More frequen
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -107,7 +107,7 @@ Put-call parity holds for the Bates prices, which is the statement that the comp
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace prc = pluss::subsp::math::finance::pricing;
 namespace vol = pluss::subsp::math::finance::volatility;
@@ -159,7 +159,7 @@ Parity holds to rounding (10⁻¹⁴) for every combination of jump parameters, 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <limits>
 

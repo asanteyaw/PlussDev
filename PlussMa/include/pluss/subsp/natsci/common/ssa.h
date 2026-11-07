@@ -14,7 +14,7 @@
 // (exact sampling of the state at t_end; the exponential clock is memoryless).
 
 #include "pluss/subsp/natsci/common/dynamics.h"
-#include "pluss/tils/aux/rng_seed.h"
+#include "pluss/tils/auxiliary/rng_seed.h"
 
 #include <algorithm>
 

@@ -12,7 +12,7 @@ The characteristic function of a normal variable is φ(t) = exp(iμt − σ²t²
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -53,7 +53,7 @@ All four moments equal the closed forms (1.5, 6.25, 21.375 and 107.0625) with a 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;
@@ -90,7 +90,7 @@ A complex function persists like a real one, and the restored function gives the
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <sstream>
 

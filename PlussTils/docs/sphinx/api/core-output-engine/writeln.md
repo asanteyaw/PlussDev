@@ -30,7 +30,7 @@ None.
 Example 1 writes two lines, the first with three values.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -61,7 +61,7 @@ Each call ends its own line.
 Example 2 adds end text through a trailing options value.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -90,7 +90,7 @@ The end text is written before the newline.
 Example 3 calls writeln with no values.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

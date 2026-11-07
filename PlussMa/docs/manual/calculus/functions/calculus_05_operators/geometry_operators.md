@@ -24,7 +24,7 @@ For the unit sphere `g = diag(1, sin²θ)` the nonzero symbols are `Γ^θ_φφ =
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace math = pluss::math;
 namespace operators = pluss::operators;

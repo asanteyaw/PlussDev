@@ -2,7 +2,7 @@
 
 #include "distr_generic_detail.h"
 
-#include "pluss/tils/aux/scalar_cast.h"
+#include "pluss/tils/auxiliary/scalar_cast.h"
 
 #include <algorithm>
 #include <cmath>

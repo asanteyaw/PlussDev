@@ -29,7 +29,7 @@ None.
 Example 1 shows every notation on a representative number.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -75,7 +75,7 @@ Each notation produces its own written form.
 Example 2 compares Notation::Metric with Humanize::Metric on the same number.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>

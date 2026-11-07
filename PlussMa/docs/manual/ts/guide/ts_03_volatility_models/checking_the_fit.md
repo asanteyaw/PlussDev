@@ -12,7 +12,7 @@ The raw returns should fail the tests of [Chapter 1](../ts_01_describing_a_serie
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <utility>
 #include <vector>
@@ -64,7 +64,7 @@ The clustering tests on `z²` can pass while a more specific pattern remains: if
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <utility>

@@ -14,7 +14,7 @@ The delta method gives Var(ED50) ≈ [Var(b₀) + 2 ED50 Cov(b₀, b₁) + ED50�
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -87,7 +87,7 @@ The program scans m and reports the Fieller interval for the full study and for 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;

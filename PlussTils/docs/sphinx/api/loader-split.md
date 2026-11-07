@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 
 DataSplit split_fields(const std::vector<Series>& fields, DataSplitOptions options = {});
 DataSplit split_fields(const SeriesDataset& dataset, DataSplitOptions options = {});
@@ -55,7 +55,7 @@ None beyond what `DataLoader`'s own construction refuses, when `split_loaders` b
 Example 1 splits a field list by ratio and checks the partition.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -127,7 +127,7 @@ Example 2 splits straight into three ready-to-use loaders.
 ```cpp
 // split_loaders does the same partition as split_fields and wraps each part in its own DataLoader,
 // so you get three ready-to-use loaders in one call instead of three field lists to wrap yourself.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -174,7 +174,7 @@ Example 3 splits a SeriesDataset directly, instead of unpacking its fields first
 ```cpp
 // split_fields also accepts a Dataset or a SeriesDataset directly, reading its batch_dim from the
 // dataset instead of the options, so a dataset you already built can be split without unpacking it.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

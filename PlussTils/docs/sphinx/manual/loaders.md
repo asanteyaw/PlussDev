@@ -51,7 +51,7 @@ a batch size of three. Sequential order visits samples zero through six in
 turn. Seven samples in batches of three leave a final batch of one.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -108,7 +108,7 @@ same seven samples twice. It keeps the short batch in one loader and drops it in
 the other.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -162,7 +162,7 @@ covers every sample exactly once, and a new epoch reshuffles while returning to
 an earlier epoch replays it.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -238,7 +238,7 @@ the plain order. The subset sampler visits only the indices you list, which is
 how you train on one class, one group, or one split without copying data.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -326,7 +326,7 @@ square of `i` and a label of `i` modulo two. The loader stacks samples into
 batches, and a collate function then reshapes each batch before it is delivered.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -408,7 +408,7 @@ row exactly once, the two fields stay aligned within each part, and the same
 seed gives the same split.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -486,7 +486,7 @@ workers and a prefetch depth of two. Delivery is in order by default, so the
 parallel loader hands over the same batches in the same sequence.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <atomic>
@@ -557,9 +557,9 @@ under it, creates a directory that a cache needs, and refuses a path that climbs
 out of the root. The program removes its own directory when it finishes.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <fstream>
@@ -631,7 +631,7 @@ loader leaves batches in the source dtype by default. Setting a target dtype
 converts every batch on delivery and leaves the source untouched.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -686,7 +686,7 @@ the refusals one at a time and prints whether each was rejected. The program
 prints only the outcome, not the library's wording.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

@@ -1,6 +1,6 @@
 // WeightedRandomSampler picks indices with probability proportional to their weight. A weight of
 // zero is never picked, and the sample count is independent of the dataset size.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

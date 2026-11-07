@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 
 using batch_type = DataBatch;
 
@@ -46,7 +46,7 @@ A batch size that is not positive, a `shuffle` and `sampler` set together, or a 
 Example 1 builds a loader from a list of fields and reads every batch by index.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -95,7 +95,7 @@ The loader reports its sample and batch counts, and each batch holds the rows an
 Example 2 builds a loader from a custom Dataset.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -170,7 +170,7 @@ Example 3 replaces the configuration after construction with set_options.
 ```cpp
 // set_options replaces the whole configuration after construction and rebuilds the batch plan, the
 // same validation and ordering the constructor runs.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

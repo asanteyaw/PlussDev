@@ -21,7 +21,7 @@ A `NaN` is neither positive nor non-negative, so a `NaN` reaching `log` or `sqrt
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <cmath>
 #include <functional>
@@ -108,7 +108,7 @@ The program shows one of each, and the case that surprises people: a domain erro
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <functional>
 #include <string>

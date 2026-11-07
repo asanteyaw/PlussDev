@@ -29,7 +29,7 @@ None.
 Example 1 writes three values with the default separator.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -58,7 +58,7 @@ A single space joins the values.
 Example 2 sets a longer separator and writes three names.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -88,7 +88,7 @@ The separator appears between each pair of values.
 Example 3 keeps the separator across calls.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

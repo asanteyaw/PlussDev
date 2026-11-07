@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 quotes the strings inside a list.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -57,7 +57,7 @@ Each name is wrapped in quotes, so a name that contains a comma is still clearly
 Example 2 sets a different quote character.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -88,7 +88,7 @@ A single quote wraps each name instead of the default double quote.
 Example 3 shows all four case transforms.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>
@@ -124,7 +124,7 @@ Upper and lower change every letter, title capitalizes each word, and sentence c
 Example 4 sets escape_non_printable and compares it with the option left off.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <limits>

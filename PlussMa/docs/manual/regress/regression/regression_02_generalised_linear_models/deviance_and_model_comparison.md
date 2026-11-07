@@ -22,7 +22,7 @@ The program generates 40 observations of a binary outcome whose log-odds depend 
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -82,7 +82,7 @@ The drop in deviance from a model to a larger model nested in it is, when the ex
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 namespace distr = pluss::subsp::stats::distr;

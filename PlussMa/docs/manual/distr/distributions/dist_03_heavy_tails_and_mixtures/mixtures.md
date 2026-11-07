@@ -20,7 +20,7 @@ The first program fits the mixture from two very different starting points and p
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -80,7 +80,7 @@ The number of components is the number of entries you put in the starting object
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -127,7 +127,7 @@ A fitted mixture also answers a classification question: given an observation, w
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -186,7 +186,7 @@ EM climbs to the nearest maximum, and a mixture likelihood can have more than on
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 

@@ -34,7 +34,7 @@ Example 1 pulls batches one at a time with next, until it returns nothing.
 ```cpp
 // next() pulls one batch and advances the loader's own cursor, so repeated calls walk through the
 // epoch without a range-for. It returns nullopt once every batch has been delivered.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -76,7 +76,7 @@ Each call advances the cursor, and the final call past the end returns nothing.
 Example 2 reads a loader in a range-based for loop.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>
@@ -144,7 +144,7 @@ The loop visits every sample exactly once per pass, in the order begin and the i
 Example 3 reads batches by index, comparing a loader that keeps a partial batch with one that drops it.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -188,7 +188,7 @@ The kept loader has one more batch than the dropped one, and its last batch is t
 Example 4 reads an index past the end.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

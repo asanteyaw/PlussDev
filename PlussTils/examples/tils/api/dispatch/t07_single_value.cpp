@@ -1,7 +1,7 @@
 // transmit also works on one value that is not a range. It calls the function on the value and
 // returns the result, so the same call reads the same whether the input is one value or many.
 // A string is a range of characters, so it takes the range form instead; see the pitfalls.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 

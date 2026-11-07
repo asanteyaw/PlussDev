@@ -1,6 +1,6 @@
 // Numbering the entries of a checklist. When the callable takes a second argument, transmit passes the
 // position of each element, so the label can depend on where the entry sits in the list.
-#include <pluss/tils/aux/transmit.h>
+#include <pluss/tils/auxiliary/transmit.h>
 
 #include <iostream>
 #include <string>

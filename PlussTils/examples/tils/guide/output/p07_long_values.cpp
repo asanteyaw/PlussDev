@@ -1,6 +1,6 @@
 // A log line that quotes a long history. Lists are capped with a count of what was left out, and
 // nested lists are cut at a depth so one value cannot fill the terminal.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <vector>

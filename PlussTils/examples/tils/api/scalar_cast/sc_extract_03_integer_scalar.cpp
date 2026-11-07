@@ -1,7 +1,7 @@
 // Extracting a plain integer, not a float. The extraction form takes the type from the call, as_i64
 // here, and requires the series to hold exactly one element.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 

@@ -1,6 +1,6 @@
 // temporal_split_loaders wraps each fold's train and test fields in their own DataLoader, ready to
 // iterate, the temporal counterpart to split_loaders.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

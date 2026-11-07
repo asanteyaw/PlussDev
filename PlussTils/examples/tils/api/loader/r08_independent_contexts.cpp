@@ -1,6 +1,6 @@
 // Two projects open at once, each with its own root. A PathContext holds its own root, so it does not
 // disturb the global one, and each context resolves paths under its own directory.
-#include <pluss/tils/aux/pathing.h>
+#include <pluss/tils/auxiliary/pathing.h>
 
 #include <filesystem>
 #include <iostream>

@@ -35,7 +35,7 @@ Example 1 reads every accessor on a loader built from two fields.
 ```cpp
 // empty, field_count, sample_count, batch_size, and options read back what the loader was built
 // with, without changing anything.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -82,7 +82,7 @@ Example 2 reads epoch after set_epoch moves to a chosen epoch.
 ```cpp
 // epoch() reads back the epoch set_epoch moved to, so a caller can tell which pass through the data
 // a loader is currently on.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>
@@ -118,7 +118,7 @@ epoch starts at zero and reads back the value set_epoch was given.
 Example 3 reads sample_count and batch_count on the loader from the first example.
 
 ```cpp
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

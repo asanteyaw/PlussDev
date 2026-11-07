@@ -27,7 +27,7 @@ None, unless noted for a specific field.
 Example 1 writes a list and a map with the plain preset.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>
@@ -60,7 +60,7 @@ No brackets surround the list or the map, so the line reads like plain text.
 Example 2 writes a nested map with the pretty JSON preset.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>
@@ -102,7 +102,7 @@ The keys are sorted, the value is laid out across several lines, and each key is
 Example 3 writes an optional and an integer with the repr preset.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>
@@ -135,7 +135,7 @@ The optional is wrapped in Some, which is the unambiguous debug form.
 Example 4 fits a short and a long value into a ten-character cell.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>

@@ -1,6 +1,6 @@
 // A list of attendee names for a badge run. Names are title-cased, and inside a list each name is
 // quoted so a name with a space or a comma is still clear.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <string>

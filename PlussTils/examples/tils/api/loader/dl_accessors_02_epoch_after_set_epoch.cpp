@@ -1,6 +1,6 @@
 // epoch() reads back the epoch set_epoch moved to, so a caller can tell which pass through the data
 // a loader is currently on.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <iostream>

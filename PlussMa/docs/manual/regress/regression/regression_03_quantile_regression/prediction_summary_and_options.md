@@ -28,7 +28,7 @@ struct reg::QuantileOptions {
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 namespace reg = pluss::subsp::stats::regression;
 using namespace pluss::tils;
@@ -78,7 +78,7 @@ The report has the same layout as the others, with the quantile τ, the iteratio
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <sstream>
 
@@ -136,7 +136,7 @@ The remaining options in action: a line through the origin, incomplete rows, and
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <limits>
 

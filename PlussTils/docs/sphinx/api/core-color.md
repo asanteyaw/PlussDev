@@ -32,7 +32,7 @@ None.
 Example 1 checks that two named colors are distinct, and that Default is the style's starting foreground.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -68,7 +68,7 @@ Red and blue compare unequal, and a fresh style's foreground is Default.
 Example 2 shows a bright color escape sequence.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -104,7 +104,7 @@ The bright yellow foreground is written as its own escape code.
 Example 3 shows a 24-bit color overriding a named one on the same style.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <array>
 #include <iostream>

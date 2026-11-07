@@ -3,7 +3,7 @@
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 class OutputEngine;
 ```
@@ -32,7 +32,7 @@ A format call whose pattern and arguments disagree is refused when strict argume
 Example 1 writes with the default constructor, which uses standard output.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -61,7 +61,7 @@ The default engine writes to standard output with no configuration.
 Example 2 writes into a string stream, which is how a program captures its own output.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -92,7 +92,7 @@ The text is held in the stream, so the program can read it back.
 Example 3 builds an engine from options that set a minimum level.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>
@@ -126,7 +126,7 @@ The info line is dropped, and the warning is kept.
 Example 4 checks that an engine cannot be copied or reassigned.
 
 ```cpp
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <sstream>

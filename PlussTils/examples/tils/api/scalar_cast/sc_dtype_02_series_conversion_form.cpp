@@ -1,7 +1,7 @@
 // as_dtype(const Series&, ScalarType, Config) converts an existing series, the same job as_i64(x, cfg)
 // does, but with the target type given as a value instead of named in the function.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 

@@ -1,6 +1,6 @@
 // A feature-flag report. Each flag is a key and a value, shown as a map with a chosen key-value
 // separator and brackets, and a pair shows the same shape for one comparison.
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <iostream>
 #include <map>

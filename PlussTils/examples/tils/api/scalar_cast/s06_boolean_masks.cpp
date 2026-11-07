@@ -1,7 +1,7 @@
 // Turning a Series of numbers into a mask of true and false values. The mask marks the readings that
 // passed a limit, and the conversion to boolean keeps every reading that is not zero as true.
 #include <pluss/mic.h>
-#include <pluss/tils/aux/scalar_cast.h>
+#include <pluss/tils/auxiliary/scalar_cast.h>
 
 #include <iostream>
 #include <vector>

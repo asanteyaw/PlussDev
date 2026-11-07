@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bessel_k.h"
-#include "pluss/tils/aux/scalar_cast.h"
+#include "pluss/tils/auxiliary/scalar_cast.h"
 #include "distr_object_detail.h"
 
 #include <algorithm>

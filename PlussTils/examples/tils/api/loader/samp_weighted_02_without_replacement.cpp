@@ -1,6 +1,6 @@
 // Without replacement, the sampler cannot deliver more samples than there are indices to draw, and
 // each index is picked at most once.
-#include <pluss/tils/aux/data_loader.h>
+#include <pluss/tils/auxiliary/data_loader.h>
 #include <pluss/pluss.h>
 
 #include <algorithm>

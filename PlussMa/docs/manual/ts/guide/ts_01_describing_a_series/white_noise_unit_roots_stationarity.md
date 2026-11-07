@@ -20,7 +20,7 @@ The Ljung–Box statistic combines the squared autocorrelations up to a chosen l
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <vector>
 
@@ -143,7 +143,7 @@ The program runs both tests over four series, one of each kind, and prints the d
 
 ```cpp
 #include <pluss/ma.h>
-#include <pluss/tils/aux/output.h>
+#include <pluss/tils/auxiliary/output.h>
 
 #include <string>
 #include <vector>
