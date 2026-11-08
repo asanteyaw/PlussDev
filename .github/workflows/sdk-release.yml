@@ -2,6 +2,14 @@ name: PlussII C++ Release
 
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platforms to build and validate
+        type: choice
+        default: all
+        options:
+          - all
+          - linux-arm64
   push:
     tags:
       - "v*"
@@ -14,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15, ubuntu-24.04, windows-2022]
+        os: ${{ fromJSON(inputs.platform == 'linux-arm64' && '["ubuntu-24.04-arm"]' || '["macos-15","ubuntu-24.04","ubuntu-24.04-arm","windows-2022"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
