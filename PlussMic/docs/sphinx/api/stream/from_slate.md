@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: b39cb0946947 -->
+<!-- pluss-signature-hash: 52f06c926728 -->
 
 # Stream::from_slate
 

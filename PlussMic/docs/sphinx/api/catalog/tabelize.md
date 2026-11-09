@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-<!-- pluss-signature-hash: ad70058c2d21 -->
+<!-- pluss-signature-hash: 9464dde9d452 -->
 
 # Catalog::tabelize
 
@@ -9,6 +9,7 @@
 
 ```cpp
 Catalog::tabelize(const TabelizePolicy& policy = {}) const -> pluss::table::DataFrame
+Catalog::tabelize(const RaggedPolicy& policy) const -> pluss::table::DataFrame
 ```
 
 ```cpp
@@ -33,6 +34,11 @@ method uses to turn a possibly-ragged `Catalog` into a strictly rectangular
 `DataFrame`. [`DataFrame::kindelize()`](../dataframe/kindelize.md) is the inverse
 direction.
 
+The `RaggedPolicy` overload expresses the same conversion through the shared ragged
+policy vocabulary. It validates the requested layout, then maps its domain,
+alignment, and absent-value settings to a `TabelizePolicy`. Tail alignment is not
+supported for this rectangular conversion.
+
 ```{important} The default Align::Inner truncates a ragged catalog to its shortest stream
 With the default policy, streams of different lengths are aligned to their **shortest**
 common length — extra rows in longer streams are silently dropped. If you want every row
@@ -49,6 +55,12 @@ shorter streams instead of truncating longer ones. See Example 2.
     (default `false`) additionally adds the row-index axis as its own feature, named
     `label_feature` (default `"label"`); `collision` decides what happens if that name
     already exists as a stream.
+
+**policy** (`const RaggedPolicy&`, alternative overload)
+    Selects the row domain, alignment, and absent-value handling through the shared
+    ragged policy. Pass an explicit policy, such as
+    `RaggedPolicy::defaults(OpClass::Rectangular)`. Exact-domain and loss-error
+    constraints are checked before conversion.
 
 ## Returns
 
