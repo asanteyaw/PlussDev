@@ -16,7 +16,7 @@
 <div class="pluss-card">
 <span class="card-name">View</span>
 <span class="card-model">PlussTils/view</span>
-<p class="card-desc">The PlussView desktop viewer: architecture, window runtime, and the in-progress MATLAB-style popup viewer.</p>
+<p class="card-desc">The PlussView desktop viewer: architecture, window runtime, and a planned popup viewer.</p>
 </div>
 
 <div class="pluss-card">
@@ -40,15 +40,5 @@
 :hidden:
 
 api_reference
-```
-
-```{toctree}
-:glob:
-:maxdepth: 2
-:hidden:
-
-*
-_local/*/*
-_local/*/*/*
-_local/*/*/*/*
+_local/MANIFEST
 ```

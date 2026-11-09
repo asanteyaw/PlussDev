@@ -10,17 +10,15 @@ PlussTils' reference material is organized by domain:
   together.
 - [PlussView window runtime](plussview_window_runtime.md): the runtime behavior of a
   live viewer window.
-- [MATLAB-style popup viewer roadmap](matlab_popup_viewer_roadmap.md): planned work for
-  a popup-viewer surface.
 
 **Pathing** and **Tils** utilities (including `pluss::tils::OutputEngine`) are not documented here yet.
 
 ```{toctree}
-:glob:
 :maxdepth: 2
+:hidden:
 
-_local/*/*
-_local/*/*/*
+plussview_architecture
+plussview_window_runtime
 ```
 
 <div class="pluss-inline-prev-next">

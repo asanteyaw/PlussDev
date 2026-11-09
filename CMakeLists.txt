@@ -89,7 +89,7 @@ if(_pluss_is_conda_clang AND EXISTS "/usr/bin/clang++")
     unset(_pluss_probe)
 endif()
 
-project(plussma VERSION 0.1.1 LANGUAGES CXX)
+project(plussma VERSION 0.0.2 LANGUAGES CXX)
 
 if(MSVC)
     add_compile_options(/utf-8)
