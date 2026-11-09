@@ -54,7 +54,5 @@ api_reference
 :hidden:
 
 *
-_local/*/*
-_local/*/*/*
-_local/*/*/*/*
+_local/MANIFEST
 ```
