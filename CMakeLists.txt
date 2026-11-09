@@ -89,7 +89,7 @@ if(_pluss_is_conda_clang AND EXISTS "/usr/bin/clang++")
     unset(_pluss_probe)
 endif()
 
-project(plussma VERSION 0.1.0 LANGUAGES CXX)
+project(plussma VERSION 0.0.1 LANGUAGES CXX)
 
 # Keep the explicitly selected Conda compiler usable with the active Xcode SDK.
 # This is a compile-toolchain repair, not a public header requirement.
