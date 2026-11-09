@@ -10,7 +10,7 @@ import tomllib
 from dataclasses import dataclass
 from typing import Callable
 
-ROOT = pathlib.Path('/Users/yawasante/software/cxx/PlussDev')
+ROOT = pathlib.Path(__file__).resolve().parents[3]
 DOCS = ROOT / 'PlussMic/docs/sphinx'
 API_CONTENT = DOCS / 'api_content'
 PER_METHOD_CLASSES = {
