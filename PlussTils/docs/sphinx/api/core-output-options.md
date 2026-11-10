@@ -2,19 +2,9 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-struct OutputOptions {
-  std::string separator{" "};
-  bool levels_enabled{true};
-  std::array<std::string, 5> level_prefixes;
-  OutputLevel min_level{OutputLevel::Trace};
-  bool auto_flush{false};
-};
-```
-
 `OutputOptions` is the bulk configuration of an engine. It holds the separator, whether level tags are written, the tag for each level, the minimum level, and whether each line is flushed. Build one, change the fields you need, and pass it to the constructor or to `set_options`. `OutputEngine::options` returns the current values in this form.
 
-## Parameters
+## Fields
 
 | Field | Meaning |
 |---|---|
@@ -23,14 +13,6 @@ struct OutputOptions {
 | `level_prefixes` | The tag for each level, in level order. |
 | `min_level` | The lowest level that is written. Default trace. |
 | `auto_flush` | Whether each line is flushed as it is written. Default false. |
-
-## Returns
-
-A plain value. Copying it copies every field.
-
-## Errors
-
-None.
 
 ## Practical Examples
 

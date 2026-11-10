@@ -2,14 +2,6 @@
 
 [Back to PlussBI API Reference](../bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-enum class FilterOp : std::uint8_t {
-  Eq = 0, Ne = 1, Gt = 2, Ge = 3, Lt = 4, Le = 5, In = 6, Between = 7,
-};
-```
-
 `FilterOp` names the comparison a filter performs. Six operators compare one value:
 `Eq`, `Ne`, `Gt`, `Ge`, `Lt`, and `Le`. `In` tests membership in a set of values, and
 `Between` tests whether a value falls in an inclusive range. Each operator expects a
@@ -20,26 +12,22 @@ renders.
 The enumerator values are fixed and form the stable identity of each operator. They
 are declared in the order shown, starting at zero.
 
-## Parameters
+## Values
 
-| Enumerator | Meaning |
+| Value | Meaning |
 |---|---|
-| `Eq` | Equal to the value |
-| `Ne` | Not equal to the value |
-| `Gt` | Strictly greater than the value |
-| `Ge` | Greater than or equal to the value |
-| `Lt` | Strictly less than the value |
-| `Le` | Less than or equal to the value |
-| `In` | Equal to any member of a set |
-| `Between` | Within an inclusive range |
+| `Eq (0)` | Equal to a scalar. |
+| `Ne (1)` | Not equal to a scalar. |
+| `Gt (2)` | Strictly greater than a scalar. |
+| `Ge (3)` | Greater than or equal to a scalar. |
+| `Lt (4)` | Strictly less than a scalar. |
+| `Le (5)` | Less than or equal to a scalar. |
+| `In (6)` | Equal to any member of a set. |
+| `Between (7)` | Within an inclusive range. |
 
-## Returns
+## Constraints
 
-Not a function. The enumerators are values of the `FilterOp` type.
-
-## Errors
-
-A comparison operator with a set or range payload, or `In` or `Between` with a scalar payload, is refused when the studio renders.
+A comparison with a set or range payload, or `In` or `Between` with a scalar payload, is refused when the studio renders.
 
 ## Practical Examples
 

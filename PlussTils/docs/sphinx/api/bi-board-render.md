@@ -2,36 +2,16 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-struct BoardRender {
-  std::string key;
-  std::string title;
-  std::int64_t rows{1};
-  std::int64_t cols{1};
-  std::vector<TileRender> tiles;
-};
-```
-
 `BoardRender` is one board inside a `StudioRender`. Its `title` is the title as set, which is empty when none was set; the page heading
 falls back to the key. Its `rows` and `cols` are the grid, and its `tiles` are in the order the board holds them.
 
-## Parameters
+## Fields
 
 | Field | Meaning |
 |---|---|
 | `key`, `title` | The board key and its title as set. |
 | `rows`, `cols` | The grid shape. |
 | `tiles` | The rendered tiles, in board order. |
-
-## Returns
-
-Not applicable. A render returns these.
-
-## Errors
-
-Not applicable.
 
 ## Practical Examples
 

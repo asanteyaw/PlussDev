@@ -2,23 +2,11 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-struct StudioRender {
-  std::string key;
-  Session session;
-  std::vector<BoardRender> boards;
-  CacheStats cache;
-  std::map<std::string, std::vector<std::string>> dependencies;
-};
-```
-
 `StudioRender` is the value a render returns. It records the studio key, a copy of the session the render used, one `BoardRender` per board in
 creation order, the cache counts for this render, and a dependency map from each feature to the tiles that read it. Reading a render does
 not change the studio, so you can render, inspect, and render again.
 
-## Parameters
+## Fields
 
 | Field | Meaning |
 |---|---|
@@ -27,14 +15,6 @@ not change the studio, so you can render, inspect, and render again.
 | `boards` | One board result per board, in creation order. |
 | `cache` | Cache counts for this render. |
 | `dependencies` | Feature name to the tile keys that depend on it. |
-
-## Returns
-
-Not applicable. A render returns this struct.
-
-## Errors
-
-Not applicable.
 
 ## Practical Examples
 

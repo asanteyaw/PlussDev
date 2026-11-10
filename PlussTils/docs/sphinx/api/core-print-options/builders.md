@@ -2,23 +2,25 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 Each builder sets one or two related fields and returns the value, so calls chain: `with_sep`, `with_end`, `fixed`, `sci`, `hex`, `percent`, `pad`, `grouped`, `colored`, `quoted`, `upcase`, `pretty`, and `capped`. They are shortcuts for the designated-initializer form, and either form produces the same `PrintOptions`.
 
-## Parameters
+## Methods
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Method | Meaning |
+|---|---|
+| `with_sep(s)` | Set sep. |
+| `with_end(s)` | Set end. |
+| `fixed(p)` | Select Fixed notation and precision p. |
+| `sci(p)` | Select Scientific notation and precision p. |
+| `hex(prefix)` | Select Hex notation and optional base prefix. |
+| `percent(p)` | Select Percent notation and precision p. |
+| `pad(w, a, f)` | Set width, alignment, and fill. |
+| `grouped(g, n)` | Set grouping separator and group size. |
+| `colored(s)` | Set the whole-call style. |
+| `quoted(on)` | Enable or disable string quoting. |
+| `upcase(on)` | Select Upper or None case transform. |
+| `pretty(ind)` | Enable multiline layout and set indentation. |
+| `capped(n)` | Set the maximum item count. |
 
 ## Practical Examples
 

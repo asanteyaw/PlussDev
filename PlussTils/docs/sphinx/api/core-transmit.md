@@ -7,9 +7,6 @@
 
 #include <pluss/tils/kit/transmit.h>
 
-enum class transmit_exec { seq, par };
-struct transmit_options { transmit_exec exec{seq}; std::size_t grain_size{4096}; std::size_t workers{0}; };
-
 template <class F, class T> auto transmit(F&& fn, T&& value);  // T is not a range
 template <class F, std::ranges::input_range R> auto transmit(F&& fn, R&& input, transmit_options opts = {});
 template <class F, class It, class Sent> auto transmit(F&& fn, It first, Sent last, transmit_options opts = {});
@@ -21,7 +18,7 @@ template <class F, std::ranges::input_range R, class OutIt> OutIt transmit_into(
 
 The callable may take one argument, the element, or two, the element and its zero-based position, which `transmit` detects from the callable's signature. The input is never modified.
 
-The range form and `transmit_into` take a `transmit_options`. The default, `transmit_exec::seq`, visits the input on the calling thread, in order. `transmit_exec::par` splits a random-access, sized range into chunks sized by `grain_size`, runs each chunk on its own thread, up to `workers` threads (0 means the hardware's reported concurrency), and writes each result into its own slot, so the output keeps the input's order regardless of which thread finished first.
+The range and iterator-pair forms take a `transmit_options`. The default, `transmit_exec::seq`, visits the input on the calling thread, in order. `transmit_exec::par` splits a random-access, sized range into chunks sized by `grain_size`, runs each chunk on its own thread, up to `workers` threads (0 means the hardware's reported concurrency), and writes each result into its own slot, so the output keeps the input's order regardless of which thread finished first. `transmit_into` writes sequentially and does not take these options.
 
 ## Parameters
 
@@ -29,7 +26,15 @@ The range form and `transmit_into` take a `transmit_options`. The default, `tran
 |---|---|
 | `fn` | The callable. It takes the element, or the element and its position. |
 | `value` / `input` / `first, last` / `a, b` | The value, range, iterator pair, or two ranges to map over. |
-| `opts` | Execution options: sequential or parallel, the chunk size, and the thread count. Read by the range form and by `transmit_into`. |
+| `opts` | Execution options: sequential or parallel, the chunk size, and the thread count. Read by the range and iterator-pair forms. |
+
+## Execution options
+
+| Option | Meaning | Default |
+|---|---|---|
+| `exec` | `seq` runs on the calling thread; `par` splits a suitable range across threads. | `seq` |
+| `grain_size` | Minimum chunk size for parallel work. | `4096` |
+| `workers` | Maximum worker count; `0` uses reported hardware concurrency. | `0` |
 
 ## Returns
 

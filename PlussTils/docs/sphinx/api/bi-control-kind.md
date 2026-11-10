@@ -2,29 +2,15 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-enum class ControlKind : std::uint8_t {
-  Category = 0,
-  NumericRange = 1,
-  TemporalRange = 2,
-};
-```
-
 `ControlKind` says what a control offers. A category control lists values. A numeric range control filters a number range. A temporal range control filters a date or time range. The DSL constructors set it, and `Control::kind` reads it back.
 
-## Parameters
+## Values
 
-`ControlKind` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of `ControlKind`, which is one of the three values above.
-
-## Errors
-
-None. Every value is valid, and the studio chooses the rendering from the kind.
+| Value | Meaning |
+|---|---|
+| `Category (0)` | Offer a choice from category values. |
+| `NumericRange (1)` | Filter a numeric range. |
+| `TemporalRange (2)` | Filter a date or time range. |
 
 ## Practical Examples
 

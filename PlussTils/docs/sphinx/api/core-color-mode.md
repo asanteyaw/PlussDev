@@ -2,31 +2,21 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class ColorMode : std::uint8_t {
-  Auto, Always, Never
-};
-```
-
 `ColorMode` decides whether ANSI escape sequences are written. `Auto`, the default, writes them only when the sink is a real terminal. `Always` forces them on, which is useful for a test that wants to see the escapes. `Never` suppresses them even on a terminal.
 
-## Parameters
+## Values
 
-`ColorMode` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `Auto` | Emit ANSI escapes only when the sink is a terminal. Default. |
+| `Always` | Emit ANSI escapes even for a non-terminal sink. |
+| `Never` | Suppress ANSI escapes, including on a terminal. |
 
 ## Practical Examples
 
 ### Example 1
 
-Example 1 shows the default behavior off a terminal, where nothing is written.
+Example 1 suppresses color explicitly, even when the sink is a terminal.
 
 ```cpp
 #include <pluss/tils/kit/output.h>

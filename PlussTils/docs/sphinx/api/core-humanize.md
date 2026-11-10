@@ -2,25 +2,17 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class Humanize : std::uint8_t {
-  None, BytesIEC, BytesSI, Metric, DurationNs
-};
-```
-
 `Humanize` scales a number and appends a unit. `BytesIEC` uses binary units (KiB, MiB, ...). `BytesSI` uses decimal units (kB, MB, ...). `Metric` uses plain SI prefixes (k, M, G, ...), the same scale `Notation::Metric` uses. `DurationNs` treats the number as a count of nanoseconds and scales it up through microseconds, milliseconds, and seconds.
 
-## Parameters
+## Values
 
-`Humanize` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `None` | Do not scale or append a unit. |
+| `BytesIEC` | Scale bytes by powers of 1024 and use KiB, MiB, and higher binary units. |
+| `BytesSI` | Scale bytes by powers of 1000 and use kB, MB, and higher decimal units. |
+| `Metric` | Scale with SI prefixes such as k, M, and G. |
+| `DurationNs` | Interpret the input as nanoseconds and scale through microseconds, milliseconds, and seconds. |
 
 ## Practical Examples
 

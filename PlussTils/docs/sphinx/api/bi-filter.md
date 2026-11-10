@@ -2,19 +2,6 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-struct Filter {
-  std::string key;
-  std::string feature;
-  FilterOp op{FilterOp::Eq};
-  std::variant<std::monostate, FilterScalar, FilterSet, FilterRange> payload;
-  std::optional<std::string> scope;
-  bool enabled{true};
-};
-```
-
 A `Filter` is one narrowing choice. It names the column it tests (`feature`), the
 comparison to make (`op`), the value or values to compare against (`payload`), and
 two switches that control where it applies: `scope` and `enabled`. A session stores
@@ -36,19 +23,18 @@ The static factories `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `between`, and `in` bui
 filter with the operator and payload already in place. Build the struct directly when
 you need a combination the factories do not offer, such as a text ordering.
 
-## Parameters
+## Fields
 
-| Parameter | Meaning |
+| Field | Meaning |
 |---|---|
-| (fields) | Set the fields directly, or use a static factory. The struct is an aggregate. |
+| `key` | Session slot; a later filter with the same key replaces this one. |
+| `feature` | Column to test. |
+| `op` | Comparison operator; default Eq. |
+| `payload` | Scalar, set, or range appropriate for the operator. |
+| `scope` | Optional query scope; unset means all queries. |
+| `enabled` | Whether the filter affects rows; default true. |
 
-## Returns
-
-A `Filter` is a value. Copying it copies every field.
-
-## Errors
-
-Setting an unsupported payload for an operator is refused when the studio renders, not when the filter is built.
+An incompatible operator and payload are refused when the studio renders.
 
 ## Practical Examples
 

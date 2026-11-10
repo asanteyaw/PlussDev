@@ -2,25 +2,21 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-struct SyntaxTheme {
-  std::optional<Style> number, string, boolean, null, key, punctuation, field;
-};
-```
-
 `SyntaxTheme` names a `Style` for each kind of token inside a structured value: numbers, strings, booleans, null, map keys, punctuation, and struct fields. It is a reserved field on `PrintOptions`: a value is accepted and does not refuse to compile or run, but the renderer does not yet apply per-token colors from it.
 
-## Parameters
+## Fields
 
-See the fields below.
+| Field | Meaning |
+|---|---|
+| `number` | Style for numeric tokens. |
+| `string` | Style for string tokens. |
+| `boolean` | Style for Boolean tokens. |
+| `null` | Style for null tokens. |
+| `key` | Style for map keys. |
+| `punctuation` | Style for delimiters and punctuation. |
+| `field` | Style for struct fields. |
 
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+These per-token styles are accepted but are not yet applied by the renderer.
 
 ## Practical Examples
 

@@ -2,25 +2,17 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class CaseXf : std::uint8_t {
-  None, Upper, Lower, Title, Sentence
-};
-```
-
 `CaseXf` changes the case of rendered text. `Title` capitalizes the first letter of every word. `Sentence` capitalizes only the first letter of each sentence and lowercases the rest; a new sentence starts after a period, an exclamation mark, or a question mark.
 
-## Parameters
+## Values
 
-`CaseXf` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `None` | Leave letter case unchanged. |
+| `Upper` | Convert letters to uppercase. |
+| `Lower` | Convert letters to lowercase. |
+| `Title` | Capitalize the first letter of each word. |
+| `Sentence` | Capitalize the first letter of each sentence and lowercase the rest. |
 
 ## Practical Examples
 

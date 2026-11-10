@@ -2,33 +2,16 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-enum class DashboardChrome : std::uint8_t {
-  None = 0,
-  Sidebar = 1,
-};
-```
-
 `DashboardChrome` chooses the page layout of an exported or served dashboard. `None` lays the boards out in a single centered column with
 no sidebar element. `Sidebar` adds the board tabs and the active filter panel, and it is the default for `export_html`, `show`, and
 `start_serving`.
 
-## Parameters
+## Values
 
-| Enumerator | Value | Layout |
-|---|---|---|
-| `None` | 0 | A single column with no sidebar element. |
-| `Sidebar` | 1 | Board tabs and the filter panel beside the content. The default. |
-
-## Returns
-
-Not applicable. `DashboardChrome` is an enumeration.
-
-## Errors
-
-Not applicable.
+| Value | Meaning |
+|---|---|
+| `None (0)` | Lay out boards in a centered column without a sidebar. |
+| `Sidebar (1)` | Show board tabs and the active filter panel. Default. |
 
 ## Practical Examples
 

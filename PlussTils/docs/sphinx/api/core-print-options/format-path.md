@@ -2,29 +2,22 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 `missing_arg` is the text written for a placeholder with no argument. `strict_args` turns a placeholder count that disagrees with the arguments into an error instead of a silent fallback. `pack` bundles several values into one `ArgPack`, so a trailing `PrintOptions` is never mistaken for a value, and the bundle can be reused across patterns.
 
-## Parameters
+## Fields
 
-See each field below.
+| Field | Meaning |
+|---|---|
+| `missing_arg` | Text for an unfilled placeholder; default {}. |
+| `strict_args` | Reject a mismatch between placeholders and arguments; default false. |
 
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+A placeholder-count mismatch raises an error when `strict_args` is enabled.
 
 ## Practical Examples
 
 ### Example 1
 
-Example 1 sets the text for a missing argument.
+Example 1 sets the text for a missing argument. A literal pattern with too few arguments does not compile, so the pattern is held in a variable and wrapped in `runtime_format`.
 
 ```cpp
 #include <pluss/tils/kit/output.h>
@@ -42,7 +35,8 @@ using namespace pluss::tils;
 
 int main() {
   OutputEngine out;
-  out.writelnf("{} {} {}", "only", "two", PrintOptions{.missing_arg = "<?>"});
+  const std::string pattern = "{} {} {}";
+  out.writelnf(runtime_format(pattern), "only", "two", PrintOptions{.missing_arg = "<?>"});
   return 0;
 }
 ```

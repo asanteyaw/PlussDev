@@ -2,18 +2,6 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-struct LayoutSpec {
-  std::int64_t row{0};
-  std::int64_t col{0};
-  std::int64_t row_span{1};
-  std::int64_t col_span{1};
-  std::optional<double> min_height{};
-};
-```
-
 `LayoutSpec` records where a tile sits on a board's grid: its row and column, how many rows and columns it
 spans, and an optional minimum height. Rows and columns are zero-based. Views and controls fill in the
 layout when you place them, so you normally read a layout rather than write one.
@@ -22,7 +10,7 @@ The minimum height is optional and unset by default. Set it with `min_height` on
 shorter than that many pixels when the studio renders it. Placing a view or a control leaves it unset, so `place` and
 `min_height` are separate steps.
 
-## Parameters
+## Fields
 
 | Field | Meaning |
 |---|---|
@@ -30,13 +18,7 @@ shorter than that many pixels when the studio renders it. Placing a view or a co
 | `row_span`, `col_span` | How many rows and columns the tile covers. Must be positive when the board renders. |
 | `min_height` | An optional minimum height in pixels. Unset by default. |
 
-## Returns
-
-Not applicable. `LayoutSpec` is a struct. Use `at` to build one from a position.
-
-## Errors
-
-Non-negative coordinates and positive spans are checked when the studio renders. A minimum height must be positive, and `min_height` refuses zero or a negative value when it is called.
+Non-negative coordinates and positive spans are checked when the studio renders. Minimum height must be positive.
 
 ## Practical Examples
 

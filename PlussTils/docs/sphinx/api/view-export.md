@@ -5,8 +5,6 @@
 ```cpp
 #include <pluss/tils/view/window/export.h>
 
-enum class CanvasExportFormat : unsigned char { Ppm = 0, Png = 1 };
-
 std::optional<CanvasExportFormat> detect_canvas_export_format(std::string_view path);
 bool save_canvas_ppm(const PixelCanvas& canvas, std::string_view path);
 bool save_canvas_png(const PixelCanvas& canvas, std::string_view path);
@@ -17,6 +15,13 @@ bool save_canvas(const PixelCanvas& canvas, std::string_view path);
 These functions write a `PixelCanvas` to a file, in one of two formats: PPM, a plain uncompressed format, or PNG. `detect_canvas_export_format` reads a path's extension and reports which format it names, or nothing for an extension it does not recognize. `save_canvas_ppm` and `save_canvas_png` each write their named format directly. `save_canvas` with an explicit `format` writes that format through the same named function; `save_canvas` with no format detects it from the path instead.
 
 Every one of these functions, however you reach it, refuses to write unless the path's extension matches the format being written: a file this module writes always has a name that truthfully describes its own contents. This holds even for `save_canvas_png` called by name, and even for `save_canvas` given an explicit format; passing the format explicitly selects which writer runs, it does not let you bypass the extension check. A canvas with no pixels, or a non-positive size, is also refused.
+
+## Formats
+
+| Value | File format |
+|---|---|
+| `Ppm` | PPM image (`.ppm`). |
+| `Png` | PNG image (`.png`). |
 
 ## Parameters
 

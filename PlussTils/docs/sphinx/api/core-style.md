@@ -2,31 +2,15 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-struct Style {
-  Color fg{Color::Default};
-  Color bg{Color::Default};
-  std::optional<std::array<std::uint8_t, 3>> fg_rgb{};
-  std::optional<std::array<std::uint8_t, 3>> bg_rgb{};
-  bool bold{}, dim{}, italic{}, underline{}, blink{}, reverse{}, strike{};
-
-  constexpr bool empty() const noexcept;
-};
-```
-
 `Style` holds the colors and attributes for one call's output: a foreground and a background color, an optional 24-bit override for either, and seven boolean attributes. `empty()` reports whether every field is at its default. Two styles compare equal when every field matches.
 
-## Parameters
+## Fields
 
-See the fields below.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Field | Meaning |
+|---|---|
+| `fg, bg` | Named foreground and background colors; Default leaves each unset. |
+| `fg_rgb, bg_rgb` | Optional RGB values; each overrides its named color. |
+| `bold, dim, italic, underline, blink, reverse, strike` | Boolean text attributes; all false by default. |
 
 ## Practical Examples
 

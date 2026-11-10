@@ -2,39 +2,18 @@
 
 [Back to PlussView](view.md) · [PlussView API Reference](../api_reference.md)
 
-```cpp
-#include <pluss/tils/view/window/types.h>
-
-struct PointI { int x{0}; int y{0}; };
-struct SizeI { int width{0}; int height{0}; };
-struct RectI {
-  int x{0}; int y{0}; int width{0}; int height{0};
-  constexpr bool empty() const noexcept;
-};
-
-struct Color {
-  std::uint8_t r{0}, g{0}, b{0}, a{255};
-  static constexpr Color rgba(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255) noexcept;
-};
-```
-
 These four plain structs are the vocabulary every other PlussView type is built from. `PointI` is a pixel position, `SizeI` a width and a height, and `RectI` a rectangle with both. `RectI::empty()` is true when the width or the height is not positive, which is how a canvas and the renderer decide a rectangle has nothing to draw. `Color` holds four 8-bit channels, defaulting to opaque black; `Color::rgba` is the usual way to build one, with alpha defaulting to fully opaque.
 
-## Parameters
+## Fields
 
-| Parameter | Meaning |
-|---|---|
-| `x`, `y` | A pixel position. |
-| `width`, `height` | A size, or the extent of a rectangle from its `x`, `y` corner. |
-| `red`, `green`, `blue`, `alpha` | The four channels of a color, 0 to 255 each. |
+| Type | Fields | Meaning |
+|---|---|---|
+| `PointI` | `x`, `y` | Pixel position; each defaults to 0. |
+| `SizeI` | `width`, `height` | Pixel dimensions; each defaults to 0. |
+| `RectI` | `x`, `y`, `width`, `height` | Position and extent; each defaults to 0. `empty()` is true for a non-positive extent. |
+| `Color` | `r`, `g`, `b`, `a` | 8-bit channels. RGB default to 0 and alpha to 255; `rgba(...)` constructs a color. |
 
-## Returns
-
-Each is a plain aggregate; building one is just listing its fields, or calling `Color::rgba`.
-
-## Errors
-
-None. There is no validation on these types themselves; a canvas or the renderer decides what an invalid size or rectangle means.
+The types themselves do not validate dimensions; the canvas or renderer interprets them.
 
 ## Practical Examples
 

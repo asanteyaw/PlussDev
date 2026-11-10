@@ -2,23 +2,16 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 Each preset is a complete `PrintOptions` built for one job: `plain()` removes brackets and quoting for a terse message, `pretty_json()` lays a value out like formatted JSON, `repr()` favors an unambiguous debug form, and `table_cell(width)` pads and truncates a value to fit one column.
 
-## Parameters
+## Methods
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Method | Meaning |
+|---|---|
+| `plain()` | Use a terse form without brackets or color. |
+| `pretty_json()` | Use multiline, quoted, sorted output with JSON-like values. |
+| `repr()` | Favor a debug form with quoted strings and tagged optionals. |
+| `table_cell(width)` | Pad and truncate to one column width. |
 
 ## Practical Examples
 

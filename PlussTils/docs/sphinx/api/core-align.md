@@ -2,25 +2,17 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class Align : std::uint8_t {
-  Inherit, Left, Right, Center, Numeric
-};
-```
-
 `Align` sets how a value is padded to a field width. `Inherit` falls back to the baseline, then to the built-in default, which is left. `Numeric` is accepted and currently renders the same as `Right`; alignment is applied to the already-rendered text, so it does not yet pin a sign to the field's edge separately from the digits.
 
-## Parameters
+## Values
 
-`Align` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `Inherit` | Use the engine baseline, then the built-in left alignment. |
+| `Left` | Pad after the rendered value. |
+| `Right` | Pad before the rendered value. |
+| `Center` | Split padding around the rendered value. |
+| `Numeric` | Currently behaves like Right; signs are not aligned separately. |
 
 ## Practical Examples
 

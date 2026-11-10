@@ -2,27 +2,27 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-
-struct PrintOptions;
-```
-
 `PrintOptions` is the per-call formatting spec that `OutputEngine` reads. A value you pass as the last argument of a call describes that whole call: every top-level value written by that call is rendered under it. A value you store with `OutputEngine::print_defaults` becomes the engine's baseline, and a call's own options still win for the fields they set; a field neither sets falls back to a built-in default.
 
 Most fields are plain values with an obvious off state: zero, an empty string, or `false`. A few fields are enumerations with an explicit `Inherit` value, which means the same thing: fall back to the baseline, then to the built-in default. The fields are grouped by what they affect, and each group has its own reference page, linked below.
 
-## Parameters
+## Fields
 
-`PrintOptions` has no constructor parameters. Build one with aggregate initialization, set the fields you need, and pass it as the last argument of a call, or store it with `print_defaults`.
+| Field group | Meaning |
+|---|---|
+| [Joining](core-print-options/joining.md) | Separators, affixes, and flushing. |
+| [Layout](core-print-options/layout.md) | Width, alignment, padding, and truncation. |
+| [Numbers](core-print-options/numbers.md) | Notation, precision, signs, and grouping. |
+| [Humanized units](core-print-options/humanize.md) | Unit scaling and precision. |
+| [Booleans and optionals](core-print-options/booleans-and-optionals.md) | Boolean text and optional values. |
+| [Strings](core-print-options/strings.md) | Quoting and letter case. |
+| [Containers](core-print-options/containers.md) | Delimiters, depth, order, and multiline layout. |
+| [Color](core-print-options/color.md) | Whole-call and token styling. |
+| [Format strings](core-print-options/format-path.md) | Missing arguments and strict matching. |
 
-## Returns
+Build with aggregate initialization or use the [fluent builders](core-print-options/builders.md) and [presets](core-print-options/presets.md).
 
-A plain value. Copying it copies every field. The fluent builders return `PrintOptions&`, so calls chain.
-
-## Errors
-
-None from the struct itself. `OutputEngine::writef` and `writelnf` refuse a pattern whose placeholder count disagrees with the arguments when `strict_args` is set.
+With strict format arguments enabled, `writef` and `writelnf` reject a placeholder-count mismatch.
 
 ## Practical Examples
 

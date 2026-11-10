@@ -2,38 +2,17 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-struct CacheStats {
-  std::size_t query_hits{0};
-  std::size_t query_misses{0};
-  std::size_t tile_hits{0};
-  std::size_t tile_misses{0};
-  std::size_t board_hits{0};
-  std::size_t board_misses{0};
-};
-```
-
 `CacheStats` counts the work a render did. A hit means a cached result was reused; a miss means the result was computed. The counts describe
 the render that returned them, not the studio's lifetime. A warm render reports hits and no misses. A session change, or `refresh`, makes the
 next render compute its tiles again.
 
-## Parameters
+## Fields
 
 | Field | Meaning |
 |---|---|
 | `query_hits`, `query_misses` | Table queries reused or computed. |
 | `tile_hits`, `tile_misses` | Tiles reused or computed. |
 | `board_hits`, `board_misses` | Board results reused or computed. |
-
-## Returns
-
-Not applicable. A render returns this.
-
-## Errors
-
-Not applicable.
 
 ## Practical Examples
 

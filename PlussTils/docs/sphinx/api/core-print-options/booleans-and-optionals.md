@@ -2,23 +2,17 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 `bool_style` chooses how `true` and `false` are written; `bool_true` and `bool_false` give the text for `BoolStyle::Custom`. `null_text` is the text for an empty `optional`, and `optional_tag` wraps a present value in `Some(...)` and an empty one as `None`, instead of writing the value or the null text plainly.
 
-## Parameters
+## Fields
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Field | Meaning |
+|---|---|
+| `bool_style` | Boolean vocabulary; default Inherit. |
+| `bool_true` | Text for true when Custom is selected; default true. |
+| `bool_false` | Text for false when Custom is selected; default false. |
+| `null_text` | Text for an empty optional; uses the engine default when unset. |
+| `optional_tag` | Wrap present and empty optionals as Some(...) and None; default false. |
 
 ## Practical Examples
 

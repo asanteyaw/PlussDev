@@ -7,8 +7,6 @@
 ```cpp
 #include <pluss/tils/kit/pathing.h>
 
-enum class RootResolve { WorkingDirectory, CallerFile };
-
 explicit PathContext::PathContext(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
 static PathContext PathContext::from_root(std::filesystem::path root, RootResolve resolve_mode = RootResolve::WorkingDirectory);
 std::filesystem::path PathContext::root_path() const;
@@ -28,6 +26,13 @@ std::unordered_map<std::string, UrlRef> UrlContext::file_path_map(
 `PathContext` holds its own root, independent of the process-wide root the free functions (`root_path`, `file_path`, and the rest) read. Use it when two pieces of code need different roots at the same time, such as two datasets loaded from different projects in one program; building or changing a `PathContext` never touches the global root.
 
 `UrlContext` is the same idea for a remote address instead of a local folder: it holds a base URL, and `file_path` joins a relative path onto it, returning a `UrlRef` rather than resolving anything on disk. `file_paths` and `file_path_map` build several URLs at once, the map form keyed by a name you choose, the same way the free `file_paths`/`file_path_map` functions do for local paths.
+
+## Root resolution
+
+| Value | Meaning |
+|---|---|
+| `WorkingDirectory` | Resolve a relative root against the current working directory. Default. |
+| `CallerFile` | Resolve a relative root against the caller's source file. |
 
 ## Parameters
 

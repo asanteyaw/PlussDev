@@ -2,25 +2,22 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class Notation : std::uint8_t {
-  Inherit, Auto, Fixed, Scientific, General, Hex, Percent, Metric, Binary, Octal
-};
-```
-
 `Notation` chooses how a number is written. `Fixed`, `Scientific`, and `General` are the usual floating-point forms. `Hex`, `Octal`, and `Binary` write an integer in another base. `Percent` multiplies by 100 and appends a percent sign. `Metric` scales the number with an SI suffix, using the same scale `Humanize::Metric` uses; it only scales upward, so a value under one stays in base units.
 
-## Parameters
+## Values
 
-`Notation` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `Inherit` | Use the engine baseline or built-in numeric notation. |
+| `Auto` | Choose a suitable form automatically. |
+| `Fixed` | Use fixed-point decimal notation. |
+| `Scientific` | Use scientific notation. |
+| `General` | Use general floating-point notation. |
+| `Hex` | Write an integer in base 16. |
+| `Percent` | Multiply by 100 and append a percent sign. |
+| `Metric` | Scale upward with an SI suffix. |
+| `Binary` | Write an integer in base 2. |
+| `Octal` | Write an integer in base 8. |
 
 ## Practical Examples
 

@@ -5,11 +5,6 @@
 ```cpp
 #include <pluss/tils/view/window/renderer.h>
 
-enum class RenderEventKind : std::uint8_t {
-  FrameStarted = 0, FrameFinished = 1, UnsupportedCommand = 2, Error = 3,
-};
-struct RenderEvent { RenderEventKind kind{FrameStarted}; std::string note{}; };
-
 class IRenderer {
 public:
   virtual bool render(const Scene& scene, PixelCanvas& canvas, std::vector<RenderEvent>& events) = 0;
@@ -22,6 +17,17 @@ std::unique_ptr<IRenderer> make_software_renderer();
 `IRenderer` is the interface a renderer implements: `render` applies a `Scene`'s commands to a `PixelCanvas`, in order, and appends one `RenderEvent` per notable thing that happened during the frame to the vector you pass in. `SoftwareRenderer` is the one implementation PlussView ships, a pure-software rasterizer with no GPU or platform dependency; `make_software_renderer` builds one behind the `IRenderer` interface, which is the usual way to get one.
 
 A normal frame appends a `FrameStarted` event first and a `FrameFinished` event last. `UnsupportedCommand` and `Error` are the other two kinds, for a command the renderer could not apply or a failure during the frame; `render`'s own boolean return is the overall success, independent of what ended up in the events. The events vector is not cleared by `render`, so repeated calls accumulate events from every frame into the one vector, unless you clear it yourself between frames.
+
+## Events
+
+| Kind | Meaning |
+|---|---|
+| `FrameStarted` | Rendering began. |
+| `FrameFinished` | Rendering finished. |
+| `UnsupportedCommand` | A command could not be applied. |
+| `Error` | A frame operation failed. |
+
+Each `RenderEvent` contains a `kind` and a `note` string.
 
 ## Parameters
 

@@ -2,25 +2,18 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class BoolStyle : std::uint8_t {
-  Inherit, TrueFalse, OneZero, YesNo, OnOff, Custom
-};
-```
+`BoolStyle` chooses the words written for `true` and `false`. The named styles provide fixed vocabularies. `Custom` reads its words from the `bool_true` and `bool_false` fields instead.
 
-`BoolStyle` chooses the words written for `true` and `false`. The first four are fixed vocabularies. `Custom` reads its words from the `bool_true` and `bool_false` fields instead.
+## Values
 
-## Parameters
-
-`BoolStyle` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `Inherit` | Use the engine baseline, then the built-in true/false form. |
+| `TrueFalse` | Write true and false. |
+| `OneZero` | Write 1 and 0. |
+| `YesNo` | Write yes and no. |
+| `OnOff` | Write on and off. |
+| `Custom` | Use the bool_true and bool_false fields. |
 
 ## Practical Examples
 

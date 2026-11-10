@@ -2,28 +2,29 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class Color : std::uint8_t {
-  Default,
-  Black, Red, Green, Yellow, Blue, Magenta, Cyan, White,
-  BrightBlack, BrightRed, BrightGreen, BrightYellow,
-  BrightBlue, BrightMagenta, BrightCyan, BrightWhite
-};
-```
-
 `Color` names a foreground or background color for a `Style`. `Default` means no color is set for that channel. A `fg_rgb` or `bg_rgb` value on the `Style` overrides the named color for that channel, when a 24-bit color is wanted instead of one of these names.
 
-## Parameters
+## Values
 
-`Color` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `Default` | Leave this color channel unset. |
+| `Black` | Standard black. |
+| `Red` | Standard red. |
+| `Green` | Standard green. |
+| `Yellow` | Standard yellow. |
+| `Blue` | Standard blue. |
+| `Magenta` | Standard magenta. |
+| `Cyan` | Standard cyan. |
+| `White` | Standard white. |
+| `BrightBlack` | Bright black. |
+| `BrightRed` | Bright red. |
+| `BrightGreen` | Bright green. |
+| `BrightYellow` | Bright yellow. |
+| `BrightBlue` | Bright blue. |
+| `BrightMagenta` | Bright magenta. |
+| `BrightCyan` | Bright cyan. |
+| `BrightWhite` | Bright white. |
 
 ## Practical Examples
 

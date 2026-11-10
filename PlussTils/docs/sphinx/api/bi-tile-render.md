@@ -2,25 +2,10 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-struct TileRender {
-  std::string key;
-  LayoutSpec layout;
-  ViewKind kind;
-  bool is_control;
-  std::optional<View> view;
-  std::optional<Control> control;
-  std::optional<Filter> active_filter;
-  std::shared_ptr<pluss::table::DataFrame> table;
-};
-```
-
 `TileRender` is one tile of a rendered board. It records the tile's key, layout, and kind, whether it is a control, the active filter a control has set,
 and the table of rows a table view shows. A table tile holds the rows it shows.
 
-## Parameters
+## Fields
 
 | Field | Meaning |
 |---|---|
@@ -29,14 +14,6 @@ and the table of rows a table view shows. A table tile holds the rows it shows.
 | `is_control` | True for control tiles. |
 | `active_filter` | The filter a control has set, when one applies. |
 | `table` | The rows a table view shows. Present for table tiles. |
-
-## Returns
-
-Not applicable. A render returns these.
-
-## Errors
-
-Not applicable.
 
 ## Practical Examples
 

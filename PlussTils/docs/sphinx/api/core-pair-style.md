@@ -2,25 +2,17 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class PairStyle : std::uint8_t {
-  Inherit, Tuple, Colon, Arrow, Equals
-};
-```
-
 `PairStyle` chooses how a `std::pair` is written: as a tuple, with a colon, with an arrow, or with an equals sign between the two values.
 
-## Parameters
+## Values
 
-`PairStyle` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `Inherit` | Use the engine baseline or built-in pair style. |
+| `Tuple` | Write the pair as a tuple. |
+| `Colon` | Separate the elements with a colon. |
+| `Arrow` | Separate the elements with an arrow. |
+| `Equals` | Separate the elements with an equals sign. |
 
 ## Practical Examples
 

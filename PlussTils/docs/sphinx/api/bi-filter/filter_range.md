@@ -2,33 +2,18 @@
 
 [Back to PlussBI API Reference](../bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
-
-struct FilterRange {
-  FilterScalar low{};
-  FilterScalar high{};
-};
-```
-
 `FilterRange` holds the two bounds of a `Between` filter. Each bound is a `FilterScalar`, so a range is
 numeric, temporal, or a duration range according to the kind of its bounds and the column it tests.
 Both bounds are included. Text columns do not support ranges.
 
-## Parameters
+## Fields
 
 | Field | Meaning |
 |---|---|
 | `low` | The lower bound, a `FilterScalar`. |
 | `high` | The upper bound, a `FilterScalar`. |
 
-## Returns
-
-A struct. Construct it with designated initializers and pass it as the payload of a `Between` filter.
-
-## Errors
-
-A range on a text column is refused when the studio renders. A range whose bounds are not of the column's kind is refused too.
+Text columns and bounds of the wrong kind are refused when the studio renders.
 
 ## Practical Examples
 

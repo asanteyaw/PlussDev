@@ -2,23 +2,26 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 These fields shape how a list, a map, or a tuple is written: the separators between items and between a map's key and value, the brackets for each container kind, the `pair_style` for a `std::pair`, a cap on how many items are shown, whether a map is sorted by key, whether a list shows its indices, and the multiline layout with its indent and trailing comma.
 
-## Parameters
+## Fields
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Field | Meaning |
+|---|---|
+| `item_sep` | Separator between items; default comma and space. |
+| `kv_sep` | Separator between map keys and values; default colon and space. |
+| `list_brackets` | Opening and closing list delimiters; default [ and ]. |
+| `map_brackets` | Opening and closing map delimiters; default { and }. |
+| `tuple_brackets` | Opening and closing tuple delimiters; default ( and ). |
+| `pair_style` | How a pair separates its elements; default Inherit. |
+| `max_items` | Maximum displayed items; 0 means all. |
+| `more_verbose` | Show the number of omitted items; default false. |
+| `max_depth` | Maximum nesting depth; 0 means unlimited. |
+| `sort_keys` | Sort map keys; default false. |
+| `show_indices` | Show list indices; default false. |
+| `multiline` | Lay out containers across lines; default false. |
+| `indent` | Indent for multiline output; default two spaces. |
+| `trailing_comma` | Add a trailing comma in multiline output; default false. |
 
 ## Practical Examples
 

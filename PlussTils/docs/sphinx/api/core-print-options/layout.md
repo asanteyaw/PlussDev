@@ -2,23 +2,17 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 These fields apply to each top-level value a call writes: `align`, `width`, `fill`, `truncate`, and `ellipsis`. They are the same fields a `{:spec}` placeholder sets from a compact format spec. Truncation happens before padding, so a value is cut to fit, then padded to the requested width if it is still short.
 
-## Parameters
+## Fields
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Field | Meaning |
+|---|---|
+| `align` | Alignment within a padded field; default Inherit. |
+| `width` | Minimum field width; 0 disables padding. |
+| `fill` | Padding character; default space. |
+| `truncate` | Maximum display width; 0 means unlimited. |
+| `ellipsis` | Marker for truncated text; default …. |
 
 ## Practical Examples
 

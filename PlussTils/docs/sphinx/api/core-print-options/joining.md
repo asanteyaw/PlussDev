@@ -2,23 +2,18 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 These fields decide how the values of one call are joined into a line: `sep` between values, `end` after the last one, `prefix` and `suffix` around everything, `line_prefix` on every physical line, and `flush` to push the line out immediately. All but `flush` are `std::optional<std::string>`; an unset one falls back to the engine's separator or to an empty string.
 
-## Parameters
+## Fields
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Field | Meaning |
+|---|---|
+| `sep` | Separator between top-level values; uses the engine separator when unset. |
+| `end` | Text after the last value, before any newline added by writeln. |
+| `prefix` | Text before the whole call. |
+| `suffix` | Text after the whole call. |
+| `line_prefix` | Text prepended to every physical line. |
+| `flush` | Flush the sink after this call; default false. |
 
 ## Practical Examples
 

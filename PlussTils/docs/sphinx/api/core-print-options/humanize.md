@@ -2,23 +2,14 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 `humanize` scales a number and appends a unit: binary bytes, decimal bytes, a metric count, or a duration in nanoseconds scaled up to seconds. `humanize_precision` sets how many decimals the scaled value shows. `Notation::Metric` reaches the same scaling code as `Humanize::Metric`, so the two agree.
 
-## Parameters
+## Fields
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Field | Meaning |
+|---|---|
+| `humanize` | Unit scaling mode; default None. |
+| `humanize_precision` | Fractional digits after scaling; default 1. |
 
 ## Practical Examples
 

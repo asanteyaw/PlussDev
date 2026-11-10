@@ -2,29 +2,17 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class OutputLevel : std::size_t {
-  Trace = 0,
-  Debug = 1,
-  Info = 2,
-  Warn = 3,
-  Error = 4
-};
-```
-
 `OutputLevel` ranks a log line. Levels are ordered from trace, the least severe, to error, the most. The minimum level of an engine drops every line below it, so ordering is what makes filtering work. The default prefix of each level is shown by the default prefixes of `OutputOptions`.
 
-## Parameters
+## Values
 
-`OutputLevel` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of `OutputLevel`. Comparison follows the order above.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `Trace (0)` | Least severe; detailed tracing. |
+| `Debug (1)` | Debugging information. |
+| `Info (2)` | Informational output. |
+| `Warn (3)` | Warnings. |
+| `Error (4)` | Most severe; errors. |
 
 ## Practical Examples
 

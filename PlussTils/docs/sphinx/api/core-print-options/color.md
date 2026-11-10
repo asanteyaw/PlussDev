@@ -2,23 +2,15 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 `color_mode` decides whether ANSI escape sequences are written at all: `Auto` writes them only when the sink is a real terminal, `Always` forces them, and `Never` suppresses them. `style` sets the colors and attributes for the whole call's output, and `syntax` is a reserved field for coloring each kind of token inside a structured value; it is accepted today, but it does not yet change what is written.
 
-## Parameters
+## Fields
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Field | Meaning |
+|---|---|
+| `color_mode` | Whether ANSI color is emitted; default Auto. |
+| `style` | Colors and attributes for the whole call; default empty. |
+| `syntax` | Reserved per-token styles; currently has no rendering effect. |
 
 ## Practical Examples
 

@@ -2,23 +2,16 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 `quote_strings` wraps each string in a container with `quote_char`. `case_transform` changes the case of the rendered text. `escape_non_printable` is accepted, but it is a reserved field: it does not yet change how a non-printable byte is written.
 
-## Parameters
+## Fields
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Field | Meaning |
+|---|---|
+| `quote_strings` | Quote strings inside containers; default false. |
+| `quote_char` | Quote character; default double quote. |
+| `case_transform` | Letter-case transformation; default None. |
+| `escape_non_printable` | Reserved; currently has no rendering effect. |
 
 ## Practical Examples
 

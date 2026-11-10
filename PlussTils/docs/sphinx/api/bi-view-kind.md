@@ -2,34 +2,20 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
+`ViewKind` says what a view shows. Each view constructor sets one kind. A view built with `View::make` takes the kind from its `BindSpec`. The default kind is a detail table.
 
-enum class ViewKind : std::uint8_t {
-  Kpi = 0,
-  Line = 1,
-  Bar = 2,
-  DetailTable = 3,
-  PivotTable = 4,
-  Scatter = 5,
-  Heatmap = 6,
-  Corr = 7,
-};
-```
+## Values
 
-`ViewKind` says what a view shows. Each DSL constructor sets one kind. A view built with `View::make` takes the kind from its `BindSpec`. The default kind is a detail table.
-
-## Parameters
-
-`ViewKind` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of `ViewKind`, one of the nine values above.
-
-## Errors
-
-None. Every value is valid.
+| Value | Meaning |
+|---|---|
+| `Kpi (0)` | A key performance indicator. |
+| `Line (1)` | A line chart. |
+| `Bar (2)` | A bar chart. |
+| `DetailTable (3)` | A detail table. Default. |
+| `PivotTable (4)` | A pivot table. |
+| `Scatter (5)` | A scatter plot. |
+| `Heatmap (6)` | A heatmap. |
+| `Corr (7)` | A correlation view. |
 
 ## Practical Examples
 

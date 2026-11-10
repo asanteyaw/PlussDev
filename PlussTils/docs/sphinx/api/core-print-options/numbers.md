@@ -2,23 +2,24 @@
 
 [Back to `PrintOptions`](../core-print-options.md) · [Core Utilities API Reference](../../api_reference.md)
 
-```cpp
-#include <pluss/tils/print_options.h>
-```
-
 These fields choose how a number is written: the `notation`, its `precision`, the `sign` style, the `alt` and `uppercase` flags, the `grouping` character and `group_size`, the `decimal_point` character, `trim_trailing_zeros`, and the text for not-a-number and infinite values. `Notation::Metric` scales the number itself with an SI suffix; it reuses the same scale as `Humanize::Metric` and only scales upward, so a value under one stays in base units.
 
-## Parameters
+## Fields
 
-See each field below.
-
-## Returns
-
-Not applicable; this page covers a group of fields.
-
-## Errors
-
-None, unless noted for a specific field.
+| Field | Meaning |
+|---|---|
+| `notation` | Numeric form; default Inherit. |
+| `precision` | Fractional digits, or significant digits for General; unset by default. |
+| `sign` | Positive-number sign policy; default Inherit. |
+| `alt` | Add a base prefix or retain a trailing decimal point; default false. |
+| `uppercase` | Use uppercase hex digits and exponent or infinity markers; default false. |
+| `grouping` | Thousands separator; no separator by default. |
+| `group_size` | Digits per group; default 3. |
+| `decimal_point` | Decimal separator; default period. |
+| `trim_trailing_zeros` | Remove trailing fractional zeroes; default false. |
+| `nan_text` | Text for a not-a-number value; default nan. |
+| `pos_inf_text` | Text for positive infinity; default inf. |
+| `neg_inf_text` | Text for negative infinity; default -inf. |
 
 ## Practical Examples
 

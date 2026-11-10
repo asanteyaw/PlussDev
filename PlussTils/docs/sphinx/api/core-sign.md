@@ -2,25 +2,16 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-enum class Sign : std::uint8_t {
-  Inherit, NegativeOnly, Always, SpaceForPositive
-};
-```
-
 `Sign` decides whether a positive number shows a sign. `NegativeOnly` is the default: only negative numbers show a minus. `Always` adds a plus to positive numbers. `SpaceForPositive` writes a space in place of a sign on positive numbers, which keeps positive and negative numbers aligned by their digits.
 
-## Parameters
+## Values
 
-`Sign` has no parameters. It is an enumeration.
-
-## Returns
-
-A value of this type.
-
-## Errors
-
-None.
+| Value | Meaning |
+|---|---|
+| `Inherit` | Use the engine baseline or built-in sign policy. |
+| `NegativeOnly` | Show a minus only for negative numbers. Default. |
+| `Always` | Also show a plus for positive numbers. |
+| `SpaceForPositive` | Use a leading space for positive numbers to align digits with signed negatives. |
 
 ## Practical Examples
 
