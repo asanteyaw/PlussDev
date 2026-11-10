@@ -14,7 +14,7 @@ using SupposeBox = FlowBox<T>; // compatibility alias
 inline constexpr FlowFn flow{};
 ```
 
-`flow(x)` is the value-pipeline API. It returns `FlowBox<T>`. The old `SupposeBox<T>` name remains as an alias for source compatibility. The separate [`suppose`](core-suppose.md) API checks named premises about Pluss values.
+`flow(x)` is the value-pipeline API. It returns `FlowBox<T>`. The old `SupposeBox<T>` name remains as an alias for source compatibility. The separate [`suppose`](core-suppose.md) API builds named computations, checked derivations, outlines, and proofs about Pluss values.
 
 The box holds one whole value, including a whole container. `then(fn)` invokes `fn` once with that value and returns a new box holding the result; it does not map over a container's elements. `transform(fn)` is the same operation. `tap(fn)` invokes `fn` for an effect and returns the same box. `value()` and `unwrap()` expose the stored value, and `into<U>()` converts it. A callback receiving a mutable reference can modify an lvalue box, so `then` and `tap` are not inherently nonmutating.
 

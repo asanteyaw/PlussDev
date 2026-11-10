@@ -50,7 +50,22 @@ add_executable(plusstils_core_seed_reference
 target_link_libraries(plusstils_core_seed_reference PRIVATE PlussTilsCore)
 target_compile_features(plusstils_core_seed_reference PRIVATE cxx_std_20)
 
+add_executable(plusstils_suppose_modes
+    ${CMAKE_CURRENT_SOURCE_DIR}/examples/tils/suppose_modes.cpp
+)
+target_link_libraries(plusstils_suppose_modes PRIVATE PlussTils)
+target_compile_features(plusstils_suppose_modes PRIVATE cxx_std_20)
+
 if(BUILD_TESTING)
+    add_executable(plusstils_suppose_reasoning_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/suppose_reasoning_tests.cpp
+    )
+    target_include_directories(plusstils_suppose_reasoning_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+    target_compile_features(plusstils_suppose_reasoning_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_suppose_reasoning COMMAND plusstils_suppose_reasoning_tests)
+
     add_executable(plusstils_suppose_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/test/suppose_tests.cpp
     )

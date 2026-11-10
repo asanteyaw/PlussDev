@@ -15,4 +15,5 @@ the name point at another value. The two do not depend on each other.
 For a guide with worked programs, see
 [Values in pipelines: flow and let](../../manual/tils-suppose-let.md).
 
-For named checks about a Pluss value, see [`suppose`](../core-suppose.md).
+For named algorithms, checked derivations, outlines, and proofs about Pluss
+values, see [`suppose`](../core-suppose.md).

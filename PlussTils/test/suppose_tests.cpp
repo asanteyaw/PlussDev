@@ -3,6 +3,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -28,34 +29,52 @@ int main() {
   auto argument = pluss::tils::suppose("three observations", values,
       [&](const pluss::Series& x) { ++calls; return x.numel() == 3; });
   expect(&argument.value() == &values);  // An lvalue is borrowed, not copied.
-  auto verified = argument
-      .then("positive sum", [&](const pluss::Series& x) {
+  auto verified = std::move(argument)
+      .then("sum of observations", [&](const pluss::Series& x) {
         ++calls;
-        return x.sum().item<double>() > 0.0;
+        return x.sum();
+      }, [&](const pluss::Series&, const pluss::Series& sum) {
+        ++calls;
+        return sum.item<double>() == 12.0;
       })
-      .conclude("positive mean", [&](const pluss::Series& x) {
+      .then("mean of observations", [&](const pluss::Series& x, const pluss::Series&) {
         ++calls;
-        return x.mean().item<double>() > 0.0;
+        return x.mean();
+      }, [&](const pluss::Series& x, const pluss::Series& sum, const pluss::Series& mean) {
+        ++calls;
+        return mean.item<double>() * x.numel() == sum.item<double>();
+      })
+      .conclude("mean is positive", [&](const pluss::Series&, const pluss::Series&,
+                                         const pluss::Series& mean) {
+        ++calls;
+        return mean.item<double>() > 0.0;
       });
-  expect(verified.verified() && verified.applicable() && calls == 3);
-  expect(verified.steps().size() == 3 && verified.failed_step().empty());
+  expect(verified.verified() && verified.applicable() && calls == 6);
+  expect(verified.steps().size() == 4 && verified.failed_step().empty());
+  expect(verified.derived<0>()->item<double>() == 12.0);
+  expect(verified.derived<1>()->item<double>() == 4.0);
 
   auto absent = pluss::tils::suppose("four observations", values,
       [](const pluss::Series& x) { return x.numel() == 4; })
-      .then("skipped derivation", [&](const pluss::Series&) { ++calls; return true; })
-      .conclude("skipped conclusion", [&](const pluss::Series&) { ++calls; return true; });
-  expect(!absent.applicable() && !absent.verified() && calls == 3);
+      .then("skipped derivation", [&](const pluss::Series& x) { ++calls; return x.sum(); },
+            [&](const pluss::Series&, const pluss::Series&) { ++calls; return true; })
+      .conclude("skipped conclusion", [&](const pluss::Series&,
+                                           const pluss::Series&) { ++calls; return true; });
+  expect(!absent.applicable() && !absent.verified() && calls == 6);
   expect(absent.steps()[1].status == pluss::tils::SuppositionStepStatus::skipped);
   expect(absent.steps()[2].status == pluss::tils::SuppositionStepStatus::skipped);
+  expect(!absent.derived<0>().has_value());
 
   auto failed = pluss::tils::suppose("three observations", values,
       [](const pluss::Series& x) { return x.numel() == 3; })
-      .then("negative sum", [](const pluss::Series& x) {
-        return x.sum().item<double>() < 0.0;
-      })
-      .conclude("skipped conclusion", [&](const pluss::Series&) { ++calls; return true; });
+      .then("negative sum", [](const pluss::Series& x) { return x.sum(); },
+            [](const pluss::Series&, const pluss::Series& sum) {
+              return sum.item<double>() < 0.0;
+            })
+      .conclude("skipped conclusion", [&](const pluss::Series&,
+                                           const pluss::Series&) { ++calls; return true; });
   expect(failed.status() == pluss::tils::SuppositionStatus::derivation_failed);
-  expect(failed.failed_step() == "negative sum" && calls == 3);
+  expect(failed.failed_step() == "negative sum" && calls == 6);
 
   auto owned = pluss::tils::suppose("temporary series", pluss::make_series({1.0}),
       [](const pluss::Series& x) { return x.numel() == 1; })

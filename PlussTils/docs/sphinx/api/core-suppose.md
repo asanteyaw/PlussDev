@@ -2,111 +2,131 @@
 
 [Back to Core Utilities](core.md) · [Value pipelines](core-flow.md)
 
-`suppose` starts a named, checked argument about a Pluss value. It evaluates a premise, checks each named derivation through `then`, and checks a final claim through `conclude`. The result records which steps passed, failed, or were skipped.
+`suppose` gives Pluss computations and mathematical arguments a common vocabulary: start with a value or a premise, name the steps, and inspect what follows. Its modes make different claims:
 
-This checks one concrete value at runtime. It does not prove a statement for every possible value.
+| Mode | What it does | What it does **not** claim |
+| --- | --- | --- |
+| Computation | Runs named derivations and keeps their Pluss results. | That a mathematical proposition is true. |
+| Checked run | Checks a premise, derived relationships, and a conclusion for one input. | That the conclusion holds for every input. |
+| Proof outline | Records claims and reasons in order. | That the reasons have been verified. |
+| Blueprint | Tracks steps, dependencies, and what can proceed next. | That a pending step has been completed. |
+| Proof checker | Checks a small set of propositional inference rules. | Arithmetic, quantifiers, or universal properties of Series. |
 
-## Signature
+The value and each computed derivation must be a supported Pluss type. `Series`, `Note`, `Timeline`, `Duration`, `Queue`, and the public PlussMic value types are supported. The blueprint, outline, and proof checker are tagged with a Pluss type but do not need a concrete value. Native C++ values are outside this API.
 
-```cpp
-#include <pluss/tils/suppose.h>
-
-auto argument = pluss::tils::suppose("premise", pluss_value, predicate);
-auto result = argument
-    .then("derivation", predicate)
-    .conclude("conclusion", predicate);
-```
-
-The value must be a supported Pluss type. The first release supports the core Series, Note, Timeline, Duration, and Queue types and the public PlussMic table, kindle, scribble, and bundle types. Native C++ values are deliberately outside this API. Each predicate is a callable taking `const T&` and returning a Boolean result; it receives the same Pluss value throughout the argument.
-
-## What `then` means
-
-`then("name", check)` checks a proposition about the Pluss value. It does not transform the value or visit the elements of a container. If the premise or an earlier derivation fails, the callable is skipped and the named step is recorded as skipped. `conclude("name", check)` performs the final check and returns `SuppositionResult`.
-
-`result.verified()` is true only when the premise, every derivation, and the conclusion pass. `result.applicable()` is false when the premise is not met; that is distinct from a failed derivation or conclusion. `result.status()` distinguishes all four outcomes, `result.steps()` supplies the ordered record, and `result.failed_step()` names the first failed check.
-
-## Ownership and cost
-
-An lvalue Pluss object is observed by const reference, without copying it. An rvalue is moved into the argument so it remains alive through the checks. Callbacks are templated and invoked directly, without `std::function`. The step record owns its names and uses a vector, so creating an argument has an allocation cost. Four steps are reserved up front, and checks after a failure are not called. Use ordinary predicates in a hot loop when no named record is needed.
-
-## Errors
-
-Empty premise, derivation, or conclusion names throw `std::invalid_argument`. Exceptions from a predicate propagate to the caller. An unsupported value type fails at compile time.
-
-## Example 1: a checked argument
+## Example 1: an algorithm with named results
 
 ```cpp
 #include <pluss/pluss.h>
 #include <pluss/tils/suppose.h>
-#include <iostream>
 
 int main() {
-  auto values = pluss::make_series({2.0, 4.0, 6.0});
-  auto result = pluss::tils::suppose("three observations", values,
-      [](const pluss::Series& x) { return x.numel() == 3; })
-      .then("sum is positive", [](const pluss::Series& x) {
-        return x.sum().item<double>() > 0.0;
+  auto x = pluss::make_series({2.0, 4.0, 6.0});
+  auto run = pluss::tils::suppose(x)
+      .then("sum", [](const pluss::Series& x) { return x.sum(); })
+      .then("mean", [](const pluss::Series& x, const pluss::Series&) {
+        return x.mean();
       })
-      .conclude("mean is positive", [](const pluss::Series& x) {
-        return x.mean().item<double>() > 0.0;
-      });
-  std::cout << std::boolalpha << result.verified() << '\n';
+      .finish();
+
+  auto total = run.derived<0>()->item<double>(); // 12
+  auto average = run.derived<1>()->item<double>(); // 4
+  return total == 12.0 && average == 4.0 ? 0 : 1;
 }
 ```
 
-Output
+`finish()` reports `completed()`, not `verified()`: these steps computed values without checking a mathematical claim. A two-argument `then` receives the original value and all earlier derived values. Later steps can reuse them. The results are owned by the returned object and are available through `derived<index>()`.
 
-```text
-true
-```
-
-## Example 2: a premise that does not apply
+## Example 2: a checked run
 
 ```cpp
 #include <pluss/pluss.h>
 #include <pluss/tils/suppose.h>
-#include <iostream>
 
 int main() {
-  auto values = pluss::make_series({2.0, 4.0, 6.0});
-  int checks = 0;
-  auto result = pluss::tils::suppose("four observations", values,
-      [](const pluss::Series& x) { return x.numel() == 4; })
-      .then("not evaluated", [&](const pluss::Series&) { ++checks; return true; })
-      .conclude("also not evaluated", [&](const pluss::Series&) { ++checks; return true; });
-  std::cout << std::boolalpha << result.applicable() << ' ' << checks << '\n';
-}
-```
-
-Output
-
-```text
-false 0
-```
-
-## Example 3: locating a failed derivation
-
-```cpp
-#include <pluss/pluss.h>
-#include <pluss/tils/suppose.h>
-#include <iostream>
-
-int main() {
-  auto values = pluss::make_series({2.0, 4.0, 6.0});
-  auto result = pluss::tils::suppose("three observations", values,
+  auto x = pluss::make_series({2.0, 4.0, 6.0});
+  auto result = pluss::tils::suppose("three observations", x,
       [](const pluss::Series& x) { return x.numel() == 3; })
-      .then("sum is negative", [](const pluss::Series& x) {
-        return x.sum().item<double>() < 0.0;
-      })
-      .conclude("mean is negative", [](const pluss::Series& x) {
-        return x.mean().item<double>() < 0.0;
-      });
-  std::cout << result.failed_step() << '\n';
+      .then("sum is twelve",
+        [](const pluss::Series& x) { return x.sum(); },
+        [](const pluss::Series&, const pluss::Series& sum) {
+          return sum.item<double>() == 12.0;
+        })
+      .then("mean agrees with sum",
+        [](const pluss::Series& x, const pluss::Series&) { return x.mean(); },
+        [](const pluss::Series& x, const pluss::Series& sum,
+           const pluss::Series& mean) {
+          return mean.item<double>() * x.numel() == sum.item<double>();
+        })
+      .conclude("mean is positive",
+        [](const pluss::Series&, const pluss::Series&,
+           const pluss::Series& mean) { return mean.item<double>() > 0.0; });
+  return result.verified() ? 0 : 1;
 }
 ```
 
-Output
+For this (x), the premise is “(x) has three observations.” The first derivation yields (s=12). The second yields (m=4) and checks (3m=s). The conclusion checks (m>0). The verifier for each `then` receives the original value, earlier facts, and its new fact. `conclude` receives the original and every fact. If the premise or a check fails, subsequent callbacks are skipped. `status()`, `steps()`, and `failed_step()` explain the outcome. A skipped derivation has an empty `derived<index>()` optional.
 
-```text
-sum is negative
+## Example 3: a proof outline
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/tils/suppose.h>
+
+int main() {
+  auto outline = pluss::tils::suppose.outline<pluss::Series>("variance is nonnegative");
+  outline.given("real observations")
+      .claim("squared deviations are nonnegative", "a real square is nonnegative")
+      .claim("their mean is nonnegative", "a mean of nonnegative reals is nonnegative")
+      .goal("variance is nonnegative");
+  return outline.nodes().size() == 4 ? 0 : 1;
+}
 ```
+
+This records the reasoning and its missing proof obligations. The strings are **not** machine-checked. An outline can guide a write-up or future formal rules without masquerading as a proof certificate.
+
+## Example 4: a dependency blueprint
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/tils/suppose.h>
+
+int main() {
+  auto plan = pluss::tils::suppose.blueprint<pluss::Series>("variance computation");
+  plan.given("observations")
+      .step("compute mean")
+      .step("center values")
+      .goal("variance");
+  auto next = plan.ready(); // ID of "compute mean"
+  plan.mark_done(next.front());
+  return plan.ready().front() == 2 ? 0 : 1;
+}
+```
+
+Each one-argument `step`, `claim`, or `goal` depends on the preceding node. Use `step_after(name, {ids})`, `claim_after(name, reason, {ids})`, or `goal_after(name, {ids})` for branches and joins. `ready()` lists pending nodes whose dependencies are done. `mark_done(id)` rejects a step with incomplete dependencies. A blueprint records progress; it does not execute the algorithm or validate proof claims.
+
+## Example 5: a checked logical proof
+
+The proof checker handles **propositional logic** over statements about a Pluss type. Here it proves the unconditional theorem ((P\land Q)\Rightarrow P):
+
+```cpp
+#include <pluss/pluss.h>
+#include <pluss/tils/suppose.h>
+
+int main() {
+  auto P = pluss::tils::suppose.atom<pluss::Series>("x is nonempty");
+  auto Q = pluss::tils::suppose.atom<pluss::Series>("x is finite");
+  auto proof = pluss::tils::suppose.proof<pluss::Series>();
+  auto both = proof.assume(P.and_(Q));
+  auto first = proof.and_left(both);
+  auto theorem = proof.discharge(both, first);
+  auto certificate = proof.conclude(theorem, P.and_(Q).implies(P));
+  return certificate.unconditional() ? 0 : 1;
+}
+```
+
+The checker also provides `and_right`, `and_intro`, and `modus_ponens`. It checks the formula structure, tracks which assumptions a line depends on, and rejects a conclusion that does not match the derived line. `discharge` turns a conclusion reached under an assumption into an implication and removes that dependency. An `assume` call does not establish that its statement is true of real data: a certificate with remaining assumptions is conditional. This kernel proves logical consequences, not numerical theorems such as variance nonnegativity. Those require sound, explicitly implemented arithmetic rules.
+
+## Cost and errors
+
+For computations, an lvalue input is borrowed by const reference and an rvalue is moved. Derived Pluss values are moved into the result. Callbacks are templated and invoked directly, without `std::function`; the named trace still stores strings in a vector and therefore has bookkeeping cost. `flow(value)` is simpler when no named reasoning is needed. Empty names, invalid dependencies, and invalid proof inferences throw standard exceptions. Callback exceptions propagate.
