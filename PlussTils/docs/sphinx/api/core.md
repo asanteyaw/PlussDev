@@ -25,8 +25,8 @@ of this surface.
   member that writes or logs values.
 - [Print options](core/print-options.md): every field, builder, and preset of
   `PrintOptions`, and the enumerations they use.
-- [Suppose](core-suppose.md): named algorithms, checked derivations, proof
-  outlines, dependency blueprints, and propositional proofs over Pluss values.
+- [Suppose](core-suppose.md): named runtime checks, Pluss derivations, and
+  failure traces for a concrete value.
 - [Value flow](core/value-flow.md): fluent `flow` transformations and immutable
   `let` bindings, each with its own reference page.
 
