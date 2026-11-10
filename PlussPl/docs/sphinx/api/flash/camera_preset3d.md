@@ -7,8 +7,6 @@
 ## Signature
 
 ```cpp
-enum class CameraPreset3D : std::uint8_t { Spatial, TopDown, Front, Side, Isometric };
-
 Pane& flash::camera_preset3d(Pane& pane, CameraPreset3D preset)
 ```
 

@@ -3,23 +3,26 @@
 [Back to PlussView](view.md) · [PlussView API Reference](../api_reference.md)
 
 ```cpp
-#include <pluss/tils/view/window/scene.h>
-
 using DrawCommand = std::variant<
     ClearCommand, FillRectCommand, FillRoundedRectCommand, FillLinearGradientCommand,
     StrokeRectCommand, StrokeRoundedRectCommand, LineCommand, PolylineCommand,
     FillPolygonCommand, MarkerCloudCommand, SetClipRectCommand, ClearClipRectCommand,
     TextCommand, TextCaretCommand>;
 
-class Scene {
-public:
-  void add(DrawCommand command);
-  void clear_commands();
-  const std::vector<DrawCommand>& commands() const noexcept;
-};
+
 
 Scene scale_scene(const Scene& scene, double scale);
 ```
+
+**Header:** `<pluss/tils/view/window/scene.h>`
+
+### `Scene` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `add` | Method | `void add(DrawCommand command)` |
+| `clear_commands` | Method | `void clear_commands()` |
+| `commands` | Method | `const std::vector<DrawCommand>& commands() const noexcept` |
 
 A `Scene` retains an ordered list of draw commands; it does not paint anything itself. `add` appends one command, accepting any of the fourteen alternatives of `DrawCommand` through its implicit conversion. `commands()` reads the list back, in the order the commands were added, and `clear_commands` empties it. A renderer applies the list in that same order, so a later command paints over an earlier one wherever they overlap; nothing about a `Scene` reorders or merges commands.
 

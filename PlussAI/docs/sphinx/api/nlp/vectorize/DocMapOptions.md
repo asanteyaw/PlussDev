@@ -7,12 +7,12 @@ plain data built with designated initializers.
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::vectorize::DocMapOptions {
-  bool use_lemmas = true;
-  bool skip_punct = true;
-};
-```
+### `pluss::ai::nlp::vectorize::DocMapOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `use_lemmas` | `bool` | `true` |
+| `skip_punct` | `bool` | `true` |
 
 ## Fields
 

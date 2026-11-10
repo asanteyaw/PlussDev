@@ -7,8 +7,6 @@
 ## Signature
 
 ```cpp
-enum class TracePreset3D : std::uint8_t { Path, Cloud, Surface, Wireframe, Spire, Volume };
-
 Trace& flash::trace_preset3d(Trace& trace, TracePreset3D preset)
 ```
 

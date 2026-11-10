@@ -15,14 +15,14 @@ Stream::kind() const -> StreamKind
 
 Returns which payload kind the stream currently stores, as a `StreamKind` enum value:
 
-```cpp
-enum class StreamKind : std::uint8_t {
-  Series = 0,
-  Note = 1,
-  Timeline = 2,
-  TimeIndex = 3,
-};
-```
+### `StreamKind` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Series` | `0` | — |
+| `Note` | `1` | — |
+| `Timeline` | `2` | — |
+| `TimeIndex` | `3` | — |
 
 ```{important} StreamKind has no operator<< — cast to int or use ptype() for text
 `StreamKind` is a plain `enum class` with no stream-insertion operator defined.

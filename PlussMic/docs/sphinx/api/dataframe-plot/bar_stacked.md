@@ -54,12 +54,13 @@ color per band — raise `alpha` toward `1.0` for a fully solid, unambiguous per
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`BarStackedPlotOptions`)
-    ```cpp
-    struct BarStackedPlotOptions {
-      double alpha{0.65};
-      double line_width{1.0};
-    };
-    ```
+
+### `BarStackedPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `0.65` |
+| `line_width` | `double` | `1.0` |
 
 ## Returns
 

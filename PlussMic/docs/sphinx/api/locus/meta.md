@@ -26,14 +26,13 @@ remove it along with the catalog. It also reaches
 [`nexus()`](policy.md)'s aligned `Nexus` view, so metadata declared on a
 `Locus` is visible to DataFrame-oriented code too.
 
-```cpp
-struct TableMeta {
-  std::string grain{};
-  std::vector<std::string> primary_key{};
-  std::string time_field{};
-  // ... provenance fields, shared with Nexus
-};
-```
+### `TableMeta` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `grain` | `std::string` | empty |
+| `primary_key` | `std::vector<std::string>` | empty |
+| `time_field` | `std::string` | empty |
 
 ## Parameters
 

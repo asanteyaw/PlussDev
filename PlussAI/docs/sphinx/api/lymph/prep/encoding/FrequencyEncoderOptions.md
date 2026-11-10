@@ -5,13 +5,13 @@ configures count encoding. It is passed to the
 [`prep::FrequencyEncoder`](FrequencyEncoder.md) constructor and to the
 [`prep::stage::frequency_encoder`](../stage/frequency_encoder.md) factory.
 
-```cpp
-struct FrequencyEncoderOptions {
-  std::int64_t           max_categories    = 50;
-  CategoryOverflowPolicy overflow          = CategoryOverflowPolicy::KeepMostFrequent;
-  double                 unknown_frequency = 0.0;
-};
-```
+### `FrequencyEncoderOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `max_categories` | `std::int64_t` | `50` |
+| `overflow` | `CategoryOverflowPolicy` | `CategoryOverflowPolicy::KeepMostFrequent` |
+| `unknown_frequency` | `double` | `0.0` |
 
 ## Fields
 

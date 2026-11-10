@@ -73,9 +73,7 @@ Given the resolved feature names (`names`) and whether `features` was passed non
     above only fires for the default/empty case).
 
 **options** (`AutoPlotOptions`)
-    ```cpp
-    struct AutoPlotOptions {};
-    ```
+**AutoPlotOptions options:** no configurable fields.
     Currently empty; reserved for future routing controls.
 
 ## Returns

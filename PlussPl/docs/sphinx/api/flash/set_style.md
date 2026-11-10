@@ -7,8 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class FlashStyle : std::uint8_t { Darkgrid, Lightgrid, Sandgrid, Dark, Light, Sand };
-
 Pane& flash::set_style(Pane& pane, GridStyle style = GridStyle::Major)
 Pane& flash::set_style(Pane& pane, FlashStyle style)
 

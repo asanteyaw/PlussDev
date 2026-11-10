@@ -7,18 +7,6 @@
 ## Signatures
 
 ```cpp
-struct SummaryOptions {
-  std::string title{"table"};
-  int precision{4};
-  bool include_header{true};
-  std::int64_t max_cases{10};
-  bool transpose{false};
-  bool include_case_index{true};
-  std::int64_t features_per_table{0};
-  std::int64_t tables_per_row{1};
-  std::int64_t table_gap_spaces{4};
-};
-
 Studio& flash::summaryplot(Studio& studio, pluss::msharp::RangeView::Series columns,
                             pluss::msharp::RangeView::Of<std::string_view> labels,
                             const SummaryOptions& options = {})
@@ -51,48 +39,17 @@ want statistics, compute them yourself and pass the results in as the "features.
 
 ## `SummaryOptions` fields
 
-**title** (`std::string`, default `"table"`)
-    The pane's title, passed to [`Studio::pane2`](../studio/pane2.md).
-
-**precision** (`int`, default `4`)
-    Decimal places for every formatted cell, via `std::setprecision` in fixed-point mode.
-    Clamped to at least `0`. Non-finite values format as the literal string `"nan"`
-    regardless of `precision`.
-
-**include_header** (`bool`, default `true`)
-    Whether the first line is a header row (feature names, or `"feature"`/`"case_N"`
-    labels when `transpose` is `true`).
-
-**max_cases** (`std::int64_t`, default `10`)
-    How many rows/cases are shown per feature. `0` or negative falls back to `10`
-    (`options.max_cases > 0 ? options.max_cases : 10`, not clamped to `1` like most other
-    `flash::` count fields). Cases beyond this are summarized by a trailing `"... (N more
-    cases)"` line rather than silently dropped.
-
-**transpose** (`bool`, default `false`)
-    `false`: cases are rows, features are columns (each feature gets a header column).
-    `true`: features are rows, cases are columns (each case gets a header column,
-    `"case_0"`, `"case_1"`, …) — useful when you have many features but few cases.
-
-**include_case_index** (`bool`, default `true`)
-    Whether the non-transposed layout's leading `"case"` index column is shown. Has no
-    effect when `transpose` is `true` (that layout's row label is always the feature
-    name, unconditionally).
-
-**features_per_table** (`std::int64_t`, default `0`)
-    How many features go in each table block before starting a new one. `0` means "all
-    features in one table." A single, large feature set can be broken into several
-    narrower tables via this field, then optionally arranged side by side via
-    `tables_per_row`.
-
-**tables_per_row** (`std::int64_t`, default `1`)
-    How many of the `features_per_table`-sized table blocks are laid out side by side
-    (padded to equal column width, joined with `table_gap_spaces` of padding) before
-    wrapping to a new row of tables. Only visibly matters when `features_per_table`
-    actually produces more than one table.
-
-**table_gap_spaces** (`std::int64_t`, default `4`)
-    Spaces between adjacent tables when `tables_per_row > 1`. Clamped to at least `1`.
+| Field | Type and default | Description |
+|---|---|---|
+| `title` | `std::string`, default `"table"` | The pane's title, passed to [`Studio::pane2`](../studio/pane2.md). |
+| `precision` | `int`, default `4` | Decimal places for every formatted cell, via `std::setprecision` in fixed-point mode. Clamped to at least `0`. Non-finite values format as the literal string `"nan"` regardless of `precision`. |
+| `include_header` | `bool`, default `true` | Whether the first line is a header row (feature names, or `"feature"`/`"case_N"` labels when `transpose` is `true`). |
+| `max_cases` | `std::int64_t`, default `10` | How many rows/cases are shown per feature. `0` or negative falls back to `10` (`options.max_cases > 0 ? options.max_cases : 10`, not clamped to `1` like most other `flash::` count fields). Cases beyond this are summarized by a trailing `"... (N more cases)"` line rather than silently dropped. |
+| `transpose` | `bool`, default `false` | `false`: cases are rows, features are columns (each feature gets a header column). `true`: features are rows, cases are columns (each case gets a header column, `"case_0"`, `"case_1"`, …) — useful when you have many features but few cases. |
+| `include_case_index` | `bool`, default `true` | Whether the non-transposed layout's leading `"case"` index column is shown. Has no effect when `transpose` is `true` (that layout's row label is always the feature name, unconditionally). |
+| `features_per_table` | `std::int64_t`, default `0` | How many features go in each table block before starting a new one. `0` means "all features in one table." A single, large feature set can be broken into several narrower tables via this field, then optionally arranged side by side via `tables_per_row`. |
+| `tables_per_row` | `std::int64_t`, default `1` | How many of the `features_per_table`-sized table blocks are laid out side by side (padded to equal column width, joined with `table_gap_spaces` of padding) before wrapping to a new row of tables. Only visibly matters when `features_per_table` actually produces more than one table. |
+| `table_gap_spaces` | `std::int64_t`, default `4` | Spaces between adjacent tables when `tables_per_row > 1`. Clamped to at least `1`. |
 
 ## Parameters
 

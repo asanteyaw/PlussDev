@@ -22,13 +22,12 @@ or the `1280.0`×`820.0` default if `size()` was never called.
 ## Returns
 
 `const Extent2d&`
-    ```cpp
-    struct Extent2d {
-      double width{1280.0};
-      double height{820.0};
-    };
-    ```
-    A const reference to a simple two-field struct.
+    A const reference to the current canvas dimensions.
+
+| Field | Default | Meaning |
+|---|---|---|
+| `width` | `1280.0` | Canvas width. |
+| `height` | `820.0` | Canvas height. |
 
 ## Examples
 

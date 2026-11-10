@@ -27,15 +27,15 @@ one or more `DataFrame` features instead of a single slate.
 
 **options** (`SlateFreqOptions`, optional)
 
-```cpp
-struct SlateFreqOptions {
-  SlateFreqKind kind{SlateFreqKind::Count};
-  bool dropnull{true};
-  bool sort{true};
-  bool ascending{false};
-  std::int64_t top{0};
-};
-```
+### `SlateFreqOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `kind` | `SlateFreqKind` | `SlateFreqKind::Count` |
+| `dropnull` | `bool` | `true` |
+| `sort` | `bool` | `true` |
+| `ascending` | `bool` | `false` |
+| `top` | `std::int64_t` | `0` |
 
 **options.kind** (`SlateFreqKind`, default `Count`)
 

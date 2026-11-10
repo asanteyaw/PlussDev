@@ -7,23 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class CatPlotKind : std::uint8_t { Strip, Swarm, Box, Violin, Bar, Count };
-enum class CatEstimator : std::uint8_t { Mean, Median };
-enum class CatErrorBar : std::uint8_t { None, CI, PI, Std, SE };
-
-struct CatPlotOptions {
-  CatPlotKind kind = CatPlotKind::Strip;
-  CatEstimator estimator = CatEstimator::Mean;
-  CatErrorBar errorbar = CatErrorBar::None;
-  double confidence_level = 0.95;
-  bool dodge = false;
-  bool split = false;
-  std::vector<std::string> order{};
-  std::vector<std::string> hue_order{};
-  ViolinOptions violin{};
-  float trace_width = 0.9F;
-};
-
 Trace& flash::catplot(Pane& pane, const Note& group, const Series& values,
                        const CatPlotOptions& options)
 
@@ -117,77 +100,18 @@ hatch.
 
 ## `CatPlotOptions` fields
 
-**kind** (`CatPlotKind`, default `Strip`)
-    Which underlying visual to draw. `Strip`/`Swarm` draw one point per observation via
-    `Pane::cloud` (both kinds render identically — no swarm point-avoidance algorithm
-    exists here either, matching [`swarmplot`](swarmplot.md)'s documented alias behavior).
-    `Box` draws quartile summaries via `Pane::quartet`. `Violin` draws KDE density curves
-    via `Pane::violin` (styled by the nested `violin` field, below). `Bar` and `Count`
-    both take the "bar-like" code path: `Bar` draws one bar per group holding
-    `estimator`'s summary statistic (with optional error bars per `errorbar`); `Count`
-    draws raw per-group observation counts (ignoring `estimator`/`errorbar` entirely —
-    counts are always exact tallies, never estimated).
-
-**estimator** (`CatEstimator`, default `Mean`)
-    Only meaningful when `kind == Bar`. `Mean` summarizes each group/hue bucket by its
-    arithmetic mean; `Median` uses the sorted-data median instead. Ignored for every other
-    `kind`.
-
-**errorbar** (`CatErrorBar`, default `None`)
-    Only meaningful when `kind == Bar`. `None` draws bars with no error bars at all. `Std`
-    draws ± one sample standard deviation. `SE` draws ± one standard error of the mean
-    (`stddev / sqrt(n)`). `CI` draws a symmetric confidence interval, `z * SE`, where `z`
-    is derived from `confidence_level`. `PI` draws an empirical percentile interval
-    computed directly from the bucket's sorted raw values (not a parametric estimate) —
-    and is the **only** `errorbar` mode compatible with `estimator == Median` (all other
-    modes compute their spread from the *mean*-based sample variance internally, even when
-    `estimator == Median` — a real, verified quirk: requesting `Median` with `errorbar ==
-    Std/SE/CI` still centers the bar on the median but derives its error-bar width from the
-    mean/variance machinery, not from the median's own dispersion).
-
-**confidence_level** (`double`, default `0.95`)
-    Used only by `errorbar == CI` (via a z-score lookup) and `errorbar == PI` (as a direct
-    percentile-interval width). Ignored otherwise.
-
-**dodge** (`bool`, default `false`)
-    Only takes effect when a `hue` is supplied. When `true`, each hue level's bar/mark is
-    offset to sit side-by-side within its group's slot instead of overlapping at the same
-    x-position. Automatically disabled (has no effect) when `split_violin` is active — see
-    `split`, below.
-
-**split** (`bool`, default `false`)
-    Only takes effect when `kind == Violin` **and** a `hue` is supplied. Draws each hue
-    level as one **half** of a single mirrored violin at the group's x-position (left half
-    for the first hue level, right half for the second), via `ViolinSide::Left`/`Right` —
-    the same mechanism [`violinplot`](violinplot.md) exposes directly. **Requires exactly
-    two hue levels** — `catplot` throws `std::invalid_argument` if `split == true` and the
-    resolved hue level count is anything other than 2 (verified below). When `split` is
-    active, `dodge` has no additional effect (split and dodge are mutually exclusive
-    layout strategies).
-
-**order** (`std::vector<std::string>`, default empty)
-    An explicit x-axis category ordering. Empty (the default) means "first-seen order in
-    the data" (via the shared `encode_categories`-style logic). When non-empty, listed
-    labels are placed first in the given order; any labels present in the data but *not*
-    listed in `order` are appended afterward, in their own first-seen order — `order` does
-    not need to be exhaustive.
-
-**hue_order** (`std::vector<std::string>`, default empty)
-    The same explicit-ordering behavior as `order`, applied to hue levels instead of
-    groups (affects dodge offset order and legend label order, not visibility — every hue
-    level present in the data is still drawn regardless of whether it appears in
-    `hue_order`).
-
-**violin** (`ViolinOptions`, default-constructed)
-    Only consulted when `kind == Violin`. See [`flash::violinplot`](violinplot.md) for the
-    full field reference (`width`, `bw_adjust`, `cut`, `scale`, `inner`, `side`). Note that
-    when `split == true`, `catplot` overwrites this sub-struct's `side` field per hue level
-    (`Left`/`Right`) — any `side` value you set here is ignored in that specific case.
-
-**trace_width** (`float`, default `0.9F`)
-    Forwarded to `Trace::width()` on every trace `catplot` draws. Has no visible effect for
-    point-based kinds (`Strip`/`Swarm`) — `width()` governs *stroke* width, and points have
-    no stroke — but does visibly affect `Box`/`Violin`/`Bar` outlines.
+| Field | Type and default | Description |
+|---|---|---|
+| `kind` | `CatPlotKind`, default `Strip` | Which underlying visual to draw. `Strip`/`Swarm` draw one point per observation via `Pane::cloud` (both kinds render identically — no swarm point-avoidance algorithm exists here either, matching [`swarmplot`](swarmplot.md)'s documented alias behavior). `Box` draws quartile summaries via `Pane::quartet`. `Violin` draws KDE density curves via `Pane::violin` (styled by the nested `violin` field, below). `Bar` and `Count` both take the "bar-like" code path: `Bar` draws one bar per group holding `estimator`'s summary statistic (with optional error bars per `errorbar`); `Count` draws raw per-group observation counts (ignoring `estimator`/`errorbar` entirely — counts are always exact tallies, never estimated). |
+| `estimator` | `CatEstimator`, default `Mean` | Only meaningful when `kind == Bar`. `Mean` summarizes each group/hue bucket by its arithmetic mean; `Median` uses the sorted-data median instead. Ignored for every other `kind`. |
+| `errorbar` | `CatErrorBar`, default `None` | Only meaningful when `kind == Bar`. `None` draws bars with no error bars at all. `Std` draws ± one sample standard deviation. `SE` draws ± one standard error of the mean (`stddev / sqrt(n)`). `CI` draws a symmetric confidence interval, `z * SE`, where `z` is derived from `confidence_level`. `PI` draws an empirical percentile interval computed directly from the bucket's sorted raw values (not a parametric estimate) — and is the **only** `errorbar` mode compatible with `estimator == Median` (all other modes compute their spread from the *mean*-based sample variance internally, even when `estimator == Median` — a real, verified quirk: requesting `Median` with `errorbar == Std/SE/CI` still centers the bar on the median but derives its error-bar width from the mean/variance machinery, not from the median's own dispersion). |
+| `confidence_level` | `double`, default `0.95` | Used only by `errorbar == CI` (via a z-score lookup) and `errorbar == PI` (as a direct percentile-interval width). Ignored otherwise. |
+| `dodge` | `bool`, default `false` | Only takes effect when a `hue` is supplied. When `true`, each hue level's bar/mark is offset to sit side-by-side within its group's slot instead of overlapping at the same x-position. Automatically disabled (has no effect) when `split_violin` is active — see `split`, below. |
+| `split` | `bool`, default `false` | Only takes effect when `kind == Violin` **and** a `hue` is supplied. Draws each hue level as one **half** of a single mirrored violin at the group's x-position (left half for the first hue level, right half for the second), via `ViolinSide::Left`/`Right` — the same mechanism [`violinplot`](violinplot.md) exposes directly. **Requires exactly two hue levels** — `catplot` throws `std::invalid_argument` if `split == true` and the resolved hue level count is anything other than 2 (verified below). When `split` is active, `dodge` has no additional effect (split and dodge are mutually exclusive layout strategies). |
+| `order` | `std::vector<std::string>`, default empty | An explicit x-axis category ordering. Empty (the default) means "first-seen order in the data" (via the shared `encode_categories`-style logic). When non-empty, listed labels are placed first in the given order; any labels present in the data but *not* listed in `order` are appended afterward, in their own first-seen order — `order` does not need to be exhaustive. |
+| `hue_order` | `std::vector<std::string>`, default empty | The same explicit-ordering behavior as `order`, applied to hue levels instead of groups (affects dodge offset order and legend label order, not visibility — every hue level present in the data is still drawn regardless of whether it appears in `hue_order`). |
+| `violin` | `ViolinOptions`, default-constructed | Only consulted when `kind == Violin`. See [`flash::violinplot`](violinplot.md) for the full field reference (`width`, `bw_adjust`, `cut`, `scale`, `inner`, `side`). Note that when `split == true`, `catplot` overwrites this sub-struct's `side` field per hue level (`Left`/`Right`) — any `side` value you set here is ignored in that specific case. |
+| `trace_width` | `float`, default `0.9F` | Forwarded to `Trace::width()` on every trace `catplot` draws. Has no visible effect for point-based kinds (`Strip`/`Swarm`) — `width()` governs *stroke* width, and points have no stroke — but does visibly affect `Box`/`Violin`/`Bar` outlines. |
 
 ## Parameters
 

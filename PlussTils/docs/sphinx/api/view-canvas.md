@@ -2,25 +2,22 @@
 
 [Back to PlussView](view.md) · [PlussView API Reference](../api_reference.md)
 
-```cpp
-#include <pluss/tils/view/window/canvas.h>
+**Header:** `<pluss/tils/view/window/canvas.h>`
 
-class PixelCanvas {
-public:
-  PixelCanvas() = default;
-  explicit PixelCanvas(SizeI size);
+### `PixelCanvas` members
 
-  bool resize(SizeI size);
-  void clear(Color color) noexcept;
-  void fill_rect(RectI rect, Color color) noexcept;
-  void set_pixel(PointI pixel, Color color) noexcept;
-  void blend_pixel(PointI pixel, Color color, std::uint8_t alpha) noexcept;
-
-  SizeI size() const noexcept;
-  bool empty() const noexcept;
-  std::span<const std::uint8_t> bytes() const noexcept;
-};
-```
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `PixelCanvas` | Method | `PixelCanvas() = default` |
+| `PixelCanvas` | Method | `explicit PixelCanvas(SizeI size)` |
+| `resize` | Method | `bool resize(SizeI size)` |
+| `clear` | Method | `void clear(Color color) noexcept` |
+| `fill_rect` | Method | `void fill_rect(RectI rect, Color color) noexcept` |
+| `set_pixel` | Method | `void set_pixel(PointI pixel, Color color) noexcept` |
+| `blend_pixel` | Method | `void blend_pixel(PointI pixel, Color color, std::uint8_t alpha) noexcept` |
+| `size` | Method | `SizeI size() const noexcept` |
+| `empty` | Method | `bool empty() const noexcept` |
+| `bytes` | Method | `std::span<const std::uint8_t> bytes() const noexcept` |
 
 `PixelCanvas` owns a plain RGBA frame buffer. A default-constructed canvas has no pixels and reports empty; building one with a `SizeI`, or calling `resize` later, allocates a frame of that size. `resize` returns whether it succeeded: a non-positive width or height is refused, and the canvas is left empty rather than keeping its previous frame. `clear`, `fill_rect`, `set_pixel`, and `blend_pixel` paint directly onto the canvas, without going through a `Scene`; a coordinate or rectangle that falls outside the canvas is ignored rather than refused. `blend_pixel` mixes a color into the existing pixel by an alpha weight, instead of replacing it outright. `bytes()` exposes the raw RGBA buffer, four bytes per pixel, row by row.
 

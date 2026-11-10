@@ -22,14 +22,14 @@ be switched between a literal search and a regex search via `options`.
 
 `TextOptions` has four fields, though only two matter to `has()`:
 
-```cpp
-struct TextOptions {
-  bool regex{false};
-  bool case_sensitive{true};
-  std::int64_t limit{-1};      // unused by has()
-  std::string prefix{"part"};  // unused by has()
-};
-```
+### `TextOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `regex` | `bool` | `false` |
+| `case_sensitive` | `bool` | `true` |
+| `limit` | `std::int64_t` | `-1` |
+| `prefix` | `std::string` | `"part"` |
 
 The default (`{}`) makes a bare `has(needle)` call a **literal,
 case-sensitive substring search** — `needle` is matched character-for-character,

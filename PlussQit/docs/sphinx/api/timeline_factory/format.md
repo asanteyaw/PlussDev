@@ -13,15 +13,15 @@ Note pluss::timeline::format(
     const pluss::timeline::FormatOptions& options = {})
 ```
 
-```cpp
-struct pluss::timeline::FormatOptions {
-  std::string pattern{"%Y-%m-%dT%H:%M:%S.%f%z"};
-  std::string timezone{};
-  std::string nat{"NaT"};
-  int fractional_digits{9};
-  bool trim_fractional_zeros{false};
-};
-```
+### `pluss::timeline::FormatOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `pattern` | `std::string` | `"%Y-%m-%dT%H:%M:%S.%f%z"` |
+| `timezone` | `std::string` | empty |
+| `nat` | `std::string` | `"NaT"` |
+| `fractional_digits` | `int` | `9` |
+| `trim_fractional_zeros` | `bool` | `false` |
 
 ## Convert Instants Into Shape-Preserving Text
 

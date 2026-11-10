@@ -16,14 +16,14 @@ Registry RegistryNoteAccessor::normalize(pluss::table::UnicodeForm form = pluss:
 Applies Unicode normalization to every bound field's text, returning a new
 registry with those fields replaced.
 
-```cpp
-enum class UnicodeForm : std::uint8_t {
-  NFC = 0,
-  NFD = 1,
-  NFKC = 2,
-  NFKD = 3,
-};
-```
+### `UnicodeForm` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `NFC` | `0` | — |
+| `NFD` | `1` | — |
+| `NFKC` | `2` | — |
+| `NFKD` | `3` | — |
 
 Normalization matters when the same visual character can be represented by
 different underlying byte sequences (for example, a precomposed accented

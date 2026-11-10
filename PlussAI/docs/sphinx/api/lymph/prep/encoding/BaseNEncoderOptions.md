@@ -5,13 +5,13 @@ radix encoding. It is passed to the
 [`prep::BaseNEncoder`](BaseNEncoder.md) constructor and to the
 [`prep::stage::basen_encoder`](../stage/basen_encoder.md) factory.
 
-```cpp
-struct BaseNEncoderOptions {
-  std::int64_t           base           = 2;
-  std::int64_t           max_categories = 1024;
-  CategoryOverflowPolicy overflow       = CategoryOverflowPolicy::KeepMostFrequent;
-};
-```
+### `BaseNEncoderOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `base` | `std::int64_t` | `2` |
+| `max_categories` | `std::int64_t` | `1024` |
+| `overflow` | `CategoryOverflowPolicy` | `CategoryOverflowPolicy::KeepMostFrequent` |
 
 ## Fields
 

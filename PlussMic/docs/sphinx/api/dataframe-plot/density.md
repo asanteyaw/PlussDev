@@ -47,13 +47,14 @@ every overload requires at least one named feature.
     16-point curve, not a degenerate one-point line.
 
 **options** (`DensityPlotOptions`)
-    ```cpp
-    struct DensityPlotOptions {
-      std::int64_t points{128};
-      double alpha{1.0};
-      double line_width{1.5};
-    };
-    ```
+
+### `DensityPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `points` | `std::int64_t` | `128` |
+| `alpha` | `double` | `1.0` |
+| `line_width` | `double` | `1.5` |
 
 ## Returns
 

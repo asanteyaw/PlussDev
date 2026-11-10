@@ -7,34 +7,6 @@
 ## Signature
 
 ```cpp
-enum class Anim3SweepPlane : std::uint8_t { XY, XZ, YZ };
-
-struct Animation3Options {
-  std::string title{"PlussPl 3D Animation"};
-  std::int64_t width{1280};
-  std::int64_t height{820};
-
-  Anim3SweepPlane sweep_plane{Anim3SweepPlane::YZ};
-  double base_rot_xy_deg{0.0};
-  double base_rot_xz_deg{12.0};
-  double base_rot_yz_deg{24.0};
-  double sweep_speed_deg_per_sec{18.0};
-
-  double camera_distance{5.4};
-  double camera_yaw_deg{30.0};
-  double camera_pitch_deg{-14.0};
-  double min_perspective_denom{0.15};
-  double plot_padding_fraction{0.08};
-
-  bool progressive_reveal{true};
-  double reveal_points_per_sec{96.0};
-  bool connect_path{true};
-  double line_width{1.5};
-  double point_radius{2.4};
-  bool enable_snapshot{true};
-  std::string snapshot_prefix{"plusspl_3d_frame"};
-};
-
 template <class X, class Y, class Z>
 bool flash::animate3(X&& x, Y&& y, Z&& z, const Animation3Options& options = {})
 ```
@@ -78,72 +50,23 @@ slider. That HTML is opened in a real window via `pluss::view::show_html_window`
 
 ## `Animation3Options` fields
 
-**title** (`std::string`, default `"PlussPl 3D Animation"`)
-    The HTML page's `<title>` and on-page heading, and the window title passed to
-    `pluss::view::HtmlWindowOptions`.
-
-**width**, **height** (`std::int64_t`, default `1280`, `820`)
-    The window/canvas size. Both must be at least `640`×`420`, or `animate3` throws
-    `std::invalid_argument("flash::animate3: window size too small")` — verified below.
-
-**sweep_plane** (`Anim3SweepPlane`, default `YZ`)
-    Which of the three rotation planes is continuously swept over time by the animation
-    loop: `XY`, `XZ`, or `YZ`.
-
-**base_rot_xy_deg**, **base_rot_xz_deg**, **base_rot_yz_deg** (`double`, default `0.0`,
-`12.0`, `24.0`)
-    Fixed starting rotation offsets in each plane, applied before the `sweep_plane`'s
-    continuous sweep animates on top.
-
-**sweep_speed_deg_per_sec** (`double`, default `18.0`)
-    Base angular sweep speed (degrees per second), before the in-page speed slider's
-    multiplier (`0.2×`–`3.0×`) is applied.
-
-**camera_distance**, **camera_yaw_deg**, **camera_pitch_deg** (`double`, default `5.4`,
-`30.0`, `-14.0`)
-    The fixed 3D→2D projection camera used to render the rotated points onto the
-    canvas. `camera_distance` must be positive, or `animate3` throws
-    `std::invalid_argument("flash::animate3: camera_distance must be positive")`.
-
-**min_perspective_denom** (`double`, default `0.15`)
-    A floor on the perspective-divide denominator, preventing points very close to the
-    camera from scaling toward infinity. Must be positive, or `animate3` throws
-    `std::invalid_argument("flash::animate3: min_perspective_denom must be positive")`.
-
-**plot_padding_fraction** (`double`, default `0.08`)
-    Fraction of the canvas reserved as border padding. Must be in `[0.0, 0.45)`, or
-    `animate3` throws `std::invalid_argument("flash::animate3: invalid
-    plot_padding_fraction")`.
-
-**progressive_reveal** (`bool`, default `true`)
-    Whether points appear gradually over time (`true`, paced by `reveal_points_per_sec`)
-    or are all visible from the first frame (`false`).
-
-**reveal_points_per_sec** (`double`, default `96.0`)
-    How many points become visible per second when `progressive_reveal` is `true`. Must
-    be positive, or `animate3` throws `std::invalid_argument("flash::animate3:
-    reveal_points_per_sec must be positive")`.
-
-**connect_path** (`bool`, default `true`)
-    Whether currently-visible points are joined by a line (`true`) or shown as
-    unconnected markers (`false`).
-
-**line_width** (`double`, default `1.5`)
-    Stroke width for the connecting line when `connect_path` is `true`. Must be
-    positive, or `animate3` throws `std::invalid_argument("flash::animate3: line_width
-    must be positive")`.
-
-**point_radius** (`double`, default `2.4`)
-    Base marker radius (in canvas pixels), scaled per-point by projected depth. Must be
-    positive, or `animate3` throws `std::invalid_argument("flash::animate3: point_radius
-    must be positive")`.
-
-**enable_snapshot** (`bool`, default `true`)
-    Whether a "Save PNG" button (and the `S` keyboard shortcut) is included in the page,
-    letting the viewer export the current canvas frame as a PNG download.
-
-**snapshot_prefix** (`std::string`, default `"plusspl_3d_frame"`)
-    Filename prefix used for exported PNG snapshots (`{prefix}_{timestamp}.png`).
+| Field | Type and default | Description |
+|---|---|---|
+| `title` | `std::string`, default `"PlussPl 3D Animation"` | The HTML page's `<title>` and on-page heading, and the window title passed to `pluss::view::HtmlWindowOptions`. |
+| `width`, `height` | `std::int64_t`, default `1280`, `820` | The window/canvas size. Both must be at least `640`×`420`, or `animate3` throws `std::invalid_argument("flash::animate3: window size too small")` — verified below. |
+| `sweep_plane` | `Anim3SweepPlane`, default `YZ` | Which of the three rotation planes is continuously swept over time by the animation loop: `XY`, `XZ`, or `YZ`. |
+| `base_rot_xy_deg`, `base_rot_xz_deg`, `base_rot_yz_deg` | `double`, default `0.0`, `12.0`, `24.0` | Fixed starting rotation offsets in each plane, applied before the `sweep_plane`'s continuous sweep animates on top. |
+| `sweep_speed_deg_per_sec` | `double`, default `18.0` | Base angular sweep speed (degrees per second), before the in-page speed slider's multiplier (`0.2×`–`3.0×`) is applied. |
+| `camera_distance`, `camera_yaw_deg`, `camera_pitch_deg` | `double`, default `5.4`, `30.0`, `-14.0` | The fixed 3D→2D projection camera used to render the rotated points onto the canvas. `camera_distance` must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: camera_distance must be positive")`. |
+| `min_perspective_denom` | `double`, default `0.15` | A floor on the perspective-divide denominator, preventing points very close to the camera from scaling toward infinity. Must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: min_perspective_denom must be positive")`. |
+| `plot_padding_fraction` | `double`, default `0.08` | Fraction of the canvas reserved as border padding. Must be in `[0.0, 0.45)`, or `animate3` throws `std::invalid_argument("flash::animate3: invalid plot_padding_fraction")`. |
+| `progressive_reveal` | `bool`, default `true` | Whether points appear gradually over time (`true`, paced by `reveal_points_per_sec`) or are all visible from the first frame (`false`). |
+| `reveal_points_per_sec` | `double`, default `96.0` | How many points become visible per second when `progressive_reveal` is `true`. Must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: reveal_points_per_sec must be positive")`. |
+| `connect_path` | `bool`, default `true` | Whether currently-visible points are joined by a line (`true`) or shown as unconnected markers (`false`). |
+| `line_width` | `double`, default `1.5` | Stroke width for the connecting line when `connect_path` is `true`. Must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: line_width must be positive")`. |
+| `point_radius` | `double`, default `2.4` | Base marker radius (in canvas pixels), scaled per-point by projected depth. Must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: point_radius must be positive")`. |
+| `enable_snapshot` | `bool`, default `true` | Whether a "Save PNG" button (and the `S` keyboard shortcut) is included in the page, letting the viewer export the current canvas frame as a PNG download. |
+| `snapshot_prefix` | `std::string`, default `"plusspl_3d_frame"` | Filename prefix used for exported PNG snapshots (`{prefix}_{timestamp}.png`). |
 
 ## Returns
 

@@ -28,16 +28,16 @@ The single, `op`-parameterized entry point behind every comparison on `Slate` â€
 runtime value (selected from a variable, a config file, a user-facing filter builder);
 otherwise the named methods or operators read more naturally at the call site.
 
-```cpp
-enum class SlateBinaryCompareOp : std::uint8_t {
-  Eq = 0,  // equal
-  Ne = 1,  // not equal
-  Lt = 2,  // less than
-  Le = 3,  // less than or equal
-  Gt = 4,  // greater than
-  Ge = 5,  // greater than or equal
-};
-```
+### `SlateBinaryCompareOp` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Eq` | `0` | equal |
+| `Ne` | `1` | not equal |
+| `Lt` | `2` | less than |
+| `Le` | `3` | less than or equal |
+| `Gt` | `4` | greater than |
+| `Ge` | `5` | greater than or equal |
 
 The right-hand side can be a numeric scalar, a text scalar, one of the four native pluss
 payload types (`Series`, `Note`, `Timeline`, `Duration`), or another `Slate` â€” every

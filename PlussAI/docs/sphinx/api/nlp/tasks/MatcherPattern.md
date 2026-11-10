@@ -16,13 +16,13 @@ is involved.
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::MatcherPattern {
-  std::string label{};
-  std::vector<std::string> tokens{};
-  bool use_lemmas = true;
-};
-```
+### `pluss::ai::nlp::MatcherPattern` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `label` | `std::string` | empty |
+| `tokens` | `std::vector<std::string>` | empty |
+| `use_lemmas` | `bool` | `true` |
 
 ## Fields
 

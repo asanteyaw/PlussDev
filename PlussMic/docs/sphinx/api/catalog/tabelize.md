@@ -12,19 +12,19 @@ Catalog::tabelize(const TabelizePolicy& policy = {}) const -> pluss::table::Data
 Catalog::tabelize(const RaggedPolicy& policy) const -> pluss::table::DataFrame
 ```
 
-```cpp
-struct TabelizePolicy {
-  Align align{Align::Inner};
-  AlignBy align_by{AlignBy::Label};
-  FillPolicy fill{FillPolicy::Null};
-  std::optional<double> fill_scalar{std::nullopt};
-  DTypePolicy dtype{DTypePolicy::BestEffort};
-  CollisionPolicy collision{CollisionPolicy::Error};
-  std::optional<std::string> anchor{std::nullopt};
-  bool include_label_feature{false};
-  std::string label_feature{"label"};
-};
-```
+### `TabelizePolicy` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `align` | `Align` | `Align::Inner` |
+| `align_by` | `AlignBy` | `AlignBy::Label` |
+| `fill` | `FillPolicy` | `FillPolicy::Null` |
+| `fill_scalar` | `std::optional<double>` | `std::nullopt` |
+| `dtype` | `DTypePolicy` | `DTypePolicy::BestEffort` |
+| `collision` | `CollisionPolicy` | `CollisionPolicy::Error` |
+| `anchor` | `std::optional<std::string>` | `std::nullopt` |
+| `include_label_feature` | `bool` | `false` |
+| `label_feature` | `std::string` | `"label"` |
 
 ## What It Does
 

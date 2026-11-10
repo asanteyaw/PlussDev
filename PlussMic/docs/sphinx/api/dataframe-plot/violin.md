@@ -69,28 +69,30 @@ default `{}`, feature-list mode)
     above.
 
 **options** (`ViolinPlotOptions`)
-    ```cpp
-    struct ViolinPlotOptions {
-      double alpha{0.92};
-      double line_width{1.1};
-      double width{0.8};
-      double bw_adjust{1.0};
-      double cut{2.0};
-      pluss::pl::ViolinScale scale{pluss::pl::ViolinScale::Area};
-      pluss::pl::ViolinInner inner{pluss::pl::ViolinInner::Box};
-      pluss::pl::ViolinSide side{pluss::pl::ViolinSide::Full};
-    };
-    ```
-    `width` is the maximum horizontal extent of each violin. `bw_adjust` scales the kernel
-    density bandwidth (above `1.0` smooths the shape further, below `1.0` shows more
-    fine-grained detail). `cut` controls how far the drawn shape extends past the observed
-    data's min/max, in bandwidth units. `scale` picks how multiple violins are normalized
-    against each other: `Area` (equal area under each violin regardless of sample count),
-    `Count` (area proportional to each group's sample count), or `Width` (equal max width
-    regardless of shape). `inner` chooses what's drawn inside the violin body: `None`,
-    `Box` (a mini box plot), `Quartile` (quartile lines), `Stick` (individual observation
-    ticks), or `Point` (individual observation dots). `side` can restrict each violin to a
-    half-shape (`Left`/`Right`) instead of the default symmetric `Full` shape.
+
+### `ViolinPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `0.92` |
+| `line_width` | `double` | `1.1` |
+| `width` | `double` | `0.8` |
+| `bw_adjust` | `double` | `1.0` |
+| `cut` | `double` | `2.0` |
+| `scale` | `pluss::pl::ViolinScale` | `pluss::pl::ViolinScale::Area` |
+| `inner` | `pluss::pl::ViolinInner` | `pluss::pl::ViolinInner::Box` |
+| `side` | `pluss::pl::ViolinSide` | `pluss::pl::ViolinSide::Full` |
+
+`width` is the maximum horizontal extent of each violin. `bw_adjust` scales the kernel
+density bandwidth (above `1.0` smooths the shape further, below `1.0` shows more
+fine-grained detail). `cut` controls how far the drawn shape extends past the observed
+data's min/max, in bandwidth units. `scale` picks how multiple violins are normalized
+against each other: `Area` (equal area under each violin regardless of sample count),
+`Count` (area proportional to each group's sample count), or `Width` (equal max width
+regardless of shape). `inner` chooses what's drawn inside the violin body: `None`,
+`Box` (a mini box plot), `Quartile` (quartile lines), `Stick` (individual observation
+ticks), or `Point` (individual observation dots). `side` can restrict each violin to a
+half-shape (`Left`/`Right`) instead of the default symmetric `Full` shape.
 
 ## Returns
 

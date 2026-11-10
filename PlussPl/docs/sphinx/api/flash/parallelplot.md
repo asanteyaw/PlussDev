@@ -7,16 +7,6 @@
 ## Signatures
 
 ```cpp
-struct ParallelCoordinatesOptions {
-  std::vector<std::string> labels{};
-  bool normalize{true};
-  std::int64_t max_points{1200};
-  double alpha{0.24};
-  float trace_width{0.9F};
-  bool show_grid{true};
-  bool show_legend{true};
-};
-
 Studio& flash::parallelplot(Studio& studio, pluss::msharp::RangeView::Series columns,
                              const ParallelCoordinatesOptions& options = {})
 
@@ -74,36 +64,15 @@ differently from the default.
 
 ## `ParallelCoordinatesOptions` fields
 
-**labels** (`std::vector<std::string>`, default empty)
-    Per-feature x-axis tick labels. Falls back to `"x1"`, `"x2"`, … when its length
-    doesn't match the feature count.
-
-**normalize** (`bool`, default `true`)
-    See the important callout above.
-
-**max_points** (`std::int64_t`, default `1200`)
-    Row-count cap — rows beyond this are deterministically downsampled to an
-    evenly-strided subset (same mechanism shared across the `flash::` multivariate-view
-    family). With the `class_labels` overload, the class-label vector is downsampled in
-    lockstep with the rows.
-
-**alpha** (`double`, default `0.24`)
-    Per-line opacity, clamped to `[0.05, 1.0]`. Values below `0.999` mark the trace
-    transparent. Low default opacity is what makes overlapping lines readable as density
-    rather than a solid mass.
-
-**trace_width** (`float`, default `0.9F`)
-    Stroke width for every line.
-
-**show_grid** (`bool`, default `true`)
-    Whether the pane gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None`
-    (`false`).
-
-**show_legend** (`bool`, default `true`)
-    Whether a legend is drawn (`KeyPlace::Auto`) or suppressed (`KeyPlace::None`). With
-    the plain (no `class_labels`) overload there's nothing to legend regardless — every
-    line uses the same uniform color and none are `label()`-ed — so this only visibly
-    matters for the `class_labels` overload.
+| Field | Type and default | Description |
+|---|---|---|
+| `labels` | `std::vector<std::string>`, default empty | Per-feature x-axis tick labels. Falls back to `"x1"`, `"x2"`, … when its length doesn't match the feature count. |
+| `normalize` | `bool`, default `true` | See the important callout above. |
+| `max_points` | `std::int64_t`, default `1200` | Row-count cap — rows beyond this are deterministically downsampled to an evenly-strided subset (same mechanism shared across the `flash::` multivariate-view family). With the `class_labels` overload, the class-label vector is downsampled in lockstep with the rows. |
+| `alpha` | `double`, default `0.24` | Per-line opacity, clamped to `[0.05, 1.0]`. Values below `0.999` mark the trace transparent. Low default opacity is what makes overlapping lines readable as density rather than a solid mass. |
+| `trace_width` | `float`, default `0.9F` | Stroke width for every line. |
+| `show_grid` | `bool`, default `true` | Whether the pane gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`). |
+| `show_legend` | `bool`, default `true` | Whether a legend is drawn (`KeyPlace::Auto`) or suppressed (`KeyPlace::None`). With the plain (no `class_labels`) overload there's nothing to legend regardless — every line uses the same uniform color and none are `label()`-ed — so this only visibly matters for the `class_labels` overload. |
 
 ## Parameters
 

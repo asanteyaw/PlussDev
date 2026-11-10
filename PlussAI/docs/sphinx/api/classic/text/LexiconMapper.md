@@ -117,15 +117,15 @@ only fails once `learn()` is actually called.
 : `LexiconMapperState` — a plain struct, not a `Series` vector (unlike
   every state-dump type in [`sparse`](../sparse.md)):
 
-  ```cpp
-  struct classic::LexiconMapperState {
-    classic::LexiconMapOptions options;
-    bool learned;
-    std::int64_t learned_document_count;
-    std::vector<std::string> vocabulary;
-    std::vector<std::int64_t> document_frequency;
-  };
-  ```
+### `classic::LexiconMapperState` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `options` | `classic::LexiconMapOptions` | default constructed |
+| `learned` | `bool` | — |
+| `learned_document_count` | `std::int64_t` | — |
+| `vocabulary` | `std::vector<std::string>` | — |
+| `document_frequency` | `std::vector<std::int64_t>` | — |
 
   `load_state` re-validates `state.options` exactly like `learn` does
   (`max_features > 0`, `min_document_frequency > 0`, a valid n-gram

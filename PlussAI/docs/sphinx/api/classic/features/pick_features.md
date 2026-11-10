@@ -32,45 +32,45 @@ indices/scores alone.
 : Identical contract to [`rank_features`'s `batch`](rank_features.md#parameters).
 
 `options` (`FeaturePickOptions`, default `{}`)
-: ```cpp
-  struct classic::FeaturePickOptions {
-    classic::FeatureScoreMode mode = classic::FeatureScoreMode::ClassF;
-    std::int64_t top_k = 10;
-    double fraction = 0.0;
-    bool absolute_score = true;
-  };
-  ```
+: Controls scoring and how many features to keep.
 
-  `mode` / `absolute_score` — identical contract to
-  [`rank_features`'s `options`](rank_features.md#parameters), including
-  `absolute_score` having no observable effect on either score formula.
+| Field | Default | Meaning |
+|---|---|---|
+| `mode` | `ClassF` | Scoring rule; see `rank_features`. |
+| `top_k` | `10` | Maximum number to keep when `fraction` is unset. |
+| `fraction` | `0.0` | Fraction or percentage to keep; overrides `top_k` when positive. |
+| `absolute_score` | `true` | Passed to the ranking operation. |
 
-  `fraction` (default `0.0`, meaning "unset") — when `> 0.0`, **overrides
-  `top_k` entirely** (checked first): a value in `(0, 1]` is a literal
-  fraction of `feature_count()`; a value `> 1` (up to `100`) is a percent
-  — so `fraction = 0.25` and `fraction = 25` both keep 25% of features.
-  The kept count is `ceil(fraction_resolved * feature_count())`, at least
-  `1`. `fraction = 1.0` keeps 100% (the literal-fraction branch, not the
-  percent one, since the check is `<= 1.0`). See
-  [Example 2](#example-2) and [Example 3](#example-3).
+`mode` / `absolute_score` have the same contract as
+[`rank_features`'s `options`](rank_features.md#parameters), including
+`absolute_score` having no observable effect on either score formula.
 
-  `top_k` (default `10`) — used only when `fraction <= 0.0`; the count is
-  `min(top_k, feature_count())`, so a `top_k` larger than the actual
-  feature count is silently capped, never an error. See
-  [Example 1](#example-1).
+`fraction` (default `0.0`, meaning "unset") — when `> 0.0`, **overrides
+`top_k` entirely** (checked first): a value in `(0, 1]` is a literal
+fraction of `feature_count()`; a value `> 1` (up to `100`) is a percent
+— so `fraction = 0.25` and `fraction = 25` both keep 25% of features.
+The kept count is `ceil(fraction_resolved * feature_count())`, at least
+`1`. `fraction = 1.0` keeps 100% (the literal-fraction branch, not the
+percent one, since the check is `<= 1.0`). See
+[Example 2](#example-2) and [Example 3](#example-3).
+
+`top_k` (default `10`) — used only when `fraction <= 0.0`; the count is
+`min(top_k, feature_count())`, so a `top_k` larger than the actual
+feature count is silently capped, never an error. See
+[Example 1](#example-1).
 
 ## Returns
 
 A `StatusOr<FeaturePickResult>`:
 
-```cpp
-struct classic::FeaturePickResult {
-  classic::FeatureBatch reduced;              // columns in SCORE-DESCENDING order
-  pluss::Series selected_feature_indices;     // Int64, same score-descending order
-  pluss::Series scores;                       // Float64, one per feature, ORIGINAL column order
-  pluss::Series ranked_feature_indices;       // Int64, every feature, score-descending
-};
-```
+### `classic::FeaturePickResult` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `reduced` | `classic::FeatureBatch` | — |
+| `selected_feature_indices` | `pluss::Series` | — |
+| `scores` | `pluss::Series` | — |
+| `ranked_feature_indices` | `pluss::Series` | — |
 
 `scores`/`ranked_feature_indices` are exactly
 [`rank_features`'s own output](rank_features.md#returns) for the same

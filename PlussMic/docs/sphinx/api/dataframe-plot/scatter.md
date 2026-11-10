@@ -57,24 +57,26 @@ text first (e.g. with `bucketize()` or `note()`-family conversions).
     the important callout above for its resolution and type requirements.
 
 **options** (`ScatterPlotOptions`)
-    ```cpp
-    struct ScatterPlotOptions {
-      double alpha{0.92};
-      double line_width{1.1};
-      bool fit_line{false};
-      std::int64_t fit_order{1};
-      bool fit_ci{false};
-      double fit_confidence_level{0.95};
-    };
-    ```
-    `line_width` here affects marker outline stroke width rather than a connecting line,
-    since scatter points aren't connected. `fit_line = true` overlays a line of best fit
-    on top of the point cloud (or, with `hue_feature`, one color-matched fit line per hue
-    group) — see the important callout below and Examples 6–8. `fit_order` sets the
-    polynomial degree of that fit (`1` for a straight line, the default; higher values fit
-    a curve). `fit_ci = true` additionally draws a shaded confidence band around the fit,
-    sized by `fit_confidence_level`. All four `fit_*` fields are ignored when `fit_line`
-    is `false`.
+
+### `ScatterPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `0.92` |
+| `line_width` | `double` | `1.1` |
+| `fit_line` | `bool` | `false` |
+| `fit_order` | `std::int64_t` | `1` |
+| `fit_ci` | `bool` | `false` |
+| `fit_confidence_level` | `double` | `0.95` |
+
+`line_width` here affects marker outline stroke width rather than a connecting line,
+since scatter points aren't connected. `fit_line = true` overlays a line of best fit
+on top of the point cloud (or, with `hue_feature`, one color-matched fit line per hue
+group) — see the important callout below and Examples 6–8. `fit_order` sets the
+polynomial degree of that fit (`1` for a straight line, the default; higher values fit
+a curve). `fit_ci = true` additionally draws a shaded confidence band around the fit,
+sized by `fit_confidence_level`. All four `fit_*` fields are ignored when `fit_line`
+is `false`.
 
 ## Returns
 

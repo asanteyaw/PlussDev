@@ -18,15 +18,14 @@ Enters the casting accessor — `cast()` itself performs no conversion; it binds
 current slate (and, optionally, a `SlateCastOptions` policy) and hands back a
 `SlateCastAccessor` whose four methods each convert to one target payload family:
 
-```cpp
-class SlateCastAccessor {
-public:
-  Slate series() const;
-  Slate note() const;
-  Slate timeline() const;
-  Slate timeindex() const;
-};
-```
+### `SlateCastAccessor` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `series` | Method | `Slate series() const` |
+| `note` | Method | `Slate note() const` |
+| `timeline` | Method | `Slate timeline() const` |
+| `timeindex` | Method | `Slate timeindex() const` |
 
 Calling the target that matches the source slate's own [`kind()`](kind.md) is always a
 cheap identity — `Slate(...).cast().series()` on an already-`Series`-kind slate just
@@ -46,14 +45,15 @@ different numeric dtype). Converting *between* kinds follows these rules:
 - **→ `timeindex()`**: delegates to `timeline()` first, then wraps the result as an
   (unsorted-tolerant) `TimeIndex`.
 
+### `SlateCastOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `series_dtype` | `std::optional<pluss::codem::ScalarType>` | `std::nullopt` |
+| `format` | `std::string` | empty |
+| `invalid` | `ParseInvalid` | `ParseInvalid::Raise` |
+
 ```{important} SlateCastOptions::invalid only actually takes effect for the Timeline target
-```cpp
-struct SlateCastOptions {
-  std::optional<pluss::codem::ScalarType> series_dtype{std::nullopt};
-  std::string format{};
-  ParseInvalid invalid{ParseInvalid::Raise};
-};
-```
 `invalid` (`Raise` or `Null`) is meant to choose what happens when a `Note` value can't be
 parsed. In the current implementation, that choice is only actually consulted by the
 `Timeline` (and, transitively, `TimeIndex`) target: `Raise` (the default) throws on the

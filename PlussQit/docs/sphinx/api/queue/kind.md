@@ -7,8 +7,6 @@
 ## Signature
 
 ```cpp
-enum class Queue::Kind : std::uint8_t { Series, Note, Timeline, Duration };
-
 Kind kind() const noexcept;
 std::string_view kind_name() const noexcept;
 static constexpr std::string_view kind_name(Kind k) noexcept;
@@ -18,6 +16,15 @@ bool is_note() const noexcept;
 bool is_timeline() const noexcept;
 bool is_duration() const noexcept;
 ```
+
+### `Queue::Kind` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Series` | — | — |
+| `Note` | — | — |
+| `Timeline` | — | — |
+| `Duration` | — | — |
 
 ## What It Does
 

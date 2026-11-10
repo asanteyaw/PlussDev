@@ -54,12 +54,13 @@ default `{}`)
     numeric feature is required"` after the empty list resolves to nothing.
 
 **options** (`BoxPlotOptions`)
-    ```cpp
-    struct BoxPlotOptions {
-      double alpha{0.95};
-      double line_width{1.1};
-    };
-    ```
+
+### `BoxPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `0.95` |
+| `line_width` | `double` | `1.1` |
 
 ## Returns
 

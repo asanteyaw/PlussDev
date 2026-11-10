@@ -293,13 +293,15 @@ assert a pipeline fitted as expected — see the transition in the
 
 ```cpp
 StandardScalerSummary summary() const;
-
-struct StandardScalerSummary {
-  std::vector<std::string> feature_names;
-  Series mean;    // one value per fitted column
-  Series scale;   // one value per fitted column
-};
 ```
+
+### `StandardScalerSummary` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `feature_names` | `std::vector<std::string>` | — |
+| `mean` | `Series` | — |
+| `scale` | `Series` | — |
 
 The fitted parameters. `StandardScaler` is the one scaler in this subfamily with
 a **named** summary — `mean` and `scale` directly, rather than the opaque
@@ -334,8 +336,8 @@ int main() {
   scaler.features({"amount", "ratio"}).learn(train);
   const lymph::prep::StandardScalerSummary s = scaler.summary();
 
-  const auto mean  = s.mean.to(pluss::pCPU, ScalarType::Float64).reshape({s.mean.numel()}).pull<double>();
-  const auto scale = s.scale.to(pluss::pCPU, ScalarType::Float64).reshape({s.scale.numel()}).pull<double>();
+  const auto mean  = s.mean.to(pluss::pCPU, ScalarType::Float64).reshape({s.mean.numel()}).items<double>();
+  const auto scale = s.scale.to(pluss::pCPU, ScalarType::Float64).reshape({s.scale.numel()}).items<double>();
   for (std::size_t i = 0; i < s.feature_names.size(); ++i) {
     std::cout << s.feature_names[i] << ": mean=" << mean[i] << " scale=" << scale[i] << "\n";
   }

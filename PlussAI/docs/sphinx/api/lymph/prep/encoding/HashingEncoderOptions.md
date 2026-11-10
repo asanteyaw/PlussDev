@@ -5,12 +5,12 @@ feature hashing. It is passed to the
 [`prep::HashingEncoder`](HashingEncoder.md) constructor and to the
 [`prep::stage::hashing_encoder`](../stage/hashing_encoder.md) factory.
 
-```cpp
-struct HashingEncoderOptions {
-  std::int64_t  n_components = 8;
-  std::uint64_t seed         = 0;
-};
-```
+### `HashingEncoderOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `n_components` | `std::int64_t` | `8` |
+| `seed` | `std::uint64_t` | `0` |
 
 ## Fields
 

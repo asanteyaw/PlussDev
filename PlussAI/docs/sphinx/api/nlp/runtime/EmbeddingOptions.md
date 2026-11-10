@@ -6,16 +6,16 @@ table is initialized with. The struct is plain data built with designated initia
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::runtime::EmbeddingOptions {
-  std::int64_t width = 128;
-  bool use_positions = true;
-  bool learned_positions = true;
-  std::int64_t max_positions = 4096;
-  pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU);
-  std::uint64_t seed = 0;
-};
-```
+### `pluss::ai::nlp::runtime::EmbeddingOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `width` | `std::int64_t` | `128` |
+| `use_positions` | `bool` | `true` |
+| `learned_positions` | `bool` | `true` |
+| `max_positions` | `std::int64_t` | `4096` |
+| `with_dtype` | `Method` | `pluss::Config cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float32).with_platform(pluss::pCPU)` |
+| `seed` | `std::uint64_t` | `0` |
 
 ## Fields
 

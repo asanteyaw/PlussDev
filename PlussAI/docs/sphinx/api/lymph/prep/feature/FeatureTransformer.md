@@ -28,9 +28,12 @@ branches are then added with the [low-level assembly hooks](#add_stage--add_pipe
 In practice [`prep::feature_transformer(...)`](feature_transformer.md) does both
 in one call — and note its remainder default is `PassThrough`, not `Drop`.
 
-```cpp
-enum class FeatureRemainderPolicy : std::uint8_t { Drop = 0, PassThrough = 1 };
-```
+### `FeatureRemainderPolicy` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Drop` | `0` | — |
+| `PassThrough` | `1` | — |
 
 ## State
 

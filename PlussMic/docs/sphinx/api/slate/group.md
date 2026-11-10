@@ -19,28 +19,29 @@ binds the current slate (as the value column to aggregate/transform) and an opti
 `SlateGroupOptions` policy, and hands back a `SlateGroupBuilder` whose `.by(key)` method
 supplies the actual grouping key(s) and produces a `SlateGrouped`:
 
-```cpp
-struct SlateGroupOptions {
-  bool dropnull{true};  // exclude rows whose group key is NULL
-  bool sort{false};     // sort output by group key
-};
+### `SlateGroupOptions` fields
 
-class SlateGroupBuilder {
-public:
-  SlateGrouped by(const Slate& key) const;
-  SlateGrouped by(std::initializer_list<Slate> keys) const;
-  SlateGrouped by(pluss::msharp::RangeView::Of<Slate> keys) const;
-};
+| Field | Type | Default |
+|---|---|---|
+| `dropnull` | `bool` | `true` |
+| `sort` | `bool` | `false` |
 
-class SlateGrouped {
-public:
-  DataFrame agg(std::initializer_list<SlateGroupSpec> specs) const;
-  Slate transform(GroupOp op) const;
-  DataFrame transform(std::initializer_list<SlateGroupSpec> specs) const;
-  Slate filter(const Slate& keep) const;
-  // ...
-};
-```
+### `SlateGroupBuilder` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `by` | Method | `SlateGrouped by(const Slate& key) const` |
+| `by` | Method | `SlateGrouped by(std::initializer_list<Slate> keys) const` |
+| `by` | Method | `SlateGrouped by(pluss::msharp::RangeView::Of<Slate> keys) const` |
+
+### `SlateGrouped` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `agg` | Method | `DataFrame agg(std::initializer_list<SlateGroupSpec> specs) const` |
+| `transform` | Method | `Slate transform(GroupOp op) const` |
+| `transform` | Method | `DataFrame transform(std::initializer_list<SlateGroupSpec> specs) const` |
+| `filter` | Method | `Slate filter(const Slate& keep) const` |
 
 The full chain reads `slate.group(options).by(key).agg({...})` (one row per group) or
 `.transform(op)` (one row per *input* row, broadcasting each group's aggregate back out) —

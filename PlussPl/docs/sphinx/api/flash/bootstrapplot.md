@@ -7,17 +7,6 @@
 ## Signature
 
 ```cpp
-enum class BootstrapStatistic : std::uint8_t { Mean, Median, Std };
-
-struct BootstrapPlotOptions {
-  std::int64_t samples{300};
-  std::int64_t sample_size{0};
-  std::uint64_t seed{7};
-  int bins{24};
-  BootstrapStatistic statistic{BootstrapStatistic::Mean};
-  float trace_width{0.85F};
-};
-
 template <class Values>
 Studio& flash::bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOptions& options = {})
 ```
@@ -47,32 +36,14 @@ different samples from the same underlying distribution.
 
 ## `BootstrapPlotOptions` fields
 
-**samples** (`std::int64_t`, default `300`)
-    How many bootstrap resamples are drawn. Clamped to at least `8`.
-
-**sample_size** (`std::int64_t`, default `0`)
-    How many points each individual resample draws (with replacement). `0` or negative
-    falls back to `values`' own length — the conventional bootstrap setup (each resample
-    is the same size as the original sample). Set explicitly to bootstrap at a different
-    resample size.
-
-**seed** (`std::uint64_t`, default `7`)
-    Base RNG seed. Each of the `samples` resamples uses `seed + (i + 1)` as its own draw
-    seed (`i` from `0`), so the entire sequence of resamples — and therefore the rendered
-    histogram — is fully deterministic and reproducible for a given `seed`. Directly
-    verified: two calls with the same `seed` render byte-identical output; a different
-    `seed` renders differently.
-
-**bins** (`int`, default `24`)
-    Histogram bin count for the resampled-statistic distribution. Clamped to at least
-    `4`.
-
-**statistic** (`BootstrapStatistic`, default `Mean`)
-    Which statistic is computed per resample (and for the "observed" reference line):
-    `Mean`, `Median`, or `Std` (population standard deviation, `ddof = 0`).
-
-**trace_width** (`float`, default `0.85F`)
-    Stroke width for the histogram.
+| Field | Type and default | Description |
+|---|---|---|
+| `samples` | `std::int64_t`, default `300` | How many bootstrap resamples are drawn. Clamped to at least `8`. |
+| `sample_size` | `std::int64_t`, default `0` | How many points each individual resample draws (with replacement). `0` or negative falls back to `values`' own length — the conventional bootstrap setup (each resample is the same size as the original sample). Set explicitly to bootstrap at a different resample size. |
+| `seed` | `std::uint64_t`, default `7` | Base RNG seed. Each of the `samples` resamples uses `seed + (i + 1)` as its own draw seed (`i` from `0`), so the entire sequence of resamples — and therefore the rendered histogram — is fully deterministic and reproducible for a given `seed`. Directly verified: two calls with the same `seed` render byte-identical output; a different `seed` renders differently. |
+| `bins` | `int`, default `24` | Histogram bin count for the resampled-statistic distribution. Clamped to at least `4`. |
+| `statistic` | `BootstrapStatistic`, default `Mean` | Which statistic is computed per resample (and for the "observed" reference line): `Mean`, `Median`, or `Std` (population standard deviation, `ddof = 0`). |
+| `trace_width` | `float`, default `0.85F` | Stroke width for the histogram. |
 
 ## Returns
 

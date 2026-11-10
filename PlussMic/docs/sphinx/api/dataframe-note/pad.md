@@ -19,9 +19,13 @@ Grows every selected text feature's cells up to a target character `width`
 by adding `fill` characters, positioning the original text according to
 `align`:
 
-```cpp
-enum class TextAlign { Left = 0, Right = 1, Center = 2 };
-```
+### `TextAlign` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Left` | `0` | — |
+| `Right` | `1` | — |
+| `Center` | `2` | — |
 
 - **`TextAlign::Left`** (the default): the original text is left-aligned —
   fill characters are added on the **right**.

@@ -17,17 +17,16 @@ The entry point into the archive's **depth labels** — an optional per-catalog 
 set via the constructor's `depth_labels` parameter or via `label().set(...)`. `label()`
 binds the current archive and hands back an `ArchiveLabelAccessor`:
 
-```cpp
-class ArchiveLabelAccessor {
-public:
-  bool has() const;
-  Stream values() const;
-  Archive set(const Stream& labels) const;
-  Archive reset() const;
-  Archive sort(bool ascending = true, bool nulls_last = true) const;
-  Archive align(const Stream& labels) const;
-};
-```
+### `ArchiveLabelAccessor` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `has` | Method | `bool has() const` |
+| `values` | Method | `Stream values() const` |
+| `set` | Method | `Archive set(const Stream& labels) const` |
+| `reset` | Method | `Archive reset() const` |
+| `sort` | Method | `Archive sort(bool ascending = true, bool nulls_last = true) const` |
+| `align` | Method | `Archive align(const Stream& labels) const` |
 
 ```{important} values() throws when no depth labels are set — unlike Stream::lbl().values()
 Unlike [`Stream::lbl()`](../stream/lbl.md)`.values()` (which synthesizes a positional

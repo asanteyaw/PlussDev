@@ -50,23 +50,25 @@ even though `ActPlotOptions` itself has no explicit minimum-row-count field.
     to a `Series`-kind feature — see the shared-diagnostics note above.
 
 **options** (`ActPlotOptions`)
-    ```cpp
-    struct ActPlotOptions {
-      std::int64_t max_lag{40};
-      bool show_confidence_band{true};
-      double confidence_level{0.95};
-      float trace_width{1.2F};
-    };
-    ```
-    `max_lag` is clamped internally to `[1, n - 1]` where `n` is the feature's row count, so
-    requesting a `max_lag` larger than the data supports doesn't throw — it's silently
-    capped. `show_confidence_band` draws two horizontal reference lines at
-    `±z / sqrt(n)`, where `z` is the z-score for `confidence_level` (using the same lookup
-    table as [`bar()`](bar.md)'s `ci_enabled` whiskers: `0.99 → 2.575829`, `0.98 →
-    2.326348`, `0.95 → 1.959964`, `0.90 → 1.644854`, anything else `→ 1.281552`). A spike
-    that crosses outside this band at a given lag is a rough visual cue that the
-    autocorrelation at that lag is unlikely to be pure noise. `trace_width` controls the
-    stroke width of each spike.
+
+### `ActPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `max_lag` | `std::int64_t` | `40` |
+| `show_confidence_band` | `bool` | `true` |
+| `confidence_level` | `double` | `0.95` |
+| `trace_width` | `float` | `1.2F` |
+
+`max_lag` is clamped internally to `[1, n - 1]` where `n` is the feature's row count, so
+requesting a `max_lag` larger than the data supports doesn't throw — it's silently
+capped. `show_confidence_band` draws two horizontal reference lines at
+`±z / sqrt(n)`, where `z` is the z-score for `confidence_level` (using the same lookup
+table as [`bar()`](bar.md)'s `ci_enabled` whiskers: `0.99 → 2.575829`, `0.98 →
+2.326348`, `0.95 → 1.959964`, `0.90 → 1.644854`, anything else `→ 1.281552`). A spike
+that crosses outside this band at a given lag is a rough visual cue that the
+autocorrelation at that lag is unlikely to be pure noise. `trace_width` controls the
+stroke width of each spike.
 
 ## Returns
 

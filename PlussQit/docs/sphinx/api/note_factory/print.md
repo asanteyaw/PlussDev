@@ -77,7 +77,7 @@ All fields have defaults; construct the struct and set only what you need.
 | `show_shape` | `bool` | `true` | Include `shape=[...]` in a `Full` header. |
 | `show_dim` | `bool` | `true` | Include `dim=N` in a `Full` header. |
 | `show_numel` | `bool` | `true` | Include `numel=N` in a `Full` header. |
-| `show_encoding` | `bool` | `true` | Include `encoding=utf8|bytes` in a `Full` header. |
+| `show_encoding` | `bool` | `true` | Include `encoding=utf8\|bytes` in a `Full` header. |
 
 ### Cell text
 
@@ -89,11 +89,28 @@ All fields have defaults; construct the struct and set only what you need.
 
 ### Related enums
 
-```cpp
-enum class NotePrintMetadataMode { Full, Compact, None };
-enum class NotePrintContentMode  { Both, HeaderOnly, ValuesOnly };
-enum class NotePrintBytesMode    { Escaped, Hex };
-```
+### `NotePrintMetadataMode` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Full` | — | — |
+| `Compact` | — | — |
+| `None` | — | — |
+
+### `NotePrintContentMode` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Both` | — | — |
+| `HeaderOnly` | — | — |
+| `ValuesOnly` | — | — |
+
+### `NotePrintBytesMode` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Escaped` | — | — |
+| `Hex` | — | — |
 
 All three are available unqualified as `pluss::NotePrintMetadataMode`,
 `pluss::NotePrintContentMode`, and `pluss::NotePrintBytesMode`.

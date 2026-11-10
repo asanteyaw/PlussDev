@@ -277,12 +277,14 @@ bool learned() const noexcept;
 
 ```cpp
 TransformerSummary summary() const;
-
-struct TransformerSummary {
-  std::vector<std::string> feature_names;  // the pinned columns
-  std::vector<Series> state;               // raw fitted tensors
-};
 ```
+
+### `TransformerSummary` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `feature_names` | `std::vector<std::string>` | — |
+| `state` | `std::vector<Series>` | — |
 
 The generic fitted-state view every encoder in the subfamily returns. For a
 readable layout use the [Attributes](#attributes) below instead.

@@ -7,14 +7,14 @@ dense integer coding. It is passed to the
 identical to [`options::OrdinalEncoder`](OrdinalEncoderOptions.md) except that
 `one_based` defaults to `false`.
 
-```cpp
-struct LabelEncoderOptions {
-  std::int64_t           max_categories = 256;
-  CategoryOverflowPolicy overflow       = CategoryOverflowPolicy::KeepMostFrequent;
-  bool                   include_unknown_bucket = true;
-  bool                   one_based      = false;
-};
-```
+### `LabelEncoderOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `max_categories` | `std::int64_t` | `256` |
+| `overflow` | `CategoryOverflowPolicy` | `CategoryOverflowPolicy::KeepMostFrequent` |
+| `include_unknown_bucket` | `bool` | `true` |
+| `one_based` | `bool` | `false` |
 
 ## Fields
 

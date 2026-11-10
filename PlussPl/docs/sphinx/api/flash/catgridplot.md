@@ -7,18 +7,6 @@
 ## Signatures
 
 ```cpp
-struct CatGridPlotOptions {
-  std::int64_t rows{0};
-  std::int64_t cols{0};
-  double grid_gap_x{16.0};
-  double grid_gap_y{16.0};
-  bool show_grid{true};
-  std::vector<std::string> titles{};
-  std::vector<std::string> x_labels{};
-  std::vector<std::string> y_labels{};
-  CatPlotOptions cat{};
-};
-
 Studio& flash::catgridplot(Studio& studio, pluss::msharp::RangeView::Note groups,
                             pluss::msharp::RangeView::Series values,
                             const CatGridPlotOptions& options = {})
@@ -65,30 +53,14 @@ mechanics; they are not re-derived here.
 
 ## `CatGridPlotOptions` fields
 
-**rows**, **cols** (`std::int64_t`, default `0` each)
-    Explicit grid shape hints; `0` means "auto" — resolved the same way as
-    `RelGridPlotOptions::rows`/`cols` on the [`flash::relgridplot`](relgridplot.md) page,
-    including the `rows*cols < facet_count` error.
-
-**grid_gap_x**, **grid_gap_y** (`double`, default `16.0` each)
-    Forwarded to the internal [`flash::FacetGrid`](FacetGrid.md) call as its `gx`/`gy`
-    gutter.
-
-**show_grid** (`bool`, default `true`)
-    Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None`
-    (`false`).
-
-**titles** (`std::vector<std::string>`, default empty)
-    Per-facet panel titles, applied positionally — short vectors leave the remaining
-    panels untitled, exactly like `relgridplot`.
-
-**x_labels**, **y_labels** (`std::vector<std::string>`, default empty)
-    Per-facet axis labels, applied positionally, same short-vector tolerance.
-
-**cat** (`CatPlotOptions`, default-constructed)
-    Forwarded to [`flash::catplot`](catplot.md) for every panel — every field documented
-    there (`kind`, `hue`, `order`, `dodge`, `jitter`, `estimator`, …) applies here too, per
-    panel.
+| Field | Type and default | Description |
+|---|---|---|
+| `rows`, `cols` | `std::int64_t`, default `0` each | Explicit grid shape hints; `0` means "auto" — resolved the same way as `RelGridPlotOptions::rows`/`cols` on the [`flash::relgridplot`](relgridplot.md) page, including the `rows*cols < facet_count` error. |
+| `grid_gap_x`, `grid_gap_y` | `double`, default `16.0` each | Forwarded to the internal [`flash::FacetGrid`](FacetGrid.md) call as its `gx`/`gy` gutter. |
+| `show_grid` | `bool`, default `true` | Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`). |
+| `titles` | `std::vector<std::string>`, default empty | Per-facet panel titles, applied positionally — short vectors leave the remaining panels untitled, exactly like `relgridplot`. |
+| `x_labels`, `y_labels` | `std::vector<std::string>`, default empty | Per-facet axis labels, applied positionally, same short-vector tolerance. |
+| `cat` | `CatPlotOptions`, default-constructed | Forwarded to [`flash::catplot`](catplot.md) for every panel — every field documented there (`kind`, `hue`, `order`, `dodge`, `jitter`, `estimator`, …) applies here too, per panel. |
 
 ## Parameters
 

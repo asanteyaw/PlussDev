@@ -11,11 +11,11 @@
 Catalog::distinct(DistinctOptions options = {}) const -> Catalog
 ```
 
-```cpp
-struct DistinctOptions {
-  bool dropnull{true};
-};
-```
+### `DistinctOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `dropnull` | `bool` | `true` |
 
 ## What It Does
 

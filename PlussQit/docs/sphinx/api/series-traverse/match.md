@@ -6,12 +6,6 @@
 
 ## Type
 
-```cpp
-namespace pluss::codem {
-class TraverseMatch;
-}
-```
-
 Every finder on [`Series::traverse`](../series/traverse.md) —
 [`find_ge`](find_ge.md), [`find_eq`](find_eq.md), [`find_all`](find_all.md),
 [`find_first`](find_first.md), and the rest — returns a `TraverseMatch`. It is

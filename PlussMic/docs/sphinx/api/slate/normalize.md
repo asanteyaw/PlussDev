@@ -17,14 +17,14 @@ Applies Unicode text normalization to every cell of a `Note` (string) slate,
 choosing one of the four standard Unicode Normalization Forms via `form`. Requires
 the slate to be `Note`-kind.
 
-```cpp
-enum class UnicodeForm {
-  NFC = 0,   // Canonical Decomposition, followed by Canonical Composition
-  NFD = 1,   // Canonical Decomposition
-  NFKC = 2,  // Compatibility Decomposition, followed by Canonical Composition
-  NFKD = 3,  // Compatibility Decomposition
-};
-```
+### `UnicodeForm` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `NFC` | `0` | Canonical Decomposition, followed by Canonical Composition |
+| `NFD` | `1` | Canonical Decomposition |
+| `NFKC` | `2` | Compatibility Decomposition, followed by Canonical Composition |
+| `NFKD` | `3` | Compatibility Decomposition |
 
 Normalization matters for text that might contain the same visible character
 represented in more than one way — most commonly, a precomposed accented letter (`é`

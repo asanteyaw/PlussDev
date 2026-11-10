@@ -20,14 +20,14 @@ sees individual rows in isolation) — it's a whole-slate escape hatch for a tra
 doesn't fit `Slate`'s built-in vectorized methods, with `shape` documenting (and
 enforcing) what kind of result you're expected to produce.
 
-```cpp
-enum class ResultShape : std::uint8_t {
-  Infer = 0,     // no size check
-  Reduce = 1,    // result must have exactly one row
-  Preserve = 2,  // result must have the same number of rows as the input
-  Expand = 3,    // no size check
-};
-```
+### `ResultShape` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Infer` | `0` | no size check |
+| `Reduce` | `1` | result must have exactly one row |
+| `Preserve` | `2` | result must have the same number of rows as the input |
+| `Expand` | `3` | no size check |
 
 ```{important} fold() calls fn() once with the whole slate — it does not iterate rows
 If you want `fn` invoked once per row instead, with a running per-row callback, use

@@ -6,17 +6,17 @@ The complete data set for one language: its identity, abbreviations, titles, lem
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::resources::LanguagePack {
-  pluss::ai::nlp::Language lang = pluss::ai::nlp::Language::Unknown;
-  std::string_view code{};
-  std::string_view name{};
-  pluss::RangeView<std::string_view> abbreviations{};
-  pluss::RangeView<std::string_view> titles{};
-  pluss::RangeView<LemmaRule> lemma_rules{};
-  pluss::RangeView<TokenMergeRule> token_merges{};
-};
-```
+### `pluss::ai::nlp::resources::LanguagePack` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `lang` | `pluss::ai::nlp::Language` | `pluss::ai::nlp::Language::Unknown` |
+| `code` | `std::string_view` | empty |
+| `name` | `std::string_view` | empty |
+| `abbreviations` | `pluss::RangeView<std::string_view>` | empty |
+| `titles` | `pluss::RangeView<std::string_view>` | empty |
+| `lemma_rules` | `pluss::RangeView<LemmaRule>` | default constructed |
+| `token_merges` | `pluss::RangeView<TokenMergeRule>` | default constructed |
 
 ## Fields
 

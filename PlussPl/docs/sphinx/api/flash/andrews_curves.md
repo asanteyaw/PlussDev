@@ -7,17 +7,6 @@
 ## Signatures
 
 ```cpp
-struct AndrewsCurvesOptions {
-  std::vector<std::string> labels{};
-  bool normalize{true};
-  std::int64_t points{220};
-  std::int64_t max_curves{600};
-  double alpha{0.28};
-  float trace_width{0.9F};
-  bool show_grid{true};
-  bool show_legend{true};
-};
-
 Studio& flash::andrews_curves(Studio& studio, pluss::msharp::RangeView::Series columns,
                                const AndrewsCurvesOptions& options = {})
 
@@ -72,39 +61,16 @@ normalizes to a flat 0.0 rather than dividing by zero.
 
 ## `AndrewsCurvesOptions` fields
 
-**labels** (`std::vector<std::string>`, default empty)
-    Per-feature labels. Unlike [`flash::parallelplot`](parallelplot.md), these never
-    appear as visible axis tick labels (Andrews curves have no per-feature x-axis) — they
-    only participate in the `Dataset`/matrix-overload fallback-naming plumbing, with no
-    visible effect on the plain overloads' rendered output.
-
-**normalize** (`bool`, default `true`)
-    See the important callout above.
-
-**points** (`std::int64_t`, default `220`)
-    How many `t` samples span `[-π, π]` for every curve. Clamped to at least `64`.
-    Directly verified: a curve sampled at `64` points renders visibly coarser/differently
-    than the `220`-point default.
-
-**max_curves** (`std::int64_t`, default `600`)
-    Row-count cap — rows beyond this are deterministically downsampled to an
-    evenly-strided subset, identical mechanism to
-    [`flash::parallelplot`](parallelplot.md)'s `max_points` (just named for curves
-    instead of points here).
-
-**alpha** (`double`, default `0.28`)
-    Per-curve opacity, clamped to `[0.05, 1.0]`.
-
-**trace_width** (`float`, default `0.9F`)
-    Stroke width for every curve.
-
-**show_grid** (`bool`, default `true`)
-    Whether the pane gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None`
-    (`false`).
-
-**show_legend** (`bool`, default `true`)
-    Whether a legend is drawn — only visibly matters for the `class_labels` overload,
-    same as [`flash::parallelplot`](parallelplot.md)'s `show_legend`.
+| Field | Type and default | Description |
+|---|---|---|
+| `labels` | `std::vector<std::string>`, default empty | Per-feature labels. Unlike [`flash::parallelplot`](parallelplot.md), these never appear as visible axis tick labels (Andrews curves have no per-feature x-axis) — they only participate in the `Dataset`/matrix-overload fallback-naming plumbing, with no visible effect on the plain overloads' rendered output. |
+| `normalize` | `bool`, default `true` | See the important callout above. |
+| `points` | `std::int64_t`, default `220` | How many `t` samples span `[-π, π]` for every curve. Clamped to at least `64`. Directly verified: a curve sampled at `64` points renders visibly coarser/differently than the `220`-point default. |
+| `max_curves` | `std::int64_t`, default `600` | Row-count cap — rows beyond this are deterministically downsampled to an evenly-strided subset, identical mechanism to [`flash::parallelplot`](parallelplot.md)'s `max_points` (just named for curves instead of points here). |
+| `alpha` | `double`, default `0.28` | Per-curve opacity, clamped to `[0.05, 1.0]`. |
+| `trace_width` | `float`, default `0.9F` | Stroke width for every curve. |
+| `show_grid` | `bool`, default `true` | Whether the pane gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`). |
+| `show_legend` | `bool`, default `true` | Whether a legend is drawn — only visibly matters for the `class_labels` overload, same as [`flash::parallelplot`](parallelplot.md)'s `show_legend`. |
 
 ## Parameters
 

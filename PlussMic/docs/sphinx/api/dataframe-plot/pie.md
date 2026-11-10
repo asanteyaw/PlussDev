@@ -46,21 +46,23 @@ only, not the original column's total.
     the row labels").
 
 **options** (`PiePlotOptions`)
-    ```cpp
-    struct PiePlotOptions {
-      bool show_label{true};
-      bool show_percent{true};
-      bool show_value{false};
-      int precision{1};
-      std::string separator{" | "};
-    };
-    ```
-    Each `show_*` flag independently controls whether that piece of text appears on a
-    slice; when more than one is enabled, the pieces are joined with `separator` in the
-    order label, then percent, then value. `precision` (clamped to `0..12`) controls decimal
-    places for both the percentage and the raw value text. If all three `show_*` flags are
-    `false`, no per-slice text is rendered at all (slices are still drawn and colored, just
-    unlabeled).
+
+### `PiePlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `show_label` | `bool` | `true` |
+| `show_percent` | `bool` | `true` |
+| `show_value` | `bool` | `false` |
+| `precision` | `int` | `1` |
+| `separator` | `std::string` | `" \| "` |
+
+Each `show_*` flag independently controls whether that piece of text appears on a
+slice; when more than one is enabled, the pieces are joined with `separator` in the
+order label, then percent, then value. `precision` (clamped to `0..12`) controls decimal
+places for both the percentage and the raw value text. If all three `show_*` flags are
+`false`, no per-slice text is rendered at all (slices are still drawn and colored, just
+unlabeled).
 
 ## Returns
 

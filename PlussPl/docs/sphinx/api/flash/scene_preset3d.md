@@ -7,8 +7,6 @@
 ## Signature
 
 ```cpp
-enum class ScenePreset3D : std::uint8_t { Survey, Presentation, Studio, Topology };
-
 Pane& flash::scene_preset3d(Pane& pane, ScenePreset3D preset)
 ```
 

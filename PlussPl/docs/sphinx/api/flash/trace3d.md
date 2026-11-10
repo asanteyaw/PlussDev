@@ -7,15 +7,6 @@
 ## Signature
 
 ```cpp
-struct Trace3DOptions {
-  std::optional<TracePreset3D> preset{std::nullopt};
-  std::optional<ShadeMode> shade{std::nullopt};
-  std::optional<LightingMode> lighting{std::nullopt};
-  std::optional<MaterialProfile> material{std::nullopt};
-  std::optional<float> line_width{std::nullopt};
-  std::optional<bool> transparent{std::nullopt};
-};
-
 Trace& flash::trace3d(Trace& trace, const Trace3DOptions& options)
 ```
 
@@ -46,23 +37,14 @@ verified: `Trace3DOptions{.preset = Surface}` alone renders byte-identical to a 
 
 ## `Trace3DOptions` fields
 
-**preset** (`std::optional<TracePreset3D>`, default `std::nullopt`)
-    Applies [`flash::trace_preset3d`](trace_preset3d.md) first, when set.
-
-**shade** (`std::optional<ShadeMode>`, default `std::nullopt`)
-    Applies [`Trace::shade`](../trace/shade.md) when set — after `preset`.
-
-**lighting** (`std::optional<LightingMode>`, default `std::nullopt`)
-    Applies [`Trace::lighting`](../trace/lighting.md) when set — after `shade`.
-
-**material** (`std::optional<MaterialProfile>`, default `std::nullopt`)
-    Applies [`Trace::material`](../trace/material.md) when set — after `lighting`.
-
-**line_width** (`std::optional<float>`, default `std::nullopt`)
-    Applies [`Trace::width`](../trace/width.md) when set — after `material`.
-
-**transparent** (`std::optional<bool>`, default `std::nullopt`)
-    Applies [`Trace::transparent`](../trace/transparent.md) when set — applied last.
+| Field | Type and default | Description |
+|---|---|---|
+| `preset` | `std::optional<TracePreset3D>`, default `std::nullopt` | Applies [`flash::trace_preset3d`](trace_preset3d.md) first, when set. |
+| `shade` | `std::optional<ShadeMode>`, default `std::nullopt` | Applies [`Trace::shade`](../trace/shade.md) when set — after `preset`. |
+| `lighting` | `std::optional<LightingMode>`, default `std::nullopt` | Applies [`Trace::lighting`](../trace/lighting.md) when set — after `shade`. |
+| `material` | `std::optional<MaterialProfile>`, default `std::nullopt` | Applies [`Trace::material`](../trace/material.md) when set — after `lighting`. |
+| `line_width` | `std::optional<float>`, default `std::nullopt` | Applies [`Trace::width`](../trace/width.md) when set — after `material`. |
+| `transparent` | `std::optional<bool>`, default `std::nullopt` | Applies [`Trace::transparent`](../trace/transparent.md) when set — applied last. |
 
 ## Returns
 

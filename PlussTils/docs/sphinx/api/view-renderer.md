@@ -3,16 +3,18 @@
 [Back to PlussView](view.md) · [PlussView API Reference](../api_reference.md)
 
 ```cpp
-#include <pluss/tils/view/window/renderer.h>
-
-class IRenderer {
-public:
-  virtual bool render(const Scene& scene, PixelCanvas& canvas, std::vector<RenderEvent>& events) = 0;
-};
-class SoftwareRenderer final : public IRenderer {};
-
 std::unique_ptr<IRenderer> make_software_renderer();
 ```
+
+**Header:** `<pluss/tils/view/window/renderer.h>`
+
+### `IRenderer` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `render` | Method | `virtual bool render(const Scene& scene, PixelCanvas& canvas, std::vector<RenderEvent>& events) = 0` |
+
+**Type:** `SoftwareRenderer`
 
 `IRenderer` is the interface a renderer implements: `render` applies a `Scene`'s commands to a `PixelCanvas`, in order, and appends one `RenderEvent` per notable thing that happened during the frame to the vector you pass in. `SoftwareRenderer` is the one implementation PlussView ships, a pure-software rasterizer with no GPU or platform dependency; `make_software_renderer` builds one behind the `IRenderer` interface, which is the usual way to get one.
 

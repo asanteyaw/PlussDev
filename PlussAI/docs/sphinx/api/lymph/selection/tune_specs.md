@@ -52,12 +52,12 @@ under `tune_options.split`. Trials are ranked by `objective_metric`
 
 ## `SpecTuneResult`
 
-```cpp
-struct SpecTuneResult {
-  reports::Tune report{};   // trials, best_index, objective_metric/policy, objective_rank, ledger
-  ModelSpec  best_spec{};   // the winning point's spec
-};
-```
+### `SpecTuneResult` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `report` | `reports::Tune` | — |
+| `best_spec` | `ModelSpec` | — |
 
 `report.trials` is one entry per visited point — each carries its `spec`, its
 `objective`, and a `CrossAssessReport`. `report.best_index` points at the winner;

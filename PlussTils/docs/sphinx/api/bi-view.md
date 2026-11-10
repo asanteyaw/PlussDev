@@ -2,11 +2,9 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
+**Header:** `<pluss/bi/specs.h>`
 
-class View;
-```
+**Type:** `View`
 
 A `View` is one tile of a board that shows data. Build one with a DSL constructor such as `bi::bar("key")`, or with `View::make` when you already have a `BindSpec`. Every view has a key, a query that chooses rows, a binding that chooses what to show, and a layout that places it on the grid. A view with no query is refused when the studio renders.
 

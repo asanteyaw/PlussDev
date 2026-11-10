@@ -7,11 +7,6 @@
 ## Signature
 
 ```cpp
-struct ResidAcfPlotOptions {
-  RegPlotOptions reg{};
-  AcfPlotOptions acf{};
-};
-
 template <class X, class Y>
 Studio& flash::resid_acfplot(Studio& studio, X&& x, Y&& y, const ResidAcfPlotOptions& options = {})
 ```
@@ -46,18 +41,10 @@ spikes.
 
 ## `ResidAcfPlotOptions` fields
 
-**reg** (`RegPlotOptions`, default-constructed)
-    Controls the regression fit computed to produce residuals — every field documented on
-    [`flash::regplot`](regplot.md) that affects the *fit itself* applies here
-    (`order`, `robust`, `lowess`, `lowess_frac`); fields that only affect
-    `regplot`'s own *rendering* (`show_scatter`, `show_ci`, `fit_trace_width`, …) have no
-    effect here, since `resid_acfplot` never calls `regplot` to draw anything — it only
-    reuses its prediction function.
-
-**acf** (`AcfPlotOptions`, default-constructed)
-    Forwarded to the internal [`flash::acfplot`](acfplot.md) call over the computed
-    residuals — every field documented on that page applies, including the discrete
-    confidence-level bucketing and the inert `marker_area` field.
+| Field | Type and default | Description |
+|---|---|---|
+| `reg` | `RegPlotOptions`, default-constructed | Controls the regression fit computed to produce residuals — every field documented on [`flash::regplot`](regplot.md) that affects the *fit itself* applies here (`order`, `robust`, `lowess`, `lowess_frac`); fields that only affect `regplot`'s own *rendering* (`show_scatter`, `show_ci`, `fit_trace_width`, …) have no effect here, since `resid_acfplot` never calls `regplot` to draw anything — it only reuses its prediction function. |
+| `acf` | `AcfPlotOptions`, default-constructed | Forwarded to the internal [`flash::acfplot`](acfplot.md) call over the computed residuals — every field documented on that page applies, including the discrete confidence-level bucketing and the inert `marker_area` field. |
 
 ## Returns
 

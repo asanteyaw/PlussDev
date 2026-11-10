@@ -7,8 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class FlashContext : std::uint8_t { Inherit, Paper, Notebook, Talk, Poster };
-
 Studio& flash::set_context(
     Studio& studio, double width, double height,
     double tick_font_scale = 1.0, double axis_label_font_scale = 1.0)

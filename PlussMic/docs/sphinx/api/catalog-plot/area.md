@@ -48,17 +48,19 @@ the full explanation; only what's specific to `area()` is repeated here.
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`AreaPlotOptions`)
-    ```cpp
-    struct AreaPlotOptions {
-      double alpha{0.88};
-      double line_width{1.3};
-      XYAlignOptions align{};
-    };
-    ```
-    Note the higher default `alpha` (`0.88` vs. `line()`'s `1.0`) — a filled area reads
-    better slightly translucent than fully opaque. `align` controls how a mismatched-length
-    explicit `x_key`/y-key pair is reconciled — see
-    [`line()`](line.md) for the full explanation.
+
+### `AreaPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `0.88` |
+| `line_width` | `double` | `1.3` |
+| `align` | `XYAlignOptions` | default constructed |
+
+Note the higher default `alpha` (`0.88` vs. `line()`'s `1.0`) — a filled area reads
+better slightly translucent than fully opaque. `align` controls how a mismatched-length
+explicit `x_key`/y-key pair is reconciled — see
+[`line()`](line.md) for the full explanation.
 
 ## Returns
 

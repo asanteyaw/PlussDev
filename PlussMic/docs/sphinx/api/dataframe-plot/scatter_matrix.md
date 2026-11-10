@@ -50,18 +50,20 @@ or non-numeric feature throws, matching the rest of the plotting accessor. If yo
     (`(i, j)` and `(j, i)` are mirror images of the same pairwise relationship).
 
 **options** (`ScatterMatrixPlotOptions`)
-    ```cpp
-    struct ScatterMatrixPlotOptions {
-      bool corner{false};
-      pluss::pl::flash::PairPlotOptions pair{};
-    };
-    ```
-    `corner = true` is a shorthand: if `pair.triangle` is still at its default (`Full`), it
-    gets switched to `Lower` automatically — a "corner-style" pairs plot with the diagonal
-    at the top-left and only the lower triangle filled in. `pair` is the full underlying
-    `PlussPl` `PairPlotOptions` struct (triangle, diagonal kind, point vs. regression cells,
-    grid sizing, point limits, and more); only the fields most relevant here are called out
-    on this page — the rest are documented in `PlussPl`'s own reference.
+
+### `ScatterMatrixPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `corner` | `bool` | `false` |
+| `pair` | `pluss::pl::flash::PairPlotOptions` | default constructed |
+
+`corner = true` is a shorthand: if `pair.triangle` is still at its default (`Full`), it
+gets switched to `Lower` automatically — a "corner-style" pairs plot with the diagonal
+at the top-left and only the lower triangle filled in. `pair` is the full underlying
+`PlussPl` `PairPlotOptions` struct (triangle, diagonal kind, point vs. regression cells,
+grid sizing, point limits, and more); only the fields most relevant here are called out
+on this page — the rest are documented in `PlussPl`'s own reference.
 
 ## Returns
 

@@ -7,13 +7,6 @@
 ## Signature
 
 ```cpp
-struct LagPlotOptions {
-  std::int64_t lag{1};
-  std::int64_t max_points{2500};
-  double marker_area{16.0};
-  float trace_width{0.55F};
-};
-
 template <class Values>
 Studio& flash::lagplot(Studio& studio, Values&& values, const LagPlotOptions& options = {})
 ```
@@ -40,21 +33,12 @@ lag-`n` correlation; a formless cloud suggests none). Single overload, single pa
 
 ## `LagPlotOptions` fields
 
-**lag** (`std::int64_t`, default `1`)
-    The step offset between `x(t)` (the x-axis) and `x(t + lag)` (the y-axis). Clamped to
-    `[1, n - 1]` — always at least `1` step, never beyond the series' own length.
-
-**max_points** (`std::int64_t`, default `2500`)
-    Cap on how many `(x(t), x(t+lag))` pairs are plotted. When the usable pair count
-    (`n - lag`) exceeds this, an evenly-strided subset of at most `max_points` pairs is
-    plotted instead — `0` or negative disables the cap entirely (every usable pair is
-    plotted).
-
-**marker_area** (`double`, default `16.0`)
-    Per-point marker area, clamped to at least `2.0`.
-
-**trace_width** (`float`, default `0.55F`)
-    Stroke width for the point cloud.
+| Field | Type and default | Description |
+|---|---|---|
+| `lag` | `std::int64_t`, default `1` | The step offset between `x(t)` (the x-axis) and `x(t + lag)` (the y-axis). Clamped to `[1, n - 1]` — always at least `1` step, never beyond the series' own length. |
+| `max_points` | `std::int64_t`, default `2500` | Cap on how many `(x(t), x(t+lag))` pairs are plotted. When the usable pair count (`n - lag`) exceeds this, an evenly-strided subset of at most `max_points` pairs is plotted instead — `0` or negative disables the cap entirely (every usable pair is plotted). |
+| `marker_area` | `double`, default `16.0` | Per-point marker area, clamped to at least `2.0`. |
+| `trace_width` | `float`, default `0.55F` | Stroke width for the point cloud. |
 
 ## Returns
 

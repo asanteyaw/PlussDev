@@ -7,13 +7,6 @@
 ## Signatures
 
 ```cpp
-struct Camera3DOptions {
-  double azimuth_deg{-37.5};
-  double elevation_deg{30.0};
-  double view_angle_deg{30.0};
-  ProjectionKind projection{ProjectionKind::Orthographic};
-};
-
 Pane& flash::camera3d(Pane& pane, const Camera3DOptions& options)
 
 Pane& flash::camera3d(Pane& pane, double azimuth_deg, double elevation_deg,
@@ -48,18 +41,12 @@ positionally — directly verified byte-identical given equivalent values.
 
 ## `Camera3DOptions` fields
 
-**azimuth_deg** (`double`, default `-37.5`)
-    Horizontal camera angle in degrees, matching [`Lens::planar`](../pane/lens.md)/
-    [`Lens::spatial`](../pane/lens.md)'s own `spatial()` default.
-
-**elevation_deg** (`double`, default `30.0`)
-    Vertical camera angle in degrees, matching `Lens::spatial()`'s own default.
-
-**view_angle_deg** (`double`, default `30.0`)
-    Field-of-view angle in degrees, used under `Perspective` projection.
-
-**projection** (`ProjectionKind`, default `Orthographic`)
-    `Orthographic` or `Perspective` — forwarded to [`Lens::project`](../pane/lens.md).
+| Field | Type and default | Description |
+|---|---|---|
+| `azimuth_deg` | `double`, default `-37.5` | Horizontal camera angle in degrees, matching [`Lens::planar`](../pane/lens.md)/ [`Lens::spatial`](../pane/lens.md)'s own `spatial()` default. |
+| `elevation_deg` | `double`, default `30.0` | Vertical camera angle in degrees, matching `Lens::spatial()`'s own default. |
+| `view_angle_deg` | `double`, default `30.0` | Field-of-view angle in degrees, used under `Perspective` projection. |
+| `projection` | `ProjectionKind`, default `Orthographic` | `Orthographic` or `Perspective` — forwarded to [`Lens::project`](../pane/lens.md). |
 
 ## Returns
 

@@ -2,11 +2,9 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
+**Header:** `<pluss/bi/specs.h>`
 
-class Control;
-```
+**Type:** `Control`
 
 A `Control` is a tile that filters the other tiles on its board. It reads one feature and offers the values of that feature, or a range, as a choice. Build one with a DSL constructor such as `bi::category`, `bi::range`, or `bi::time_range`. A control sets a filter on the session, so the views on the board show only the rows the control selects.
 

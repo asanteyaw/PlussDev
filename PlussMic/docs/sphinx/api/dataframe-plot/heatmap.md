@@ -73,17 +73,19 @@ combination with no matching rows at all) with `0` before rendering.
     `Max`, `Std`, `Var`, or `Mode`.
 
 **options** (`HeatmapPlotOptions`)
-    ```cpp
-    struct HeatmapPlotOptions {
-      bool annotate_levels{false};
-      bool scale_guide{true};
-      bool borderless{false};
-    };
-    ```
-    `annotate_levels = true` prints each cell's numeric value directly on the heatmap.
-    `scale_guide` controls whether a color-scale legend/guide is drawn alongside the
-    matrix. `borderless = true` removes cell borders and also suppresses the default 30°
-    y-axis tick label rotation that's otherwise applied automatically.
+
+### `HeatmapPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `annotate_levels` | `bool` | `false` |
+| `scale_guide` | `bool` | `true` |
+| `borderless` | `bool` | `false` |
+
+`annotate_levels = true` prints each cell's numeric value directly on the heatmap.
+`scale_guide` controls whether a color-scale legend/guide is drawn alongside the
+matrix. `borderless = true` removes cell borders and also suppresses the default 30°
+y-axis tick label rotation that's otherwise applied automatically.
 
 ## Returns
 

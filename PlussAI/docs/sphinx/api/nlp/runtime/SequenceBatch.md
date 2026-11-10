@@ -7,18 +7,18 @@ its three methods.
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::runtime::SequenceBatch {
-  pluss::Series token_ids;
-  pluss::Series position_ids;
-  pluss::Series valid_mask;
-  pluss::Series key_padding_mask;
-  pluss::Series lengths;
-  std::int64_t batch_size = 0;
-  std::int64_t max_length = 0;
-  bool batch_first = true;
-};
-```
+### `pluss::ai::nlp::runtime::SequenceBatch` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `token_ids` | `pluss::Series` | — |
+| `position_ids` | `pluss::Series` | — |
+| `valid_mask` | `pluss::Series` | — |
+| `key_padding_mask` | `pluss::Series` | — |
+| `lengths` | `pluss::Series` | — |
+| `batch_size` | `std::int64_t` | `0` |
+| `max_length` | `std::int64_t` | `0` |
+| `batch_first` | `bool` | `true` |
 
 ## State
 

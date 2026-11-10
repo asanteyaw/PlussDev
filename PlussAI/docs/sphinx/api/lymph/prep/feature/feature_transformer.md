@@ -68,9 +68,12 @@ it directly with `learn_map` on a `FeatureBatch`.
 
 ## The remainder policy
 
-```cpp
-enum class FeatureRemainderPolicy : std::uint8_t { Drop = 0, PassThrough = 1 };
-```
+### `FeatureRemainderPolicy` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Drop` | `0` | — |
+| `PassThrough` | `1` | — |
 
 The **remainder** is every column in `feature_order` that no branch routes to.
 `Drop` leaves it out of the output; `PassThrough` appends it unchanged, after

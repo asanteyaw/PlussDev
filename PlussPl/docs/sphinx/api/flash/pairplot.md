@@ -7,52 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class PairPlotTriangle : std::uint8_t { Full, Lower, Upper };
-enum class PairPlotKind : std::uint8_t { Scatter, Reg };
-enum class PairPlotDiagKind : std::uint8_t { Histogram, Density };
-
-struct PairPlotOptions {
-  PairPlotTriangle triangle{PairPlotTriangle::Full};
-  PairPlotKind kind{PairPlotKind::Scatter};
-  PairPlotDiagKind diag_kind{PairPlotDiagKind::Histogram};
-  bool corner{false};
-  bool dropna{false};
-  bool monochrome{true};
-  std::optional<int> auto_tick_decimals{std::nullopt};
-  std::vector<std::string> labels{};
-  bool auto_size{true};
-  double min_width{1280.0};
-  double min_height{900.0};
-  double cell_width{210.0};
-  double cell_height{210.0};
-  double outer_pad_x{120.0};
-  double outer_pad_y{120.0};
-  std::int64_t max_points{2500};
-  std::int64_t diag_bins{14};
-  double grid_gap_x{8.0};
-  double grid_gap_y{8.0};
-  double tick_font_scale{0.8};
-  double axis_label_font_scale{0.9};
-  float diag_trace_width{0.75F};
-  float scatter_trace_width{0.45F};
-  double marker_area_scale{380.0};
-  double marker_area_min{7.0};
-  double marker_area_max{18.0};
-  bool show_grid{false};
-  bool hide_inner_ticks{true};
-  std::int64_t diag_density_points{128};
-  std::optional<double> x_tick_rotation_deg{std::nullopt};
-  std::optional<double> y_tick_rotation_deg{std::nullopt};
-  std::optional<double> x_label_rotation_deg{std::nullopt};
-  std::optional<double> y_label_rotation_deg{std::nullopt};
-  std::optional<TickFormat> x_tick_format{std::nullopt};
-  std::optional<TickFormat> y_tick_format{std::nullopt};
-  std::optional<double> x_tick_label_gap_points{std::nullopt};
-  std::optional<double> y_tick_label_gap_points{std::nullopt};
-  std::optional<double> x_label_gap_points{std::nullopt};
-  std::optional<double> y_label_gap_points{std::nullopt};
-};
-
 Studio& flash::pairplot(Studio& studio, pluss::msharp::RangeView::Series columns,
                          const PairPlotOptions& options = {})
 
@@ -128,137 +82,58 @@ size the Studio already had.
 
 ## `PairPlotOptions` fields
 
-**Content**
+### Content
 
-**triangle** (`PairPlotTriangle`, default `Full`)
-    Which off-diagonal cells to keep visible: `Full` (every cell), `Lower` (`row >= col`
-    only), or `Upper` (`row <= col` only). Excluded cells are still created, then hidden.
+| Field | Type and default | Description |
+|---|---|---|
+| `triangle` | `PairPlotTriangle`, default `Full` | Which off-diagonal cells to keep visible: `Full` (every cell), `Lower` (`row >= col` only), or `Upper` (`row <= col` only). Excluded cells are still created, then hidden. |
+| `kind` | `PairPlotKind`, default `Scatter` | The off-diagonal glyph: `Scatter` (a point cloud via [`Pane::cloud`](../pane/cloud.md)) or `Reg` (the same scatter plus a fit-only regression line, drawn via [`flash::regplot`](regplot.md) with `show_scatter=false`, `show_ci=false`). |
+| `diag_kind` | `PairPlotDiagKind`, default `Histogram` | The diagonal glyph: `Histogram` (via [`Pane::bucket`](../pane/bucket.md), using `diag_bins`) or `Density` (a KDE curve via [`Pane::trend`](../pane/trend.md), using `diag_density_points`, clamped to at least `32`). |
+| `corner` | `bool`, default `false` | See the important callout above — silently forces `triangle` to `Lower` when `triangle` is still at its default `Full`. |
+| `dropna` | `bool`, default `false` | Whether to drop every row where *any* feature is non-finite (`NaN`/`Inf`) before plotting, computed via a combined `isfinite()`/`logical_and()` mask across all features. When all rows are dropped, `pairplot` throws `std::invalid_argument("flash::pairplot has no rows after filtering/sampling")`. |
+| `monochrome` | `bool`, default `true` | Whether every trace uses the theme's default single stroke color (`true`) or a per-panel color drawn from an internal categorical palette (`false`) — diagonal traces color by row index, off-diagonal traces color by `row + col`. |
+| `labels` | `std::vector<std::string>`, default empty | Feature names for the outer-edge axis labels. Used only when its length exactly matches the feature count; otherwise every feature falls back to an auto-generated `"x" + std::to_string(index + 1)` label (`"x1"`, `"x2"`, …). |
 
-**kind** (`PairPlotKind`, default `Scatter`)
-    The off-diagonal glyph: `Scatter` (a point cloud via [`Pane::cloud`](../pane/cloud.md))
-    or `Reg` (the same scatter plus a fit-only regression line, drawn via
-    [`flash::regplot`](regplot.md) with `show_scatter=false`, `show_ci=false`).
+### Sizing & layout
 
-**diag_kind** (`PairPlotDiagKind`, default `Histogram`)
-    The diagonal glyph: `Histogram` (via [`Pane::bucket`](../pane/bucket.md), using
-    `diag_bins`) or `Density` (a KDE curve via [`Pane::trend`](../pane/trend.md), using
-    `diag_density_points`, clamped to at least `32`).
+| Field | Type and default | Description |
+|---|---|---|
+| `auto_size` | `bool`, default `true` | Whether `pairplot` calls `Studio::size()` itself. See the important callout above. |
+| `min_width`, `min_height` | `double`, default `1280.0`, `900.0` | The floor `Studio::size()` is clamped to when `auto_size` is `true`, regardless of how small the computed suggested size would otherwise be. |
+| `cell_width`, `cell_height` | `double`, default `210.0` each | The per-cell size (in points) used by the `auto_size` width/height computation. |
+| `outer_pad_x`, `outer_pad_y` | `double`, default `120.0` each | Extra margin (in points) added once to the `auto_size` width/height computation, for outer axis labels/ticks. |
+| `grid_gap_x`, `grid_gap_y` | `double`, default `8.0` each | The gutter between cells, forwarded straight to `Studio::mosaic`. |
+| `show_grid` | `bool`, default `false` | Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`) — note `pairplot`'s default is `false`, the opposite of most other `flash::` grid-of-plots functions. |
+| `hide_inner_ticks` | `bool`, default `true` | See the first important callout above. |
 
-**corner** (`bool`, default `false`)
-    See the important callout above — silently forces `triangle` to `Lower` when
-    `triangle` is still at its default `Full`.
+### Sampling & diagonal detail
 
-**dropna** (`bool`, default `false`)
-    Whether to drop every row where *any* feature is non-finite (`NaN`/`Inf`) before
-    plotting, computed via a combined `isfinite()`/`logical_and()` mask across all
-    features. When all rows are dropped, `pairplot` throws
-    `std::invalid_argument("flash::pairplot has no rows after filtering/sampling")`.
+| Field | Type and default | Description |
+|---|---|---|
+| `max_points` | `std::int64_t`, default `2500` | Row-count cap. When a feature has more rows than this, every column is deterministically downsampled to an evenly-strided subset of at most `max_points` rows (same mechanism as [`flash::relgridplot`](relgridplot.md)'s siblings share via `detail::downsample_columns`). |
+| `diag_bins` | `std::int64_t`, default `14` | Bin count forwarded to `Pane::bucket` when `diag_kind == Histogram`. Clamped to at least `1`. |
+| `diag_density_points` | `std::int64_t`, default `128` | KDE evaluation-point count when `diag_kind == Density`. Clamped to at least `32`. |
 
-**monochrome** (`bool`, default `true`)
-    Whether every trace uses the theme's default single stroke color (`true`) or a
-    per-panel color drawn from an internal categorical palette (`false`) — diagonal traces
-    color by row index, off-diagonal traces color by `row + col`.
+### Font, marker, and stroke tuning
 
-**labels** (`std::vector<std::string>`, default empty)
-    Feature names for the outer-edge axis labels. Used only when its length exactly
-    matches the feature count; otherwise every feature falls back to an auto-generated
-    `"x" + std::to_string(index + 1)` label (`"x1"`, `"x2"`, …).
+| Field | Type and default | Description |
+|---|---|---|
+| `tick_font_scale` | `double`, default `0.8` | The base tick-label font scale for edge panes (non-edge panes use this scaled further down by `hide_inner_ticks`). Non-finite or non-positive values fall back to `0.8`. |
+| `axis_label_font_scale` | `double`, default `0.9` | The axis-label font scale, applied to every pane. Non-finite or non-positive values fall back to `0.9`. |
+| `diag_trace_width` | `float`, default `0.75F` | Stroke width for diagonal traces. |
+| `scatter_trace_width` | `float`, default `0.45F` | Stroke width for off-diagonal scatter markers (and the baseline `regplot` fit-line width is derived from this when `kind == Reg`: `max(0.8F, scatter_trace_width + 0.45F)`). |
+| `marker_area_scale`, `marker_area_min`, `marker_area_max` | `double`, default `380.0`, `7.0`, `18.0` | Off-diagonal marker area is computed as `marker_area_scale / sqrt(points * feature_count)`, then clamped to `[marker_area_min, marker_area_max]` — larger point counts and feature grids automatically shrink markers to reduce overplotting. |
+| `auto_tick_decimals` | `std::optional<int>`, default `std::nullopt` | When set, forwarded to both [`Pane::x_auto_tick_decimals`](../pane/x_auto_tick_decimals.md) and [`Pane::y_auto_tick_decimals`](../pane/y_auto_tick_decimals.md) on every pane. Left alone (each axis's own default) when unset. |
 
-**Sizing & layout**
+### Per-axis tick/label passthroughs
 
-**auto_size** (`bool`, default `true`)
-    Whether `pairplot` calls `Studio::size()` itself. See the important callout above.
-
-**min_width**, **min_height** (`double`, default `1280.0`, `900.0`)
-    The floor `Studio::size()` is clamped to when `auto_size` is `true`, regardless of how
-    small the computed suggested size would otherwise be.
-
-**cell_width**, **cell_height** (`double`, default `210.0` each)
-    The per-cell size (in points) used by the `auto_size` width/height computation.
-
-**outer_pad_x**, **outer_pad_y** (`double`, default `120.0` each)
-    Extra margin (in points) added once to the `auto_size` width/height computation, for
-    outer axis labels/ticks.
-
-**grid_gap_x**, **grid_gap_y** (`double`, default `8.0` each)
-    The gutter between cells, forwarded straight to `Studio::mosaic`.
-
-**show_grid** (`bool`, default `false`)
-    Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None`
-    (`false`) — note `pairplot`'s default is `false`, the opposite of most other
-    `flash::` grid-of-plots functions.
-
-**hide_inner_ticks** (`bool`, default `true`)
-    See the first important callout above.
-
-**Sampling & diagonal detail**
-
-**max_points** (`std::int64_t`, default `2500`)
-    Row-count cap. When a feature has more rows than this, every column is deterministically
-    downsampled to an evenly-strided subset of at most `max_points` rows (same mechanism as
-    [`flash::relgridplot`](relgridplot.md)'s siblings share via `detail::downsample_columns`).
-
-**diag_bins** (`std::int64_t`, default `14`)
-    Bin count forwarded to `Pane::bucket` when `diag_kind == Histogram`. Clamped to at
-    least `1`.
-
-**diag_density_points** (`std::int64_t`, default `128`)
-    KDE evaluation-point count when `diag_kind == Density`. Clamped to at least `32`.
-
-**Font, marker, and stroke tuning**
-
-**tick_font_scale** (`double`, default `0.8`)
-    The base tick-label font scale for edge panes (non-edge panes use this scaled further
-    down by `hide_inner_ticks`). Non-finite or non-positive values fall back to `0.8`.
-
-**axis_label_font_scale** (`double`, default `0.9`)
-    The axis-label font scale, applied to every pane. Non-finite or non-positive values
-    fall back to `0.9`.
-
-**diag_trace_width** (`float`, default `0.75F`)
-    Stroke width for diagonal traces.
-
-**scatter_trace_width** (`float`, default `0.45F`)
-    Stroke width for off-diagonal scatter markers (and the baseline `regplot` fit-line
-    width is derived from this when `kind == Reg`: `max(0.8F, scatter_trace_width +
-    0.45F)`).
-
-**marker_area_scale**, **marker_area_min**, **marker_area_max** (`double`, default
-`380.0`, `7.0`, `18.0`)
-    Off-diagonal marker area is computed as `marker_area_scale / sqrt(points *
-    feature_count)`, then clamped to `[marker_area_min, marker_area_max]` — larger point
-    counts and feature grids automatically shrink markers to reduce overplotting.
-
-**auto_tick_decimals** (`std::optional<int>`, default `std::nullopt`)
-    When set, forwarded to both [`Pane::x_auto_tick_decimals`](../pane/x_auto_tick_decimals.md)
-    and [`Pane::y_auto_tick_decimals`](../pane/y_auto_tick_decimals.md) on every pane. Left
-    alone (each axis's own default) when unset.
-
-**Per-axis tick/label passthroughs**
-
-**x_tick_rotation_deg**, **y_tick_rotation_deg** (`std::optional<double>`, default
-`std::nullopt`)
-    Forwarded to [`Pane::x_tick_rotation`](../pane/x_tick_rotation.md)/
-    [`y_tick_rotation`](../pane/y_tick_rotation.md) when set.
-
-**x_label_rotation_deg**, **y_label_rotation_deg** (`std::optional<double>`, default
-`std::nullopt`)
-    Forwarded to [`Pane::x_label_rotation`](../pane/x_label_rotation.md)/
-    [`y_label_rotation`](../pane/y_label_rotation.md) when set.
-
-**x_tick_format**, **y_tick_format** (`std::optional<TickFormat>`, default `std::nullopt`)
-    Forwarded to [`Pane::x_tick_format`](../pane/x_tick_format.md)/
-    [`y_tick_format`](../pane/y_tick_format.md) when set.
-
-**x_tick_label_gap_points**, **y_tick_label_gap_points** (`std::optional<double>`, default
-`std::nullopt`)
-    Forwarded to [`Pane::x_tick_label_gap`](../pane/x_tick_label_gap.md)/
-    [`y_tick_label_gap`](../pane/y_tick_label_gap.md) when set.
-
-**x_label_gap_points**, **y_label_gap_points** (`std::optional<double>`, default
-`std::nullopt`)
-    Forwarded to [`Pane::x_label_gap`](../pane/x_label_gap.md)/
-    [`y_label_gap`](../pane/y_label_gap.md) when set.
+| Field | Type and default | Description |
+|---|---|---|
+| `x_tick_rotation_deg`, `y_tick_rotation_deg` | `std::optional<double>`, default `std::nullopt` | Forwarded to [`Pane::x_tick_rotation`](../pane/x_tick_rotation.md)/ [`y_tick_rotation`](../pane/y_tick_rotation.md) when set. |
+| `x_label_rotation_deg`, `y_label_rotation_deg` | `std::optional<double>`, default `std::nullopt` | Forwarded to [`Pane::x_label_rotation`](../pane/x_label_rotation.md)/ [`y_label_rotation`](../pane/y_label_rotation.md) when set. |
+| `x_tick_format`, `y_tick_format` | `std::optional<TickFormat>`, default `std::nullopt` | Forwarded to [`Pane::x_tick_format`](../pane/x_tick_format.md)/ [`y_tick_format`](../pane/y_tick_format.md) when set. |
+| `x_tick_label_gap_points`, `y_tick_label_gap_points` | `std::optional<double>`, default `std::nullopt` | Forwarded to [`Pane::x_tick_label_gap`](../pane/x_tick_label_gap.md)/ [`y_tick_label_gap`](../pane/y_tick_label_gap.md) when set. |
+| `x_label_gap_points`, `y_label_gap_points` | `std::optional<double>`, default `std::nullopt` | Forwarded to [`Pane::x_label_gap`](../pane/x_label_gap.md)/ [`y_label_gap`](../pane/y_label_gap.md) when set. |
 
 ## Parameters
 

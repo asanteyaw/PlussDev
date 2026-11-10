@@ -15,12 +15,12 @@ LocusPull::options(const PullOptions& options) -> LocusPull&
 Replaces the plan's raggedness and root-key policy wholesale -- the most
 recent call wins; `options()` does not merge with whatever was set before.
 
-```cpp
-struct PullOptions {
-  RaggedPolicy ragged{RaggedPolicy::defaults(OpClass::Relational)};
-  bool require_primary_key{true};
-};
-```
+### `PullOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `defaults` | `Method` | `RaggedPolicy ragged{RaggedPolicy::defaults(OpClass::Relational)}` |
+| `require_primary_key` | `bool` | `true` |
 
 | Field | Meaning | Default |
 |---|---|---|

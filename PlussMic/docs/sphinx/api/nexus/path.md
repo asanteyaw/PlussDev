@@ -21,20 +21,22 @@ itself). The result is a `JoinPath`, not a `DataFrame` — it describes *how* to
 `from` to `to`, and feeds directly into [`plan()`](plan.md) to become an executable
 [`JoinPlan`](plan.md).
 
-```cpp
-struct JoinPathStep {
-  std::string relationship_name{};
-  std::string from_table{};
-  std::string to_table{};
-  bool reversed{false};
-};
+### `JoinPathStep` fields
 
-struct JoinPath {
-  std::string from{};
-  std::string to{};
-  std::vector<JoinPathStep> steps{};
-};
-```
+| Field | Type | Default |
+|---|---|---|
+| `relationship_name` | `std::string` | empty |
+| `from_table` | `std::string` | empty |
+| `to_table` | `std::string` | empty |
+| `reversed` | `bool` | `false` |
+
+### `JoinPath` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `from` | `std::string` | empty |
+| `to` | `std::string` | empty |
+| `steps` | `std::vector<JoinPathStep>` | empty |
 
 Each `JoinPathStep` names the relationship being traversed and which direction it's being
 traversed in (`reversed = true` when the step goes from that relationship's declared

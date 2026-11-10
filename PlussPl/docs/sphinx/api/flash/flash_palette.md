@@ -7,8 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class FlashPalette : std::uint8_t { Deep, Muted, Pastel, Bright, Dark, Colorblind };
-
 PaletteRamp flash::flash_palette(FlashPalette palette = FlashPalette::Deep)
 PaletteRamp flash::flash_palette(std::string_view name)
 ```

@@ -6,16 +6,16 @@
 to `HoldoutPlan`, whose chained setters refine it; `HoldoutPlan::options()`
 reads it back.
 
-```cpp
-struct HoldoutSplitOptions {
-  double        test_size        = 0.2;
-  Series        stratify         = pluss::series::undefined();
-  std::string   stratify_feature = {};
-  std::uint64_t random_state     = 0;
-  bool          deterministic    = true;
-  bool          shuffle          = true;
-};
-```
+### `HoldoutSplitOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `test_size` | `double` | `0.2` |
+| `undefined` | `Method` | `Series        stratify         = pluss::series::undefined()` |
+| `stratify_feature` | `std::string` | `{}` |
+| `random_state` | `std::uint64_t` | `0` |
+| `deterministic` | `bool` | `true` |
+| `shuffle` | `bool` | `true` |
 
 ## Fields
 

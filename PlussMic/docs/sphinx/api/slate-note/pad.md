@@ -19,9 +19,13 @@ Grows every cell of the bound slate up to a target character `width` by adding
 forward to [`Slate::pad()`](../slate/pad.md). Requires the bound slate to be
 `Note`-kind.
 
-```cpp
-enum class TextAlign { Left = 0, Right = 1, Center = 2 };
-```
+### `TextAlign` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Left` | `0` | — |
+| `Right` | `1` | — |
+| `Center` | `2` | — |
 
 - **`TextAlign::Left`** (the default): fill characters are added on the **right**.
 - **`TextAlign::Right`**: fill characters are added on the **left** — the classic

@@ -64,13 +64,13 @@ everything else in the row.
 
 A `StatusOr<DependenceCurve>`:
 
-```cpp
-struct classic::DependenceCurve {
-  std::int64_t feature_index;   // echoes the argument back
-  pluss::Series grid;           // Float64, length grid_points
-  pluss::Series mean_prediction; // Float64, length grid_points
-};
-```
+### `classic::DependenceCurve` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `feature_index` | `std::int64_t` | — |
+| `grid` | `pluss::Series` | — |
+| `mean_prediction` | `pluss::Series` | — |
 
 For a classifier, `mean_prediction[i]` is the mean **predicted
 probability** (`sigmoid(infer_scores(...))`, averaged across `eval`'s

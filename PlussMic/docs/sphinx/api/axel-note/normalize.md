@@ -19,14 +19,14 @@ Applies
 [`RegistryNoteAccessor::normalize`](../registry-note/normalize.md) to
 every frame via [`Axel::map`](../axel/map.md).
 
-```cpp
-enum class UnicodeForm : std::uint8_t {
-  NFC = 0,
-  NFD = 1,
-  NFKC = 2,
-  NFKD = 3,
-};
-```
+### `UnicodeForm` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `NFC` | `0` | — |
+| `NFD` | `1` | — |
+| `NFKC` | `2` | — |
+| `NFKD` | `3` | — |
 
 Normalization matters when the same visual character can be represented
 by different underlying byte sequences (for example, a precomposed

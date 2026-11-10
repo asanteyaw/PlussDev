@@ -16,14 +16,14 @@ DataFrameNoteAccessor::normalize(UnicodeForm form = UnicodeForm::NFC) const -> D
 Applies Unicode text normalization to every selected feature's cells,
 choosing one of the four standard Unicode Normalization Forms via `form`:
 
-```cpp
-enum class UnicodeForm {
-  NFC = 0,   // Canonical Decomposition, followed by Canonical Composition
-  NFD = 1,   // Canonical Decomposition
-  NFKC = 2,  // Compatibility Decomposition, followed by Canonical Composition
-  NFKD = 3,  // Compatibility Decomposition
-};
-```
+### `UnicodeForm` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `NFC` | `0` | Canonical Decomposition, followed by Canonical Composition |
+| `NFD` | `1` | Canonical Decomposition |
+| `NFKC` | `2` | Compatibility Decomposition, followed by Canonical Composition |
+| `NFKD` | `3` | Compatibility Decomposition |
 
 Normalization matters for text that might contain the same visible
 character represented in more than one way — most commonly, a precomposed

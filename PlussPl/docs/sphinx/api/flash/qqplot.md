@@ -7,14 +7,6 @@
 ## Signatures
 
 ```cpp
-struct QqPlotOptions {
-  bool standardize = true;
-  bool show_reference_line = true;
-  double marker_area = 14.0;
-  float trace_width = 0.75F;
-  float reference_width = 1.0F;
-};
-
 template <class Values>
 Trace& flash::qqplot(Pane& pane, Values&& values, const QqPlotOptions& options = {})
 
@@ -56,27 +48,13 @@ and never dangles.
 
 ## `QqPlotOptions` fields
 
-**standardize** (`bool`, default `true`)
-    When `true` (the default), the sample is standardized (`(x - mean) / population_stddev`)
-    before plotting, so the sample-quantile axis is in "standard deviations" units
-    directly comparable to the theoretical-quantile axis. When `false`, the sample keeps
-    its original units. Standardization is skipped (silently, no error) if the sample's
-    standard deviation is at or below `1e-12` — a constant (zero-variance) sample is left
-    as-is either way.
-
-**show_reference_line** (`bool`, default `true`)
-    Whether to draw a straight reference line through the sample's 25th/75th percentile
-    points (an IQR-based reference, robust to outliers — not a simple `y = x` line, and
-    not a least-squares fit of the qq points themselves).
-
-**marker_area** (`double`, default `14.0`, clamped to a minimum of `2.0`)
-    The qq points' marker size.
-
-**trace_width** (`float`, default `0.75F`)
-    The qq scatter trace's stroke width.
-
-**reference_width** (`float`, default `1.0F`)
-    The reference line's stroke width.
+| Field | Type and default | Description |
+|---|---|---|
+| `standardize` | `bool`, default `true` | When `true` (the default), the sample is standardized (`(x - mean) / population_stddev`) before plotting, so the sample-quantile axis is in "standard deviations" units directly comparable to the theoretical-quantile axis. When `false`, the sample keeps its original units. Standardization is skipped (silently, no error) if the sample's standard deviation is at or below `1e-12` — a constant (zero-variance) sample is left as-is either way. |
+| `show_reference_line` | `bool`, default `true` | Whether to draw a straight reference line through the sample's 25th/75th percentile points (an IQR-based reference, robust to outliers — not a simple `y = x` line, and not a least-squares fit of the qq points themselves). |
+| `marker_area` | `double`, default `14.0`, clamped to a minimum of `2.0` | The qq points' marker size. |
+| `trace_width` | `float`, default `0.75F` | The qq scatter trace's stroke width. |
+| `reference_width` | `float`, default `1.0F` | The reference line's stroke width. |
 
 ## Parameters
 

@@ -34,14 +34,14 @@ The two-argument overload takes an explicit `TextOptions`, letting you choose
 `regex` and `case_sensitive` independently, and cap the count with `limit` (default
 `-1`, meaning unlimited):
 
-```cpp
-struct TextOptions {
-  bool regex{false};
-  bool case_sensitive{true};
-  std::int64_t limit{-1};
-  std::string prefix{"part"};  // unused by count()
-};
-```
+### `TextOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `regex` | `bool` | `false` |
+| `case_sensitive` | `bool` | `true` |
+| `limit` | `std::int64_t` | `-1` |
+| `prefix` | `std::string` | `"part"` |
 
 Matches never overlap: once a match is found, scanning resumes right after it, so
 `count("aa")` on `"aaaa"` reports `2`, not `3`.

@@ -60,12 +60,12 @@ translate a validation plan into one and turn on its reliability defaults
 
 ## A `GridAxis`
 
-```cpp
-struct GridAxis {
-  std::string name{};             // point.at("name") lookup, and trial labels
-  std::vector<double> values{};   // the discrete values to sweep
-};
-```
+### `GridAxis` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `name` | `std::string` | — |
+| `values` | `std::vector<double>` | — |
 
 Values are always `double`. For a boolean or enum hyperparameter, sweep `{0.0,
 1.0}` (or `{0, 1, 2}`) and convert inside `make_model`:

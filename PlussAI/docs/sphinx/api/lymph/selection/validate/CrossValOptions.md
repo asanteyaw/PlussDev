@@ -8,24 +8,24 @@ behind every [`Plan`](Plan.md). The [`cross`](cross.md) /
 factories each set `plan` and hand the rest to `Plan`, where the chained setters
 refine it further. `Plan::options()` reads it back.
 
-```cpp
-struct CrossValOptions {
-  CVPlanKind    plan                 = CVPlanKind::CrossVal;
-  double        holdout_fraction     = 0.2;
-  std::int64_t  folds                = 5;
-  std::int64_t  repeats              = 1;
-  std::int64_t  time_gap             = 0;
-  std::int64_t  time_test_size       = 0;
-  std::int64_t  time_max_train_size  = 0;
-  bool          stratified           = false;
-  Series        groups               = pluss::series::undefined();
-  bool          reliability_defaults = true;
-  bool          shuffle              = true;
-  std::int64_t  max_parallel         = 0;
-  std::uint64_t random_state         = 0;
-  bool          deterministic        = true;
-};
-```
+### `CrossValOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `plan` | `CVPlanKind` | `CVPlanKind::CrossVal` |
+| `holdout_fraction` | `double` | `0.2` |
+| `folds` | `std::int64_t` | `5` |
+| `repeats` | `std::int64_t` | `1` |
+| `time_gap` | `std::int64_t` | `0` |
+| `time_test_size` | `std::int64_t` | `0` |
+| `time_max_train_size` | `std::int64_t` | `0` |
+| `stratified` | `bool` | `false` |
+| `undefined` | `Method` | `Series        groups               = pluss::series::undefined()` |
+| `reliability_defaults` | `bool` | `true` |
+| `shuffle` | `bool` | `true` |
+| `max_parallel` | `std::int64_t` | `0` |
+| `random_state` | `std::uint64_t` | `0` |
+| `deterministic` | `bool` | `true` |
 
 ## Fields
 

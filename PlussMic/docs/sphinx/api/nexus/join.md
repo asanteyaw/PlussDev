@@ -20,16 +20,16 @@ that chains several `join()`-style steps together from a [`JoinPlan`](plan.md), 
 [`NexusTraverse`](../../nexus_traverse_api_reference) (via [`from()`](from.md)) is the fluent,
 higher-level way to build that chain without constructing a `JoinPlan` by hand.
 
-```cpp
-struct JoinSpec {
-  std::vector<std::pair<std::string, std::string>> keys{};
-  JoinHow how{JoinHow::Inner};
-  std::string right_suffix{};
-  std::optional<RelationshipCardinality> validate{};
-  std::optional<std::string> relationship_name{};
-  std::optional<std::string> result_name{};
-};
-```
+### `JoinSpec` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `keys` | `std::vector<std::pair<std::string, std::string>>` | empty |
+| `how` | `JoinHow` | `JoinHow::Inner` |
+| `right_suffix` | `std::string` | empty |
+| `validate` | `std::optional<RelationshipCardinality>` | empty |
+| `relationship_name` | `std::optional<std::string>` | empty |
+| `result_name` | `std::optional<std::string>` | empty |
 
 `keys` lists `(left_feature, right_feature)` pairs to join on. `how` picks the join
 semantics (`Inner`, `Left`, `Right`, `Outer`, `Cross`, `LeftOnly`, `RightOnly` — see

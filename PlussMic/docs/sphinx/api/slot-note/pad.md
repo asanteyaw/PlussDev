@@ -18,13 +18,13 @@ Slot SlotNoteAccessor::pad(std::int64_t width,
 Pads every value in the bound slot out to at least `width` characters,
 using `fill` and the alignment given by `align`.
 
-```cpp
-enum class TextAlign : std::uint8_t {
-  Left = 0,
-  Right = 1,
-  Center = 2,
-};
-```
+### `TextAlign` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Left` | `0` | — |
+| `Right` | `1` | — |
+| `Center` | `2` | — |
 
 `align` describes where the *original text* ends up, not where the
 padding goes.

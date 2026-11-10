@@ -30,17 +30,19 @@ feature `j`. Follows the same numeric-feature rules as [`box()`](box.md) — an 
     frame — see [`box()`](box.md)'s important callout for the exact rule and throw text.
 
 **options** (`CorrHeatmapPlotOptions`)
-    ```cpp
-    struct CorrHeatmapPlotOptions {
-      bool annotate_levels{true};
-      bool scale_guide{true};
-      bool borderless{false};
-    };
-    ```
-    Same fields as [`heatmap()`](heatmap.md)'s `HeatmapPlotOptions`, but note the different
-    default: `annotate_levels` defaults to `true` here (each cell's correlation coefficient
-    is printed by default), where plain `heatmap()` defaults it to `false`. `borderless =
-    true` here also suppresses the default 30° y-tick rotation, same as `heatmap()`.
+
+### `CorrHeatmapPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `annotate_levels` | `bool` | `true` |
+| `scale_guide` | `bool` | `true` |
+| `borderless` | `bool` | `false` |
+
+Same fields as [`heatmap()`](heatmap.md)'s `HeatmapPlotOptions`, but note the different
+default: `annotate_levels` defaults to `true` here (each cell's correlation coefficient
+is printed by default), where plain `heatmap()` defaults it to `false`. `borderless =
+true` here also suppresses the default 30° y-tick rotation, same as `heatmap()`.
 
 ## Returns
 

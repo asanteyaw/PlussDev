@@ -39,33 +39,37 @@ points"`.
     [`act()`](act.md)'s shared-diagnostics note.
 
 **options** (`BootstrapPlotOptions`)
-    ```cpp
-    enum class BootstrapStatistic : std::uint8_t {
-      Mean,
-      Median,
-      Std,
-    };
 
-    struct BootstrapPlotOptions {
-      std::int64_t samples{300};
-      std::int64_t sample_size{0};
-      std::uint64_t seed{7};
-      int bins{24};
-      BootstrapStatistic statistic{BootstrapStatistic::Mean};
-      float trace_width{0.85F};
-    };
-    ```
-    `samples` is how many resamples are drawn; clamped to a minimum of `8` internally.
-    `sample_size` is how many rows (with replacement) each resample draws — `0` (the
-    default) means "same size as the original feature," the conventional bootstrap setting;
-    a positive value overrides this. `seed` seeds the random draws deterministically — each
-    of the `samples` resamples uses `seed + i + 1` internally (`i` from `0` to
-    `samples - 1`), so the same `seed` reproduces the same sampling distribution across
-    runs. `statistic` chooses what's computed per resample: `Mean` (arithmetic mean),
-    `Median` (via a full sort and exact quantile at `0.5`), or `Std` (population standard
-    deviation, i.e. divided by `n` rather than `n - 1`). `bins` controls the histogram
-    resolution of the resulting distribution (floored to a minimum of `4`). `trace_width`
-    controls the histogram bars' outline width.
+### `BootstrapStatistic` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Mean` | — | — |
+| `Median` | — | — |
+| `Std` | — | — |
+
+### `BootstrapPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `samples` | `std::int64_t` | `300` |
+| `sample_size` | `std::int64_t` | `0` |
+| `seed` | `std::uint64_t` | `7` |
+| `bins` | `int` | `24` |
+| `statistic` | `BootstrapStatistic` | `BootstrapStatistic::Mean` |
+| `trace_width` | `float` | `0.85F` |
+
+`samples` is how many resamples are drawn; clamped to a minimum of `8` internally.
+`sample_size` is how many rows (with replacement) each resample draws — `0` (the
+default) means "same size as the original feature," the conventional bootstrap setting;
+a positive value overrides this. `seed` seeds the random draws deterministically — each
+of the `samples` resamples uses `seed + i + 1` internally (`i` from `0` to
+`samples - 1`), so the same `seed` reproduces the same sampling distribution across
+runs. `statistic` chooses what's computed per resample: `Mean` (arithmetic mean),
+`Median` (via a full sort and exact quantile at `0.5`), or `Std` (population standard
+deviation, i.e. divided by `n` rather than `n - 1`). `bins` controls the histogram
+resolution of the resulting distribution (floored to a minimum of `4`). `trace_width`
+controls the histogram bars' outline width.
 
 ## Returns
 

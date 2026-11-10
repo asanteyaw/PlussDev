@@ -11,11 +11,11 @@
 Stream::distinct(DistinctOptions options = {}) const -> Stream
 ```
 
-```cpp
-struct DistinctOptions {
-  bool dropnull{true};
-};
-```
+### `DistinctOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `dropnull` | `bool` | `true` |
 
 ## What It Does
 

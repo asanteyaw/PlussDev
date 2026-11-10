@@ -7,13 +7,6 @@
 ## Signature
 
 ```cpp
-struct AutocorrelationPlotOptions {
-  std::int64_t max_lag{40};
-  bool show_confidence_band{true};
-  double confidence_level{0.95};
-  float trace_width{1.2F};
-};
-
 template <class Values>
 Studio& flash::actplot(Studio& studio, Values&& values, const AutocorrelationPlotOptions& options = {})
 ```
@@ -52,18 +45,12 @@ purely as a smaller-surface, more conventionally-named entry point ("act" for
 
 ## `AutocorrelationPlotOptions` fields
 
-**max_lag** (`std::int64_t`, default `40`)
-    Forwarded to [`AcfPlotOptions::max_lag`](acfplot.md).
-
-**show_confidence_band** (`bool`, default `true`)
-    Forwarded to [`AcfPlotOptions::show_confidence_band`](acfplot.md).
-
-**confidence_level** (`double`, default `0.95`)
-    Forwarded to [`AcfPlotOptions::confidence_level`](acfplot.md) — same discrete-bucket
-    z-score lookup described on that page.
-
-**trace_width** (`float`, default `1.2F`)
-    Forwarded to [`AcfPlotOptions::trace_width`](acfplot.md).
+| Field | Type and default | Description |
+|---|---|---|
+| `max_lag` | `std::int64_t`, default `40` | Forwarded to [`AcfPlotOptions::max_lag`](acfplot.md). |
+| `show_confidence_band` | `bool`, default `true` | Forwarded to [`AcfPlotOptions::show_confidence_band`](acfplot.md). |
+| `confidence_level` | `double`, default `0.95` | Forwarded to [`AcfPlotOptions::confidence_level`](acfplot.md) — same discrete-bucket z-score lookup described on that page. |
+| `trace_width` | `float`, default `1.2F` | Forwarded to [`AcfPlotOptions::trace_width`](acfplot.md). |
 
 ## Returns
 

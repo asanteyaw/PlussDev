@@ -7,21 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class FlashStyle : std::uint8_t { Darkgrid, Lightgrid, Sandgrid, Dark, Light, Sand };
-enum class FlashContext : std::uint8_t { Inherit, Paper, Notebook, Talk, Poster };
-
-struct FlashThemeOptions {
-  FlashStyle style{FlashStyle::Lightgrid};
-  FlashContext context{FlashContext::Inherit};
-  bool borderless{false};
-  bool horizontal_grid{false};
-  std::optional<KeyPlace> legend_place{std::nullopt};
-  std::optional<KeyDock> legend_dock{std::nullopt};
-  std::optional<KeyShape> legend_shape{std::nullopt};
-  std::optional<double> width{std::nullopt};
-  std::optional<double> height{std::nullopt};
-};
-
 Studio& flash::set(Studio& studio, Theme theme = Theme::paper())
 Studio& flash::set_theme(Studio& studio, Theme theme = Theme::paper())
 
@@ -87,40 +72,16 @@ overload)
 
 ## `FlashThemeOptions` fields
 
-**style** (`FlashStyle`, default `Lightgrid`)
-    Forwarded to [`flash::set_style`](set_style.md) — see that page's full field
-    description of `FlashStyle`'s six values.
-
-**context** (`FlashContext`, default `Inherit`)
-    Forwarded to [`flash::set_context`](set_context.md) — see that page's full field
-    description of `FlashContext`'s five values and the width/height/font-scale each
-    one sets. `Inherit` (the default here) leaves sizing/font-scale untouched.
-
-**borderless** (`bool`, default `false`)
-    When `true`, calls `axes_visible(false)` on the affected pane(s) — see
-    [`Pane::axes_visible`](../pane/axes_visible.md) — hiding the axes frame entirely.
-
-**horizontal_grid** (`bool`, default `false`)
-    Forwarded to [`flash::horizontal_grid`](horizontal_grid.md) — restricts the grid to
-    horizontal lines only, on grid-family styles.
-
-**legend_place** (`std::optional<KeyPlace>`, default empty)
-    When set, calls [`Pane::legend`](../pane/legend.md) with this placement on the
-    affected pane(s). Only meaningful on the `Pane`-affecting overloads.
-
-**legend_dock** (`std::optional<KeyDock>`, default empty)
-    When set, calls [`Studio::legend`](../studio/legend.md) with this dock on the
-    figure. Only read by the `(Studio&, const FlashThemeOptions&)` overload —
-    `Pane`-affecting overloads ignore this field, since a `Pane` has no dock concept.
-
-**legend_shape** (`std::optional<KeyShape>`, default empty)
-    When set, calls `legend_shape(*legend_shape)` on the affected pane(s) (and, on the
-    `Studio` overload, on the figure's own legend shape too).
-
-**width**, **height** (`std::optional<double>`, default empty, `Studio` overload only)
-    When set, forwarded into [`flash::set_context`](set_context.md)'s explicit
-    width/height override. Ignored on the `Pane`-affecting overloads (a single pane has
-    no independent figure size).
+| Field | Type and default | Description |
+|---|---|---|
+| `style` | `FlashStyle`, default `Lightgrid` | Forwarded to [`flash::set_style`](set_style.md) — see that page's full field description of `FlashStyle`'s six values. |
+| `context` | `FlashContext`, default `Inherit` | Forwarded to [`flash::set_context`](set_context.md) — see that page's full field description of `FlashContext`'s five values and the width/height/font-scale each one sets. `Inherit` (the default here) leaves sizing/font-scale untouched. |
+| `borderless` | `bool`, default `false` | When `true`, calls `axes_visible(false)` on the affected pane(s) — see [`Pane::axes_visible`](../pane/axes_visible.md) — hiding the axes frame entirely. |
+| `horizontal_grid` | `bool`, default `false` | Forwarded to [`flash::horizontal_grid`](horizontal_grid.md) — restricts the grid to horizontal lines only, on grid-family styles. |
+| `legend_place` | `std::optional<KeyPlace>`, default empty | When set, calls [`Pane::legend`](../pane/legend.md) with this placement on the affected pane(s). Only meaningful on the `Pane`-affecting overloads. |
+| `legend_dock` | `std::optional<KeyDock>`, default empty | When set, calls [`Studio::legend`](../studio/legend.md) with this dock on the figure. Only read by the `(Studio&, const FlashThemeOptions&)` overload — `Pane`-affecting overloads ignore this field, since a `Pane` has no dock concept. |
+| `legend_shape` | `std::optional<KeyShape>`, default empty | When set, calls `legend_shape(*legend_shape)` on the affected pane(s) (and, on the `Studio` overload, on the figure's own legend shape too). |
+| `width`, `height` | `std::optional<double>`, default empty, `Studio` overload only | When set, forwarded into [`flash::set_context`](set_context.md)'s explicit width/height override. Ignored on the `Pane`-affecting overloads (a single pane has no independent figure size). |
 
 ## Returns
 

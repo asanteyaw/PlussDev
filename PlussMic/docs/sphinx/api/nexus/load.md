@@ -50,18 +50,18 @@ concern instead of the default Nexus bulk-loader path.
 
 ## LoadOptions
 
-```cpp
-struct LoadOptions {
-  std::vector<std::string> load{};
-  std::vector<std::string> ignore{};
-  std::vector<std::string> formats{"csv", "txt", "json", "parquet"};
-  bool recursive{false};
-  bool keep_extension{false};
-  bool parallel{true};
-  std::optional<std::size_t> max_workers{};
-  pluss::loader::Config config{};
-};
-```
+### `LoadOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `load` | `std::vector<std::string>` | empty |
+| `ignore` | `std::vector<std::string>` | empty |
+| `formats` | `std::vector<std::string>` | `"csv", "txt", "json", "parquet"` |
+| `recursive` | `bool` | `false` |
+| `keep_extension` | `bool` | `false` |
+| `parallel` | `bool` | `true` |
+| `max_workers` | `std::optional<std::size_t>` | empty |
+| `config` | `pluss::loader::Config` | default constructed |
 
 ### Field Semantics
 

@@ -7,17 +7,6 @@
 ## Signatures
 
 ```cpp
-struct RadvizOptions {
-  std::vector<std::string> labels{};
-  bool normalize{true};
-  std::int64_t max_points{3000};
-  double marker_area{18.0};
-  float trace_width{0.55F};
-  bool show_grid{true};
-  bool show_anchors{true};
-  bool show_legend{true};
-};
-
 Studio& flash::radviz(Studio& studio, pluss::msharp::RangeView::Series columns,
                        const RadvizOptions& options = {})
 
@@ -73,42 +62,16 @@ row with all-zero weights falls back to the coordinate origin (denominator clamp
 
 ## `RadvizOptions` fields
 
-**labels** (`std::vector<std::string>`, default empty)
-    Per-feature anchor labels, drawn via [`Pane::pin`](../pane/pins.md) next to each
-    anchor when `show_anchors` is `true`. Falls back to `"x1"`, `"x2"`, … when its length
-    doesn't match the feature count.
-
-**normalize** (`bool`, default `true`)
-    Whether every feature is independently min-max scaled to `[0, 1]` before computing
-    anchor weights — same rule and same degenerate-feature fallback (flat `0.0`) as
-    [`flash::parallelplot`](parallelplot.md)/[`flash::andrews_curves`](andrews_curves.md).
-
-**max_points** (`std::int64_t`, default `3000`)
-    Row-count cap, same deterministic downsampling mechanism shared across the family.
-
-**marker_area** (`double`, default `18.0`)
-    Per-row point marker area, clamped to at least `2.0`.
-
-**trace_width** (`float`, default `0.55F`)
-    Stroke width for the per-row point cloud (and, with the `class_labels` overload,
-    each class's point cloud).
-
-**show_grid** (`bool`, default `true`)
-    Whether the pane gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None`
-    (`false`).
-
-**show_anchors** (`bool`, default `true`)
-    Whether the `n` feature anchors are drawn at all — as their own marker cloud (area
-    fixed at `26.0`, independent of `marker_area`) plus a text [`pin`](../pane/pins.md)
-    label per anchor. `false` renders only the per-row points, with no visual reference
-    for where each feature's pull direction is.
-
-**show_legend** (`bool`, default `true`)
-    Whether a legend is drawn. Unlike
-    [`flash::parallelplot`](parallelplot.md)/[`flash::andrews_curves`](andrews_curves.md),
-    the plain (no `class_labels`) overload explicitly forces `KeyPlace::None` regardless
-    of `show_legend` — there's nothing to legend, and this field is only consulted by the
-    `class_labels` overload.
+| Field | Type and default | Description |
+|---|---|---|
+| `labels` | `std::vector<std::string>`, default empty | Per-feature anchor labels, drawn via [`Pane::pin`](../pane/pins.md) next to each anchor when `show_anchors` is `true`. Falls back to `"x1"`, `"x2"`, … when its length doesn't match the feature count. |
+| `normalize` | `bool`, default `true` | Whether every feature is independently min-max scaled to `[0, 1]` before computing anchor weights — same rule and same degenerate-feature fallback (flat `0.0`) as [`flash::parallelplot`](parallelplot.md)/[`flash::andrews_curves`](andrews_curves.md). |
+| `max_points` | `std::int64_t`, default `3000` | Row-count cap, same deterministic downsampling mechanism shared across the family. |
+| `marker_area` | `double`, default `18.0` | Per-row point marker area, clamped to at least `2.0`. |
+| `trace_width` | `float`, default `0.55F` | Stroke width for the per-row point cloud (and, with the `class_labels` overload, each class's point cloud). |
+| `show_grid` | `bool`, default `true` | Whether the pane gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`). |
+| `show_anchors` | `bool`, default `true` | Whether the `n` feature anchors are drawn at all — as their own marker cloud (area fixed at `26.0`, independent of `marker_area`) plus a text [`pin`](../pane/pins.md) label per anchor. `false` renders only the per-row points, with no visual reference for where each feature's pull direction is. |
+| `show_legend` | `bool`, default `true` | Whether a legend is drawn. Unlike [`flash::parallelplot`](parallelplot.md)/[`flash::andrews_curves`](andrews_curves.md), the plain (no `class_labels`) overload explicitly forces `KeyPlace::None` regardless of `show_legend` — there's nothing to legend, and this field is only consulted by the `class_labels` overload. |
 
 ## Parameters
 

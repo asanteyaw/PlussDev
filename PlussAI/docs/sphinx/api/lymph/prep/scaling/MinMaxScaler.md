@@ -18,12 +18,12 @@ For each fitted column `map` computes `lower + (x - min) / (max - min) * (upper 
 
 `MinMaxScaler` returns a `TransformerSummary`, not a named struct:
 
-```cpp
-struct TransformerSummary {
-  std::vector<std::string> feature_names;  // the pinned / fitted columns
-  std::vector<Series> state;               // raw fitted tensors, layout below
-};
-```
+### `TransformerSummary` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `feature_names` | `std::vector<std::string>` | — |
+| `state` | `std::vector<Series>` | — |
 
 `summary().state` holds three tensors. `state[1]` is the **learned minimum** and `state[2]` the **learned maximum**, one value each per fitted column; `state[0]` is internal bookkeeping. Example 2 reads them.
 

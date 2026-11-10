@@ -7,16 +7,6 @@
 ## Signature
 
 ```cpp
-enum class HyperSweepPlane : std::uint8_t { XY, XZ, XW, YZ, YW, ZW };
-
-struct HyperSweepOptions {
-  std::int64_t frames{96};
-  HyperSweepPlane plane{HyperSweepPlane::XW};
-  double start_deg{0.0};
-  double end_deg{360.0};
-  bool include_endpoint{false};
-};
-
 std::vector<HyperPlotOptions> flash::hyper_animation_sequence(
     const HyperPlotOptions& base, const HyperSweepOptions& options = {})
 ```
@@ -43,25 +33,12 @@ rotation angle to render for each exported frame.
 
 ## `HyperSweepOptions` fields
 
-**frames** (`std::int64_t`, default `96`)
-    How many `HyperPlotOptions` snapshots to generate. Must be greater than `1`, or
-    `hyper_animation_sequence` throws
-    `std::invalid_argument("flash::hyper_animation_sequence: frames must be > 1")`.
-
-**plane** (`HyperSweepPlane`, default `XW`)
-    Which of `base`'s six rotation fields is swept: `XY` → `rot_xy_deg`, `XZ` →
-    `rot_xz_deg`, `XW` → `rot_xw_deg`, `YZ` → `rot_yz_deg`, `YW` → `rot_yw_deg`, `ZW` →
-    `rot_zw_deg`. Every other rotation field stays fixed at `base`'s value.
-
-**start_deg**, **end_deg** (`double`, default `0.0`, `360.0`)
-    The angular range swept across the generated frames.
-
-**include_endpoint** (`bool`, default `false`)
-    Whether the step size divides the range by `frames` (`false`, so frame `frames - 1`
-    lands just short of `end_deg` — the conventional choice for a seamlessly looping
-    `0°`–`360°` animation, where `end_deg` and the next loop's `start_deg` would
-    otherwise coincide and duplicate a frame) or by `frames - 1` (`true`, so the last
-    frame lands exactly on `end_deg`).
+| Field | Type and default | Description |
+|---|---|---|
+| `frames` | `std::int64_t`, default `96` | How many `HyperPlotOptions` snapshots to generate. Must be greater than `1`, or `hyper_animation_sequence` throws `std::invalid_argument("flash::hyper_animation_sequence: frames must be > 1")`. |
+| `plane` | `HyperSweepPlane`, default `XW` | Which of `base`'s six rotation fields is swept: `XY` → `rot_xy_deg`, `XZ` → `rot_xz_deg`, `XW` → `rot_xw_deg`, `YZ` → `rot_yz_deg`, `YW` → `rot_yw_deg`, `ZW` → `rot_zw_deg`. Every other rotation field stays fixed at `base`'s value. |
+| `start_deg`, `end_deg` | `double`, default `0.0`, `360.0` | The angular range swept across the generated frames. |
+| `include_endpoint` | `bool`, default `false` | Whether the step size divides the range by `frames` (`false`, so frame `frames - 1` lands just short of `end_deg` — the conventional choice for a seamlessly looping `0°`–`360°` animation, where `end_deg` and the next loop's `start_deg` would otherwise coincide and duplicate a frame) or by `frames - 1` (`true`, so the last frame lands exactly on `end_deg`). |
 
 ## Returns
 

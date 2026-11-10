@@ -41,13 +41,13 @@ involved at all; this is purely a property of `batch.x` on its own.
 
 A `StatusOr<VariancePruneResult>`:
 
-```cpp
-struct classic::VariancePruneResult {
-  classic::FeatureBatch reduced;
-  pluss::Series selected_feature_indices;  // Int64, ascending original order
-  pluss::Series feature_variances;         // Float64, one per ORIGINAL column
-};
-```
+### `classic::VariancePruneResult` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `reduced` | `classic::FeatureBatch` | — |
+| `selected_feature_indices` | `pluss::Series` | — |
+| `feature_variances` | `pluss::Series` | — |
 
 `reduced` — the [`take_features`](take_features.md)-selected batch
 (so, like that function, always `Float64` regardless of `batch.x`'s own

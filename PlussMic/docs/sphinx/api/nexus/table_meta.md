@@ -16,18 +16,18 @@ Reads back the `TableMeta` declared for a table, if any. `TableMeta` is presenta
 audit metadata layered on top of a table — it never changes the table's own values, only
 what `Nexus` knows *about* the table:
 
-```cpp
-struct TableMeta {
-  std::optional<std::string> grain{};
-  std::vector<std::string> primary_key{};
-  std::vector<std::vector<std::string>> candidate_keys{};
-  std::optional<std::string> time_field{};
-  CaseLabelPolicy case_labels{CaseLabelPolicy::Unknown};
-  std::optional<std::string> source{};
-  std::optional<std::string> provenance{};
-  std::optional<std::string> note{};
-};
-```
+### `TableMeta` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `grain` | `std::optional<std::string>` | empty |
+| `primary_key` | `std::vector<std::string>` | empty |
+| `candidate_keys` | `std::vector<std::vector<std::string>>` | empty |
+| `time_field` | `std::optional<std::string>` | empty |
+| `case_labels` | `CaseLabelPolicy` | `CaseLabelPolicy::Unknown` |
+| `source` | `std::optional<std::string>` | empty |
+| `provenance` | `std::optional<std::string>` | empty |
+| `note` | `std::optional<std::string>` | empty |
 
 `grain` is a free-text description of what one row represents (`"one row per customer"`).
 `primary_key` and `candidate_keys` declare which feature(s) should uniquely identify a row

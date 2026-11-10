@@ -47,13 +47,14 @@ y-axis meaning ("count"), regardless of key count.
     `options().default_bins` at all; `20` is simply this parameter's own default value.
 
 **options** (`HistPlotOptions`)
-    ```cpp
-    struct HistPlotOptions {
-      std::int64_t bins{20};
-      double alpha{0.95};
-      double line_width{1.0};
-    };
-    ```
+
+### `HistPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `bins` | `std::int64_t` | `20` |
+| `alpha` | `double` | `0.95` |
+| `line_width` | `double` | `1.0` |
 
 ## Returns
 

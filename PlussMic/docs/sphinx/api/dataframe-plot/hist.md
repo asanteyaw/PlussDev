@@ -57,14 +57,16 @@ instead. Any `bins` value other than exactly `20` (or `<= 0`, which always falls
     `<= 0` always fall back to `options_.default_bins` (clamped to at least `1`).
 
 **options** (`HistPlotOptions`)
-    ```cpp
-    struct HistPlotOptions {
-      std::int64_t bins{20};
-      double alpha{0.95};
-      double line_width{1.0};
-    };
-    ```
-    Same `bins` ambiguity applies to `options.bins` as to the plain `bins` argument.
+
+### `HistPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `bins` | `std::int64_t` | `20` |
+| `alpha` | `double` | `0.95` |
+| `line_width` | `double` | `1.0` |
+
+Same `bins` ambiguity applies to `options.bins` as to the plain `bins` argument.
 
 **feature** (`std::string_view`)
     A single numeric feature to histogram, drawn on one pane.

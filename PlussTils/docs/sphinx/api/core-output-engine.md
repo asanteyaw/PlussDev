@@ -2,13 +2,11 @@
 
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
-```cpp
-#include <pluss/tils/kit/output.h>
+**Header:** `<pluss/tils/kit/output.h>`
 
-class OutputEngine;
-```
+**Type:** `OutputEngine`
 
-`OutputEngine` writes text to a stream. It can write plain values, formatted lines, and level-tagged log lines, and it applies the engine's separator, level prefixes, minimum level, and default print options to every line. Each engine owns one sink and is not copyable, so two engines cannot share one lock or one configuration by accident. Calls return the engine, so they chain. The engine is safe to share between threads, because each call takes an internal lock.
+`OutputEngine` writes text to a stream. It can write plain values, formatted lines, and level-tagged log lines, and its static members [`format`](core-output-engine/format.md) and [`join`](core-output-engine/join.md) render the same patterns to a string. A string-literal pattern is checked against its arguments while compiling. The engine applies its separator, level prefixes, minimum level, and default print options to every line. Each engine owns one sink and is not copyable, so two engines cannot share one lock or one configuration by accident. Calls return the engine, so they chain. The engine is safe to share between threads, because each call takes an internal lock.
 
 ## Parameters
 
@@ -23,7 +21,7 @@ Constructors return an engine. Most members return `OutputEngine&` so calls chai
 
 ## Errors
 
-A format call whose pattern and arguments disagree is refused when strict argument checking is on. Without it, a missing argument prints its marker, and an extra argument is ignored.
+A string-literal pattern whose placeholders and arguments disagree does not compile, and so does a malformed spec or an unmatched brace. A pattern wrapped in [`runtime_format`](core-runtime-format.md) is checked when the call runs: a malformed spec throws `pluss::Error`, strict argument checking refuses an unused argument, and otherwise a missing argument prints its marker and an extra argument is ignored.
 
 ## Practical Examples
 
@@ -154,5 +152,7 @@ Both checks are false, so each engine keeps its own sink and configuration.
 
 ## See Also
 
+- [`format`](core-output-engine/format.md) and [`join`](core-output-engine/join.md)
+- [`runtime_format`](core-runtime-format.md)
 - [`OutputOptions`](core-output-options.md)
 - [`OutputLevel`](core-output-level.md)

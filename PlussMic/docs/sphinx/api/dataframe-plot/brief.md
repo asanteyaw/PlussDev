@@ -52,32 +52,34 @@ that page's important callout for the exact rule and throw text.
     frame — see [`box()`](box.md)'s important callout for the exact rule.
 
 **options** (`BriefPlotOptions`)
-    ```cpp
-    struct BriefPlotOptions {
-      std::string title{"table"};
-      int precision{4};
-      bool include_header{true};
-      std::int64_t max_cases{10};
-      bool transpose{false};
-      bool include_case_index{true};
-      std::int64_t features_per_table{0};
-      std::int64_t tables_per_row{1};
-      std::int64_t table_gap_spaces{4};
-    };
-    ```
-    `title` becomes the pane's own title text. `precision` (floored to `0`) sets fixed-point
-    decimal places for every cell; a non-finite value always renders as the literal text
-    `"nan"` regardless of `precision`. `include_header` toggles the column-name header row.
-    `max_cases` (falling back to `10` if `≤ 0`) caps how many rows are printed before a
-    trailing `"... (N more cases)"` line is appended; it does not affect which features are
-    summarized, only how many rows. `transpose = true` swaps the orientation: features become
-    rows and cases become columns (labeled `"case_0"`, `"case_1"`, ...) instead of the
-    default features-as-columns, cases-as-rows layout. `include_case_index` toggles a leading
-    `"case"` index column in the non-transposed layout (ignored when `transpose = true`, which
-    always uses its own `"feature"` label column instead). `features_per_table` (falling back
-    to "every feature in one table" if `≤ 0`) splits the feature set into multiple smaller
-    tables of that width; `tables_per_row` (floored to `1`) then lays those sub-tables out
-    side by side, `table_gap_spaces` (floored to `1`) spaces between them.
+
+### `BriefPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `title` | `std::string` | `"table"` |
+| `precision` | `int` | `4` |
+| `include_header` | `bool` | `true` |
+| `max_cases` | `std::int64_t` | `10` |
+| `transpose` | `bool` | `false` |
+| `include_case_index` | `bool` | `true` |
+| `features_per_table` | `std::int64_t` | `0` |
+| `tables_per_row` | `std::int64_t` | `1` |
+| `table_gap_spaces` | `std::int64_t` | `4` |
+
+`title` becomes the pane's own title text. `precision` (floored to `0`) sets fixed-point
+decimal places for every cell; a non-finite value always renders as the literal text
+`"nan"` regardless of `precision`. `include_header` toggles the column-name header row.
+`max_cases` (falling back to `10` if `≤ 0`) caps how many rows are printed before a
+trailing `"... (N more cases)"` line is appended; it does not affect which features are
+summarized, only how many rows. `transpose = true` swaps the orientation: features become
+rows and cases become columns (labeled `"case_0"`, `"case_1"`, ...) instead of the
+default features-as-columns, cases-as-rows layout. `include_case_index` toggles a leading
+`"case"` index column in the non-transposed layout (ignored when `transpose = true`, which
+always uses its own `"feature"` label column instead). `features_per_table` (falling back
+to "every feature in one table" if `≤ 0`) splits the feature set into multiple smaller
+tables of that width; `tables_per_row` (floored to `1`) then lays those sub-tables out
+side by side, `table_gap_spaces` (floored to `1`) spaces between them.
 
 ## Returns
 

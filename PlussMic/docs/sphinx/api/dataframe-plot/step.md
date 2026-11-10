@@ -57,17 +57,19 @@ only covers what's specific to `step()`.
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`StepPlotOptions`)
-    ```cpp
-    struct StepPlotOptions {
-      double alpha{1.0};
-      double line_width{1.5};
-      XYAlignOptions align{};
-    };
-    ```
-    Only opacity, stroke width, and `align` — unlike [`LinePlotOptions`](line.md), there is
-    no `y_limit_method` field on `StepPlotOptions`; the y-axis always uses the figure's
-    default auto-fit behavior for step charts. `align` is present but inert here — see
-    [`line()`](line.md)'s note on the field.
+
+### `StepPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `1.0` |
+| `line_width` | `double` | `1.5` |
+| `align` | `XYAlignOptions` | default constructed |
+
+Only opacity, stroke width, and `align` — unlike [`LinePlotOptions`](line.md), there is
+no `y_limit_method` field on `StepPlotOptions`; the y-axis always uses the figure's
+default auto-fit behavior for step charts. `align` is present but inert here — see
+[`line()`](line.md)'s note on the field.
 
 ## Returns
 

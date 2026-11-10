@@ -2,17 +2,13 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
+**Header:** `<pluss/bi/specs.h>`
 
-class Studio {
-public:
-  explicit Studio(std::string_view key);
-  // key, session, source, board, boards, set_filter, clear_filter, refresh,
-  // render, show, start_serving, serve, save, load, restore_session,
-  // export_html, export_svg, export_pdf, export_png
-};
-```
+### `Studio` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `Studio` | Method | `explicit Studio(std::string_view key)` |
 
 A `Studio` is a dashboard: it owns named boards, a session of reader choices, and a source of named tables.
 You build it by giving it a source, adding boards and their tiles, and setting choices on its session. Rendering

@@ -2,15 +2,13 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
+**Header:** `<pluss/bi/specs.h>`
 
-class Board {
-public:
-  explicit Board(std::string_view key);
-  // ... key, title, grid, control, view, tiles, nrows, ncols, version
-};
-```
+### `Board` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `Board` | Method | `explicit Board(std::string_view key)` |
 
 A `Board` is one page of a dashboard. It has a key that identifies it inside a studio, an optional
 title, a grid of rows and columns, and an ordered list of tiles. Each tile is either a view that presents

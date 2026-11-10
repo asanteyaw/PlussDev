@@ -16,16 +16,16 @@ Persists the entire workspace to disk under `directory`: every table's data, dec
 [`TableMeta`](table_meta.md), declared [`Relationship`](relationships.md)s, and saved
 views — everything [`load()`](load.md) needs to reconstruct an equivalent `Nexus` later.
 
-```cpp
-struct StoreOptions {
-  StoreKind kind{StoreKind::Parquet};
-  std::string manifest{"manifest.csv"};
-  std::string schema{"schema.csv"};
-  std::string graph{"graph.csv"};
-  std::string views{"views.csv"};
-  std::string tables{"tables"};
-};
-```
+### `StoreOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `kind` | `StoreKind` | `StoreKind::Parquet` |
+| `manifest` | `std::string` | `"manifest.csv"` |
+| `schema` | `std::string` | `"schema.csv"` |
+| `graph` | `std::string` | `"graph.csv"` |
+| `views` | `std::string` | `"views.csv"` |
+| `tables` | `std::string` | `"tables"` |
 
 `kind` picks the per-table file format (`Csv`, `Json`, or `Parquet` — see the important
 callout below). The rest of `StoreOptions` are just file/directory names, relative to

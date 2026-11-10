@@ -90,18 +90,20 @@ See Examples 1, 2, and 3 below for each of these three paths in turn.
     The feature to use as the shared x-axis. See "Choosing the x-axis" above.
 
 **options** (`LinePlotOptions`)
-    ```cpp
-    struct LinePlotOptions {
-      double alpha{1.0};
-      double line_width{1.6};
-      std::optional<pluss::pl::LimitMethod> y_limit_method{pluss::pl::LimitMethod::Padded};
-      XYAlignOptions align{};
-    };
-    ```
-    `alpha` controls trace opacity, `line_width` the stroke width. `y_limit_method` chooses
-    how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin beyond
-    the data's min/max, `Tight` fits exactly to the data range with no margin, and
-    `TickAligned` snaps the limits outward to the nearest tick boundaries.
+
+### `LinePlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `1.0` |
+| `line_width` | `double` | `1.6` |
+| `y_limit_method` | `std::optional<pluss::pl::LimitMethod>` | `pluss::pl::LimitMethod::Padded` |
+| `align` | `XYAlignOptions` | default constructed |
+
+`alpha` controls trace opacity, `line_width` the stroke width. `y_limit_method` chooses
+how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin beyond
+the data's min/max, `Tight` fits exactly to the data range with no margin, and
+`TickAligned` snaps the limits outward to the nearest tick boundaries.
 
     ```{note} align is present on the struct but has no effect at this layer
     `align` (`XYAlignOptions`) exists so `Catalog::plot().line()` can reuse this exact

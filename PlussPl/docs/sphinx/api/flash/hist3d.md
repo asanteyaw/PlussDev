@@ -7,16 +7,6 @@
 ## Signatures
 
 ```cpp
-struct Hist3DOptions {
-  std::int64_t bins_x{26};
-  std::int64_t bins_y{20};
-  bool normalize{false};
-  bool smooth{false};
-  std::int64_t smooth_passes{1};
-  bool as_surface{false};
-  bool as_wireframe{false};
-};
-
 template <class X, class Y>
 Trace& flash::hist3d(Pane& pane, X&& x, Y&& y, const Hist3DOptions& options = {})
 
@@ -42,34 +32,14 @@ once; the check order simply decides which one silently wins.
 
 ## `Hist3DOptions` fields
 
-**bins_x**, **bins_y** (`std::int64_t`, default `26`, `20`)
-    Grid resolution for the underlying 2D histogram. Each clamped to at least `4`
-    internally by `hist2d_grid` — the same helper and same clamp
-    [`flash::jointplot`](jointplot.md)'s `Hex`/`Kde` kinds use, though `hist3d`'s own
-    defaults (`26`/`20`) differ from `jointplot`'s `Hex` defaults (`28`/`22`).
-
-**normalize** (`bool`, default `false`)
-    Whether the binned grid is divided by its own total sum before rendering (turning raw
-    counts into a density-like proportion) — a no-op when the total is `0` or
-    non-finite. Directly verified to render genuinely differently from the default
-    (raw-count) grid.
-
-**smooth** (`bool`, default `false`)
-    Whether the binned grid is blurred by `smooth_passes` passes before rendering — same
-    smoothing mechanism [`flash::jointplot`](jointplot.md)'s `Kde` kind uses on its own
-    binned grid.
-
-**smooth_passes** (`std::int64_t`, default `1`)
-    Smoothing pass count when `smooth` is `true`. Clamped to at least `1`.
-
-**as_surface** (`bool`, default `false`)
-    Render the binned grid as a filled [`flash::sheet`](sheet.md) surface instead of the
-    default bar forest. See the important callout above for its interaction with
-    `as_wireframe`.
-
-**as_wireframe** (`bool`, default `false`)
-    Render the binned grid as a [`flash::lattice`](lattice.md) wireframe mesh instead of
-    the default bar forest. Takes priority over `as_surface` when both are set.
+| Field | Type and default | Description |
+|---|---|---|
+| `bins_x`, `bins_y` | `std::int64_t`, default `26`, `20` | Grid resolution for the underlying 2D histogram. Each clamped to at least `4` internally by `hist2d_grid` — the same helper and same clamp [`flash::jointplot`](jointplot.md)'s `Hex`/`Kde` kinds use, though `hist3d`'s own defaults (`26`/`20`) differ from `jointplot`'s `Hex` defaults (`28`/`22`). |
+| `normalize` | `bool`, default `false` | Whether the binned grid is divided by its own total sum before rendering (turning raw counts into a density-like proportion) — a no-op when the total is `0` or non-finite. Directly verified to render genuinely differently from the default (raw-count) grid. |
+| `smooth` | `bool`, default `false` | Whether the binned grid is blurred by `smooth_passes` passes before rendering — same smoothing mechanism [`flash::jointplot`](jointplot.md)'s `Kde` kind uses on its own binned grid. |
+| `smooth_passes` | `std::int64_t`, default `1` | Smoothing pass count when `smooth` is `true`. Clamped to at least `1`. |
+| `as_surface` | `bool`, default `false` | Render the binned grid as a filled [`flash::sheet`](sheet.md) surface instead of the default bar forest. See the important callout above for its interaction with `as_wireframe`. |
+| `as_wireframe` | `bool`, default `false` | Render the binned grid as a [`flash::lattice`](lattice.md) wireframe mesh instead of the default bar forest. Takes priority over `as_surface` when both are set. |
 
 ## Parameters
 

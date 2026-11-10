@@ -12,20 +12,20 @@ static Catalog Catalog::load_excel(std::string_view filepath)
 static Catalog Catalog::load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options)
 ```
 
-```cpp
-struct ReadExcelOptions {
-  bool header{true};
-  std::int64_t header_row{0};
-  std::size_t header_rows{1};
-  bool header_ffill{true};
-  std::string header_joiner{"_"};
-  std::optional<std::string> sheet_name{};
-  std::optional<std::int64_t> sheet_index{};
-  std::vector<std::string> sheet_names{};
-  std::vector<std::int64_t> sheet_indices{};
-  std::optional<std::size_t> n_sheets{};
-};
-```
+### `ReadExcelOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `header` | `bool` | `true` |
+| `header_row` | `std::int64_t` | `0` |
+| `header_rows` | `std::size_t` | `1` |
+| `header_ffill` | `bool` | `true` |
+| `header_joiner` | `std::string` | `"_"` |
+| `sheet_name` | `std::optional<std::string>` | empty |
+| `sheet_index` | `std::optional<std::int64_t>` | empty |
+| `sheet_names` | `std::vector<std::string>` | empty |
+| `sheet_indices` | `std::vector<std::int64_t>` | empty |
+| `n_sheets` | `std::optional<std::size_t>` | empty |
 
 ## What It Does
 

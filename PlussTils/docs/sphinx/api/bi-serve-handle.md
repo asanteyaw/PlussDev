@@ -2,11 +2,9 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
+**Header:** `<pluss/bi/specs.h>`
 
-class ServeHandle;
-```
+**Type:** `ServeHandle`
 
 A `ServeHandle` is a running server that `Studio::start_serving` returned. It is move-only, like a thread: a copy would leave two handles racing to stop the same server. A handle that is still running when it goes out of scope stops its server and waits for it to finish, so a server never outlives its handle.
 

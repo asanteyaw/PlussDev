@@ -20,19 +20,21 @@ kind (`how`) to every hop. `plan()` alone doesn't touch any table data; it only 
 recipe. [`materialize()`](materialize.md) is the method that actually executes a `JoinPlan`
 and returns the joined `DataFrame`.
 
-```cpp
-struct JoinPlanStep {
-  std::string left_table{};
-  std::string right_table{};
-  JoinSpec spec{};
-};
+### `JoinPlanStep` fields
 
-struct JoinPlan {
-  std::string root_table{};
-  std::string result_name{};
-  std::vector<JoinPlanStep> steps{};
-};
-```
+| Field | Type | Default |
+|---|---|---|
+| `left_table` | `std::string` | empty |
+| `right_table` | `std::string` | empty |
+| `spec` | `JoinSpec` | default constructed |
+
+### `JoinPlan` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `root_table` | `std::string` | empty |
+| `result_name` | `std::string` | empty |
+| `steps` | `std::vector<JoinPlanStep>` | empty |
 
 Each `JoinPlanStep` is a fully-formed `JoinSpec` (its `relationship_name` set to the
 declaration the corresponding `JoinPathStep` used, `right_suffix` defaulted to

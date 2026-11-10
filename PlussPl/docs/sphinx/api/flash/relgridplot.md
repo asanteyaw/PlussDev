@@ -7,22 +7,8 @@
 ## Signatures
 
 ```cpp
-enum class RelGridKind : std::uint8_t { Scatter, Line, Reg };
-
 RelGridKind flash::relgrid_kind(std::string_view kind);
 
-struct RelGridPlotOptions {
-  RelGridKind kind{RelGridKind::Scatter};
-  std::int64_t rows{0};
-  std::int64_t cols{0};
-  double grid_gap_x{16.0};
-  double grid_gap_y{16.0};
-  bool show_grid{true};
-  std::vector<std::string> titles{};
-  std::vector<std::string> x_labels{};
-  std::vector<std::string> y_labels{};
-  RegPlotOptions reg{};
-};
 
 Studio& flash::relgridplot(Studio& studio, pluss::msharp::RangeView::Series xs,
                             pluss::msharp::RangeView::Series ys,
@@ -70,38 +56,15 @@ short-vector-is-fine rule applies independently to x_labels and y_labels.
 
 ## `RelGridPlotOptions` fields
 
-**kind** (`RelGridKind`, default `RelGridKind::Scatter`)
-    Which flash function draws each panel: `Scatter` → [`scatterplot`](scatterplot.md),
-    `Line` → [`lineplot`](lineplot.md), `Reg` → [`regplot`](regplot.md). The kind-string
-    overloads resolve this via `flash::relgrid_kind("scatter"|"line"|"reg")`, which throws
-    `std::invalid_argument("flash::relgridplot unknown kind: " + kind)` for any other
-    string.
-
-**rows**, **cols** (`std::int64_t`, default `0` each)
-    Explicit grid shape hints. `0` means "auto" for that dimension — see the important
-    callout above for the full resolution rule, including the `rows*cols < facet_count`
-    error case.
-
-**grid_gap_x**, **grid_gap_y** (`double`, default `16.0` each)
-    Forwarded straight to the internal [`flash::FacetGrid`](FacetGrid.md) call as its
-    `gx`/`gy` gutter.
-
-**show_grid** (`bool`, default `true`)
-    Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None`
-    (`false`), applied via `Pane::grid` before that panel is drawn.
-
-**titles** (`std::vector<std::string>`, default empty)
-    Per-facet panel titles, applied positionally. See the important callout above for the
-    short-vector behavior.
-
-**x_labels**, **y_labels** (`std::vector<std::string>`, default empty)
-    Per-facet axis labels, applied positionally via `Pane::x_label`/`Pane::y_label` — same
-    short-vector-is-fine rule as `titles`.
-
-**reg** (`RegPlotOptions`, default-constructed)
-    Forwarded to [`flash::regplot`](regplot.md) for every panel when `kind ==
-    RelGridKind::Reg` — every field documented on that page (`ci`, `order`, `line_only`,
-    …) applies here too. Unused when `kind` is `Scatter` or `Line`.
+| Field | Type and default | Description |
+|---|---|---|
+| `kind` | `RelGridKind`, default `RelGridKind::Scatter` | Which flash function draws each panel: `Scatter` → [`scatterplot`](scatterplot.md), `Line` → [`lineplot`](lineplot.md), `Reg` → [`regplot`](regplot.md). The kind-string overloads resolve this via `flash::relgrid_kind("scatter"\|"line"\|"reg")`, which throws `std::invalid_argument("flash::relgridplot unknown kind: " + kind)` for any other string. |
+| `rows`, `cols` | `std::int64_t`, default `0` each | Explicit grid shape hints. `0` means "auto" for that dimension — see the important callout above for the full resolution rule, including the `rows*cols < facet_count` error case. |
+| `grid_gap_x`, `grid_gap_y` | `double`, default `16.0` each | Forwarded straight to the internal [`flash::FacetGrid`](FacetGrid.md) call as its `gx`/`gy` gutter. |
+| `show_grid` | `bool`, default `true` | Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`), applied via `Pane::grid` before that panel is drawn. |
+| `titles` | `std::vector<std::string>`, default empty | Per-facet panel titles, applied positionally. See the important callout above for the short-vector behavior. |
+| `x_labels`, `y_labels` | `std::vector<std::string>`, default empty | Per-facet axis labels, applied positionally via `Pane::x_label`/`Pane::y_label` — same short-vector-is-fine rule as `titles`. |
+| `reg` | `RegPlotOptions`, default-constructed | Forwarded to [`flash::regplot`](regplot.md) for every panel when `kind == RelGridKind::Reg` — every field documented on that page (`ci`, `order`, `line_only`, …) applies here too. Unused when `kind` is `Scatter` or `Line`. |
 
 ## Parameters
 

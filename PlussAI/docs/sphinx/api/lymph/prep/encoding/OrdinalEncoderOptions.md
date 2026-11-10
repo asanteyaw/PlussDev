@@ -5,14 +5,14 @@ integer coding. It is passed to the
 [`prep::OrdinalEncoder`](OrdinalEncoder.md) constructor and to the
 [`prep::stage::ordinal_encoder`](../stage/ordinal_encoder.md) factory.
 
-```cpp
-struct OrdinalEncoderOptions {
-  std::int64_t           max_categories = 256;
-  CategoryOverflowPolicy overflow       = CategoryOverflowPolicy::KeepMostFrequent;
-  bool                   include_unknown_bucket = true;
-  bool                   one_based      = true;
-};
-```
+### `OrdinalEncoderOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `max_categories` | `std::int64_t` | `256` |
+| `overflow` | `CategoryOverflowPolicy` | `CategoryOverflowPolicy::KeepMostFrequent` |
+| `include_unknown_bucket` | `bool` | `true` |
+| `one_based` | `bool` | `true` |
 
 ## Fields
 

@@ -16,19 +16,18 @@ Stream::lbl() const -> StreamLabelAccessor
 The entry point into `Stream`'s fuller row-label surface. `lbl()` binds the current stream
 and hands back a `StreamLabelAccessor`:
 
-```cpp
-class StreamLabelAccessor {
-public:
-  Stream values() const;
-  bool has() const;
-  Stream set(const Stream& labels) const;
-  Stream set(const pluss::table::Slate& labels) const;
-  Stream range() const;
-  Stream reset() const;
-  Stream align(const Stream& target_labels, const pluss::table::AlignOptions& options = {}) const;
-  Stream align(const pluss::table::Slate& target_labels, const pluss::table::AlignOptions& options = {}) const;
-};
-```
+### `StreamLabelAccessor` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `values` | Method | `Stream values() const` |
+| `has` | Method | `bool has() const` |
+| `set` | Method | `Stream set(const Stream& labels) const` |
+| `set` | Method | `Stream set(const pluss::table::Slate& labels) const` |
+| `range` | Method | `Stream range() const` |
+| `reset` | Method | `Stream reset() const` |
+| `align` | Method | `Stream align(const Stream& target_labels, const pluss::table::AlignOptions& options = {}) const` |
+| `align` | Method | `Stream align(const pluss::table::Slate& target_labels, const pluss::table::AlignOptions& options = {}) const` |
 
 This has no equivalent on `Catalog` — `lbl()` is Stream-specific, since row labels are a
 per-column (per-`Stream`) concept, not something that makes sense collection-wide.

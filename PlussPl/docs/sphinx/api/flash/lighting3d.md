@@ -7,14 +7,6 @@
 ## Signature
 
 ```cpp
-struct Lighting3DOptions {
-  bool clear_first{true};
-  bool headlight{true};
-  bool lamp_left{false};
-  bool lamp_right{false};
-  bool sun_key{false};
-};
-
 Pane& flash::lighting3d(Pane& pane, const Lighting3DOptions& options)
 ```
 
@@ -48,21 +40,12 @@ Gouraud/Flat-lit trace if you expect to see its effect.
 
 ## `Lighting3DOptions` fields
 
-**clear_first** (`bool`, default `true`)
-    Whether [`Pane::lights().clear()`](../pane/lights.md) runs before any of the flags
-    below are applied — `false` layers new lights on top of whatever the pane's
-    `LightRig` already contained.
-
-**headlight** (`bool`, default `true`)
-    Whether [`lights().headlight()`](../pane/lights.md) is appended — one light
-    co-located with the camera.
-
-**lamp_left**, **lamp_right** (`bool`, default `false` each)
-    Whether [`lights().lamp_left()`](../pane/lights.md)/`lamp_right()` are appended.
-
-**sun_key** (`bool`, default `false`)
-    Whether [`lights().sun_key()`](../pane/lights.md) is appended — this preset alone
-    adds **two** lights per call, unlike the other three (one each).
+| Field | Type and default | Description |
+|---|---|---|
+| `clear_first` | `bool`, default `true` | Whether [`Pane::lights().clear()`](../pane/lights.md) runs before any of the flags below are applied — `false` layers new lights on top of whatever the pane's `LightRig` already contained. |
+| `headlight` | `bool`, default `true` | Whether [`lights().headlight()`](../pane/lights.md) is appended — one light co-located with the camera. |
+| `lamp_left`, `lamp_right` | `bool`, default `false` each | Whether [`lights().lamp_left()`](../pane/lights.md)/`lamp_right()` are appended. |
+| `sun_key` | `bool`, default `false` | Whether [`lights().sun_key()`](../pane/lights.md) is appended — this preset alone adds **two** lights per call, unlike the other three (one each). |
 
 ## Returns
 

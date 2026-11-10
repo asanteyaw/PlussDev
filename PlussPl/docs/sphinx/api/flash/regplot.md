@@ -7,23 +7,6 @@
 ## Signatures
 
 ```cpp
-struct RegPlotOptions {
-  bool show_scatter = true;
-  bool show_fit = true;
-  bool show_ci = false;
-  double confidence_level = 0.95;
-  std::int64_t n_boot = 0;
-  std::int64_t order = 1;
-  bool robust = false;
-  bool lowess = false;
-  double lowess_frac = 0.35;
-  std::int64_t fit_points = 96;
-  double marker_area = 18.0;
-  float scatter_trace_width = 0.55F;
-  float fit_trace_width = 1.25F;
-  float ci_trace_width = 0.35F;
-};
-
 template <class X, class Y>
 Trace& flash::regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {})
 ```
@@ -63,62 +46,19 @@ always correct.
 
 ## `RegPlotOptions` fields
 
-**show_scatter** (`bool`, default `true`)
-    Whether to draw the raw `(x, y)` points via `Pane::cloud`.
-
-**show_fit** (`bool`, default `true`)
-    Whether to draw the fitted curve via `Pane::trend`.
-
-**show_ci** (`bool`, default `false`)
-    Whether to draw a confidence band around the fit, via `Pane::whisk`. Only drawn when
-    there are more than 2 finite pairs (`sx.numel() > 2`) — with exactly 2 points there is
-    no meaningful residual spread to estimate from, so the CI is silently skipped even if
-    `show_ci` is `true`.
-
-**confidence_level** (`double`, default `0.95`)
-    The nominal coverage of the CI band. Consumed differently depending on `n_boot`: for
-    the analytic path (`n_boot == 0`) it's converted to a z-score via a **6-bucket lookup
-    table**, not a continuous computation — see the important callout on
-    [`catplot`](catplot.md)'s equivalent field for the exact bucket boundaries and the
-    verified consequence (e.g. `0.90` and `0.92` currently produce an *identical* CI
-    width, since both fall in the same "≥ 0.90" bucket). For the bootstrap path
-    (`n_boot > 0`) it's used directly as a percentile-interval width, not quantized.
-
-**n_boot** (`std::int64_t`, default `0`)
-    `0` (the default) computes the CI analytically from the fit's residual standard error.
-    Any positive value switches to a **bootstrap** CI: resampling the `(x, y)` pairs with
-    replacement `max(32, n_boot)` times, refitting each resample, and taking the
-    `confidence_level` percentile spread of the resulting predictions at each `fit_x`
-    point. Bootstrap CIs are typically wider and noisier-looking than the analytic ones,
-    especially at the low end of `n_boot`.
-
-**order** (`std::int64_t`, default `1`)
-    The polynomial degree fit to the data (clamped to a minimum of `1`). `1` is a
-    straight-line fit; higher values fit increasingly flexible curves. Ignored when
-    `lowess == true`.
-
-**robust** (`bool`, default `false`)
-    When `true`, uses iteratively-reweighted least squares (3 iterations, Tukey-biweight
-    downweighting based on the median absolute deviation of residuals) instead of plain
-    least squares — reduces the influence of outliers on the fit. Applies to both the
-    polynomial (`lowess == false`) and LOWESS (`lowess == true`) fit paths.
-
-**lowess** (`bool`, default `false`)
-    When `true`, replaces the polynomial fit entirely with a local-regression (LOWESS)
-    curve — ignores `order`. Useful for genuinely non-polynomial relationships.
-
-**lowess_frac** (`double`, default `0.35`)
-    Only consulted when `lowess == true`. The fraction of points (clamped to `[0.05,
-    1.0]`) included in each local neighborhood — smaller values track the data more
-    tightly (more wiggly), larger values smooth more aggressively.
-
-**fit_points** (`std::int64_t`, default `96`)
-    How many x-positions (evenly spaced across the data's x-range, clamped to a minimum
-    of `2`) the fitted curve/CI band is evaluated at.
-
-**marker_area**, **scatter_trace_width**, **fit_trace_width**, **ci_trace_width**
-    Styling knobs forwarded directly to the corresponding trace's marker-area/width
-    setters.
+| Field | Type and default | Description |
+|---|---|---|
+| `show_scatter` | `bool`, default `true` | Whether to draw the raw `(x, y)` points via `Pane::cloud`. |
+| `show_fit` | `bool`, default `true` | Whether to draw the fitted curve via `Pane::trend`. |
+| `show_ci` | `bool`, default `false` | Whether to draw a confidence band around the fit, via `Pane::whisk`. Only drawn when there are more than 2 finite pairs (`sx.numel() > 2`) — with exactly 2 points there is no meaningful residual spread to estimate from, so the CI is silently skipped even if `show_ci` is `true`. |
+| `confidence_level` | `double`, default `0.95` | The nominal coverage of the CI band. Consumed differently depending on `n_boot`: for the analytic path (`n_boot == 0`) it's converted to a z-score via a **6-bucket lookup table**, not a continuous computation — see the important callout on [`catplot`](catplot.md)'s equivalent field for the exact bucket boundaries and the verified consequence (e.g. `0.90` and `0.92` currently produce an *identical* CI width, since both fall in the same "≥ 0.90" bucket). For the bootstrap path (`n_boot > 0`) it's used directly as a percentile-interval width, not quantized. |
+| `n_boot` | `std::int64_t`, default `0` | `0` (the default) computes the CI analytically from the fit's residual standard error. Any positive value switches to a **bootstrap** CI: resampling the `(x, y)` pairs with replacement `max(32, n_boot)` times, refitting each resample, and taking the `confidence_level` percentile spread of the resulting predictions at each `fit_x` point. Bootstrap CIs are typically wider and noisier-looking than the analytic ones, especially at the low end of `n_boot`. |
+| `order` | `std::int64_t`, default `1` | The polynomial degree fit to the data (clamped to a minimum of `1`). `1` is a straight-line fit; higher values fit increasingly flexible curves. Ignored when `lowess == true`. |
+| `robust` | `bool`, default `false` | When `true`, uses iteratively-reweighted least squares (3 iterations, Tukey-biweight downweighting based on the median absolute deviation of residuals) instead of plain least squares — reduces the influence of outliers on the fit. Applies to both the polynomial (`lowess == false`) and LOWESS (`lowess == true`) fit paths. |
+| `lowess` | `bool`, default `false` | When `true`, replaces the polynomial fit entirely with a local-regression (LOWESS) curve — ignores `order`. Useful for genuinely non-polynomial relationships. |
+| `lowess_frac` | `double`, default `0.35` | Only consulted when `lowess == true`. The fraction of points (clamped to `[0.05, 1.0]`) included in each local neighborhood — smaller values track the data more tightly (more wiggly), larger values smooth more aggressively. |
+| `fit_points` | `std::int64_t`, default `96` | How many x-positions (evenly spaced across the data's x-range, clamped to a minimum of `2`) the fitted curve/CI band is evaluated at. |
+| `marker_area`, `scatter_trace_width`, `fit_trace_width`, `ci_trace_width` | double / float; defaults 18.0 / 0.55F / 1.25F / 0.35F | Styling knobs forwarded directly to the corresponding trace's marker-area/width setters. |
 
 ## Parameters
 

@@ -52,15 +52,11 @@ the others do not.
 
 ## The `Candidate` value type
 
-```cpp
-struct Candidate {
-  std::string name{};
-  models::Model model;                        // cheap-copy handle
-  std::optional<TrainOptions> train_options{};  // nullopt = use compare()'s shared train_options
-  Candidate(std::string name, models::Model model,
-            std::optional<TrainOptions> train_options = std::nullopt);
-};
-```
+| Field | Meaning |
+|---|---|
+| `name` | Label shown in the ranked results. |
+| `model` | Model to train and evaluate. |
+| `train_options` | Optional candidate settings; when absent, use the shared settings passed to `compare()`. |
 
 Construct in place: `candidates.emplace_back("logreg",
 lymph::models::logistic_regression())`, optionally with a third `TrainOptions`

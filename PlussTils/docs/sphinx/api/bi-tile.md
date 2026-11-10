@@ -2,19 +2,18 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/specs.h>
+**Header:** `<pluss/bi/specs.h>`
 
-class Tile {
-public:
-  const std::string& key() const noexcept;
-  const LayoutSpec& layout() const noexcept;
-  const std::optional<View>& view() const noexcept;
-  const std::optional<Control>& control() const noexcept;
-  static Tile from_view(std::string_view key, LayoutSpec layout, View view);
-  static Tile from_control(std::string_view key, LayoutSpec layout, Control control);
-};
-```
+### `Tile` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `key` | Method | `const std::string& key() const noexcept` |
+| `layout` | Method | `const LayoutSpec& layout() const noexcept` |
+| `view` | Method | `const std::optional<View>& view() const noexcept` |
+| `control` | Method | `const std::optional<Control>& control() const noexcept` |
+| `from_view` | Method | `static Tile from_view(std::string_view key, LayoutSpec layout, View view)` |
+| `from_control` | Method | `static Tile from_control(std::string_view key, LayoutSpec layout, Control control)` |
 
 A `Tile` is one entry in a board's tile list. It records a key, a placement, and exactly one of a view or a
 control. A board creates tiles when you add a view or a control, so you rarely build one yourself. The

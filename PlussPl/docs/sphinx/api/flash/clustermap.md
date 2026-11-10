@@ -7,12 +7,6 @@
 ## Signatures
 
 ```cpp
-struct ClusterMapOptions {
-  bool cluster_rows = true;
-  bool cluster_cols = true;
-  HeatmapOptions heatmap{};
-};
-
 template <class X, class Y, class Z>
 Trace& flash::clustermap(Pane& pane, X&& x, Y&& y, Z&& z)
 
@@ -41,18 +35,11 @@ real, but it is a simple sort, not a clustering algorithm.
 
 ## `ClusterMapOptions` fields
 
-**cluster_rows** (`bool`, default `true`)
-    Whether to reorder rows by ascending row-mean. When `false`, rows keep their original
-    order.
-
-**cluster_cols** (`bool`, default `true`)
-    Whether to reorder columns by ascending column-mean. When `false`, columns keep their
-    original order.
-
-**heatmap** (`HeatmapOptions`, default-constructed)
-    Passed straight through to the underlying [`flash::heatmap`](heatmap.md) call after
-    reordering — every field documented there (`vmin`, `vmax`, `mask`, `annotate_levels`,
-    `scale_guide`, `borderless`) applies here too, against the *reordered* grid.
+| Field | Type and default | Description |
+|---|---|---|
+| `cluster_rows` | `bool`, default `true` | Whether to reorder rows by ascending row-mean. When `false`, rows keep their original order. |
+| `cluster_cols` | `bool`, default `true` | Whether to reorder columns by ascending column-mean. When `false`, columns keep their original order. |
+| `heatmap` | `HeatmapOptions`, default-constructed | Passed straight through to the underlying [`flash::heatmap`](heatmap.md) call after reordering — every field documented there (`vmin`, `vmax`, `mask`, `annotate_levels`, `scale_guide`, `borderless`) applies here too, against the *reordered* grid. |
 
 ## Parameters
 

@@ -194,30 +194,32 @@ than a toy.
 
 ## The Full Options Surface
 
-```cpp
-struct PivotValueSpec {
-  std::string output{};
-  std::string feature{};
-  GroupOp op{GroupOp::Mean};
-};
+### `PivotValueSpec` fields
 
-struct PivotTableOptions {
-  std::vector<std::string> index{};
-  std::vector<std::string> columns{};
-  std::vector<std::string> values{};
-  std::vector<GroupOp> aggfuncs{GroupOp::Mean};
-  std::vector<PivotValueSpec> specs{};
-  std::optional<SlateValue::HostAny> fill_value{std::nullopt};
-  bool margins{false};
-  std::string margins_name{"All"};
-  bool dropna{true};
-  bool sort{true};
-  bool render{false};
-  std::string index_separator{"\x1F"};
-  std::string column_separator{" | "};
-  std::string value_separator{" :: "};
-};
-```
+| Field | Type | Default |
+|---|---|---|
+| `output` | `std::string` | empty |
+| `feature` | `std::string` | empty |
+| `op` | `GroupOp` | `GroupOp::Mean` |
+
+### `PivotTableOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `index` | `std::vector<std::string>` | empty |
+| `columns` | `std::vector<std::string>` | empty |
+| `values` | `std::vector<std::string>` | empty |
+| `aggfuncs` | `std::vector<GroupOp>` | `GroupOp::Mean` |
+| `specs` | `std::vector<PivotValueSpec>` | empty |
+| `fill_value` | `std::optional<SlateValue::HostAny>` | `std::nullopt` |
+| `margins` | `bool` | `false` |
+| `margins_name` | `std::string` | `"All"` |
+| `dropna` | `bool` | `true` |
+| `sort` | `bool` | `true` |
+| `render` | `bool` | `false` |
+| `index_separator` | `std::string` | `"\x1F"` |
+| `column_separator` | `std::string` | `" \| "` |
+| `value_separator` | `std::string` | `" :: "` |
 
 ## Option Semantics
 

@@ -7,8 +7,6 @@
 ## Signature
 
 ```cpp
-enum class ThemePreset3D : std::uint8_t { Paper, Ocean, Graphite, Mist };
-
 Pane& flash::theme_preset3d(Pane& pane, ThemePreset3D preset)
 ```
 

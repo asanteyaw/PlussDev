@@ -45,28 +45,34 @@ defaults to `{}`)
     Example 4.
 
 **options** (`CatalogCorrHeatmapPlotOptions`)
-    ```cpp
-    struct CatalogPairAlignOptions {
-      PairAlign align{PairAlign::PairwiseInner};   // PairwiseInner | GlobalInner
-      PairAlignBy align_by{PairAlignBy::Auto};     // Auto | Label | Pos
-    };
 
-    struct CorrHeatmapPlotOptions {
-      bool annotate_levels{true};
-      bool scale_guide{true};
-      bool borderless{false};
-    };
+### `CatalogPairAlignOptions` fields
 
-    struct CatalogCorrHeatmapPlotOptions {
-      CatalogPairAlignOptions align{};
-      pluss::table::CorrHeatmapPlotOptions heatmap{};
-      pluss::table::DataFrame::CorrMethod method{pluss::table::DataFrame::CorrMethod::Pearson};
-    };
-    ```
-    `align`/`align_by` control cross-key alignment (see the important callout above).
-    `heatmap.annotate_levels`/`scale_guide`/`borderless` forward straight into the underlying
-    `flash::heatmap` cell. `method` selects `Pearson` (default), `Spearman`, or `KendallTau`
-    correlation.
+| Field | Type | Default |
+|---|---|---|
+| `align` | `PairAlign` | `PairAlign::PairwiseInner` |
+| `align_by` | `PairAlignBy` | `PairAlignBy::Auto` |
+
+### `CorrHeatmapPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `annotate_levels` | `bool` | `true` |
+| `scale_guide` | `bool` | `true` |
+| `borderless` | `bool` | `false` |
+
+### `CatalogCorrHeatmapPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `align` | `CatalogPairAlignOptions` | default constructed |
+| `heatmap` | `pluss::table::CorrHeatmapPlotOptions` | empty |
+| `method` | `pluss::table::DataFrame::CorrMethod` | `pluss::table::DataFrame::CorrMethod::Pearson` |
+
+`align`/`align_by` control cross-key alignment (see the important callout above).
+`heatmap.annotate_levels`/`scale_guide`/`borderless` forward straight into the underlying
+`flash::heatmap` cell. `method` selects `Pearson` (default), `Spearman`, or `KendallTau`
+correlation.
 
 ## Returns
 

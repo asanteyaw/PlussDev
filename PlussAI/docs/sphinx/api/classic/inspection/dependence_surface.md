@@ -55,15 +55,15 @@ effect in isolation.
 
 A `StatusOr<DependenceSurface>`:
 
-```cpp
-struct classic::DependenceSurface {
-  std::int64_t feature_a;         // echoes the argument back
-  std::int64_t feature_b;         // echoes the argument back
-  pluss::Series grid_a;           // Float64, length grid_points_a
-  pluss::Series grid_b;           // Float64, length grid_points_b
-  pluss::Series mean_prediction;  // Float64, [grid_points_a, grid_points_b]
-};
-```
+### `classic::DependenceSurface` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `feature_a` | `std::int64_t` | — |
+| `feature_b` | `std::int64_t` | — |
+| `grid_a` | `pluss::Series` | — |
+| `grid_b` | `pluss::Series` | — |
+| `mean_prediction` | `pluss::Series` | — |
 
 `mean_prediction[i, j]` is the mean prediction with `feature_a` held at
 `grid_a[i]` and `feature_b` held at `grid_b[j]` across every other row's

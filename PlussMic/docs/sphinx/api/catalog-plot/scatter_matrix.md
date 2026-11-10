@@ -47,41 +47,48 @@ defaults to `{}`)
     `Full` (default, every cell), `Lower`, or `Upper`.
 
 **options** (`CatalogScatterMatrixPlotOptions`)
-    ```cpp
-    struct CatalogPairAlignOptions {
-      PairAlign align{PairAlign::PairwiseInner};
-      PairAlignBy align_by{PairAlignBy::Auto};
-    };
 
-    struct PairPlotOptions {                    // pluss::pl::flash
-      PairPlotTriangle triangle{PairPlotTriangle::Full};   // Full | Lower | Upper
-      PairPlotKind kind{PairPlotKind::Scatter};            // Scatter | Reg
-      PairPlotDiagKind diag_kind{PairPlotDiagKind::Histogram}; // Histogram | Density
-      bool corner{false};
-      std::vector<std::string> labels{};
-      std::int64_t max_points{2500};
-      std::int64_t diag_bins{14};
-      std::int64_t diag_density_points{128};
-      // ... sizing/grid fields, see PlussPl's own reference for the full struct
-    };
+### `CatalogPairAlignOptions` fields
 
-    struct ScatterMatrixPlotOptions {            // pluss::table
-      bool corner{false};
-      pluss::pl::flash::PairPlotOptions pair{};
-    };
+| Field | Type | Default |
+|---|---|---|
+| `align` | `PairAlign` | `PairAlign::PairwiseInner` |
+| `align_by` | `PairAlignBy` | `PairAlignBy::Auto` |
 
-    struct CatalogScatterMatrixPlotOptions {
-      CatalogPairAlignOptions align{};
-      pluss::table::ScatterMatrixPlotOptions matrix{};
-    };
-    ```
-    `matrix.corner = true` additionally forces `pair.triangle` from `Full` to `Lower` (a
-    no-op if `triangle` was already `Lower` or `Upper`). `pair.kind = Reg` draws a fitted
-    regression line (via `flash::regplot`) on off-diagonal cells instead of a plain point
-    cloud. `pair.diag_kind = Density` swaps the diagonal cells from histograms to smoothed
-    density curves. `pair.labels`, if left empty, is filled in with the resolved key names.
-    `align`/`align_by` control the same cross-key alignment
-    [`corr_heatmap()`](corr_heatmap.md) uses.
+### `PairPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `triangle` | `PairPlotTriangle` | `PairPlotTriangle::Full` |
+| `kind` | `PairPlotKind` | `PairPlotKind::Scatter` |
+| `diag_kind` | `PairPlotDiagKind` | `PairPlotDiagKind::Histogram` |
+| `corner` | `bool` | `false` |
+| `labels` | `std::vector<std::string>` | empty |
+| `max_points` | `std::int64_t` | `2500` |
+| `diag_bins` | `std::int64_t` | `14` |
+| `diag_density_points` | `std::int64_t` | `128` |
+
+### `ScatterMatrixPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `corner` | `bool` | `false` |
+| `pair` | `pluss::pl::flash::PairPlotOptions` | default constructed |
+
+### `CatalogScatterMatrixPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `align` | `CatalogPairAlignOptions` | default constructed |
+| `matrix` | `pluss::table::ScatterMatrixPlotOptions` | default constructed |
+
+`matrix.corner = true` additionally forces `pair.triangle` from `Full` to `Lower` (a
+no-op if `triangle` was already `Lower` or `Upper`). `pair.kind = Reg` draws a fitted
+regression line (via `flash::regplot`) on off-diagonal cells instead of a plain point
+cloud. `pair.diag_kind = Density` swaps the diagonal cells from histograms to smoothed
+density curves. `pair.labels`, if left empty, is filled in with the resolved key names.
+`align`/`align_by` control the same cross-key alignment
+[`corr_heatmap()`](corr_heatmap.md) uses.
 
 ## Returns
 

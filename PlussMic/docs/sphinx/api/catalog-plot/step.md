@@ -50,17 +50,19 @@ explanation; only what's specific to `step()` is repeated here.
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`StepPlotOptions`)
-    ```cpp
-    struct StepPlotOptions {
-      double alpha{1.0};
-      double line_width{1.5};
-      XYAlignOptions align{};
-    };
-    ```
-    `align` controls how a mismatched-length explicit `x_key`/y-key pair is reconciled
-    (`Strict` throws, the default; `Inner` truncates; `PadScalar` pads) — see
-    [`line()`](line.md) for the full explanation and
-    worked examples; the mechanics are identical here.
+
+### `StepPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `1.0` |
+| `line_width` | `double` | `1.5` |
+| `align` | `XYAlignOptions` | default constructed |
+
+`align` controls how a mismatched-length explicit `x_key`/y-key pair is reconciled
+(`Strict` throws, the default; `Inner` truncates; `PadScalar` pads) — see
+[`line()`](line.md) for the full explanation and
+worked examples; the mechanics are identical here.
 
 ## Returns
 

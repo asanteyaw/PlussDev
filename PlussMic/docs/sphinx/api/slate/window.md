@@ -17,14 +17,14 @@ Computes a **trailing** rolling aggregate over a numeric `Series`-kind slate: ro
 the result summarizes rows `[i - window + 1, i]` of the input (clipped at the start of the
 slate for the first `window - 1` rows), using whichever aggregate `op` selects.
 
-```cpp
-enum class SlateWindowOp : std::uint8_t {
-  RollingSum = 0,
-  RollingMean = 1,
-  RollingMin = 2,
-  RollingMax = 3,
-};
-```
+### `SlateWindowOp` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `RollingSum` | `0` | — |
+| `RollingMean` | `1` | — |
+| `RollingMin` | `2` | — |
+| `RollingMax` | `3` | — |
 
 `min_periods` sets how many *valid* values must actually be present within a row's window
 for that row to produce a result at all — rows whose window has fewer valid entries than

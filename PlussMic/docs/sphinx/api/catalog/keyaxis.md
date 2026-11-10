@@ -17,19 +17,18 @@ The entry point into operations on the **key axis** — the stream *names* thems
 rather than their contents. `keyaxis()` binds the current catalog and hands back a
 `CatalogKeyAxisAccessor`:
 
-```cpp
-class CatalogKeyAxisAccessor {
-public:
-  Catalog like(std::string_view needle, bool case_sensitive = true) const;
-  Catalog match(std::string_view pattern) const;
-  Catalog series() const;
-  Catalog note() const;
-  Catalog timeline() const;
-  Catalog timeindex() const;
-  Catalog prefix(std::string_view prefix) const;
-  Catalog suffix(std::string_view suffix) const;
-};
-```
+### `CatalogKeyAxisAccessor` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `like` | Method | `Catalog like(std::string_view needle, bool case_sensitive = true) const` |
+| `match` | Method | `Catalog match(std::string_view pattern) const` |
+| `series` | Method | `Catalog series() const` |
+| `note` | Method | `Catalog note() const` |
+| `timeline` | Method | `Catalog timeline() const` |
+| `timeindex` | Method | `Catalog timeindex() const` |
+| `prefix` | Method | `Catalog prefix(std::string_view prefix) const` |
+| `suffix` | Method | `Catalog suffix(std::string_view suffix) const` |
 
 All eight methods are **filters** on the key axis:
 

@@ -54,21 +54,23 @@ Example 2.
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`BarPlotOptions`)
-    ```cpp
-    struct BarPlotOptions {
-      bool ci_enabled{false};
-      double ci_level{0.95};
-      bool horizontal{false};
-      XYAlignOptions align{};
-    };
-    ```
-    `ci_enabled`/`ci_level` are accepted for shape-compatibility with `DataFramePlotAccessor`
-    but are not read by `Catalog::plot().bar()` — it always draws plain bars with a fixed
-    `alpha = 0.88`/`line_width = 1.0` styling, regardless of these two fields.
-    `horizontal = true` swaps which values become the bars' length vs. category axis — see
-    the important callout above. `align` controls how a mismatched-length explicit
-    `x_key`/y-key pair is reconciled — see
-    [`line()`](line.md) for the full explanation.
+
+### `BarPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `ci_enabled` | `bool` | `false` |
+| `ci_level` | `double` | `0.95` |
+| `horizontal` | `bool` | `false` |
+| `align` | `XYAlignOptions` | default constructed |
+
+`ci_enabled`/`ci_level` are accepted for shape-compatibility with `DataFramePlotAccessor`
+but are not read by `Catalog::plot().bar()` — it always draws plain bars with a fixed
+`alpha = 0.88`/`line_width = 1.0` styling, regardless of these two fields.
+`horizontal = true` swaps which values become the bars' length vs. category axis — see
+the important callout above. `align` controls how a mismatched-length explicit
+`x_key`/y-key pair is reconciled — see
+[`line()`](line.md) for the full explanation.
 
 ## Returns
 

@@ -79,14 +79,14 @@ not a pre-training statistical one.
 
 A `StatusOr<PermuteImpactReport>`:
 
-```cpp
-struct classic::PermuteImpactReport {
-  pluss::Series mean_drop;         // Float64, one per feature
-  pluss::Series std_drop;          // Float64, one per feature (population std across repeats)
-  pluss::Series per_repeat_drops;  // Float64, [repeats, features]
-  classic::MetricKind metric;      // echoes the metric argument back
-};
-```
+### `classic::PermuteImpactReport` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `mean_drop` | `pluss::Series` | — |
+| `std_drop` | `pluss::Series` | — |
+| `per_repeat_drops` | `pluss::Series` | — |
+| `metric` | `classic::MetricKind` | — |
 
 Every "drop" is framed so **positive always means the feature mattered**,
 regardless of whether `metric` prefers larger or smaller values: for a

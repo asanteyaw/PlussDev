@@ -7,21 +7,6 @@
 ## Signature
 
 ```cpp
-enum class AnimationFrameFormat : std::uint8_t { Png, Svg, Pdf };
-
-struct HyperFrameExportOptions {
-  std::filesystem::path output_dir{"PlussPl/examples/outputs/4D/plusspl_flash_4d_frame_export"};
-  std::string file_prefix{"frame"};
-  std::string title{"Geometric 4D frame"};
-  AnimationFrameFormat format{AnimationFrameFormat::Png};
-  std::int64_t width{1280};
-  std::int64_t height{860};
-  std::int64_t dpi{144};
-  Theme theme{Theme::paper()};
-  HyperPlotOptions plot{};
-  HyperSweepOptions sweep{};
-};
-
 template <class X, class Y, class Z, class W>
 std::int64_t flash::export4_frames(X&& x, Y&& y, Z&& z, W&& w,
                                     const HyperFrameExportOptions& options = {})
@@ -55,56 +40,17 @@ lengths)
 
 ## `HyperFrameExportOptions` fields
 
-**output_dir** (`std::filesystem::path`, default
-`"PlussPl/examples/outputs/4D/plusspl_flash_4d_frame_export"`)
-    Directory the frame files are written into — created (including any missing parent
-    directories) via `std::filesystem::create_directories` if it doesn't already exist.
-    Must be non-empty, or `export4_frames` throws
-    `std::invalid_argument("flash::export4_frames: output_dir must be non-empty")`.
-
-**file_prefix** (`std::string`, default `"frame"`)
-    Filename prefix for every exported frame. Frame index `i` is written as
-    `{file_prefix}_{i, zero-padded to the width of the largest index}.{ext}` — e.g. with
-    3 frames (indices `0`–`2`, one digit each) and the default prefix, files are named
-    `frame_0.png`, `frame_1.png`, `frame_2.png`; with 10+ frames the indices are
-    zero-padded to two or more digits so the files still sort correctly by name.
-
-**title** (`std::string`, default `"Geometric 4D frame"`)
-    Forwarded as each frame's `Studio`/pane title (the same `title` argument
-    [`flash::cloud4`](cloud4.md)'s `Studio` overload accepts) — identical across every
-    exported frame.
-
-**format** (`AnimationFrameFormat`, default `Png`)
-    `Png` (via `Studio::save_png`, using `dpi`), `Svg` (via `Studio::save_svg`), or `Pdf`
-    (via `Studio::save_pdf`) — also determines each file's extension (`.png`/`.svg`/
-    `.pdf`).
-
-**width**, **height** (`std::int64_t`, default `1280`, `860`)
-    The `Studio` figure size (in points, via `Studio::size`) each frame is rendered at.
-    Both must be at least `480`×`320`, or `export4_frames` throws
-    `std::invalid_argument("flash::export4_frames: invalid frame extent")`.
-
-**dpi** (`std::int64_t`, default `144`)
-    Resolution used only when `format = Png`, passed to `Studio::save_png` — clamped to
-    at least `72` internally (`std::max<std::int64_t>(72, options.dpi)`), so a `dpi`
-    below `72` does not throw but is silently raised to `72`. Unused for `Svg`/`Pdf`.
-
-**theme** (`Theme`, default `Theme::paper()`)
-    The theme each per-frame `Studio` is constructed with.
-
-**plot** (`HyperPlotOptions`, default `{}`)
-    The base 4D plot configuration — see [`flash::path4`](path4.md)'s field table.
-    `plot.point_size` is the one field genuinely used by [`flash::cloud4`](cloud4.md)'s
-    per-frame render; every field of `plot` except whichever one `sweep.plane` selects
-    (see below) is held fixed across all exported frames.
-
-**sweep** (`HyperSweepOptions`, default `{}`)
-    Forwarded, together with `plot`, straight into
-    [`flash::hyper_animation_sequence`](hyper_animation_sequence.md) — see that page's
-    field table for `frames`/`plane`/`start_deg`/`end_deg`/`include_endpoint`. A
-    `sweep.frames` of `1` or fewer propagates `hyper_animation_sequence`'s own
-    `std::invalid_argument("flash::hyper_animation_sequence: frames must be > 1")`
-    rather than a distinct `export4_frames`-specific message.
+| Field | Type and default | Description |
+|---|---|---|
+| `output_dir` | `std::filesystem::path`, default `"PlussPl/examples/outputs/4D/plusspl_flash_4d_frame_export"` | Directory the frame files are written into — created (including any missing parent directories) via `std::filesystem::create_directories` if it doesn't already exist. Must be non-empty, or `export4_frames` throws `std::invalid_argument("flash::export4_frames: output_dir must be non-empty")`. |
+| `file_prefix` | `std::string`, default `"frame"` | Filename prefix for every exported frame. Frame index `i` is written as `{file_prefix}_{i, zero-padded to the width of the largest index}.{ext}` — e.g. with 3 frames (indices `0`–`2`, one digit each) and the default prefix, files are named `frame_0.png`, `frame_1.png`, `frame_2.png`; with 10+ frames the indices are zero-padded to two or more digits so the files still sort correctly by name. |
+| `title` | `std::string`, default `"Geometric 4D frame"` | Forwarded as each frame's `Studio`/pane title (the same `title` argument [`flash::cloud4`](cloud4.md)'s `Studio` overload accepts) — identical across every exported frame. |
+| `format` | `AnimationFrameFormat`, default `Png` | `Png` (via `Studio::save_png`, using `dpi`), `Svg` (via `Studio::save_svg`), or `Pdf` (via `Studio::save_pdf`) — also determines each file's extension (`.png`/`.svg`/ `.pdf`). |
+| `width`, `height` | `std::int64_t`, default `1280`, `860` | The `Studio` figure size (in points, via `Studio::size`) each frame is rendered at. Both must be at least `480`×`320`, or `export4_frames` throws `std::invalid_argument("flash::export4_frames: invalid frame extent")`. |
+| `dpi` | `std::int64_t`, default `144` | Resolution used only when `format = Png`, passed to `Studio::save_png` — clamped to at least `72` internally (`std::max<std::int64_t>(72, options.dpi)`), so a `dpi` below `72` does not throw but is silently raised to `72`. Unused for `Svg`/`Pdf`. |
+| `theme` | `Theme`, default `Theme::paper()` | The theme each per-frame `Studio` is constructed with. |
+| `plot` | `HyperPlotOptions`, default `{}` | The base 4D plot configuration — see [`flash::path4`](path4.md)'s field table. `plot.point_size` is the one field genuinely used by [`flash::cloud4`](cloud4.md)'s per-frame render; every field of `plot` except whichever one `sweep.plane` selects (see below) is held fixed across all exported frames. |
+| `sweep` | `HyperSweepOptions`, default `{}` | Forwarded, together with `plot`, straight into [`flash::hyper_animation_sequence`](hyper_animation_sequence.md) — see that page's field table for `frames`/`plane`/`start_deg`/`end_deg`/`include_endpoint`. A `sweep.frames` of `1` or fewer propagates `hyper_animation_sequence`'s own `std::invalid_argument("flash::hyper_animation_sequence: frames must be > 1")` rather than a distinct `export4_frames`-specific message. |
 
 ## Returns
 

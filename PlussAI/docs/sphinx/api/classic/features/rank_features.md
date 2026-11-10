@@ -36,42 +36,29 @@ a reduced batch or a top-k index list, is what's needed.
   skipped.
 
 `options` (`FeatureRankOptions`, default `{}`)
-: ```cpp
-  enum class classic::FeatureScoreMode : std::uint8_t {
-    ClassF = 0,       // ANOVA F-statistic, for a classification target
-    RegressionF = 1,  // Correlation-based F-statistic, for a regression target
-  };
+: Selects the scoring rule.
 
-  struct classic::FeatureRankOptions {
-    classic::FeatureScoreMode mode = classic::FeatureScoreMode::ClassF;
-    bool absolute_score = true;
-  };
-  ```
+| Field | Default | Meaning |
+|---|---|---|
+| `mode` | `ClassF` | `ClassF` uses ANOVA F for classification; `RegressionF` uses correlation-based F for regression. |
+| `absolute_score` | `true` | Has no observable effect on either F score. |
 
-  `mode` (default `ClassF`) — `ClassF` computes, per feature, the one-way
-  ANOVA F-ratio `MS_between / MS_within` across `batch.y`'s own distinct
-  values (treated as class labels, however many there are — see
-  [Example 2](#example-2)); `RegressionF` computes
-  `r^2 / (1 - r^2) * (n - 2)` from that feature's Pearson correlation with
-  `batch.y` treated as a continuous target — see
-  [Example 3](#example-3). `absolute_score` (default `true`) — **has no
-  observable effect for either mode**: both F-statistic formulas are
-  ratios of sums of squares, structurally non-negative already, so
-  `std::abs` is applied to an already-nonnegative value. Verified directly
-  in [Example 4](#example-4) rather than assumed from the formulas alone;
-  documented as a real, honest limitation of the current implementation,
-  not a bug to route around.
+`ClassF` computes, per feature, the one-way ANOVA F-ratio
+`MS_between / MS_within` across `batch.y`'s distinct values. `RegressionF`
+computes `r^2 / (1 - r^2) * (n - 2)` from Pearson correlation with `batch.y`
+as a continuous target. Both formulas are non-negative, so `absolute_score`
+does not change either result. See [Example 4](#example-4).
 
 ## Returns
 
 A `StatusOr<FeatureRankReport>`:
 
-```cpp
-struct classic::FeatureRankReport {
-  pluss::Series scores;                  // Float64, one per feature, ORIGINAL column order
-  pluss::Series ranked_feature_indices;  // Int64, every feature, sorted by score descending
-};
-```
+### `classic::FeatureRankReport` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `scores` | `pluss::Series` | — |
+| `ranked_feature_indices` | `pluss::Series` | — |
 
 `scores` is `feature_count()`-long, in the same column order as
 `batch.features.x` — never reordered. `ranked_feature_indices` is also

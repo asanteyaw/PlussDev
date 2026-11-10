@@ -21,13 +21,13 @@ Returns a new axel with those fields replaced. Applies
 [`RegistryNoteAccessor::pad`](../registry-note/pad.md) to every frame
 via [`Axel::map`](../axel/map.md).
 
-```cpp
-enum class TextAlign : std::uint8_t {
-  Left = 0,
-  Right = 1,
-  Center = 2,
-};
-```
+### `TextAlign` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Left` | `0` | — |
+| `Right` | `1` | — |
+| `Center` | `2` | — |
 
 `align` describes where the *original text* ends up, not where the
 padding goes: `Left` keeps the text flush left and adds padding on the

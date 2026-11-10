@@ -21,18 +21,17 @@ one place the builder actually mutates its stored spec list.
 
 `PullSpec` is a plain, independently-constructible value:
 
-```cpp
-struct PullSpec {
-  std::string source{};
-  PullOp op{PullOp::Take};
-  std::optional<std::string> alias{};
-  std::optional<PullWindow> window{};
+### `PullSpec` fields
 
-  PullSpec named(std::string_view value) const;
-  PullSpec windowed(std::int64_t value, std::string_view unit) const;
-  PullSpec root_windowed(std::int64_t value, std::string_view unit) const;
-};
-```
+| Field | Type | Default |
+|---|---|---|
+| `source` | `std::string` | empty |
+| `op` | `PullOp` | `PullOp::Take` |
+| `alias` | `std::optional<std::string>` | empty |
+| `window` | `std::optional<PullWindow>` | empty |
+| `named` | `Method` | `PullSpec named(std::string_view value) const` |
+| `windowed` | `Method` | `PullSpec windowed(std::int64_t value, std::string_view unit) const` |
+| `root_windowed` | `Method` | `PullSpec root_windowed(std::int64_t value, std::string_view unit) const` |
 
 | Field | Meaning | Default |
 |---|---|---|

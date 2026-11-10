@@ -15,20 +15,20 @@ Nexus::relationships() const -> const std::vector<Relationship>&
 Returns every declared `Relationship` in the workspace, in the order they were added. A
 `Relationship` is a declared edge between two tables:
 
-```cpp
-struct Relationship {
-  std::string name{};
-  std::string left_table{};
-  std::string right_table{};
-  std::vector<std::pair<std::string, std::string>> keys{};
-  RelationshipCardinality cardinality{RelationshipCardinality::ManyToOne};
-  bool left_optional{false};
-  bool right_optional{false};
-  double confidence{1.0};
-  RelationshipValidationStatus status{RelationshipValidationStatus::Declared};
-  std::optional<std::string> note{};
-};
-```
+### `Relationship` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `name` | `std::string` | empty |
+| `left_table` | `std::string` | empty |
+| `right_table` | `std::string` | empty |
+| `keys` | `std::vector<std::pair<std::string, std::string>>` | empty |
+| `cardinality` | `RelationshipCardinality` | `RelationshipCardinality::ManyToOne` |
+| `left_optional` | `bool` | `false` |
+| `right_optional` | `bool` | `false` |
+| `confidence` | `double` | `1.0` |
+| `status` | `RelationshipValidationStatus` | `RelationshipValidationStatus::Declared` |
+| `note` | `std::optional<std::string>` | empty |
 
 `name` uniquely identifies the relationship (see [`add_relationship()`](add_relationship.md)
 for the uniqueness rule). `left_table`/`right_table` name the two tables it connects.

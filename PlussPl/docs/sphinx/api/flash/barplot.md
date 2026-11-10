@@ -7,10 +7,6 @@
 ## Signatures
 
 ```cpp
-struct BarPlotOptions {
-  bool horizontal = false;
-};
-
 template <class X, class Y>
 Trace& flash::barplot(Pane& pane, X&& x, Y&& y, const BarPlotOptions& options = {})
 
@@ -44,13 +40,9 @@ is not hardcoded to always be the x-axis.
 
 ## `BarPlotOptions` fields
 
-**horizontal** (`bool`, default `false`)
-    When `true`, draws horizontal bars via [`Pane::columns_h`](../pane/columns_h.md)
-    instead of vertical bars via [`Pane::columns`](../pane/columns.md). Also determines
-    which axis the `Note` overload's category labels land on — see the important callout
-    above. This is `BarPlotOptions`' only field; there is no bar-width, gap, or color
-    control exposed here — style the returned `Trace&` directly for that (`.width(...)`,
-    `.stroke(...)`, `.palette(...)`).
+| Field | Type and default | Description |
+|---|---|---|
+| `horizontal` | `bool`, default `false` | When `true`, draws horizontal bars via [`Pane::columns_h`](../pane/columns_h.md) instead of vertical bars via [`Pane::columns`](../pane/columns.md). Also determines which axis the `Note` overload's category labels land on — see the important callout above. This is `BarPlotOptions`' only field; there is no bar-width, gap, or color control exposed here — style the returned `Trace&` directly for that (`.width(...)`, `.stroke(...)`, `.palette(...)`). |
 
 ```{note}
 Horizontal bar autorange now includes the shared bar base as part of the x-domain, not

@@ -7,15 +7,6 @@
 ## Signature
 
 ```cpp
-struct Scene3DOptions {
-  std::optional<ScenePreset3D> preset{std::nullopt};
-  std::optional<ThemePreset3D> theme{std::nullopt};
-  std::optional<CameraPreset3D> camera_preset{std::nullopt};
-  std::optional<Camera3DOptions> camera{std::nullopt};
-  std::optional<Lighting3DOptions> lighting{std::nullopt};
-  std::optional<GridStyle> grid_style{std::nullopt};
-};
-
 Pane& flash::scene3d(Pane& pane, const Scene3DOptions& options)
 ```
 
@@ -51,27 +42,14 @@ differently (only the camera changes, theme/lighting/grid stay Studio's).
 
 ## `Scene3DOptions` fields
 
-**preset** (`std::optional<ScenePreset3D>`, default `std::nullopt`)
-    Applies [`flash::scene_preset3d`](scene_preset3d.md) first, when set. See the
-    important callout above.
-
-**theme** (`std::optional<ThemePreset3D>`, default `std::nullopt`)
-    Applies [`flash::theme_preset3d`](theme_preset3d.md) when set — after `preset`.
-
-**camera_preset** (`std::optional<CameraPreset3D>`, default `std::nullopt`)
-    Applies [`flash::camera_preset3d`](camera_preset3d.md) when set — after `theme` and
-    `grid_style`.
-
-**camera** (`std::optional<Camera3DOptions>`, default `std::nullopt`)
-    Applies [`flash::camera3d`](camera3d.md) when set — after `camera_preset`, so setting
-    both `camera_preset` and `camera` lets `camera` win (it's applied later).
-
-**lighting** (`std::optional<Lighting3DOptions>`, default `std::nullopt`)
-    Applies [`flash::lighting3d`](lighting3d.md) when set — applied last.
-
-**grid_style** (`std::optional<GridStyle>`, default `std::nullopt`)
-    Applies [`Pane::grid`](../pane/grid.md) directly when set — applied third, after
-    `preset`/`theme`, before `camera_preset`/`camera`/`lighting`.
+| Field | Type and default | Description |
+|---|---|---|
+| `preset` | `std::optional<ScenePreset3D>`, default `std::nullopt` | Applies [`flash::scene_preset3d`](scene_preset3d.md) first, when set. See the important callout above. |
+| `theme` | `std::optional<ThemePreset3D>`, default `std::nullopt` | Applies [`flash::theme_preset3d`](theme_preset3d.md) when set — after `preset`. |
+| `camera_preset` | `std::optional<CameraPreset3D>`, default `std::nullopt` | Applies [`flash::camera_preset3d`](camera_preset3d.md) when set — after `theme` and `grid_style`. |
+| `camera` | `std::optional<Camera3DOptions>`, default `std::nullopt` | Applies [`flash::camera3d`](camera3d.md) when set — after `camera_preset`, so setting both `camera_preset` and `camera` lets `camera` win (it's applied later). |
+| `lighting` | `std::optional<Lighting3DOptions>`, default `std::nullopt` | Applies [`flash::lighting3d`](lighting3d.md) when set — applied last. |
+| `grid_style` | `std::optional<GridStyle>`, default `std::nullopt` | Applies [`Pane::grid`](../pane/grid.md) directly when set — applied third, after `preset`/`theme`, before `camera_preset`/`camera`/`lighting`. |
 
 ## Returns
 

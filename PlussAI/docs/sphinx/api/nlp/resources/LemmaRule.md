@@ -6,12 +6,12 @@ One exact surface-to-lemma pair in a language's lemma table.
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::resources::LemmaRule {
-  std::string_view surface{};
-  std::string_view lemma{};
-};
-```
+### `pluss::ai::nlp::resources::LemmaRule` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `surface` | `std::string_view` | empty |
+| `lemma` | `std::string_view` | empty |
 
 ## Fields
 

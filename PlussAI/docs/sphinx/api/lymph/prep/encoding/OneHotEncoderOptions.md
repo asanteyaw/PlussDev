@@ -5,13 +5,13 @@ the category budget and unknown handling for one-hot expansion. It is passed to
 the [`prep::OneHotEncoder`](OneHotEncoder.md) constructor and to the
 [`prep::stage::one_hot_encoder`](../stage/one_hot_encoder.md) factory.
 
-```cpp
-struct OneHotEncoderOptions {
-  std::int64_t           max_categories = 20;
-  CategoryOverflowPolicy overflow       = CategoryOverflowPolicy::KeepMostFrequent;
-  bool                   include_unknown_bucket = true;
-};
-```
+### `OneHotEncoderOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `max_categories` | `std::int64_t` | `20` |
+| `overflow` | `CategoryOverflowPolicy` | `CategoryOverflowPolicy::KeepMostFrequent` |
+| `include_unknown_bucket` | `bool` | `true` |
 
 ## Fields
 

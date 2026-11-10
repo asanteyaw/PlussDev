@@ -13,7 +13,7 @@ pluss::Duration pluss::duration::nanos(pluss::RangeView<std::int64_t> flat, plus
 // microseconds, milliseconds, seconds, minutes, hours, days, and weeks
 // each provide the same scalar, nested-literal, and flat-plus-shape forms.
 
-enum class pluss::duration::Unit { Nanos, Microseconds, Milliseconds, Seconds, Minutes, Hours, Days, Weeks };
+
 pluss::Duration pluss::duration::make(std::int64_t count, Unit unit);
 pluss::Duration pluss::duration::make(std::initializer_list<NestedInt64Literal> nested, Unit unit);
 pluss::Duration pluss::duration::make(pluss::RangeView<std::int64_t> flat, pluss::RangeView<std::int64_t> sizes, Unit unit);
@@ -24,6 +24,19 @@ pluss::Duration pluss::make_duration(pluss::RangeView<std::int64_t> flat, pluss:
 
 pluss::Duration pluss::duration::range(const Duration& start, const Duration& end, const Duration& step);
 ```
+
+### `pluss::duration::Unit` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Nanos` | — | — |
+| `Microseconds` | — | — |
+| `Milliseconds` | — | — |
+| `Seconds` | — | — |
+| `Minutes` | — | — |
+| `Hours` | — | — |
+| `Days` | — | — |
+| `Weeks` | — | — |
 
 ## What It Does
 

@@ -17,19 +17,18 @@ The entry point into operations on the **key axis** — the stream names within 
 catalog, applied uniformly across every catalog in the archive. `keyaxis()` binds the
 current archive and hands back an `ArchiveKeyAxisAccessor`:
 
-```cpp
-class ArchiveKeyAxisAccessor {
-public:
-  Archive like(std::string_view needle, bool case_sensitive = true) const;
-  Archive match(std::string_view pattern) const;
-  Archive series() const;
-  Archive note() const;
-  Archive timeline() const;
-  Archive timeindex() const;
-  Archive prefix(std::string_view prefix) const;
-  Archive suffix(std::string_view suffix) const;
-};
-```
+### `ArchiveKeyAxisAccessor` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `like` | Method | `Archive like(std::string_view needle, bool case_sensitive = true) const` |
+| `match` | Method | `Archive match(std::string_view pattern) const` |
+| `series` | Method | `Archive series() const` |
+| `note` | Method | `Archive note() const` |
+| `timeline` | Method | `Archive timeline() const` |
+| `timeindex` | Method | `Archive timeindex() const` |
+| `prefix` | Method | `Archive prefix(std::string_view prefix) const` |
+| `suffix` | Method | `Archive suffix(std::string_view suffix) const` |
 
 All eight methods are **filters** on the key axis, identical in behavior to
 [`Catalog::keyaxis`](../catalog/keyaxis.md) — just applied to every catalog in the archive

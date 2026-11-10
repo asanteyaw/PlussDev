@@ -7,24 +7,8 @@
 ## Signatures
 
 ```cpp
-enum class DisGridKind : std::uint8_t { Hist, Density, Ecdf, Rug };
-
 DisGridKind flash::disgrid_kind(std::string_view kind);
 
-struct DisGridPlotOptions {
-  DisGridKind kind{DisGridKind::Hist};
-  std::int64_t rows{0};
-  std::int64_t cols{0};
-  double grid_gap_x{16.0};
-  double grid_gap_y{16.0};
-  bool show_grid{true};
-  std::vector<std::string> titles{};
-  std::vector<std::string> x_labels{};
-  std::vector<std::string> y_labels{};
-  std::int64_t bins{12};
-  std::int64_t density_points{96};
-  double rug_height{0.06};
-};
 
 Studio& flash::disgridplot(Studio& studio, pluss::msharp::RangeView::Series values,
                             const DisGridPlotOptions& options = {})
@@ -58,46 +42,17 @@ mechanics.
 
 ## `DisGridPlotOptions` fields
 
-**kind** (`DisGridKind`, default `DisGridKind::Hist`)
-    Which flash function draws each panel: `Hist` → [`histplot`](histplot.md) (using
-    `bins`), `Density` → [`kdeplot`](kdeplot.md) (using `density_points`), `Ecdf` →
-    [`ecdfplot`](ecdfplot.md), `Rug` → [`rugplot`](rugplot.md) (using `rug_height`). The
-    kind-string overloads resolve this via `flash::disgrid_kind("hist"|"density"|"ecdf"|
-    "rug")`, which throws `std::invalid_argument("flash::disgridplot unknown kind: " +
-    kind)` for any other string.
-
-**rows**, **cols** (`std::int64_t`, default `0` each)
-    Explicit grid shape hints; `0` means "auto" — resolved identically to
-    `RelGridPlotOptions::rows`/`cols` on the [`flash::relgridplot`](relgridplot.md) page.
-
-**grid_gap_x**, **grid_gap_y** (`double`, default `16.0` each)
-    Forwarded to the internal [`flash::FacetGrid`](FacetGrid.md) call as its `gx`/`gy`
-    gutter.
-
-**show_grid** (`bool`, default `true`)
-    Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None`
-    (`false`).
-
-**titles** (`std::vector<std::string>`, default empty)
-    Per-facet panel titles, applied positionally — short vectors leave the remaining
-    panels untitled.
-
-**x_labels**, **y_labels** (`std::vector<std::string>`, default empty)
-    Per-facet axis labels, applied positionally, same short-vector tolerance.
-
-**bins** (`std::int64_t`, default `12`)
-    Forwarded to [`flash::histplot`](histplot.md) as its bin count when `kind ==
-    DisGridKind::Hist`. Clamped to at least `1` internally
-    (`std::max<std::int64_t>(1, options.bins)`) before being cast to `int`. Unused for
-    other kinds.
-
-**density_points** (`std::int64_t`, default `96`)
-    Forwarded to [`flash::kdeplot`](kdeplot.md) as its evaluation-point count when `kind ==
-    DisGridKind::Density`. Unused for other kinds.
-
-**rug_height** (`double`, default `0.06`)
-    Forwarded to [`flash::rugplot`](rugplot.md) as its tick height when `kind ==
-    DisGridKind::Rug`. Unused for other kinds.
+| Field | Type and default | Description |
+|---|---|---|
+| `kind` | `DisGridKind`, default `DisGridKind::Hist` | Which flash function draws each panel: `Hist` → [`histplot`](histplot.md) (using `bins`), `Density` → [`kdeplot`](kdeplot.md) (using `density_points`), `Ecdf` → [`ecdfplot`](ecdfplot.md), `Rug` → [`rugplot`](rugplot.md) (using `rug_height`). The kind-string overloads resolve this via `flash::disgrid_kind("hist"\|"density"\|"ecdf"\| "rug")`, which throws `std::invalid_argument("flash::disgridplot unknown kind: " + kind)` for any other string. |
+| `rows`, `cols` | `std::int64_t`, default `0` each | Explicit grid shape hints; `0` means "auto" — resolved identically to `RelGridPlotOptions::rows`/`cols` on the [`flash::relgridplot`](relgridplot.md) page. |
+| `grid_gap_x`, `grid_gap_y` | `double`, default `16.0` each | Forwarded to the internal [`flash::FacetGrid`](FacetGrid.md) call as its `gx`/`gy` gutter. |
+| `show_grid` | `bool`, default `true` | Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`). |
+| `titles` | `std::vector<std::string>`, default empty | Per-facet panel titles, applied positionally — short vectors leave the remaining panels untitled. |
+| `x_labels`, `y_labels` | `std::vector<std::string>`, default empty | Per-facet axis labels, applied positionally, same short-vector tolerance. |
+| `bins` | `std::int64_t`, default `12` | Forwarded to [`flash::histplot`](histplot.md) as its bin count when `kind == DisGridKind::Hist`. Clamped to at least `1` internally (`std::max<std::int64_t>(1, options.bins)`) before being cast to `int`. Unused for other kinds. |
+| `density_points` | `std::int64_t`, default `96` | Forwarded to [`flash::kdeplot`](kdeplot.md) as its evaluation-point count when `kind == DisGridKind::Density`. Unused for other kinds. |
+| `rug_height` | `double`, default `0.06` | Forwarded to [`flash::rugplot`](rugplot.md) as its tick height when `kind == DisGridKind::Rug`. Unused for other kinds. |
 
 ## Parameters
 

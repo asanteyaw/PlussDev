@@ -36,13 +36,13 @@ who placed where, on what objective, with which per-metric means.
 
 ## The `Trial` value type
 
-```cpp
-struct Trial {
-  std::string name{};
-  double objective = /* NaN until computed */;
-  metrics::CrossValidationReport cv{};
-};
-```
+### `Trial` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `name` | `std::string` | empty |
+| `objective` | `double` | `/* NaN until computed */` |
+| `cv` | `metrics::CrossValidationReport` | default constructed |
 
 One trial is one candidate's outcome: its `name`, its `objective` (the
 objective fold mean), and the full `cv` report behind that number —
@@ -54,20 +54,19 @@ objective fold mean), and the full `cv` report behind that number —
 `compare` / `Suite::run` return a `CompareResult`, which wraps the report with
 fitted models:
 
-```cpp
-struct CompareResult {
-  CompareReport report{};
-  std::optional<models::Model> best_model{};
-  std::optional<models::Model> worst_model{};
-  std::vector<models::Model> fitted{};          // top FitOptions.fit_top, ranked
-  std::vector<models::Model> bottom_fitted{};   // bottom FitOptions.fit_bottom
+### `CompareResult` fields
 
-  const models::Model& best() const;            // throws if unset
-  const models::Model& worst() const;           // throws if unset
-  std::vector<std::pair<std::string, models::Model>> top(std::int64_t k) const;
-  std::vector<std::pair<std::string, models::Model>> bottom(std::int64_t k) const;
-};
-```
+| Field | Type | Default |
+|---|---|---|
+| `report` | `CompareReport` | default constructed |
+| `best_model` | `std::optional<models::Model>` | empty |
+| `worst_model` | `std::optional<models::Model>` | empty |
+| `fitted` | `std::vector<models::Model>` | — |
+| `bottom_fitted` | `std::vector<models::Model>` | — |
+| `best` | `Method` | `const models::Model& best() const` |
+| `worst` | `Method` | `const models::Model& worst() const` |
+| `top` | `Method` | `std::vector<std::pair<std::string, models::Model>> top(std::int64_t k) const` |
+| `bottom` | `Method` | `std::vector<std::pair<std::string, models::Model>> bottom(std::int64_t k) const` |
 
 `best()` / `worst()` are the single re-fitted extremes (always available once a
 comparison ran). `top(k)` / `bottom(k)` need `k <= FitOptions.fit_top` /

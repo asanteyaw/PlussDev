@@ -64,15 +64,17 @@ fill more fully occludes the ones beneath it.
     Same three-step resolution as [`line()`](line.md).
 
 **options** (`AreaStackedPlotOptions`)
-    ```cpp
-    struct AreaStackedPlotOptions {
-      double alpha{0.7};
-      double line_width{1.2};
-    };
-    ```
-    `alpha` defaults lower than both [`line()`](line.md) (`1.0`) and [`area()`](area.md)
-    (`0.88`) — see the note above for why: with several stacked, overlapping fills, a lower
-    default opacity keeps the underlying grid and boundary lines visible through the stack.
+
+### `AreaStackedPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `0.7` |
+| `line_width` | `double` | `1.2` |
+
+`alpha` defaults lower than both [`line()`](line.md) (`1.0`) and [`area()`](area.md)
+(`0.88`) — see the note above for why: with several stacked, overlapping fills, a lower
+default opacity keeps the underlying grid and boundary lines visible through the stack.
 
 ## Returns
 

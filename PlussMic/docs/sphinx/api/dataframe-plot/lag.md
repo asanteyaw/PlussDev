@@ -38,22 +38,24 @@ A feature with fewer than two rows throws `"flash::lagplot requires at least two
     feature — see [`act()`](act.md)'s shared-diagnostics note.
 
 **options** (`LagPlotOptions`)
-    ```cpp
-    struct LagPlotOptions {
-      std::int64_t lag{1};
-      std::int64_t max_points{2500};
-      double marker_area{16.0};
-      float trace_width{0.55F};
-    };
-    ```
-    `lag` is clamped internally to `[1, n - 1]` where `n` is the feature's row count — a
-    `lag` of `0` or larger than the data supports is silently clamped rather than throwing.
-    Given `n` rows and a clamped `lag`, `usable = n - lag` points are plotted: the point at
-    index `i` (for `i` in `0..usable`) is `(x[i], x[i + lag])`. `max_points` caps how many of
-    these `usable` points are actually drawn — when `usable` exceeds `max_points`, points are
-    subsampled at a stride (not randomly chosen) so the count stays within budget while still
-    spanning the full range. `marker_area` and `trace_width` control point size and marker
-    outline width respectively (`marker_area` is floored to a minimum of `2.0`).
+
+### `LagPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `lag` | `std::int64_t` | `1` |
+| `max_points` | `std::int64_t` | `2500` |
+| `marker_area` | `double` | `16.0` |
+| `trace_width` | `float` | `0.55F` |
+
+`lag` is clamped internally to `[1, n - 1]` where `n` is the feature's row count — a
+`lag` of `0` or larger than the data supports is silently clamped rather than throwing.
+Given `n` rows and a clamped `lag`, `usable = n - lag` points are plotted: the point at
+index `i` (for `i` in `0..usable`) is `(x[i], x[i + lag])`. `max_points` caps how many of
+these `usable` points are actually drawn — when `usable` exceeds `max_points`, points are
+subsampled at a stride (not randomly chosen) so the count stays within budget while still
+spanning the full range. `marker_area` and `trace_width` control point size and marker
+outline width respectively (`marker_area` is floored to a minimum of `2.0`).
 
 ## Returns
 

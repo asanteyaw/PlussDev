@@ -22,21 +22,22 @@ recently set, or an inactive, all-zero default if `mosaic()` was never called.
 ## Returns
 
 `const MosaicLayout&`
-    ```cpp
-    struct MosaicLayout {
-      std::int64_t rows{0};
-      std::int64_t cols{0};
-      double gutter_x{18.0};
-      double gutter_y{18.0};
-      bool active{false};
-    };
-    ```
-    `active` is `true` only after a successful [`mosaic()`](mosaic.md) call — a `Studio`
-    that never called `mosaic()` reports `rows = 0`, `cols = 0`, `active = false`, even if it
-    has several panes placed via explicit [`subpane2()`](subpane2.md)/
-    [`subpane3()`](subpane3.md) slots (the renderer infers an *effective* grid from those
-    slots at render time, but that inferred grid is never written back into this accessor's
-    return value — `mosaic_layout()` only ever reflects an explicit `mosaic()` call).
+    The current mosaic configuration.
+
+| Field | Default | Meaning |
+|---|---|---|
+| `rows` | `0` | Number of mosaic rows. |
+| `cols` | `0` | Number of mosaic columns. |
+| `gutter_x` | `18.0` | Horizontal space between cells. |
+| `gutter_y` | `18.0` | Vertical space between cells. |
+| `active` | `false` | Whether `mosaic()` set this layout. |
+
+`active` is `true` only after a successful [`mosaic()`](mosaic.md) call — a `Studio`
+that never called `mosaic()` reports `rows = 0`, `cols = 0`, `active = false`, even if it
+has several panes placed via explicit [`subpane2()`](subpane2.md)/
+[`subpane3()`](subpane3.md) slots (the renderer infers an *effective* grid from those
+slots at render time, but that inferred grid is never written back into this accessor's
+return value — `mosaic_layout()` only ever reflects an explicit `mosaic()` call).
 
 ## Examples
 

@@ -33,16 +33,16 @@ own link's cardinality, the same as a single-hop `join()` would.
 `CatalogJoinReport` (`.report`) describing what was matched, left without a partner,
 or omitted -- `join()` itself discards that report.
 
-```cpp
-struct JoinSpec {
-  std::vector<std::pair<std::string, std::string>> keys{};
-  JoinHow how{JoinHow::Inner};
-  std::string right_suffix{};
-  std::optional<RelationshipCardinality> validate{};
-  std::optional<std::string> relationship_name{};
-  std::optional<std::string> result_name{};
-};
-```
+### `JoinSpec` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `keys` | `std::vector<std::pair<std::string, std::string>>` | empty |
+| `how` | `JoinHow` | `JoinHow::Inner` |
+| `right_suffix` | `std::string` | empty |
+| `validate` | `std::optional<RelationshipCardinality>` | empty |
+| `relationship_name` | `std::optional<std::string>` | empty |
+| `result_name` | `std::optional<std::string>` | empty |
 
 | Field | Meaning | Default |
 |---|---|---|

@@ -46,13 +46,14 @@ overlaid on a shared `"value"`/`"density"` axis pair.
     regardless of what's passed.
 
 **options** (`DensityPlotOptions`)
-    ```cpp
-    struct DensityPlotOptions {
-      std::int64_t points{128};
-      double alpha{1.0};
-      double line_width{1.5};
-    };
-    ```
+
+### `DensityPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `points` | `std::int64_t` | `128` |
+| `alpha` | `double` | `1.0` |
+| `line_width` | `double` | `1.5` |
 
 ## Returns
 

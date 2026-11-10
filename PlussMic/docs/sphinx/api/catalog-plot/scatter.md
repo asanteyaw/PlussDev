@@ -71,34 +71,40 @@ hue key '<name>' must be note-like or time-like"`. See Example 6.
     callout above.
 
 **options** (`pluss::table::ScatterPlotOptions` or `CatalogScatterPlotOptions`)
-    ```cpp
-    struct ScatterPlotOptions {
-      double alpha{0.92};
-      double line_width{1.1};
-      bool fit_line{false};
-      std::int64_t fit_order{1};
-      bool fit_ci{false};
-      double fit_confidence_level{0.95};
-    };
 
-    struct CatalogPairAlignOptions {
-      PairAlign align{PairAlign::PairwiseInner};   // PairwiseInner | GlobalInner
-      PairAlignBy align_by{PairAlignBy::Auto};     // Auto | Label | Pos
-    };
+### `ScatterPlotOptions` fields
 
-    struct CatalogScatterPlotOptions {
-      CatalogPairAlignOptions align{};
-      pluss::table::ScatterPlotOptions scatter{};
-    };
-    ```
-    Passing a bare `ScatterPlotOptions` (the second overload) is equivalent to passing a
-    `CatalogScatterPlotOptions` with default-constructed `align` and that `scatter` value —
-    it exists purely so a caller who doesn't care about alignment doesn't have to spell out
-    the wrapper struct. `fit_line`/`fit_order`/`fit_ci`/`fit_confidence_level` are accepted
-    for shape-compatibility with `DataFramePlotAccessor::scatter` but are **not** read by
-    `Catalog::plot().scatter()` — no fit line is ever drawn here, regardless of these fields.
-    `align`/`align_by` only affect the numeric-pair branch (plain `Series` `x_key`) — they
-    have no effect when `x_key` resolves to a labeled-axis key.
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `0.92` |
+| `line_width` | `double` | `1.1` |
+| `fit_line` | `bool` | `false` |
+| `fit_order` | `std::int64_t` | `1` |
+| `fit_ci` | `bool` | `false` |
+| `fit_confidence_level` | `double` | `0.95` |
+
+### `CatalogPairAlignOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `align` | `PairAlign` | `PairAlign::PairwiseInner` |
+| `align_by` | `PairAlignBy` | `PairAlignBy::Auto` |
+
+### `CatalogScatterPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `align` | `CatalogPairAlignOptions` | default constructed |
+| `scatter` | `pluss::table::ScatterPlotOptions` | default constructed |
+
+Passing a bare `ScatterPlotOptions` (the second overload) is equivalent to passing a
+`CatalogScatterPlotOptions` with default-constructed `align` and that `scatter` value —
+it exists purely so a caller who doesn't care about alignment doesn't have to spell out
+the wrapper struct. `fit_line`/`fit_order`/`fit_ci`/`fit_confidence_level` are accepted
+for shape-compatibility with `DataFramePlotAccessor::scatter` but are **not** read by
+`Catalog::plot().scatter()` — no fit line is ever drawn here, regardless of these fields.
+`align`/`align_by` only affect the numeric-pair branch (plain `Series` `x_key`) — they
+have no effect when `x_key` resolves to a labeled-axis key.
 
 ## Returns
 

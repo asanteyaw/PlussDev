@@ -38,23 +38,25 @@ covers what's specific to `andrews_curves()`.
     Optional coloring/grouping feature, same behavior as [`parallel()`](parallel.md)'s.
 
 **options** (`AndrewsCurvesPlotOptions`)
-    ```cpp
-    struct AndrewsCurvesPlotOptions {
-      std::vector<std::string> labels{};
-      bool normalize{true};
-      std::int64_t points{220};
-      std::int64_t max_curves{600};
-      double alpha{0.28};
-      float trace_width{0.9F};
-      bool show_grid{true};
-      bool show_legend{true};
-    };
-    ```
-    `points` is how many points each row's curve is evaluated at over its domain (finer
-    than a straight-line plot, since the curve is smooth). `max_curves` caps how many rows'
-    curves are drawn — analogous to [`parallel()`](parallel.md)'s `max_points`. The rest
-    (`labels`, `normalize`, `alpha`, `trace_width`, `show_grid`, `show_legend`) mirror
-    [`ParallelPlotOptions`](parallel.md)'s fields of the same name.
+
+### `AndrewsCurvesPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `labels` | `std::vector<std::string>` | empty |
+| `normalize` | `bool` | `true` |
+| `points` | `std::int64_t` | `220` |
+| `max_curves` | `std::int64_t` | `600` |
+| `alpha` | `double` | `0.28` |
+| `trace_width` | `float` | `0.9F` |
+| `show_grid` | `bool` | `true` |
+| `show_legend` | `bool` | `true` |
+
+`points` is how many points each row's curve is evaluated at over its domain (finer
+than a straight-line plot, since the curve is smooth). `max_curves` caps how many rows'
+curves are drawn — analogous to [`parallel()`](parallel.md)'s `max_points`. The rest
+(`labels`, `normalize`, `alpha`, `trace_width`, `show_grid`, `show_legend`) mirror
+[`ParallelPlotOptions`](parallel.md)'s fields of the same name.
 
 ## Returns
 

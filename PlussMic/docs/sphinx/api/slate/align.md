@@ -18,19 +18,21 @@ alignment surface behind many higher-level `DataFrame` operations. Use it when y
 working with one extracted column directly and need to reorder or relabel it against
 another label vector before comparison, arithmetic, export, or manual reconstruction.
 
-```cpp
-enum class AlignBy : std::uint8_t {
-  Pos = 0,      // strict positional alignment — no label-based remapping
-  Caselbl = 1,  // gather by case label
-  Feature = 2,  // gather by feature label
-  Both = 3,     // DataFrame-only; rejected for Slate
-};
+### `AlignBy` values
 
-struct AlignOptions {
-  AlignBy align{AlignBy::Pos};
-  std::optional<double> fill{std::nullopt};
-};
-```
+| Value | Numeric value | Description |
+|---|---|---|
+| `Pos` | `0` | strict positional alignment — no label-based remapping |
+| `Caselbl` | `1` | gather by case label |
+| `Feature` | `2` | gather by feature label |
+| `Both` | `3` | DataFrame-only; rejected for Slate |
+
+### `AlignOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `align` | `AlignBy` | `AlignBy::Pos` |
+| `fill` | `std::optional<double>` | `std::nullopt` |
 
 `target_labels`' interpretation depends entirely on `options.align`: under `Caselbl`, it's
 the desired case-axis order; under `Feature`, the desired feature-label order; under `Pos`

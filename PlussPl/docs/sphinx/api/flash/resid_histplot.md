@@ -7,12 +7,6 @@
 ## Signatures
 
 ```cpp
-struct ResidHistPlotOptions {
-  int bins = 24;
-  float trace_width = 0.85F;
-  RegPlotOptions reg{};
-};
-
 template <class X, class Y>
 Trace& flash::resid_histplot(Pane& pane, X&& x, Y&& y, const ResidHistPlotOptions& options = {})
 
@@ -35,17 +29,11 @@ where a perfectly-fit residual would land.
 
 ## `ResidHistPlotOptions` fields
 
-**bins** (`int`, default `24`, clamped to a minimum of `4`)
-    The histogram bin count, forwarded to `Pane::bucket`.
-
-**trace_width** (`float`, default `0.85F`)
-    The histogram trace's stroke width.
-
-**reg** (`RegPlotOptions`, default-constructed)
-    The fit-algorithm configuration used to compute residuals — **only its
-    `order`/`robust`/`lowess`/`lowess_frac` fields are consulted**, exactly like
-    [`residplot`](residplot.md)'s own `RegPlotOptions` parameter. `show_scatter`,
-    `show_fit`, `show_ci`, `confidence_level`, and `n_boot` are all ignored here too.
+| Field | Type and default | Description |
+|---|---|---|
+| `bins` | `int`, default `24`, clamped to a minimum of `4` | The histogram bin count, forwarded to `Pane::bucket`. |
+| `trace_width` | `float`, default `0.85F` | The histogram trace's stroke width. |
+| `reg` | `RegPlotOptions`, default-constructed | The fit-algorithm configuration used to compute residuals — **only its `order`/`robust`/`lowess`/`lowess_frac` fields are consulted**, exactly like [`residplot`](residplot.md)'s own `RegPlotOptions` parameter. `show_scatter`, `show_fit`, `show_ci`, `confidence_level`, and `n_boot` are all ignored here too. |
 
 ## Parameters
 

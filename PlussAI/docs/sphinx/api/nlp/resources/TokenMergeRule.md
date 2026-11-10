@@ -6,13 +6,13 @@ One pair of adjacent tokens that forms a single unit in a language.
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::resources::TokenMergeRule {
-  std::string_view left{};
-  std::string_view right{};
-  std::string_view merged{};
-};
-```
+### `pluss::ai::nlp::resources::TokenMergeRule` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `left` | `std::string_view` | empty |
+| `right` | `std::string_view` | empty |
+| `merged` | `std::string_view` | empty |
 
 ## Fields
 

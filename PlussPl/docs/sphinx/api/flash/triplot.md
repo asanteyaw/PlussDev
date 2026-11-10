@@ -7,31 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class TriplotKind : std::uint8_t { Cloud, Path, Sheet, Lattice, Spire, Ridge };
-
-struct TriplotOptions {
-  TriplotKind kind{TriplotKind::Cloud};
-  std::vector<std::string> labels{};
-  std::vector<std::int64_t> feature_indices{};
-  std::vector<std::string> feature_names{};
-  std::int64_t max_features{0};
-  std::int64_t max_panels{9};
-  std::int64_t rows{0};
-  std::int64_t cols{0};
-  std::int64_t max_points{2500};
-  std::int64_t ridge_levels{8};
-  bool show_grid{true};
-  bool auto_size{true};
-  double min_width{1280.0};
-  double min_height{900.0};
-  double cell_width{360.0};
-  double cell_height{300.0};
-  double outer_pad_x{100.0};
-  double outer_pad_y{100.0};
-  double grid_gap_x{10.0};
-  double grid_gap_y{10.0};
-};
-
 Studio& flash::triplot(Studio& studio, pluss::msharp::RangeView::Series columns,
                         const TriplotOptions& options = {})
 
@@ -94,90 +69,35 @@ Examples 8-11 below.
 
 ## `TriplotOptions` fields
 
-**Content & selection**
+### Content & selection
 
-**kind** (`TriplotKind`, default `Cloud`)
-    Which glyph draws each triplet's panel: `Cloud` → a 3D scatter
-    ([`Pane::cloud3`](../pane/cloud3.md)); `Path` → a connected 3D line
-    ([`Pane::path3`](../pane/path3.md)); `Sheet` → a filled surface
-    ([`Pane::sheet`](../pane/sheet.md)); `Lattice` → a wireframe surface
-    ([`Pane::lattice`](../pane/lattice.md)); `Spire` → a 3D bar-forest
-    ([`Pane::spire3`](../pane/spire3.md)); `Ridge` → elevated contour lines
-    ([`Pane::ridge3`](../pane/ridge3.md)). `Sheet`/`Lattice`/`Spire`/`Ridge` all draw over
-    the binned surface described in the important callout above, not the raw triplet.
+| Field | Type and default | Description |
+|---|---|---|
+| `kind` | `TriplotKind`, default `Cloud` | Which glyph draws each triplet's panel: `Cloud` → a 3D scatter ([`Pane::cloud3`](../pane/cloud3.md)); `Path` → a connected 3D line ([`Pane::path3`](../pane/path3.md)); `Sheet` → a filled surface ([`Pane::sheet`](../pane/sheet.md)); `Lattice` → a wireframe surface ([`Pane::lattice`](../pane/lattice.md)); `Spire` → a 3D bar-forest ([`Pane::spire3`](../pane/spire3.md)); `Ridge` → elevated contour lines ([`Pane::ridge3`](../pane/ridge3.md)). `Sheet`/`Lattice`/`Spire`/`Ridge` all draw over the binned surface described in the important callout above, not the raw triplet. |
+| `labels` | `std::vector<std::string>`, default empty | Per-feature names. Falls back to `detail::default_feature_labels`'s `"x1"`, `"x2"`, … scheme when its length doesn't match the feature count — identical fallback rule to [`flash::pairplot`](pairplot.md)'s `columns`-overloads (no underscore, unlike the matrix-overload fallback used elsewhere). |
+| `feature_indices` | `std::vector<std::int64_t>`, default empty | Explicit 0-based indices (into the full, unfiltered feature list) to restrict the triplet search to. Out-of-range indices throw. Duplicates are silently de-duplicated, keeping first occurrence order. Takes priority over `feature_names` when both are set. |
+| `feature_names` | `std::vector<std::string>`, default empty | Explicit feature names (matched against `labels`) to restrict the search to. An unrecognized name throws `"flash::triplot unknown feature name: " + name`. Only consulted when `feature_indices` is empty. |
+| `max_features` | `std::int64_t`, default `0` | When positive and the selected feature count exceeds it, truncates the selection down to the first `max_features` (in whatever order `feature_indices`/`feature_names`/the default full-list order established). `0` means "no cap." |
+| `max_panels` | `std::int64_t`, default `9` | Caps how many of the generated `C(n, 3)` triplets actually get a panel — truncates the triplet-generation loop early rather than filtering after the fact, so it always keeps the *first* `max_panels` triplets in lexicographic order, not a random or evenly-spaced subset. |
 
-**labels** (`std::vector<std::string>`, default empty)
-    Per-feature names. Falls back to `detail::default_feature_labels`'s `"x1"`, `"x2"`, …
-    scheme when its length doesn't match the feature count — identical fallback rule to
-    [`flash::pairplot`](pairplot.md)'s `columns`-overloads (no underscore, unlike the
-    matrix-overload fallback used elsewhere).
+### Grid shape & sampling
 
-**feature_indices** (`std::vector<std::int64_t>`, default empty)
-    Explicit 0-based indices (into the full, unfiltered feature list) to restrict the
-    triplet search to. Out-of-range indices throw. Duplicates are silently de-duplicated,
-    keeping first occurrence order. Takes priority over `feature_names` when both are set.
+| Field | Type and default | Description |
+|---|---|---|
+| `rows`, `cols` | `std::int64_t`, default `0` each | Explicit panel-grid shape hints — `0` means "auto," resolved via the same [`flash::resolve_grid_shape`](FacetGrid.md) rule documented on [`flash::relgridplot`](relgridplot.md), including the `rows*cols < triplet_count` error. |
+| `max_points` | `std::int64_t`, default `2500` | Row-count cap. Feature columns exceeding this are deterministically downsampled to an evenly-strided subset, same mechanism as [`flash::pairplot`](pairplot.md)'s `max_points`. |
+| `ridge_levels` | `std::int64_t`, default `8` | Contour-level count forwarded to [`Pane::ridge3`](../pane/ridge3.md) when `kind == Ridge`. Clamped to at least `3`. Unused for every other kind. |
 
-**feature_names** (`std::vector<std::string>`, default empty)
-    Explicit feature names (matched against `labels`) to restrict the search to. An
-    unrecognized name throws `"flash::triplot unknown feature name: " + name`. Only
-    consulted when `feature_indices` is empty.
+### Sizing & layout
 
-**max_features** (`std::int64_t`, default `0`)
-    When positive and the selected feature count exceeds it, truncates the selection down
-    to the first `max_features` (in whatever order `feature_indices`/`feature_names`/the
-    default full-list order established). `0` means "no cap."
-
-**max_panels** (`std::int64_t`, default `9`)
-    Caps how many of the generated `C(n, 3)` triplets actually get a panel — truncates the
-    triplet-generation loop early rather than filtering after the fact, so it always keeps
-    the *first* `max_panels` triplets in lexicographic order, not a random or evenly-spaced
-    subset.
-
-**Grid shape & sampling**
-
-**rows**, **cols** (`std::int64_t`, default `0` each)
-    Explicit panel-grid shape hints — `0` means "auto," resolved via the same
-    [`flash::resolve_grid_shape`](FacetGrid.md) rule documented on
-    [`flash::relgridplot`](relgridplot.md), including the `rows*cols < triplet_count`
-    error.
-
-**max_points** (`std::int64_t`, default `2500`)
-    Row-count cap. Feature columns exceeding this are deterministically downsampled to an
-    evenly-strided subset, same mechanism as [`flash::pairplot`](pairplot.md)'s
-    `max_points`.
-
-**ridge_levels** (`std::int64_t`, default `8`)
-    Contour-level count forwarded to [`Pane::ridge3`](../pane/ridge3.md) when `kind ==
-    Ridge`. Clamped to at least `3`. Unused for every other kind.
-
-**Sizing & layout**
-
-**show_grid** (`bool`, default `true`)
-    Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None`
-    (`false`) — note `triplot`'s default is `true`, the opposite of
-    [`flash::pairplot`](pairplot.md)'s `show_grid` default.
-
-**auto_size** (`bool`, default `true`)
-    Whether `triplot` calls `Studio::size()` itself from `cell_width`/`cell_height`/
-    `grid_gap_x`/`grid_gap_y`/`outer_pad_x`/`outer_pad_y` and the resolved grid shape,
-    clamped to at least `min_width`×`min_height` — the same pattern as
-    [`flash::pairplot`](pairplot.md)'s `auto_size`, just computed from the *panel* grid
-    shape rather than the feature count directly.
-
-**min_width**, **min_height** (`double`, default `1280.0`, `900.0`)
-    The floor `Studio::size()` is clamped to when `auto_size` is `true`.
-
-**cell_width**, **cell_height** (`double`, default `360.0`, `300.0`)
-    The per-panel size (in points) used by the `auto_size` computation — larger than
-    [`flash::pairplot`](pairplot.md)'s `210.0`/`210.0`, since each `triplot` panel is a
-    full 3D view rather than a small pairwise thumbnail.
-
-**outer_pad_x**, **outer_pad_y** (`double`, default `100.0` each)
-    Extra margin (in points) added once to the `auto_size` computation.
-
-**grid_gap_x**, **grid_gap_y** (`double`, default `10.0` each)
-    The gutter between panels, forwarded to the internal
-    [`flash::FacetGrid`](FacetGrid.md)-equivalent layout call.
+| Field | Type and default | Description |
+|---|---|---|
+| `show_grid` | `bool`, default `true` | Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`) — note `triplot`'s default is `true`, the opposite of [`flash::pairplot`](pairplot.md)'s `show_grid` default. |
+| `auto_size` | `bool`, default `true` | Whether `triplot` calls `Studio::size()` itself from `cell_width`/`cell_height`/ `grid_gap_x`/`grid_gap_y`/`outer_pad_x`/`outer_pad_y` and the resolved grid shape, clamped to at least `min_width`×`min_height` — the same pattern as [`flash::pairplot`](pairplot.md)'s `auto_size`, just computed from the *panel* grid shape rather than the feature count directly. |
+| `min_width`, `min_height` | `double`, default `1280.0`, `900.0` | The floor `Studio::size()` is clamped to when `auto_size` is `true`. |
+| `cell_width`, `cell_height` | `double`, default `360.0`, `300.0` | The per-panel size (in points) used by the `auto_size` computation — larger than [`flash::pairplot`](pairplot.md)'s `210.0`/`210.0`, since each `triplot` panel is a full 3D view rather than a small pairwise thumbnail. |
+| `outer_pad_x`, `outer_pad_y` | `double`, default `100.0` each | Extra margin (in points) added once to the `auto_size` computation. |
+| `grid_gap_x`, `grid_gap_y` | `double`, default `10.0` each | The gutter between panels, forwarded to the internal [`flash::FacetGrid`](FacetGrid.md)-equivalent layout call. |
 
 ## Parameters
 

@@ -17,12 +17,11 @@ The entry point into `Catalog`'s group-by-key-stream split. `group()` itself bin
 current catalog and hands back a `CatalogGroupBuilder`, whose single method actually does
 the work:
 
-```cpp
-class CatalogGroupBuilder {
-public:
-  std::unordered_map<std::string, Catalog> by(std::string_view key_field) const;
-};
-```
+### `CatalogGroupBuilder` members
+
+| Member | Kind or type | Signature or default |
+|---|---|---|
+| `by` | Method | `std::unordered_map<std::string, Catalog> by(std::string_view key_field) const` |
 
 `.by(key_field)` reads one named stream as the grouping key and partitions the whole
 catalog into one **complete sub-`Catalog`** per distinct key value — each sub-catalog keeps

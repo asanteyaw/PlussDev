@@ -7,20 +7,20 @@ be used for the training and the inference sequences, or the ids will not line u
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::runtime::SequenceOptions {
-  bool use_lemmas = true;
-  bool skip_punct = true;
-  bool lowercase = true;
-  bool add_bos = false;
-  bool add_eos = false;
-  bool batch_first = true;
-  std::string pad_token = "<pad>";
-  std::string unk_token = "<unk>";
-  std::string bos_token = "<bos>";
-  std::string eos_token = "<eos>";
-};
-```
+### `pluss::ai::nlp::runtime::SequenceOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `use_lemmas` | `bool` | `true` |
+| `skip_punct` | `bool` | `true` |
+| `lowercase` | `bool` | `true` |
+| `add_bos` | `bool` | `false` |
+| `add_eos` | `bool` | `false` |
+| `batch_first` | `bool` | `true` |
+| `pad_token` | `std::string` | `"<pad>"` |
+| `unk_token` | `std::string` | `"<unk>"` |
+| `bos_token` | `std::string` | `"<bos>"` |
+| `eos_token` | `std::string` | `"<eos>"` |
 
 ## Fields
 

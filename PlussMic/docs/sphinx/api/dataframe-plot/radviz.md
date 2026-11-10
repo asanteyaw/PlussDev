@@ -41,26 +41,28 @@ covers what's specific to `radviz()`.
     Optional coloring/grouping feature, same behavior as [`parallel()`](parallel.md)'s.
 
 **options** (`RadvizPlotOptions`)
-    ```cpp
-    struct RadvizPlotOptions {
-      std::vector<std::string> labels{};
-      bool normalize{true};
-      std::int64_t max_points{3000};
-      double marker_area{18.0};
-      float trace_width{0.55F};
-      bool show_grid{true};
-      bool show_anchors{true};
-      bool show_legend{true};
-    };
-    ```
-    `labels`, `normalize`, `max_points`, `show_grid`, `show_legend` mirror
-    [`ParallelPlotOptions`](parallel.md)'s fields of the same name (`max_points` here caps
-    how many rows are plotted as points, analogous to `andrews_curves()`'s `max_curves`
-    capping curves). `marker_area` sizes each row's point marker; `trace_width` here controls
-    marker outline width rather than a line's stroke width, since radviz plots points rather
-    than lines. `show_anchors` toggles whether the per-feature anchor points and labels are
-    drawn around the circle's rim — turning it off leaves only the plotted rows and the
-    circle outline.
+
+### `RadvizPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `labels` | `std::vector<std::string>` | empty |
+| `normalize` | `bool` | `true` |
+| `max_points` | `std::int64_t` | `3000` |
+| `marker_area` | `double` | `18.0` |
+| `trace_width` | `float` | `0.55F` |
+| `show_grid` | `bool` | `true` |
+| `show_anchors` | `bool` | `true` |
+| `show_legend` | `bool` | `true` |
+
+`labels`, `normalize`, `max_points`, `show_grid`, `show_legend` mirror
+[`ParallelPlotOptions`](parallel.md)'s fields of the same name (`max_points` here caps
+how many rows are plotted as points, analogous to `andrews_curves()`'s `max_curves`
+capping curves). `marker_area` sizes each row's point marker; `trace_width` here controls
+marker outline width rather than a line's stroke width, since radviz plots points rather
+than lines. `show_anchors` toggles whether the per-feature anchor points and labels are
+drawn around the circle's rim — turning it off leaves only the plotted rows and the
+circle outline.
 
 ## Returns
 

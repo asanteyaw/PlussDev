@@ -110,29 +110,46 @@ defaults to `{}`)
     The key to use as the shared x-axis. See "Choosing the x-axis" above.
 
 **options** (`LinePlotOptions`)
-    ```cpp
-    enum class XYAlignMode : std::uint8_t { Strict, Inner, PadScalar };
-    enum class XYAlignBy : std::uint8_t { Auto, Label, Pos };
 
-    struct XYAlignOptions {
-      XYAlignMode mode{XYAlignMode::Strict};
-      XYAlignBy align_by{XYAlignBy::Auto};
-      double pad_scalar{0.0};
-    };
+### `XYAlignMode` values
 
-    struct LinePlotOptions {
-      double alpha{1.0};
-      double line_width{1.6};
-      std::optional<pluss::pl::LimitMethod> y_limit_method{pluss::pl::LimitMethod::Padded};
-      XYAlignOptions align{};
-    };
-    ```
-    `alpha` controls trace opacity, `line_width` the stroke width. `y_limit_method` chooses
-    how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin beyond
-    the data's min/max, `Tight` fits exactly to the data range with no margin, and
-    `TickAligned` snaps the limits outward to the nearest tick boundaries. `align` controls
-    how an explicit `x_key` of a different length than a y-key is reconciled — see "Aligning
-    x and y of different lengths" below.
+| Value | Numeric value | Description |
+|---|---|---|
+| `Strict` | — | — |
+| `Inner` | — | — |
+| `PadScalar` | — | — |
+
+### `XYAlignBy` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Auto` | — | — |
+| `Label` | — | — |
+| `Pos` | — | — |
+
+### `XYAlignOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `mode` | `XYAlignMode` | `XYAlignMode::Strict` |
+| `align_by` | `XYAlignBy` | `XYAlignBy::Auto` |
+| `pad_scalar` | `double` | `0.0` |
+
+### `LinePlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `alpha` | `double` | `1.0` |
+| `line_width` | `double` | `1.6` |
+| `y_limit_method` | `std::optional<pluss::pl::LimitMethod>` | `pluss::pl::LimitMethod::Padded` |
+| `align` | `XYAlignOptions` | default constructed |
+
+`alpha` controls trace opacity, `line_width` the stroke width. `y_limit_method` chooses
+how the y-axis auto-fits to the data: `Padded` (the default) adds a small margin beyond
+the data's min/max, `Tight` fits exactly to the data range with no margin, and
+`TickAligned` snaps the limits outward to the nearest tick boundaries. `align` controls
+how an explicit `x_key` of a different length than a y-key is reconciled — see "Aligning
+x and y of different lengths" below.
 
 ### Aligning x and y of different lengths
 

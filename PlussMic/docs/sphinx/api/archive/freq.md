@@ -11,12 +11,12 @@
 Archive::freq(FreqOptions options = {}) const -> Archive
 ```
 
-```cpp
-struct FreqOptions {
-  std::int64_t top{0};
-  bool dropnull{true};
-};
-```
+### `FreqOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `top` | `std::int64_t` | `0` |
+| `dropnull` | `bool` | `true` |
 
 ## What It Does
 

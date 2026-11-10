@@ -53,16 +53,18 @@ mechanics.
     labels (titled `"case"`) if omitted with no default set.
 
 **options** (`BarPlotOptions`)
-    ```cpp
-    struct BarPlotOptions {
-      bool ci_enabled{false};
-      double ci_level{0.95};
-      bool horizontal{false};
-      XYAlignOptions align{};
-    };
-    ```
-    `horizontal = true` swaps the chart's orientation: bars extend along the x-axis instead
-    of the y-axis, and the category axis becomes the vertical one.
+
+### `BarPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `ci_enabled` | `bool` | `false` |
+| `ci_level` | `double` | `0.95` |
+| `horizontal` | `bool` | `false` |
+| `align` | `XYAlignOptions` | default constructed |
+
+`horizontal = true` swaps the chart's orientation: bars extend along the x-axis instead
+of the y-axis, and the category axis becomes the vertical one.
 
     `ci_enabled = true` switches from "one bar per row" to **aggregated** bars: rows sharing
     the same x-axis position (same category label, or same numeric x-value) are grouped,

@@ -17,13 +17,13 @@ of relying on training.
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::EntityPattern {
-  std::string label{};
-  std::vector<std::string> tokens{};
-  bool use_lemmas = true;
-};
-```
+### `pluss::ai::nlp::EntityPattern` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `label` | `std::string` | empty |
+| `tokens` | `std::vector<std::string>` | empty |
+| `use_lemmas` | `bool` | `true` |
 
 ## Fields
 

@@ -2,11 +2,9 @@
 
 [Back to PlussBI API Reference](bi.md)
 
-```cpp
-#include <pluss/bi/session.h>
+**Header:** `<pluss/bi/session.h>`
 
-class pluss::bi::Session;
-```
+**Type:** `pluss::bi::Session`
 
 `Session` holds the choices a reader has made on a dashboard: the filters that
 narrow a view, and the named parameters a control or a caller sets. It is the

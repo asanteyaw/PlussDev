@@ -59,15 +59,15 @@ final vector when the intermediates aren't needed.
 
 `resolve_weight_plan` returns a `StatusOr<WeightPlan>`:
 
-```cpp
-struct classic::WeightPlan {
-  pluss::Series weights;         // Float64, [n], the final per-row weight -- mean == 1.0 always
-  pluss::Series class_weights;   // Float64, [class_count], the resolved per-class weight
-  pluss::Series sample_weights;  // Float64, [n], batch_sample_weights * options.sample_weights, BEFORE class weighting
-  classic::ClassMix mix;         // from class_mix(labels)
-  double mean_weight;            // the PRE-normalization mean -- weights = raw / mean_weight
-};
-```
+### `classic::WeightPlan` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `weights` | `pluss::Series` | — |
+| `class_weights` | `pluss::Series` | — |
+| `sample_weights` | `pluss::Series` | — |
+| `mix` | `classic::ClassMix` | — |
+| `mean_weight` | `double` | — |
 
 The final `weights` is always computed as `batch_sample_weights *
 options.sample_weights * class_weight[row's class]`, then divided by its

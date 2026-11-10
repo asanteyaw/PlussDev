@@ -16,31 +16,13 @@ Atlas::ts() const -> AtlasTsAccessor
 The entry point into the time-series operations accessor, applied across every frame in
 the atlas. `ts()` itself binds the current atlas and returns an `AtlasTsAccessor`:
 
-```cpp
-class AtlasTsAccessor {
-public:
-  Atlas returns(std::int64_t periods = 1) const;
-  Atlas log_returns(std::int64_t periods = 1) const;
-  Atlas diff(std::int64_t periods = 1) const;
-  Atlas lag(std::int64_t periods = 1) const;
-  Atlas lead(std::int64_t periods = 1) const;
-  Atlas rolling(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean,
-                const WindowOptions& options = {}) const;
-  Atlas rolling(std::string_view duration, WindowStatistic statistic = WindowStatistic::Mean,
-                const StatisticOptions& options = {},
-                WindowClosure closure = WindowClosure::Right) const;
-  Atlas expanding(WindowStatistic statistic = WindowStatistic::Mean,
-                  const StatisticOptions& options = {}) const;
-  Atlas ewm(double alpha, WindowStatistic statistic = WindowStatistic::Mean,
-            bool adjusted = true, bool bias_corrected = true,
-            std::int64_t min_count = 1, bool ignore_nulls = false) const;
-  Atlas fill_gaps(GapFillMode mode = GapFillMode::Forward,
-                  std::optional<double> constant = std::nullopt) const;
-  Atlas sort(bool ascending = true, bool nulls_last = true) const;
-  AtlasTsResampler resample(std::string_view freq, std::int64_t step = 1) const;
-  Atlas asfreq(std::string_view freq, std::int64_t step = 1, /* ... */) const;
-};
-```
+| Operation | Purpose |
+|---|---|
+| [`returns`](../atlas-ts/returns.md), [`log_returns`](../atlas-ts/log_returns.md), [`diff`](../atlas-ts/diff.md) | Compute changes between observations. |
+| [`lag`](../atlas-ts/lag.md), [`lead`](../atlas-ts/lead.md) | Shift observations backward or forward. |
+| [`rolling`](../atlas-ts/rolling.md), [`expanding`](../atlas-ts/expanding.md), [`ewm`](../atlas-ts/ewm.md) | Calculate windowed statistics. |
+| [`fill_gaps`](../atlas-ts/fill_gaps.md), [`sort`](../atlas-ts/sort.md) | Fill missing values or order observations. |
+| [`resample`](../atlas-ts/resample.md), [`asfreq`](../atlas-ts/asfreq.md) | Change the time frequency. |
 
 This is the same operation family as [`DataFrame::ts()`](../dataframe/ts.md)/
 [`DataFrameTsAccessor`](../../dataframe_ts_accessor_api_reference), applied per-frame across

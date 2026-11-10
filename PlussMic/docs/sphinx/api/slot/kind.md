@@ -15,17 +15,17 @@ SlotKind Slot::kind() const
 
 Classifies the slot's values into one of seven `SlotKind` categories:
 
-```cpp
-enum class SlotKind : std::uint8_t {
-  Empty = 0,   // zero values
-  Null,        // every value is std::monostate (null)
-  Series,      // every value is Series, all the same scalar dtype
-  Note,        // every value is Note
-  Timeline,    // every value is Timeline
-  TimeIndex,   // every value is TimeIndex
-  Mixed        // anything else (mixed kinds, or Series with differing dtypes)
-};
-```
+### `SlotKind` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Empty` | `0` | zero values |
+| `Null` | — | every value is std::monostate (null) |
+| `Series` | — | every value is Series, all the same scalar dtype |
+| `Note` | — | every value is Note |
+| `Timeline` | — | every value is Timeline |
+| `TimeIndex` | — | every value is TimeIndex |
+| `Mixed` | — | anything else (mixed kinds, or Series with differing dtypes) |
 
 ## Parameters
 

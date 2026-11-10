@@ -16,12 +16,12 @@ Returns the rows on one side of a declared relationship that have no match on th
 side — the actual rows behind [`validate_relationship()`](validate_relationship.md)'s
 coverage check. `side` picks which table's unmatched rows you get back:
 
-```cpp
-enum class RelationshipSide : std::uint8_t {
-  Left = 0,
-  Right = 1,
-};
-```
+### `RelationshipSide` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Left` | `0` | — |
+| `Right` | `1` | — |
 
 `RelationshipSide::Left` (the default) returns rows from `Relationship::left_table` that
 have no matching row in `right_table`; `Right` returns the mirror image — rows from

@@ -16,14 +16,14 @@ Slot SlotNoteAccessor::normalize(pluss::table::UnicodeForm form = pluss::table::
 Applies Unicode normalization to every value in the bound slot, returning
 a new slot.
 
-```cpp
-enum class UnicodeForm : std::uint8_t {
-  NFC = 0,
-  NFD = 1,
-  NFKC = 2,
-  NFKD = 3,
-};
-```
+### `UnicodeForm` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `NFC` | `0` | — |
+| `NFD` | `1` | — |
+| `NFKC` | `2` | — |
+| `NFKD` | `3` | — |
 
 ## Parameters
 

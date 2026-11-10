@@ -7,15 +7,6 @@
 ## Signatures
 
 ```cpp
-struct HeatmapOptions {
-  bool annotate_levels = false;
-  bool scale_guide = true;
-  bool borderless = true;
-  std::optional<double> vmin = std::nullopt;
-  std::optional<double> vmax = std::nullopt;
-  std::optional<Series> mask = std::nullopt;
-};
-
 template <class X, class Y, class Z>
 Trace& flash::heatmap(Pane& pane, X&& x, Y&& y, Z&& z)
 
@@ -52,32 +43,13 @@ using the c-parameter overload, clamp/mask c yourself before passing it in.
 
 ## `HeatmapOptions` fields
 
-**annotate_levels** (`bool`, default `false`)
-    Forwarded to `Trace::annotate_levels` — whether to draw each cell's numeric value as
-    text overlaid on the cell.
-
-**scale_guide** (`bool`, default `true`)
-    Forwarded to `Pane::scale_guide` — whether to draw a color-scale legend/guide.
-
-**borderless** (`bool`, default `true`)
-    When `true` (the default), applies a bundle of pane styling suited to a clean
-    grid-only look: `GridStyle::None`, all four grid-line toggles off, axes hidden
-    (`axes_visible(false)`), tick *labels* kept visible (`x_tick_labels(true)`,
-    `y_tick_labels(true)`), and both axes' limit method set to `LimitMethod::Tight`. When
-    `false`, none of this styling is applied — the pane keeps whatever grid/axis
-    appearance it already had.
-
-**vmin**, **vmax** (`std::optional<double>`, default unset)
-    Clamp `z`'s values to `[vmin, vmax]` before rendering (only when both bounds resolve
-    to finite values with `vmin <= vmax` — otherwise clamping is silently skipped). See
-    the important callout above for why this has no effect in the `c`-taking overloads.
-
-**mask** (`std::optional<Series>`, default unset)
-    A same-shape-as-`z` series where zero means "hide this cell" (replaced with `NaN`)
-    and any non-zero means "keep it". Must flatten to exactly `z`'s element count — a
-    mismatch throws `std::invalid_argument("flash::heatmap mask must match z element
-    count")` (see the important callout below on this validation being genuinely broken
-    until this fix).
+| Field | Type and default | Description |
+|---|---|---|
+| `annotate_levels` | `bool`, default `false` | Forwarded to `Trace::annotate_levels` — whether to draw each cell's numeric value as text overlaid on the cell. |
+| `scale_guide` | `bool`, default `true` | Forwarded to `Pane::scale_guide` — whether to draw a color-scale legend/guide. |
+| `borderless` | `bool`, default `true` | When `true` (the default), applies a bundle of pane styling suited to a clean grid-only look: `GridStyle::None`, all four grid-line toggles off, axes hidden (`axes_visible(false)`), tick *labels* kept visible (`x_tick_labels(true)`, `y_tick_labels(true)`), and both axes' limit method set to `LimitMethod::Tight`. When `false`, none of this styling is applied — the pane keeps whatever grid/axis appearance it already had. |
+| `vmin`, `vmax` | `std::optional<double>`, default unset | Clamp `z`'s values to `[vmin, vmax]` before rendering (only when both bounds resolve to finite values with `vmin <= vmax` — otherwise clamping is silently skipped). See the important callout above for why this has no effect in the `c`-taking overloads. |
+| `mask` | `std::optional<Series>`, default unset | A same-shape-as-`z` series where zero means "hide this cell" (replaced with `NaN`) and any non-zero means "keep it". Must flatten to exactly `z`'s element count — a mismatch throws `std::invalid_argument("flash::heatmap mask must match z element count")` (see the important callout below on this validation being genuinely broken until this fix). |
 
 ```{important} Fixed: a mismatched mask crashed with an unrelated internal error instead of throwing cleanly
 The mask-length validation used to reshape the flattened mask to z's element

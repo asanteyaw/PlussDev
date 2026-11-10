@@ -8,19 +8,19 @@ summary matches what a mapper would count.
 
 ## Declaration
 
-```cpp
-struct pluss::ai::nlp::vectorize::CorpusStats {
-  std::int64_t doc_count = 0;
-  std::int64_t token_count = 0;
-  std::int64_t sentence_count = 0;
-  std::int64_t phrase_count = 0;
-  std::int64_t unique_term_count = 0;
-  pluss::Series document_token_counts;
-  pluss::Series document_unique_term_counts;
-  pluss::Note vocabulary;
-  pluss::Series document_frequency;
-};
-```
+### `pluss::ai::nlp::vectorize::CorpusStats` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `doc_count` | `std::int64_t` | `0` |
+| `token_count` | `std::int64_t` | `0` |
+| `sentence_count` | `std::int64_t` | `0` |
+| `phrase_count` | `std::int64_t` | `0` |
+| `unique_term_count` | `std::int64_t` | `0` |
+| `document_token_counts` | `pluss::Series` | — |
+| `document_unique_term_counts` | `pluss::Series` | — |
+| `vocabulary` | `pluss::Note` | — |
+| `document_frequency` | `pluss::Series` | — |
 
 ## Fields
 

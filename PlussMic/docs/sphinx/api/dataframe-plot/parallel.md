@@ -48,23 +48,25 @@ figure altogether.
     a text-like one.
 
 **options** (`ParallelPlotOptions`)
-    ```cpp
-    struct ParallelPlotOptions {
-      std::vector<std::string> labels{};
-      bool normalize{true};
-      std::int64_t max_points{1200};
-      double alpha{0.24};
-      float trace_width{0.9F};
-      bool show_grid{true};
-      bool show_legend{true};
-    };
-    ```
-    `labels`, left empty, defaults to the resolved feature names — set it explicitly for
-    custom axis labels (must match the feature count). `normalize = true` (the default)
-    rescales each axis independently so features on very different numeric ranges remain
-    visually comparable. `alpha` defaults quite low (`0.24`) since parallel-coordinates
-    plots are typically drawn with many overlapping, semi-transparent lines. `max_points`
-    caps how many rows are drawn (for large frames, a subsample rather than every row).
+
+### `ParallelPlotOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `labels` | `std::vector<std::string>` | empty |
+| `normalize` | `bool` | `true` |
+| `max_points` | `std::int64_t` | `1200` |
+| `alpha` | `double` | `0.24` |
+| `trace_width` | `float` | `0.9F` |
+| `show_grid` | `bool` | `true` |
+| `show_legend` | `bool` | `true` |
+
+`labels`, left empty, defaults to the resolved feature names — set it explicitly for
+custom axis labels (must match the feature count). `normalize = true` (the default)
+rescales each axis independently so features on very different numeric ranges remain
+visually comparable. `alpha` defaults quite low (`0.24`) since parallel-coordinates
+plots are typically drawn with many overlapping, semi-transparent lines. `max_points`
+caps how many rows are drawn (for large frames, a subsample rather than every row).
 
 ## Returns
 

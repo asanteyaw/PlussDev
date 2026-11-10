@@ -18,12 +18,12 @@ For each fitted column `map` computes `x / max(|x|)`. Sign is preserved, a zero 
 
 `MaxAbsScaler` returns a `TransformerSummary`, not a named struct:
 
-```cpp
-struct TransformerSummary {
-  std::vector<std::string> feature_names;  // the pinned / fitted columns
-  std::vector<Series> state;               // raw fitted tensors, layout below
-};
-```
+### `TransformerSummary` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `feature_names` | `std::vector<std::string>` | — |
+| `state` | `std::vector<Series>` | — |
 
 `summary().state` holds two tensors. `state[1]` is the **learned maximum magnitude**, one value per fitted column; `state[0]` is internal bookkeeping. Example 2 reads it.
 

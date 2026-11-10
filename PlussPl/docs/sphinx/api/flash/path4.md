@@ -7,21 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class HyperProjection : std::uint8_t { Orthographic, PerspectiveW };
-
-struct HyperPlotOptions {
-  HyperProjection projection{HyperProjection::Orthographic};
-  double rot_xy_deg{0.0};
-  double rot_xz_deg{0.0};
-  double rot_xw_deg{0.0};
-  double rot_yz_deg{0.0};
-  double rot_yw_deg{0.0};
-  double rot_zw_deg{0.0};
-  double w_perspective_distance{3.0};
-  std::optional<Range1d> w_slice{};
-  double point_size{8.0};
-};
-
 template <class X, class Y, class Z, class W>
 Trace& flash::path4(Pane& pane, X&& x, Y&& y, Z&& z, W&& w,
                      const HyperPlotOptions& options = {})
@@ -69,36 +54,13 @@ lengths)
 
 ## `HyperPlotOptions` fields
 
-**projection** (`HyperProjection`, default `Orthographic`)
-    `Orthographic` drops `w` after rotation (a straightforward 4D→3D orthographic
-    projection); `PerspectiveW` instead uses `w` (relative to `w_perspective_distance`)
-    to scale `x`/`y`/`z`, giving points at different `w` positions a visible
-    near/far-style foreshortening — directly verified to render genuinely differently
-    from `Orthographic` given the same rotated points.
-
-**rot_xy_deg**, **rot_xz_deg**, **rot_xw_deg**, **rot_yz_deg**, **rot_yw_deg**,
-**rot_zw_deg** (`double`, default `0.0` each)
-    Rotation angles (degrees) in each of the six independent planes a 4D space has —
-    three more than 3D's usual `xy`/`xz`/`yz` set, since 4D introduces `xw`/`yw`/`zw` as
-    well. All default to `0.0` (no rotation).
-
-**w_perspective_distance** (`double`, default `3.0`)
-    The `w`-axis "camera distance" used by `PerspectiveW` projection's foreshortening
-    calculation. Unused under `Orthographic`.
-
-**w_slice** (`std::optional<Range1d>` — `{ double low; double high; }`, default empty)
-    When set, only points whose *projected* `w` value falls within `[low, high]`
-    participate — every other point is dropped before the 3D path is drawn. Since
-    `path4` connects points into a single continuous path, dropping some points also
-    changes which points are adjacent in the drawn line, not just how many points are
-    shown. If `w_slice` filters out every point, `path4` throws
-    `std::invalid_argument("flash::path4: no points remain after projection/slice")` —
-    verified below.
-
-**point_size** (`double`, default `8.0`)
-    Declared, but not read anywhere in `path4`'s own implementation (it exists for
-    [`flash::cloud4`](cloud4.md)'s use of the same `HyperPlotOptions` struct, where it
-    genuinely controls marker size) — inert here.
+| Field | Type and default | Description |
+|---|---|---|
+| `projection` | `HyperProjection`, default `Orthographic` | `Orthographic` drops `w` after rotation (a straightforward 4D→3D orthographic projection); `PerspectiveW` instead uses `w` (relative to `w_perspective_distance`) to scale `x`/`y`/`z`, giving points at different `w` positions a visible near/far-style foreshortening — directly verified to render genuinely differently from `Orthographic` given the same rotated points. |
+| `rot_xy_deg`, `rot_xz_deg`, `rot_xw_deg`, `rot_yz_deg`, `rot_yw_deg`, `rot_zw_deg` | `double`, default `0.0` each | Rotation angles (degrees) in each of the six independent planes a 4D space has — three more than 3D's usual `xy`/`xz`/`yz` set, since 4D introduces `xw`/`yw`/`zw` as well. All default to `0.0` (no rotation). |
+| `w_perspective_distance` | `double`, default `3.0` | The `w`-axis "camera distance" used by `PerspectiveW` projection's foreshortening calculation. Unused under `Orthographic`. |
+| `w_slice` | `std::optional<Range1d>` — `{ double low; double high; }`, default empty | When set, only points whose *projected* `w` value falls within `[low, high]` participate — every other point is dropped before the 3D path is drawn. Since `path4` connects points into a single continuous path, dropping some points also changes which points are adjacent in the drawn line, not just how many points are shown. If `w_slice` filters out every point, `path4` throws `std::invalid_argument("flash::path4: no points remain after projection/slice")` — verified below. |
+| `point_size` | `double`, default `8.0` | Declared, but not read anywhere in `path4`'s own implementation (it exists for [`flash::cloud4`](cloud4.md)'s use of the same `HyperPlotOptions` struct, where it genuinely controls marker size) — inert here. |
 
 ## Returns
 

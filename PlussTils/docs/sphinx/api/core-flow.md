@@ -3,15 +3,17 @@
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
 ```cpp
-#include <pluss/tils/flow.h>
-
 template <class T>
-class FlowBox;
+
 
 template <class T>
 
 inline constexpr FlowFn flow{};
 ```
+
+**Header:** `<pluss/tils/flow.h>`
+
+**Type:** `FlowBox`
 
 `flow(x)` is the value-pipeline API. It returns `FlowBox<T>`. The separate [`suppose`](core-suppose.md) API checks named premises, derivations, and conclusions for a concrete Pluss value.
 

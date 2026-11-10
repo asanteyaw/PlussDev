@@ -15,9 +15,14 @@ SlateLabelAccessor::align(const Slate& target_labels, const AlignOptions& option
 A direct forward to `Slate::align(target_labels, options)`. What it actually
 does depends entirely on `options.align`:
 
-```cpp
-enum class AlignBy : std::uint8_t { Pos = 0, Caselbl = 1, Feature = 2, Both = 3 };
-```
+### `AlignBy` values
+
+| Value | Numeric value | Description |
+|---|---|---|
+| `Pos` | `0` | — |
+| `Caselbl` | `1` | — |
+| `Feature` | `2` | — |
+| `Both` | `3` | — |
 
 - **`AlignBy::Pos`** (the default): a pure **length check** — throws unless
   `target_labels.size() == this->size()`, then returns `*this` completely

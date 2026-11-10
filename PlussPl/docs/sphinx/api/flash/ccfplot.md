@@ -7,14 +7,6 @@
 ## Signature
 
 ```cpp
-struct CcfPlotOptions {
-  std::int64_t max_lag{40};
-  bool show_confidence_band{true};
-  double confidence_level{0.95};
-  float trace_width{1.2F};
-  double marker_area{14.0};
-};
-
 template <class X, class Y>
 Studio& flash::ccfplot(Studio& studio, X&& x, Y&& y, const CcfPlotOptions& options = {})
 ```
@@ -44,23 +36,13 @@ symmetric around lag `0`, plotting `2 * max_lag + 1` spikes total.
 
 ## `CcfPlotOptions` fields
 
-**max_lag** (`std::int64_t`, default `40`)
-    The largest **magnitude** lag shown in either direction. Clamped to `[1, n - 1]`.
-    The plotted lag range is always `[-max_lag, +max_lag]`.
-
-**show_confidence_band** (`bool`, default `true`)
-    Whether the `+CI`/`-CI` reference lines are drawn — same constant-width
-    normal-approximation mechanics as [`flash::acfplot`](acfplot.md).
-
-**confidence_level** (`double`, default `0.95`)
-    Same discrete-bucket z-score lookup as [`flash::acfplot`](acfplot.md).
-
-**trace_width** (`float`, default `1.2F`)
-    Stroke width for the correlogram's spikes.
-
-**marker_area** (`double`, default `14.0`)
-    Declared, but never read anywhere in `ccfplot`'s implementation — same inert field as
-    [`AcfPlotOptions::marker_area`](acfplot.md).
+| Field | Type and default | Description |
+|---|---|---|
+| `max_lag` | `std::int64_t`, default `40` | The largest **magnitude** lag shown in either direction. Clamped to `[1, n - 1]`. The plotted lag range is always `[-max_lag, +max_lag]`. |
+| `show_confidence_band` | `bool`, default `true` | Whether the `+CI`/`-CI` reference lines are drawn — same constant-width normal-approximation mechanics as [`flash::acfplot`](acfplot.md). |
+| `confidence_level` | `double`, default `0.95` | Same discrete-bucket z-score lookup as [`flash::acfplot`](acfplot.md). |
+| `trace_width` | `float`, default `1.2F` | Stroke width for the correlogram's spikes. |
+| `marker_area` | `double`, default `14.0` | Declared, but never read anywhere in `ccfplot`'s implementation — same inert field as [`AcfPlotOptions::marker_area`](acfplot.md). |
 
 ## Returns
 

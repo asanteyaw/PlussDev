@@ -11,12 +11,12 @@
 Catalog::freq(FreqOptions options = {}) const -> Catalog
 ```
 
-```cpp
-struct FreqOptions {
-  std::int64_t top{0};  // 0 means no limit
-  bool dropnull{true};
-};
-```
+### `FreqOptions` fields
+
+| Field | Type | Default |
+|---|---|---|
+| `top` | `std::int64_t` | `0` |
+| `dropnull` | `bool` | `true` |
 
 ## What It Does
 

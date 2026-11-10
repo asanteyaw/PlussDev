@@ -3,17 +3,19 @@
 [Back to Core Utilities](core.md) · [Core Utilities API Reference](../api_reference.md)
 
 ```cpp
-#include <pluss/tils/let.h>
-
 template <class T>
 concept let_payload;
 
 template <let_payload T>
-class let;
+
 
 template <class T>
 inline constexpr bool enable_let = false;
 ```
+
+**Header:** `<pluss/tils/let.h>`
+
+**Type:** `let`
 
 `let<T>` binds one core payload and never rebinds it. The payload types are the series, note, timeline, duration, and queue types, plus any type that opts in by specializing `enable_let`. The binding is read-only: `get()`, `*`, and `->` return const access, and assignment to a `let` is removed. Copying a `let` gives a second binding to the same payload. `map` keeps the binding when its result is itself a payload, and otherwise yields the bare value.
 

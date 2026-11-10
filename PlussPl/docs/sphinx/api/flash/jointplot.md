@@ -7,34 +7,6 @@
 ## Signatures
 
 ```cpp
-enum class JointPlotKind : std::uint8_t { Scatter, Reg, Hex, Kde };
-enum class JointMarginalKind : std::uint8_t { Hist, Kde };
-
-struct JointPlotOptions {
-  JointPlotKind kind{JointPlotKind::Scatter};
-  JointMarginalKind marginal{JointMarginalKind::Hist};
-  std::int64_t marginal_bins{18};
-  std::int64_t marginal_kde_points{128};
-  std::int64_t hex_bins_x{28};
-  std::int64_t hex_bins_y{22};
-  std::int64_t kde_bins_x{30};
-  std::int64_t kde_bins_y{24};
-  std::int64_t kde_smooth_passes{2};
-  std::int64_t kde_levels{10};
-  bool kde_fill{true};
-  bool show_joint_grid{true};
-  bool show_marginal_grid{false};
-  double grid_gap_x{8.0};
-  double grid_gap_y{8.0};
-  RegPlotOptions reg{};
-};
-
-struct MatrixJointOptions {
-  Axis feature_axis{Axis::Cols};
-  std::int64_t x_feature{0};
-  std::int64_t y_feature{1};
-};
-
 // -- core (series-convertible x/y) --
 Studio& flash::jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter")
 Studio& flash::jointplot(Studio& studio, X&& x, Y&& y, const JointPlotOptions& options)
@@ -126,22 +98,21 @@ verified below.
 
 ## `JointPlotOptions` fields
 
-**kind** (`JointPlotKind`, default `Scatter`)
-    The joint (central) panel's glyph:
-    - `Scatter` — a point cloud via [`Pane::cloud`](../pane/cloud.md).
-    - `Reg` — delegates the entire joint panel to [`flash::regplot`](regplot.md) with
-      the nested `reg` options.
-    - `Hex` — a 2D-binned heatmap (via [`flash::heatmap`](heatmap.md)) over a
-      `hex_bins_x × hex_bins_y` grid. The name is historical; the rendered result is a
-      rectangular-cell density view, not literal hexagon tiles.
-    - `Kde` — a smoothed 2D density: the same binned grid, blurred by
-      `kde_smooth_passes`, drawn as filled contours (`kde_fill`) plus a
-      [`Pane::contour`](../pane/contour.md) outline at `kde_levels` levels. Also
-      switches the default `marginal` to `Kde` (see the important callout below).
-
-**marginal** (`JointMarginalKind`, default `Hist`)
-    The two marginal panels' glyph: `Hist` (via [`Pane::bucket`](../pane/bucket.md), using
-    `marginal_bins`) or `Kde` (a density curve using `marginal_kde_points`).
+| Field | Type and default | Description |
+|---|---|---|
+| `kind` | `JointPlotKind`, default `Scatter` | The joint (central) panel's glyph: - `Scatter` — a point cloud via [`Pane::cloud`](../pane/cloud.md). - `Reg` — delegates the entire joint panel to [`flash::regplot`](regplot.md) with the nested `reg` options. - `Hex` — a 2D-binned heatmap (via [`flash::heatmap`](heatmap.md)) over a `hex_bins_x × hex_bins_y` grid. The name is historical; the rendered result is a rectangular-cell density view, not literal hexagon tiles. - `Kde` — a smoothed 2D density: the same binned grid, blurred by `kde_smooth_passes`, drawn as filled contours (`kde_fill`) plus a [`Pane::contour`](../pane/contour.md) outline at `kde_levels` levels. Also switches the default `marginal` to `Kde` (see the important callout below). |
+| `marginal` | `JointMarginalKind`, default `Hist` | The two marginal panels' glyph: `Hist` (via [`Pane::bucket`](../pane/bucket.md), using `marginal_bins`) or `Kde` (a density curve using `marginal_kde_points`). |
+| `marginal_bins` | `std::int64_t`, default `18` | Bin count for `Hist`-kind marginals. Clamped to at least `4`. |
+| `marginal_kde_points` | `std::int64_t`, default `128` | Evaluation-point count for `Kde`-kind marginals. Clamped to at least `16`. |
+| `hex_bins_x`, `hex_bins_y` | `std::int64_t`, default `28`, `22` | Grid resolution for `kind = Hex`. Each clamped to at least `4` internally by `hist2d_grid`. |
+| `kde_bins_x`, `kde_bins_y` | `std::int64_t`, default `30`, `24` | Grid resolution for `kind = Kde`, before smoothing. Same `4`-minimum clamp. |
+| `kde_smooth_passes` | `std::int64_t`, default `2` | How many smoothing passes are applied to the binned KDE grid before contouring. `0` or negative disables smoothing (returns the raw binned grid unchanged). |
+| `kde_levels` | `std::int64_t`, default `10` | Contour level count for `kind = Kde`'s outline. Clamped to at least `4`. |
+| `kde_fill` | `bool`, default `true` | Whether `kind = Kde` also draws a filled [`flash::heatmap`](heatmap.md) underneath the contour outline (`true`) or only the contour lines (`false`). |
+| `show_joint_grid` | `bool`, default `true` | Whether the joint (central) panel gets `GridStyle::Major` gridlines. |
+| `show_marginal_grid` | `bool`, default `false` | Whether the two marginal panels get `GridStyle::Major` gridlines — note the default is `false` here, the opposite of `show_joint_grid`'s `true` default. |
+| `grid_gap_x`, `grid_gap_y` | `double`, default `8.0` each | The gutter between the `4×4` mosaic's cells, forwarded to `Studio::mosaic`. |
+| `reg` | `RegPlotOptions`, default-constructed | Forwarded to [`flash::regplot`](regplot.md) for the joint panel when `kind == Reg` — every field documented there applies. Its `marker_area` field also doubles as the marker area for `kind = Scatter`'s point cloud (`max(1.0, options.reg.marker_area)`), even though `Scatter` never calls `regplot` itself. |
 
 ```{important} kind = Kde also silently switches marginal to Kde, only via the kind-string overload
 The "kde" kind-STRING form (options.kind = Kde) additionally sets options.marginal =
@@ -155,55 +126,12 @@ same via the options overload requires setting BOTH kind and marginal explicitly
 in Example 5.
 ```
 
-**marginal_bins** (`std::int64_t`, default `18`)
-    Bin count for `Hist`-kind marginals. Clamped to at least `4`.
-
-**marginal_kde_points** (`std::int64_t`, default `128`)
-    Evaluation-point count for `Kde`-kind marginals. Clamped to at least `16`.
-
-**hex_bins_x**, **hex_bins_y** (`std::int64_t`, default `28`, `22`)
-    Grid resolution for `kind = Hex`. Each clamped to at least `4` internally by
-    `hist2d_grid`.
-
-**kde_bins_x**, **kde_bins_y** (`std::int64_t`, default `30`, `24`)
-    Grid resolution for `kind = Kde`, before smoothing. Same `4`-minimum clamp.
-
-**kde_smooth_passes** (`std::int64_t`, default `2`)
-    How many smoothing passes are applied to the binned KDE grid before contouring.
-    `0` or negative disables smoothing (returns the raw binned grid unchanged).
-
-**kde_levels** (`std::int64_t`, default `10`)
-    Contour level count for `kind = Kde`'s outline. Clamped to at least `4`.
-
-**kde_fill** (`bool`, default `true`)
-    Whether `kind = Kde` also draws a filled [`flash::heatmap`](heatmap.md) underneath
-    the contour outline (`true`) or only the contour lines (`false`).
-
-**show_joint_grid** (`bool`, default `true`)
-    Whether the joint (central) panel gets `GridStyle::Major` gridlines.
-
-**show_marginal_grid** (`bool`, default `false`)
-    Whether the two marginal panels get `GridStyle::Major` gridlines — note the default
-    is `false` here, the opposite of `show_joint_grid`'s `true` default.
-
-**grid_gap_x**, **grid_gap_y** (`double`, default `8.0` each)
-    The gutter between the `4×4` mosaic's cells, forwarded to `Studio::mosaic`.
-
-**reg** (`RegPlotOptions`, default-constructed)
-    Forwarded to [`flash::regplot`](regplot.md) for the joint panel when `kind == Reg` —
-    every field documented there applies. Its `marker_area` field also doubles as the
-    marker area for `kind = Scatter`'s point cloud (`max(1.0, options.reg.marker_area)`),
-    even though `Scatter` never calls `regplot` itself.
-
 ## `MatrixJointOptions` fields
 
-**feature_axis** (`Axis`, default `Axis::Cols`)
-    Which matrix axis holds the features — same meaning as
-    [`MatrixFrameOptions::feature_axis`](pairplot.md).
-
-**x_feature**, **y_feature** (`std::int64_t`, default `0`, `1`)
-    0-based feature indices to plot. Both must be in range, and must differ from each
-    other, or `jointplot` throws (see Examples below).
+| Field | Type and default | Description |
+|---|---|---|
+| `feature_axis` | `Axis`, default `Axis::Cols` | Which matrix axis holds the features — same meaning as [`MatrixFrameOptions::feature_axis`](pairplot.md). |
+| `x_feature`, `y_feature` | `std::int64_t`, default `0`, `1` | 0-based feature indices to plot. Both must be in range, and must differ from each other, or `jointplot` throws (see Examples below). |
 
 ## Parameters
 
