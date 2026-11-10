@@ -51,6 +51,13 @@ target_link_libraries(plusstils_core_seed_reference PRIVATE PlussTilsCore)
 target_compile_features(plusstils_core_seed_reference PRIVATE cxx_std_20)
 
 if(BUILD_TESTING)
+    add_executable(plusstils_suppose_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/suppose_tests.cpp
+    )
+    target_link_libraries(plusstils_suppose_tests PRIVATE PlussTils)
+    target_compile_features(plusstils_suppose_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_suppose COMMAND plusstils_suppose_tests)
+
     add_executable(plusstils_core_env_tests
         ${CMAKE_CURRENT_SOURCE_DIR}/test/core_env_tests.cpp
     )

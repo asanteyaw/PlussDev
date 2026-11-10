@@ -314,7 +314,7 @@ NelderMeadOutcome nelder_mead_minimizer(
                       .reshape(std::span<const std::int64_t>(original_shape.data(), original_shape.size()))
                       .to(initial.platform(), initial.scalar_type());
   out.minimum = scalar_as_f64(state.values.front(), "nelder_mead_minimizer");
-  out.status = pluss::tils::suppose(converged)
+  out.status = pluss::tils::flow(converged)
                    .then([&](bool ok) {
                      if (ok) return SolverStatus::Converged;
                      return (state.evaluations >= max_evaluations)

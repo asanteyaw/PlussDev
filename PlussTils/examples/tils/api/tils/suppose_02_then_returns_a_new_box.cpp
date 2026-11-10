@@ -1,4 +1,4 @@
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -9,7 +9,7 @@ namespace tils = pluss::tils;
 
 int main() {
   // then runs the function on the held value and returns a new box. The original keeps its value.
-  auto base = tils::suppose(3);
+  auto base = tils::flow(3);
   auto doubled = base.then([](int x) { return x * 2; });
   std::cout << "original still holds: " << base.value() << '\n';
   std::cout << "new box holds: " << doubled.value() << '\n';

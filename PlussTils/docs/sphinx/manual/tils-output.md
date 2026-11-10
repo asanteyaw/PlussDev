@@ -407,6 +407,6 @@ The escape sequences wrap the text, and the line with color off has none. In a r
 ## Where next
 
 - [Print options](tils-print-options.md) -- every option a trailing `PrintOptions` can carry.
-- [Values in pipelines: suppose and let](tils-suppose-let.md) -- the wrappers that often hold the values you print.
+- [Values in pipelines: flow and let](tils-suppose-let.md) -- the wrappers that often hold the values you print.
 - [`OutputEngine` reference](../api/core-output-engine.md) -- every member, with its own examples.
 - [`OutputLevel`](../api/core-output-level.md) and [`OutputOptions`](../api/core-output-options.md) -- the level enum and the bulk configuration.

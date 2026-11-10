@@ -22,7 +22,7 @@ chapter covers one of them with complete programs.
 - **I need a path under a project root, or a remote address.** Read
   [Paths and roots](tils-aux-paths.md).
 - **I need to wrap a value and chain steps on it, or fix a binding.** Read
-  [Values in pipelines: suppose and let](tils-suppose-let.md).
+  [Values in pipelines: flow and let](tils-suppose-let.md).
 - **I need repeatable random numbers.** Read [Deterministic seeds](core_seeds.md).
 - **I need to read a dataset in batches.** Read [Loaders](loaders.md), which
   covers the data loader and its samplers.

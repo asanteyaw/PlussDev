@@ -1,4 +1,4 @@
-# PlussTils: Values in pipelines, suppose and let
+# PlussTils: Values in pipelines, flow and let
 
 ```{raw} html
 <meta name="pluss-doc-kind" content="guide">
@@ -6,22 +6,24 @@
 
 [Back to PlussTils](../index.md) · [PlussTils Core Manual](core.md)
 
-Two small utilities wrap a value so that you can work with it in steps. `suppose` wraps any value and lets you chain changes to it. `let` binds one of the core payload types, a series, a note, a timeline, or a duration, and refuses to rebind it. Use `suppose` when you are shaping a value with a sequence of steps, and `let` when a value should stay fixed once it is named.
+Two small utilities wrap a value so that you can work with it in steps. `flow` wraps any value and lets you chain changes to it. `let` binds one of the core payload types, a series, a note, a timeline, or a duration, and refuses to rebind it. Use `flow` when you are shaping a value with a sequence of steps, and `let` when a value should stay fixed once it is named.
+
+For named premises and checked derivations about Pluss values, use [`suppose`](../api/core-suppose.md).
 
 ## The mental model
 
-Both utilities are boxes. You put a value in, and the box gives it back through `value()`, `get()`, or `unwrap()`. The difference is what the box allows. A `suppose` box accepts any type, and every step returns a new box, so the one you started with never changes. A `let` box accepts only the payload types it was built for, and it never accepts a new value: once bound, the name always refers to the same payload.
+Both utilities are boxes. You put a value in, and the box gives it back through `value()`, `get()`, or `unwrap()`. The difference is what the box allows. A `flow` box accepts any type, and every step returns a new box, so the one you started with never changes. A `let` box accepts only the payload types it was built for, and it never accepts a new value: once bound, the name always refers to the same payload.
 
 ## Worked tour
 
 Every example is a complete program, and the output under it is copied from that program's run.
 
-## Example 1: suppose wraps any value
+## Example 1: flow wraps any value
 
-A `suppose` box holds any type, not only the core types. This example wraps a string and reads it back, along with its length.
+A `flow` box holds any type, not only the core types. This example wraps a string and reads it back, along with its length.
 
 ```cpp
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -31,8 +33,8 @@ A `suppose` box holds any type, not only the core types. This example wraps a st
 namespace tils = pluss::tils;
 
 int main() {
-  // suppose wraps any value, not only the core types, and the box returns the value it holds.
-  auto text = tils::suppose(std::string("abc"));
+  // flow wraps any value, not only the core types, and the box returns the value it holds.
+  auto text = tils::flow(std::string("abc"));
   std::cout << "wrapped text: " << text.value() << '\n';
   std::cout << "wrapped length: " << text.value().size() << '\n';
   return 0;
@@ -53,7 +55,7 @@ The box returns the string unchanged, and the length is read from the value it h
 `then` runs a function on the held value and returns a new box with the result. The starting box is not touched. This example doubles a value and then reads both boxes.
 
 ```cpp
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -64,7 +66,7 @@ namespace tils = pluss::tils;
 
 int main() {
   // then runs the function on the held value and returns a new box. The original keeps its value.
-  auto base = tils::suppose(3);
+  auto base = tils::flow(3);
   auto doubled = base.then([](int x) { return x * 2; });
   std::cout << "original still holds: " << base.value() << '\n';
   std::cout << "new box holds: " << doubled.value() << '\n';
@@ -86,7 +88,7 @@ The original still holds three, and the new box holds six. Every step makes a ne
 `transform` is a second name for the same operation. This example applies each name to the same box and compares the results.
 
 ```cpp
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -97,7 +99,7 @@ namespace tils = pluss::tils;
 
 int main() {
   // transform is the same operation under a second name, so either spelling gives the same box.
-  auto base = tils::suppose(std::string("ab"));
+  auto base = tils::flow(std::string("ab"));
   auto via_then = base.then([](const std::string& s) { return s + "cd"; });
   auto via_transform = base.transform([](const std::string& s) { return s + "cd"; });
   std::cout << "then: " << via_then.value() << '\n';
@@ -120,7 +122,7 @@ Both produce abcd. Pick one name and use it everywhere in a chain.
 The type of the new box follows the function's result. This example turns a string into its length, a `size_t`.
 
 ```cpp
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -131,7 +133,7 @@ namespace tils = pluss::tils;
 
 int main() {
   // The result type follows the function. A string can become a length, a number, or anything else.
-  auto text = tils::suppose(std::string("hello"));
+  auto text = tils::flow(std::string("hello"));
   auto length = text.then([](const std::string& s) { return s.size(); });
   std::cout << "length type is size_t: " << std::is_same_v<decltype(length.value()), std::size_t&> << '\n';
   std::cout << "length: " << length.value() << '\n';
@@ -153,7 +155,7 @@ The length is a `size_t`, read as five, so the type changed along with the value
 `tap` runs a function on the held value for its effect, such as logging, and returns the same box. This example taps a vector and then reads its size.
 
 ```cpp
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -164,7 +166,7 @@ namespace tils = pluss::tils;
 
 int main() {
   // tap runs a function on the held value and returns the same box, so the value is unchanged.
-  auto items = tils::suppose(std::vector<int>{1, 2, 3});
+  auto items = tils::flow(std::vector<int>{1, 2, 3});
   items.tap([](const std::vector<int>& v) { std::cout << "tapped size: " << v.size() << '\n'; });
   std::cout << "value unchanged: " << items.value().size() << '\n';
   return 0;
@@ -185,7 +187,7 @@ The tap printed the size, and the value still has three elements afterwards.
 `into<U>` converts the held value to `U` and returns a box of `U`. The original keeps its type and value. This example converts 3.7 to an integer.
 
 ```cpp
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -196,7 +198,7 @@ namespace tils = pluss::tils;
 
 int main() {
   // into<U> converts the held value to U and returns a box of U. The original is kept.
-  const auto ratio = tils::suppose(3.7);
+  const auto ratio = tils::flow(3.7);
   const auto whole = ratio.into<int>();
   std::cout << "converted: " << whole.value() << '\n';
   std::cout << "original still holds: " << ratio.value() << '\n';
@@ -215,10 +217,10 @@ The converted box holds three, and the original still holds 3.7.
 
 ## Example 7: as builds a box from another type
 
-`suppose.as<To>(value)` builds a box of type `To` from a value of another type. This example builds a string from a string literal.
+`flow.as<To>(value)` builds a box of type `To` from a value of another type. This example builds a string from a string literal.
 
 ```cpp
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -228,8 +230,8 @@ The converted box holds three, and the original still holds 3.7.
 namespace tils = pluss::tils;
 
 int main() {
-  // suppose.as<To>(value) builds a box of To from a value of another type.
-  auto from_text = tils::suppose.as<std::string>("literal");
+  // flow.as<To>(value) builds a box of To from a value of another type.
+  auto from_text = tils::flow.as<std::string>("literal");
   std::cout << "built string: " << from_text.value() << '\n';
   std::cout << "built value is a std::string: " << std::is_same_v<decltype(from_text.value()), std::string&> << '\n';
   return 0;
@@ -250,7 +252,7 @@ The box holds literal, and its type is `std::string`.
 Calling `unwrap` on a box that you no longer need moves the value out without copying it. This example moves a vector out of its box.
 
 ```cpp
-#include <pluss/tils/suppose.h>
+#include <pluss/tils/flow.h>
 
 #include <iostream>
 #include <string>
@@ -261,7 +263,7 @@ namespace tils = pluss::tils;
 
 int main() {
   // Calling unwrap on a box that is about to end moves the value out, so no copy is made.
-  auto items = tils::suppose(std::vector<int>{4, 5, 6});
+  auto items = tils::flow(std::vector<int>{4, 5, 6});
   std::vector<int> taken = std::move(items).unwrap();
   std::cout << "taken size: " << taken.size() << '\n';
   return 0;
@@ -611,14 +613,14 @@ The custom payload reads back its value, and the trait is true for it.
 
 | You want | Use | Notes |
 |---|---|---|
-| A value you shape with several steps, of any type | `suppose` | Each step returns a new box, so the starting value is kept. |
+| A value you shape with several steps, of any type | `flow` | Each step returns a new box, so the starting value is kept. |
 | A core payload that must stay the same once named | `let` | The name cannot be reassigned, and the payload is read-only. |
 | A plain value you only read once | plain `auto` | A box adds nothing when no step is chained. |
 | A chain over a let that should stay a let | `map` returning a payload | A non-payload result drops to the bare value. |
 
 ## Pitfalls
 
-**Expecting a suppose step to change the box you started with.** suppose_02 shows the starting box still holds three after the step.
+**Expecting a flow step to change the box you started with.** Example 2 shows the starting box still holds three after the step.
 
 **Expecting a let to be reassigned.** let_07 shows assignment is unavailable, so the name cannot be pointed at a new value.
 
@@ -628,6 +630,7 @@ The custom payload reads back its value, and the trait is true for it.
 
 ## Where next
 
-- [SupposeBox and suppose](../api/core-suppose.md) -- the reference for the box and its operations.
+- [FlowBox and flow](../api/core-flow.md) -- the reference for the box and its operations.
+- [suppose](../api/core-suppose.md) -- checked premises, derivations, and conclusions over Pluss values.
 - [let](../api/core-let.md) -- the reference for the binding and its payload rules.
 - [PlussBI: A Guide](bi.md) -- where the core payloads are used to build dashboards.

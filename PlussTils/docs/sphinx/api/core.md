@@ -3,7 +3,7 @@
 [Back to PlussTils API Reference](../api_reference.md) · [Core Manual](../manual/core.md)
 
 The Core reference owns public operations in `pluss::tils`: environment access,
-compact value declaration, assumption checks, scalar conversion, output,
+compact value declaration, checked supposition, scalar conversion, output,
 callable transmission, and axis-wise mapping. Each operation will receive a
 separate A-Z page after its implementation, overloads, errors, and exact output
 have been verified.
@@ -25,8 +25,10 @@ of this surface.
   member that writes or logs values.
 - [Print options](core/print-options.md): every field, builder, and preset of
   `PrintOptions`, and the enumerations they use.
-- [Value flow](core/value-flow.md): immutable `let` bindings and fluent
-  `suppose` transformations, each with its own reference page.
+- [Checked supposition](core-suppose.md): named premises, derivations, and
+  conclusions over Pluss values.
+- [Value flow](core/value-flow.md): fluent `flow` transformations and immutable
+  `let` bindings, each with its own reference page.
 
 ```{toctree}
 :maxdepth: 2
@@ -40,5 +42,6 @@ core/value-flow
 core/output
 core/print-options
 core-suppose
+core-flow
 core-let
 ```

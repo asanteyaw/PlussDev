@@ -537,4 +537,4 @@ The conversion gives a const reference to the note.
 
 ## See Also
 
-- [Value flow: let and suppose](core/value-flow.md)
+- [Value flow: flow and let](core/value-flow.md)

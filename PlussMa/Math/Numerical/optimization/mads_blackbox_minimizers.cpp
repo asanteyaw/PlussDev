@@ -540,7 +540,7 @@ BlackboxSolverOutcome mesh_adaptive_direct_search_minimizer(
     }
   }
 
-  const BlackboxSolverStatus status = pluss::tils::suppose(converged)
+  const BlackboxSolverStatus status = pluss::tils::flow(converged)
       .then([&](bool ok) {
         if (ok) {
           return BlackboxSolverStatus::Converged;
@@ -1273,7 +1273,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       .to(setup.flat_initial.platform(), setup.flat_initial.scalar_type());
   out.objective_vector = state.incumbent_objectives.to(ScalarType::Float64);
   out.scalarized_minimum = state.best_merit;
-  out.status = pluss::tils::suppose(converged)
+  out.status = pluss::tils::flow(converged)
       .then([&](bool ok) {
         if (ok) {
           return BlackboxSolverStatus::Converged;

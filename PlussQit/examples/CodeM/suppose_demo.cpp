@@ -47,10 +47,10 @@ struct ToFahrenheit {
 } // namespace
 
 int main() {
-  std::cout << "=== suppose / let demo ===\n\n";
+  std::cout << "=== flow / let demo ===\n\n";
 
-  std::cout << "1) suppose as a single-value pipeline (free functions)\n";
-  const auto tagged = pluss::tils::suppose(std::vector<int>{1, 2, 3, 4})
+  std::cout << "1) flow as a single-value pipeline (free functions)\n";
+  const auto tagged = pluss::tils::flow(std::vector<int>{1, 2, 3, 4})
                           .tap(require_non_empty)
                           .then(double_all)
                           .then(sum_all)
@@ -59,21 +59,21 @@ int main() {
   std::cout << "pipeline result: " << tagged << "\n\n";
 
   std::cout << "2) transform + into + function object\n";
-  const auto numeric = pluss::tils::suppose(21)
+  const auto numeric = pluss::tils::flow(21)
                            .transform(ClampAtLeast{50})
                            .into<double>()
                            .then(half_value)
                            .value();
-  std::cout << "suppose(21) -> clamp>=50 -> into<double> -> half = " << numeric << "\n\n";
+  std::cout << "flow(21) -> clamp>=50 -> into<double> -> half = " << numeric << "\n\n";
 
-  std::cout << "3) suppose.as<T>(value) for explicit typed starts\n";
-  const auto temp_f = pluss::tils::suppose.as<Celsius>(36.5)
+  std::cout << "3) flow.as<T>(value) for explicit typed starts\n";
+  const auto temp_f = pluss::tils::flow.as<Celsius>(36.5)
                           .then(ToFahrenheit{})
                           .value();
-  std::cout << "suppose.as<Celsius>(36.5) -> Fahrenheit = " << temp_f << "\n\n";
+  std::cout << "flow.as<Celsius>(36.5) -> Fahrenheit = " << temp_f << "\n\n";
 
   std::cout << "4) Lambdas in the same pipeline style\n";
-  const auto shout = pluss::tils::suppose(std::string("pluss queue + suppose"))
+  const auto shout = pluss::tils::flow(std::string("pluss queue + flow"))
                          .then([](std::string s) {
                            std::transform(s.begin(), s.end(), s.begin(),
                                           [](unsigned char c) { return static_cast<char>(std::toupper(c)); });

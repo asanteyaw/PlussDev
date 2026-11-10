@@ -370,5 +370,5 @@ The plain preset prints the list without brackets and the name without quotes. T
 ## Where next
 
 - [Writing output](tils-output.md) -- the engine that uses these options.
-- [Values in pipelines: suppose and let](tils-suppose-let.md) -- the wrappers that often hold the values you print.
+- [Values in pipelines: flow and let](tils-suppose-let.md) -- the wrappers that often hold the values you print.
 - [`PrintOptions` reference](../api/core-print-options.md) -- every field group, builder, and preset.

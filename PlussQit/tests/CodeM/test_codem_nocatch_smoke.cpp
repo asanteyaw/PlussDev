@@ -297,7 +297,7 @@ void test_aux_let_transmit() {
   static_assert(!scalar_transmittable.template operator()<ScalarNeedsIndex, int>());
 
   std::cout << "[RUN] aux:let\n";
-  auto lv = pluss::tils::suppose(std::vector<int>{1, 2, 3})
+  auto lv = pluss::tils::flow(std::vector<int>{1, 2, 3})
                 .then([](const std::vector<int>& x) {
                   std::vector<int> y = x;
                   for (auto& v : y) v *= 2;
@@ -311,11 +311,11 @@ void test_aux_let_transmit() {
                 .value();
   expect_eq(lv, std::vector<int>{2, 4, 6}, "let pipeline");
 
-  auto gv = pluss::tils::suppose(5).then([](int x) { return x + 3; }).value();
-  expect_true(gv == 8, "global suppose alias");
+  auto gv = pluss::tils::flow(5).then([](int x) { return x + 3; }).value();
+  expect_true(gv == 8, "flow transform");
 
-  auto la = pluss::tils::suppose.as<double>(3).then([](double x) { return x + 0.5; }).value();
-  expect_close(la, 3.5, 1e-12, "suppose typed conversion");
+  auto la = pluss::tils::flow.as<double>(3).then([](double x) { return x + 0.5; }).value();
+  expect_close(la, 3.5, 1e-12, "flow typed conversion");
 
   auto declared = pluss::make_series({1.0, 2.0, 3.0});
   expect_true(declared.numel() == 3, "let declaration works for Series");

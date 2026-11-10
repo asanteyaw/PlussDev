@@ -14,7 +14,7 @@ int main() {
   const auto platform = mps_ready ? pluss::pMPS : pluss::pCPU;
   std::cout << (mps_ready ? "MPS ready. Training on GPU." : "Training on CPU.") << '\n';
 
-  auto doubled = pluss::tils::suppose(std::vector<int>{1, 2, 3, 4})
+  auto doubled = pluss::tils::flow(std::vector<int>{1, 2, 3, 4})
                      .then([](std::vector<int> v) {
                        for (auto& x : v) x *= 2;
                        return v;
