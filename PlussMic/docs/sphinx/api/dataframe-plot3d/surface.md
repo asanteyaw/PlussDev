@@ -70,27 +70,27 @@ grouped mode, not the `NaN`-gap behavior of [`parallel()`](../dataframe-plot/par
 ## Parameters
 
 **x_feature** (`std::string_view`)
-    Feature whose distinct values become the grid's columns (x-axis).
+Feature whose distinct values become the grid's columns (x-axis).
 
 **y_feature** (`std::string_view`)
-    Feature whose distinct values become the grid's rows (y-axis).
+Feature whose distinct values become the grid's rows (y-axis).
 
 **z_feature** (`std::string_view`)
-    Feature aggregated into each grid cell's height.
+Feature aggregated into each grid cell's height.
 
 **op** (`DataFrame::GroupOp`, default `Mean`)
-    The aggregation applied per cell — see the important callout above for which values
-    are actually supported.
+The aggregation applied per cell — see the important callout above for which values
+are actually supported.
 
 **options** (`Surface3DPlotOptions`)
-    ```cpp
-    struct Surface3DPlotOptions {
-      Plot3DSceneOptions scene{};
-      Plot3DTraceOptions trace{};
-    };
-    ```
-    The same shared structs documented in full on [`line()`](line.md); `surface()` has no
-    fields of its own beyond these two.
+
+| Option | Default | Purpose |
+|---|---|---|
+| `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
+| `trace` | Trace defaults | Surface shading and material settings. |
+
+The same shared structs documented in full on [`line()`](line.md); `surface()` has no
+fields of its own beyond these two.
 
 ## Returns
 

@@ -47,68 +47,36 @@ uses for its own `x_key`/y-key reconciliation. See Example 4.
 ## Parameters
 
 **x_key**, **y_key**, **z_key** (`std::string_view`, required)
-    The three keys forming each point's 3D position.
+The three keys forming each point's 3D position.
 
 **size_key** (`std::optional<std::string_view>`, default `std::nullopt`)
-    Optional numeric key controlling each point's marker size. When omitted,
-    `options.default_marker_size` is used uniformly for every point.
+Optional numeric key controlling each point's marker size. When omitted,
+`options.default_marker_size` is used uniformly for every point.
 
 **color_key** (`std::optional<std::string_view>`, default `std::nullopt`)
-    Optional numeric key controlling each point's color, as a continuous color-mapped value
-    — **not** a categorical grouping the way `hue_key` is on the 2D `scatter()`.
+Optional numeric key controlling each point's color, as a continuous color-mapped value
+— **not** a categorical grouping the way `hue_key` is on the 2D `scatter()`.
 
 **options** (`pluss::table::Scatter3DPlotOptions` or `CatalogScatter3DPlotOptions`)
-    ```cpp
-    struct Plot3DSceneOptions {
-      std::optional<ScenePreset3D> preset{std::nullopt};
-      std::optional<ThemePreset3D> theme{std::nullopt};
-      std::optional<CameraPreset3D> camera_preset{std::nullopt};
-      std::optional<Camera3DOptions> camera{std::nullopt};
-      std::optional<Lighting3DOptions> lighting{std::nullopt};
-      std::optional<pluss::pl::GridStyle> grid_style{std::nullopt};
-    };
 
-    struct Plot3DTraceOptions {
-      std::optional<TracePreset3D> preset{std::nullopt};
-      std::optional<pluss::pl::ShadeMode> shade{std::nullopt};
-      std::optional<pluss::pl::LightingMode> lighting{std::nullopt};
-      std::optional<pluss::pl::MaterialProfile> material{std::nullopt};
-      std::optional<float> line_width{std::nullopt};
-      std::optional<bool> transparent{std::nullopt};
-    };
+| Option | Default | Purpose |
+|---|---|---|
+| `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
+| `trace` | Trace defaults | Point-cloud shading and material settings. |
+| `default_marker_size` | 12 | Uniform point size when no size key is supplied. |
+| `align` | Inner | Reconciles the requested keys before plotting. |
+| `align_by` | Auto | Chooses label or position matching. |
+| `pad_scalar` | 0 | Fill value when scalar padding is selected. |
 
-    enum class XYAlignMode : std::uint8_t { Strict, Inner, PadScalar };
-    enum class XYAlignBy : std::uint8_t { Auto, Label, Pos };
+The alignment mode can be Strict, Inner, or PadScalar. Matching can use Auto, Label, or Pos. Pass scene and trace settings through `Scatter3DPlotOptions`; the Catalog wrapper also exposes the alignment settings directly. See [`DataFramePlot3DAccessor::line()`](../dataframe-plot3d/line.md) for the scene and trace choices.
 
-    struct XYAlignOptions {
-      XYAlignMode mode{XYAlignMode::Strict};
-      XYAlignBy align_by{XYAlignBy::Auto};
-      double pad_scalar{0.0};
-    };
-
-    struct Scatter3DPlotOptions {
-      Plot3DSceneOptions scene{};
-      Plot3DTraceOptions trace{};
-      double default_marker_size{12.0};
-      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
-    };
-
-    struct CatalogScatter3DPlotOptions {
-      pluss::table::XYAlignMode align{pluss::table::XYAlignMode::Inner};
-      pluss::table::XYAlignBy align_by{pluss::table::XYAlignBy::Auto};
-      double pad_scalar{0.0};
-      pluss::table::Scatter3DPlotOptions scatter{};
-    };
-    ```
-    Passing a bare `Scatter3DPlotOptions` (the first overload, also the one with all
-    defaulted arguments) is equivalent to passing a `CatalogScatter3DPlotOptions` built from
-    that value's own `align` field (`catalog_options.align = options.align.mode`, etc.) and
-    that `scatter` value. Note `Scatter3DPlotOptions::align` defaults to `Inner` here — a
-    looser default than [`LinePlotOptions::align`](../catalog-plot/line.md)'s
-    `Strict` default, since a 3D scatter's whole point is plotting keys that aren't expected
-    to share a row count. Unlike `CatalogPairAlignOptions` (used by the 2D pairwise methods),
-    there is no `PairwiseInner`/`GlobalInner` axis here — every requested key is always
-    reconciled together as one group, so `align`/`align_by`/`pad_scalar` are the only knobs.
+Passing `Scatter3DPlotOptions` uses its alignment settings and scatter settings together.
+The Catalog options expose those alignment settings directly. The default alignment is `Inner` — a
+looser default than [`LinePlotOptions::align`](../catalog-plot/line.md)'s
+`Strict` default, since a 3D scatter's whole point is plotting keys that aren't expected
+to share a row count. Unlike `CatalogPairAlignOptions` (used by the 2D pairwise methods),
+there is no `PairwiseInner`/`GlobalInner` axis here — every requested key is always
+reconciled together as one group, so `align`/`align_by`/`pad_scalar` are the only knobs.
 
 ## Returns
 

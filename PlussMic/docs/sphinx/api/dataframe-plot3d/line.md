@@ -55,99 +55,76 @@ when it fires from a `plot3d()` call.
 ## Parameters
 
 **x_feature**, **y_feature**, **z_feature** (`std::string_view`, all required)
-    The three features providing each row's `x`, `y`, and `z` coordinate — see the note
-    above for how each is converted to a numeric value. Unlike the 2D accessor's `x_feature`
-    arguments, none of these are optional and there is no frame-row-label fallback.
+The three features providing each row's `x`, `y`, and `z` coordinate — see the note
+above for how each is converted to a numeric value. Unlike the 2D accessor's `x_feature`
+arguments, none of these are optional and there is no frame-row-label fallback.
 
 **options** (`Line3DPlotOptions`)
-    ```cpp
-    struct Line3DPlotOptions {
-      Plot3DSceneOptions scene{};
-      Plot3DTraceOptions trace{};
-      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
-    };
-    ```
-    `scene` controls the 3D pane's camera, lighting, theme, and grid style; `trace`
-    controls the drawn line's shading, lighting response, material, stroke width, and
-    transparency. Both are described in full below, since every method on this accessor
-    shares the exact same two structs. `align` is present for the same
-    struct-reuse-with-`Catalog::plot3d()` reason as
-    [`scatter()`](scatter.md)'s — inert on `DataFramePlot3DAccessor::line()` itself.
 
-    ```cpp
-    enum class ScenePreset3D { Survey, Presentation, Studio, Topology };
-    enum class ThemePreset3D { Paper, Ocean, Graphite, Mist };
-    enum class CameraPreset3D { Spatial, TopDown, Front, Side, Isometric };
-    enum class ProjectionKind { Perspective, Orthographic };
+| Option | Default | Purpose |
+|---|---|---|
+| `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
+| `trace` | Trace defaults | Line shading, material, width, and transparency. |
+| `align` | Inner, Auto, pad value 0 | Shared with Catalog plotting; this DataFrame method does not use it. |
 
-    struct Camera3DOptions {
-      double azimuth_deg{-37.5};
-      double elevation_deg{30.0};
-      double view_angle_deg{30.0};
-      ProjectionKind projection{ProjectionKind::Orthographic};
-    };
+`scene` and `trace` are shared across the 3D plotting methods. The `align` setting
+applies to Catalog plotting; this DataFrame method ignores it.
 
-    struct Lighting3DOptions {
-      bool clear_first{true};
-      bool headlight{true};
-      bool lamp_left{false};
-      bool lamp_right{false};
-      bool sun_key{false};
-    };
 
-    struct Plot3DSceneOptions {
-      std::optional<ScenePreset3D> preset{std::nullopt};
-      std::optional<ThemePreset3D> theme{std::nullopt};
-      std::optional<CameraPreset3D> camera_preset{std::nullopt};
-      std::optional<Camera3DOptions> camera{std::nullopt};
-      std::optional<Lighting3DOptions> lighting{std::nullopt};
-      std::optional<pluss::pl::GridStyle> grid_style{std::nullopt};
-    };
-    ```
+The scene accepts these settings. An unset optional setting leaves the pane default in place.
 
-    Every field in `Plot3DSceneOptions` is a `std::optional` that defaults to
-    `std::nullopt`, meaning "leave the pane's built-in default alone." When several
-    fields *are* set, they're applied in a fixed order, each one layering on top of
-    (and able to override) whatever came before: **`preset`** first (a scribble that sets
-    a theme, grid style, camera angle, and a lighting rig all at once — see the preset
-    table below), then **`theme`** (overrides just the color theme), then
-    **`grid_style`** (`None`, `Major`, or `MajorMinor`), then **`camera_preset`**
-    (overrides just the camera angle), then **`camera`** (an explicit
-    `Camera3DOptions`, overriding any preset's angle with exact numbers), then
-    **`lighting`** (an explicit `Lighting3DOptions`, overriding any preset's lights).
-    Setting both `camera_preset` and `camera` is legal — `camera` applies last and wins.
+| Setting | Choices or default | Purpose |
+|---|---|---|
+| `preset` | Survey, Presentation, Studio, Topology; unset | Sets a coordinated scene style. |
+| `theme` | Paper, Ocean, Graphite, Mist; unset | Chooses the color theme. |
+| `camera_preset` | Spatial, TopDown, Front, Side, Isometric; unset | Chooses a camera angle. |
+| `grid_style` | None, Major, MajorMinor; unset | Controls grid lines. |
+| `camera` | Unset | Supplies explicit camera settings instead of a preset angle. |
+| `lighting` | Unset | Supplies explicit lights instead of a preset rig. |
 
-    | `ScenePreset3D` | Theme | Camera | Lighting |
-    |---|---|---|---|
-    | `Survey` | Ocean | Isometric | headlight + left lamp |
-    | `Presentation` | Paper | perspective, low/wide angle | headlight + right lamp + sun key |
-    | `Studio` | Graphite | Spatial (the library-wide default angle) | headlight + both lamps |
-    | `Topology` | Mist | TopDown | headlight only |
+Explicit camera settings use azimuth −37.5°, elevation 30°, view angle 30°, and orthographic projection by default. Projection can be Perspective or Orthographic. Explicit lighting starts with `clear_first` and `headlight` enabled; `lamp_left`, `lamp_right`, and `sun_key` are disabled by default.
 
-    ```cpp
-    enum class TracePreset3D { Path, Cloud, Surface, Wireframe, Spire, Volume };
-    enum class ShadeMode { Faceted, Flat, Smooth };
-    enum class LightingMode { None, Flat, Gouraud };
-    enum class MaterialProfile { Default, Dull, Shiny, Metal };
 
-    struct Plot3DTraceOptions {
-      std::optional<TracePreset3D> preset{std::nullopt};
-      std::optional<ShadeMode> shade{std::nullopt};
-      std::optional<LightingMode> lighting{std::nullopt};
-      std::optional<MaterialProfile> material{std::nullopt};
-      std::optional<float> line_width{std::nullopt};
-      std::optional<bool> transparent{std::nullopt};
-    };
-    ```
+Every field in `Plot3DSceneOptions` is a `std::optional` that defaults to
+`std::nullopt`, meaning "leave the pane's built-in default alone." When several
+fields *are* set, they're applied in a fixed order, each one layering on top of
+(and able to override) whatever came before: **`preset`** first (a coordinated style that sets
+a theme, grid style, camera angle, and a lighting rig all at once — see the preset
+table below), then **`theme`** (overrides just the color theme), then
+**`grid_style`** (`None`, `Major`, or `MajorMinor`), then **`camera_preset`**
+(overrides just the camera angle), then **`camera`** (an explicit
+`Camera3DOptions`, overriding any preset's angle with exact numbers), then
+**`lighting`** (an explicit `Lighting3DOptions`, overriding any preset's lights).
+Setting both `camera_preset` and `camera` is legal — `camera` applies last and wins.
 
-    Same layering rule as `Plot3DSceneOptions`: **`preset`** applies first (a scribble of
-    shade/lighting/material/width/transparency tuned for one trace shape — `Path` is
-    tuned for line traces, `Cloud` for scatter, `Surface` for filled meshes,
-    `Wireframe` for mesh edges, `Spire` for 3D-bar histograms, `Volume` for
-    translucent solids), then any explicitly-set `shade`, `lighting`, `material`,
-    `line_width`, or `transparent` fields override just that one aspect of the preset.
-    None of `line()`'s example calls below set a `preset`, so the pane/trace defaults
-    (not any preset's values) are what's actually drawn unless noted otherwise.
+| `ScenePreset3D` | Theme | Camera | Lighting |
+|---|---|---|---|
+| `Survey` | Ocean | Isometric | headlight + left lamp |
+| `Presentation` | Paper | perspective, low/wide angle | headlight + right lamp + sun key |
+| `Studio` | Graphite | Spatial (the library-wide default angle) | headlight + both lamps |
+| `Topology` | Mist | TopDown | headlight only |
+
+
+The trace accepts these settings. An unset optional setting leaves the trace default in place.
+
+| Setting | Choices or default | Purpose |
+|---|---|---|
+| `preset` | Path, Cloud, Surface, Wireframe, Spire, Volume; unset | Sets a coordinated trace style. |
+| `shade` | Faceted, Flat, Smooth; unset | Chooses surface shading. |
+| `lighting` | None, Flat, Gouraud; unset | Chooses how the trace responds to light. |
+| `material` | Default, Dull, Shiny, Metal; unset | Chooses the material finish. |
+| `line_width` | Unset | Sets stroke width. |
+| `transparent` | Unset | Controls transparency. |
+
+
+Same layering rule as `Plot3DSceneOptions`: **`preset`** applies first (a coordinated choice of
+shade/lighting/material/width/transparency tuned for one trace shape — `Path` is
+tuned for line traces, `Cloud` for scatter, `Surface` for filled meshes,
+`Wireframe` for mesh edges, `Spire` for 3D-bar histograms, `Volume` for
+translucent solids), then any explicitly-set `shade`, `lighting`, `material`,
+`line_width`, or `transparent` fields override just that one aspect of the preset.
+None of `line()`'s example calls below set a `preset`, so the pane/trace defaults
+(not any preset's values) are what's actually drawn unless noted otherwise.
 
 ## Returns
 

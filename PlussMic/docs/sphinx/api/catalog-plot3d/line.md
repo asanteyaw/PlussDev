@@ -30,28 +30,27 @@ Reuses the same all-keys-reconciled-together alignment
 ## Parameters
 
 **x_key**, **y_key**, **z_key** (`std::string_view`, required)
-    The three keys forming the path's 3D coordinates, connected in row order after
-    alignment.
+The three keys forming the path's 3D coordinates, connected in row order after
+alignment.
 
 **options** (`pluss::table::Line3DPlotOptions` or `CatalogLine3DPlotOptions`)
-    ```cpp
-    struct Line3DPlotOptions {
-      Plot3DSceneOptions scene{};
-      Plot3DTraceOptions trace{};
-      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
-    };
 
-    struct CatalogLine3DPlotOptions {
-      pluss::table::XYAlignMode align{pluss::table::XYAlignMode::Inner};
-      pluss::table::XYAlignBy align_by{pluss::table::XYAlignBy::Auto};
-      double pad_scalar{0.0};
-      pluss::table::Line3DPlotOptions line{};
-    };
-    ```
-    Same `scene`/`trace` shape documented in full on
-    [`CatalogPlot3DAccessor::scatter`](scatter.md) — `line()` has no fields of
-    its own beyond these two, plus the same `align`/`align_by`/`pad_scalar` alignment trio
-    (`XYAlignMode`/`XYAlignBy`) `scatter()` uses, defaulting to `Inner`.
+The Catalog overloads accept the following settings:
+
+| Option | Default | Purpose |
+|---|---|---|
+| `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
+| `trace` | Trace defaults | Path shading and material settings. |
+| `align` | Inner | Reconciles the three keys before plotting. |
+| `align_by` | Auto | Chooses label or position matching. |
+| `pad_scalar` | 0 | Fill value when scalar padding is selected. |
+
+Pass the scene and trace settings through `Line3DPlotOptions`; the Catalog wrapper also exposes the alignment settings directly.
+
+Same `scene`/`trace` shape documented in full on
+[`CatalogPlot3DAccessor::scatter`](scatter.md) — `line()` has no fields of
+its own beyond these two, plus the same `align`/`align_by`/`pad_scalar` alignment trio
+(`XYAlignMode`/`XYAlignBy`) `scatter()` uses, defaulting to `Inner`.
 
 ## Returns
 

@@ -31,43 +31,43 @@ explanation — this page only covers what's specific to `hist()`.
 ## Parameters
 
 **x_feature**, **y_feature** (`std::string_view`, both required)
-    The two numeric features jointly binned into the grid. Both must resolve to numeric
-    values — see [`line()`](line.md)'s note on feature-to-axis conversion.
+The two numeric features jointly binned into the grid. Both must resolve to numeric
+values — see [`line()`](line.md)'s note on feature-to-axis conversion.
 
 **options** (`Hist3DPlotOptions`)
-    ```cpp
-    struct Hist3DPlotOptions {
-      std::int64_t bins_x{26};
-      std::int64_t bins_y{20};
-      bool normalize{false};
-      bool smooth{false};
-      std::int64_t smooth_passes{1};
-      bool as_surface{false};
-      bool as_wireframe{false};
-      Plot3DSceneOptions scene{};
-      Plot3DTraceOptions trace{};
-      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
-    };
-    ```
-    `bins_x`/`bins_y` are floored to a minimum of `4` each — a request below that is
-    silently clamped up, never throwing. `normalize = true` divides every cell by the grid's
-    total count, turning raw counts into a density-like share (skipped if the total is
-    non-finite or `0`, in which case the raw counts pass through unchanged). `smooth = true`
-    applies a smoothing pass to the grid before rendering, repeated `smooth_passes` times
-    (floored to a minimum of `1`); this softens sharp bin-to-bin jumps at the cost of
-    blurring the exact counts. `as_wireframe` and `as_surface` control the render shape —
-    see the note below for exactly how they interact. `align` is present for the same
-    struct-reuse-with-`Catalog::plot3d()` reason as `Scatter3DPlotOptions`'s (see
-    [`scatter()`](scatter.md)) — inert on `DataFramePlot3DAccessor::hist()` itself.
 
-    ```{note} Three mutually exclusive render shapes, checked in a fixed order
-    `as_wireframe` is checked first: if `true`, the grid is drawn as a **wireframe mesh**
-    (same shape [`wireframe()`](wireframe.md) draws), regardless of `as_surface`. Otherwise,
-    if `as_surface` is `true`, the grid is drawn as a **continuous surface** (same shape
-    [`surface()`](surface.md) draws). If neither flag is set (the default for both), the
-    grid is drawn as a field of **3D bars** — one vertical "spire" per grid cell, the
-    conventional 3D-histogram look. Setting both flags is legal; `as_wireframe` simply wins.
-    ```
+| Option | Default | Purpose |
+|---|---|---|
+| `bins_x` | 26 | Number of bins along x; at least 4 are used. |
+| `bins_y` | 20 | Number of bins along y; at least 4 are used. |
+| `normalize` | false | Divide cells by the total count. |
+| `smooth` | false | Smooth the grid before rendering. |
+| `smooth_passes` | 1 | Number of smoothing passes; at least 1 is used. |
+| `as_surface` | false | Draw a continuous surface. |
+| `as_wireframe` | false | Draw a wireframe; takes precedence over `as_surface`. |
+| `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
+| `trace` | Trace defaults | Trace shading and material settings. |
+| `align` | Inner, Auto, pad value 0 | Shared with Catalog plotting; this DataFrame method does not use it. |
+
+`bins_x`/`bins_y` are floored to a minimum of `4` each — a request below that is
+silently clamped up, never throwing. `normalize = true` divides every cell by the grid's
+total count, turning raw counts into a density-like share (skipped if the total is
+non-finite or `0`, in which case the raw counts pass through unchanged). `smooth = true`
+applies a smoothing pass to the grid before rendering, repeated `smooth_passes` times
+(floored to a minimum of `1`); this softens sharp bin-to-bin jumps at the cost of
+blurring the exact counts. `as_wireframe` and `as_surface` control the render shape —
+see the note below for exactly how they interact. `align` is present for the same
+struct-reuse-with-`Catalog::plot3d()` reason as `Scatter3DPlotOptions`'s (see
+[`scatter()`](scatter.md)) — inert on `DataFramePlot3DAccessor::hist()` itself.
+
+```{note} Three mutually exclusive render shapes, checked in a fixed order
+`as_wireframe` is checked first: if `true`, the grid is drawn as a **wireframe mesh**
+(same shape [`wireframe()`](wireframe.md) draws), regardless of `as_surface`. Otherwise,
+if `as_surface` is `true`, the grid is drawn as a **continuous surface** (same shape
+[`surface()`](surface.md) draws). If neither flag is set (the default for both), the
+grid is drawn as a field of **3D bars** — one vertical "spire" per grid cell, the
+conventional 3D-histogram look. Setting both flags is legal; `as_wireframe` simply wins.
+```
 
 ## Returns
 

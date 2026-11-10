@@ -28,37 +28,34 @@ requested keys.
 ## Parameters
 
 **x_key**, **y_key** (`std::string_view`, required)
-    The two keys binned into the 2D histogram grid.
+The two keys binned into the 2D histogram grid.
 
 **options** (`pluss::table::Hist3DPlotOptions` or `CatalogHist3DPlotOptions`)
-    ```cpp
-    struct Hist3DPlotOptions {
-      std::int64_t bins_x{26};
-      std::int64_t bins_y{20};
-      bool normalize{false};
-      bool smooth{false};
-      std::int64_t smooth_passes{1};
-      bool as_surface{false};
-      bool as_wireframe{false};
-      Plot3DSceneOptions scene{};
-      Plot3DTraceOptions trace{};
-      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
-    };
 
-    struct CatalogHist3DPlotOptions {
-      pluss::table::XYAlignMode align{pluss::table::XYAlignMode::Inner};
-      pluss::table::XYAlignBy align_by{pluss::table::XYAlignBy::Auto};
-      double pad_scalar{0.0};
-      pluss::table::Hist3DPlotOptions hist{};
-    };
-    ```
-    `bins_x`/`bins_y` set the grid resolution independently per axis. `normalize = true`
-    switches the z-axis (and its label) from `"count"` to `"density"`. `smooth`/
-    `smooth_passes` optionally blur the grid before rendering. `as_surface`/`as_wireframe`
-    change the grid's render style; both `false` (the default) renders it as 3D bars.
-    `align`/`align_by`/`pad_scalar` govern how `x_key`/`y_key` are reconciled — same
-    `XYAlignMode`/`XYAlignBy` trio [`scatter()`](scatter.md) uses, defaulting to
-    `Inner`.
+| Option | Default | Purpose |
+|---|---|---|
+| `bins_x` | 26 | Number of bins along x. |
+| `bins_y` | 20 | Number of bins along y. |
+| `normalize` | false | Show each cell as a share of the total. |
+| `smooth` | false | Smooth the binned grid. |
+| `smooth_passes` | 1 | Number of smoothing passes. |
+| `as_surface` | false | Draw a continuous surface. |
+| `as_wireframe` | false | Draw a wireframe; takes precedence over `as_surface`. |
+| `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
+| `trace` | Trace defaults | Trace shading and material settings. |
+| `align` | Inner | Reconciles the two keys before plotting. |
+| `align_by` | Auto | Chooses label or position matching. |
+| `pad_scalar` | 0 | Fill value when scalar padding is selected. |
+
+Pass histogram settings through `Hist3DPlotOptions`; the Catalog wrapper also exposes the alignment settings directly.
+
+`bins_x`/`bins_y` set the grid resolution independently per axis. `normalize = true`
+switches the z-axis (and its label) from `"count"` to `"density"`. `smooth`/
+`smooth_passes` optionally blur the grid before rendering. `as_surface`/`as_wireframe`
+change the grid's render style; both `false` (the default) renders it as 3D bars.
+`align`/`align_by`/`pad_scalar` govern how `x_key`/`y_key` are reconciled — same
+`XYAlignMode`/`XYAlignBy` trio [`scatter()`](scatter.md) uses, defaulting to
+`Inner`.
 
 ## Returns
 

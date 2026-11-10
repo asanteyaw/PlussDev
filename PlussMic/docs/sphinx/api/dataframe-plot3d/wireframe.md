@@ -40,29 +40,29 @@ table is pivoted, the z-grid still has to be numeric so it can be rendered in 3D
 ## Parameters
 
 **x_feature** (`std::string_view`)
-    Feature whose distinct values become the grid's columns (x-axis) — see
-    [`surface()`](surface.md)'s note on grid-coordinate resolution.
+Feature whose distinct values become the grid's columns (x-axis) — see
+[`surface()`](surface.md)'s note on grid-coordinate resolution.
 
 **y_feature** (`std::string_view`)
-    Feature whose distinct values become the grid's rows (y-axis).
+Feature whose distinct values become the grid's rows (y-axis).
 
 **z_feature** (`std::string_view`)
-    Feature aggregated into each grid cell's height.
+Feature aggregated into each grid cell's height.
 
 **op** (`DataFrame::GroupOp`, default `Mean`)
-    The aggregation applied per cell — see [`surface()`](surface.md)'s important callout
-    for which values are actually supported.
+The aggregation applied per cell — see [`surface()`](surface.md)'s important callout
+for which values are actually supported.
 
 **options** (`Wireframe3DPlotOptions`)
-    ```cpp
-    struct Wireframe3DPlotOptions {
-      Plot3DSceneOptions scene{};
-      Plot3DTraceOptions trace{};
-    };
-    ```
-    The same shared structs documented in full on [`line()`](line.md); `wireframe()` has no
-    fields of its own beyond these two. A `Wireframe` trace preset (tuned lighting/shading
-    for mesh edges) is available via `options.trace.preset`.
+
+| Option | Default | Purpose |
+|---|---|---|
+| `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
+| `trace` | Trace defaults | Mesh-edge shading and material settings. |
+
+The same shared structs documented in full on [`line()`](line.md); `wireframe()` has no
+fields of its own beyond these two. A `Wireframe` trace preset (tuned lighting/shading
+for mesh edges) is available via `options.trace.preset`.
 
 ## Returns
 

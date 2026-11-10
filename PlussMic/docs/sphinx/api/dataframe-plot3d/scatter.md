@@ -47,34 +47,34 @@ passed to the underlying trace call is always populated, just filled with a cons
 ## Parameters
 
 **x_feature**, **y_feature**, **z_feature** (`std::string_view`, all required)
-    The three features providing each point's `x`, `y`, and `z` coordinate — see
-    [`line()`](line.md)'s note on feature-to-axis conversion.
+The three features providing each point's `x`, `y`, and `z` coordinate — see
+[`line()`](line.md)'s note on feature-to-axis conversion.
 
 **size_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
-    Optional numeric feature controlling each point's marker size. Omitted means every
-    point uses `options.default_marker_size` uniformly.
+Optional numeric feature controlling each point's marker size. Omitted means every
+point uses `options.default_marker_size` uniformly.
 
 **color_feature** (`std::optional<std::string_view>`, default `std::nullopt`)
-    Optional numeric feature mapped onto the trace's color scale, one continuous gradient
-    across all points (not a categorical split into separate traces — contrast the 2D
-    accessor's `hue_feature`).
+Optional numeric feature mapped onto the trace's color scale, one continuous gradient
+across all points (not a categorical split into separate traces — contrast the 2D
+accessor's `hue_feature`).
 
 **options** (`Scatter3DPlotOptions`)
-    ```cpp
-    struct Scatter3DPlotOptions {
-      Plot3DSceneOptions scene{};
-      Plot3DTraceOptions trace{};
-      double default_marker_size{12.0};
-      XYAlignOptions align{XYAlignMode::Inner, XYAlignBy::Auto, 0.0};
-    };
-    ```
-    `default_marker_size` is only consulted when `size_feature` is omitted; `scene`/`trace`
-    are the same shared structs documented in full on [`line()`](line.md). `align` exists so
-    `Catalog::plot3d().scatter()` can reuse this struct type for its own multi-key
-    reconciliation (see
-    [`CatalogPlot3DAccessor::scatter`](../catalog-plot3d/scatter.md)) — `DataFramePlot3DAccessor::scatter()`
-    itself never reads it: every feature named here is already a column of the same,
-    already-constructed `DataFrame`, so there is no length mismatch for `align` to resolve.
+
+| Option | Default | Purpose |
+|---|---|---|
+| `scene` | Pane defaults | Camera, theme, lighting, and grid settings. |
+| `trace` | Trace defaults | Point-cloud shading and material settings. |
+| `default_marker_size` | 12 | Uniform point size when `size_feature` is omitted. |
+| `align` | Inner, Auto, pad value 0 | Shared with Catalog plotting; this DataFrame method does not use it. |
+
+`default_marker_size` is only consulted when `size_feature` is omitted; `scene`/`trace`
+are the same shared structs documented in full on [`line()`](line.md). `align` exists so
+`Catalog::plot3d().scatter()` can reuse this struct type for its own multi-key
+reconciliation (see
+[`CatalogPlot3DAccessor::scatter`](../catalog-plot3d/scatter.md)) — `DataFramePlot3DAccessor::scatter()`
+itself never reads it: every feature named here is already a column of the same,
+already-constructed `DataFrame`, so there is no length mismatch for `align` to resolve.
 
 ## Returns
 
