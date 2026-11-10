@@ -1,0 +1,152 @@
+# `krylov::GmresResult`
+
+The solution of a GMRES solve with per-lane residuals and the work done.
+
+`solution` has the shape of the right-hand side; `residual_norm`, `relative_residual` and `converged` are per lane; `iterations` is the total iteration count, `operator_evaluations` the number of times the operator was applied (one per iteration plus one per restart), and `restarts` the number of restart cycles.
+
+## Fields
+
+### `solution`
+
+`pluss::Series`, default `undefined`.
+
+The solution, shaped like the right-hand side (real or complex like the input).
+
+
+### `residual_norm`
+
+`pluss::Series`, default `undefined`.
+
+The final `‖b − A x‖` per lane.
+
+
+### `relative_residual`
+
+`pluss::Series`, default `undefined`.
+
+The residual over `‖b‖` per lane, to compare with `relative_tolerance`.
+
+
+### `converged`
+
+`pluss::Series`, default `undefined`.
+
+Boolean per lane: the residual met the threshold at the end of some cycle.
+
+
+### `iterations`
+
+`std::int64_t`, default `0`.
+
+The total across restart cycles; a multiple of `restart` unless `max_iterations` cut the last cycle short.
+
+
+### `operator_evaluations`
+
+`std::int64_t`, default `0`.
+
+How many times `A` was applied: one per iteration plus one per cycle to form the true residual. This is the cost to compare against other solvers.
+
+
+### `restarts`
+
+`std::int64_t`, default `0`.
+
+The number of restart cycles run. A value above 1 means the Krylov basis was discarded at least once, and convergence may be slower than the unrestarted method would give.
+
+## Guidance
+
+Returned by `gmres`.
+
+## Practical Examples
+
+### Example 1
+
+Reading a result.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const Series A = pluss::make_series({3.0, 1.0, -1.0, 2.0}, {2, 2});
+  const auto apply = [&](const Series &x) { return A.matmul(x.unsqueeze(-1)).squeeze(-1); };
+  const krylov::GmresResult r = krylov::gmres(apply, pluss::make_series({1.0, 2.0}), {-1});
+  out.writeln("solution =", r.solution.items<double>(), ", residual =", r.residual_norm.reshape({r.residual_norm.numel()}).items<double>());
+  out.writeln("iterations =", r.iterations, ", operator evaluations =", r.operator_evaluations, ", restarts =", r.restarts, ", converged =", r.converged.reshape({r.converged.numel()}).items<bool>());
+}
+```
+
+### Example 2
+
+A batch. Each lane has its own residual and flag.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const Series A = pluss::make_series({3.0, 1.0, -1.0, 2.0}, {2, 2});
+  const auto apply = [&](const Series &x) { return A.matmul(x.unsqueeze(-1)).squeeze(-1); };
+  const krylov::GmresResult r = krylov::gmres(apply, pluss::make_series({1.0, 2.0, 0.0, 1.0, 4.0, -1.0}, {3, 2}), {-1});
+  out.writeln("shape =", r.solution.sizes(), ", relative residuals =", r.relative_residual.reshape({r.relative_residual.numel()}).items<double>());
+}
+```
+
+### Example 3
+
+The residual check. The reported norm equals `‖b − A x‖` recomputed.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const Series A = pluss::make_series({3.0, 1.0, -1.0, 2.0}, {2, 2});
+  const auto apply = [&](const Series &x) { return A.matmul(x.unsqueeze(-1)).squeeze(-1); };
+  const Series b = pluss::make_series({1.0, 2.0});
+  const krylov::GmresResult r = krylov::gmres(apply, b, {-1});
+  out.writeln("reported =", r.residual_norm.reshape({r.residual_norm.numel()}).items<double>(), ", recomputed =", (b - apply(r.solution)).square().sum().sqrt().item<double>());
+}
+```
+
+## See Also
+
+- [`gmres`](gmres.md): produces it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GmresOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">GmresOptions</span>
+  </a>
+  <a class="next-link" href="cg.html">
+    <span class="label">Next</span>
+    <span class="title">cg</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,31 @@
+<!-- generated from lti.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Linear time-invariant systems
+
+The `pluss::ma::eng::lti` family describes systems whose dynamics are linear and do not change with absolute time. It supports complementary state-space and pole-zero representations, structural analysis, frequency response, and time-domain simulation.
+
+## Branches
+
+Use [State space](lti/state.md) when internal states, controllability, observability, or Gramians matter. Use [Pole-zero and response](lti/response.md) when roots, stability, second-order sections, or frequency-domain behavior are the natural language of the problem. Use [Simulation](lti/simulation.md) to propagate validated state-space systems over sampled inputs and inspect both output and state histories.
+
+The three branches share one explicit timebase convention: `sample_time == 0` denotes continuous time, while a positive sample time denotes discrete time. This prevents silent mixing of continuous poles, discrete roots, and incompatible simulation grids.
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+lti/state
+lti/response
+lti/simulation
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+lti/state
+lti/response
+lti/simulation
+```
+<!-- apiref:toctree:end -->

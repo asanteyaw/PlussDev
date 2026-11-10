@@ -1,0 +1,123 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e675fea52a55 -->
+
+# `ProblemBuilder::nl_ineq`
+
+[Back to `optim::ProblemBuilder`](../ProblemBuilder.md)
+
+The short name of `nonlinear_inequality`.
+
+## Signature
+
+```cpp
+template <typename Fn> optim::ProblemBuilder &optim::ProblemBuilder::nl_ineq(Fn &&fn);
+```
+
+## What It Does
+
+Identical to [`nonlinear_inequality`](nonlinear_inequality.md): `fn` returns `g(x)` and the constraint is `g(x) ≤ 0`.
+
+## Parameters
+
+`Fn &&fn`
+: Returns `g(x)`.
+
+## Returns
+
+The same builder, for chaining.
+
+## Practical Examples
+
+### Example 1
+
+The unit-disc problem with the short name.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+
+  const optim::OptimaState result = optim::optima(optim::problem().objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); }).nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; }), pluss::series::make({0.0, 0.0}));
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+### Example 2
+
+A halfspace written as a nonlinear row: `x₀ + x₁ ≤ 2`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+
+  const optim::OptimaState result = optim::optima(optim::problem().objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); }).nl_ineq([](const Pack &p) { return p.at("x").sum() - 2.0; }), pluss::series::make({0.0, 0.0}));
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+### Example 3
+
+Two inequalities cannot be chained; the second call replaces the first. Combine them into one callback that returns both residuals, here `x₀ + x₁ ≤ 2` and `x₀ ≤ 0.25`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+
+  const optim::OptimaState result = optim::optima(optim::problem().objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); }).nl_ineq([](const Pack &p) {
+    const pluss::Series rows = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}});
+    return rows.matmul(p.at("x").reshape({2, 1})).reshape({2}) - pluss::series::make({2.0, 0.25});
+  }), pluss::series::make({0.0, 0.0}));
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+## See Also
+
+- [`nonlinear_inequality`](nonlinear_inequality.md): the long name
+- [`ProblemBuilder`](Introduction.md): the builder
+- [`optima`](../optima.md): solves the problem
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="nl_eq.html">
+    <span class="label">Previous</span>
+    <span class="title">nl_eq</span>
+  </a>
+  <a class="next-link" href="nonlinear_analytic.html">
+    <span class="label">Next</span>
+    <span class="title">nonlinear_analytic</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

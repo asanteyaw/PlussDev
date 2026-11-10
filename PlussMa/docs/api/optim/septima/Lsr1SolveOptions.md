@@ -1,0 +1,181 @@
+<!-- generated from Lsr1SolveOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::Lsr1SolveOptions`
+
+Budgets, tolerances, the L-SR1 settings and the progress hook of an `l_sr1_trust_region` run.
+
+`step` holds the method's own settings ([`Lsr1Options`](Lsr1Options.md)); the rest are the loop controls. The run is `Converged` when the 2-norm of the gradient is at most `gradient_tolerance`. `step_tolerance` ends the run when the step is negligible, `max_no_progress_iterations` when the objective stops improving, and `max_iterations` is the budget. The hook is called each iteration with an [`Lsr1ProgressSnapshot`](Lsr1ProgressSnapshot.md) and returns `false` to stop.
+
+## Fields
+
+### `step`
+
+`optim::Lsr1Options`, default `{}`.
+
+The method's settings.
+
+### `max_iterations`
+
+`std::int64_t`, default `200`.
+
+Iteration budget.
+
+### `max_no_progress_iterations`
+
+`std::int64_t`, default `25`.
+
+Iterations without improvement before stopping.
+
+### `gradient_tolerance`
+
+`double`, default `1e-6`.
+
+The gradient 2-norm accepted as stationary.
+
+### `step_tolerance`
+
+`double`, default `1e-12`.
+
+A step below this ends the run.
+
+### `progress_hook`
+
+`std::function<bool(const optim::Lsr1ProgressSnapshot &)>`, default `empty`.
+
+Called each iteration; return `true` to stop.
+
+## Guidance
+
+Passed to `l_sr1_trust_region`.
+
+## Practical Examples
+
+### Example 1
+
+A looser gradient tolerance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  for (const double tolerance : {1e-2, 1e-8}) {
+    optim::Lsr1SolveOptions options;
+    options.gradient_tolerance = tolerance;
+    const optim::Lsr1Result result = optim::l_sr1_trust_region(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+    out.writeln("tolerance", tolerance, ": iterations =", result.iteration, ", objective =", result.objective_value);
+  }
+}
+```
+
+Output
+
+```text
+tolerance 0.0100000000 : iterations = 40 , objective = 0.0000000079
+tolerance 0.0000000100 : iterations = 43 , objective = 0.0000000000
+```
+
+### Example 2
+
+The budget.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  optim::Lsr1SolveOptions options;
+  options.max_iterations = 5;
+  const optim::Lsr1Result result = optim::l_sr1_trust_region(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+  out.writeln("exit =", optim::lsr1_exit_flag_name(result.exit_flag), ", iterations =", result.iteration);
+}
+```
+
+Output
+
+```text
+exit = MaxIterations , iterations = 5
+```
+
+### Example 3
+
+A hook that records the trust radius. It stays at its starting value here because every step falls inside the ball; it shrinks after a step the model predicted badly.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  std::vector<double> radii;
+  optim::Lsr1SolveOptions options;
+  options.max_iterations = 8;
+  options.progress_hook = [&radii](const optim::Lsr1ProgressSnapshot &s) { radii.push_back(s.trust_radius); return false; };
+  (void)optim::l_sr1_trust_region(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+  out.writeln("trust radius =", radii);
+}
+```
+
+Output
+
+```text
+trust radius = [1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000]
+```
+
+## See Also
+
+- [`l_sr1_trust_region`](l_sr1_trust_region.md): consumes it
+- [`Lsr1Options`](Lsr1Options.md): the `step` member
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Lsr1Result.html">
+    <span class="label">Previous</span>
+    <span class="title">Lsr1Result</span>
+  </a>
+  <a class="next-link" href="Lsr1State.html">
+    <span class="label">Next</span>
+    <span class="title">Lsr1State</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

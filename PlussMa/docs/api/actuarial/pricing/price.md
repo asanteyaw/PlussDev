@@ -1,0 +1,233 @@
+<!-- generated from price.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `actuarial::operators::price`
+
+Creates a pricing operator from expense and profit loads.
+
+## Signature
+
+```cpp
+actuarial::Pricing actuarial::operators::price(actuarial::Loads loads = {});
+```
+
+## What It Does
+
+Binds the [`Loads`](Loads.md) into a [`Pricing`](Pricing.md). Calling it on an [`Experience`](Experience.md) computes the pure premium {math}`L/E`, the indicated premium {math}`(L/E+F)/(1-v-\pi)` and the rate change {math}`P/P_0-1` together, so the three stay consistent in shape and assumptions. Use it whenever a rate indication is needed; use the default loads for a pure-premium indication and set the loads to move to a full premium. The loads are checked when the operator is built, the experience when it is called.
+
+## Parameters
+
+`loads`
+: Fixed expense per exposure unit and the variable and profit ratios. The default is no loads.
+
+## Returns
+
+A `Pricing` with key `"price"`.
+
+## Errors
+
+Throws `operators::price: fixed_expense must be finite and >= 0`, `operators::price: variable_expense_ratio must be finite and >= 0`, `operators::price: profit_ratio must be finite and >= 0` and `operators::price: variable_expense_ratio + profit_ratio must be < 1` when built. Calling it throws `premium_curve: numerator must be >= 0` (negative losses), `premium_curve: numerator must be finite`, `premium_curve: exposure must be >= 0`, `premium_curve: numerator and exposure must have same length`, `rate_change: current_premium must be strictly > 0` and the corresponding `must be defined` errors.
+
+## Practical Examples
+
+### Example 1: a pure-premium indication
+
+Default loads: the indicated premium equals the pure premium.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700.0, 720.0, 740.0, 760.0});
+  const actuarial::Experience experience{losses, exposure, premium};
+  const auto r = actuarial::operators::price()(experience);
+  out.writeln("pure      =", r.pure_premium.items<double>());
+  out.writeln("indicated =", r.indicated_premium.items<double>());
+  out.writeln("change    =", r.rate_change.items<double>());
+}
+```
+
+Output
+
+```text
+pure      = [520.000000, 575.000000, 540.000000, 611.111111]
+indicated = [520.000000, 575.000000, 540.000000, 611.111111]
+change    = [-0.257143, -0.201389, -0.270270, -0.195906]
+```
+
+### Example 2: a loaded indication
+
+Fixed expense, variable expense and profit.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700.0, 720.0, 740.0, 760.0});
+  const actuarial::Experience experience{losses, exposure, premium};
+  const actuarial::Loads loads{50.0, 0.15, 0.05};
+  const auto r = actuarial::operators::price(loads)(experience);
+  out.writeln("indicated =", r.indicated_premium.items<double>());
+  out.writeln("change    =", r.rate_change.items<double>());
+}
+```
+
+Output
+
+```text
+indicated = [712.500000, 781.250000, 737.500000, 826.388889]
+change    = [0.017857, 0.085069, -0.003378, 0.087354]
+```
+
+### Example 3: an empty cell
+
+A cell with no exposure has pure premium zero; the fixed expense alone remains in the indication.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700.0, 720.0, 740.0, 760.0});
+  const actuarial::Experience experience{losses, exposure, premium};
+  const actuarial::Experience gap{losses, pluss::make_series({1000.0, 0.0, 1500.0, 1800.0}), premium};
+  out.writeln("pure      =", actuarial::operators::price()(gap).pure_premium.items<double>());
+  out.writeln("indicated =", actuarial::operators::price(actuarial::Loads{50.0, 0.0, 0.0})(gap).indicated_premium.items<double>());
+}
+```
+
+Output
+
+```text
+pure      = [520.000000, 0.000000, 540.000000, 611.111111]
+indicated = [570.000000, 50.000000, 590.000000, 661.111111]
+```
+
+### Example 4: the key and reuse
+
+One operator, called twice.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700.0, 720.0, 740.0, 760.0});
+  const actuarial::Experience experience{losses, exposure, premium};
+  const actuarial::Pricing pricing = actuarial::operators::price(actuarial::Loads{0.0, 0.2, 0.0});
+  out.writeln(pricing.key(), pricing(experience).indicated_premium.items<double>()[0], pricing(experience).indicated_premium.items<double>()[0]);
+}
+```
+
+Output
+
+```text
+price 650.000000 650.000000
+```
+
+### Example 5: the errors
+
+Bad loads fail at construction, bad experience at the call.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::operators::price(actuarial::Loads{-1.0, 0.1, 0.1}); });
+  report([&] { (void)actuarial::operators::price(actuarial::Loads{0.0, 0.6, 0.5}); });
+  report([&] { (void)actuarial::operators::price()(actuarial::Experience{pluss::make_series({1.0, 2.0}), pluss::make_series({1.0, 2.0, 3.0}), pluss::make_series({1.0, 1.0})}); });
+  report([&] { (void)actuarial::operators::price()(actuarial::Experience{pluss::make_series({1.0}), pluss::make_series({1.0}), pluss::make_series({0.0})}); });
+}
+```
+
+Output
+
+```text
+operators::price: fixed_expense must be finite and >= 0
+operators::price: variable_expense_ratio + profit_ratio must be < 1
+premium_curve: numerator and exposure must have same length
+rate_change: current_premium must be strictly > 0
+```
+
+## See Also
+
+- [`Pricing`](Pricing.md): the type
+- [`Loads`](Loads.md): the assumptions
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Credibility.html">
+    <span class="label">Previous</span>
+    <span class="title">Credibility</span>
+  </a>
+  <a class="next-link" href="credibility_operator.html">
+    <span class="label">Next</span>
+    <span class="title">credibility</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

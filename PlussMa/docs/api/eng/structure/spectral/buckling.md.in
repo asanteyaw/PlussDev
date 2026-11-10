@@ -1,0 +1,70 @@
+# `structure::buckling`
+
+Finds the linearised buckling factors of a frame.
+
+## Signature
+
+```cpp
+structure::BuckResult structure::buckling(const structure::Frame& frame, const pluss::Series& reference_load, const structure::Fix& fix, const structure::EigOptions& options = {});
+```
+
+## What It Does
+
+Solves the frame under a reference load to find its axial forces, builds the geometric stiffness from them, and returns the lowest positive multipliers `lambda` of `K phi = lambda K_g phi`: the frame buckles when the load is `lambda` times the reference load.
+
+## Parameters
+
+`frame`
+: A frame; no density is needed.
+
+`reference_load`
+: A nodal load `[..., node, 3]` that compresses at least one member.
+
+`fix`
+: The supports.
+
+`options`
+: Count and iteration controls.
+
+## Returns
+
+A `BuckResult`.
+
+## Errors
+
+Throws `std::invalid_argument` when the reference load puts no member in compression (a zero, tensile or purely transverse load), or the inputs are malformed. Throws `std::runtime_error` when the requested factors cannot be extracted or an inner solve does not converge.
+
+## Interpretation and Use
+
+The analysis is linearised: it ignores imperfections and yielding, and the finite-element factors approach the exact value from above, so refine until the lowest factor stops moving. The reference load fixes the pattern of compression; scaling it scales the factor inversely.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pinned column and a cantilever with the buckling factors and shapes.
+
+@@example Eng/api/structure_buckling.cpp@@
+
+### Example 2
+
+Four end conditions against Euler's loads.
+
+@@example Eng/api/structure_buckling_cases.cpp@@
+
+### Example 3
+
+A tensile reference load.
+
+@@example Eng/api/structure_spectral_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="modes.html">
+    <span class="label">Previous</span>
+    <span class="title">modes</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,154 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 012c0a42784c -->
+
+# `actuarial::Operator<Signature>::operator_call`
+
+[Back to `actuarial::Operator<Signature>`](../Operator.md)
+
+Calls the stored callable.
+
+## Signature
+
+```cpp
+Result actuarial::Operator<Signature>::operator()(Args... args) const;
+```
+
+## What It Does
+
+Forwards the arguments to the stored callable and returns its result, with the types fixed by `Signature`. The call is `const`, so one operator can be shared. Whatever the callable throws propagates. Library operators are called the same way: a `Valuation` takes a `Cashflow`, a `LossTransform` takes a loss `Series`.
+
+## Parameters
+
+`args...`
+: Arguments convertible to the parameter types of `Signature`.
+
+## Returns
+
+The callable's result.
+
+## Errors
+
+Throws `actuarial Operator is undefined` for an empty operator; exceptions from the callable propagate unchanged.
+
+## Practical Examples
+
+### Example 1: a scalar call
+
+Call the operator like the function it wraps.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Operator<double(double)> square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  out.writeln(square(1.5), square(-2.0));
+}
+```
+
+### Example 2: a vector call
+
+One call applies a library operator to a whole series of losses.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({50.0, 150.0, 400.0});
+  out.writeln(actuarial::operators::deductible(100.0)(losses).items<double>());
+}
+```
+
+### Example 3: composing calls
+
+The result of one operator feeds the next.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Operator<double(double)> square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  out.writeln(square(square(2.0)));
+}
+```
+
+### Example 4: the errors
+
+An empty operator and a throwing callable.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::Operator<double(double)>{}(1.0); });
+  const auto strict = actuarial::make_operator<double(double)>("strict", [](double x) { if (x < 0) throw std::runtime_error("negative input"); return x; });
+  report([&] { (void)strict(-1.0); });
+}
+```
+
+## See Also
+
+- [`Operator`](../Operator.md): the type
+- [`make_operator`](../make_operator.md): builds one
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="operator_bool.html">
+    <span class="label">Previous</span>
+    <span class="title">operator_bool</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

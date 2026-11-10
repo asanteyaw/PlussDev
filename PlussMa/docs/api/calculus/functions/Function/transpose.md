@@ -1,0 +1,162 @@
+<!-- generated from transpose.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ea76aa4cfaf6 -->
+
+# `math::Function::transpose`
+
+[Back to `math::Function`](../Function.md)
+
+Swaps two output axes: the last two by default, or any two you name.
+
+## Signature
+
+```cpp
+math::Function math::Function::transpose() const;
+math::Function math::Function::transpose(std::int64_t axis0, std::int64_t axis1) const;
+```
+
+## What It Does
+
+`transpose()` swaps the last two output axes, which for a matrix is the ordinary transpose, `[m, n] → [n, m]`. `transpose(axis0, axis1)` swaps any two output axes of a tensor. As with every tensor method the axis numbers count output axes from zero and ignore batch axes, so a batched matrix function transposes each matrix in the batch.
+
+Transposition is needed when a product pairs the wrong axes (`AᵀB` rather than `AB`), when a Jacobian is wanted as columns of gradients instead of rows, and in identities such as `(AB)ᵀ = BᵀAᵀ`. It only reorders; the values are untouched. A function with fewer than two output axes cannot be transposed.
+
+## Parameters
+
+`std::int64_t axis0`
+: The first output axis to swap.
+
+`std::int64_t axis1`
+: The second output axis to swap.
+
+## Returns
+
+A new `Function` with the two axes exchanged.
+
+## Errors
+
+- Fewer than two output axes: `math::Function::transpose: needs at least two output axes`.
+- An axis number outside the output rank is refused.
+
+## Practical Examples
+
+### Example 1
+
+The transpose of a `3 × 2` matrix function is `2 × 3`; the rows become columns.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto A = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}).reshape({3, 2});  // 3 x 2
+
+  const math::Function m = math::function({"x"}, [&](math::Function x) { return math::function(A) * x; });
+  out.writeln("shape:", m.shape(), "  transposed:", m.transpose().shape());
+  out.writeln("A at 1:  ", m(1.0).reshape({6}).items<double>());
+  out.writeln("A^T at 1:", m.transpose()(1.0).reshape({6}).items<double>());
+}
+```
+
+Output
+
+```text
+shape: [3, 2]   transposed: [2, 3]
+A at 1:   [1.0000, 2.0000, 3.0000, 4.0000, 5.0000, 6.0000]
+A^T at 1: [1.0000, 3.0000, 5.0000, 2.0000, 4.0000, 6.0000]
+```
+
+### Example 2
+
+Swapping chosen axes of a tensor. In a function of shape `[2, 2, 2]`, `transpose(0, 2)` exchanges the first and last axes; `transpose(1, 2)` is what the no-argument form does.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function t = math::function({"x"}, [](math::Function x) {
+    const auto pair = [&](double a, double b) { return math::stack({x + a, x + b}); };
+    return math::stack({math::stack({pair(0, 1), pair(2, 3)}), math::stack({pair(4, 5), pair(6, 7)})});
+  });
+  out.writeln("original:       ", t(0.0).reshape({8}).items<double>());
+  out.writeln("transpose(0, 2):", t.transpose(0, 2)(0.0).reshape({8}).items<double>());
+  out.writeln("transpose(1, 2):", t.transpose(1, 2)(0.0).reshape({8}).items<double>());
+  out.writeln("transpose():    ", t.transpose()(0.0).reshape({8}).items<double>());
+}
+```
+
+Output
+
+```text
+original:        [0.0000, 4.0000, 2.0000, 6.0000, 1.0000, 5.0000, 3.0000, 7.0000]
+transpose(0, 2): [0.0000, 1.0000, 2.0000, 3.0000, 4.0000, 5.0000, 6.0000, 7.0000]
+transpose(1, 2): [0.0000, 2.0000, 4.0000, 6.0000, 1.0000, 3.0000, 5.0000, 7.0000]
+transpose():     [0.0000, 2.0000, 4.0000, 6.0000, 1.0000, 3.0000, 5.0000, 7.0000]
+```
+
+The last two lines are equal.
+
+### Example 3
+
+The product rule for transposes, `(AB)ᵀ = BᵀAᵀ`, checked on matrices that depend on `x`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto A = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}).reshape({3, 2});  // 3 x 2
+
+  const auto B = pluss::make_series({1.0, 0.0, 2.0, 1.0, 0.0, 3.0, 1.0, 1.0}).reshape({2, 4});
+  const math::Function left = math::function({"x"}, [&](math::Function x) { return (math::function(A).matmul(math::function(B)) * x).transpose(); });
+  const math::Function right = math::function({"x"}, [&](math::Function x) { return math::function(B).transpose().matmul(math::function(A).transpose()) * x; });
+  out.writeln("(AB)^T:    ", left(2.0).reshape({12}).items<double>());
+  out.writeln("B^T A^T:   ", right(2.0).reshape({12}).items<double>());
+}
+```
+
+Output
+
+```text
+(AB)^T:     [2.0000, 6.0000, 10.0000, 12.0000, 24.0000, 36.0000, 8.0000, 20.0000, 32.0000, 6.0000, 14.0000, 22.0000]
+B^T A^T:    [2.0000, 6.0000, 10.0000, 12.0000, 24.0000, 36.0000, 8.0000, 20.0000, 32.0000, 6.0000, 14.0000, 22.0000]
+```
+
+## See Also
+
+- [`contract`](contract.md): contract any axes
+- [`matmul`](matmul.md): the matrix product
+- [`shape`](shape.md): see the axes
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="trace.html">
+    <span class="label">Previous</span>
+    <span class="title">trace</span>
+  </a>
+  <a class="next-link" href="variables.html">
+    <span class="label">Next</span>
+    <span class="title">variables</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,65 @@
+# `power::dc`
+
+Solves the linear DC power flow.
+
+## Signature
+
+```cpp
+power::DcResult power::dc(const power::Grid& grid);
+```
+
+## What It Does
+
+Assumes unit voltage magnitudes, lossless lines and small angle differences, so that the active flow on a line is `(theta_i - theta_j) / x` and the power balance is the linear system `B theta = P`. One solve gives the angles, the injections and the flows of every scenario.
+
+## Parameters
+
+`grid`
+: The compiled network.
+
+## Returns
+
+A `DcResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for a malformed grid. The solve itself has no failure state for a connected network.
+
+## Interpretation and Use
+
+Use it where resistance is small against reactance and voltages are near nominal: screening, sensitivities, contingencies and dispatch. It cannot see voltages, reactive power or losses.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A ring with flows that can be found by hand.
+
+@@example Eng/api/power_dc_ring.cpp@@
+
+### Example 2
+
+Linearity: a sweep of load levels.
+
+@@example Eng/api/power_dc_sweep.cpp@@
+
+### Example 3
+
+Compared with the AC solution, and its lack of losses.
+
+@@example Eng/api/power_dc_vs_ac.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="AcResult.html">
+    <span class="label">Previous</span>
+    <span class="title">AcResult</span>
+  </a>
+  <a class="next-link" href="ac.html">
+    <span class="label">Next</span>
+    <span class="title">ac</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

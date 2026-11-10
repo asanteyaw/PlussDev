@@ -1,0 +1,180 @@
+# `pricing::OptionVolMetrics`
+
+The log-likelihood, conditional variances, conditional means and standardised innovations of returns under pricing (NGARCH) dynamics.
+
+`loglik` and `loglik_per_obs` are the Gaussian likelihood of the returns under the pricing dynamics (with the risk premium in the mean); `variance` is the conditional variance `[T]`, `mean` the conditional mean `r + λ√h − h/2` `[T]`, and `standardized_innovation` the standardised shocks `(R − mean)/√h` `[T]`. If the model is right the innovations are independent standard normals.
+
+## Fields
+
+### `loglik`
+
+`double`, default `NaN`.
+
+Log-likelihood of the returns.
+
+### `loglik_per_obs`
+
+`pluss::Series`, default `undefined`.
+
+`[T]`.
+
+### `variance`
+
+`pluss::Series`, default `undefined`.
+
+`[T]` conditional variances.
+
+### `mean`
+
+`pluss::Series`, default `undefined`.
+
+`[T]` conditional means.
+
+### `standardized_innovation`
+
+`pluss::Series`, default `undefined`.
+
+`[T]`: `(R − mean)/√variance`.
+
+## Guidance
+
+Returned by `pricing_metrics`.
+
+## Practical Examples
+
+### Example 1
+
+Shapes and sum of terms.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const Series daily = returns * 0.01;   // log returns in decimals, the unit the pricing model assumes
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const auto m = fin::pricing::pricing_metrics(daily, fin::volatility::Ngarch11Params{.omega = 3e-6, .alpha = 0.06, .beta = 0.88, .gamma = 0.5}, cfg);
+  out.writeln("variance", m.variance.sizes(), " mean", m.mean.sizes(), " innovations", m.standardized_innovation.sizes(), "; loglik", m.loglik, " = sum of terms", m.loglik_per_obs.sum().item<double>());
+}
+```
+
+### Example 2
+
+Standardised innovations of the true model are approximately standard normal: mean near 0, variance near 1.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const Series daily = returns * 0.01;   // log returns in decimals, the unit the pricing model assumes
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const auto fit = ts::Garch::fit_mle(daily, {}, cfg);
+  const auto m = fin::pricing::pricing_metrics(daily, fin::volatility::to_pricing_params(fit, 0.0), cfg);
+  out.writeln("innovations: mean", m.standardized_innovation.mean().item<double>(), ", variance", m.standardized_innovation.var().item<double>());
+}
+```
+
+### Example 3
+
+The conditional mean follows the premium: `mean = r + λ√h − h/2`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const Series daily = returns * 0.01;   // log returns in decimals, the unit the pricing model assumes
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const fin::volatility::Ngarch11Params p{.omega = 3e-6, .alpha = 0.06, .beta = 0.88, .lambda = 0.05, .r = 1e-4};
+  const auto m = fin::pricing::pricing_metrics(daily, p, cfg);
+  out.writeln("max |mean - (r + lambda sqrt(h) - h/2)| =", (m.mean - (m.variance.sqrt() * 0.05 + 1e-4 - m.variance * 0.5)).abs().max().item<double>());
+}
+```
+
+## See Also
+
+- [`pricing_metrics`](pricing_metrics.md): produces it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Ngarch11Params.html">
+    <span class="label">Previous</span>
+    <span class="title">Ngarch11Params</span>
+  </a>
+  <a class="next-link" href="ReturnsMetrics.html">
+    <span class="label">Next</span>
+    <span class="title">ReturnsMetrics</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

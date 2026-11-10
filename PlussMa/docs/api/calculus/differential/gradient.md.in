@@ -1,0 +1,162 @@
+# `operators::gradient`
+
+The vector of first partial derivatives of a scalar function.
+
+## Signature
+
+```cpp
+operators::Operator operators::gradient(pluss::StackArray<std::string_view> variables = {}, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+`gradient()` is the operator `f ↦ ∇f = (∂f/∂x₁, …, ∂f/∂xₙ)`. It takes a scalar-valued function of `n` variables and returns a vector-valued function of the same variables whose single output axis has length `n`. With no arguments the partials are taken with respect to every variable of the function, in declaration order; naming variables, `gradient({"z", "x"})`, takes only those, in the order given.
+
+The gradient points in the direction of steepest increase and is the object of gradient descent, of the first-order optimality condition `∇f = 0`, and of the normal to a level set. It evaluates on arrays of points: for a batch of `m` points the result has shape `[m, n]`.
+
+The input must be scalar-valued (rank 0); for a vector-valued function use [`jacobian`](jacobian.md). Mixed and higher derivatives are in [`hessian`](hessian.md).
+
+## Parameters
+
+`pluss::StackArray<std::string_view> variables`
+: The variables to differentiate with respect to, in the order they should appear in the result. Empty (the default) means all variables of the function, in declaration order.
+
+`operators::DiffOptions options`
+: Non-smooth policy, fallback and size limit.
+
+## Returns
+
+An `Operator` whose application returns the gradient as a rank-1 `Function` of length equal to the number of variables.
+
+## Errors
+
+- The input must be scalar-valued: `input Function must be scalar-valued`.
+- An unknown variable raises `unknown variable '<name>'`.
+
+## Practical Examples
+
+### Example 1
+
+The gradient of a function of three variables at a point, with all variables (declaration order) and with a chosen subset in a chosen order. For `f = xy + yz²` at `(1, 2, 3)`: `∇f = (y, x + z², 2yz) = (2, 10, 12)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return x * y + y * z * z; });
+  const auto point = {pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)};
+  const math::Function all = operators::gradient()(f);
+  const math::Function some = operators::gradient({"z", "x"})(f);
+  out.writeln("all variables:  shape", all.shape(), all(point).items<double>());
+  out.writeln("{z, x}:         shape", some.shape(), some(point).items<double>(), " (f_z = 12, f_x = 2)");
+}
+```
+
+### Example 2
+
+A batch of points gives one gradient per point: shape `[points, variables]`. Three points of `f = xy + yz²`, the same value in each variable.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return x * y + y * z * z; });
+  const auto t = pluss::make_series({1.0, 2.0, 3.0});
+  const pluss::Series g = operators::gradient()(f)({t, t, t});
+  out.writeln("shape:", g.sizes());
+  out.writeln("gradients:", g.reshape({9}).items<double>(), " (y, x + z^2, 2yz at t, t, t)");
+}
+```
+
+### Example 3
+
+Gradient descent. A loop that follows the negative gradient of the Rosenbrock-type bowl `(x − 1)² + 10 (y − x²)²` converges toward its minimum at `(1, 1)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return (x - 1.0) * (x - 1.0) + 10.0 * (y - x * x) * (y - x * x); });
+  const math::Function g = operators::gradient()(f);
+  double x = -0.5, y = 0.5;
+  for (int step = 0; step <= 400; ++step) {
+    const auto gradient = g({pluss::make_series(x), pluss::make_series(y)}).items<double>();
+    if (step % 100 == 0) out.writeln("step", step, ": (x, y) =", x, y, "  f =", f({pluss::make_series(x), pluss::make_series(y)}).item<double>());
+    x -= 0.01 * gradient[0];
+    y -= 0.01 * gradient[1];
+  }
+}
+```
+
+### Example 4
+
+The input must be scalar-valued, and the variables must exist.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function vector = math::function({"x", "y"}, [](math::Function x, math::Function y) { return math::stack({x, y}); });
+  const math::Function scalar = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y; });
+  try { (void)operators::gradient()(vector); } catch (const pluss::Error &e) { out.writeln("vector-valued input:", first_line(e)); }
+  try { (void)operators::gradient({"w"})(scalar); } catch (const pluss::Error &e) { out.writeln("unknown variable:   ", first_line(e)); }
+}
+```
+
+## See Also
+
+- [`jacobian`](jacobian.md): for a vector-valued function
+- [`hessian`](hessian.md): second derivatives
+- [`differential`](differential.md): one partial derivative
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="differential.html">
+    <span class="label">Previous</span>
+    <span class="title">differential</span>
+  </a>
+  <a class="next-link" href="hessian.html">
+    <span class="label">Next</span>
+    <span class="title">hessian</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

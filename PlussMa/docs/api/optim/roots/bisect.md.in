@@ -1,0 +1,206 @@
+# `roots::bisect`
+
+Finds a root of `f` in a bracket by repeatedly halving the interval, for every lane at once.
+
+## Signature
+
+```cpp
+roots::Result roots::bisect(const roots::Fn &f, pluss::Series lo, pluss::Series hi, const roots::Options &options = {});
+```
+
+## What It Does
+
+`bisect` is the safest root finder: given a bracket `[lo, hi]` on which `f` changes sign, it halves the bracket again and again, keeping the half that still contains the sign change, and returns the midpoint of the final bracket. It cannot diverge and does not need a derivative; the price is slow, linear convergence (one binary digit per iteration), so 100 iterations narrow the bracket by a factor of about `10³⁰`.
+
+`f` maps a `Series` of any shape to a `Series` of the same shape; each element is a separate *lane* with its own bracket or starting value, and all lanes advance together, so one call solves a whole parameter sweep with no host loop. `lo` and `hi` are `Series` of the same shape, one bracket per lane.
+
+If some lane has no sign change (`f(lo)` and `f(hi)` have the same sign) there is no root to find in that lane. The solver does not throw: it reports `bracketed = false` in the [`Result`](Result.md) and the result for such a lane is simply where the halving ended, which is not a root. Always check `bracketed` and the residual. The iteration stops after `max_iterations`, or earlier when `x_tolerance` or `f_tolerance` is positive and every lane meets it (checked every `check_every` iterations); with both tolerances at their default of 0 it always runs all iterations.
+
+## Parameters
+
+`const roots::Fn &f`
+: The function whose root is wanted: `std::function<Series(const Series &)>`, mapping a `Series` of any shape to a `Series` of the same shape. It is called on arrays, never element by element.
+
+`pluss::Series lo`
+: The lower end of each lane's bracket.
+
+`pluss::Series hi`
+: The upper end of each lane's bracket, the same shape as `lo`.
+
+`const roots::Options &options`
+: Iteration limit, tolerances and the early-exit cadence. See `Options`.
+
+## Returns
+
+A `roots::Result`: `root` (the midpoint of the final bracket), `residual` (`f(root)`), `iterations`, and `bracketed` (false when some lane had no sign change).
+
+## Errors
+
+- `roots::bisect: lo and hi must have the same shape`.
+
+## Practical Examples
+
+### Example 1
+
+One call, three lanes. `x² − 2` has its positive root `√2 = 1.41421356…`; the brackets `[1, 2]`, `[0, 2]` and `[1.4, 3]` each contain it, and every lane converges to the same value.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  const Series lo = pluss::make_series({1.0, 0.0, 1.4});
+  const Series hi = pluss::make_series({2.0, 2.0, 3.0});
+  const roots::Result result = roots::bisect(f, lo, hi);
+
+  out.writeln("root       =", result.root.items<double>());
+  out.writeln("residual   =", result.residual.items<double>());
+  out.writeln("iterations =", result.iterations, ", bracketed =", result.bracketed);
+}
+```
+
+### Example 2
+
+Stopping early. With `x_tolerance` set, the loop stops as soon as every bracket is narrower than the tolerance, checked every `check_every` iterations; 40 iterations are enough for a bracket of width 1 to reach `1e-12`. The default `check_every` is 8, so the stop happens at a multiple of it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(14));
+  const pluss::subsp::math::roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  pluss::subsp::math::roots::Options options;
+  options.x_tolerance = 1e-12;
+  const auto result = pluss::subsp::math::roots::bisect(f, pluss::make_series(1.0), pluss::make_series(2.0), options);
+
+  out.writeln("iterations =", result.iterations);
+  out.writeln("root       =", result.root.item<double>());
+  out.writeln("|error|    =", std::abs(result.root.item<double>() - std::sqrt(2.0)));
+}
+```
+
+### Example 3
+
+A missing sign change. `x² − 2` is negative on all of `[0, 1]`, so the first lane has no root in its bracket; the second lane is fine. The call still returns, with `bracketed = false` and a large residual in the failed lane.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  const roots::Result result = roots::bisect(f, pluss::make_series({0.0, 1.0}), pluss::make_series({1.0, 2.0}));
+
+  out.writeln("bracketed =", result.bracketed);
+  out.writeln("root      =", result.root.items<double>());
+  out.writeln("residual  =", result.residual.items<double>(), "  (the first lane is not a root)");
+}
+```
+
+### Example 4
+
+A parameter sweep. The roots of `x³ − c` for `c = 1, 8, 27, 64, 125` are the cube roots `1, 2, 3, 4, 5`, found by five lanes in one call.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const Series c = pluss::make_series({1.0, 8.0, 27.0, 64.0, 125.0});
+  const roots::Fn f = [&](const Series &x) { return x * x * x - c; };
+  const roots::Result result = roots::bisect(f, c * 0.0, c + 1.0);
+
+  out.writeln("c     =", c.items<double>());
+  out.writeln("c^1/3 =", result.root.items<double>());
+}
+```
+
+### Example 5
+
+Mismatched brackets are refused: `lo` and `hi` must have the same shape.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const std::exception &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  try {
+    (void)roots::bisect(f, pluss::make_series({0.0, 0.0, 0.0}), pluss::make_series({1.0, 2.0}));
+  } catch (const std::exception &e) {
+    out.writeln("error =", first_line(e));
+  }
+}
+```
+
+## See Also
+
+- [`illinois`](illinois.md): also bracketed, but converges superlinearly
+- [`newton`](newton.md): faster when a good start is known
+- [`Options`](Options.md): iteration limit and tolerances
+- [`Result`](Result.md): what the call returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Result.html">
+    <span class="label">Previous</span>
+    <span class="title">Result</span>
+  </a>
+  <a class="next-link" href="householder.html">
+    <span class="label">Next</span>
+    <span class="title">householder</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

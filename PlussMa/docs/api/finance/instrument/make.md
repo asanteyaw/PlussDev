@@ -1,0 +1,141 @@
+<!-- generated from make.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `instrument::make`
+
+A European call or put with one strike and one maturity.
+
+## Signature
+
+```cpp
+instrument::Vanilla instrument::make(pricing::OptionType type, double strike, double maturity, pluss::Config cfg = f64_default());
+```
+
+## What It Does
+
+Builds a [`Vanilla`](Vanilla.md) with one-element `strike` and `maturity` `Series` (Float64 by default), European exercise and the given type. It is the quickest way to describe one option; for a strip of strikes or maturities fill the `Series` yourself. Nothing is validated until the field is priced.
+
+## Parameters
+
+`pricing::OptionType type`
+: `Call` or `Put`.
+
+`double strike`
+: The strike.
+
+`double maturity`
+: Years to expiry.
+
+`pluss::Config cfg`
+: Type and device of the `Series`.
+
+## Returns
+
+A `Vanilla`.
+
+## Errors
+
+- An unsupported combination is reported when the field is priced, not when the instrument is built.
+
+## Practical Examples
+
+### Example 1
+
+A one-year at-the-money call, priced under Black-Scholes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(100.0, 0.05, 0.02),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  out.writeln(field.price().price.items<double>());
+}
+```
+
+Output
+
+```text
+[9.227006]
+```
+
+### Example 2
+
+What it builds: one-element strike and maturity, European exercise.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto inst = fin::instrument::make(fin::pricing::Put, 95.0, 0.5);
+  out.writeln("strike", inst.strike.items<double>(), "maturity", inst.maturity.items<double>(), "European:", inst.exercise == fin::pricing::ExerciseStyle::European);
+}
+```
+
+Output
+
+```text
+strike [95.00] maturity [0.50] European: true
+```
+
+### Example 3
+
+The dtype can be chosen.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto inst = fin::instrument::make(fin::pricing::Call, 100.0, 1.0, pluss::Config{}.with_dtype(pluss::ScalarType::Float32));
+  out.writeln(inst.strike.dtype(), inst.maturity.dtype());
+}
+```
+
+Output
+
+```text
+float32 float32
+```
+
+## See Also
+
+- [`Vanilla`](Vanilla.md): what it builds
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="bermudan.html">
+    <span class="label">Previous</span>
+    <span class="title">bermudan</span>
+  </a>
+  <a class="next-link" href="market_make.html">
+    <span class="label">Next</span>
+    <span class="title">make</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

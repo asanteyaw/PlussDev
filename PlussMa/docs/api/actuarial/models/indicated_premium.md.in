@@ -1,0 +1,189 @@
+# `actuarial::models::indicated_premium`
+
+The premium indicated by a pure premium and loads.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::models::indicated_premium(const pluss::Series &pure_premium, double fixed_expense, double variable_expense_ratio, double profit_ratio);
+```
+
+## What It Does
+
+Returns {math}`P=\dfrac{\text{pure}+F}{1-v-\pi}`: the fixed expense per unit of exposure is added to the pure premium, then the total is grossed up so that the variable expenses (a share `v` of the premium) and the profit (a share {math}`\pi`) are covered out of the premium itself. Because the ratios are shares of the premium, not of the pure premium, the divisor is what is left after them. It is the second step of [`operators::price`](../pricing/price.md), usable on its own on a series of pure premiums of any shape.
+
+## Parameters
+
+`pure_premium`
+: Series of pure premiums, finite and 0 or more.
+
+`fixed_expense`
+: Expense per unit of exposure, finite and 0 or more.
+
+`variable_expense_ratio`
+: Share of the premium for variable expenses, finite and 0 or more.
+
+`profit_ratio`
+: Share of the premium for profit, finite and 0 or more, with the two ratios summing to less than 1.
+
+## Returns
+
+A series of the shape of `pure_premium`.
+
+## Errors
+
+Throws `indicated_premium: fixed_expense must be >= 0`, `indicated_premium: variable_expense_ratio must be >= 0`, `indicated_premium: profit_ratio must be >= 0` (and the `must be finite` forms), `indicated_premium: variable_expense_ratio + profit_ratio must be < 1`, and the `indicated_premium: pure_premium must be …` errors.
+
+## Practical Examples
+
+### Example 1: all three loads
+
+Fixed expense 50, variable expense 15% and profit 5%.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  out.writeln(actuarial::models::indicated_premium(pluss::make_series({520.0, 575.0, 540.0, 611.1}), 50.0, 0.15, 0.05).items<double>());
+}
+```
+
+### Example 2: by hand
+
+(520 + 50) / (1 - 0.15 - 0.05).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln((520.0 + 50.0) / 0.80, actuarial::models::indicated_premium(pluss::make_series({520.0}), 50.0, 0.15, 0.05).items<double>()[0]);
+}
+```
+
+### Example 3: each load on its own
+
+The effect of the fixed expense, the variable expense and the profit separately.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series pure = pluss::make_series({520.0});
+  out.writeln("fixed 50:        ", actuarial::models::indicated_premium(pure, 50.0, 0.0, 0.0).items<double>()[0]);
+  out.writeln("variable 15%:    ", actuarial::models::indicated_premium(pure, 0.0, 0.15, 0.0).items<double>()[0]);
+  out.writeln("profit 5%:       ", actuarial::models::indicated_premium(pure, 0.0, 0.0, 0.05).items<double>()[0]);
+  out.writeln("no loads:        ", actuarial::models::indicated_premium(pure, 0.0, 0.0, 0.0).items<double>()[0]);
+}
+```
+
+### Example 4: a grid of pure premiums
+
+The loads apply elementwise to a matrix.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const pluss::Series pure = pluss::make_series({100.0, 200.0, 300.0, 400.0}, {2, 2});
+  out.writeln(actuarial::models::indicated_premium(pure, 10.0, 0.2, 0.1).reshape({4}).items<double>());
+}
+```
+
+### Example 5: the errors
+
+Negative or non-finite loads and ratios that sum to one or more are refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::models::indicated_premium(pluss::make_series({520.0}), -1.0, 0.1, 0.1); });
+  report([&] { (void)actuarial::models::indicated_premium(pluss::make_series({520.0}), 0.0, -0.1, 0.1); });
+  report([&] { (void)actuarial::models::indicated_premium(pluss::make_series({520.0}), 0.0, 0.1, std::nan("")); });
+  report([&] { (void)actuarial::models::indicated_premium(pluss::make_series({520.0}), 0.0, 0.6, 0.4); });
+  report([&] { (void)actuarial::models::indicated_premium(pluss::make_series({-520.0}), 0.0, 0.1, 0.1); });
+}
+```
+
+## See Also
+
+- [`rate_change`](rate_change.md): compares it with the current premium
+- [`operators::price`](../pricing/price.md): the operator that runs these steps together
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="credibility_blend.html">
+    <span class="label">Previous</span>
+    <span class="title">credibility_blend</span>
+  </a>
+  <a class="next-link" href="rate_change.html">
+    <span class="label">Next</span>
+    <span class="title">rate_change</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

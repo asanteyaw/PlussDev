@@ -1,0 +1,160 @@
+# `bridge::weighted_joint_loglik`
+
+The weighted sum of a returns log-likelihood and an options log-likelihood.
+
+## Signature
+
+```cpp
+double bridge::weighted_joint_loglik(double returns_loglik, double options_loglik, const bridge::JointLikelihoodWeights &weights = {});
+```
+
+## What It Does
+
+`w_r · returns_loglik + w_o · options_loglik`, the objective to maximise when estimating pricing parameters from returns and option prices together. With the default weights it is the plain sum. See [`JointLikelihoodWeights`](JointLikelihoodWeights.md) for choosing the weights.
+
+## Parameters
+
+`double returns_loglik`
+: Log-likelihood of the returns.
+
+`double options_loglik`
+: Log-likelihood of the option prices.
+
+`const bridge::JointLikelihoodWeights &weights`
+: The two weights.
+
+## Returns
+
+The weighted sum.
+
+## Errors
+
+- A negative or non-finite weight throws (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+The default weights: a plain sum.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  out.writeln(fin::bridge::weighted_joint_loglik(-1500.0, -120.0));
+}
+```
+
+### Example 2
+
+Weighted: the options count ten times as much.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  out.writeln(fin::bridge::weighted_joint_loglik(-1500.0, -120.0, {.returns_weight = 1.0, .options_weight = 10.0}));
+}
+```
+
+### Example 3
+
+The joint objective from real pieces: the returns log-likelihood of a fitted model plus a Gaussian log-likelihood of option-price errors.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const auto garch = ts::Garch::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const double returns_loglik = fin::bridge::returns_metrics(returns, garch, cfg).loglik;
+  const double errors[] = {0.05, -0.02, 0.01};
+  double options_loglik = 0.0;
+  for (const double e : errors) options_loglik += -0.5 * (e * e / 0.0025 + std::log(2.0 * M_PI * 0.0025));
+  out.writeln("returns", returns_loglik, ", options", options_loglik, ", joint", fin::bridge::weighted_joint_loglik(returns_loglik, options_loglik, {.returns_weight = 1.0 / 1500.0, .options_weight = 1.0 / 3.0}));
+}
+```
+
+### Example 4
+
+Negative weights are refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  try {
+    (void)(fin::bridge::weighted_joint_loglik(-1.0, -1.0, {.returns_weight = -1.0}));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`weighted_joint_nll`](weighted_joint_nll.md): its negative
+- [`JointLikelihoodWeights`](JointLikelihoodWeights.md): the weights
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="variance_forecast.html">
+    <span class="label">Previous</span>
+    <span class="title">variance_forecast</span>
+  </a>
+  <a class="next-link" href="weighted_joint_nll.html">
+    <span class="label">Next</span>
+    <span class="title">weighted_joint_nll</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

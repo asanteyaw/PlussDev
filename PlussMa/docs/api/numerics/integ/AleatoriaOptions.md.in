@@ -1,0 +1,142 @@
+# `integ::AleatoriaOptions`
+
+Sample count, seed and variance-reduction setting of Monte Carlo integration.
+
+`samples` is the number of random points (and of integrand evaluations); the standard error shrinks like `1/√samples`, so four times the samples halves it. `seed` makes a run reproducible: the same seed and options give the same estimate. `stratified` draws one point per equal stratum. `dtype` and `platform` say where the samples live and in what precision, and `infinite_domain_epsilon` applies only to an infinite bound of the one-variable form (the same meaning as in `QuadraOptions`).
+
+## Fields
+
+### `samples`
+
+`std::int64_t`, default `1000000`.
+
+Random points, and integrand evaluations.
+
+### `seed`
+
+`std::uint64_t`, default `0`.
+
+Seed of the random numbers.
+
+### `dtype`
+
+`pluss::ScalarType`, default `Float64`.
+
+Precision of the samples.
+
+### `platform`
+
+`pluss::Platform`, default `CPU`.
+
+Where the samples live.
+
+### `stratified`
+
+`bool`, default `false`.
+
+One sample per equal-width stratum.
+
+### `infinite_domain_epsilon`
+
+`double`, default `1e-10`.
+
+For infinite bounds: distance from the substitution's singular end.
+
+## Guidance
+
+Passed to `aleatoria`, or set as `IntegraOptions::monte_carlo`.
+
+## Practical Examples
+
+### Example 1
+
+The sample count. Four times the samples roughly halves the standard error.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(7));
+  for (const std::int64_t n : {10000, 40000, 160000}) {
+    integ::AleatoriaOptions options;
+    options.samples = n;
+    options.seed = 1;
+    const integ::AleatoriaResult r = integ::aleatoria([](const Series &t) { return t.square(); }, 0.0, 1.0, options);
+    out.writeln("samples", n, ": standard error =", r.standard_error);
+  }
+}
+```
+
+### Example 2
+
+The seed. The same seed repeats a run; another seed gives an independent estimate.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  for (const std::uint64_t seed : {1, 1, 2}) {
+    integ::AleatoriaOptions options;
+    options.samples = 20000;
+    options.seed = seed;
+    out.writeln("seed", seed, ": estimate =", integ::aleatoria([](const Series &t) { return t.square(); }, 0.0, 1.0, options).value.item<double>());
+  }
+}
+```
+
+### Example 3
+
+Single precision on the samples.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  integ::AleatoriaOptions options;
+  options.samples = 50000;
+  options.seed = 4;
+  options.dtype = pluss::ScalarType::Float32;
+  const integ::AleatoriaResult r = integ::aleatoria([](const Series &t) { return t.square(); }, 0.0, 1.0, options);
+  out.writeln("estimate =", r.value.item<float>(), ", is Float32 =", r.value.scalar_type() == pluss::ScalarType::Float32);
+}
+```
+
+## See Also
+
+- [`aleatoria`](aleatoria.md): uses it
+- [`AleatoriaResult`](AleatoriaResult.md): what it returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="AleatoriaResult.html">
+    <span class="label">Next</span>
+    <span class="title">AleatoriaResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

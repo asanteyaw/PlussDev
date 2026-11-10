@@ -1,0 +1,36 @@
+# Stochastic Processes API Reference
+
+The stochastic-process tools of PlussMa live in `pluss::subsp::math::sde`. They simulate stochastic differential equations over whole `Series` of independent paths, differentiate those simulations with respect to the initial state and the parameters, and integrate against explicit Wiener and jump paths under the Itô, Stratonovich and Marcus conventions.
+
+```cpp
+#include <pluss/ma.h>
+
+namespace sde = pluss::subsp::math::sde;
+```
+
+Every page of this reference documents one function, enumeration or options structure: what it is, when to call it, every parameter and field, what it returns and what it refuses, and programs with real output that cover each overload and each option.
+
+Looking for the mathematics (why the conventions differ, Itô's lemma, Malliavin calculus)? The {guide}`stochastic processes guide <stochastic>` develops it. The calculus operators that act directly on a `Series` of path samples (`calc.diff.ito`, `calc.antidiff.ito`, the Malliavin derivative) are described there.
+
+## The families
+
+| Family | What it covers |
+|---|---|
+| [Stochastic differential equations](stochastic/sde.md) | Simulation by Euler-Maruyama, Milstein and Stratonovich-Heun; pathwise gradients by the adjoint method |
+| [Stochastic integrals and jump paths](stochastic/integrals.md) | Wiener and jump paths, Itô, Stratonovich and Marcus integrals, adaptedness checking |
+
+## Conventions
+
+- A leading axis of the initial state or the `like` template is a batch of independent paths.
+- Noise is elementwise: the diffusion has the shape of the state, and each entry has its own Wiener increment.
+- Time is a plain number; the state, the parameters and the paths are `Series`.
+- The same seed always gives the same paths.
+- Errors are `pluss::Error`; the message names the operation and the problem.
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+stochastic/sde
+stochastic/integrals
+```

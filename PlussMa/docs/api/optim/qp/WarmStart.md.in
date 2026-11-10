@@ -1,0 +1,157 @@
+# `qp::WarmStart`
+
+A starting point for a solve: the primal variables, the constraint values and the multipliers of a previous solution.
+
+`WarmStart` holds three `Series` that together describe where the iteration begins: `x` (the variables), `z` (the constraint values `A x`) and `y` (the multipliers). Obtain one from a finished solve with [`Result::warm()`](Result.md); pass it as the last argument of `qp::solve` or of `Solver::solve`. An empty `WarmStart` (the default) means a cold start from zero. A warm start pays off when the new problem is close to the one that produced it: the iteration needs fewer steps to converge. It never changes the answer, only the work.
+
+## Fields
+
+### `x`
+
+`pluss::Series`, default `empty`.
+
+The starting value of the variables.
+
+### `z`
+
+`pluss::Series`, default `empty`.
+
+The starting constraint values (`A x`).
+
+### `y`
+
+`pluss::Series`, default `empty`.
+
+The starting multipliers.
+
+## Guidance
+
+An empty `WarmStart` is a cold start.
+
+## Practical Examples
+
+### Example 1
+
+Warm start from a previous solution. After a small change to `q`, restarting from `first.warm()` takes fewer iterations than a cold start.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  const qp::Result first = qp::solve(P, q, A, lower, upper);
+  const qp::WarmStart start = first.warm();
+  const qp::Result restarted = qp::solve(P, q + 0.01, A, lower, upper, {}, start);
+  const qp::Result cold = qp::solve(P, q + 0.01, A, lower, upper);
+
+  out.writeln("warm start : iterations =", restarted.iterations);
+  out.writeln("cold start : iterations =", cold.iterations);
+}
+```
+
+### Example 2
+
+Both reach the same answer: a warm start changes the work, not the result.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  const qp::Result first = qp::solve(P, q, A, lower, upper);
+  const qp::Result restarted = qp::solve(P, q + 0.01, A, lower, upper, {}, first.warm());
+  const qp::Result cold = qp::solve(P, q + 0.01, A, lower, upper);
+  out.writeln("warm x =", restarted.x.items<double>());
+  out.writeln("cold x =", cold.x.items<double>());
+}
+```
+
+### Example 3
+
+Built by hand. A starting guess for `x` alone, with `z` and `y` taken from a previous run, is a legal warm start; the three members are plain fields.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  const qp::Result first = qp::solve(P, q, A, lower, upper);
+  qp::WarmStart guess;
+  guess.x = pluss::series::make({0.1, 0.9});
+  guess.z = first.z;
+  guess.y = first.y;
+  out.writeln("iterations from the hand-made start =", qp::solve(P, q, A, lower, upper, {}, guess).iterations);
+}
+```
+
+## See Also
+
+- [`Result`](Result.md): `warm()` produces one
+- [`solve`](solve.md): consumes it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Solver.html">
+    <span class="label">Previous</span>
+    <span class="title">Solver</span>
+  </a>
+  <a class="next-link" href="prepare.html">
+    <span class="label">Next</span>
+    <span class="title">prepare</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

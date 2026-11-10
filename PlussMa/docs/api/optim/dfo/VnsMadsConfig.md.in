@@ -1,0 +1,166 @@
+# `dfo::VnsMadsConfig`
+
+Settings of variable-neighbourhood MADS: the base configuration plus the kicks.
+
+`base` is the [`MadsBlackboxAdvancedConfig`](MadsBlackboxAdvancedConfig.md) used for each stage; its evaluation budget is divided among the `neighborhoods` stages. Before each later stage the best point is kicked by a normal draw of scale `initial_kick_scale`, which grows by `kick_growth` per stage so that later stages jump further.
+
+## Fields
+
+### `base`
+
+`dfo::MadsBlackboxAdvancedConfig`, default `{}`.
+
+The MADS settings used for each stage.
+
+### `neighborhoods`
+
+`std::int64_t`, default `5`.
+
+Number of stages.
+
+### `initial_kick_scale`
+
+`double`, default `0.2`.
+
+Scale of the first kick.
+
+### `kick_growth`
+
+`double`, default `1.7`.
+
+Factor the kick scale grows by each stage.
+
+### `rng_seed`
+
+`std::uint64_t`, default `5489`.
+
+Seed of the kicks.
+
+## Guidance
+
+Passed to `vnsmads_blackbox_minimizer`.
+
+## Practical Examples
+
+### Example 1
+
+The kick scale.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto value = [](const Series &x) {
+    const double pi = 3.14159265358979323846;
+    return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();   // minimum 0 at the origin, many local minima
+  };
+
+  const auto black_box = [&](const Series &x) { dfo::BlackboxEvaluation e; e.objectives = value(x).reshape({1}); return e; };
+  for (const double kick : {0.1, 1.0, 3.0}) {
+    dfo::VnsMadsConfig config;
+    config.base.lower_bounds = pluss::series::make({-5.12, -5.12});
+    config.base.upper_bounds = pluss::series::make({5.12, 5.12});
+    config.base.max_evaluations = 9000;
+    config.neighborhoods = 6;
+    config.initial_kick_scale = kick;
+    out.writeln("kick scale", kick, ": minimum =", dfo::vnsmads_blackbox_minimizer(black_box, pluss::series::make({3.2, 2.7}), config).scalarized_minimum);
+  }
+}
+```
+
+### Example 2
+
+The kick growth.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto value = [](const Series &x) {
+    const double pi = 3.14159265358979323846;
+    return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();   // minimum 0 at the origin, many local minima
+  };
+
+  const auto black_box = [&](const Series &x) { dfo::BlackboxEvaluation e; e.objectives = value(x).reshape({1}); return e; };
+  for (const double growth : {1.0, 1.7, 2.5}) {
+    dfo::VnsMadsConfig config;
+    config.base.lower_bounds = pluss::series::make({-5.12, -5.12});
+    config.base.upper_bounds = pluss::series::make({5.12, 5.12});
+    config.base.max_evaluations = 9000;
+    config.neighborhoods = 6;
+    config.kick_growth = growth;
+    out.writeln("kick growth", growth, ": minimum =", dfo::vnsmads_blackbox_minimizer(black_box, pluss::series::make({3.2, 2.7}), config).scalarized_minimum);
+  }
+}
+```
+
+### Example 3
+
+Seeds. The kicks are random; the seed of the configuration and the base both matter.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto value = [](const Series &x) {
+    const double pi = 3.14159265358979323846;
+    return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();   // minimum 0 at the origin, many local minima
+  };
+
+  const auto black_box = [&](const Series &x) { dfo::BlackboxEvaluation e; e.objectives = value(x).reshape({1}); return e; };
+  for (const std::uint64_t seed : {1, 2, 3}) {
+    dfo::VnsMadsConfig config;
+    config.base.lower_bounds = pluss::series::make({-5.12, -5.12});
+    config.base.upper_bounds = pluss::series::make({5.12, 5.12});
+    config.base.max_evaluations = 9000;
+    config.base.rng_seed = seed;
+    config.rng_seed = seed;
+    config.neighborhoods = 6;
+    out.writeln("seed", seed, ": minimum =", dfo::vnsmads_blackbox_minimizer(black_box, pluss::series::make({3.2, 2.7}), config).scalarized_minimum);
+  }
+}
+```
+
+## See Also
+
+- [`vnsmads_blackbox_minimizer`](vnsmads_blackbox_minimizer.md): uses it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SurrogateMode.html">
+    <span class="label">Previous</span>
+    <span class="title">SurrogateMode</span>
+  </a>
+  <a class="next-link" href="coopmads_blackbox_minimizer.html">
+    <span class="label">Next</span>
+    <span class="title">coopmads_blackbox_minimizer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

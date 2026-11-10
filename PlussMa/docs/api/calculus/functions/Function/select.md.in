@@ -1,0 +1,161 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f2a248b462b0 -->
+
+# `math::Function::select`
+
+[Back to `math::Function`](../Function.md)
+
+Picks one index along an output axis, removing that axis.
+
+## Signature
+
+```cpp
+math::Function math::Function::select(std::int64_t axis, std::int64_t index) const;
+```
+
+## What It Does
+
+`f.select(axis, index)` fixes the output axis `axis` at `index`, the way `m[i]` takes row `i` of a matrix or `v[k]` takes component `k` of a vector. The result has one fewer output axis: selecting from a vector gives a scalar function, selecting a row of a matrix gives a vector function. Axis numbers count output axes from zero.
+
+It is how you take a part of a vector- or tensor-valued function and keep working with it as a function: one component of a gradient, one equation of a system, one entry of a Hessian. Differentiating a selected component is the same as selecting from the differentiated function.
+
+The index is checked when the selection is built, against the known output shape.
+
+## Parameters
+
+`std::int64_t axis`
+: The output axis to fix, counted from zero.
+
+`std::int64_t index`
+: The position along that axis.
+
+## Returns
+
+A new `Function` with one fewer output axis.
+
+## Errors
+
+- An index outside the output shape raises `select index is outside the output shape`.
+- An axis outside the output rank is refused.
+
+## Practical Examples
+
+### Example 1
+
+A row and a column of a matrix function: `select(0, i)` is row `i`, `select(1, j)` is column `j`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto A = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}).reshape({3, 2});  // 3 x 2
+
+  const math::Function m = math::function({"x"}, [&](math::Function x) { return math::function(A) * x; });
+  out.writeln("row 1:    shape", m.select(0, 1).shape(), m.select(0, 1)(1.0).items<double>());
+  out.writeln("column 0: shape", m.select(1, 0).shape(), m.select(1, 0)(1.0).items<double>());
+}
+```
+
+### Example 2
+
+Taking one component of a gradient. For `f = x² y` the gradient is `(2xy, x²)`; selecting component 1 gives `∂f/∂y = x²`, a scalar function that can be differentiated or evaluated on its own.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * x * y; });
+  const math::Function grad = operators::gradient()(f);
+  const math::Function fy = grad.select(0, 1);
+  const auto point = {pluss::make_series(3.0), pluss::make_series(5.0)};
+  out.writeln("gradient at (3, 5):", grad(point).items<double>());
+  out.writeln("rank of f_y:", fy.rank(), "  value", fy(point).item<double>());
+}
+```
+
+### Example 3
+
+An entry of a Hessian: select the row, then the column. `f_xy` of `x² y` is `2x`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * x * y; });
+  const math::Function hessian = operators::hessian()(f);
+  const math::Function fxy = hessian.select(0, 0).select(0, 1);
+  const auto point = {pluss::make_series(3.0), pluss::make_series(5.0)};
+  out.writeln("f_xy at (3, 5):", fxy(point).item<double>(), "  (2x = 6)");
+}
+```
+
+### Example 4
+
+An index outside the output shape is refused when the selection is built, before any evaluation.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function v = math::function({"x"}, [](math::Function x) { return math::stack({x, x * x, x * x * x}); });
+  try {
+    (void)v.select(0, 3);
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`shape`](shape.md): the axes you can select from
+- [`transpose`](transpose.md): reorder axes
+- [`operators::gradient`](../../differential/gradient.md): produces a vector function
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="real.html">
+    <span class="label">Previous</span>
+    <span class="title">real</span>
+  </a>
+  <a class="next-link" href="shape.html">
+    <span class="label">Next</span>
+    <span class="title">shape</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

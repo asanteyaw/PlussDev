@@ -1,0 +1,138 @@
+<!-- generated from ln_eq.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9f4e3b7334f3 -->
+
+# `ProblemBuilder::ln_eq`
+
+[Back to `optim::ProblemBuilder`](../ProblemBuilder.md)
+
+Adds the linear equalities `Aeq x = beq`.
+
+## Signature
+
+```cpp
+optim::ProblemBuilder &optim::ProblemBuilder::ln_eq(const pluss::Series &Aeq, const pluss::Series &beq);
+```
+
+## What It Does
+
+`Aeq` is a matrix with one row per equation and one column per unknown scalar (taking the blocks of the pack in order); `beq` has one entry per row. Linear rows are handled exactly by every algorithm. An inconsistent system, or a column count that does not match the unknowns, is rejected when `optima` starts.
+
+## Parameters
+
+`Aeq`
+: Matrix, `[rows, unknowns]`.
+
+`beq`
+: Right-hand side, `[rows]`.
+
+## Returns
+
+The same builder, for chaining.
+
+## Practical Examples
+
+### Example 1
+
+One row: three numbers that must sum to 3, preferred near 2.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const optim::OptimaState result = optim::optima(optim::problem().objective([](const Pack &p) { return (p.at("x") - 2.0).square().sum(); })
+      .ln_eq(pluss::series::make({{1.0, 1.0, 1.0}}), pluss::series::make({3.0})), pluss::series::make({0.0, 0.0, 0.0}));
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+x = [1.0000, 1.0000, 1.0000]
+```
+
+### Example 2
+
+Two rows fix two of three unknowns. `x₀ = 1`, `x₁ = 2`, and the third is free to follow the objective.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const optim::OptimaState result = optim::optima(optim::problem().objective([](const Pack &p) { return (p.at("x") - 5.0).square().sum(); })
+      .ln_eq(pluss::series::make({{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}}), pluss::series::make({1.0, 2.0})), pluss::series::make({0.0, 0.0, 0.0}));
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+x = [1.0000, 2.0000, 5.0000]
+```
+
+### Example 3
+
+Over named blocks, the columns are the blocks in order. With `a, b` the row `{2, -1}` means `2a − b = 0`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack start = optim::pack_scalars({{"a", pluss::make_series(0.0)}, {"b", pluss::make_series(0.0)}});
+  const optim::OptimaState result = optim::optima(optim::problem().objective([](const Pack &p) { return (p.at("a") - 1.0).square() + (p.at("b") - 1.0).square(); })
+      .ln_eq(pluss::series::make({{2.0, -1.0}}), pluss::series::make({0.0})), start);
+  out.writeln("a =", result.params.at("a").items<double>(), " b =", result.params.at("b").items<double>());
+}
+```
+
+Output
+
+```text
+a = [0.6000]  b = [1.2000]
+```
+
+## See Also
+
+- [`ln_ineq`](ln_ineq.md): linear inequalities
+- [`ProblemBuilder`](Introduction.md): the builder
+- [`optima`](../optima.md): solves the problem
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lbs.html">
+    <span class="label">Previous</span>
+    <span class="title">lbs</span>
+  </a>
+  <a class="next-link" href="ln_ineq.html">
+    <span class="label">Next</span>
+    <span class="title">ln_ineq</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

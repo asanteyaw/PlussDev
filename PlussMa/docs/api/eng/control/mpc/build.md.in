@@ -1,0 +1,78 @@
+# `control::mpc::build`
+
+Compiles a reusable finite-horizon MPC plan.
+
+## Signature
+
+```cpp
+control::mpc::Plan control::mpc::build(
+    const lti::StateSpace& system,
+    const control::mpc::Weights& weights,
+    const control::mpc::Bounds& bounds,
+    control::mpc::Options options = {});
+```
+
+## What It Does
+
+`build` performs work that does not depend on the current state or reference: prediction assembly, cost condensation, constraint assembly, and solver factorization. Reusing the result is the preferred receding-horizon path.
+
+## Parameters
+
+`system`
+: A discrete state-space model.
+
+`weights`
+: State, input, and optional terminal quadratic weights.
+
+`bounds`
+: Input and optional state bounds.
+
+`options`
+: Prediction horizon and QP settings.
+
+## Returns
+
+A reusable `control::mpc::Plan` with condensed matrices and factorization.
+
+## Errors
+
+Throws for continuous models, non-positive horizons, invalid weights, inconsistent bounds, or QP preparation failures.
+
+## Interpretation and Use
+
+Call `build` outside the real-time update loop. It validates the discrete model, expands horizon matrices, assembles constraints, and prepares the QP solver once. The resulting plan preserves dtype and platform from its inputs.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Build once and solve twice.
+
+@@example Eng/api/control_mpc_plan.cpp@@
+
+### Example 2
+
+Compile non-default horizon and QP settings.
+
+@@example Eng/api/control_mpc_options.cpp@@
+
+### Example 3
+
+See build-time rejection of continuous models and zero horizons.
+
+@@example Eng/api/control_mpc_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Plan.html">
+    <span class="label">Previous</span>
+    <span class="title">Plan</span>
+  </a>
+  <a class="next-link" href="solve.html">
+    <span class="label">Next</span>
+    <span class="title">solve</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,249 @@
+<!-- generated from stochastic_differential.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::stochastic::stochastic_differential`
+
+Itô's formula (and its Stratonovich and θ versions): the drift and diffusion of `g(X)` for `dX = μ dt + σ ∘_θ dW`.
+
+## Signature
+
+```cpp
+operators::Operator operators::stochastic::stochastic_differential(math::Function drift, math::Function diffusion, pluss::StackArray<std::string_view> states, operators::stochastic::Convention convention = operators::stochastic::Convention::Ito, double theta = 0.0, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+If `X` follows `dX = μ dt + σ ∘_θ dW` (the noise read in convention `θ`), then `g(X)` follows an SDE in the same convention. `stochastic_differential(μ, σ, {"x"}, convention)(g)` returns its coefficients as a vector `[a, b₁, …, b_m]`:
+
+`a = μ·∇g + (½ − θ) tr(σσᵀ ∇²g)` (the drift) and `b = σᵀ ∇g` (the diffusion).
+
+At `θ = 0` (Itô) this is **Itô's formula**, `a = μ g′ + ½ σ² g″`, with the extra second-derivative term; at `θ = ½` (Stratonovich) the term vanishes and the ordinary chain rule holds, `a = μ g′`; at `θ = 1` the sign of the correction flips. The diffusion `b` is the same in every convention. Use `Convention::Theta` with `theta` for other values.
+
+The result is exact (a formula in the state), so it can be evaluated, differentiated and compared. For several states the drift is a vector, the diffusion a matrix and the formulas use the gradient and Hessian.
+
+## Parameters
+
+`math::Function drift`
+: The drift `μ`.
+
+`math::Function diffusion`
+: The diffusion `σ`.
+
+`pluss::StackArray<std::string_view> states`
+: The state variables.
+
+`operators::stochastic::Convention convention`
+: `Ito` (default), `Stratonovich`, `Klimontovich` or `Theta`.
+
+`double theta`
+: The `θ` for `Convention::Theta`, in `[0, 1]`.
+
+`operators::DiffOptions options`
+: Options for the derivatives.
+
+## Returns
+
+An `Operator` whose application returns the coefficients `[a, b₁, …, b_m]` of `g(X)` as a vector `Function` of the state.
+
+## Errors
+
+- `theta must lie in [0, 1]`.
+
+## Practical Examples
+
+### Example 1
+
+Itô against Stratonovich for geometric Brownian motion and `g = x²`. Itô: drift `(2a + b²) x²`, diffusion `2b x²`. Stratonovich: drift `2a x²` (no correction), the same diffusion `2bx²`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  const auto coefficients = [&](stochastic::Convention c) { return stochastic::stochastic_differential(drift, diffusion, {"x"}, c)(square)(x).items<double>(); };
+  const auto ito = coefficients(stochastic::Convention::Ito), strat = coefficients(stochastic::Convention::Stratonovich);
+  out.writeln("Ito:           drift", ito[0], " diffusion", ito[1], "   (2a + b^2) x^2 =", (2 * a + b * b) * x * x, " 2 b x^2 =", 2 * b * x * x);
+  out.writeln("Stratonovich:  drift", strat[0], " diffusion", strat[1], "   2a x^2 =", 2 * a * x * x);
+}
+```
+
+Output
+
+```text
+Ito:           drift 1.666000  diffusion 1.960000    (2a + b^2) x^2 = 1.666000  2 b x^2 = 1.960000
+Stratonovich:  drift 1.176000  diffusion 1.960000    2a x^2 = 1.176000
+```
+
+### Example 2
+
+A general `θ`. The drift correction is proportional to `(½ − θ)`: with `θ = 0.25` it is half the Itô correction, `2a x² + ½ b² x²`. The diffusion is unchanged.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  const auto result = stochastic::stochastic_differential(drift, diffusion, {"x"}, stochastic::Convention::Theta, 0.25)(square)(x).items<double>();
+  out.writeln("theta = 0.25: drift", result[0], " diffusion", result[1], "   2a x^2 + b^2 x^2 / 2 =", 2 * a * x * x + 0.5 * b * b * x * x);
+}
+```
+
+Output
+
+```text
+theta = 0.25: drift 1.421000  diffusion 1.960000    2a x^2 + b^2 x^2 / 2 = 1.421000
+```
+
+### Example 3
+
+Backward convention. At `θ = 1` the correction changes sign: drift `2a x² − b² x²`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  const auto result = stochastic::stochastic_differential(drift, diffusion, {"x"}, stochastic::Convention::Klimontovich)(square)(x).items<double>();
+  out.writeln("Klimontovich: drift", result[0], "   2a x^2 - b^2 x^2 =", 2 * a * x * x - b * b * x * x);
+}
+```
+
+Output
+
+```text
+Klimontovich: drift 0.686000    2a x^2 - b^2 x^2 = 0.686000
+```
+
+### Example 4
+
+Itô's formula for the log. For geometric Brownian motion, `d(log X)` has Itô drift `a − b²/2` and diffusion `b`: the familiar lognormal drift.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  const math::Function logarithm = math::function({"x"}, [](math::Function v) { return v.log(); });
+  const auto result = stochastic::stochastic_differential(drift, diffusion, {"x"})(logarithm)(x).items<double>();
+  out.writeln("d log X: drift", result[0], " diffusion", result[1], "   a - b^2/2 =", a - 0.5 * b * b, " b =", b);
+}
+```
+
+Output
+
+```text
+d log X: drift 0.175000  diffusion 0.500000    a - b^2/2 = 0.175000  b = 0.500000
+```
+
+### Example 5
+
+`θ` must lie in `[0, 1]`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  try { (void)stochastic::stochastic_differential(drift, diffusion, {"x"}, stochastic::Convention::Theta, 2.0); } catch (const pluss::Error &e) { out.writeln(first_line(e)); }
+}
+```
+
+Output
+
+```text
+operators::stochastic::stochastic_differential: theta must lie in [0, 1]
+```
+
+## See Also
+
+- [`generator`](generator.md): the expected-rate operator
+- [`convention_change`](convention_change.md): converts the drift between conventions
+- [`theta_of`](theta_of.md): the θ of a convention
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="skorokhod_integral.html">
+    <span class="label">Previous</span>
+    <span class="title">skorokhod_integral</span>
+  </a>
+  <a class="next-link" href="stochastic_integral.html">
+    <span class="label">Next</span>
+    <span class="title">stochastic_integral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

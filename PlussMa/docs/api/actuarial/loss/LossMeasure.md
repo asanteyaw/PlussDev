@@ -1,0 +1,175 @@
+<!-- generated from LossMeasure.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `actuarial::LossMeasure`
+
+A rule that reduces a sample of amounts to one statistic.
+
+## Signature
+
+```cpp
+using actuarial::LossMeasure = actuarial::Operator<pluss::Series(const pluss::Series &)>;
+```
+
+## What It Represents
+
+An [`Operator`](../foundation/Operator.md) from a series of amounts to a rank-zero series. [`mean`](mean.md) is the built-in measure. Apply a measure to losses for a descriptive statistic, or to the output of a [`LossTransform`](LossTransform.md) for the expected payment of a contract; custom measures (a quantile, a variance) are made with [`make_operator`](../foundation/make_operator.md) and plug in anywhere a measure is expected. The built-in mean assigns an empty sample the value zero, so portfolio pipelines stay defined without a special case.
+
+## Methods
+
+An operator is called like a function and has the four members of [`Operator`](../foundation/Operator.md): [`defined`](../foundation/Operator/defined.md), [`key`](../foundation/Operator/key.md), [`operator bool`](../foundation/Operator/operator_bool.md) and [`operator()`](../foundation/Operator/operator_call.md), which does the work described here.
+
+## Practical Examples
+
+### Example 1: a measure of a contract
+
+The mean of the ground-up losses against the mean of a deductible contract on the same sample.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  const actuarial::LossMeasure mean = actuarial::operators::mean();
+  out.writeln("mean loss =", mean(x).item<double>(), " mean deductible payment =", mean(actuarial::operators::deductible(100.0)(x)).item<double>());
+}
+```
+
+Output
+
+```text
+mean loss = 1071.666667  mean deductible payment = 975.000000
+```
+
+### Example 2: a custom measure
+
+The largest amount, built with `make_operator` and used like the mean.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  const actuarial::LossMeasure largest = actuarial::make_operator<pluss::Series(const pluss::Series &)>("largest", [](const pluss::Series &s) { return s.amax(); });
+  out.writeln(largest.key(), largest(x).item<double>(), " layer:", largest(actuarial::operators::layer(100.0, 500.0)(x)).item<double>());
+}
+```
+
+Output
+
+```text
+largest 4000.000000  layer: 500.000000
+```
+
+### Example 3: the result is rank zero
+
+A measure reduces the whole sample to a rank-zero series.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  out.writeln("rank", actuarial::operators::mean()(x).dim());
+}
+```
+
+Output
+
+```text
+rank 0
+```
+
+### Example 4: an empty sample and an empty measure
+
+The built-in mean of nothing is zero; an empty measure object throws when called.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  out.writeln("mean of nothing:", actuarial::operators::mean()(pluss::series::zeros({0})).item<double>());
+  report([&] { (void)actuarial::LossMeasure{}(pluss::make_series({1.0})); });
+}
+```
+
+Output
+
+```text
+mean of nothing: 0.000000
+actuarial Operator is undefined
+```
+
+## Changelog
+
+- **0.1**: initial operator-first actuarial surface.
+
+## See Also
+
+[`LossTransform`](LossTransform.md) produces the payments a measure is applied to.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LossTransform.html">
+    <span class="label">Previous</span>
+    <span class="title">LossTransform</span>
+  </a>
+  <a class="next-link" href="deductible.html">
+    <span class="label">Next</span>
+    <span class="title">deductible</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

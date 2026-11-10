@@ -1,0 +1,80 @@
+# `control::SmoothResult`
+
+Forward-filter output augmented by backward-smoothed state estimates.
+
+## Signature
+
+```cpp
+control::SmoothResult
+```
+
+## What It Does
+
+This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+
+
+
+## Fields
+
+### `filter`
+
+The complete `control::KalmanResult` from the forward pass.
+
+### `smoothed_mean`
+
+State means conditioned on the complete observation sequence.
+
+### `smoothed_cov`
+
+State covariances conditioned on the complete observation sequence.
+
+### `gain`
+
+Backward smoothing gains connecting adjacent time steps.
+
+## Returns
+
+This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+
+## Errors
+
+The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+
+## Interpretation and Use
+
+The embedded `filter` preserves the causal estimate, while `smoothed_mean` and `smoothed_cov` use future observations. Never substitute smoothed states in an online controller: they are retrospective. They are appropriate for reconstruction, parameter analysis, and offline diagnostics.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Compare filtered and smoothed trajectories directly.
+
+@@example Eng/api/control_smooth.cpp@@
+
+### Example 2
+
+Inspect the forward quantities retained inside a smooth result.
+
+@@example Eng/api/control_estimation.cpp@@
+
+### Example 3
+
+Review model and covariance failures shared with filtering.
+
+@@example Eng/api/control_estimation_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="KalmanResult.html">
+    <span class="label">Previous</span>
+    <span class="title">KalmanResult</span>
+  </a>
+  <a class="next-link" href="lqe.html">
+    <span class="label">Next</span>
+    <span class="title">lqe</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

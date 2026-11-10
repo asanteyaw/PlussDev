@@ -1,0 +1,232 @@
+# `actuarial::endowment_insurance`
+
+Expected present value of an endowment insurance of 1.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::endowment_insurance(const pluss::Series &qx, double interest_rate);
+```
+
+## What It Does
+
+Returns {math}`A_{x:\overline{n}\vert}=A^1_{x:\overline{n}\vert}+{}_nE_x`: 1 at the end of the year of death if death occurs within `n` years, or 1 at the end of the term if the life survives, so the benefit is certain to be paid and only its timing is uncertain. It is [`cashflow::endowment`](../valuation/endowment.md) on a flat rate. At a zero rate it is exactly 1; at a positive rate it is below 1 by the discounting of the later payments.
+
+## Parameters
+
+`qx`
+: One-dimensional, finite series of one-year death probabilities in {math}`[0,1]`; the horizon is its length.
+
+`interest_rate`
+: The annual effective rate {math}`i`, finite and greater than −1. A zero or negative rate is valid.
+
+## Returns
+
+A rank-zero series: the expected present value of a benefit of 1 per unit, read with `item<double>()`.
+
+## Errors
+
+Throws `survival_curve: qx must be defined`, `survival_curve: qx must be 1D`, `survival_curve: qx must be finite` and `survival_curve: qx values must lie in [0, 1]`, and `discount::flat: rate must be finite` and `discount::flat: rate must be > -1`.
+
+## Practical Examples
+
+### Example 1: five years at 4%
+
+The cost of a certain payment of 1 whose date depends on death.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln(actuarial::endowment_insurance(qx, 0.04).item<double>());
+}
+```
+
+### Example 2: by hand
+
+The term insurance plus the pure endowment.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln(actuarial::term_insurance(qx, 0.04).item<double>() + actuarial::pure_endowment(qx, 0.04).item<double>(), actuarial::endowment_insurance(qx, 0.04).item<double>());
+}
+```
+
+### Example 3: no interest
+
+A certain benefit of 1 is worth 1 undiscounted.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln(actuarial::endowment_insurance(qx, 0.0).item<double>());
+}
+```
+
+### Example 4: the discount only
+
+With no mortality it is the discount factor to the end of the term.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(actuarial::endowment_insurance(pluss::make_series({0.0, 0.0, 0.0}), 0.05).item<double>(), std::pow(1.05, -3.0));
+}
+```
+
+### Example 5: the effect of the interest rate
+
+A higher rate lowers the value of money paid in the future.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  for (const double i : {0.0, 0.02, 0.04, 0.08})
+    out.writeln("i =", i, " value =", actuarial::endowment_insurance(qx, i).item<double>());
+}
+```
+
+### Example 6: the effect of the horizon
+
+Each added year of mortality extends the benefit.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series full = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024, 0.030, 0.037});
+  for (const int n : {2, 4, 7})
+    out.writeln("n =", n, " value =", actuarial::endowment_insurance(full.slice(0, 0, n, 1), 0.04).item<double>());
+}
+```
+
+### Example 7: the errors
+
+Invalid probabilities and interest rates are refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::endowment_insurance(pluss::make_series({0.1, 1.5}), 0.04); });
+  report([&] { (void)actuarial::endowment_insurance(pluss::make_series({0.1, 0.2}), -1.0); });
+  report([&] { (void)actuarial::endowment_insurance(pluss::make_series({0.1, 0.2}), std::nan("")); });
+  report([&] { (void)actuarial::endowment_insurance(pluss::make_series({0.1, 0.2}).reshape({1, 2}), 0.04); });
+}
+```
+
+## See Also
+
+- [`term_insurance`](term_insurance.md), [`pure_endowment`](pure_endowment.md): the two parts
+- [`endowment_premium`](endowment_premium.md): the level premium for it
+- [`Valuation`](../valuation/Valuation.md): the general operator behind these values
+- [`Mortality`](../mortality/Mortality.md): the law as a value
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pure_endowment.html">
+    <span class="label">Previous</span>
+    <span class="title">pure_endowment</span>
+  </a>
+  <a class="next-link" href="lx_qx.html">
+    <span class="label">Next</span>
+    <span class="title">lx_qx</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

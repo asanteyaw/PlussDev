@@ -1,0 +1,158 @@
+<!-- generated from Result.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `roots::Result`
+
+What every root finder returns: the roots, the residuals, the iteration count and whether the brackets were valid.
+
+`Result` holds one `Series` per output, each with the shape of the lanes, plus two scalars. It is a plain value; the series carry gradient history when the function captured tracked parameters (see [`householder`](householder.md)).
+
+## Fields
+
+### `root`
+
+`pluss::Series`, default `undefined`.
+
+The root estimate for each lane, with the shape of the lanes.
+
+### `residual`
+
+`pluss::Series`, default `undefined`.
+
+`f(root)` for each lane: the direct measure of how good the root is.
+
+### `iterations`
+
+`std::int64_t`, default `0`.
+
+The number of iterations performed, at most `max_iterations`.
+
+### `bracketed`
+
+`bool`, default `true`.
+
+False when a bracketed solver (`bisect`, `illinois`) found a lane whose end points did not straddle a root. Always true for the other solvers.
+
+## Guidance
+
+Check `bracketed` for bracketed solvers and `residual` always.
+
+## Practical Examples
+
+### Example 1
+
+Reading a result. `root` and `residual` have one entry per lane, `iterations` is the number of iterations performed, and `residual` is `f(root)`, so `max |residual|` is the convergence check.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(14));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  const roots::Result result = roots::illinois(f, pluss::make_series({1.0, 0.0, 1.5}), pluss::make_series({2.0, 2.0, 3.0}));
+
+  out.writeln("root      =", result.root.items<double>());
+  out.writeln("residual  =", result.residual.items<double>());
+  out.writeln("converged =", result.residual.abs().max().item<double>() < 1e-12);
+}
+```
+
+Output
+
+```text
+root      = [1.41421356237309, 1.41421356237309, 1.41421356237309]
+residual  = [-0.00000000000000, -0.00000000000000, -0.00000000000000]
+converged = true
+```
+
+### Example 2
+
+`bracketed`. For the bracketed solvers it is false if any lane's end points had the same sign; the other solvers leave it true. It is the only signal of a bad bracket, so a sweep should check it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  const roots::Result good = roots::bisect(f, pluss::make_series({0.0, 1.0}), pluss::make_series({2.0, 3.0}));
+  const roots::Result bad = roots::bisect(f, pluss::make_series({0.0, 2.0}), pluss::make_series({1.0, 3.0}));
+  out.writeln("good brackets : bracketed =", good.bracketed);
+  out.writeln("bad brackets  : bracketed =", bad.bracketed);
+}
+```
+
+Output
+
+```text
+good brackets : bracketed = true
+bad brackets  : bracketed = false
+```
+
+### Example 3
+
+`iterations` against the budget. A tolerance lets a solver stop early; the count shows how many iterations were actually used.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  roots::Options options;
+  options.x_tolerance = 1e-10;
+  options.check_every = 1;
+  out.writeln("bisect   :", roots::bisect(f, pluss::make_series(1.0), pluss::make_series(2.0), options).iterations, "iterations");
+  out.writeln("illinois :", roots::illinois(f, pluss::make_series(1.0), pluss::make_series(2.0), options).iterations, "iterations");
+  out.writeln("newton   :", roots::newton(f, pluss::make_series(2.0), {}, options).iterations, "iterations");
+}
+```
+
+Output
+
+```text
+bisect   : 34 iterations
+illinois : 8 iterations
+newton   : 5 iterations
+```
+
+## See Also
+
+- [`Options`](Options.md): the inputs that shape the result
+- [`bisect`](bisect.md): sets `bracketed`
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Options.html">
+    <span class="label">Previous</span>
+    <span class="title">Options</span>
+  </a>
+  <a class="next-link" href="bisect.html">
+    <span class="label">Next</span>
+    <span class="title">bisect</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

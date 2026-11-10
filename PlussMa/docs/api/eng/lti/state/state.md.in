@@ -1,0 +1,80 @@
+# `lti::state`
+
+## Signature
+
+```cpp
+lti::StateSpace lti::state(
+    const pluss::Series& a,
+    const pluss::Series& b,
+    const pluss::Series& c,
+    const pluss::Series& d,
+    double sample_time = 0.0);
+```
+
+## What It Does
+
+Validates and normalizes four state-space matrices into one immutable system. It broadcasts compatible leading batch axes and promotes all matrices to one floating or complex dtype.
+
+## Parameters
+
+`a`
+: Dynamics matrix with tail `[states, states]`; it must be square.
+
+`b`
+: Input matrix with tail `[states, inputs]`.
+
+`c`
+: Output matrix with tail `[outputs, states]`.
+
+`d`
+: Direct-feedthrough matrix with tail `[outputs, inputs]`.
+
+`sample_time`
+: Zero for continuous time or a finite positive discrete sampling interval.
+
+## Returns
+
+A `StateSpace` owning promoted, batch-expanded matrices on their shared platform.
+
+## Errors
+
+Rejects undefined, nonmatrix, empty, integer, shape-incompatible, non-broadcastable, or cross-platform matrices, and negative/nonfinite sample time.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Construct and inspect a second-order continuous state-space model.
+
+@@example Eng/api/lti_state.cpp@@
+
+### Example 2
+
+Compare energy Gramians across continuous and discrete timebases.
+
+@@example Eng/api/lti_gram.cpp@@
+
+### Example 3
+
+Exercise matrix-shape and sample-time validation.
+
+@@example Eng/api/lti_state_errors.cpp@@
+
+## See Also
+
+See the [State space](../state.md) family page for matrix shapes, batching, and analysis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Gram.html">
+    <span class="label">Previous</span>
+    <span class="title">Gram</span>
+  </a>
+  <a class="next-link" href="ctrb.html">
+    <span class="label">Next</span>
+    <span class="title">ctrb</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

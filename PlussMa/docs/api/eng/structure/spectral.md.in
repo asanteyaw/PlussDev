@@ -1,0 +1,55 @@
+# Mass, modes and buckling
+
+This branch treats the eigenproblems of a frame. `mass` applies the consistent mass, `modes` finds natural frequencies and shapes, and `buckling` finds the load multipliers at which the frame becomes unstable.
+
+## Choosing A Surface
+
+Both eigen searches share `EigOptions`. `modes` needs a density; `buckling` needs a compressive reference load.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Mass and modes of a cantilever.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+
+### Example 2
+
+Buckling of a pinned column.
+
+@@example Eng/api/structure_buckling.cpp@@
+
+### Example 3
+
+Four end conditions against Euler's loads.
+
+@@example Eng/api/structure_buckling_cases.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+spectral/EigOptions
+spectral/ModeResult
+spectral/BuckResult
+spectral/mass
+spectral/modes
+spectral/buckling
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+spectral/EigOptions
+spectral/ModeResult
+spectral/BuckResult
+spectral/mass
+spectral/modes
+spectral/buckling
+```
+<!-- apiref:toctree:end -->

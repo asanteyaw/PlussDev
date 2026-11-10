@@ -1,0 +1,158 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 29086979d462 -->
+
+# `actuarial::Triangle::observed`
+
+[Back to `actuarial::Triangle`](../Triangle.md)
+
+The mask of observed cells.
+
+## Signature
+
+```cpp
+const pluss::Series &actuarial::Triangle::observed() const noexcept;
+```
+
+## What It Does
+
+Returns the `norigins × ndevelopment` boolean matrix that is true where a cell holds data. Observed cells are left-contiguous in every row, so the number of observed cells in row `i` is the development age reached by origin `i`. When the triangle was built without a mask, a cell is observed if it is positive; give a mask to [`cumulative`](../cumulative.md) when a genuine observed amount can be zero.
+
+## Returns
+
+A const reference to a two-dimensional boolean `Series`; undefined for an undefined triangle.
+
+## Practical Examples
+
+### Example 1: the staircase
+
+Ones where there is data.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative);
+  const auto o = triangle.observed().reshape({16}).items<double>();
+  for (int r = 0; r < 4; ++r) out.writeln(o[4*r], o[4*r+1], o[4*r+2], o[4*r+3]);
+}
+```
+
+### Example 2: the age reached by each origin
+
+The row sums of the mask.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative);
+  out.writeln(triangle.observed().sum(1).items<double>());
+}
+```
+
+### Example 3: an explicit mask
+
+A genuine zero is kept as an observed cell when the mask says so.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const pluss::Series values = pluss::make_series({0.0, 10.0, 5.0, 0.0}, {2, 2});
+  const pluss::Series mask = pluss::make_series({1.0, 1.0, 1.0, 0.0}, {2, 2}).gt(0.5);
+  const actuarial::Triangle t = actuarial::triangle::cumulative(values, mask);
+  out.writeln("observed =", t.observed().reshape({4}).items<double>());
+}
+```
+
+### Example 4: without a mask, zero means unobserved
+
+The same values without a mask: the leading zero makes the first row non-contiguous and is refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::triangle::cumulative(pluss::make_series({0.0, 10.0, 5.0, 0.0}, {2, 2})); });
+}
+```
+
+## See Also
+
+- [`Triangle`](../Triangle.md): the type
+- [`cumulative`](../cumulative.md): builds one
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="norigins.html">
+    <span class="label">Previous</span>
+    <span class="title">norigins</span>
+  </a>
+  <a class="next-link" href="origins.html">
+    <span class="label">Next</span>
+    <span class="title">origins</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

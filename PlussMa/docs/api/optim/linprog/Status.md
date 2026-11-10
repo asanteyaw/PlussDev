@@ -1,0 +1,182 @@
+<!-- generated from Status.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `linprog::Status`
+
+The verdict of a lane of a linear-programming solve.
+
+`Status` is carried per lane in `Result::status` as a `Float64` code. `Optimal` and `NearOptimal` mean a usable solution ([`success`](success.md) is true for both). `PrimalInfeasible` means no point satisfies the constraints and `Result::farkas` proves it. `Unbounded` means the objective has no minimum and `Result::ray` gives the direction. `IterationLimit` means the solve ran out of iterations without a verdict.
+
+## Fields
+
+### `Optimal`
+
+`enumerator`, default `0`.
+
+The primal and dual residuals and the gap are below `tolerance`.
+
+### `PrimalInfeasible`
+
+`enumerator`, default `1`.
+
+No feasible point exists; `Result::farkas` holds the proof.
+
+### `Unbounded`
+
+`enumerator`, default `2`.
+
+The objective has no minimum; `Result::ray` is a recession direction.
+
+### `IterationLimit`
+
+`enumerator`, default `3`.
+
+The iteration limit was reached without a verdict.
+
+### `NearOptimal`
+
+`enumerator`, default `4`.
+
+The iteration stalled at the limit of attainable accuracy with residuals and gap below `accept_tolerance`; the best iterate is returned.
+
+## Guidance
+
+Use `linprog::success(status)` to test for a usable solution.
+
+## Practical Examples
+
+### Example 1
+
+One problem of each verdict, named. Optimal, infeasible and unbounded problems are solved and their codes printed with `to_string`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise -x0 - 2 x1   subject to   x0 + x1 <= 4,  x0 + 3 x1 <= 6,  x >= 0
+  linprog::Problem problem;
+  problem.c = pluss::series::make({-1.0, -2.0});
+  problem.a_ub = pluss::series::make({{1.0, 1.0}, {1.0, 3.0}});
+  problem.b_ub = pluss::series::make({4.0, 6.0});
+  problem.lower = pluss::series::make({0.0, 0.0});
+
+  linprog::Problem infeasible = problem, unbounded;
+  infeasible.b_ub = pluss::series::make({-1.0, -1.0});   // x0 + x1 <= -1 with x >= 0
+  unbounded.c = pluss::series::make({-1.0, 0.0});
+  unbounded.a_ub = pluss::series::make({{1.0, -1.0}});
+  unbounded.b_ub = pluss::series::make({1.0});
+  unbounded.lower = pluss::series::make({0.0, 0.0});
+  for (const auto &[label, p] : {std::pair<const char *, linprog::Problem>{"optimal   ", problem}, {"infeasible", infeasible}, {"unbounded ", unbounded}}) {
+    const linprog::Result r = linprog::solve(p);
+    out.writeln(label, "->", linprog::to_string(static_cast<linprog::Status>(static_cast<int>(r.status.item<double>()))));
+  }
+}
+```
+
+Output
+
+```text
+optimal    -> Optimal
+infeasible -> PrimalInfeasible
+unbounded  -> Unbounded
+```
+
+### Example 2
+
+`IterationLimit`. A run too short to finish ends with it; polishing is off so the simplex does not rescue the lane.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise -x0 - 2 x1   subject to   x0 + x1 <= 4,  x0 + 3 x1 <= 6,  x >= 0
+  linprog::Problem problem;
+  problem.c = pluss::series::make({-1.0, -2.0});
+  problem.a_ub = pluss::series::make({{1.0, 1.0}, {1.0, 3.0}});
+  problem.b_ub = pluss::series::make({4.0, 6.0});
+  problem.lower = pluss::series::make({0.0, 0.0});
+
+  linprog::Options short_run;
+  short_run.max_iterations = 2;
+  short_run.polish = false;
+  out.writeln(linprog::to_string(static_cast<linprog::Status>(static_cast<int>(linprog::solve(problem, short_run).status.item<double>()))));
+}
+```
+
+Output
+
+```text
+IterationLimit
+```
+
+### Example 3
+
+Per-lane verdicts in a batch. Two lanes share constraints but have different right-hand sides, one feasible and one not.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  linprog::Problem problem;
+  problem.c = pluss::series::make({{1.0, 1.0}, {1.0, 1.0}});
+  problem.a_ub = pluss::series::make({{-1.0, -1.0}});
+  problem.b_ub = pluss::series::make({-1.0, 1.0}).reshape({2, 1});   // x0 + x1 >= 1  and  x0 + x1 >= -1
+  problem.lower = pluss::series::make({0.0, 0.0});
+  problem.upper = pluss::series::make({0.3, 0.3});
+  const std::vector<double> codes = linprog::solve(problem).status.items<double>();
+  for (std::size_t lane = 0; lane < codes.size(); ++lane) {
+    out.writeln("lane", lane, ":", linprog::to_string(static_cast<linprog::Status>(static_cast<int>(codes[lane]))));
+  }
+}
+```
+
+Output
+
+```text
+lane 0 : PrimalInfeasible
+lane 1 : Optimal
+```
+
+## See Also
+
+- [`to_string`](to_string.md): names a status
+- [`success`](success.md): tests for a usable one
+- [`Result`](Result.md): holds the codes and certificates
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Result.html">
+    <span class="label">Previous</span>
+    <span class="title">Result</span>
+  </a>
+  <a class="next-link" href="solve.html">
+    <span class="label">Next</span>
+    <span class="title">solve</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

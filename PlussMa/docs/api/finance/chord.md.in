@@ -1,0 +1,29 @@
+# Several assets
+
+A `module::Chord` coordinates several single-asset [`Field`](field/Field.md)s, each with its own market, model and engine, and runs one operation across all of them. It is to `Field` what a table collection is to a table: it adds the names and the batching, and leaves every pricing question to the `Field`. Assets that can share a call are merged into one vectorised call; the others are priced one by one. [`Chord::Result`](chord/Result.md) returns a result per asset and the prices laid end to end.
+
+| You want | Use |
+|---|---|
+| To put assets together | [`Chord::add`](chord/Chord/add.md), [`at`](chord/Chord/at.md), [`contains`](chord/Chord/contains.md) |
+| Prices and Greeks of every asset | [`Chord::price`](chord/Chord/price.md) |
+| The implied-volatility smile of every asset | [`Chord::implied_vol`](chord/Chord/implied_vol.md) |
+| Correlated paths of all assets, for basket and spread payoffs | [`Chord::simulate_paths`](chord/Chord/simulate_paths.md), [`Chord::Paths`](chord/Paths.md) |
+| To know how much batching applies | [`Chord::batches`](chord/Chord/batches.md) |
+| To check all assets at once | [`Chord::validate`](chord/Chord/validate.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`Chord`](chord/Chord.md) | Named single-asset Fields priced together, with assets that can share a call merged into one vectorised call. |
+| [`Chord::Paths`](chord/Paths.md) | The simulated paths of all assets of a Chord, with the asset axis last. |
+| [`Chord::Result`](chord/Result.md) | The result of pricing a Chord: a Field::Result per asset and every price laid end to end. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+chord/Chord
+```
+<!-- apiref:toctree:end -->

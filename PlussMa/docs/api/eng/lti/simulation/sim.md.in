@@ -1,0 +1,82 @@
+# `lti::sim`
+
+## Signature
+
+```cpp
+lti::SimRun lti::sim(
+    const lti::StateSpace& system,
+    const pluss::Series& input,
+    const pluss::Series& time,
+    const lti::SimOptions& options = {});
+
+lti::SimRun lti::sim(
+    const lti::StateSpace& system,
+    const pluss::Series& input,
+    const pluss::Series& time,
+    const pluss::Series& initial,
+    const lti::SimOptions& options = {});
+```
+
+## What It Does
+
+Propagates continuous or discrete state-space dynamics over an explicit time grid. The first overload starts from zero state; the second uses a supplied initial state. Continuous propagation supports zero-order and linear input holds.
+
+## Parameters
+
+`system`
+: Valid state-space model.
+
+`input`
+: Samples shaped `[..., time, inputs]`.
+
+`time`
+: Finite, strictly increasing real floating vector. Discrete spacing must match `sample_time`.
+
+`initial`
+: Optional state shaped `[..., states]`; omitted means zero.
+
+`options`
+: Input interpolation policy.
+
+## Returns
+
+`SimRun` with values `[..., time, outputs]` and states `[..., time, states]`, preserving promoted precision and platform.
+
+## Errors
+
+Rejects malformed or incompatible shapes, mismatched lengths or platforms, nonfinite/nonincreasing time, wrong discrete spacing, incompatible initial state, and linear hold for discrete dynamics.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Simulate a continuous first-order step response on an irregular time grid.
+
+@@example Eng/api/lti_sim.cpp@@
+
+### Example 2
+
+Compare hold policies with an explicit initial state.
+
+@@example Eng/api/lti_sim_modes.cpp@@
+
+### Example 3
+
+Exercise timestamp and input-shape validation.
+
+@@example Eng/api/lti_sim_errors.cpp@@
+
+## See Also
+
+See [Simulation](../simulation.md) for shapes, batching, hold policy, and continuous/discrete behavior.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SimRun.html">
+    <span class="label">Previous</span>
+    <span class="title">SimRun</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

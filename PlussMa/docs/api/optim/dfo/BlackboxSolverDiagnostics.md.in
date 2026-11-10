@@ -1,0 +1,146 @@
+# `dfo::BlackboxSolverDiagnostics`
+
+The counters of a scalar mesh-adaptive run.
+
+`iterations` and `evaluations` count polls and objective calls; `last_phase` names the last kind of iteration (`bootstrap`, `accept_poll`, `accept_boundary`, `refine_mesh`, and the like); `mesh_size` and `frame_size` are the final sizes of the mesh and the frame.
+
+## Fields
+
+### `iterations`
+
+`std::int64_t`, default `0`.
+
+Iterations performed.
+
+### `evaluations`
+
+`std::int64_t`, default `0`.
+
+Objective evaluations.
+
+### `last_phase`
+
+`std::string`, default `empty`.
+
+Name of the last kind of iteration.
+
+### `mesh_size`
+
+`double`, default `0`.
+
+Final mesh size.
+
+### `frame_size`
+
+`double`, default `0`.
+
+Final frame size.
+
+## Guidance
+
+Read from `BlackboxSolverOutcome::diagnostics`.
+
+## Practical Examples
+
+### Example 1
+
+After a run to convergence on a quadratic. The frame ends at or below `mesh_tolerance`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::MadsBlackboxConfig config;
+  config.max_iterations = 5000;
+  config.max_evaluations = 20000;
+  const dfo::BlackboxSolverOutcome o = dfo::orthomads_minimizer(f, pluss::series::make({0.0, 0.0}), config);
+  const dfo::BlackboxSolverDiagnostics &d = o.diagnostics;
+  out.writeln("status =", dfo::to_string(o.status), ", iterations =", d.iterations, ", evaluations =", d.evaluations, ", last phase =", d.last_phase);
+  out.writeln("mesh =", d.mesh_size, ", frame =", d.frame_size);
+}
+```
+
+### Example 2
+
+After a run cut short by its default limit. The Rosenbrock valley needs more than the default 250 iterations per variable, so the frame is still above the tolerance when the run ends.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  const dfo::BlackboxSolverOutcome o = dfo::orthomads_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}));
+  out.writeln("status =", dfo::to_string(o.status), ", iterations =", o.diagnostics.iterations, ", frame =", o.diagnostics.frame_size);
+}
+```
+
+### Example 3
+
+The relative-improvement test. A looser `relative_improvement_tolerance` ends the run earlier, with a larger final frame; a tighter one lets the mesh refine further.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  for (const double tol : {1e-2, 1e-12}) {
+    dfo::MadsBlackboxConfig config;
+    config.relative_improvement_tolerance = tol;
+    config.max_iterations = 5000;
+    config.max_evaluations = 20000;
+    const dfo::BlackboxSolverOutcome o = dfo::orthomads_minimizer(f, pluss::series::make({0.0, 0.0}), config);
+    out.writeln("tolerance", tol, ": final frame =", o.diagnostics.frame_size, ", evaluations =", o.diagnostics.evaluations);
+  }
+}
+```
+
+## See Also
+
+- [`BlackboxSolverOutcome`](BlackboxSolverOutcome.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="BlackboxEvaluation.html">
+    <span class="label">Previous</span>
+    <span class="title">BlackboxEvaluation</span>
+  </a>
+  <a class="next-link" href="BlackboxSolverDisplay.html">
+    <span class="label">Next</span>
+    <span class="title">BlackboxSolverDisplay</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

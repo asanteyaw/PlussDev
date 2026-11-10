@@ -1,0 +1,211 @@
+<!-- generated from contains.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a9f17adf036e -->
+
+# `module::Chord::contains`
+
+[Back to `module::Chord`](../Chord.md)
+
+Tells whether an asset of that name is in the Chord.
+
+## Signature
+
+```cpp
+bool module::Chord::contains(const std::string &name) const;
+```
+
+## What It Does
+
+True when [`add`](add.md) was called with exactly that name. The comparison is exact and case sensitive. Call it before [`at`](at.md) or `operator[]` when the name comes from outside the program (a file, a user, another system), so that a missing asset is a branch and not an exception, and before `add` to avoid a duplicate.
+
+## Parameters
+
+`const std::string &name`
+: The name to look for.
+
+## Returns
+
+`true` if an asset has that name, `false` otherwise.
+
+## Practical Examples
+
+### Example 1: present and absent names
+
+Two assets, one name that is there and one that is not.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("spx", bs(100.0, 100.0, 0.20)).add("ndx", bs(90.0, 95.0, 0.30));
+  out.writeln("spx:", chord.contains("spx"), " ndx:", chord.contains("ndx"), " dax:", chord.contains("dax"));
+}
+```
+
+Output
+
+```text
+spx: true  ndx: true  dax: false
+```
+
+### Example 2: guarding at
+
+Read an asset only if it is there.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("spx", bs(100.0, 100.0, 0.20));
+  for (const std::string name : {"spx", "dax"}) {
+    if (chord.contains(name)) out.writeln(name, "spot", chord.at(name).market.spot.items<double>());
+    else out.writeln(name, "is not in the chord");
+  }
+}
+```
+
+Output
+
+```text
+spx spot [100.00000]
+dax is not in the chord
+```
+
+### Example 3: names are case sensitive
+
+`SPX` is not `spx`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("spx", bs(100.0, 100.0, 0.20));
+  out.writeln("spx:", chord.contains("spx"), " SPX:", chord.contains("SPX"), " spx with a space:", chord.contains("spx "));
+}
+```
+
+Output
+
+```text
+spx: true  SPX: false  spx with a space: false
+```
+
+### Example 4: adding only what is missing
+
+Avoid a duplicate-name error by checking first.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20));
+  for (const std::string name : {"a", "b"}) {
+    if (!chord.contains(name)) chord.add(name, bs(100.0, 100.0, 0.20));
+  }
+  out.writeln("assets", chord.names());
+}
+```
+
+Output
+
+```text
+assets [a, b]
+```
+
+### Example 5: an empty chord
+
+An empty Chord contains nothing, not even the empty name.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  out.writeln("size", chord.size(), " contains a:", chord.contains("a"), " contains empty name:", chord.contains(""));
+}
+```
+
+Output
+
+```text
+size 0  contains a: false  contains empty name: false
+```
+
+## See Also
+
+- [`Chord`](../Chord.md): the class
+- [`at`](at.md): reads the asset
+- [`add`](add.md): adds an asset
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="batches.html">
+    <span class="label">Previous</span>
+    <span class="title">batches</span>
+  </a>
+  <a class="next-link" href="from_model_params.html">
+    <span class="label">Next</span>
+    <span class="title">from_model_params</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

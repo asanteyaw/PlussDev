@@ -1,0 +1,73 @@
+# `structure::harmonic`
+
+Computes the steady response of a frame to sinusoidal loads.
+
+## Signature
+
+```cpp
+structure::HarmonicResult structure::harmonic(const structure::Frame& frame, const pluss::Series& load, const pluss::Series& omega, const structure::Fix& fix, const structure::HarmonicOptions& options = {});
+```
+
+## What It Does
+
+For a load `f e^{i omega t}` finds the steady complex amplitude `u` from `(K + i omega C - omega^2 M) u = f` at every frequency of `omega`, in one call with no time stepping. The load may be real or complex; a real load has zero phase.
+
+## Parameters
+
+`frame`
+: A frame with density.
+
+`load`
+: Load amplitudes, `[..., frequency, node, 3]`.
+
+`omega`
+: Angular frequencies in radians per time, a vector.
+
+`fix`
+: The supports; prescribed values must be zero.
+
+`options`
+: Damping coefficients and GMRES controls.
+
+## Returns
+
+A `HarmonicResult`.
+
+## Errors
+
+Throws `std::invalid_argument` when the frame has no density, the load lacks the frequency axis or has the wrong dtype or platform, `omega` is malformed, a free degree of freedom has no stiffness, or the options are invalid. Throws `std::runtime_error` when the solve at a frequency does not converge (typically an undamped structure at a natural frequency) and `fail_on_nonconvergence` is true.
+
+## Interpretation and Use
+
+Put several frequency samples inside each resonance, spaced finely compared with its width `2 zeta omega_n`. Damping, through `mass_damping` and `stiffness_damping`, controls the size of the peaks.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A sweep with stiffness and mass damping, and an undamped resonance.
+
+@@example Eng/api/structure_harmonic.cpp@@
+
+### Example 2
+
+The sweep checked against a mode sum.
+
+@@example Eng/api/structure_harmonic_modal.cpp@@
+
+### Example 3
+
+Rejected loads and frames.
+
+@@example Eng/api/structure_dynamics_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="motion.html">
+    <span class="label">Previous</span>
+    <span class="title">motion</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

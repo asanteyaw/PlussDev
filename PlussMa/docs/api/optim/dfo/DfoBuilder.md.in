@@ -1,0 +1,100 @@
+# `dfo::DfoBuilder`
+
+A chainable description of a derivative-free problem and its options, solved with `solve()`.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DFO::build();
+dfo::DfoBuilder dfo::DFO::build(const pluss::Series &initial);
+dfo::DfoResult dfo::DfoBuilder::solve() const;
+```
+
+## Construction
+
+Start from [`DFO::build()`](DFO/build.md). The default-constructed builder is empty; `DfoBuilder(problem)` and `DfoBuilder(problem, options)` start from existing values.
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`options`](DfoBuilder/options.md) | Returns the options collected so far. |
+| [`problem`](DfoBuilder/problem.md) | Returns the problem collected so far. |
+| [`solve`](DfoBuilder/solve.md) | Runs the collected problem with the collected options. |
+| [`with_auto_policy`](DfoBuilder/with_auto_policy.md) | Sets the thresholds `Auto` uses. |
+| [`with_blackbox`](DfoBuilder/with_blackbox.md) | Sets a black-box evaluation that returns objectives, constraints and a success flag. |
+| [`with_bounds`](DfoBuilder/with_bounds.md) | Sets lower and upper bounds on every variable. |
+| [`with_check_every`](DfoBuilder/with_check_every.md) | Sets how often the improvement test is applied. |
+| [`with_constraints`](DfoBuilder/with_constraints.md) | Sets inequality constraints `g(x) ≤ 0`. |
+| [`with_constraints_values`](DfoBuilder/with_constraints_values.md) | Sets inequality and equality constraints through `DfoConstraintValues`. |
+| [`with_de_config`](DfoBuilder/with_de_config.md) | Sets the settings of the differential evolution method. |
+| [`with_de_prmm_config`](DfoBuilder/with_de_prmm_config.md) | Sets the settings of the adaptive differential evolution method. |
+| [`with_display_iter`](DfoBuilder/with_display_iter.md) | Turns the per-iteration display on or off. |
+| [`with_initial`](DfoBuilder/with_initial.md) | Sets the starting point. |
+| [`with_mads_config`](DfoBuilder/with_mads_config.md) | Sets the settings of the mesh-adaptive methods. |
+| [`with_max_evaluations`](DfoBuilder/with_max_evaluations.md) | Sets the objective-evaluation budget. |
+| [`with_max_iterations`](DfoBuilder/with_max_iterations.md) | Sets the iteration (generation) budget. |
+| [`with_max_total_evaluations`](DfoBuilder/with_max_total_evaluations.md) | Sets a budget that also counts cache hits (MADS). |
+| [`with_nelder_mead_config`](DfoBuilder/with_nelder_mead_config.md) | Sets the settings of the Nelder-Mead method. |
+| [`with_objective`](DfoBuilder/with_objective.md) | Sets the objective, a function of the point that returns a real scalar. |
+| [`with_options`](DfoBuilder/with_options.md) | Replaces all options. |
+| [`with_problem`](DfoBuilder/with_problem.md) | Replaces the whole problem. |
+| [`with_promote_cpu_to_float64`](DfoBuilder/with_promote_cpu_to_float64.md) | Chooses whether single-precision CPU inputs are computed in double precision. |
+| [`with_pso_config`](DfoBuilder/with_pso_config.md) | Sets the settings of the particle swarm method. |
+| [`with_pso_dv_config`](DfoBuilder/with_pso_dv_config.md) | Sets the settings of the differential-velocity swarm method. |
+| [`with_seed`](DfoBuilder/with_seed.md) | Sets the seed of the random numbers. |
+| [`with_solver`](DfoBuilder/with_solver.md) | Chooses the method. |
+| [`with_tolerance`](DfoBuilder/with_tolerance.md) | Sets the relative-improvement stopping tolerance. |
+
+## Changelog
+
+- **0.1**: initial documented surface.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+DfoBuilder/Introduction
+DfoBuilder/options
+DfoBuilder/problem
+DfoBuilder/solve
+DfoBuilder/with_auto_policy
+DfoBuilder/with_blackbox
+DfoBuilder/with_bounds
+DfoBuilder/with_check_every
+DfoBuilder/with_constraints
+DfoBuilder/with_constraints_values
+DfoBuilder/with_de_config
+DfoBuilder/with_de_prmm_config
+DfoBuilder/with_display_iter
+DfoBuilder/with_initial
+DfoBuilder/with_mads_config
+DfoBuilder/with_max_evaluations
+DfoBuilder/with_max_iterations
+DfoBuilder/with_max_total_evaluations
+DfoBuilder/with_nelder_mead_config
+DfoBuilder/with_objective
+DfoBuilder/with_options
+DfoBuilder/with_problem
+DfoBuilder/with_promote_cpu_to_float64
+DfoBuilder/with_pso_config
+DfoBuilder/with_pso_dv_config
+DfoBuilder/with_seed
+DfoBuilder/with_solver
+DfoBuilder/with_tolerance
+```
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DfoAutoPolicy.html">
+    <span class="label">Previous</span>
+    <span class="title">DfoAutoPolicy</span>
+  </a>
+  <a class="next-link" href="DfoConstraintValues.html">
+    <span class="label">Next</span>
+    <span class="title">DfoConstraintValues</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

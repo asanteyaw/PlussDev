@@ -1,0 +1,177 @@
+<!-- generated from OptimaHessianApproximation.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::OptimaHessianApproximation`
+
+The curvature model of the quadratic subproblem: BFGS, limited-memory BFGS, exact, Hessian-vector products, or none.
+
+Each iteration of the sequential and interior algorithms solves a quadratic model whose second-order term is a Hessian. `Bfgs` (the default) builds a dense approximation from successive gradient differences with a damped update that keeps it positive definite. `Lbfgs` does the same from only the last `lbfgs_memory` step pairs, so memory stays small for many unknowns. `Exact` assembles the exact Hessian of the Lagrangian from forward-over-reverse products and makes it positive definite by a diagonal shift where it is not. `HessianVector` uses exact Hessian-vector products inside the iterative solves without forming the matrix. `Identity` uses no curvature, which turns the method into scaled steepest descent and is rarely competitive.
+
+## Fields
+
+### `Bfgs`
+
+`enumerator`, default `0`.
+
+Damped dense BFGS update (default).
+
+### `Identity`
+
+`enumerator`, default `1`.
+
+No curvature.
+
+### `Lbfgs`
+
+`enumerator`, default `2`.
+
+Limited-memory BFGS.
+
+### `Exact`
+
+`enumerator`, default `3`.
+
+Exact Lagrangian Hessian from forward-over-reverse products.
+
+### `HessianVector`
+
+`enumerator`, default `4`.
+
+Exact Hessian-vector products inside iterative solves.
+
+## Guidance
+
+Set as `hessian_approximation` in the sequential, working-set or interior options.
+
+## Practical Examples
+
+### Example 1
+
+All five on the Rosenbrock valley. Exact curvature needs the fewest iterations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <utility>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const pluss::Series &x) {
+    const pluss::Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  const std::pair<const char *, optim::OptimaHessianApproximation> models[] = {
+      {"Bfgs", optim::OptimaHessianApproximation::Bfgs}, {"Lbfgs", optim::OptimaHessianApproximation::Lbfgs}, {"Exact", optim::OptimaHessianApproximation::Exact},
+      {"HessianVector", optim::OptimaHessianApproximation::HessianVector}, {"Identity", optim::OptimaHessianApproximation::Identity}};
+  for (const auto &[name, model] : models) {
+    optim::OptimaOptions options;
+    options.sequential_qp.hessian_approximation = model;
+    const optim::OptimaState result = optim::optima(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+    out.writeln(name, ": iterations =", result.iteration, ", exit =", optim::optima_exit_flag_name(result.exit_flag));
+  }
+}
+```
+
+Output
+
+```text
+Bfgs : iterations = 34 , exit = Converged
+Lbfgs : iterations = 41 , exit = Converged
+Exact : iterations = 20 , exit = Converged
+HessianVector : iterations = 20 , exit = Converged
+Identity : iterations = 100 , exit = MaxIterations
+```
+
+### Example 2
+
+The limited-memory model with a short memory.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const pluss::Series &x) {
+    const pluss::Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  optim::OptimaOptions options;
+  options.sequential_qp.hessian_approximation = optim::OptimaHessianApproximation::Lbfgs;
+  options.sequential_qp.lbfgs_memory = 3;
+  const optim::OptimaState result = optim::optima(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+  out.writeln("iterations =", result.iteration, ", x =", result.params.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+iterations = 35 , x = [1.0000, 1.0000]
+```
+
+### Example 3
+
+In the interior algorithm.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const pluss::Series &x) {
+    const pluss::Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.hessian_approximation = optim::OptimaHessianApproximation::Exact;
+  const optim::OptimaState result = optim::optima(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+  out.writeln("iterations =", result.iteration, ", exit =", optim::optima_exit_flag_name(result.exit_flag));
+}
+```
+
+Output
+
+```text
+iterations = 20 , exit = Converged
+```
+
+## See Also
+
+- [`SequentialQPOptions`](SequentialQPOptions.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OptimaExitFlag.html">
+    <span class="label">Previous</span>
+    <span class="title">OptimaExitFlag</span>
+  </a>
+  <a class="next-link" href="OptimaLinearSystemSolver.html">
+    <span class="label">Next</span>
+    <span class="title">OptimaLinearSystemSolver</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

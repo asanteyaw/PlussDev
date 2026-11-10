@@ -1,0 +1,68 @@
+<!-- generated from plussma_calculus.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Calculus API Reference
+
+The calculus of PlussMa lives in `pluss::subsp::math` (reached as `pluss::math` and `pluss::operators`). It rests on two types. A [`math::Function`](calculus/functions/Function.md) is a formula written once and evaluated on any data. An [`operators::Operator`](calculus/operators/Operator.md) is a transformation of functions: differentiate, integrate, transform, expand. Applying an operator to a function gives another function, so the result can be evaluated, differentiated again, saved, or handed to the next operator.
+
+```cpp
+#include <pluss/ma.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+```
+
+Every page of this reference documents one function, method or options structure: what it is, when to call it, every parameter, what it returns, what it refuses, and programs with real output that cover each overload and each option.
+
+## How the pieces fit
+
+**A function is built once.** `math::function({"x", "y"}, callable)` runs the callable a single time on placeholder variables and records the formula; evaluating the function replays it on `Series` data, scalar or array, one point or a million. Constants, vectors and matrices are built with [`function`](calculus/functions/function_factory.md) and [`stack`](calculus/functions/stack.md); arithmetic, elementwise functions and tensor operations on a function are its methods.
+
+**An operator transforms functions.** `operators::differential("x")(f)` is `∂f/∂x`; `operators::integral("x", 0.0, 1.0)(f)` removes `x`; `operators::fourier::transform("x", "w")(f)` introduces a frequency `w`. Operators are values: build one, keep it, apply it to many functions, compose several with [`compose`](calculus/operators/compose.md), sum them with [`linear_combination`](calculus/operators/linear_combination.md), or define your own with [`define`](calculus/operators/define.md).
+
+**Results are exact where they can be.** Derivatives are exact formulas. Integrals, transforms and series use closed forms when a rule matches and fall back to numerical evaluation otherwise; [`provenance()`](calculus/functions/Function/provenance.md) reports which. What the library cannot see inside (a callable on `Series`) is `Opaque`, and is differentiated by automatic differentiation only on request.
+
+## The families
+
+| Family | What it covers |
+|---|---|
+| [Functions](calculus/functions.md) | The `Function` value, how to build one, arithmetic and elementwise methods, tensor methods, and the accessors that report what a function is |
+| [Operators](calculus/operators.md) | The `Operator` value, its capabilities, the option structs, and the operators that combine and define others |
+| [Derivatives](calculus/differential.md) | Partial and complex (Wirtinger) derivatives, gradient, Jacobian, Hessian, covariant derivative of a scalar |
+| [Integrals](calculus/integral.md) | Antiderivatives, anchored and definite integrals including infinite ranges, convolution |
+| [Differential geometry](calculus/geometry.md) | Levi-Civita connection, covariant derivative of tensors, absolute derivative along a curve |
+| [Fourier series and transforms](calculus/fourier.md) | Cosine, sine and full series; Fourier, cosine and sine transforms in three conventions |
+| [Measures](calculus/measure.md) | Integration against Lebesgue measure, densities, point masses and Stieltjes mixtures |
+| [Vector calculus](calculus/vector_calculus.md) | Divergence, curl, Laplacian, directional and material derivatives |
+| [Calculus of variations](calculus/variational.md) | Functional derivative and Euler–Lagrange expressions |
+| [Fractional calculus](calculus/fractional.md) | Fractional integrals and Caputo, Riemann–Liouville and Grünwald–Letnikov derivatives |
+| [Laplace transforms](calculus/laplace.md) | The transform and its numerical inverse |
+| [Taylor and power series](calculus/expansion.md) | Taylor polynomials, coefficient vectors, remainders, termwise series calculus |
+| [Stochastic calculus](calculus/stochastic.md) | Stochastic integrals, quadratic variation, generators, Itô's formula, Malliavin calculus |
+| [Saving and loading](calculus/io.md) | Writing functions and operators to streams and files, and reading them back |
+
+## Conventions
+
+- Examples print with `pluss::tils::OutputEngine`; a `Series` is read with `.items<double>()`, or `.item<double>()` for one number.
+- A function's variables are named when it is built. Values are supplied by position or by name when it is called ([`operator()`](calculus/functions/Function/call.md)).
+- Two functions can be combined (added, multiplied, composed with an operator's result) only if they share a variable trace: both built inside one `math::function(...)` callable, or one derived from the other. Functions from separate calls are combined with [`compose`](calculus/functions/Function/compose.md).
+- Errors are `pluss::Error`; the message names the operation and the problem.
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+calculus/functions
+calculus/operators
+calculus/differential
+calculus/integral
+calculus/geometry
+calculus/fourier
+calculus/measure
+calculus/vector_calculus
+calculus/variational
+calculus/fractional
+calculus/laplace
+calculus/expansion
+calculus/stochastic
+calculus/io
+```

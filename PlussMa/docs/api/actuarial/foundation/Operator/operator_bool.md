@@ -1,0 +1,137 @@
+<!-- generated from operator_bool.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8706be2e7004 -->
+
+# `actuarial::Operator<Signature>::operator_bool`
+
+[Back to `actuarial::Operator<Signature>`](../Operator.md)
+
+The explicit boolean form of `defined`.
+
+## Signature
+
+```cpp
+explicit actuarial::Operator<Signature>::operator bool() const noexcept;
+```
+
+## What It Does
+
+Equivalent to `defined()`, so an operator reads naturally in a condition: `if (rule)`. It is `explicit`, so an operator does not silently convert to a number or compare as one.
+
+## Returns
+
+`true` if a callable is installed.
+
+## Practical Examples
+
+### Example 1: in a condition
+
+An operator can be tested directly in an `if`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Operator<double(double)> square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  if (square) out.writeln("square is set");
+  const actuarial::Operator<double(double)> none;
+  if (!none) out.writeln("none is empty");
+}
+```
+
+Output
+
+```text
+square is set
+none is empty
+```
+
+### Example 2: the same as defined
+
+The two forms always agree.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Operator<double(double)> square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  const actuarial::Operator<double(double)> none;
+  out.writeln(static_cast<bool>(square) == square.defined(), static_cast<bool>(none) == none.defined());
+}
+```
+
+Output
+
+```text
+true true
+```
+
+### Example 3: choosing a fallback
+
+Pick the supplied rule or a default.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Operator<double(double)> square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  actuarial::Operator<double(double)> supplied;
+  const auto &chosen = supplied ? supplied : square;
+  out.writeln(chosen.key(), chosen(6.0));
+}
+```
+
+Output
+
+```text
+square 36.000000
+```
+
+## See Also
+
+- [`Operator`](../Operator.md): the type
+- [`make_operator`](../make_operator.md): builds one
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="key.html">
+    <span class="label">Previous</span>
+    <span class="title">key</span>
+  </a>
+  <a class="next-link" href="operator_call.html">
+    <span class="label">Next</span>
+    <span class="title">operator_call</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

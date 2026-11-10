@@ -1,0 +1,147 @@
+<!-- generated from core.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Contingent values
+
+The core functions turn a vector of one-year death probabilities and a level rate of interest into the classical contingent values: the survival curve, annuities, insurances, endowments, the life table with its commutation columns, and the net premium and reserve of an endowment insurance. Each takes a plain `Series` of probabilities and returns a `Series`, so they are the shortest route from a mortality table to a number. They sit beneath the operator layer: every one of the value functions is the [`Valuation`](valuation/Valuation.md) operator applied to one of the standard [`Cashflow`](valuation/Cashflow.md) benefits on a flat rate.
+
+## What This Family Owns
+
+| You want | Use |
+|---|---|
+| The probability of surviving 0 to `n` years | [`survival_curve`](core/survival_curve.md) |
+| The value of 1 a year paid at the start of each year while alive | [`annuity_due`](core/annuity_due.md) |
+| The same, paid at the end of each year | [`annuity_immediate`](core/annuity_immediate.md) |
+| The value of 1 payable at death within the term | [`term_insurance`](core/term_insurance.md) |
+| The value of 1 payable on surviving the term | [`pure_endowment`](core/pure_endowment.md) |
+| The value of 1 payable at death or at the end of the term | [`endowment_insurance`](core/endowment_insurance.md) |
+| A life table from death probabilities | [`lx_qx`](core/lx_qx.md) |
+| The commutation columns, to price at any age | [`commutation_table`](core/commutation_table.md), [`CommutationTable`](core/CommutationTable.md) |
+| The level premium of an endowment insurance | [`endowment_premium`](core/endowment_premium.md) |
+| The reserve of an endowment insurance at every duration | [`endowment_reserve`](core/endowment_reserve.md) |
+
+Use these when the rate is level and the benefit is one of the standard ones. Reach for [`Valuation`](valuation/Valuation.md) when the discount is a curve of rates, the benefit is a custom pair of payment vectors, or one basis values many benefits. Each value function returns a rank-zero series, read with `item<double>()`; the horizon is the length of the probability vector.
+
+## Practical Examples
+
+### Example 1: the standard values on one table
+
+Five years of mortality at 4%.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln("annuity-due        =", actuarial::annuity_due(qx, 0.04).item<double>());
+  out.writeln("annuity-immediate  =", actuarial::annuity_immediate(qx, 0.04).item<double>());
+  out.writeln("term insurance     =", actuarial::term_insurance(qx, 0.04).item<double>());
+  out.writeln("pure endowment     =", actuarial::pure_endowment(qx, 0.04).item<double>());
+  out.writeln("endowment ins.     =", actuarial::endowment_insurance(qx, 0.04).item<double>());
+}
+```
+
+Output
+
+```text
+annuity-due        = 4.520664
+annuity-immediate  = 4.278858
+term insurance     = 0.067934
+pure endowment     = 0.758194
+endowment ins.     = 0.826128
+```
+
+### Example 2: the same numbers from the operator layer
+
+Each value function is a flat-rate valuation of a standard cashflow.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Valuation value = actuarial::operators::value({actuarial::mortality::from_qx(qx), actuarial::discount::flat(0.04)});
+  out.writeln(actuarial::annuity_due(qx, 0.04).item<double>(), value(actuarial::cashflow::annuity(5)).item<double>());
+  out.writeln(actuarial::term_insurance(qx, 0.04).item<double>(), value(actuarial::cashflow::death(5)).item<double>());
+}
+```
+
+Output
+
+```text
+4.52066387 4.52066387
+0.06793404 0.06793404
+```
+
+### Example 3: a premium and its reserve
+
+The level premium of a five-year endowment and the reserve it builds up.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln("premium =", actuarial::endowment_premium(qx, 0.04).item<double>());
+  out.writeln("reserve =", actuarial::endowment_reserve(qx, 0.04).items<double>());
+}
+```
+
+Output
+
+```text
+premium = 0.182745
+reserve = [0.000000, 0.181873, 0.371663, 0.570136, 0.778794, 1.000000]
+```
+
+## Related Pages
+
+Use the persistent sidebar to open each function. The {guide}`actuarial guide <actuarial>` develops the formulas and longer workflows.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+core/survival_curve
+core/annuity_due
+core/annuity_immediate
+core/term_insurance
+core/pure_endowment
+core/endowment_insurance
+core/lx_qx
+core/commutation_table
+core/CommutationTable
+core/endowment_premium
+core/endowment_reserve
+```
+<!-- apiref:toctree:end -->

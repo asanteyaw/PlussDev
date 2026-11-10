@@ -1,0 +1,28 @@
+<!-- generated from vector_calculus.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Vector calculus
+
+The classical operators on scalar and vector fields: divergence, curl, Laplacian, directional derivative and the material (convective) derivative. Each is built from partial derivatives, so each result is an exact function of the coordinates.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`curl`](vector_calculus/curl.md) | The curl of a vector field: its local rotation. A vector function in three dimensions, a scalar function in two. |
+| [`directional`](vector_calculus/directional.md) | The derivative of a scalar function along a direction field: `v · ∇f`. |
+| [`divergence`](vector_calculus/divergence.md) | The divergence of a vector field: `Σ ∂Fᵢ/∂xᵢ`, a scalar function. |
+| [`laplacian`](vector_calculus/laplacian.md) | The Laplacian of a scalar function: `Σ ∂²f/∂xᵢ²`. |
+| [`material`](vector_calculus/material.md) | The material (convective) derivative of a scalar function in a flow: `∂f/∂t + v · ∇f`. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+vector_calculus/curl
+vector_calculus/directional
+vector_calculus/divergence
+vector_calculus/laplacian
+vector_calculus/material
+```
+<!-- apiref:toctree:end -->

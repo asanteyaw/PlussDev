@@ -1,0 +1,169 @@
+<!-- generated from bind_objective.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 30f0aa022fc2 -->
+
+# `module::Field::bind_objective`
+
+[Back to `module::Field`](../Field.md)
+
+A function from a `Model` to the loss, with the field and the quotes frozen inside it.
+
+## Signature
+
+```cpp
+std::function<double(const module::Model &)> module::Field::bind_objective(const pluss::Series &target_prices, pluss::Config cfg = {}) const;
+```
+
+## What It Does
+
+Copies the field and the quotes into a callable that takes a candidate [`Model`](../../model/Model.md), prices the field with it and returns the loss. The returned function is independent of the original field (later edits to the field do not change it), which makes it safe to hand to a minimiser. To drive a minimiser over a flat vector of parameters, convert with [`Model::make`](../../model/Model/make.md) inside a wrapper.
+
+## Parameters
+
+`const pluss::Series &target_prices`
+: One quote per option.
+
+`pluss::Config cfg`
+: Device.
+
+## Returns
+
+A `std::function<double(const Model&)>`.
+
+## Errors
+
+- Evaluating it with an invalid model throws.
+
+## Practical Examples
+
+### Example 1
+
+Binding and evaluating at two models.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  const Series quotes = field.price().price;
+  const auto f = field.bind_objective(quotes);
+  out.writeln("at the truth :", f(fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04})));
+  out.writeln("elsewhere    :", f(fin::model::make(fin::model::Kind::Heston, {3.0, 0.04, 0.3, -0.7, 0.04})));
+}
+```
+
+Output
+
+```text
+at the truth : 0.0000000000
+elsewhere    : 0.0469695690
+```
+
+### Example 2
+
+The bound function is independent of the field: editing the field afterwards does not change it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  const Series quotes = field.price().price;
+  const auto f = field.bind_objective(quotes);
+  const fin::module::Model probe = fin::model::make(fin::model::Kind::Heston, {2.0, 0.04, 0.3, -0.7, 0.04});
+  const double before = f(probe);
+  field.controls.loss = mod::Loss::MAE;
+  field.market = fin::market::make(120.0, 0.02, 0.0);
+  out.writeln("before edit:", before, ", after edit:", f(probe));
+}
+```
+
+Output
+
+```text
+before edit: 0.0079350865 , after edit: 0.0079350865
+```
+
+### Example 3
+
+Fitting one parameter by a plain grid search over the bound function: the minimum lies at the generating value.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  const Series quotes = field.price().price;
+  const auto f = field.bind_objective(quotes);
+  double best = 1e30, best_theta = 0.0;
+  for (double theta = 0.02; theta <= 0.0801; theta += 0.01) {
+    const double value = f(fin::model::make(fin::model::Kind::Heston, {1.5, theta, 0.3, -0.7, 0.04}));
+    if (value < best) { best = value; best_theta = theta; }
+  }
+  out.writeln("best theta =", best_theta, ", objective =", best);
+}
+```
+
+Output
+
+```text
+best theta = 0.04000000 , objective = 0.00000000
+```
+
+## See Also
+
+- [`Field`](../Field.md): the class
+- [`bind_objective_typed`](bind_objective_typed.md): taking the concrete struct
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="bind_objective_typed.html">
+    <span class="label">Next</span>
+    <span class="title">bind_objective_typed</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

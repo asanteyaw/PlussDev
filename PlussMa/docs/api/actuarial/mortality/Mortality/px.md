@@ -1,0 +1,153 @@
+<!-- generated from px.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 42c3832cf3a1 -->
+
+# `actuarial::Mortality::px`
+
+[Back to `actuarial::Mortality`](../Mortality.md)
+
+The one-year survival probabilities.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::Mortality::px() const;
+```
+
+## What It Does
+
+Returns {math}`p_{x+k}=1-q_{x+k}`. It is the complement of `qx`, computed on demand. The product of the first `k` values is the probability of surviving `k` years, which is what `survival` returns.
+
+## Returns
+
+A one-dimensional `Series` of `horizon` probabilities.
+
+## Errors
+
+Throws `Mortality is undefined` for a default-constructed law.
+
+## Practical Examples
+
+### Example 1: the complement
+
+`px` is one minus `qx`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  out.writeln("px     =", mortality.px().items<double>());
+  out.writeln("1 - qx =", mortality.qx().neg().add(1.0).items<double>());
+}
+```
+
+Output
+
+```text
+px     = [0.990000, 0.988000, 0.985000, 0.981000, 0.976000]
+1 - qx = [0.990000, 0.988000, 0.985000, 0.981000, 0.976000]
+```
+
+### Example 2: the survival curve from px
+
+The cumulative product of `px`, with a leading one, is the survival curve.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const auto p = mortality.px().items<double>();
+  double running = 1.0;
+  std::vector<double> curve = {1.0};
+  for (const double v : p) curve.push_back(running *= v);
+  out.writeln("from px  =", curve);
+  out.writeln("survival =", mortality.survival().items<double>());
+}
+```
+
+Output
+
+```text
+from px  = [1.000000, 0.990000, 0.978120, 0.963448, 0.945143, 0.922459]
+survival = [1.000000, 0.990000, 0.978120, 0.963448, 0.945143, 0.922459]
+```
+
+### Example 3: the error
+
+An undefined law is refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::Mortality{}.px(); });
+}
+```
+
+Output
+
+```text
+Mortality is undefined
+```
+
+## See Also
+
+- [`Mortality`](../Mortality.md): the type
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lifetime_pmf.html">
+    <span class="label">Previous</span>
+    <span class="title">lifetime_pmf</span>
+  </a>
+  <a class="next-link" href="qx.html">
+    <span class="label">Next</span>
+    <span class="title">qx</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,139 @@
+<!-- generated from analytica_lorentzian.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `integ::analytica::lorentzian`
+
+The integral of the Lorentzian kernel `1 / (x² + scale²)` from `a` to `b`.
+
+## Signature
+
+```cpp
+double integ::analytica::lorentzian(double scale, double a, double b);
+```
+
+## What It Does
+
+`(atan(b/scale) − atan(a/scale))/scale`. The kernel is the shape of a Cauchy density and of a spectral line; over the whole line it integrates to `π/scale`.
+
+## Parameters
+
+`double scale`
+: The width; must be positive.
+
+`double a, double b`
+: The limits.
+
+## Returns
+
+The exact value of the integral, a `double`.
+
+## Errors
+
+- `scale ≤ 0` throws.
+
+## Practical Examples
+
+### Example 1
+
+The whole line. The integral approaches `π/scale`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("scale 1 :", analytica::lorentzian(1.0, -1e6, 1e6), ", pi =", 3.14159265358979323846);
+  out.writeln("scale 2 :", analytica::lorentzian(2.0, -1e6, 1e6), ", pi/2 =", 3.14159265358979323846 / 2.0);
+}
+```
+
+Output
+
+```text
+scale 1 : 3.141591 , pi = 3.141593
+scale 2 : 1.570794 , pi/2 = 1.570796
+```
+
+### Example 2
+
+The Cauchy distribution function. The probability of a standard Cauchy variable between −1 and 1 is exactly 1/2: the kernel integral divided by `π`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::lorentzian(1.0, -1.0, 1.0) / 3.14159265358979323846);
+}
+```
+
+Output
+
+```text
+0.50000000
+```
+
+### Example 3
+
+Checked against the infinite-domain quadrature. The closed form and `quadra` over the whole line agree.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto numeric = [&](const std::function<Series(const Series &)> &f, double a, double b) { return integ::quadra(f, a, b).value.item<double>(); };
+
+  out.writeln("closed form :", analytica::lorentzian(0.5, -1e8, 1e8));
+  out.writeln("quadrature  :", integ::quadra([](const Series &t) { return 1.0 / (t.square() + 0.25); }, -INFINITY, INFINITY).value.item<double>());
+}
+```
+
+Output
+
+```text
+closed form : 6.283185
+quadrature  : 6.283185
+```
+
+## See Also
+
+- [`quadra`](quadra.md): numerical quadrature of any integrand
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="analytica_hyperbolic_tangent.html">
+    <span class="label">Previous</span>
+    <span class="title">hyperbolic_tangent</span>
+  </a>
+  <a class="next-link" href="analytica_polynomial.html">
+    <span class="label">Next</span>
+    <span class="title">polynomial</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

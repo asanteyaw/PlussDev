@@ -1,0 +1,16 @@
+<!-- generated from Introduction.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::ProblemBuilder` Introduction
+
+`ProblemBuilder` collects the parts of a problem through chained calls, each returning the builder itself: the objective ([`objective`](objective.md) or [`objective_analytic`](objective_analytic.md)), bounds ([`lbs`](lbs.md), [`ubs`](ubs.md)), linear rows ([`ln_eq`](ln_eq.md), [`ln_ineq`](ln_ineq.md)) and nonlinear constraints ([`nonlinear_equality`](nonlinear_equality.md) with its short name [`nl_eq`](nl_eq.md), [`nonlinear_inequality`](nonlinear_inequality.md) with [`nl_ineq`](nl_ineq.md), and [`nonlinear_analytic`](nonlinear_analytic.md) for hand-written Jacobians). [`build`](build.md) produces a `ConstrainedProblem`, and the builder also converts to one implicitly, so it can be passed straight to [`optima`](../optima.md).
+
+Constraint sign conventions are the same everywhere: a nonlinear inequality returns `g(x)` and must satisfy `g(x) ≤ 0`; a nonlinear equality returns `h(x)` and must satisfy `h(x) = 0`; a linear equality row is `Aeq x = beq`; a linear inequality row is `Aineq x ≤ bineq`, with one matrix column per unknown scalar, taking the blocks in order. A callback may return a scalar or a vector of residuals.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="build.html">
+    <span class="label">Next</span>
+    <span class="title">build</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

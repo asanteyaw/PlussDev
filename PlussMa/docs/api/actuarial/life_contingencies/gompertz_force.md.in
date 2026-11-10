@@ -1,0 +1,186 @@
+# `actuarial::life_contingencies::gompertz_force`
+
+Evaluates the Gompertz force of mortality at ages.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::life_contingencies::gompertz_force(const pluss::Series &attained_ages, double b, double c);
+```
+
+## What It Does
+
+Returns {math}`\mu_x=b\,c^{x}` at each age: a force that grows by the factor `c` every year of age. The result has the shape, dtype and platform of `attained_ages`. Use it for adult mortality; [`gompertz_qx`](gompertz_qx.md) converts it to a one-year probability, and [`makeham_force`](makeham_force.md) adds an age-independent term.
+
+## Parameters
+
+`attained_ages`
+: One-dimensional, finite, non-negative ages.
+
+`b`
+: Force at age 0, 0 or more.
+
+`c`
+: Yearly growth factor, greater than 1.
+
+## Returns
+
+A series of forces, one per age.
+
+## Errors
+
+Throws `gompertz_force: b must be >= 0`, `gompertz_force: c must be > 1 for Gompertz-style age acceleration` and `gompertz_force: attained_ages must be >= 0`.
+
+## Practical Examples
+
+### Example 1: forces at four ages
+
+Mortality force rises with age.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(7));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0});
+  out.writeln(life::gompertz_force(ages, 0.0001, 1.08).items<double>());
+}
+```
+
+### Example 2: by hand
+
+The formula `b * c^x`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(7));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0});
+  out.writeln(0.0001 * std::pow(1.08, 60.0), 0.0001 * std::pow(1.08, 63.0));
+  out.writeln(life::gompertz_force(ages, 0.0001, 1.08).items<double>());
+}
+```
+
+### Example 3: each year multiplies by c
+
+The ratio of consecutive forces is `c`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0});
+  const auto mu = life::gompertz_force(ages, 0.0001, 1.08).items<double>();
+  out.writeln(mu[1] / mu[0], mu[2] / mu[1], mu[3] / mu[2]);
+}
+```
+
+### Example 4: the effect of c
+
+A larger growth factor makes old ages far more dangerous.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series ages = pluss::make_series({40.0, 60.0, 80.0});
+  out.writeln("c = 1.08:", life::gompertz_force(ages, 0.0001, 1.08).items<double>());
+  out.writeln("c = 1.10:", life::gompertz_force(ages, 0.0001, 1.10).items<double>());
+}
+```
+
+### Example 5: the errors
+
+Parameters and ages out of range.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)life::gompertz_force(pluss::make_series({60.0}), -1.0, 1.08); });
+  report([&] { (void)life::gompertz_force(pluss::make_series({60.0}), 0.0001, 1.0); });
+  report([&] { (void)life::gompertz_force(pluss::make_series({-1.0}), 0.0001, 1.08); });
+}
+```
+
+## See Also
+
+- [`gompertz_qx`](gompertz_qx.md): as a probability
+- [`mortality::gompertz`](../mortality/gompertz.md): builds a `Mortality`- [`Mortality`](../mortality/Mortality.md): the same conversions as accessors
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="force_qx.html">
+    <span class="label">Previous</span>
+    <span class="title">force_qx</span>
+  </a>
+  <a class="next-link" href="gompertz_qx.html">
+    <span class="label">Next</span>
+    <span class="title">gompertz_qx</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

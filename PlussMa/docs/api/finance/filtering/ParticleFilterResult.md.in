@@ -1,0 +1,268 @@
+# `filtering::ParticleFilterResult`
+
+What a particle filter returns: the filtered mean, the weights, the cloud, the effective sample size and the log-likelihood estimate.
+
+For `T` dates, `N` particles and state dimension `n`. `filtered_mean` is the weighted mean of the cloud after each observation; `particle_weights` are the normalised weights; `particles` is the whole cloud (only if `store_particles`); `ess` the effective sample size at each date, a diagnostic of degeneracy; `loglik` the estimate of the log-likelihood of the observations (the sum of the logarithms of the average likelihoods), which has a Monte Carlo error.
+
+## Fields
+
+### `filtered_mean`
+
+`pluss::Series`, default `undefined`.
+
+`[T, n]`: weighted mean of the cloud.
+
+### `particle_weights`
+
+`pluss::Series`, default `undefined`.
+
+`[T, N]`: normalised weights.
+
+### `particles`
+
+`pluss::Series`, default `undefined`.
+
+`[T, N, n]` if stored.
+
+### `ess`
+
+`pluss::Series`, default `undefined`.
+
+`[T]`: effective sample size.
+
+### `loglik`
+
+`double`, default `0.0`.
+
+Estimate of the log-likelihood.
+
+## Guidance
+
+Returned by `particle_filter` and `sv_particle_filter`.
+
+## Practical Examples
+
+### Example 1
+
+Shapes.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  const auto res = flt::particle_filter(y, make_model({}), cfg);
+  out.writeln("filtered_mean", res.filtered_mean.sizes(), " particle_weights", res.particle_weights.sizes(), " particles", res.particles.sizes(), " ess", res.ess.sizes());
+}
+```
+
+### Example 2
+
+The filtered mean is the weighted mean of the stored cloud.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  const auto res = flt::particle_filter(y, make_model({}), cfg);
+  const Series manual = (res.particles.select(0, 50).reshape({N}) * res.particle_weights.select(0, 50)).sum();
+  out.writeln("filtered mean at date 50:", res.filtered_mean.select(0, 50).sum().item<double>(), ", recomputed:", manual.item<double>(), ", weights sum to", res.particle_weights.select(0, 50).sum().item<double>());
+}
+```
+
+### Example 3
+
+The effective sample size across dates: it dips and is restored by resampling.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  const auto res = flt::particle_filter(y, make_model({}), cfg);
+  out.writeln("ESS: minimum", res.ess.amin().item<double>(), ", mean", res.ess.mean().item<double>(), ", of", N);
+}
+```
+
+### Example 4
+
+The log-likelihood estimate against the exact value from the Kalman filter, over 6 seeds of the initial cloud.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  double sum = 0.0;
+  for (std::uint64_t seed = 1; seed <= 6; ++seed) {
+    auto model = make_model({});
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 100 + seed);
+    const double l = flt::particle_filter(y, model, cfg).loglik;
+    sum += l;
+    out.writeln("seed", seed, ": loglik", l);
+  }
+  out.writeln("mean", sum / 6.0, " exact", exact.loglik);
+}
+```
+
+## See Also
+
+- [`particle_filter`](particle_filter.md): produces it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ParticleFilterOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">ParticleFilterOptions</span>
+  </a>
+  <a class="next-link" href="ParticleResampleMethod.html">
+    <span class="label">Next</span>
+    <span class="title">ParticleResampleMethod</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

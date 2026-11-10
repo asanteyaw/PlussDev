@@ -1,0 +1,24 @@
+<!-- generated from integral.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Integrals
+
+The operators that integrate: antiderivatives, anchored and definite integrals (including over infinite ranges), and convolution. Integrals the library can resolve in closed form are exact; the rest are evaluated by quadrature when values arrive.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`antiderivative`](integral/antiderivative.md) | A function whose derivative is the input: an indefinite integral with respect to one variable. |
+| [`convolution`](integral/convolution.md) | The convolution of a function with a fixed kernel over the real line: `(f ∗ k)(x) = ∫ f(t) k(x − t) dt`. |
+| [`integral`](integral/integral.md) | The integral of a function over a range: anchored at a lower limit (a function of the upper limit) or definite (a number, or a function of the other variables). |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+integral/antiderivative
+integral/convolution
+integral/integral
+```
+<!-- apiref:toctree:end -->

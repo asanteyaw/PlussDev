@@ -1,0 +1,120 @@
+# `linprog::success`
+
+Whether a status counts as a usable solution: `Optimal` or `NearOptimal`.
+
+## Signature
+
+```cpp
+bool linprog::success(linprog::Status status);
+```
+
+## What It Does
+
+A lane ends `Optimal` when the primal and dual residuals and the gap are below `tolerance`, and `NearOptimal` when the iteration stalled at the limit of attainable accuracy but the residuals and gap are below the looser `accept_tolerance`; the best iterate is returned. Both carry a solution you can use, and `success` is true for both. It is false for `PrimalInfeasible`, `Unbounded` and `IterationLimit`, which carry a certificate or a failure rather than an answer. Use it as the one test before reading `x`.
+
+## Parameters
+
+`linprog::Status status`
+: The status to test.
+
+## Returns
+
+`true` for `Optimal` and `NearOptimal`.
+
+## Practical Examples
+
+### Example 1
+
+All five statuses.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  for (const linprog::Status status : {linprog::Status::Optimal, linprog::Status::NearOptimal, linprog::Status::PrimalInfeasible, linprog::Status::Unbounded, linprog::Status::IterationLimit}) {
+    out.writeln(linprog::to_string(status), ": success =", linprog::success(status));
+  }
+}
+```
+
+### Example 2
+
+Gating on a solve. A feasible problem passes; an infeasible one does not, and its Farkas multipliers are read instead.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  linprog::Problem problem;
+  problem.c = pluss::series::make({1.0, 1.0});
+  problem.a_ub = pluss::series::make({{1.0, 1.0}, {-1.0, -1.0}});
+  problem.b_ub = pluss::series::make({1.0, -3.0});
+  problem.lower = pluss::series::make({0.0, 0.0});
+  const linprog::Result result = linprog::solve(problem);
+  const linprog::Status status = static_cast<linprog::Status>(static_cast<int>(result.status.item<double>()));
+  if (linprog::success(status)) {
+    out.writeln("solution x =", result.x.items<double>());
+  } else {
+    out.writeln("no solution:", linprog::to_string(status), ", farkas =", result.farkas.items<double>());
+  }
+}
+```
+
+### Example 3
+
+`NearOptimal` is accepted. A lane that stalled close to optimal still counts, which is why `success` is the right test and a comparison with `Optimal` is too strict.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const linprog::Status stalled = linprog::Status::NearOptimal;
+  out.writeln("== Optimal :", stalled == linprog::Status::Optimal);
+  out.writeln("success   :", linprog::success(stalled));
+}
+```
+
+## See Also
+
+- [`to_string`](to_string.md): names the status
+- [`Status`](Status.md): all five verdicts
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="solve.html">
+    <span class="label">Previous</span>
+    <span class="title">solve</span>
+  </a>
+  <a class="next-link" href="to_string.html">
+    <span class="label">Next</span>
+    <span class="title">to_string</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

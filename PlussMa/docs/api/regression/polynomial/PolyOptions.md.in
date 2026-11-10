@@ -1,0 +1,291 @@
+# `regression::PolyOptions`
+
+Everything `poly_fit` can be told besides the data: the degree, whether to include cross terms, the intercept and missing-row handling, the conditioning cutoff, the confidence level, the case weights and the labels.
+
+## Signature
+
+```cpp
+regression::PolyOptions options;
+regression::PolyFitResult regression::poly_fit(const Series &y, const Series &x, const regression::PolyOptions &options = {}, Config cfg = {});
+```
+
+A default `PolyOptions` fits a quadratic with an intercept and no cross terms at the 95% level. Examples below use eight points that follow a curve, so the degree matters.
+
+## Fields
+
+### `degree`
+
+`std::int64_t`, default `2`.
+
+The highest power of each predictor, at least one. Degree one is a straight line, degree two adds the squares, and so on; the design gains one column per predictor per power. The program fits degrees one, two and three and prints R²: the line misses the curve, the quadratic captures it, and the cubic adds almost nothing, which is the sign that two is enough.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  for (const std::int64_t degree : {1, 2, 3}) {
+    reg::PolyOptions options;
+    options.degree = degree;
+    const auto fit = reg::poly_fit(y, x, options);
+    out.writeln("degree", degree, " coefficients", fit.ols.coefficients.items<double>(), " R^2", fit.ols.rsquared);
+  }
+}
+```
+
+### `add_intercept`
+
+`bool`, default `true`.
+
+Whether a constant column is added to the expanded design. With the default `true` the first coefficient is the intercept, named `const`; with `false` the curve is forced through the origin. The program fits the quadratic both ways.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  reg::PolyOptions options;
+  const auto with = reg::poly_fit(y, x, options);
+  options.add_intercept = false;
+  const auto without = reg::poly_fit(y, x, options);
+  out.writeln("with intercept   ", with.ols.coefficient_names, with.ols.coefficients.items<double>());
+  out.writeln("without intercept", without.ols.coefficient_names, without.ols.coefficients.items<double>());
+}
+```
+
+### `include_cross`
+
+`bool`, default `false`.
+
+Whether to add the products of different predictors. Without it each predictor enters on its own through its powers, so the effect of one does not depend on the other; with it the design gains the mixed terms up to the degree, such as x1·x2 for a quadratic, which lets the effect of one predictor change with the level of the other. It has no effect with a single predictor. The program fits two predictors both ways and prints the names of the columns.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x1 = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, {10}, as_f64());
+  const auto x2 = pluss::make_series(std::vector<double>{3, 1, 4, 1, 5, 9, 2, 6, 5, 3}, {10}, as_f64());
+  const auto xx = x1.unsqueeze(1).unite({x2.unsqueeze(1)}, 1);
+  const auto yy = pluss::make_series(std::vector<double>{4.22, 3.7, 8.45, 6.6, 13.35, 22.38, 11.7, 21.82, 21.45, 18.6}, {10}, as_f64());
+  reg::PolyOptions options;
+  options.degree = 2;
+  const auto plain = reg::poly_fit(yy, xx, options);
+  options.include_cross = true;
+  const auto crossed = reg::poly_fit(yy, xx, options);
+  out.writeln("without cross terms", plain.ols.coefficient_names);
+  out.writeln("with cross terms   ", crossed.ols.coefficient_names);
+  out.writeln("R^2", plain.ols.rsquared, "->", crossed.ols.rsquared);
+}
+```
+
+### `drop_missing`
+
+`bool`, default `true`.
+
+What to do with rows that hold NaN or infinite values. With the default `true` they are left out and counted in `ols.dropped_observations`; with `false` any non-finite value is an error.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  auto values = std::vector<double>{1, 2, 3, std::nan(""), 5, 6, 7, 8};
+  const auto holey = pluss::make_series(values, {8}, as_f64());
+  reg::PolyOptions options;
+  const auto fit = reg::poly_fit(y, holey, options);
+  out.writeln("drop_missing=true : nobs", fit.ols.nobs, " dropped", fit.ols.dropped_observations);
+  options.drop_missing = false;
+  try {
+    reg::poly_fit(y, holey, options);
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln("drop_missing=false:", text.substr(0, text.find("Triggered")));
+  }
+}
+```
+
+### `rcond`
+
+`double`, default `1e-12`.
+
+The reciprocal-condition cutoff below which a direction of the design is treated as numerically absent. The powers of a predictor that stays far from zero are nearly collinear: x, x² and x³ of numbers near 100 are almost proportional. The program fits a cubic to values near 100 at the default cutoff and at a coarse one, and prints the rank: even at the default the design has lost one direction (rank 3 of 4, with a condition number around 10¹¹), and the coarse cutoff drops another. Centre the predictor before expanding it when it stays far from zero.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{100, 101, 102, 103, 104, 105, 106, 107}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  reg::PolyOptions options;
+  options.degree = 3;
+  const auto fine = reg::poly_fit(y, x, options);
+  options.rcond = 1e-6;
+  const auto coarse = reg::poly_fit(y, x, options);
+  out.writeln("rcond 1e-12: rank", fine.ols.rank, " of", fine.ols.k_params, " condition number", fine.ols.condition_number);
+  out.writeln("rcond 1e-6 : rank", coarse.ols.rank, " of", coarse.ols.k_params);
+}
+```
+
+### `alpha`
+
+`double`, default `0.05`.
+
+The significance level of the confidence intervals, so the intervals have coverage 1 − alpha. A larger alpha gives narrower intervals and changes nothing else. The program prints the interval of the quadratic coefficient at 0.05 and 0.10.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  for (const double alpha : {0.05, 0.10}) {
+    reg::PolyOptions options;
+    options.alpha = alpha;
+    const auto fit = reg::poly_fit(y, x, options);
+    const auto ci = fit.ols.conf_int.reshape({6}).items<double>();   // [lower0, upper0, lower1, upper1, lower2, upper2]
+    out.writeln("alpha", alpha, " coefficient of x^2", fit.ols.coefficients.items<double>()[2], " interval", ci[4], ci[5]);
+  }
+}
+```
+
+### `weights`
+
+`Series`, default `undefined`.
+
+Case weights, one non-negative value per row, as for [`OLSOptions`](../least_squares/OLSOptions.md): a weight of zero removes the row, and it is counted in `ols.dropped_observations`. The program gives the last row weight zero and compares with the fit that leaves it out by hand.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  reg::PolyOptions options;
+  options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 1, 0}, {8}, as_f64());
+  const auto weighted = reg::poly_fit(y, x, options);
+  options.weights = pluss::series::undefined();
+  const auto by_hand = reg::poly_fit(y.slice(0, 0, 7), x.slice(0, 0, 7), options);
+  out.writeln("weight zero: nobs", weighted.ols.nobs, " dropped", weighted.ols.dropped_observations, " coefficients", weighted.ols.coefficients.items<double>());
+  out.writeln("row removed: nobs", by_hand.ols.nobs, "         coefficients", by_hand.ols.coefficients.items<double>());
+}
+```
+
+### `response_name`
+
+`std::string`, default `"y"`.
+
+The label of the response, carried to the result and printed by the summary. It does not affect the fit. The default is `y`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  reg::PolyOptions options;
+  options.response_name = "load";
+  const auto fit = reg::poly_fit(y, x, options);
+  out.writeln("response_name", fit.ols.response_name);
+}
+```
+
+### `predictor_names`
+
+`std::vector<std::string>`, default `empty`.
+
+Labels for the predictors, one per column of `x`. The expanded columns are named from them: the predictor itself, then its powers written `t^2`, `t^3`, and mixed terms written `a*b`. Without names the predictors are `x1`, `x2`, and so on.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  reg::PolyOptions options;
+  options.degree = 3;
+  const auto unnamed = reg::poly_fit(y, x, options);
+  options.predictor_names = {"t"};
+  const auto named = reg::poly_fit(y, x, options);
+  out.writeln("default names", unnamed.ols.coefficient_names);
+  out.writeln("given names  ", named.ols.coefficient_names);
+}
+```
+
+## See Also
+
+[`poly_fit`](poly_fit.md) consumes the options, [`poly_expand`](poly_expand.md) builds the design the options describe, and [`PolyFitResult`](PolyFitResult.md) records the outcome.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="PolyFitResult.html">
+    <span class="label">Next</span>
+    <span class="title">PolyFitResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,77 @@
+# `control::margin`
+
+Interpolates classical SISO stability margins.
+
+## Signature
+
+```cpp
+control::MarginResult control::margin(
+    const pluss::Series& response,
+    const pluss::Series& omega);
+
+control::MarginResult control::margin(
+    const lti::StateSpace& system,
+    const pluss::Series& omega);
+
+control::MarginResult control::margin(
+    const lti::PoleZero& system,
+    const pluss::Series& omega);
+```
+
+## What It Does
+
+Crossings are interpolated between adjacent samples rather than snapped to bins. Supply a sufficiently resolved grid around expected crossovers; no sampled-data method can recover a crossing absent from the covered band.
+
+## Parameters
+
+`response`
+: A one-dimensional complex open-loop response sampled at `omega`.
+
+`system`
+: A SISO LTI model evaluated internally before margin extraction.
+
+`omega`
+: Strictly ordered real angular frequencies.
+
+## Returns
+
+A `MarginResult` containing gain, phase, and stability measures plus their angular frequencies.
+
+## Errors
+
+Throws for real-only response data, MIMO models, incompatible response/frequency lengths, or invalid frequency ordering.
+
+## Interpretation and Use
+
+The response overload is best when frequency data already exists; model overloads avoid separately calling `freqresp`. Crossing interpolation improves on selecting the nearest sample but cannot recover behavior outside the supplied band, so widen and refine `omega` before trusting absent crossovers.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Compute margins directly from a model over a dense grid.
+
+@@example Eng/api/control_margin.cpp@@
+
+### Example 2
+
+Produce open-loop response data suitable for the direct overload.
+
+@@example Eng/api/control_loop.cpp@@
+
+### Example 3
+
+See response dtype and SISO validation.
+
+@@example Eng/api/control_loop_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="loop.html">
+    <span class="label">Previous</span>
+    <span class="title">loop</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

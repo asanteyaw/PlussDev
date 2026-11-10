@@ -1,0 +1,153 @@
+<!-- generated from OptimaLinearSystemStructure.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::OptimaLinearSystemStructure`
+
+Whether the subproblem matrices are treated as dense or sparse.
+
+`Auto` (default) decides from the matrices. `Dense` always forms and factorises full matrices, best for small and moderately sized problems. `Sparse` exploits zeros, which pays off for large problems with sparse constraint Jacobians.
+
+## Fields
+
+### `Auto`
+
+`enumerator`, default `0`.
+
+Decide from the matrices.
+
+### `Dense`
+
+`enumerator`, default `1`.
+
+Full matrices.
+
+### `Sparse`
+
+`enumerator`, default `2`.
+
+Exploit zeros.
+
+## Guidance
+
+Set as `system_structure` in the options of an algorithm.
+
+## Practical Examples
+
+### Example 1
+
+Dense and sparse give the same answer.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  for (const optim::OptimaLinearSystemStructure structure : {optim::OptimaLinearSystemStructure::Dense, optim::OptimaLinearSystemStructure::Sparse}) {
+    optim::OptimaOptions options;
+    options.sequential_qp.system_structure = structure;
+    out.writeln(static_cast<int>(structure), ": x =", optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc).params.at("x").items<double>());
+  }
+}
+```
+
+Output
+
+```text
+1 : x = [0.4472, 0.8944]
+2 : x = [0.4472, 0.8944]
+```
+
+### Example 2
+
+In the interior algorithm.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.system_structure = optim::OptimaLinearSystemStructure::Dense;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+Output
+
+```text
+exit = Converged , iterations = 7 , evaluations = 13
+```
+
+### Example 3
+
+Combined with an explicit solver.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.system_structure = optim::OptimaLinearSystemStructure::Dense;
+  options.sequential_qp.linear_system_solver = optim::OptimaLinearSystemSolver::Cholesky;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+Output
+
+```text
+exit = Converged , iterations = 4 , evaluations = 8
+```
+
+## See Also
+
+- [`OptimaLinearSystemSolver`](OptimaLinearSystemSolver.md): the solve method
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OptimaLinearSystemSolver.html">
+    <span class="label">Previous</span>
+    <span class="title">OptimaLinearSystemSolver</span>
+  </a>
+  <a class="next-link" href="OptimaOptions.html">
+    <span class="label">Next</span>
+    <span class="title">OptimaOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

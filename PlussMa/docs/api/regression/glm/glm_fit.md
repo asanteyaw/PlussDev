@@ -1,0 +1,267 @@
+<!-- generated from glm_fit.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `regression::glm_fit`
+
+Fits a generalised linear model by iteratively reweighted least squares and returns the coefficients, their uncertainty and the measures of fit.
+
+## Signature
+
+```cpp
+regression::GLMFitResult regression::glm_fit(const Series &y, const Series &x, const regression::GLMOptions &options = {}, Config cfg = {});
+```
+
+## What It Does
+
+A generalised linear model has three parts. The response has a distribution from the exponential family, chosen by the family; the linear predictor is η = Xβ plus the offset; and the link g connects them through g(μ) = η, with μ the mean of the response. The family fixes the variance function, V(μ) = 1 for `Normal`, μ(1 − μ) for `Binomial` and μ for `Poisson`, and with it the likelihood. `glm_fit` maximises that likelihood by iteratively reweighted least squares. Each step forms the working response z = η + (y − μ) g′(μ) and the weights w = 1 / (V(μ) g′(μ)²), multiplied by any case weights, solves the weighted least-squares problem of z on X, and repeats until the largest change in a coefficient is at most `tol` times one plus the largest coefficient, or `max_iter` steps have been taken.
+
+Call it when the response is a binary outcome, a count or a positive quantity whose variance depends on its mean, so that a straight least-squares fit would misstate both the mean and its uncertainty. For a continuous response with constant variance `ols_fit` gives the same coefficients with exact t-based inference; for a quantile of the response, use `quantile_fit`. Standard errors come from the inverse of the final weighted normal-equation matrix scaled by the dispersion, and the tests are Wald tests against the standard normal distribution.
+
+An intercept column is added unless `add_intercept` is false. Rows with non-finite values are dropped unless `drop_missing` is false, and rows of weight zero are not used. A rank-deficient design is solved with a pseudoinverse and the result records the rank and a warning.
+
+## Parameters
+
+`y`
+: The response, `[n]` (one value per observation). Its range depends on the family: any real number for `Normal`, a value in [0, 1] for `Binomial`, a non-negative value for `Poisson`.
+
+`x`
+: The predictors. A vector `[n]` is one predictor; a matrix `[n, p]` is `p` predictors. A matrix with no columns, `[n, 0]`, is a model with only the intercept.
+
+`options`
+: A [`GLMOptions`](GLMOptions.md) choosing the family, link, level, iteration limits, weights, offset and labels.
+
+`cfg`
+: Computation configuration for the returned `Series`.
+
+## Returns
+
+A [`GLMFitResult`](GLMFitResult.md).
+
+## Errors
+
+The call throws, with the message beginning `subsp::stats::regression::glm_fit:`, for each of these: `row mismatch between y and X`; `expected defined response`; `requires n >= number of parameters`; `alpha must be in (0,1)`; `max_iter must be > 0`; `tol must be > 0`; `rcond must be > 0`; `weights must be non-negative`; `weights must have one value per row`; `offset must have one value per row`; `predictor_names size must equal number of design columns before intercept handling`; `non-finite values found and drop_missing=false`; `binomial family expects y in [0,1]`; `poisson family expects y >= 0`; and `the logit link expects y in [0,1]`.
+
+## Practical Examples
+
+### Example 1: a Poisson regression
+
+Ten counts against the dose that produced them. The program fits the default (canonical, log) link and reads the slope as a rate ratio.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  options.predictor_names = {"dose"};
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln(fit.coefficient_names, fit.coefficients.items<double>());
+  out.writeln("each extra unit of dose multiplies the expected count by", std::exp(fit.coefficients.items<double>()[1]));
+  out.writeln("iterations", fit.iterations, " converged", fit.converged, " deviance", fit.deviance);
+}
+```
+
+Output
+
+```text
+[const, dose] [-0.54808, 0.63117]
+each extra unit of dose multiplies the expected count by 1.87980
+iterations 6  converged true  deviance 3.85733
+```
+
+### Example 2: a logistic regression
+
+Ten pass/fail results against hours of study, with the logit link that the binomial family uses by default.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1, 1, 1}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Binomial;
+  options.predictor_names = {"hours"};
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln(fit.coefficient_names, fit.coefficients.items<double>());
+  out.writeln("odds ratio per hour", std::exp(fit.coefficients.items<double>()[1]));
+  out.writeln("z values", fit.z_values.items<double>(), " p values", fit.p_values.items<double>());
+}
+```
+
+Output
+
+```text
+[const, hours] [-3.72188, 1.35341]
+odds ratio per hour 3.87061
+z values [-1.58517, 1.70067]  p values [0.11293, 0.08900]
+```
+
+### Example 3: a Normal response
+
+With the Normal family and its identity link, `glm_fit` is least squares: the coefficients equal those of `ols_fit`, and the dispersion is the residual variance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1.1, 1.9, 3.2, 3.8, 5.1, 6.2, 6.8, 8.1, 9.0, 9.9}, {10}, as_f64());
+  const auto glm = reg::glm_fit(y, x);
+  const auto ols = reg::ols_fit(y, x);
+  out.writeln("glm", glm.coefficients.items<double>(), " dispersion", glm.dispersion);
+  out.writeln("ols", ols.coefficients.items<double>(), " mse      ", ols.mse);
+}
+```
+
+Output
+
+```text
+glm [0.06000, 1.98182]  dispersion 0.02527
+ols [0.06000, 1.98182]  mse       0.02527
+```
+
+### Example 4: an intercept-only model
+
+With no predictors the estimate is the mean on the link scale. Eight results, five passes, fit a logistic model of no predictors: the coefficient is the log-odds of 5/8.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto none = pluss::series::zeros({8, 0}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{0, 1, 1, 0, 1, 1, 0, 1}, {8}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Binomial;
+  const auto fit = reg::glm_fit(y, none, options);
+  out.writeln("coefficient", fit.coefficients.items<double>(), " log-odds of 5/8", std::log(5.0 / 3.0));
+}
+```
+
+Output
+
+```text
+coefficient [0.51083]  log-odds of 5/8 0.51083
+```
+
+### Example 5: a rate with an offset and weights
+
+Counts over different exposures need the log of the exposure as an offset, and rows can carry case weights. The program fits both together and compares the dose effect with the fit that ignores the exposure.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  const auto exposure = pluss::make_series(std::vector<double>{1, 1, 2, 2, 2, 3, 3, 3, 4, 4}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  options.offset = exposure.log();
+  options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 1, 1, 1, 2}, {10}, as_f64());
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("rate model coefficients", fit.coefficients.items<double>(), " nobs", fit.nobs);
+}
+```
+
+Output
+
+```text
+rate model coefficients [-0.72064, 0.38336]  nobs 10
+```
+
+### Example 6: the errors
+
+Bad calls throw a message that names the problem. The program shows a binomial response outside [0, 1], the logit link on counts, an invalid level and a response of the wrong length.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto counts = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto pass = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1, 1, 1}, {10}, as_f64());
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      const std::string text(e.what());
+      out.writeln(text.substr(0, text.find('\n')));
+    }
+  };
+  reg::GLMOptions binomial;
+  binomial.family = reg::GLMFamily::Binomial;
+  report([&] { reg::glm_fit(counts, x, binomial); });
+  reg::GLMOptions logit;
+  logit.family = reg::GLMFamily::Poisson;
+  logit.link = reg::GLMLink::Logit;
+  report([&] { reg::glm_fit(counts, x, logit); });
+  reg::GLMOptions level;
+  level.alpha = 0.0;
+  report([&] { reg::glm_fit(pass, x, level); });
+  report([&] { reg::glm_fit(pass.slice(0, 0, 5), x); });
+}
+```
+
+Output
+
+```text
+subsp::stats::regression::glm_fit: binomial family expects y in [0,1]
+subsp::stats::regression::glm_fit: the logit link expects y in [0,1]
+subsp::stats::regression::glm_fit: alpha must be in (0,1)
+subsp::stats::regression::glm_fit: row mismatch between y and X
+```
+
+## See Also
+
+[`glm_predict`](glm_predict.md) applies the result to new rows, [`GLMOptions`](GLMOptions.md) lists every control, and [`GLMFitResult`](GLMFitResult.md) describes each output.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GLMFitResult.html">
+    <span class="label">Previous</span>
+    <span class="title">GLMFitResult</span>
+  </a>
+  <a class="next-link" href="glm_predict.html">
+    <span class="label">Next</span>
+    <span class="title">glm_predict</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

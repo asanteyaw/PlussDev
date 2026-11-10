@@ -1,0 +1,152 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fdbff1826db8 -->
+
+# `multigrid::Hierarchy::apply`
+
+[Back to `multigrid::Hierarchy`](../Hierarchy.md)
+
+Applies the operator `A` to a field on the finest grid.
+
+## Signature
+
+```cpp
+[[nodiscard]] pluss::Series multigrid::Hierarchy::apply(const pluss::Series &u) const;
+```
+
+## What It Does
+
+Computes `(A u)ᵢ = −Σₐ hₐ⁻²[b⁺ₐ,ᵢ(u_{i+eₐ} − uᵢ) − b⁻ₐ,ᵢ(uᵢ − u_{i−eₐ})]` (plus `mass·u` if a mass term is set) with the declared end conditions, for the whole field and every batch lane at once. It is the operator you pass to a Krylov solver. On the CPU, for a field that records no derivative and has the template's shape, it runs a fused native stencil; otherwise it is built from `Series` expressions and is differentiable.
+
+## Parameters
+
+`const pluss::Series &u`
+: A field whose trailing dimensions are the axis sizes.
+
+## Returns
+
+`A u`, shaped like `u`.
+
+## Errors
+
+- A field of the wrong shape throws.
+
+## Practical Examples
+
+### Example 1
+
+Second differences. The field `u = x²` on a grid of unit spacing has second derivative 2, and the operator is the negative of the second difference, so `A u = −2` in the interior; the end cells differ because the Neumann ghost cell repeats the end value.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::make_series({0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0});
+  const mg::Hierarchy h({.axes = {{8, 1.0, mg::Edge::Neumann, mg::Edge::Neumann}}}, u);
+  out.writeln("A u =", h.apply(u).items<double>());
+}
+```
+
+### Example 2
+
+A batch. Two lanes are processed together; each is acted on independently.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::make_series({1.0, 2.0, 3.0, 4.0, 4.0, 3.0, 2.0, 1.0}, {2, 4});
+  const mg::Hierarchy h({.axes = {{4, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}}, u);
+  out.writeln("lane 0:", h.apply(u).select(0, 0).items<double>());
+  out.writeln("lane 1:", h.apply(u).select(0, 1).items<double>());
+}
+```
+
+### Example 3
+
+Symmetry. The operator is symmetric: `⟨A u, v⟩ = ⟨u, A v⟩`, which is what lets conjugate gradients use it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const std::int64_t n = 32;
+  const Series u = (pluss::series::arange(0.0, 32.0, 1.0, pluss::ScalarType::Float64) * 0.7).sin();
+  const Series v = (pluss::series::arange(0.0, 32.0, 1.0, pluss::ScalarType::Float64) * 0.3).cos();
+  const mg::Hierarchy h({.axes = {{n, 1.0, mg::Edge::Dirichlet, mg::Edge::Neumann}}}, u);
+  out.writeln("<Au,v> =", (h.apply(u) * v).sum().item<double>(), ", <u,Av> =", (u * h.apply(v)).sum().item<double>());
+}
+```
+
+### Example 4
+
+Differentiable. A field marked for differentiation receives a gradient through the operator, because the expression path records it. For `L = Σ A u` the gradient with respect to `u` is `Aᵀ 1 = A 1`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  Series u = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  u.tracks_slope_(true);
+  const mg::Hierarchy h({.axes = {{4, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}}, pluss::series::ones({4}, pluss::ScalarType::Float64));
+  h.apply(u).sum().reverse();
+  out.writeln("gradient =", u.sensitivity().items<double>(), ", A 1 =", h.apply(pluss::series::ones({4}, pluss::ScalarType::Float64)).items<double>());
+}
+```
+
+## See Also
+
+- [`Hierarchy`](../Hierarchy.md): the class
+- [`vcycle`](vcycle.md): the approximate inverse
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="coarsest_cells.html">
+    <span class="label">Next</span>
+    <span class="title">coarsest_cells</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

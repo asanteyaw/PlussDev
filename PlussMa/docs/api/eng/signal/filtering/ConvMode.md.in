@@ -1,0 +1,64 @@
+# `signal::ConvMode`
+
+## Signature
+
+```cpp
+signal::ConvMode signal::ConvMode::Full;
+signal::ConvMode signal::ConvMode::Same;
+signal::ConvMode signal::ConvMode::Valid;
+```
+
+## What It Does
+
+Controls which aligned samples are retained after linear convolution or correlation. It changes output length, not the underlying multiply-accumulate definition.
+
+## Fields
+
+| Value | Meaning |
+|---|---|
+| `Full` | Retains every partial and complete overlap; length is `N + M - 1`. |
+| `Same` | Returns an input-sized centered slice of the full result. |
+| `Valid` | Retains only complete overlap; length is `max(N - M + 1, 0)` under the documented input/kernel ordering. |
+
+## Returns
+
+Used as the `mode` argument to `conv` and `corr`.
+
+## Errors
+
+The operation validates dimensionality and signal compatibility independently of this enum.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Compare convolution, correlation, FIR filtering, and frequency response.
+
+@@example Eng/api/signal_filtering.cpp@@
+
+### Example 2
+
+Continue a recursive filter across blocks and apply forward-backward filtering.
+
+@@example Eng/api/signal_filter_state.cpp@@
+
+### Example 3
+
+Observe validation of signal dtype and recurrence coefficients.
+
+@@example Eng/api/signal_filter_errors.cpp@@
+
+## See Also
+
+See [Filtering and response](../filtering.md) for alignment, streaming-state, and axis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="PadMode.html">
+    <span class="label">Next</span>
+    <span class="title">PadMode</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,22 @@
+<!-- generated from fractional.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Fractional calculus
+
+Integrals and derivatives of non-integer order. The Riemann–Liouville and Caputo derivatives differ on constants, and the Grünwald–Letnikov derivative agrees with Riemann–Liouville; polynomials with a zero terminal get exact power-law results.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`differential`](fractional/differential.md) | The fractional derivative of order `α > 0`, in the Caputo, Riemann–Liouville or Grünwald–Letnikov sense. |
+| [`integral`](fractional/integral.md) | The Riemann–Liouville fractional integral of order `α > 0`: the `α`-fold integral, for non-integer `α`. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+fractional/differential
+fractional/integral
+```
+<!-- apiref:toctree:end -->

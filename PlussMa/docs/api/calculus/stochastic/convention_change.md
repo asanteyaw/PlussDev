@@ -1,0 +1,210 @@
+<!-- generated from convention_change.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::stochastic::convention_change`
+
+Rewrites a drift so that the same process is described in another convention.
+
+## Signature
+
+```cpp
+operators::Operator operators::stochastic::convention_change(double theta_from, double theta_to, math::Function diffusion, pluss::StackArray<std::string_view> states, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+The same random process can be written as an SDE in different conventions, and the drift is what changes. `convention_change(θ_from, θ_to, σ, {"x"})` is the operator that takes a *drift* `μ` written in convention `θ_from` and returns the drift of the same process in convention `θ_to`:
+
+`μ_to = μ_from + (θ_from − θ_to) Σⱼ σⱼₖ ∂ⱼσᵢₖ`,
+
+which for one state is `μ + (θ_from − θ_to) σ σ′`. The diffusion `σ` is the same in every convention. Converting a Stratonovich drift to Itô adds `½σσ′`; converting back removes it. When the noise is *additive* (`σ` constant) `σσ′ = 0` and nothing changes.
+
+Use it to bring a model written in one convention to the form a solver or a formula needs, such as an Itô SDE for simulation from a Stratonovich description.
+
+## Parameters
+
+`double theta_from`
+: The convention of the given drift, in `[0, 1]`.
+
+`double theta_to`
+: The convention to convert to, in `[0, 1]`.
+
+`math::Function diffusion`
+: The diffusion `σ` of the process.
+
+`pluss::StackArray<std::string_view> states`
+: The state variables.
+
+`operators::DiffOptions options`
+: Options for the derivative of `σ`.
+
+## Returns
+
+An `Operator` whose application converts a drift and returns it as a `Function`.
+
+## Errors
+
+- `theta must lie in [0, 1]`.
+
+## Practical Examples
+
+### Example 1
+
+Stratonovich to Itô for geometric Brownian motion. A Stratonovich drift `a x` becomes the Itô drift `a x + ½ b² x`: at `x = 1.4`, `0.42 + 0.175 = 0.595`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  const operators::Operator strat_to_ito = stochastic::convention_change(0.5, 0.0, diffusion, {"x"});
+  out.writeln("Ito drift =", strat_to_ito(drift)(x).item<double>(), "   a x + b^2 x / 2 =", a * x + 0.5 * b * b * x);
+}
+```
+
+Output
+
+```text
+Ito drift = 0.595000    a x + b^2 x / 2 = 0.595000
+```
+
+### Example 2
+
+A round trip changes nothing: Stratonovich → Itô → Stratonovich returns the original drift `a x = 0.42`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  const operators::Operator to_ito = stochastic::convention_change(0.5, 0.0, diffusion, {"x"});
+  const operators::Operator to_strat = stochastic::convention_change(0.0, 0.5, diffusion, {"x"});
+  out.writeln("round trip =", to_strat(to_ito(drift))(x).item<double>(), "   original =", a * x);
+}
+```
+
+Output
+
+```text
+round trip = 0.420000    original = 0.420000
+```
+
+### Example 3
+
+Additive noise: with constant `σ` the correction `σσ′` is zero, so every convention has the same drift.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  const math::Function constant_noise = math::function({"x"}, [](math::Function v) { return v * 0.0 + 0.4; });
+  out.writeln("additive noise, strat -> ito:", stochastic::convention_change(0.5, 0.0, constant_noise, {"x"})(drift)(x).item<double>(), "   original", a * x);
+}
+```
+
+Output
+
+```text
+additive noise, strat -> ito: 0.420000    original 0.420000
+```
+
+### Example 4
+
+Any pair of conventions. From Itô (`θ = 0`) to the backward convention (`θ = 1`) the drift changes by `−σσ′ = −b² x`; and `θ` must lie in `[0, 1]`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  out.writeln("Ito -> Klimontovich:", stochastic::convention_change(0.0, 1.0, diffusion, {"x"})(drift)(x).item<double>(), "   a x - b^2 x =", a * x - b * b * x);
+  try { (void)stochastic::convention_change(0.0, 1.5, diffusion, {"x"}); } catch (const pluss::Error &e) { out.writeln("theta_to = 1.5:", first_line(e)); }
+}
+```
+
+Output
+
+```text
+Ito -> Klimontovich: 0.070000    a x - b^2 x = 0.070000
+theta_to = 1.5: operators::stochastic::convention_change: theta must lie in [0, 1]
+```
+
+## See Also
+
+- [`stochastic_differential`](stochastic_differential.md): Itô's formula in any convention
+- [`theta_of`](theta_of.md): the θ of each named convention
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PathOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">PathOptions</span>
+  </a>
+  <a class="next-link" href="covariation.html">
+    <span class="label">Next</span>
+    <span class="title">covariation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

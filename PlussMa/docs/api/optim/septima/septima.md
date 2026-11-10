@@ -1,0 +1,345 @@
+<!-- generated from septima.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::septima`
+
+Minimises a smooth objective with Adam or limited-memory BFGS, optionally under bounds, equalities and inequalities.
+
+## Signature
+
+```cpp
+optim::SeptimaResult optim::septima(const std::function<pluss::Series(const pluss::Series &)> &objective, const pluss::Series &initial, const optim::SeptimaSolveOptions &options = {}, const optim::SeptimaConstraints &constraints = {});
+optim::SeptimaResult optim::septima(const std::function<pluss::Series(const optim::ParameterPack<pluss::Series> &)> &objective, const optim::ParameterPack<pluss::Series> &initial, const optim::SeptimaSolveOptions &options = {}, const optim::SeptimaConstraints &constraints = {});
+optim::SeptimaResult optim::septima(const std::function<pluss::Series(const std::vector<pluss::Series> &)> &objective, std::vector<pluss::Series> initial, const optim::SeptimaSolveOptions &options = {}, const optim::SeptimaConstraints &constraints = {});
+optim::SeptimaResult optim::septima(const std::function<pluss::Series(const pluss::Series &)> &objective, const optim::ParameterPack<pluss::Series> &initial, const optim::SeptimaSolveOptions &options, const optim::SeptimaConstraints &constraints = {});
+```
+
+## What It Does
+
+`septima` repeatedly takes a step that lowers a smooth objective `f(x)` until the gradient is small, the step is negligible, or the iteration budget runs out. The objective is written with ordinary `Series` arithmetic and differentiated automatically. The step comes from one of two optimizers, chosen in [`SeptimaOptions::optimizer`](SeptimaOptions.md): **Adam** (the default), which rescales the gradient by running averages of its size and needs a learning rate, and **L-BFGS**, which builds a curvature estimate from the last few steps, usually needs far fewer iterations on smooth problems, and has an optional line search. A third optimizer, limited-memory SR1 with a trust region, has its own entry point, [`l_sr1_trust_region`](l_sr1_trust_region.md).
+
+The unknowns can be given as one `Series` (the objective takes a `Series`), as a `ParameterPack` of named blocks (the objective takes the pack), or as a `std::vector<Series>` of blocks (the objective takes the vector). Parameters may be real or complex and any floating dtype; a complex parameter is optimised as independent real and imaginary parts. The answer's blocks come back in `params` in the same order and shapes.
+
+Constraints are optional and are enforced by an **augmented Lagrangian**: a quadratic penalty plus multipliers added to the objective, with the multipliers updated each time the augmented problem is solved well enough and the penalty raised when the violation stops shrinking. Bounds (`lbs`, `ubs`) are enforced by projecting the iterate back inside. A run that does not converge returns normally with an exit flag; check [`converged`](SeptimaResult.md) before trusting the point.
+
+## Parameters
+
+`objective`
+: A function of the parameters returning a scalar `Series`.
+
+`initial`
+: The starting point: a `Series`, a `ParameterPack`, or a `std::vector<Series>` of blocks.
+
+`options`
+: Optimizer, budgets and tolerances. See `SeptimaSolveOptions`.
+
+`constraints`
+: Bounds, equalities and inequalities. See `SeptimaConstraints`.
+
+## Returns
+
+A `SeptimaResult`.
+
+## Errors
+
+- `optim::septima: objective callback is required` when the objective is empty.
+- `optim::septima: expected one parameter block` when a single-Series objective is given several blocks.
+
+## Practical Examples
+
+### Example 1
+
+The smallest problem. Minimise `Σ (xᵢ − 3)²` from the origin with L-BFGS, which finds the minimum in a couple of iterations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto objective = [](const Series &x) { return (x - 3.0).square().sum(); };
+
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima(objective, pluss::series::make({0.0, 0.0}), options);
+
+  out.writeln("x =", result.params[0].items<double>());
+  out.writeln("exit =", optim::septima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration);
+  out.writeln("objective =", result.objective_value, ", gradient =", result.gradient_inf_norm);
+}
+```
+
+Output
+
+```text
+x = [3.000000, 3.000000]
+exit = Converged , iterations = 3
+objective = 0.000000 , gradient = 0.000000
+```
+
+### Example 2
+
+Adam needs a learning rate suited to the problem. With the default `0.001` and 200 iterations it barely moves; with `0.1` it converges.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto objective = [](const Series &x) { return (x - 3.0).square().sum(); };
+
+  for (const double rate : {0.001, 0.1}) {
+    optim::SeptimaSolveOptions options;
+    options.step.adam.learning_rate = rate;
+    options.max_iterations = 2000;
+    const optim::SeptimaResult result = optim::septima(objective, pluss::series::make({0.0, 0.0}), options);
+    out.writeln("learning rate", rate, ": exit =", optim::septima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", x =", result.params[0].items<double>());
+  }
+}
+```
+
+Output
+
+```text
+learning rate 0.0010 : exit = MaxIterations , iterations = 2000 , x = [1.6941, 1.6941]
+learning rate 0.1000 : exit = Converged , iterations = 385 , x = [3.0000, 3.0000]
+```
+
+### Example 3
+
+Named blocks. The objective receives the pack and reads each block by name; the answer is read back in block order.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::function<Series(const Pack &)> objective = [](const Pack &p) { return (p.at("a") - 1.0).square() + (p.at("b") + 2.0).square(); };
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima(objective, optim::pack_scalars({{"a", pluss::make_series(0.0)}, {"b", pluss::make_series(0.0)}}), options);
+  out.writeln("a =", result.params[0].items<double>(), " b =", result.params[1].items<double>());
+}
+```
+
+Output
+
+```text
+a = [1.0000]  b = [-2.0000]
+```
+
+### Example 4
+
+A vector of blocks. The objective is written over a `std::vector<Series>`, which suits a model whose parts have different shapes: a weight vector and a bias.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series xs = pluss::series::make({0.0, 1.0, 2.0});
+  const Series ys = pluss::series::make({1.0, 3.0, 5.0});
+  const std::function<Series(const std::vector<Series> &)> loss = [&](const std::vector<Series> &p) { return (p[0] * xs + p[1] - ys).square().sum(); };
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima(loss, std::vector<Series>{pluss::series::make({0.0}), pluss::series::make({0.0})}, options);
+  out.writeln("slope =", result.params[0].items<double>(), " intercept =", result.params[1].items<double>());
+}
+```
+
+Output
+
+```text
+slope = [2.0000]  intercept = [1.0000]
+```
+
+### Example 5
+
+A single-Series objective over a pack with one block (the fourth overload). The solve options are required in this form.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::function<Series(const Series &)> objective = [](const Series &x) { return (x - 2.0).square().sum(); };
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima(objective, optim::pack_series(pluss::series::make({0.0, 0.0})), options);
+  out.writeln("x =", result.params[0].items<double>());
+}
+```
+
+Output
+
+```text
+x = [2.0000, 2.0000]
+```
+
+### Example 6
+
+An equality constraint. The nearest point to `(2, 1)` with `x₀ + x₁ = 2` is `(1.5, 0.5)`; the multiplier of the constraint ends near `0.5`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series target = pluss::series::make({2.0, 1.0});
+  optim::SeptimaConstraints constraints;
+  constraints.equalities = [](const std::vector<Series> &x) { return std::vector<Series>{x[0].sum() - 2.0}; };
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima([&](const Series &x) { return 0.5 * (x - target).square().sum(); }, pluss::series::make({0.0, 0.0}), options, constraints);
+  out.writeln("x =", result.params[0].items<double>());
+  out.writeln("violation =", result.constraint_violation, ", multiplier =", result.state.lambda_equalities[0].item<double>());
+}
+```
+
+Output
+
+```text
+x = [1.5000, 0.5000]
+violation = 0.0000 , multiplier = 0.5000
+```
+
+### Example 7
+
+Bounds and an inequality together. Minimise the distance to `(3, 3)` inside the box `[0, 2]²` with `x₀ + x₁ ≤ 3`: the box corner is cut by the inequality and the answer is `(1.5, 1.5)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series target = pluss::series::make({3.0, 3.0});
+  optim::SeptimaConstraints constraints;
+  constraints.lbs = {pluss::series::make({0.0, 0.0})};
+  constraints.ubs = {pluss::series::make({2.0, 2.0})};
+  constraints.inequalities = [](const std::vector<Series> &x) { return std::vector<Series>{x[0].sum() - 3.0}; };
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima([&](const Series &x) { return (x - target).square().sum(); }, pluss::series::make({0.0, 0.0}), options, constraints);
+  out.writeln("x =", result.params[0].items<double>());
+  out.writeln("exit =", optim::septima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration);
+}
+```
+
+Output
+
+```text
+x = [1.5000, 1.5000]
+exit = Converged , iterations = 18
+```
+
+### Example 8
+
+A complex parameter. Minimise `|z − (1 + 2i)|²` over a complex number; the real and imaginary parts are optimised independently.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  using C = std::complex<double>;
+  const Series target = pluss::make_series(std::vector<C>{{1.0, 2.0}}, {1});
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima([&](const Series &z) { return (z - target).abs().pow(2.0).sum(); }, pluss::make_series(std::vector<C>{{0.0, 0.0}}, {1}), options);
+  const C z = result.params[0].items<C>()[0];
+  out.writeln("z =", z.real(), "+", z.imag(), "i");
+}
+```
+
+Output
+
+```text
+z = 1.0000 + 2.0000 i
+```
+
+## See Also
+
+- [`SeptimaSolveOptions`](SeptimaSolveOptions.md): budgets and tolerances
+- [`SeptimaOptions`](SeptimaOptions.md): the optimizer and penalties
+- [`SeptimaConstraints`](SeptimaConstraints.md): constraints
+- [`SeptimaResult`](SeptimaResult.md): the result
+- [`l_sr1_trust_region`](l_sr1_trust_region.md): the third optimizer
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lsr1_exit_flag_name.html">
+    <span class="label">Previous</span>
+    <span class="title">lsr1_exit_flag_name</span>
+  </a>
+  <a class="next-link" href="septima_exit_flag_name.html">
+    <span class="label">Next</span>
+    <span class="title">septima_exit_flag_name</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

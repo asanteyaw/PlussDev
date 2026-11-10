@@ -1,0 +1,66 @@
+# `lti::Gram`
+
+## Signature
+
+```cpp
+lti::Gram lti::Gram::Reach;
+lti::Gram lti::Gram::Observe;
+```
+
+## What It Does
+
+Selects which energy Gramian `lti::gram` computes. The choice changes both the Lyapunov driver and, for observability, the orientation of the dynamics matrix.
+
+## Fields
+
+| Field | Meaning |
+|---|---|
+| `Reach` | Reachability or controllability Gramian, driven by `B Bᴴ`. |
+| `Observe` | Observability Gramian, driven by `Cᴴ C`. |
+
+## Returns
+
+Pass one enumerator as the `side` argument to `lti::gram`; the enum does not allocate a matrix itself.
+
+## Errors
+
+Both choices require dynamics for which the corresponding continuous or discrete Lyapunov equation has a well-conditioned solution.
+
+## Practical Examples
+
+These verified programs cover structural analysis, both Gramian choices, and state-space validation.
+
+### Example 1
+
+Construct and inspect a second-order continuous state-space model.
+
+@@example Eng/api/lti_state.cpp@@
+
+### Example 2
+
+Compute `Reach` and `Observe` Gramians and compare continuous and discrete results.
+
+@@example Eng/api/lti_gram.cpp@@
+
+### Example 3
+
+Exercise matrix-shape and sample-time validation before analysis begins.
+
+@@example Eng/api/lti_state_errors.cpp@@
+
+## See Also
+
+See the [State space](../state.md) family page for matrix shapes, batching, and analysis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="StateSpace.html">
+    <span class="label">Previous</span>
+    <span class="title">StateSpace</span>
+  </a>
+  <a class="next-link" href="state.html">
+    <span class="label">Next</span>
+    <span class="title">state</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

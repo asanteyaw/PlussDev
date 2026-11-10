@@ -1,0 +1,178 @@
+<!-- generated from SdeOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `sde::SdeOptions`
+
+The scheme, the number of steps and the seed of a simulation.
+
+`method` picks the scheme ([`SdeMethod`](SdeMethod.md)), `steps` the number of equal steps across `[t0, t1]`, and `seed` the random stream. The noise is generated in the data type and on the device of the initial state, so there is no separate dtype or device option to get out of step with it. The same seed, steps and initial state always give the same paths: results are reproducible and comparable across schemes.
+
+## Fields
+
+### `method`
+
+`sde::SdeMethod`, default `EulerMaruyama`.
+
+The scheme. Milstein costs one derivative of `σ` per step (taken by automatic differentiation) and improves the pathwise error from order 0.5 to 1.0; choose it when individual paths matter (hedging error, pathwise gradients) rather than only averages.
+
+### `steps`
+
+`std::int64_t`, default `100`.
+
+Equal steps across the interval; must be positive. The discretisation error shrinks with `h = (t1 − t0)/steps`; the cost grows linearly. Use more steps for stiff or fast-varying coefficients.
+
+### `seed`
+
+`std::uint64_t`, default `0`.
+
+Seed of the random stream. Fix it for reproducibility; vary it across independent experiments.
+
+## Guidance
+
+Passed to `fluctua` and `fluctua_adjoint`.
+
+## Practical Examples
+
+### Example 1
+
+The method. The same noise, three schemes, geometric Brownian motion: the Itô schemes agree closely, Heun reads the coefficients as Stratonovich and settles on a different process.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const double r = 0.05, s = 0.4, T = 1.0;
+  const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
+  const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
+  const std::int64_t paths = 4000;
+  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+
+  for (const sde::SdeMethod method : {sde::SdeMethod::EulerMaruyama, sde::SdeMethod::Milstein, sde::SdeMethod::StratonovichHeun}) {
+    sde::SdeOptions options;
+    options.method = method;
+    options.steps = 64;
+    options.seed = 7;
+    out.writeln(static_cast<int>(method), ": mean Y_T =", sde::fluctua(drift, vol, y0, 0.0, T, pluss::series::undefined(), options).y_final.mean().item<double>());
+  }
+  out.writeln("Ito exact mean =", 100.0 * std::exp(r * T));
+}
+```
+
+Output
+
+```text
+0 : mean Y_T = 103.870
+1 : mean Y_T = 103.867
+2 : mean Y_T = 112.508
+Ito exact mean = 105.127
+```
+
+### Example 2
+
+The number of steps. For geometric Brownian motion the Euler-Maruyama mean after `n` steps is exactly `Y₀(1 + rT/n)ⁿ`, which approaches `Y₀ e^{rT}` from below as `n` grows; the simulated means track it up to sampling noise.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const double r = 0.05, s = 0.4, T = 1.0;
+  const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
+  const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
+  const std::int64_t paths = 100000;
+  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+
+  for (const std::int64_t steps : {1, 4, 16, 64}) {
+    sde::SdeOptions options;
+    options.steps = steps;
+    options.seed = 7;
+    out.writeln("steps", steps, ": simulated mean =", sde::fluctua(drift, vol, y0, 0.0, T, pluss::series::undefined(), options).y_final.mean().item<double>(), ", scheme mean =", 100.0 * std::pow(1.0 + r * T / steps, steps));
+  }
+  out.writeln("exact mean =", 100.0 * std::exp(r * T));
+}
+```
+
+Output
+
+```text
+steps 1 : simulated mean = 105.010 , scheme mean = 105.000
+steps 4 : simulated mean = 104.861 , scheme mean = 105.095
+steps 16 : simulated mean = 105.027 , scheme mean = 105.119
+steps 64 : simulated mean = 104.918 , scheme mean = 105.125
+exact mean = 105.127
+```
+
+### Example 3
+
+The seed. The same seed reproduces the paths exactly; another seed gives different paths.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double r = 0.05, s = 0.4, T = 1.0;
+  const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
+  const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
+  const std::int64_t paths = 1000;
+  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+
+  auto run = [&](std::uint64_t seed) {
+    sde::SdeOptions options;
+    options.seed = seed;
+    return sde::fluctua(drift, vol, y0, 0.0, T, pluss::series::undefined(), options).y_final;
+  };
+  out.writeln("seed 1 vs seed 1: max difference =", (run(1) - run(1)).abs().max().item<double>());
+  out.writeln("seed 1 vs seed 2: max difference =", (run(1) - run(2)).abs().max().item<double>());
+}
+```
+
+Output
+
+```text
+seed 1 vs seed 1: max difference = 0.0000
+seed 1 vs seed 2: max difference = 400.2146
+```
+
+## See Also
+
+- [`SdeMethod`](SdeMethod.md): the schemes
+- [`fluctua`](fluctua.md): uses it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SdeMethod.html">
+    <span class="label">Previous</span>
+    <span class="title">SdeMethod</span>
+  </a>
+  <a class="next-link" href="SdeResult.html">
+    <span class="label">Next</span>
+    <span class="title">SdeResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

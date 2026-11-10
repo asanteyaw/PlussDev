@@ -1,0 +1,165 @@
+<!-- generated from BlackboxEvaluation.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::BlackboxEvaluation`
+
+What a black-box callback returns: objectives, constraints and two flags.
+
+`objectives` holds one value for a single objective or several values for a multi-objective problem. `constraints`, when set, holds `g(x)` and the point is feasible when every element is `≤ 0`. `evaluation_ok = false` marks the point as **failed** (a simulation that did not converge): the objective is ignored and the search treats the point as unusable. `count_evaluation = false` makes a call that does not count against `max_evaluations`, such as a cheap pre-check that costs nothing.
+
+## Fields
+
+### `objectives`
+
+`pluss::Series`, default `undefined`.
+
+One value, or several for a multi-objective problem.
+
+### `constraints`
+
+`pluss::Series`, default `undefined`.
+
+Values `g(x)`; feasible when every element is `≤ 0`.
+
+### `evaluation_ok`
+
+`bool`, default `true`.
+
+`false` marks the point as a failed evaluation.
+
+### `count_evaluation`
+
+`bool`, default `true`.
+
+`false` leaves the call out of the evaluation budget.
+
+## Guidance
+
+Returned by a black-box callback.
+
+## Practical Examples
+
+### Example 1
+
+A single objective with a constraint. Minimise `Σ (xᵢ − 3)²` subject to `x₀ ≤ 1`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});
+    e.constraints = (x.select(0, 0) - 1.0).reshape({1});
+    return e;
+  };
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.constraint_handling = dfo::ConstraintHandling::ProgressiveBarrier;   // the default, Ignore, would not use the constraint
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), config);
+  out.writeln("minimizer =", o.minimizer.items<double>());
+}
+```
+
+Output
+
+```text
+minimizer = [1.00, 3.00]
+```
+
+### Example 2
+
+A failing region. The simulator fails where `x₀ > 1.5`; the minimum of `(x₀ − 2)² + (x₁ − 1)²` is inside the failing region, so the best usable point is at its edge, `(1.5, 1)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    if (x.select(0, 0).item<double>() > 1.5) {
+      e.evaluation_ok = false;
+      e.objectives = pluss::make_series(0.0).reshape({1});   // ignored
+      return e;
+    }
+    e.objectives = (x - pluss::series::make({2.0, 1.0})).square().sum().reshape({1});
+    return e;
+  };
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), dfo::MadsBlackboxAdvancedConfig{});
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", minimum =", o.scalarized_minimum);
+}
+```
+
+Output
+
+```text
+minimizer = [1.500, 0.991] , minimum = 0.250
+```
+
+### Example 3
+
+Free calls. A cheap pre-check can be marked not to count; the counters show the difference.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::int64_t calls = 0;
+  const auto black_box = [&](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - pluss::series::make({1.0, 2.0})).abs().sum().reshape({1});
+    e.count_evaluation = (calls++ % 2 == 0);   // every other call is free
+    return e;
+  };
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.max_evaluations = 200;
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({4.0, -3.0}), config);
+  out.writeln("calls =", calls, ", counted evaluations =", o.diagnostics.evaluations, ", total =", o.diagnostics.total_evaluations);
+}
+```
+
+Output
+
+```text
+calls = 399 , counted evaluations = 200 , total = 400
+```
+
+## See Also
+
+- [`mads_blackbox_minimizer`](mads_blackbox_minimizer.md): uses it
+- [`DfoProblem`](DfoProblem.md): `blackbox`
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="BlackboxAdvancedOutcome.html">
+    <span class="label">Previous</span>
+    <span class="title">BlackboxAdvancedOutcome</span>
+  </a>
+  <a class="next-link" href="BlackboxSolverDiagnostics.html">
+    <span class="label">Next</span>
+    <span class="title">BlackboxSolverDiagnostics</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

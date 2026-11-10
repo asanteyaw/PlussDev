@@ -1,0 +1,206 @@
+<!-- generated from ProblemEvaluation.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::ProblemEvaluation`
+
+A problem evaluated at a point: objective, gradient, constraint residuals, Jacobians and the violation.
+
+Returned by [`evaluate_problem`](evaluate_problem.md) and held in `OptimaState::evaluation`. `status` is `Ok` unless a value was not finite or the problem was invalid (with `message` explaining). `value` is the objective and `gradient` its gradient pack. The residual `Series` hold `g` or `h` of the nonlinear constraints and `Aeq x − beq`, `Aineq x − bineq` of the linear ones (and bound violations), and the Jacobian packs hold their derivatives. `max_constraint_violation` is the largest violation over all rows, `first_order_opt` the stationarity measure and `feasible` whether the violation is zero.
+
+## Fields
+
+### `status`
+
+`optim::EvalStatus`, default `Ok`.
+
+`Ok`, `NonFiniteObjective`, `NonFiniteGradient`, `NonFiniteConstraint`, `NonFiniteJacobian` or `InvalidProblem`.
+
+### `message`
+
+`std::string`, default `empty`.
+
+What went wrong, when `status` is not `Ok`.
+
+### `value`
+
+`pluss::Series`, default `undefined`.
+
+The objective value (a scalar).
+
+### `gradient`
+
+`optim::ParameterPack<pluss::Series>`, default `empty`.
+
+The objective gradient, one block per unknown.
+
+### `nonlinear_equality_residual`
+
+`pluss::Series`, default `undefined`.
+
+The values `h(x)` of the nonlinear equalities.
+
+### `nonlinear_inequality_residual`
+
+`pluss::Series`, default `undefined`.
+
+The values `g(x)` of the nonlinear inequalities.
+
+### `equality_residual`
+
+`pluss::Series`, default `undefined`.
+
+All equality residuals together (linear and nonlinear).
+
+### `inequality_residual`
+
+`pluss::Series`, default `undefined`.
+
+All inequality residuals together (linear, nonlinear and bounds).
+
+### `equality_jacobian`
+
+`optim::ParameterPack<pluss::Series>`, default `empty`.
+
+Jacobian of the equalities, one `[rows, size]` block per unknown.
+
+### `inequality_jacobian`
+
+`optim::ParameterPack<pluss::Series>`, default `empty`.
+
+Jacobian of the inequalities.
+
+### `max_constraint_violation`
+
+`double`, default `0`.
+
+The largest violation.
+
+### `first_order_opt`
+
+`double`, default `0`.
+
+The first-order optimality measure.
+
+### `feasible`
+
+`bool`, default `true`.
+
+Whether there is no violation.
+
+## Guidance
+
+Read from `state.evaluation` or `evaluate_problem`.
+
+## Practical Examples
+
+### Example 1
+
+Reading an evaluation.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const optim::ConstrainedProblem problem =
+      optim::problem()
+          .objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); })
+          .nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  const optim::ProblemEvaluation e = optim::evaluate_problem(problem, optim::pack_series(pluss::series::make({0.0, 0.0})));
+  out.writeln("status OK =", e.status == optim::EvalStatus::Ok, ", feasible =", e.feasible);
+  out.writeln("value =", e.value.item<double>(), ", violation =", e.max_constraint_violation, ", first-order =", e.first_order_opt);
+}
+```
+
+Output
+
+```text
+status OK = true , feasible = true
+value = 5.0000 , violation = 0.0000 , first-order = 4.0000
+```
+
+### Example 2
+
+From a solved state: the evaluation at the answer.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), {}, disc);
+  out.writeln("violation at the answer =", result.evaluation.max_constraint_violation);
+  out.writeln("inequality residual    =", result.evaluation.nonlinear_inequality_residual.item<double>());
+}
+```
+
+Output
+
+```text
+violation at the answer = 0.000000
+inequality residual    = -0.000000
+```
+
+### Example 3
+
+A non-finite point sets the status. `log` of a negative number is NaN.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const optim::ConstrainedProblem problem = optim::problem().objective([](const Pack &p) { return p.at("x").log().sum(); }).build();
+  const optim::ProblemEvaluation e = optim::evaluate_problem(problem, optim::pack_series(pluss::series::make({-1.0})));
+  out.writeln("non-finite objective flagged =", e.status == optim::EvalStatus::NonFiniteObjective);
+}
+```
+
+Output
+
+```text
+non-finite objective flagged = true
+```
+
+## See Also
+
+- [`evaluate_problem`](evaluate_problem.md): produces it
+- [`OptimaState`](OptimaState.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ProblemBuilder.html">
+    <span class="label">Previous</span>
+    <span class="title">ProblemBuilder</span>
+  </a>
+  <a class="next-link" href="SequentialQPOptions.html">
+    <span class="label">Next</span>
+    <span class="title">SequentialQPOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

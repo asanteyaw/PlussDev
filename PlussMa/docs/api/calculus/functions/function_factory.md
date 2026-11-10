@@ -1,0 +1,325 @@
+<!-- generated from function_factory.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `math::function`
+
+Creates a `Function`: from a callable (which is traced once), or from a constant.
+
+## Signature
+
+```cpp
+math::Function math::function(double constant);
+math::Function math::function(std::complex<float> constant);
+math::Function math::function(std::complex<double> constant);
+math::Function math::function(const pluss::Series &constant);
+
+template <typename Callable>
+math::Function math::function(pluss::StackArray<std::string_view> variables, Callable &&callable);
+template <typename Callable>
+math::Function math::function(std::initializer_list<const char *> variables, Callable &&callable);
+```
+
+## What It Does
+
+`math::function` is how every `Function` starts. There are two groups of overloads.
+
+**From a callable.** `math::function({"x", "y"}, callable)` names the variables and gives a callable. Pluss calls the callable *once*, passing placeholder `Function` objects, and records the arithmetic the callable performs on them as an expression graph. The callable is never called again: evaluating the function replays the recorded graph on your data. Three kinds of callable are accepted:
+
+| Callable | Becomes | Use it for |
+|---|---|---|
+| takes one `math::Function` per variable, returns a `Function` (or a `Series` or number, which becomes a constant) | a *structural* function that can be differentiated, integrated, saved and transformed | the normal case |
+| takes one `std::span<const math::Function>` | a structural function whose number of variables is only known at run time | sums over `n` variables, models with a parameter vector |
+| takes one `pluss::Series`, returns a `Series` | an *opaque* function of exactly one variable | existing numerical code you cannot rewrite in `Function` arithmetic; differentiable only with an explicit autodiff fallback, not saveable |
+
+The variables can be given as a brace list of string literals or as any range of strings (a `std::vector<std::string>`, a `StackArray`); the names are copied.
+
+**From a constant.** `math::function(2.5)`, `math::function(std::complex<double>{1, 2})` and `math::function(series)` make a function of no variables that always evaluates to the given value. A constant is not decoration: it is how a fixed matrix, a data vector or a known number enters an expression with other functions (`math::function(A).matmul(v)`), because constants may be combined with functions from any trace.
+
+Because the callable runs once on placeholders, the body must describe the formula with `Function` arithmetic. A C++ `if` on a placeholder cannot see data, since during tracing there is none; write conditionals as arithmetic. See [`provenance`](Function/provenance.md) for what each kind of callable produces.
+
+## Parameters
+
+`double constant`
+: A real number. The `std::complex<float>`, `std::complex<double>` and `Series` overloads do the same for their types; a `Series` constant may have any shape.
+
+`pluss::StackArray<std::string_view> variables`
+: The variable names, in the order they will be bound. Each must be non-empty and appear once. Any range of strings works; the names are copied.
+
+`std::initializer_list<const char *> variables`
+: The same names written as a brace list of string literals.
+
+`Callable &&callable`
+: A callable with a fixed number of `math::Function` parameters equal to the number of names, or one `std::span<const math::Function>` parameter, or one `pluss::Series` parameter returning a `Series`. It must return a `Function`, a `Series` or an arithmetic number.
+
+## Returns
+
+A new `Function`. From a constant it has no variables; from a callable it has the named variables.
+
+## Errors
+
+- Duplicate or empty variable names are refused.
+- The number of names must equal the callable's number of `Function` parameters.
+- The callable must return something; an undefined `Function` is refused.
+- An opaque `Series` callable requires exactly one variable.
+
+## Practical Examples
+
+### Example 1
+
+Constants of each type: a real number, a `std::complex<float>`, a `std::complex<double>`, and a `Series` (a vector). Each is a function of no variables and is evaluated with an empty call.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function real = math::function(2.5);
+  const math::Function single = math::function(std::complex<float>{1.0F, -2.0F});
+  const math::Function complex_constant = math::function(std::complex<double>{0.5, 3.0});
+  const math::Function vector = math::function(pluss::make_series({1.0, 2.0, 3.0}));
+
+  const std::complex<float> a = single().item<std::complex<float>>();
+  const std::complex<double> b = complex_constant().item<std::complex<double>>();
+  out.writeln("real:            ", real().item<double>(), "  arity", real.arity());
+  out.writeln("complex<float>:  ", a.real(), a.imag());
+  out.writeln("complex<double>: ", b.real(), b.imag());
+  out.writeln("Series (rank", vector.rank(), "): ", vector().items<double>());
+}
+```
+
+Output
+
+```text
+real:             2.5000   arity 0
+complex<float>:   1.0000 -2.0000
+complex<double>:  0.5000 3.0000
+Series (rank 1 ):  [1.0000, 2.0000, 3.0000]
+```
+
+### Example 2
+
+The main form: a callable with one `Function` parameter per variable. A brace list names the variables; the lambda runs once, and the function can then be evaluated any number of times.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  int traced = 0;
+  const math::Function f = math::function({"x", "y"}, [&](math::Function x, math::Function y) {
+    ++traced;
+    return x * x + y.sin();
+  });
+  const auto x = pluss::make_series({1.0, 2.0});
+  const auto y = pluss::make_series({0.0, 0.5});
+  out.writeln("f(x, y) =", f({x, y}).items<double>());
+  out.writeln("f(x, y) =", f({{"y", y}, {"x", x}}).items<double>());
+  out.writeln("the callable ran", traced, "time");
+}
+```
+
+Output
+
+```text
+f(x, y) = [1.0000, 4.4794]
+f(x, y) = [1.0000, 4.4794]
+the callable ran 1 time
+```
+
+### Example 3
+
+A fixed matrix in an expression. A constant built from a `Series` may be combined with functions from any trace; here a `2 × 2` matrix multiplies the vector `(x, 1)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto M = pluss::make_series({1.0, 2.0, 3.0, 4.0}).reshape({2, 2});
+  const math::Function f = math::function({"x"}, [&](math::Function x) { return math::function(M).matmul(math::stack({x, x * 0.0 + 1.0})); });
+  out.writeln("M (x, 1) at x = 5:", f(5.0).items<double>());
+}
+```
+
+Output
+
+```text
+M (x, 1) at x = 5: [7.0000, 19.0000]
+```
+
+`[[1, 2], [3, 4]] · (5, 1) = (7, 19)`.
+
+### Example 4
+
+A callable that returns a number or a `Series` is a constant function, even when it names variables; its arity is still the number of names.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function number = math::function({"x"}, [](math::Function) { return 5.0; });
+  const math::Function series = math::function({"x"}, [](math::Function) { return pluss::make_series(7.0); });
+  out.writeln("returns 5.0:           arity", number.arity(), " value", number(3.0).item<double>());
+  out.writeln("returns a Series 7.0:  arity", series.arity(), " value", series(3.0).item<double>());
+}
+```
+
+Output
+
+```text
+returns 5.0:           arity 1  value 5.0000
+returns a Series 7.0:  arity 1  value 7.0000
+```
+
+### Example 5
+
+A callable on a `Series`: an opaque function of one variable. It evaluates like any other, but the library cannot look inside it, so its provenance is `Opaque`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function opaque = math::function({"x"}, [](const pluss::Series &x) { return x * x - 1.0; });
+  const math::Function traced = math::function({"x"}, [](math::Function x) { return x * x - 1.0; });
+  const auto x = pluss::make_series({0.0, 2.0, 3.0});
+  out.writeln("opaque:", opaque({x}).items<double>(), " provenance Opaque?", opaque.provenance() == math::Provenance::Opaque);
+  out.writeln("traced:", traced({x}).items<double>(), " provenance Structural?", traced.provenance() == math::Provenance::Structural);
+}
+```
+
+Output
+
+```text
+opaque: [-1.0000, 3.0000, 8.0000]  provenance Opaque? true
+traced: [-1.0000, 3.0000, 8.0000]  provenance Structural? true
+```
+
+### Example 6
+
+A run-time number of variables. The callable takes a `std::span<const math::Function>` and the names come from a `std::vector<std::string>` (the `StackArray` overload); here a function of however many variables the vector holds, summing their squares.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <span>
+#include <string>
+#include <vector>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<std::string> names;
+  for (int i = 0; i < 4; ++i) names.push_back("v" + std::to_string(i));
+  const math::Function sum_of_squares = math::function(names, [](std::span<const math::Function> v) {
+    math::Function total = v[0] * v[0];
+    for (std::size_t i = 1; i < v.size(); ++i) total = total + v[i] * v[i];
+    return total;
+  });
+  std::vector<pluss::Series> args;
+  for (int i = 1; i <= 4; ++i) args.push_back(pluss::make_series(static_cast<double>(i)));
+  out.writeln("arity:", sum_of_squares.arity(), "  value:", sum_of_squares(pluss::RangeView<pluss::Series>(args)).item<double>(), " (1 + 4 + 9 + 16 = 30)");
+}
+```
+
+Output
+
+```text
+arity: 4   value: 30.0000  (1 + 4 + 9 + 16 = 30)
+```
+
+### Example 7
+
+Mistakes are refused when the function is built, with a message that names the problem: a repeated name, an empty name, a count that does not match the callable, an undefined return value, and an opaque callable with the wrong number of variables.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <functional>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto report = [&](const char *label, const std::function<void()> &call) {
+    try { call(); } catch (const pluss::Error &e) { const std::string text(e.what()); out.writeln(label, text.substr(0, text.find('\n'))); }
+  };
+
+  report("duplicate name:   ", [&] { (void)math::function({"x", "x"}, [](math::Function a, math::Function b) { return a + b; }); });
+  report("empty name:       ", [&] { (void)math::function({""}, [](math::Function a) { return a; }); });
+  report("wrong count:      ", [&] { (void)math::function({"x", "y"}, [](math::Function a) { return a; }); });
+  report("undefined return: ", [&] { (void)math::function({"x"}, [](math::Function) { return math::Function{}; }); });
+  report("opaque, 2 names:  ", [&] { (void)math::function({"x", "y"}, [](const pluss::Series &s) { return s; }); });
+}
+```
+
+Output
+
+```text
+duplicate name:    math::function: duplicate variable name 'x'
+empty name:        math::function: variable names must not be empty
+wrong count:       math::function: variable count 2 does not match callable arity 1
+undefined return:  math::function: callable returned an undefined Function
+opaque, 2 names:   math::function: an opaque Series callable requires exactly one variable
+```
+
+## See Also
+
+- [`stack`](stack.md): assembles a vector or matrix from several functions
+- [`provenance`](Function/provenance.md): what each kind of callable produces
+- [`operator()`](Function/call.md): evaluating the result
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Function.html">
+    <span class="label">Previous</span>
+    <span class="title">Function</span>
+  </a>
+  <a class="next-link" href="operator_add.html">
+    <span class="label">Next</span>
+    <span class="title">operator+</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,20 @@
+# Interpolation
+
+Values between tabulated samples. `interp::linear` evaluates the piecewise-linear interpolant of one or many curves that share a coordinate grid, for one query or many, with a choice of what to do outside the grid. The work stays on the `Series` backend, so a whole batch of curves is read at all the queries in one call, and the result is differentiable with respect to the values.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`EdgeMode`](interp/EdgeMode.md) | What `interp::linear` does for a query outside the coordinate grid. |
+| [`linear`](interp/linear.md) | Evaluates the piecewise-linear interpolant of one or many curves at one or many query points. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+interp/EdgeMode
+interp/linear
+```
+<!-- apiref:toctree:end -->

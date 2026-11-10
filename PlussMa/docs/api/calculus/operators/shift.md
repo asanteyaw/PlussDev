@@ -1,0 +1,177 @@
+<!-- generated from shift.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::shift`
+
+The translation operator: replaces `x` by `x + amount`, so `(shift f)(x) = f(x + amount)`.
+
+## Signature
+
+```cpp
+operators::Operator operators::shift(std::string_view variable, double amount);
+```
+
+## What It Does
+
+`shift("x", a)` takes a function and returns the same function evaluated `a` units to the right along `x`: `f(x) ↦ f(x + a)`. Other variables are untouched. It is linear, can be saved, and its adjoint is the opposite shift, `shift("x", −a)`.
+
+Shifts are how finite differences, lags, delays and translations are written: `shift(f) − f` over `a` is a difference quotient, a lag operator applies `shift` with a negative amount, a moving-window average is a linear combination of shifts. The result keeps the variable trace of its input, so a shifted function can be added to the original.
+
+## Parameters
+
+`std::string_view variable`
+: The variable to translate. It must be non-empty and be a variable of the function the operator is applied to.
+
+`double amount`
+: The translation: the function is evaluated at `variable + amount`.
+
+## Returns
+
+An `Operator` that translates its input along `variable`.
+
+## Errors
+
+- An empty variable name raises `variable must not be empty`.
+- Applying it to a function without that variable raises `unknown variable '<name>'`.
+
+## Practical Examples
+
+### Example 1
+
+Shifting a sine by a quarter period turns it into a cosine, `sin(x + π/2) = cos x`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sin(); });
+  const math::Function shifted = operators::shift("x", std::acos(-1.0) / 2.0)(f);
+  const auto x = pluss::make_series({0.0, 0.7, 2.0});
+  out.writeln("sin(x + pi/2): ", shifted({x}).items<double>());
+  out.writeln("cos x:         ", x.cos().items<double>());
+}
+```
+
+Output
+
+```text
+sin(x + pi/2):  [1.0000, 0.7648, -0.4161]
+cos x:          [1.0000, 0.7648, -0.4161]
+```
+
+### Example 2
+
+In a function of two variables only the named variable moves.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function g = math::function({"x", "y"}, [](math::Function x, math::Function y) { return 10.0 * x + y; });
+  const auto point = {pluss::make_series(1.0), pluss::make_series(2.0)};
+  out.writeln("g(1, 2)              =", g(point).item<double>());
+  out.writeln("shift x by 3: g(4, 2)=", operators::shift("x", 3.0)(g)(point).item<double>());
+  out.writeln("shift y by 3: g(1, 5)=", operators::shift("y", 3.0)(g)(point).item<double>());
+}
+```
+
+Output
+
+```text
+g(1, 2)              = 12.0000
+shift x by 3: g(4, 2)= 42.0000
+shift y by 3: g(1, 5)= 15.0000
+```
+
+### Example 3
+
+A moving average and the adjoint. The three-point average `(f(x−1) + f(x) + f(x+1)) / 3` is a linear combination of shifts; and the adjoint of `shift(a)` is `shift(−a)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x; });
+  const operators::Operator average = operators::linear_combination({{1.0 / 3.0, operators::shift("x", -1.0)}, {1.0 / 3.0, operators::identity()}, {1.0 / 3.0, operators::shift("x", 1.0)}});
+  out.writeln("average of x^2 over x-1, x, x+1 at 3 =", average(f)(3.0).item<double>(), "  (x^2 + 2/3 = 9.6667)");
+  out.writeln("adjoint of shift(2) applied to x^2 at 3 =", operators::adjoint(operators::shift("x", 2.0))(f)(3.0).item<double>(), "  (f(3 - 2) = 1)");
+}
+```
+
+Output
+
+```text
+average of x^2 over x-1, x, x+1 at 3 = 9.6667   (x^2 + 2/3 = 9.6667)
+adjoint of shift(2) applied to x^2 at 3 = 1.0000   (f(3 - 2) = 1)
+```
+
+### Example 4
+
+Mistakes are refused: an empty variable name when the operator is built, and a variable the function does not have when it is applied.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+  try { (void)operators::shift("", 1.0); } catch (const pluss::Error &e) { out.writeln("empty name:      ", first_line(e)); }
+  try { (void)operators::shift("z", 1.0)(f); } catch (const pluss::Error &e) { out.writeln("unknown variable:", first_line(e)); }
+}
+```
+
+Output
+
+```text
+empty name:       operators::shift: variable must not be empty
+unknown variable: operators::shift: unknown variable 'z'
+```
+
+## See Also
+
+- [`differential`](../differential/differential.md): the limit of difference quotients
+- [`adjoint`](adjoint.md): the opposite shift
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="scale.html">
+    <span class="label">Previous</span>
+    <span class="title">scale</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,161 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1dd5ddc0cb6e -->
+
+# `math::Function::log1p`
+
+[Back to `math::Function`](../Function.md)
+
+`ln(1 + x)` of a function, computed accurately when `x` is small.
+
+## Signature
+
+```cpp
+math::Function math::Function::log1p() const;
+```
+
+## What It Does
+
+`f.log1p()` builds `x ↦ ln(1 + f(x))`. It is mathematically the same as `(1.0 + f).log()`, but it does not first form `1 + x`. When `x` is tiny, `1 + x` rounds to 1 or loses most of its digits, and the logarithm of that has few correct digits left; `log1p` keeps full relative accuracy. Use it for small returns, small probabilities and anything of the form `ln(1 + small)`.
+
+The domain is `x > −1`. The function checks this on the values that arrive and raises `log1p domain excludes -1 and requires real values greater than -1`. The derivative is `(ln(1 + u))′ = u′ / (1 + u)`.
+
+## Returns
+
+A new `Function` whose value is `log1p` of the receiver's value, with the same variables and output shape.
+
+## Errors
+
+- The function must be defined.
+
+## Practical Examples
+
+### Example 1
+
+`log1p` evaluated on a small grid, next to the standard-library value. Each element is computed independently, so the result has the shape of the input.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.log1p(); });
+  const auto x = pluss::make_series({-0.5, 0.0, 0.5, 3.0});
+  out.writeln("x:           ", x.items<double>());
+  out.writeln("f(x):        ", f({x}).items<double>());
+  out.writeln("std::log1p(x):", pluss::make_series({std::log1p((-0.5)), std::log1p((0.0)), std::log1p((0.5)), std::log1p((3.0))}).items<double>());
+}
+```
+
+The two rows agree to the printed digits.
+
+### Example 2
+
+The derivative rule. Differentiating `log1p` with `operators::differential` gives the exact formula, `(ln(1 + x))′ = 1/(1 + x)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.log1p(); });
+  const math::Function df = operators::differential("x")(f);
+  const auto x = pluss::make_series({-0.5, 0.0, 0.5, 3.0});
+  const auto exact = [](double v) { return 1.0 / (1.0 + v); };
+  out.writeln("f'(x):        ", df({x}).items<double>());
+  out.writeln("closed form:  ", pluss::make_series({exact(-0.5), exact(0.0), exact(0.5), exact(3.0)}).items<double>());
+}
+```
+
+### Example 3
+
+Accuracy for small `x`. At `x = 10⁻¹⁰`, `ln(1 + x)` computed by forming `1 + x` first has lost about six digits; `log1p` keeps them. Printed to 18 decimals against the exact `x − x²/2`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(18));
+  const math::Function stable = math::function({"x"}, [](math::Function x) { return x.log1p(); });
+  const math::Function naive = math::function({"x"}, [](math::Function x) { return (1.0 + x).log(); });
+  const double x = 1e-10;
+  out.writeln("log1p(x):     ", stable(x).item<double>());
+  out.writeln("log(1 + x):   ", naive(x).item<double>());
+  out.writeln("x - x^2/2:    ", x - 0.5 * x * x);
+}
+```
+
+The `log1p` value matches `x − x²/2` to all printed digits; the naive form is wrong from the eighth digit on.
+
+### Example 4
+
+The domain is `x > −1`: the value at −1 is `−∞` and below it is complex, so both are refused with a message that names the operation.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.log1p(); });
+  for (const double v : {-1.0, -2.0}) {
+    try {
+      (void)f(v);
+    } catch (const pluss::Error &e) {
+      const std::string text(e.what());
+      out.writeln("log1p(", v, "):", text.substr(0, text.find('\n')));
+    }
+  }
+  out.writeln("log1p(-0.999) =", f(-0.999).item<double>());
+}
+```
+
+## See Also
+
+- [`log`](log.md): the logarithm
+- [`expm1`](expm1.md): the matching accurate exponential
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="log.html">
+    <span class="label">Previous</span>
+    <span class="title">log</span>
+  </a>
+  <a class="next-link" href="matmul.html">
+    <span class="label">Next</span>
+    <span class="title">matmul</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

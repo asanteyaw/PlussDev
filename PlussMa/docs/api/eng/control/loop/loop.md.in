@@ -1,0 +1,74 @@
+# `control::loop`
+
+Evaluates open- and closed-loop SISO frequency responses.
+
+## Signature
+
+```cpp
+control::LoopResult control::loop(
+    const lti::StateSpace& system,
+    const pluss::Series& omega);
+
+control::LoopResult control::loop(
+    const lti::PoleZero& system,
+    const pluss::Series& omega);
+```
+
+## What It Does
+
+The model-specific overload delegates frequency evaluation to the LTI layer, then computes sensitivity functions with vectorized complex `Series` arithmetic.
+
+## Parameters
+
+`system`
+: A SISO state-space or pole-zero model.
+
+`omega`
+: Real angular frequencies in radians per unit time.
+
+## Returns
+
+A `LoopResult` with `L`, `S`, and `T` over the requested grid.
+
+## Errors
+
+Throws when the model is not SISO or the frequency grid is invalid.
+
+## Interpretation and Use
+
+`loop` is the response coordinator; it delegates plant evaluation to LTI and then computes `S` and `T` vectorially. Choose the overload matching the model already in hand. Both require a SISO loop because scalar unity-feedback formulas are used.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Evaluate a state-space loop.
+
+@@example Eng/api/control_loop.cpp@@
+
+### Example 2
+
+Evaluate the same feedback quantities from poles, zeros, and gain.
+
+@@example Eng/api/control_loop_polezero.cpp@@
+
+### Example 3
+
+Observe the SISO contract at failure boundaries.
+
+@@example Eng/api/control_loop_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MarginResult.html">
+    <span class="label">Previous</span>
+    <span class="title">MarginResult</span>
+  </a>
+  <a class="next-link" href="margin.html">
+    <span class="label">Next</span>
+    <span class="title">margin</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

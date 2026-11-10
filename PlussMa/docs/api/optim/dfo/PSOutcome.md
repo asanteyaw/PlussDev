@@ -1,0 +1,158 @@
+<!-- generated from PSOutcome.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::PSOutcome`
+
+The result of a pattern-search run.
+
+`minimizer` and `minimum` are the best feasible point and its value, `status` a [`PSStatus`](PSStatus.md) and `diagnostics` a [`PSDiagnostics`](PSDiagnostics.md). When the problem is infeasible the status is `InfeasibleStationary` and the minimizer is the least-violating point found.
+
+## Fields
+
+### `minimizer`
+
+`pluss::Series`, default `undefined`.
+
+The best point.
+
+### `minimum`
+
+`double`, default `0`.
+
+The objective at the best point.
+
+### `status`
+
+`dfo::PSStatus`, default `ReachedIterationBudget`.
+
+Why the run stopped.
+
+### `diagnostics`
+
+`dfo::PSDiagnostics`, default `{}`.
+
+Counters and last-state values.
+
+## Guidance
+
+Returned by `pattern_search_minimizer`.
+
+## Practical Examples
+
+### Example 1
+
+Reading an outcome.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}));
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", minimum =", o.minimum, ", status =", dfo::to_string(o.status));
+}
+```
+
+Output
+
+```text
+minimizer = [0.992966, 0.986126] , minimum = 0.000052 , status = ReachedIterationBudget
+```
+
+### Example 2
+
+A constrained outcome. The diagnostics hold the violation at the answer.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f = [](const Series &x) { return (x - 2.0).square().sum(); };   // exact constrained optimum 3.3431 at (0.7071, 0.7071)
+  dfo::PSConfig config;
+  config.nonlinear_constraints = [](const Series &x) {
+    dfo::PSConstraintValues v;
+    v.inequality = (x.square().sum() - 1.0).reshape({1});   // inside the unit disc
+    return v;
+  };
+
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0}), config);
+  out.writeln("minimum =", o.minimum, ", violation =", o.diagnostics.max_constraint_violation);
+}
+```
+
+Output
+
+```text
+minimum = 3.343163 , violation = 0.000000
+```
+
+### Example 3
+
+An infeasible problem. The constraints `x ≥ 2` and `x ≤ 1` cannot both hold; the status says so.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  dfo::PSConfig config;
+  config.max_iterations = 4000;
+  config.nonlinear_constraints = [](const Series &x) {
+    dfo::PSConstraintValues v;
+    v.inequality = (x * -1.0 + 2.0).reshape({1}).unite({(x - 1.0).reshape({1})}, 0);
+    return v;
+  };
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer([](const Series &x) { return x.square().sum(); }, pluss::series::make({0.0}), config);
+  out.writeln("status =", dfo::to_string(o.status), ", violation =", o.diagnostics.max_constraint_violation);
+}
+```
+
+Output
+
+```text
+status = InfeasibleStationary , violation = 0.5000
+```
+
+## See Also
+
+- [`pattern_search_minimizer`](pattern_search_minimizer.md): produces it
+- [`PSDiagnostics`](PSDiagnostics.md): the counters
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PSMeshScaling.html">
+    <span class="label">Previous</span>
+    <span class="title">PSMeshScaling</span>
+  </a>
+  <a class="next-link" href="PSPollPattern.html">
+    <span class="label">Next</span>
+    <span class="title">PSPollPattern</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

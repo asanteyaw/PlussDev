@@ -1,0 +1,182 @@
+<!-- generated from Axis.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `multigrid::Axis`
+
+One spatial axis of the grid: its number of cells, spacing and the conditions at its two ends.
+
+A grid is a list of one to three axes, which correspond to the **last** dimensions of every field (any leading dimensions are independent batch lanes). `cells` is the number of cells along the axis and must equal the size of the field there; `spacing` is the cell width `h`, which enters the operator as `h⁻²`; `low` and `high` are the [`Edge`](Edge.md) conditions. The grid coarsens by halving every axis while all extents are even, so a power-of-two `cells` (or at least a number with several factors of two) gives the deepest hierarchy.
+
+## Fields
+
+### `cells`
+
+`std::int64_t`, default `0`.
+
+Cells along the axis; must be positive and equal to the field's size on that dimension. Powers of two coarsen deepest.
+
+### `spacing`
+
+`double`, default `1.0`.
+
+Cell width `h`, positive and finite. The operator scales as `h⁻²`; anisotropic spacings are accepted but lose the mesh-independent convergence rate.
+
+### `low`
+
+`multigrid::Edge`, default `Periodic`.
+
+Condition at the low end.
+
+### `high`
+
+`multigrid::Edge`, default `Periodic`.
+
+Condition at the high end; periodic only together with `low`.
+
+## Guidance
+
+Placed in `Problem::axes`.
+
+## Practical Examples
+
+### Example 1
+
+The number of cells and the depth of the hierarchy. Each halving makes a level; the coarsening stops when the cell count is at most the coarsest size (64 by default) or an extent is odd.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  for (const std::int64_t n : {64, 256, 1024, 1000}) {
+    const mg::Hierarchy h({.axes = {{n, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}}, pluss::series::ones({n}, pluss::ScalarType::Float64));
+    out.writeln("cells", n, ": levels =", h.levels(), ", coarsest cells =", h.coarsest_cells());
+  }
+}
+```
+
+Output
+
+```text
+cells 64 : levels = 1 , coarsest cells = 64
+cells 256 : levels = 3 , coarsest cells = 64
+cells 1024 : levels = 5 , coarsest cells = 64
+cells 1000 : levels = 4 , coarsest cells = 125
+```
+
+### Example 2
+
+The spacing. The operator carries a factor `h⁻²`, so halving the spacing multiplies `A u` by four on the same field values.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::make_series({0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0});
+  for (const double h : {1.0, 0.5}) {
+    const mg::Hierarchy g({.axes = {{8, h, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}}, u);
+    out.writeln("spacing", h, ": A u =", g.apply(u).items<double>());
+  }
+}
+```
+
+Output
+
+```text
+spacing 1.00 : A u = [-1.00, -2.00, -2.00, -2.00, -2.00, -2.00, -2.00, 111.00]
+spacing 0.50 : A u = [-4.00, -8.00, -8.00, -8.00, -8.00, -8.00, -8.00, 444.00]
+```
+
+### Example 3
+
+The two ends are independent. The same field with a Dirichlet wall at the high end, a Neumann wall, and a periodic wrap give different values in the last cell.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <utility>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  for (const auto &[lo, hi] : std::vector<std::pair<mg::Edge, mg::Edge>>{{mg::Edge::Neumann, mg::Edge::Dirichlet}, {mg::Edge::Neumann, mg::Edge::Neumann}, {mg::Edge::Periodic, mg::Edge::Periodic}})
+    out.writeln("A u =", mg::Hierarchy({.axes = {{4, 1.0, lo, hi}}}, u).apply(u).items<double>());
+}
+```
+
+Output
+
+```text
+A u = [-1.00, 0.00, 0.00, 9.00]
+A u = [-1.00, 0.00, 0.00, 1.00]
+A u = [-4.00, 0.00, 0.00, 4.00]
+```
+
+### Example 4
+
+A mismatch between the axis and the field is rejected.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  try {
+    const mg::Hierarchy h({.axes = {{8, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}}, pluss::series::ones({6}, pluss::ScalarType::Float64));
+  } catch (const std::exception &e) {
+    out.writeln(e.what());
+  }
+}
+```
+
+Output
+
+```text
+math::multigrid: field extents do not match the problem axes
+```
+
+## See Also
+
+- [`Problem`](Problem.md): a list of axes
+- [`Edge`](Edge.md): the end conditions
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Edge.html">
+    <span class="label">Next</span>
+    <span class="title">Edge</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

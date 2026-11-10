@@ -1,0 +1,191 @@
+# `qp::Result`
+
+What a quadratic-program solve returns: the solution, the objective, the multipliers, the residuals and whether it converged.
+
+`Result` carries the primal solution `x`, the optimal `objective` value, the constraint values `z = A x` and the multipliers `y`, plus two scalar residuals, the iteration count and a `converged` flag. For a batch, `x`, `z`, `y` and `objective` have the batch dimensions in front. A `Result` is a plain value: gradients flow through its series when the inputs were gradient-tracked.
+
+The multipliers `y` read like this: an entry is zero for a constraint that is not binding; positive where the upper bound is active, negative where the lower bound is active, and for an equality its sign says which direction the constraint is pulling. Always check `converged`: a solve that hits `max_iters` returns its current iterate with `converged = false`.
+
+The method `warm()` returns a [`WarmStart`](WarmStart.md) built from `x`, `z` and `y`, to start a related solve from this solution.
+
+## Fields
+
+### `x`
+
+`pluss::Series`, default ``.
+
+The solution; batch dimensions lead.
+
+### `objective`
+
+`pluss::Series`, default ``.
+
+The objective value `½ xᵀPx + qᵀx` at the solution, one per problem.
+
+### `z`
+
+`pluss::Series`, default ``.
+
+The constraint values `A x` at the solution.
+
+### `y`
+
+`pluss::Series`, default ``.
+
+The multipliers of the constraints.
+
+### `primal_residual`
+
+`double`, default `0`.
+
+The size of the constraint violation at the final iterate.
+
+### `dual_residual`
+
+`double`, default `0`.
+
+The size of the stationarity violation at the final iterate.
+
+### `iterations`
+
+`std::int64_t`, default `0`.
+
+How many iterations were performed.
+
+### `converged`
+
+`bool`, default `false`.
+
+Whether the residuals met the tolerance before the iteration cap.
+
+## Guidance
+
+Check `converged` before using `x`.
+
+## Practical Examples
+
+### Example 1
+
+Reading every field of a solve. The equality has a large positive multiplier, the active lower bound on `x₀` a negative one, and the slack constraints zero.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  const qp::Result result = qp::solve(P, q, A, lower, upper);
+
+  out.writeln("x         =", result.x.items<double>());
+  out.writeln("objective =", result.objective.item<double>());
+  out.writeln("z = A x   =", result.z.items<double>());
+  out.writeln("y         =", result.y.items<double>());
+  out.writeln("converged =", result.converged, ", iterations =", result.iterations);
+  out.writeln("primal residual =", result.primal_residual, ", dual residual =", result.dual_residual);
+}
+```
+
+### Example 2
+
+`warm()`. It packages `x`, `z` and `y` as a `WarmStart`; the members are the result's own series.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  const qp::Result result = qp::solve(P, q, A, lower, upper);
+  const qp::WarmStart start = result.warm();
+  out.writeln("warm.x equals x :", (start.x - result.x).abs().max().item<double>() == 0.0);
+  out.writeln("warm.y equals y :", (start.y - result.y).abs().max().item<double>() == 0.0);
+}
+```
+
+### Example 3
+
+`converged = false`. A capped run still returns an iterate, which is not a solution; the flag and the residuals say so.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  qp::Options capped;
+  capped.max_iters = 5;
+  const qp::Result result = qp::solve(P, q, A, lower, upper, capped);
+  out.writeln("converged =", result.converged, ", iterations =", result.iterations);
+  out.writeln("primal residual =", result.primal_residual, "(compare 5e-6 for a converged run)");
+}
+```
+
+## See Also
+
+- [`WarmStart`](WarmStart.md): what `warm()` returns
+- [`solve`](solve.md): produces a Result
+- [`Options`](Options.md): tolerances and the iteration cap
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Options.html">
+    <span class="label">Previous</span>
+    <span class="title">Options</span>
+  </a>
+  <a class="next-link" href="Solver.html">
+    <span class="label">Next</span>
+    <span class="title">Solver</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

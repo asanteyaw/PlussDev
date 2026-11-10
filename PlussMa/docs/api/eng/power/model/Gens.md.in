@@ -1,0 +1,69 @@
+# `power::Gens`
+
+The generators of a network.
+
+## Signature
+
+```cpp
+power::Gens
+```
+
+## What It Does
+
+Generators are listed separately from buses, so several may share a bus and each may be taken out of service.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `bus` | The bus index of each generator. | empty (none) |
+| `p` | Active generation of each generator, per unit. | required with `bus` |
+| `q` | Reactive generation or initial set point, per unit. | required with `bus` |
+| `active` | In-service status of each generator; false removes it from the injections. | empty (all active) |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+A generator on a bus outside the network, an `active` list that does not match the generator count, or generator values without generator buses are rejected.
+
+## Interpretation and Use
+
+The injection of a bus is its own `p` plus the `p` of its active generators; the load of a generator bus therefore goes into `Buses::p` and the generation into `Gens::p`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A generator on a voltage-controlled bus.
+
+@@example Eng/api/power_generators.cpp@@
+
+### Example 2
+
+Generator-off-grid validation.
+
+@@example Eng/api/power_net_errors.cpp@@
+
+### Example 3
+
+Generation moved from the slack to a generator in the DC flow.
+
+@@example Eng/api/power_dc_generation.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Buses.html">
+    <span class="label">Previous</span>
+    <span class="title">Buses</span>
+  </a>
+  <a class="next-link" href="Lines.html">
+    <span class="label">Next</span>
+    <span class="title">Lines</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,142 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: dd50764c88e9 -->
+
+# `operators::Operator::operator()`
+
+[Back to `operators::Operator`](../Operator.md)
+
+The call operator, `op(f)`: applies the operator to a function and returns the resulting function.
+
+## Signature
+
+```cpp
+math::Function operators::Operator::operator()(const math::Function &input) const;
+```
+
+## What It Does
+
+`op(f)` is the one thing an operator does: it takes a function and returns another. For `differential("x")` the result is the derivative; for `integral("x", 0.0, 1.0)` it is the definite integral as a function of the remaining variables; for a Fourier transform it is a function of a new frequency variable. The input is not changed.
+
+Applying an operator does the symbolic work *now*, once: the derivative rules run, the integral is formed, and what comes back is a finished `Function`. Evaluating that function afterwards replays the stored result and never re-derives anything. This is why you apply an operator once and then evaluate the result as often as you like, rather than applying it inside a loop.
+
+Two styles read well. The *compact* style applies at once, `operators::differential("x")(f)`. The *staged* style keeps the operator and applies it to several functions: `const auto d = operators::differential("x"); d(f); d(g);`. The result of one application can be the input to the next, which is also what [`compose`](../compose.md) packages into a single operator.
+
+The input must be defined and must carry the variables the operator names: asking for `df/dz` of a function with no variable `z` is an error.
+
+## Parameters
+
+`const math::Function &input`
+: The function to transform. It must be defined and carry the variables the operator refers to.
+
+## Returns
+
+A new `math::Function`: the transformed function.
+
+## Errors
+
+- An undefined input raises `input Function must be defined`.
+- A variable the operator names but the function lacks is refused.
+- An operator that returns an undefined function raises `application returned an undefined Function`.
+
+## Practical Examples
+
+### Example 1
+
+Compact and staged application give the same function. The staged operator is built once and applied to two functions.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x * x; });
+  const math::Function g = math::function({"x"}, [](math::Function x) { return x.sin(); });
+
+  const operators::Operator d = operators::differential("x");       // staged
+  const math::Function compact = operators::differential("x")(f);   // compact
+  out.writeln("d(f)(2)       =", d(f)(2.0).item<double>(), "  (3 x^2 = 12)");
+  out.writeln("compact(2)    =", compact(2.0).item<double>());
+  out.writeln("d(g)(0)       =", d(g)(0.0).item<double>(), "  (cos 0 = 1)");
+}
+```
+
+### Example 2
+
+The result is an ordinary function, so applications chain: the second derivative as `d(d(f))`, an antiderivative of a derivative, and an integral that removes a variable.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * x * y; });
+  const operators::Operator d = operators::differential("x");
+  out.writeln("d(d(f)) at (3, 5):", d(d(f))({pluss::make_series(3.0), pluss::make_series(5.0)}).item<double>(), "  (2 y = 10)");
+
+  const math::Function area = operators::integral("x", 0.0, 2.0)(f);   // a function of y alone
+  out.writeln("integral over x: arity", area.arity(), " at y = 3:", area(3.0).item<double>(), "  (8/3 * 3 = 8)");
+}
+```
+
+### Example 3
+
+What goes wrong: an undefined input, a variable the function does not have, and an operator whose own body returns nothing are each refused with a message that names the problem.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x; });
+  try { (void)operators::differential("x")(math::Function{}); } catch (const pluss::Error &e) { out.writeln("undefined input:   ", first_line(e)); }
+  try { (void)operators::differential("z")(f); } catch (const pluss::Error &e) { out.writeln("unknown variable:   ", first_line(e)); }
+  const operators::Operator broken = operators::define("example.broken", [](const math::Function &) { return math::Function{}; });
+  try { (void)broken(f); } catch (const pluss::Error &e) { out.writeln("body returns nothing:", first_line(e)); }
+}
+```
+
+## See Also
+
+- [`compose`](../compose.md): chain operators into one
+- [`capabilities`](capabilities.md): what the operator promises about its result
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="capabilities.html">
+    <span class="label">Next</span>
+    <span class="title">capabilities</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

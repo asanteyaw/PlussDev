@@ -1,0 +1,133 @@
+# `rates::hull_white_zcb`
+
+The closed-form Hull-White price of a zero-coupon bond for a linear reversion level.
+
+## Signature
+
+```cpp
+double rates::hull_white_zcb(double maturity, double short_rate, const rates::HullWhiteParams &params);
+```
+
+## What It Does
+
+The rate is Gaussian, so `P = exp(−E[∫r] + Var[∫r]/2)`, with `E∫₀^T r = r B + θ₀(T − B) + θ₁(T²/2 − (T − B)/κ)`, `B = (1 − e^{−κT})/κ` and `Var∫r = σ²/κ²·[(T − B) − κB²/2]` (the formula in the library is the exact Gaussian expression). With `theta_slope = 0` it equals the Vasicek price for the same `κ, θ₀, σ`.
+
+## Parameters
+
+`double maturity`
+: Years to maturity, non-negative; zero returns 1.
+
+`double short_rate`
+: The current short rate.
+
+`const rates::HullWhiteParams &params`
+: The model.
+
+## Returns
+
+The price of a bond paying 1 at maturity.
+
+## Errors
+
+- A negative or non-finite maturity, a non-finite rate or invalid parameters throw (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+A term structure with a rising level.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rt::HullWhiteParams p{.kappa = 0.7, .sigma = 0.01, .r0 = 0.03, .theta0 = 0.03, .theta_slope = 0.004};
+  for (const double T : {0.25, 1.0, 5.0, 10.0}) {
+    const double price = rt::hull_white_zcb(T, 0.03, p);
+    out.writeln("T", T, ": price", price, ", yield", -std::log(price) / T);
+  }
+}
+```
+
+### Example 2
+
+With a flat level it equals the Vasicek price.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const rt::HullWhiteParams hw{.kappa = 0.7, .sigma = 0.01, .r0 = 0.05, .theta0 = 0.03, .theta_slope = 0.0};
+  const rt::VasicekParams vas{.kappa = 0.7, .theta = 0.03, .sigma = 0.01, .r0 = 0.05};
+  out.writeln("Hull-White", rt::hull_white_zcb(5.0, 0.05, hw), ", Vasicek", rt::vasicek_zcb(5.0, 0.05, vas));
+}
+```
+
+### Example 3
+
+Against simulation with a rising level.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rt::HullWhiteParams p{.kappa = 0.7, .sigma = 0.01, .r0 = 0.03, .theta0 = 0.03, .theta_slope = 0.004};
+  rt::SimOptions options;
+  options.scheme = rt::Scheme::Transition;
+  options.seed = 3;
+  const double dt = 1.0 / 252.0;
+  const Series rate = rt::hull_white_paths(1260, 20000, dt, p, options).rate;
+  const Series integral = rate.slice(0, 0, 1260, 1).sum(0, false) * dt;
+  out.writeln("simulated", (integral * -1.0).exp().mean().item<double>(), ", closed form", rt::hull_white_zcb(5.0, 0.03, p));
+}
+```
+
+## See Also
+
+- [`HullWhiteParams`](HullWhiteParams.md): the model
+- [`hull_white_paths`](hull_white_paths.md): simulation of the same model
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="hull_white_paths.html">
+    <span class="label">Previous</span>
+    <span class="title">hull_white_paths</span>
+  </a>
+  <a class="next-link" href="vasicek_paths.html">
+    <span class="label">Next</span>
+    <span class="title">vasicek_paths</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

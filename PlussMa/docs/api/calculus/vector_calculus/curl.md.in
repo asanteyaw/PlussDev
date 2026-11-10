@@ -1,0 +1,149 @@
+# `operators::curl`
+
+The curl of a vector field: its local rotation. A vector function in three dimensions, a scalar function in two.
+
+## Signature
+
+```cpp
+operators::Operator operators::curl(pluss::StackArray<std::string_view> variables, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+In three dimensions `curl({"x", "y", "z"})` takes `F = (F₁, F₂, F₃)` and returns the vector `(∂F₃/∂y − ∂F₂/∂z, ∂F₁/∂z − ∂F₃/∂x, ∂F₂/∂x − ∂F₁/∂y)`, whose direction is the axis of the local rotation and whose length is twice its angular speed. In two dimensions the field `(F₁, F₂)` has the scalar curl `∂F₂/∂x − ∂F₁/∂y`.
+
+A field with zero curl is *irrotational*, which on a simply connected region means it is the gradient of a potential; a field with zero divergence and non-zero curl is a pure rotation. The curl of a gradient is always zero. `variables` names the coordinates, in order; the components of a vector field are listed in the same order, so a field in three dimensions has three components and the coordinates `{"x", "y", "z"}`. The field must have one component per coordinate, and only two or three coordinates are meaningful.
+
+## Parameters
+
+`pluss::StackArray<std::string_view> variables`
+: The coordinates, in the order of the field's components: two or three.
+
+`operators::DiffOptions options`
+: Non-smooth policy, fallback and size limit.
+
+## Returns
+
+An `Operator` whose application returns the curl: a rank-1 `Function` in three dimensions, a scalar `Function` in two.
+
+## Errors
+
+- `the field needs one component per coordinate`.
+
+## Practical Examples
+
+### Example 1
+
+The curl of `F = (xy, yz, zx)` is `(−y, −z, −x)`, which is `(−2, −3, −1)` at `(1, 2, 3)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function F = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return math::stack({x * y, y * z, z * x}); });
+  const auto point = {pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)};
+
+  const math::Function curl = operators::curl({"x", "y", "z"})(F);
+  out.writeln("rank", curl.rank(), " shape", curl.shape(), "  curl F at (1, 2, 3) =", curl(point).items<double>(), "  (-y, -z, -x)");
+}
+```
+
+### Example 2
+
+Rotation and the planar curl. The rigid rotation `(−y, x, 0)` has curl `(0, 0, 2)`: twice the angular speed 1, about the `z` axis. In the plane, `(−y, x)` has the scalar curl `2`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function rotation3 = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return math::stack({-y, x, z * 0.0}); });
+  const math::Function rotation2 = math::function({"x", "y"}, [](math::Function x, math::Function y) { return math::stack({-y, x}); });
+  const pluss::Series c3 = operators::curl({"x", "y", "z"})(rotation3)({pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)});
+  out.writeln("3-D curl: z component", c3.select(0, 2).item<double>(), "  largest |x or y component|", std::max(std::abs(c3.select(0, 0).item<double>()), std::abs(c3.select(0, 1).item<double>())));
+  out.writeln("2-D curl:", operators::curl({"x", "y"})(rotation2)({pluss::make_series(1.0), pluss::make_series(2.0)}).item<double>());
+}
+```
+
+### Example 3
+
+An identity: the curl of a gradient is zero. The gradient of `φ = x²y + sin z` is `(2xy, x², cos z)`; composing `curl` with `gradient` gives the zero vector at every point.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const math::Function phi = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return x * x * y + z.sin(); });
+  const operators::Operator curl_of_gradient = operators::compose(operators::curl({"x", "y", "z"}), operators::gradient());
+  out.writeln("curl grad phi =", curl_of_gradient(phi)({pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)}).items<double>());
+}
+```
+
+### Example 4
+
+A field with the wrong number of components for the coordinates, or a scalar function, is refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function planar = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function) { return math::stack({x, y}); });
+  try { (void)operators::curl({"x", "y", "z"})(planar); } catch (const pluss::Error &e) { out.writeln(first_line(e)); }
+}
+```
+
+## See Also
+
+- [`divergence`](divergence.md): the net outflow
+- [`gradient`](../differential/gradient.md): its curl is zero
+- [`laplacian`](laplacian.md): the second-order operator
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="directional.html">
+    <span class="label">Next</span>
+    <span class="title">directional</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

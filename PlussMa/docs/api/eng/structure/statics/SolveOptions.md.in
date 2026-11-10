@@ -1,0 +1,67 @@
+# `structure::SolveOptions`
+
+Controls of the iterative static solve.
+
+## Signature
+
+```cpp
+structure::SolveOptions
+```
+
+## What It Does
+
+The linear static solve applies the stiffness bar by bar inside a preconditioned conjugate-gradient iteration and never forms a matrix. `SolveOptions` sets how hard that iteration works and what happens when it does not finish.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `cg.max_iterations` | The iteration budget. Long or slender structures are poorly conditioned and may need a few hundred iterations. | `8192` |
+| `cg.relative_tolerance` | Stop when the residual falls below this fraction of the load. | `1e-10` |
+| `cg.absolute_tolerance` | Stop when the residual falls below this absolute value. | `1e-12` |
+| `cg.curvature_tolerance` | Threshold below which a direction of the stiffness is treated as zero curvature (a mechanism). | `0` |
+| `cg.check_interval` | How often the convergence test is evaluated, in iterations. | `8` |
+| `fail_on_nonconvergence` | When true the solve throws if the iteration does not converge or meets a mechanism; when false it returns the result with `converged` and `breakdown` set so you can inspect it. | `true` |
+
+## Returns
+
+A value; validated by the solver.
+
+## Errors
+
+A solve that does not converge within its budget throws when `fail_on_nonconvergence` is true. The error says whether the structure is a mechanism or the budget ran out.
+
+## Interpretation and Use
+
+The defaults are far below the accuracy the input data justify; change the tolerance only when the solve is a bottleneck. With `fail_on_nonconvergence` false, always check `converged` before using a result.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Tolerance, budget and the failure switch in both states.
+
+@@example Eng/api/structure_solve_options.cpp@@
+
+### Example 2
+
+The default options on the three-bar truss.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+### Example 3
+
+A mechanism reported through the solve.
+
+@@example Eng/api/structure_fix.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="StaticResult.html">
+    <span class="label">Next</span>
+    <span class="title">StaticResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

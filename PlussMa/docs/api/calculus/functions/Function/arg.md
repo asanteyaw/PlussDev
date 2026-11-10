@@ -1,0 +1,190 @@
+<!-- generated from arg.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 037ae16eb3c0 -->
+
+# `math::Function::arg`
+
+[Back to `math::Function`](../Function.md)
+
+Returns one of the function's own variables as an expression, so it can be combined with the function after the function was built.
+
+## Signature
+
+```cpp
+math::Function math::Function::arg(std::string_view variable) const;
+```
+
+## What It Does
+
+When you build a function you get its variables as placeholders inside the callable. Once the function has been returned, though, those placeholders are gone; what you hold is a finished formula. `arg("x")` gives you the variable `x` of that formula back, as a `Function` that evaluates to the value of `x`. It belongs to the same trace as the function it came from, so it can be added to, multiplied with or otherwise combined with that function, or with anything derived from it, such as its derivative.
+
+You need it whenever new arithmetic has to refer to a variable of a function that already exists: weighting a result by one of its variables (`f * f.arg("y")`), measuring distance from a point (`f.arg("x") - 1.0`), or combining a function with its own derivative and a variable at once, as in the Euler operator `x ∂f/∂x + y ∂f/∂y`. Without `arg` the only way would be to rebuild the function from scratch with the extra factor written into the callable.
+
+The returned function has the same variables as the original, in the same order, even though it only depends on one of them.
+
+## Parameters
+
+`std::string_view variable`
+: The name of one of the function's variables, as it was declared in `math::function`.
+
+## Returns
+
+A `Function` with the same variables as the receiver that evaluates to the value of the named variable.
+
+## Errors
+
+- An unknown variable name raises `math::Function: unknown variable '<name>'`.
+- The function must be defined.
+
+## Practical Examples
+
+### Example 1
+
+`arg` returns a variable as an expression. Evaluated, it is just the value that was supplied for that variable; it keeps the arity of the function it came from.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * x + y; });
+  const math::Function x = f.arg("x");
+  const math::Function y = f.arg("y");
+  const auto point = {pluss::make_series(2.0), pluss::make_series(5.0)};
+  out.writeln("arity of arg('x'):", x.arity());
+  out.writeln("x =", x(point).item<double>(), "  y =", y(point).item<double>(), "  f =", f(point).item<double>());
+}
+```
+
+Output
+
+```text
+arity of arg('x'): 2
+x = 2.0000   y = 5.0000   f = 9.0000
+```
+
+Both variables are still arguments of `x` and `y`; the expressions just pick one out.
+
+### Example 2
+
+Extending a finished function. `f` was built without the factor `y`, and `g` multiplies it in afterwards. Without `arg`, the only way would be to rebuild `f` from scratch.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x.sin() + y; });
+  const math::Function g = f * f.arg("y") + f.arg("x");
+  const auto point = {pluss::make_series(0.5), pluss::make_series(3.0)};
+  out.writeln("g(0.5, 3) =", g(point).item<double>());
+  out.writeln("by hand    ", (std::sin(0.5) + 3.0) * 3.0 + 0.5);
+}
+```
+
+Output
+
+```text
+g(0.5, 3) = 10.9383
+by hand     10.9383
+```
+
+`g = f·y + x`, built from the finished `f`. The two numbers agree.
+
+### Example 3
+
+A variable next to the function's own derivatives. For a function homogeneous of degree `n`, `x ∂f/∂x + y ∂f/∂y = n f` (Euler's theorem). The variables enter through `arg`; the derivatives come from the same function, so everything shares one trace.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * x * y + y * y * y; });  // degree 3
+  const math::Function euler = f.arg("x") * operators::differential("x")(f) + f.arg("y") * operators::differential("y")(f);
+  const auto point = {pluss::make_series(2.0), pluss::make_series(3.0)};
+  out.writeln("x f_x + y f_y =", euler(point).item<double>());
+  out.writeln("3 f           =", 3.0 * f(point).item<double>());
+}
+```
+
+Output
+
+```text
+x f_x + y f_y = 117.0000
+3 f           = 117.0000
+```
+
+`f(2, 3) = 4·3 + 27 = 39`, and `x f_x + y f_y = 2·12 + 3·(4 + 27) = 117 = 3 · 39`.
+
+### Example 4
+
+A variable the function does not have is an error that names it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x; });
+  try {
+    (void)f.arg("z");
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+math::Function: unknown variable 'z'
+```
+
+## See Also
+
+- [`operators::differential`](../../differential/differential.md): derivatives that share the function's trace
+- [`variables`](variables.md): the names `arg` accepts
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="angle.html">
+    <span class="label">Previous</span>
+    <span class="title">angle</span>
+  </a>
+  <a class="next-link" href="arity.html">
+    <span class="label">Next</span>
+    <span class="title">arity</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

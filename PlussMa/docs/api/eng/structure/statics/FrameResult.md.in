@@ -1,0 +1,73 @@
+# `structure::FrameResult`
+
+Displacements, reactions and member end actions of a frame solve.
+
+## Signature
+
+```cpp
+structure::FrameResult
+```
+
+## What It Does
+
+The result of `solve` on a `Frame`, linear, with or without a `MemberLoad`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `displacement` | Node displacements `(ux, uy, rz)`, `[..., node, 3]`. |  |
+| `reaction` | Support forces and moments, `[..., node, 3]`, zero at free degrees of freedom. |  |
+| `end_force` | Local end actions `(Ni, Vi, Mi, Nj, Vj, Mj)` of each member, `[..., member, 6]`: the axial force, shear and moment that the nodes apply to the member at its first and second end, in the member's local axes, counterclockwise moments positive. With a `MemberLoad` they include the member's own load. |  |
+| `energy` | Total strain energy, `[...]`. |  |
+| `residual_norm` | Out-of-balance force of the iteration, `[...]`. |  |
+| `converged` | One where the iteration reached its tolerance. |  |
+| `breakdown` | One where a mechanism was met. |  |
+| `iterations` | The iteration count. |  |
+
+## Returns
+
+Returned by `solve(const Frame&, ...)` and by the overload with a `MemberLoad`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+The sagging bending moment of a member is `-Mi` at its first end and `+Mj` at its second. For a tension, `Ni` is negative and `Nj` positive.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of a cantilever solve.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 2
+
+End actions with a uniform member load.
+
+@@example Eng/api/structure_member_load.cpp@@
+
+### Example 3
+
+The diagnostics under a short budget.
+
+@@example Eng/api/structure_solve_options.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="StaticResult.html">
+    <span class="label">Previous</span>
+    <span class="title">StaticResult</span>
+  </a>
+  <a class="next-link" href="MemberLoad.html">
+    <span class="label">Next</span>
+    <span class="title">MemberLoad</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,63 @@
+# `lti::obsv`
+
+## Signature
+
+```cpp
+pluss::Series lti::obsv(const lti::StateSpace& system);
+```
+
+## What It Does
+
+Builds the vertical stack `[C; CA; CA²; ...]` through power `states - 1`. Full column rank means the internal state can be reconstructed from output history.
+
+## Parameters
+
+`system`
+: Valid state-space system. Continuous and discrete systems use the same algebraic observability matrix.
+
+## Returns
+
+A `Series` with matrix tail `[states * outputs, states]` and the system batch axes.
+
+## Errors
+
+The call has no separate options. Numerical rank should be judged with a tolerance appropriate to the dtype and scaling.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Construct and inspect a second-order continuous state-space model.
+
+@@example Eng/api/lti_state.cpp@@
+
+### Example 2
+
+Compare energy Gramians across continuous and discrete timebases.
+
+@@example Eng/api/lti_gram.cpp@@
+
+### Example 3
+
+Exercise matrix-shape and sample-time validation.
+
+@@example Eng/api/lti_state_errors.cpp@@
+
+## See Also
+
+See the [State space](../state.md) family page for matrix shapes, batching, and analysis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ctrb.html">
+    <span class="label">Previous</span>
+    <span class="title">ctrb</span>
+  </a>
+  <a class="next-link" href="gramian.html">
+    <span class="label">Next</span>
+    <span class="title">gram</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

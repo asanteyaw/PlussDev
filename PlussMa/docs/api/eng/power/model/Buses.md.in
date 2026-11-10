@@ -1,0 +1,72 @@
+# `power::Buses`
+
+The buses of a network: kind, fixed injections, voltage set points and shunts.
+
+## Signature
+
+```cpp
+power::Buses
+```
+
+## What It Does
+
+The bus data of a network. Every `Series` has the buses on its last axis, and leading axes describe a batch of scenarios.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `kind` | The `BusKind` of each bus. | required |
+| `p` | Fixed active injection, per unit; loads are negative. | required |
+| `q` | Fixed reactive injection, per unit; loads are negative. | required |
+| `vm` | Voltage magnitude, per unit: the set point of slack and `PV` buses and the starting guess of `PQ` buses. | required |
+| `va` | Voltage angle, radians: the value at the slack bus and the starting guess elsewhere. | required |
+| `g` | Shunt conductance to ground at unit voltage, per unit. | undefined (zero) |
+| `b` | Shunt susceptance to ground at unit voltage, per unit; positive is capacitive. | undefined (zero) |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+Entries of the wrong count, a non-finite or non-positive `vm`, or arrays that differ in dtype, platform or batch axes are rejected by `make`.
+
+## Interpretation and Use
+
+The net injection of a bus is `p` plus the `p` of the active generators on it. A `PQ` bus has no use for `vm` and `va` except as the starting guess.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A network with PV and PQ buses.
+
+@@example Eng/api/power_generators.cpp@@
+
+### Example 2
+
+A shunt capacitor on a bus.
+
+@@example Eng/api/power_elements.cpp@@
+
+### Example 3
+
+A batch of load levels in one call.
+
+@@example Eng/api/power_scenarios.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Base.html">
+    <span class="label">Previous</span>
+    <span class="title">Base</span>
+  </a>
+  <a class="next-link" href="Gens.html">
+    <span class="label">Next</span>
+    <span class="title">Gens</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

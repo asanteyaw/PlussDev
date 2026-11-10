@@ -1,0 +1,226 @@
+<!-- generated from marcus_integral.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `sde::marcus_integral`
+
+The Marcus (canonical) integral `∫ f ∘ dX` along a path with jumps.
+
+## Signature
+
+```cpp
+sde::StochasticIntegralResult sde::marcus_integral(const sde::WienerIntegrandFn &f, const sde::WienerPath &path, const pluss::Series &jump_mask);
+sde::StochasticIntegralResult sde::marcus_integral(const sde::WienerIntegrandFn &f, const sde::WienerPath &path, double jump_sigma = 8.0);
+```
+
+## What It Does
+
+When the driver jumps, the Itô and Stratonovich sums disagree about what the integrand does *during* a jump. The Marcus convention answers by letting the jump unfold as a smooth flow: across a step that contains a jump the integrand is integrated **along the straight segment** between the two samples, while steps without a jump use the Stratonovich average. Its virtue is that it obeys the ordinary chain rule even for discontinuous drivers (a change of variables works as for smooth paths), which is why it is the "canonical" convention for SDEs driven by jump processes.
+
+The two signatures differ in how the jump steps are found. With the **mask** form you pass the steps yourself (`JumpPath::jump_mask` has them). With the **`jump_sigma`** form a step is flagged when its increment exceeds `jump_sigma · √h`, that is, far outside the Brownian scale, which works when jumps are large compared with the diffusion and fails for small ones; pass an explicit mask when you know where the jumps are.
+
+## Parameters
+
+`const sde::WienerIntegrandFn &f`
+: `(double t, const Series &x) -> Series`; the integrand.
+
+`const sde::WienerPath &path`
+: The path, typically `JumpPath::path`.
+
+`const pluss::Series &jump_mask`
+: `[steps] + like.shape`; nonzero marks a jump step.
+
+`double jump_sigma`
+: Flag a step when `|ΔX| > jump_sigma · √h`; must be positive.
+
+## Returns
+
+A [`StochasticIntegralResult`](StochasticIntegralResult.md).
+
+## Errors
+
+- A missing integrand, an invalid path, a mask not of length `steps`, or a non-positive `jump_sigma` throws (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+The chain rule across jumps. For `f = X²` the Marcus integral is `(X(T)³ − X(0)³)/3` up to the discretisation error of the unflagged steps, jumps included, whereas the Itô integral is far from it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 2000, 11, 0.0, 0.2, 6.0, 0.0, 0.5);
+  const auto f = [](double, const Series &x) { return x * x; };
+  const double xT = jp.path.w.select(0, 2000).sum().item<double>();
+  out.writeln("Marcus =", sde::marcus_integral(f, jp.path, jp.jump_mask).value.sum().item<double>(), ", X(T)^3/3 =", xT * xT * xT / 3.0);
+  out.writeln("Ito    =", sde::ito_integral(f, jp.path).value.sum().item<double>());
+}
+```
+
+Output
+
+```text
+Marcus = 0.00000 , X(T)^3/3 = 0.00001
+Ito    = -0.21325
+```
+
+### Example 2
+
+Finding the jumps from their size. With large jumps against a small volatility, the `jump_sigma` form flags the jump steps without being told, and agrees with the exact mask to within the discretisation error (the two differ in the third decimal place).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 2000, 11, 0.0, 0.05, 6.0, 0.0, 1.0);
+  const auto f = [](double, const Series &x) { return x * x; };
+  out.writeln("mask :", sde::marcus_integral(f, jp.path, jp.jump_mask).value.sum().item<double>(), ", detected :", sde::marcus_integral(f, jp.path).value.sum().item<double>());
+}
+```
+
+Output
+
+```text
+mask : 0.00454 , detected : 0.00503
+```
+
+### Example 3
+
+The threshold. A threshold so low that Brownian increments are flagged only replaces their trapezoid by a segment integral (a tiny change); one so high that real jumps are missed leaves those jumps to the trapezoid average and the value moves away from the exact one.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 2000, 11, 0.0, 0.2, 6.0, 0.0, 0.5);
+  const auto f = [](double, const Series &x) { return x * x; };
+  for (const double threshold : {2.0, 4.0, 8.0, 40.0})
+    out.writeln("jump_sigma", threshold, ": value =", sde::marcus_integral(f, jp.path, threshold).value.sum().item<double>());
+  out.writeln("exact mask     :", sde::marcus_integral(f, jp.path, jp.jump_mask).value.sum().item<double>());
+}
+```
+
+Output
+
+```text
+jump_sigma 2.00000 : value = -0.00000
+jump_sigma 4.00000 : value = 0.00007
+jump_sigma 8.00000 : value = 0.00007
+jump_sigma 40.00000 : value = 0.07552
+exact mask     : 0.00000
+```
+
+### Example 4
+
+Without jumps the Marcus integral is the Stratonovich integral. An empty mask reduces to it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+  const sde::WienerPath path = sde::simulate_wiener_path(like, 0.0, 1.0, 2000, 4);
+
+  const Series none = Series::zeros({2000, 1}, pluss::ScalarType::Float64);
+  const auto f = [](double, const Series &w) { return w; };
+  out.writeln("Marcus (no jumps) =", sde::marcus_integral(f, path, none).value.sum().item<double>(), ", Stratonovich =", sde::strat_integral(f, path).value.sum().item<double>());
+}
+```
+
+Output
+
+```text
+Marcus (no jumps) = 0.168145 , Stratonovich = 0.168145
+```
+
+### Example 5
+
+A mask of the wrong length is rejected.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+  const sde::WienerPath path = sde::simulate_wiener_path(like, 0.0, 1.0, 100, 4);
+
+  try {
+    (void)sde::marcus_integral([](double, const Series &w) { return w; }, path, Series::zeros({5, 1}, pluss::ScalarType::Float64));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::sde::marcus_integral: the jump mask needs one entry per step
+```
+
+## See Also
+
+- [`JumpPath`](JumpPath.md): the path and mask
+- [`strat_integral`](strat_integral.md): the continuous analogue
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ito_integral.html">
+    <span class="label">Previous</span>
+    <span class="title">ito_integral</span>
+  </a>
+  <a class="next-link" href="simulate_jump_diffusion_path.html">
+    <span class="label">Next</span>
+    <span class="title">simulate_jump_diffusion_path</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

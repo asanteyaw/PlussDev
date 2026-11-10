@@ -1,0 +1,76 @@
+<!-- generated from Field.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `module::Field`
+
+An instrument, a market, a model, pricing controls and simulated paths: the object that prices, differentiates, simulates and calibrates.
+
+## Signature
+
+```cpp
+module::Field field{.instrument = instrument::Vanilla{}, .market = market::State{}, .model = module::Model{}, .controls = module::Controls{}, .paths = module::Paths{}};
+```
+
+## Construction
+
+`Field` is an aggregate: build it by naming members, as in `mod::Field{.instrument = ..., .market = ..., .model = ..., .controls = ...}`, and mutate members afterwards. The factories [`instrument::make`](../instrument/make.md), [`market::make`](../instrument/market_make.md) and [`Model::make`](../model/Model/make.md) build the members from plain numbers.
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`bind_objective`](Field/bind_objective.md) | A function from a `Model` to the loss, with the field and the quotes frozen inside it. |
+| [`bind_objective_typed`](Field/bind_objective_typed.md) | Like `bind_objective`, taking the concrete model struct instead of a `Model`. |
+| [`clear_paths`](Field/clear_paths.md) | Empties `field.paths`. |
+| [`engine_name`](Field/engine_name.md) | The name of the engine the field is set to use, as text. |
+| [`exercise_boundary`](Field/exercise_boundary.md) | The early-exercise boundary of an American option under Black-Scholes: the asset price at which exercise becomes optimal, at given times to maturity. |
+| [`implied_vol`](Field/implied_vol.md) | The Black-Scholes implied volatility of the field's own model prices, or of market quotes for the field's instrument. |
+| [`loss`](Field/loss.md) | The loss of the model prices against the quotes, as a rank-zero `Series`. |
+| [`loss_value`](Field/loss_value.md) | The loss as a plain number. |
+| [`model_name`](Field/model_name.md) | The name of the model the field holds, as text. |
+| [`objective`](Field/objective.md) | The loss as the number a minimiser should reduce: the same value as `loss_value`. |
+| [`price`](Field/price.md) | Prices every option in the field with the chosen engine and returns the prices, and the Greeks if asked. |
+| [`residuals`](Field/residuals.md) | The model price minus the quote, for every option in the field. |
+| [`simulate`](Field/simulate.md) | Simulates paths and stores them in `field.paths`. |
+| [`simulate_paths`](Field/simulate_paths.md) | Simulates paths of the held (or a candidate) model and returns them without storing them. |
+| [`validate`](Field/validate.md) | Checks the whole field and throws, listing every problem, if it cannot be priced. |
+
+## Changelog
+
+- **0.1**: initial documented surface.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+Field/Introduction
+Field/bind_objective
+Field/bind_objective_typed
+Field/clear_paths
+Field/engine_name
+Field/exercise_boundary
+Field/implied_vol
+Field/loss
+Field/loss_value
+Field/model_name
+Field/objective
+Field/price
+Field/residuals
+Field/simulate
+Field/simulate_paths
+Field/validate
+```
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Engine.html">
+    <span class="label">Previous</span>
+    <span class="title">Engine</span>
+  </a>
+  <a class="next-link" href="Greeks.html">
+    <span class="label">Next</span>
+    <span class="title">Greeks</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

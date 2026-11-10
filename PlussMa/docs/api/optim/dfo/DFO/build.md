@@ -1,0 +1,138 @@
+<!-- generated from build.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ce2901d05cc7 -->
+
+# `DFO::build`
+
+[Back to `dfo::DFO`](../DFO.md)
+
+Starts a builder, optionally with the starting point already set.
+
+## Signature
+
+```cpp
+static dfo::DfoBuilder dfo::DFO::build();
+static dfo::DfoBuilder dfo::DFO::build(const pluss::Series &initial);
+```
+
+## What It Does
+
+Returns an empty [`DfoBuilder`](../DfoBuilder.md), or one whose problem already has `initial` set. Chain `with_*` calls to describe the problem and end with `solve()`. Each setter returns a new builder, so a partly built builder can be kept and extended in several ways.
+
+## Parameters
+
+`const pluss::Series &initial`
+: The starting point.
+
+## Returns
+
+A [`DfoBuilder`](../DfoBuilder.md).
+
+## Practical Examples
+
+### Example 1
+
+With the start.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).solve();
+  out.writeln("minimizer =", r.minimizer.items<double>());
+}
+```
+
+Output
+
+```text
+minimizer = [3.0000, 3.0000]
+```
+
+### Example 2
+
+Empty, then the start. `build()` takes no start; `with_initial` supplies it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build().with_initial(pluss::series::make({0.0, 0.0})).with_objective(f).solve();
+  out.writeln("minimizer =", r.minimizer.items<double>());
+}
+```
+
+Output
+
+```text
+minimizer = [3.0000, 3.0000]
+```
+
+### Example 3
+
+A partly built builder reused. The base holds the objective and the start; two copies add different bounds.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoBuilder base = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f);
+  const dfo::DfoResult tight = base.with_bounds(pluss::series::make({0.0, 0.0}), pluss::series::make({1.0, 1.0})).solve();
+  const dfo::DfoResult loose = base.with_bounds(pluss::series::make({0.0, 0.0}), pluss::series::make({5.0, 5.0})).solve();
+  out.writeln("tight =", tight.minimizer.items<double>(), ", loose =", loose.minimizer.items<double>());
+}
+```
+
+Output
+
+```text
+tight = [1.0000, 1.0000] , loose = [3.0000, 3.0000]
+```
+
+## See Also
+
+- [`DFO`](../DFO.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="run.html">
+    <span class="label">Next</span>
+    <span class="title">run</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

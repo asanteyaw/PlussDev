@@ -1,0 +1,88 @@
+# `control::PlaceResult`
+
+State-feedback gain and pole-placement diagnostics.
+
+## Signature
+
+```cpp
+control::PlaceResult
+```
+
+## What It Does
+
+This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+
+
+
+## Fields
+
+### `gain`
+
+Feedback gain `K` for the law `u = -K x`.
+
+### `closed_loop`
+
+Closed-loop matrix `A - B K`.
+
+### `basis`
+
+Eigenvector basis used to realize the requested spectrum.
+
+### `residual`
+
+Assignment residual measuring agreement with the requested poles.
+
+### `condition`
+
+Condition estimate for the realized eigenvector basis.
+
+### `sweeps`
+
+Number of refinement sweeps actually completed.
+
+## Returns
+
+This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+
+## Errors
+
+The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+
+## Interpretation and Use
+
+Inspect `residual` and `condition` before accepting `gain`. `closed_loop` is the matrix whose spectrum was assigned, while `basis` explains numerical sensitivity. A tiny residual with extreme conditioning can still produce a fragile controller.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Inspect the gain, closed-loop matrix, residual, and condition.
+
+@@example Eng/api/control_place.cpp@@
+
+### Example 2
+
+Observe failure before an invalid result is returned.
+
+@@example Eng/api/control_controller_errors.cpp@@
+
+### Example 3
+
+Compare placement output with an optimal-feedback result.
+
+@@example Eng/api/control_optimal.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PlaceOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">PlaceOptions</span>
+  </a>
+  <a class="next-link" href="PidRule.html">
+    <span class="label">Next</span>
+    <span class="title">PidRule</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

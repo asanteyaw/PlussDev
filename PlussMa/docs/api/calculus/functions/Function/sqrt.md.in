@@ -1,0 +1,161 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 537c08ca6419 -->
+
+# `math::Function::sqrt`
+
+[Back to `math::Function`](../Function.md)
+
+The square root of a function, as a new function.
+
+## Signature
+
+```cpp
+math::Function math::Function::sqrt() const;
+```
+
+## What It Does
+
+`f.sqrt()` builds `x ↦ √f(x)`. For a real function the square root exists only for nonnegative values, and the function checks this on the values that arrive: a negative input raises `sqrt domain requires nonnegative values`. For a complex function it is the principal root, so `sqrt(−4 + 0i) = 2i`.
+
+The derivative is `(√u)′ = u′ / (2√u)`, which is infinite at 0: the square root has a vertical tangent there. `√(x²)` is `|x|`, and the library simplifies `sqrt(x.pow(2))` to `abs(x)`; with [`assume`](assume.md) it becomes `x` or `−x`.
+
+## Returns
+
+A new `Function` whose value is `sqrt` of the receiver's value, with the same variables and output shape.
+
+## Errors
+
+- The function must be defined.
+- A negative real input raises `sqrt domain requires nonnegative values`.
+
+## Practical Examples
+
+### Example 1
+
+`sqrt` evaluated on a small grid, next to the standard-library value. Each element is computed independently, so the result has the shape of the input.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sqrt(); });
+  const auto x = pluss::make_series({0.25, 1.0, 4.0, 9.0});
+  out.writeln("x:           ", x.items<double>());
+  out.writeln("f(x):        ", f({x}).items<double>());
+  out.writeln("std::sqrt(x):", pluss::make_series({std::sqrt((0.25)), std::sqrt((1.0)), std::sqrt((4.0)), std::sqrt((9.0))}).items<double>());
+}
+```
+
+The two rows agree to the printed digits.
+
+### Example 2
+
+The derivative rule. Differentiating `sqrt` with `operators::differential` gives the exact formula, `(√x)′ = 1/(2√x)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sqrt(); });
+  const math::Function df = operators::differential("x")(f);
+  const auto x = pluss::make_series({0.25, 1.0, 4.0, 9.0});
+  const auto exact = [](double v) { return 0.5 / std::sqrt(v); };
+  out.writeln("f'(x):        ", df({x}).items<double>());
+  out.writeln("closed form:  ", pluss::make_series({exact(0.25), exact(1.0), exact(4.0), exact(9.0)}).items<double>());
+}
+```
+
+### Example 3
+
+The domain check, and the principal root of a complex input.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sqrt(); });
+  try {
+    (void)f(-4.0);
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln("sqrt(-4):       ", text.substr(0, text.find('\n')));
+  }
+  const std::complex<double> r = f(std::complex<double>{-4.0, 0.0}).item<std::complex<double>>();
+  out.writeln("sqrt(-4 + 0i) = ", r.real(), "+", r.imag(), "i");
+}
+```
+
+### Example 4
+
+`sqrt(x²)` is `|x|`, not `x`. Without a declaration the function keeps the absolute value; declaring the sign with `assume` removes it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function root = math::function({"x"}, [](math::Function x) { return x.pow(2).sqrt(); });
+  const auto x = pluss::make_series({-3.0, 2.0});
+  out.writeln("sqrt(x^2):               ", root({x}).items<double>());
+  out.writeln("sqrt(x^2) | NonNegative: ", root.assume("x", math::Assumption::NonNegative)({x}).items<double>());
+  out.writeln("sqrt(x^2) | NonPositive: ", root.assume("x", math::Assumption::NonPositive)({x}).items<double>());
+}
+```
+
+The last two lines are promises (here false for one point each), not checks; see [`assume`](assume.md).
+
+## See Also
+
+- [`pow`](pow.md): general powers
+- [`abs`](abs.md): absolute value
+- [`assume`](assume.md): sign declarations
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sinh.html">
+    <span class="label">Previous</span>
+    <span class="title">sinh</span>
+  </a>
+  <a class="next-link" href="sub.html">
+    <span class="label">Next</span>
+    <span class="title">sub</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

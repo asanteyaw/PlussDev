@@ -1,0 +1,57 @@
+# Estimation and smoothing
+
+This branch reconstructs hidden state from noisy observations. `lqe` designs a steady-state estimator gain. `kalman` performs forward recursive filtering for a discrete state-space model, while `smooth` adds a backward pass that conditions earlier state estimates on later observations.
+
+## Data Contract
+
+Observations end in `[time, outputs]`; optional known inputs end in `[time, inputs]`. Leading batch axes broadcast. Missing observation lanes may be represented by non-finite values and are omitted through the information-form update rather than contaminating an entire trajectory.
+
+## Practical Examples
+
+The examples run a forward filter, compare filtered and smoothed trajectories, and demonstrate estimator validation.
+
+### Example 1
+
+Filter a short scalar observation sequence and inspect predicted observations and likelihood.
+
+@@example Eng/api/control_estimation.cpp@@
+
+### Example 2
+
+Run backward smoothing and compare its trajectory with the forward filter.
+
+@@example Eng/api/control_smooth.cpp@@
+
+### Example 3
+
+Reject a continuous-time filtering model and a singular estimator noise covariance.
+
+@@example Eng/api/control_estimation_errors.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+estimation/LqeResult
+estimation/KalmanOptions
+estimation/KalmanResult
+estimation/SmoothResult
+estimation/lqe
+estimation/kalman
+estimation/smooth
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+estimation/LqeResult
+estimation/KalmanOptions
+estimation/KalmanResult
+estimation/SmoothResult
+estimation/lqe
+estimation/kalman
+estimation/smooth
+```
+<!-- apiref:toctree:end -->

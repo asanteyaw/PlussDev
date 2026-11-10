@@ -1,0 +1,139 @@
+# `integ::QuadraResult`
+
+The value of a one-variable integral with its error estimate and the work spent.
+
+`value` is a `Series` (a scalar for a plain integrand, one entry per batch row for a batched one). `error_estimate` is the change between the last two resolution levels, `evaluations` the number of nodes the integrand was called on in total (including levels discarded by `Auto`), `refinements` the number of doublings, `converged` whether the change fell within the tolerance, and `rule_used` the rule that produced `value`, which differs from `options.rule` only for `QuadraRule::Auto`.
+
+## Fields
+
+### `value`
+
+`pluss::Series`, default `undefined`.
+
+The integral.
+
+### `error_estimate`
+
+`double`, default `+inf`.
+
+Change between the last two resolution levels.
+
+### `evaluations`
+
+`std::int64_t`, default `0`.
+
+Total nodes the integrand was called on.
+
+### `refinements`
+
+`std::int64_t`, default `0`.
+
+Resolution doublings.
+
+### `converged`
+
+`bool`, default `false`.
+
+Whether the change fell within `tolerance`.
+
+### `rule_used`
+
+`integ::QuadraRule`, default `Trapezoidal`.
+
+The rule that produced `value`.
+
+## Guidance
+
+Returned by the one-variable `quadra`.
+
+## Practical Examples
+
+### Example 1
+
+Reading a result.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const integ::QuadraResult r = integ::quadra([](const Series &t) { return t.exp(); }, 0.0, 1.0);
+  out.writeln("value =", r.value.item<double>(), ", error estimate =", r.error_estimate);
+  out.writeln("evaluations =", r.evaluations, ", refinements =", r.refinements, ", converged =", r.converged, ", rule used =", static_cast<int>(r.rule_used));
+}
+```
+
+### Example 2
+
+Not converged. A tight tolerance with no refinement budget leaves `converged` false, and with no second level to compare against the error estimate stays at infinity.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  integ::QuadraOptions options;
+  options.tolerance = 1e-14;
+  options.max_refinements = 0;
+  options.nodes = 5;
+  const integ::QuadraResult r = integ::quadra([](const Series &t) { return t.exp(); }, 0.0, 1.0, options);
+  out.writeln("converged =", r.converged, ", error estimate =", r.error_estimate, ", value =", r.value.item<double>());
+}
+```
+
+### Example 3
+
+A batch. The value has one entry per row of the integrand.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const Series k = pluss::series::make({1.0, 2.0}).reshape({2, 1});
+  const integ::QuadraResult r = integ::quadra([&](const Series &t) { return t.reshape({1, t.numel()}).mul(k).exp(); }, 0.0, 1.0);
+  out.writeln("shape =", r.value.sizes(), ", values =", r.value.items<double>());
+}
+```
+
+## See Also
+
+- [`quadra`](quadra.md): produces it
+- [`QuadraOptions`](QuadraOptions.md): the settings
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="QuadraOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">QuadraOptions</span>
+  </a>
+  <a class="next-link" href="QuadraRule.html">
+    <span class="label">Next</span>
+    <span class="title">QuadraRule</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

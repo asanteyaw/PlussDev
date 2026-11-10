@@ -1,0 +1,76 @@
+# `structure::NonlinearMotionOptions`
+
+Controls of the large-displacement time integration.
+
+## Signature
+
+```cpp
+structure::NonlinearMotionOptions
+```
+
+## What It Does
+
+Controls for the nonlinear `motion`, which solves the corotational equations of motion at every step by Newton's method with a line search.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `spectral_radius` | As for `MotionOptions`. The default damps the poorly resolved high modes that large rotations of stiff members excite. | `0.9` |
+| `mass_damping` | The coefficient `a` of `a M`. | `0` |
+| `stiffness_damping` | The coefficient `b`; the damping force is `b` times the current tangent stiffness applied to the velocity, so a rigid spin is not damped. | `0` |
+| `max_iterations` | Newton iterations per step. | `20` |
+| `max_line_search` | Step reductions per iteration. | `8` |
+| `relative_tolerance` | Out-of-balance force as a fraction of the load. | `1e-8` |
+| `absolute_tolerance` | Out-of-balance force below which a step is accepted; raised to the rounding floor of the internal forces when smaller. | `1e-10` |
+| `line_search_shrink` | Factor by which a rejected step is shortened. | `0.5` |
+| `armijo` | Fraction of the predicted decrease a step must achieve. | `1e-4` |
+| `solve` | Conjugate-gradient controls of the inner linear solves; a tangent that is not positive definite is solved by restarted GMRES. | budget 8192 |
+| `fail_on_nonconvergence` | When true a step that does not converge throws; when false it is recorded in `converged`. | `true` |
+
+## Returns
+
+A value; validated by `motion`.
+
+## Errors
+
+Invalid controls (non-positive iteration limits, a shrink or `armijo` outside `(0, 1)`, a `spectral_radius` outside `[0, 1]`) are rejected.
+
+## Interpretation and Use
+
+Leave `spectral_radius` at its default unless you need the least energy loss over a long run or the strongest suppression of high-frequency accelerations.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Default, strong numerical damping and stiffness damping on a swinging rod.
+
+@@example Eng/api/structure_motion_nonlinear.cpp@@
+
+### Example 2
+
+The linear integrator for comparison.
+
+@@example Eng/api/structure_motion.cpp@@
+
+### Example 3
+
+Rejected controls.
+
+@@example Eng/api/structure_dynamics_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MotionOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">MotionOptions</span>
+  </a>
+  <a class="next-link" href="HarmonicOptions.html">
+    <span class="label">Next</span>
+    <span class="title">HarmonicOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

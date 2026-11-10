@@ -1,0 +1,146 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 03b2a2c57f53 -->
+
+# `module::Field::loss`
+
+[Back to `module::Field`](../Field.md)
+
+The loss of the model prices against the quotes, as a rank-zero `Series`.
+
+## Signature
+
+```cpp
+pluss::Series module::Field::loss(const pluss::Series &target_prices, pluss::Config cfg = {}) const;
+```
+
+## What It Does
+
+Reduces the residuals to one number by the loss chosen in `controls.loss` ([`Loss`](../Loss.md): `MSE`, `RelativeMSE`, `MAE` or `Huber`, all means over the options with no weights). The result is a `Series`, so it can be differentiated or combined with other `Series` code; [`loss_value`](loss_value.md) returns the same number as a `double`.
+
+## Parameters
+
+`const pluss::Series &target_prices`
+: One quote per option.
+
+`pluss::Config cfg`
+: Device.
+
+## Returns
+
+The loss as a rank-zero `Series`.
+
+## Errors
+
+- As for `residuals`; a non-positive `huber_delta` with the Huber loss throws.
+
+## Practical Examples
+
+### Example 1
+
+The four losses of the same residuals.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  const Series prices = field.price().price;
+  const Series quotes = prices + pluss::make_series({0.30, -0.20, 0.10, -0.40, 0.25});
+
+  for (const mod::Loss loss : {mod::Loss::MSE, mod::Loss::RelativeMSE, mod::Loss::MAE, mod::Loss::Huber}) {
+    field.controls.loss = loss;
+    out.writeln(static_cast<int>(loss), ": loss =", field.loss(quotes).item<double>());
+  }
+}
+```
+
+### Example 2
+
+The loss is a rank-zero `Series`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  const Series prices = field.price().price;
+  const Series quotes = prices + pluss::make_series({0.30, -0.20, 0.10, -0.40, 0.25});
+
+  const Series l = field.loss(quotes);
+  out.writeln("rank =", l.dim(), ", value =", l.item<double>());
+}
+```
+
+### Example 3
+
+Reading a MSE by hand: the mean of the squared residuals.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  const Series prices = field.price().price;
+  const Series quotes = prices + pluss::make_series({0.30, -0.20, 0.10, -0.40, 0.25});
+
+  out.writeln("loss =", field.loss(quotes).item<double>(), ", mean(residual^2) =", field.residuals(quotes).square().mean().item<double>());
+}
+```
+
+## See Also
+
+- [`Field`](../Field.md): the class
+- [`loss_value`](loss_value.md): as a number
+- [`residuals`](residuals.md): the raw mismatches
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="implied_vol.html">
+    <span class="label">Previous</span>
+    <span class="title">implied_vol</span>
+  </a>
+  <a class="next-link" href="loss_value.html">
+    <span class="label">Next</span>
+    <span class="title">loss_value</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

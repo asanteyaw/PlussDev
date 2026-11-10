@@ -1,0 +1,148 @@
+# `dfo::PSSearchStrategy`
+
+The extra search step tried before each poll.
+
+`Off` skips the search. `ExpandAlongSuccess` extends the last successful step by `search_expansion`, which speeds up travel along a valley. `RandomDirections` tries `search_trials` random points around the best. `ExpandAndRandomDirections` does both. A successful search skips the poll for that iteration, and the diagnostics count the search trials and successes.
+
+## Fields
+
+### `Off`
+
+`enumerator`, default `0`.
+
+No search step.
+
+### `ExpandAlongSuccess`
+
+`enumerator`, default `1`.
+
+Extend the last successful step.
+
+### `RandomDirections`
+
+`enumerator`, default `2`.
+
+Try random points around the best.
+
+### `ExpandAndRandomDirections`
+
+`enumerator`, default `3`.
+
+Both.
+
+## Guidance
+
+Set as `PSConfig::search_strategy`.
+
+## Practical Examples
+
+### Example 1
+
+The four strategies.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const auto strategy : {dfo::PSSearchStrategy::Off, dfo::PSSearchStrategy::ExpandAlongSuccess, dfo::PSSearchStrategy::RandomDirections, dfo::PSSearchStrategy::ExpandAndRandomDirections}) {
+    dfo::PSConfig config;
+    config.search_strategy = strategy;
+    const dfo::PSOutcome o = dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config);
+    out.writeln(static_cast<int>(strategy), ": evaluations =", o.diagnostics.evaluations, ", trials =", o.diagnostics.search_trials, ", successes =", o.diagnostics.search_successes);
+  }
+}
+```
+
+### Example 2
+
+The number of random trials.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const std::int64_t trials : {4, 24}) {
+    dfo::PSConfig config;
+    config.search_strategy = dfo::PSSearchStrategy::RandomDirections;
+    config.search_trials = trials;
+    const dfo::PSOutcome o = dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config);
+    out.writeln("trials", trials, ": evaluations =", o.diagnostics.evaluations, ", minimum =", o.minimum);
+  }
+}
+```
+
+### Example 3
+
+The expansion factor of the along-success search.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const double expansion : {1.5, 4.0}) {
+    dfo::PSConfig config;
+    config.search_strategy = dfo::PSSearchStrategy::ExpandAlongSuccess;
+    config.search_expansion = expansion;
+    out.writeln("expansion", expansion, ": evaluations =", dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config).diagnostics.evaluations);
+  }
+}
+```
+
+## See Also
+
+- [`PSConfig`](PSConfig.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PSPollingOrder.html">
+    <span class="label">Previous</span>
+    <span class="title">PSPollingOrder</span>
+  </a>
+  <a class="next-link" href="PSStatus.html">
+    <span class="label">Next</span>
+    <span class="title">PSStatus</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

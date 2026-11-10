@@ -1,0 +1,159 @@
+# `market::State`
+
+The market a strip is priced in: spot, interest rate and dividend yield.
+
+All three are `Series`. Each must have one element or the same number of elements as the instrument's strikes and maturities, so one field prices a strip in one market, or a set of scenarios (a vector of spots against a single option, a rate curve against several maturities). Rates and yields are annual and continuously compounded and may be negative. [`market::make`](market_make.md) builds a one-element state from numbers.
+
+## Fields
+
+### `spot`
+
+`pluss::Series`, default `undefined`.
+
+The underlying price(s), positive; one element or one per option.
+
+### `rate`
+
+`pluss::Series`, default `undefined`.
+
+Annual continuously compounded risk-free rate(s); may be negative.
+
+### `dividend_yield`
+
+`pluss::Series`, default `undefined`.
+
+Annual continuous dividend yield(s); may be negative.
+
+## Guidance
+
+Member `Field::market`.
+
+## Practical Examples
+
+### Example 1
+
+The spot. One option under five spots: the payoff curve as scenarios.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = {.spot = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .rate = pluss::make_series({0.05}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  out.writeln("spots :", field.market.spot.items<double>());
+  out.writeln("prices:", field.price().price.items<double>());
+}
+```
+
+### Example 2
+
+The rate. Four rates for one option: a call is worth more at higher rates.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({-0.01, 0.0, 0.03, 0.06}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  out.writeln("rates :", field.market.rate.items<double>());
+  out.writeln("prices:", field.price().price.items<double>());
+}
+```
+
+### Example 3
+
+The dividend yield. A higher yield lowers a call.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.05}), .dividend_yield = pluss::make_series({0.0, 0.02, 0.05})},
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  out.writeln("yields:", field.market.dividend_yield.items<double>());
+  out.writeln("prices:", field.price().price.items<double>());
+}
+```
+
+### Example 4
+
+Mismatched lengths are refused: two spots and three rates cannot be paired.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = {.spot = pluss::make_series({100.0, 101.0}), .rate = pluss::make_series({0.01, 0.02, 0.03}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::Analytic}};
+  try {
+    (void)(field.price());
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`market_make`](market_make.md): build from numbers
+- [`Vanilla`](Vanilla.md): what is priced
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OptionType.html">
+    <span class="label">Previous</span>
+    <span class="title">OptionType</span>
+  </a>
+  <a class="next-link" href="Vanilla.html">
+    <span class="label">Next</span>
+    <span class="title">Vanilla</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

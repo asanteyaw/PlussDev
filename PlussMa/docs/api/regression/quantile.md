@@ -1,0 +1,64 @@
+<!-- generated from quantile.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Quantile Regression
+
+Quantile regression models a chosen quantile of the response, not its mean: the fitted line leaves a fraction τ of the observations below it. Fitting τ = 0.1, 0.5 and 0.9 shows how the whole distribution of the response moves with the predictors, including how its spread changes, which least squares cannot show. The family has one entry point for fitting, one for prediction and two for the report, plus the options, the covariance choice and the result they use.
+
+## Statistical Contract
+
+The coefficients minimise the check loss Σ ρτ(residual), which charges τ per unit of a positive residual and 1 − τ per unit of a negative one, optionally weighted by case weights. The loss is not smooth, so the fit minimises it by iteratively reweighted least squares and reports `iterations` and `converged`. Standard errors need the density of the residuals at zero, estimated by a kernel and reported as `residual_density0`, and use either a heteroskedasticity-robust sandwich (the default) or the classical form; tests and intervals use the Student t distribution on the residual degrees of freedom.
+
+A fit that does not settle within `max_iter` steps is returned with `converged` false and a warning, not as an error.
+
+## Practical Examples
+
+The program fits the 0.1, 0.5 and 0.9 quantiles of twelve points whose spread grows with x, and predicts the band at a new x.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  const auto at = pluss::make_series(std::vector<double>{13.0}, {1}, as_f64());
+  for (const double tau : {0.1, 0.5, 0.9}) {
+    reg::QuantileOptions options;
+    options.tau = tau;
+    const auto fit = reg::quantile_fit(y, x, options);
+    out.writeln("tau", tau, " slope", fit.coefficients.items<double>()[1], " quantile at x = 13", reg::quantile_predict(fit, at).items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+tau 0.10000  slope 0.62500  quantile at x = 13 9.45000
+tau 0.50000  slope 1.52000  quantile at x = 13 20.34000
+tau 0.90000  slope 1.62000  quantile at x = 13 21.72000
+```
+
+## Related Pages
+
+The {guide}`regression guide <regress>` develops quantile regression, its covariance estimators and worked problems in longer form.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+quantile/QuantileCovariance
+quantile/QuantileOptions
+quantile/QuantileFitResult
+quantile/quantile_fit
+quantile/quantile_predict
+quantile/quantile_summary
+quantile/print_quantile_summary
+```
+<!-- apiref:toctree:end -->

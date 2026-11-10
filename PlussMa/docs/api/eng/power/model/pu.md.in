@@ -1,0 +1,68 @@
+# `power::pu`
+
+Converts a value to per unit.
+
+## Signature
+
+```cpp
+pluss::Series power::pu(const pluss::Series& value, double base);
+```
+
+## What It Does
+
+Divides a physical value by a base: `value / base`. The base is the one of the quantity, for example `Base::power` for power, `zbase` for impedance.
+
+## Parameters
+
+`value`
+: The physical values, any shape.
+
+`base`
+: The base of the quantity.
+
+## Returns
+
+The per-unit values, the same shape as `value`.
+
+## Errors
+
+Throws `std::invalid_argument` for a base that is not finite and positive.
+
+## Interpretation and Use
+
+Convert once at the boundary of a study and keep everything inside in per unit.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Per-unit conversions of power and impedance.
+
+@@example Eng/api/power_units.cpp@@
+
+### Example 2
+
+A base and a network in per unit.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 3
+
+A power given in watts where per unit was meant.
+
+@@example Eng/api/power_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ibase.html">
+    <span class="label">Previous</span>
+    <span class="title">ibase</span>
+  </a>
+  <a class="next-link" href="si.html">
+    <span class="label">Next</span>
+    <span class="title">si</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

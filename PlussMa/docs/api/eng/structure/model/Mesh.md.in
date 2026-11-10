@@ -1,0 +1,64 @@
+# `structure::Mesh`
+
+Node coordinates and the bar or member connectivity of a structure.
+
+## Signature
+
+```cpp
+structure::Mesh
+```
+
+## What It Does
+
+A `Mesh` is the geometric half of a structure description. It holds the coordinates of every node and, for every bar of a truss or member of a frame, the two nodes it joins. `structure::truss` and `structure::frame` take it together with the section properties and compile both into an immutable model.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `position` | Node coordinates, shape `[..., node, axis]`. The last axis has `2` entries for a plane truss or a frame, or `3` for a space truss. Leading axes describe a batch of different geometries with the same connectivity. | required |
+| `from` | The index of the first node of each bar or member, one entry per bar. | required |
+| `to` | The index of the second node of each bar or member, one entry per bar. The direction from `from` to `to` defines the local x axis of a frame member and the positive sense of a bar. | required |
+
+## Returns
+
+A `Mesh` is a plain value; building one validates nothing. Validation happens in `truss` and `frame`.
+
+## Errors
+
+Indices out of range, a bar from a node to itself, bars of zero length and coordinates of the wrong rank are rejected by `truss` or `frame`, not by the `Mesh`.
+
+## Interpretation and Use
+
+Number the nodes `0 ... n-1` in any order and list the bars in any order; the order of the bars is the order of the entries in every per-bar array. A frame accepts only two coordinates per node. A leading axis on `position` is a set of geometries solved together by one `solve` call.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Build a plane and a space truss from meshes and solve a batch of three apex heights.
+
+@@example Eng/api/structure_truss_build.cpp@@
+
+### Example 2
+
+Validation errors raised from a mesh that cannot describe a truss.
+
+@@example Eng/api/structure_truss_errors.cpp@@
+
+### Example 3
+
+A mesh and the supports of a pin and a roller.
+
+@@example Eng/api/structure_fix.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Bars.html">
+    <span class="label">Next</span>
+    <span class="title">Bars</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,70 @@
+# `structure::BuckResult`
+
+Buckling factors and buckled shapes of a frame.
+
+## Signature
+
+```cpp
+structure::BuckResult
+```
+
+## What It Does
+
+The result of `buckling`: the load multipliers at which the frame becomes unstable and the shape it buckles into.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `factor` | Multipliers on the reference load, ascending, `[..., mode]`. |  |
+| `shape` | Buckled shapes `(ux, uy, rz)`, `[..., mode, node, 3]`, scaled so that the largest component has magnitude one. |  |
+| `residual` | `|| K phi - factor K_g phi ||`, `[..., mode]`. |  |
+| `converged` | One where the pair reached its tolerance. |  |
+| `iterations` | Iterations used. |  |
+
+## Returns
+
+Returned by `buckling`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+A factor is a multiplier, not a load: the critical load is the factor times the reference load.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of a buckling solve on a pinned column.
+
+@@example Eng/api/structure_buckling.cpp@@
+
+### Example 2
+
+Four end conditions against Euler's loads.
+
+@@example Eng/api/structure_buckling_cases.cpp@@
+
+### Example 3
+
+A reference load that compresses nothing.
+
+@@example Eng/api/structure_spectral_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ModeResult.html">
+    <span class="label">Previous</span>
+    <span class="title">ModeResult</span>
+  </a>
+  <a class="next-link" href="mass.html">
+    <span class="label">Next</span>
+    <span class="title">mass</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

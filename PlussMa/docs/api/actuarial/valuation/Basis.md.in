@@ -1,0 +1,184 @@
+# `actuarial::Basis`
+
+The mortality and discount assumptions of a valuation, bound together.
+
+## Signature
+
+```cpp
+actuarial::Basis actuarial::Basis{actuarial::Mortality mortality, actuarial::Discount discount};
+actuarial::Valuation actuarial::operators::value(actuarial::Basis basis);
+```
+
+A `Basis` is a plain aggregate of two members, built by naming them in braces: `actuarial::Basis{mortality, discount}`. It performs no calculation: it is the assumption half of a valuation, and [`operators::value`](value.md) turns it into the operator that values cashflows.
+
+## Fields
+
+### `mortality`
+
+`actuarial::Mortality`.
+
+The one-year death probabilities that fix the survival and death probabilities of the valuation, and its maximum horizon. See [`Mortality`](../mortality/Mortality.md). The program reads the horizon back from a basis.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Basis basis{actuarial::mortality::from_qx(pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024})), actuarial::discount::flat(0.04)};
+  out.writeln("mortality horizon", basis.mortality.horizon(), " first qx", basis.mortality.qx().items<double>()[0]);
+}
+```
+
+### `discount`
+
+`actuarial::Discount`.
+
+The interest assumption: a level rate or an explicit curve of factors. See [`Discount`](Discount.md). The program reads the factors back.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Basis basis{actuarial::mortality::from_qx(pluss::make_series({0.010, 0.012, 0.015})), actuarial::discount::flat(0.04)};
+  out.writeln("discount factors", basis.discount.factors(3).items<double>());
+}
+```
+
+## Practical Examples
+
+### Example 1: one basis values every benefit
+
+The same basis values the standard benefits.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  out.writeln("annuity-due =", value(actuarial::cashflow::annuity(5)).item<double>(), " term =", value(actuarial::cashflow::death(5)).item<double>(), " pure endowment =", value(actuarial::cashflow::survival(5)).item<double>());
+}
+```
+
+### Example 2: changing one assumption
+
+Two bases that differ only in the rate, and two that differ only in mortality (one with all deaths doubled).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const auto annuity = [&](const pluss::Series &q, double rate) {
+    return actuarial::operators::value({actuarial::mortality::from_qx(q), actuarial::discount::flat(rate)})(actuarial::cashflow::annuity(5)).item<double>();
+  };
+  out.writeln("4%, base mortality   =", annuity(qx, 0.04));
+  out.writeln("2%, base mortality   =", annuity(qx, 0.02));
+  out.writeln("4%, doubled mortality=", annuity(qx.mul(2.0), 0.04));
+}
+```
+
+### Example 3: an incomplete basis is refused
+
+A basis whose mortality or discount was never set is refused when the valuation is built.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series qx = pluss::make_series({0.010, 0.012});
+  report([&] { (void)actuarial::operators::value({actuarial::Mortality{}, actuarial::discount::flat(0.04)}); });
+  report([&] { (void)actuarial::operators::value({actuarial::mortality::from_qx(qx), actuarial::Discount{}}); });
+}
+```
+
+## Changelog
+
+- **0.1**: initial operator-first actuarial surface.
+
+## See Also
+
+[`Mortality`](../mortality/Mortality.md) and [`Discount`](Discount.md) are its two members, [`operators::value`](value.md) binds it, and [`Cashflow`](Cashflow.md) is what the result values.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Discount.html">
+    <span class="label">Previous</span>
+    <span class="title">Discount</span>
+  </a>
+  <a class="next-link" href="Cashflow.html">
+    <span class="label">Next</span>
+    <span class="title">Cashflow</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

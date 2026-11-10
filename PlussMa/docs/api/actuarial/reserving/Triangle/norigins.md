@@ -1,0 +1,178 @@
+<!-- generated from norigins.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a940993515e9 -->
+
+# `actuarial::Triangle::norigins`
+
+[Back to `actuarial::Triangle`](../Triangle.md)
+
+The number of origin periods.
+
+## Signature
+
+```cpp
+std::int64_t actuarial::Triangle::norigins() const noexcept;
+```
+
+## What It Does
+
+The number of rows. Estimator assumptions that are given per origin, such as the expected ultimates of [`bornhuetter_ferguson`](../bornhuetter_ferguson.md), must have this length. An undefined triangle has zero.
+
+## Returns
+
+The row count.
+
+## Practical Examples
+
+### Example 1: the count
+
+
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative);
+  out.writeln(triangle.norigins());
+}
+```
+
+Output
+
+```text
+4
+```
+
+### Example 2: sizing assumptions
+
+Build per-origin assumptions to match.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative);
+  const pluss::Series expected = pluss::series::full({triangle.norigins()}, 300.0);
+  out.writeln(expected.numel());
+}
+```
+
+Output
+
+```text
+4
+```
+
+### Example 3: a rectangular triangle
+
+Origins and ages need not be equal in number.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const actuarial::Triangle t = actuarial::triangle::cumulative(pluss::make_series({100.0, 150.0, 170.0, 110.0, 160.0, 0.0, 120.0, 0.0, 0.0}, {3, 3}));
+  out.writeln(t.norigins(), t.ndevelopment());
+}
+```
+
+Output
+
+```text
+3 3
+```
+
+### Example 4: a mismatch
+
+An assumption vector of the wrong length is refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::operators::bornhuetter_ferguson(pluss::make_series({250.0, 280.0}), pluss::make_series({0.96, 0.90}))(actuarial::triangle::cumulative(pluss::make_series({100.0, 180.0, 220.0, 240.0, 110.0, 200.0, 250.0, 0.0, 120.0, 215.0, 0.0, 0.0, 130.0, 0.0, 0.0, 0.0}, {4, 4}))); });
+}
+```
+
+Output
+
+```text
+bornhuetter_ferguson: assumptions must match origin count
+```
+
+## See Also
+
+- [`Triangle`](../Triangle.md): the type
+- [`cumulative`](../cumulative.md): builds one
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ndevelopment.html">
+    <span class="label">Previous</span>
+    <span class="title">ndevelopment</span>
+  </a>
+  <a class="next-link" href="observed.html">
+    <span class="label">Next</span>
+    <span class="title">observed</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

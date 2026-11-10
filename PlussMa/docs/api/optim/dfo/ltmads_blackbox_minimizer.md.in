@@ -1,0 +1,145 @@
+# `dfo::ltmads_blackbox_minimizer`
+
+Minimises a black box with LT-MADS, mesh adaptive direct search with random lower-triangular poll directions.
+
+## Signature
+
+```cpp
+dfo::BlackboxAdvancedOutcome dfo::ltmads_blackbox_minimizer(const std::function<dfo::BlackboxEvaluation(const pluss::Series &)> &blackbox, const pluss::Series &initial, const dfo::MadsBlackboxAdvancedConfig &config = {});
+template <class Fn> dfo::BlackboxAdvancedOutcome dfo::ltmads_blackbox_minimizer(Fn &&blackbox, const pluss::Series &initial, const dfo::MadsBlackboxAdvancedConfig &config = {});
+```
+
+## What It Does
+
+The same solver as [`mads_blackbox_minimizer`](mads_blackbox_minimizer.md) with the poll scheme fixed to `LtMadsRandom2N`: the directions come from a random lower-triangular integer matrix, the original MADS construction, drawn from `rng_seed`. A different seed gives a different run.
+
+## Parameters
+
+`Fn &&blackbox`
+: A callable returning a `BlackboxEvaluation`, a `Series` of objectives or a number.
+
+`const pluss::Series &initial`
+: The starting point.
+
+`const dfo::MadsBlackboxAdvancedConfig &config`
+: The settings.
+
+## Returns
+
+A [`BlackboxAdvancedOutcome`](BlackboxAdvancedOutcome.md).
+
+## Errors
+
+- A black box that returns neither objectives nor a failure flag throws on the first call.
+
+## Practical Examples
+
+### Example 1
+
+The Rosenbrock valley.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    e.objectives = ((b - a * a).square() * 100.0 + (1.0 - a).square()).reshape({1});
+    return e;
+  };
+
+  const dfo::BlackboxAdvancedOutcome o = dfo::ltmads_blackbox_minimizer(black_box, pluss::series::make({-1.2, 1.0}));
+  out.writeln("minimum =", o.scalarized_minimum, ", evaluations =", o.diagnostics.evaluations);
+}
+```
+
+### Example 2
+
+Seeds. The same seed repeats a run and a different one gives another.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    e.objectives = ((b - a * a).square() * 100.0 + (1.0 - a).square()).reshape({1});
+    return e;
+  };
+
+  for (const std::uint64_t seed : {1, 1, 2}) {
+    dfo::MadsBlackboxAdvancedConfig config;
+    config.rng_seed = seed;
+    out.writeln("seed", seed, ": evaluations =", dfo::ltmads_blackbox_minimizer(black_box, pluss::series::make({-1.2, 1.0}), config).diagnostics.evaluations);
+  }
+}
+```
+
+### Example 3
+
+Bounds.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});   // minimum 0 at (3, 3)
+    return e;
+  };
+
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.lower_bounds = pluss::series::make({0.0, 0.0});
+  config.upper_bounds = pluss::series::make({2.0, 2.0});
+  const dfo::BlackboxAdvancedOutcome o = dfo::ltmads_blackbox_minimizer(black_box, pluss::series::make({0.5, 0.5}), config);
+  out.writeln("minimizer =", o.minimizer.items<double>());
+}
+```
+
+## See Also
+
+- [`MadsBlackboxAdvancedConfig`](MadsBlackboxAdvancedConfig.md): the settings
+- [`BlackboxEvaluation`](BlackboxEvaluation.md): what the black box returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="discomads_blackbox_minimizer.html">
+    <span class="label">Previous</span>
+    <span class="title">discomads_blackbox_minimizer</span>
+  </a>
+  <a class="next-link" href="ltmads_minimizer.html">
+    <span class="label">Next</span>
+    <span class="title">ltmads_minimizer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

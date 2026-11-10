@@ -1,0 +1,162 @@
+# `operators::expansion::power`
+
+Builds the polynomial `Σ cₖ (x − a)ᵏ` from a coefficient vector.
+
+## Signature
+
+```cpp
+operators::Operator operators::expansion::power(std::string_view variable, double center);
+operators::expansion::Power operators::expansion::power();
+```
+
+## What It Does
+
+`power("x", a)` acts on a coefficient vector `c` (a rank-1 `Function` such as `taylor().coefficients(...)` returns) and gives the polynomial `x ↦ Σₖ cₖ (x − a)ᵏ`, a `Function` of the new variable `x`. It is the inverse of taking coefficients: `power(taylor().coefficients(f))` is `taylor(f)`.
+
+The coefficient vector can come from anywhere: a Taylor expansion, termwise calculus on another vector ([`Power`](Power.md)), a fitted model, or a list of numbers you write down as `math::function(series)`. Evaluating the polynomial then costs a Horner-like sum. The coefficients may themselves be functions of other variables, which stay free in the result. The no-argument form `power()` returns the [`Power`](Power.md) object whose methods do the termwise calculus. The input must be rank 1.
+
+## Parameters
+
+`std::string_view variable`
+: The name of the variable of the polynomial.
+
+`double center`
+: The centre `a`; the polynomial is in powers of `(x − a)`.
+
+## Returns
+
+An `Operator` whose application returns the polynomial as a `Function` of the variable. The no-argument form returns a `Power` object.
+
+## Errors
+
+- The input must be a rank-1 coefficient vector.
+
+## Practical Examples
+
+### Example 1
+
+Coefficients to polynomial. The vector `[1, 2, 0, 4]` is `1 + 2x + 4x³`; at `x = 2` it is `37`. A centre of 1 means powers of `(x − 1)`: `1 + 2(x−1) + 4(x−1)³` at `x = 2` is `7`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function coefficients = math::function(pluss::make_series({1.0, 2.0, 0.0, 4.0}));
+  out.writeln("about 0, at x = 2:", operators::expansion::power("x", 0.0)(coefficients)(2.0).item<double>(), "  (1 + 4 + 32)");
+  out.writeln("about 1, at x = 2:", operators::expansion::power("x", 1.0)(coefficients)(2.0).item<double>(), "  (1 + 2 + 4)");
+}
+```
+
+### Example 2
+
+The inverse of taking coefficients: rebuilding the polynomial from the Taylor coefficients gives the Taylor polynomial itself. Both give `1.64583` for `exp` at `0.5`, order 3.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+
+  const math::Function rebuilt = operators::expansion::power("x", 0.0)(operators::expansion::taylor().coefficients("x", 0.0, 3)(f));
+  const math::Function direct = operators::expansion::taylor("x", 0.0, 3)(f);
+  out.writeln("power(coefficients) =", rebuilt(0.5).item<double>());
+  out.writeln("taylor              =", direct(0.5).item<double>());
+}
+```
+
+### Example 3
+
+Coefficients that depend on a parameter. The vector `[1, a, a²/2]` is a function of `a`; `power` gives a function of `a` and the new `x`, here `1 + a x + a²x²/2`. At `x = 1` it is `1, 2.5, 5` for `a = 0, 1, 2` (the call names its arguments, since `a` comes first).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function c = math::function({"a"}, [](math::Function a) { return math::stack({a * 0.0 + 1.0, a, a * a * 0.5}); });
+  const math::Function p = operators::expansion::power("x", 0.0)(c);
+  out.writeln("variables:", p.variables()[0], p.variables()[1]);
+  out.writeln("p(x = 1, a):", p({{"x", pluss::make_series({1.0, 1.0, 1.0})}, {"a", pluss::make_series({0.0, 1.0, 2.0})}}).items<double>());
+}
+```
+
+### Example 4
+
+The no-argument form gives the `Power` object, whose methods act on coefficients; the input to `power(variable, centre)` must be rank 1.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const operators::expansion::Power termwise = operators::expansion::power();
+  const math::Function c = math::function(pluss::make_series({1.0, 2.0, 3.0}));
+  out.writeln("termwise derivative of [1, 2, 3]:", termwise.derivative()(c)().items<double>());
+  const math::Function scalar = math::function({"x"}, [](math::Function x) { return x; });
+  try { (void)operators::expansion::power("x", 0.0)(scalar); } catch (const pluss::Error &e) { out.writeln("scalar input:", first_line(e)); }
+}
+```
+
+## See Also
+
+- [`Power`](Power.md): termwise calculus on coefficient vectors
+- [`taylor`](taylor_operator.md): the coefficients come from here
+- [`coefficients`](Taylor/coefficients.md): the coefficient vector
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Taylor.html">
+    <span class="label">Previous</span>
+    <span class="title">Taylor</span>
+  </a>
+  <a class="next-link" href="taylor_operator.html">
+    <span class="label">Next</span>
+    <span class="title">taylor</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,181 @@
+# `roots::newton`
+
+Newton–Raphson iteration from a starting value, with an analytic derivative or a finite-difference slope.
+
+## Signature
+
+```cpp
+roots::Result roots::newton(const roots::Fn &f, pluss::Series x, const roots::Fn &df = {}, const roots::Options &options = {});
+```
+
+## What It Does
+
+`newton` repeats `x ← x − f(x)/f′(x)`. Near a simple root the number of correct digits roughly doubles each iteration, so it is the fastest of the solvers here when it is started close enough to a root. It needs no bracket, only a starting `Series` `x`, one starting value per lane.
+
+The derivative can be supplied or not. With `df` (a `Fn` returning `f′` on a `Series`) the iteration uses it exactly. Without it, `df` is left empty and the slope is estimated by a central difference `(f(x+h) − f(x−h)) / 2h` with `h = max(|x|, 1) · derivative_step` (`derivative_step` is 1e-6 by default); this costs two extra evaluations of `f` per iteration and limits the accuracy of the slope but not of the root, which still converges to rounding. Where the slope in a lane is zero the step is taken with a slope of 1 rather than dividing by zero.
+
+Newton is not bracketed: a bad start can diverge or jump to a different root, and `bracketed` in the [`Result`](Result.md) is always true. Check the residual. The loop stops at `max_iterations`, or when a tolerance is positive and every lane meets it (checked every `check_every` iterations).
+
+## Parameters
+
+`const roots::Fn &f`
+: The function whose root is wanted.
+
+`pluss::Series x`
+: The starting value of each lane.
+
+`const roots::Fn &df`
+: The derivative `f′` as a function of a `Series`. Empty (the default) selects a central-difference estimate.
+
+`const roots::Options &options`
+: Iteration limit, tolerances, cadence, and `derivative_step` for the finite-difference slope.
+
+## Returns
+
+A `roots::Result`: `root` (the last iterate), `residual` (`f(root)`), `iterations`; `bracketed` is always true.
+
+## Errors
+
+- None are raised for bad starts or zero slopes; check `residual`.
+
+## Practical Examples
+
+### Example 1
+
+An analytic derivative. `x² − 2` with `f′ = 2x`, three starting values; all reach `√2` at the first check (8 iterations) with `x_tolerance = 1e-12`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(14));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  const roots::Fn df = [](const Series &x) { return x * 2.0; };
+  roots::Options options;
+  options.x_tolerance = 1e-12;
+  const roots::Result result = roots::newton(f, pluss::make_series({1.0, 2.0, 5.0}), df, options);
+
+  out.writeln("root       =", result.root.items<double>());
+  out.writeln("residual   =", result.residual.items<double>());
+  out.writeln("iterations =", result.iterations);
+}
+```
+
+### Example 2
+
+Without a derivative. Passing `{}` for `df` selects the central-difference slope; the root agrees with the analytic version to the printed digits. A coarser `derivative_step` only degrades the slope, not the final root.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(14));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  roots::Options options;
+  options.x_tolerance = 1e-12;
+  const Series start = pluss::make_series({1.0, 2.0, 5.0});
+  const roots::Result exact = roots::newton(f, start, [](const Series &x) { return x * 2.0; }, options);
+  const roots::Result estimated = roots::newton(f, start, {}, options);
+
+  out.writeln("analytic derivative    =", exact.root.items<double>());
+  out.writeln("finite-difference slope =", estimated.root.items<double>());
+  out.writeln("largest difference     =", (exact.root - estimated.root).abs().max().item<double>());
+}
+```
+
+### Example 3
+
+Quadratic convergence, visible by limiting the iterations. Starting from 3, the residual of `x² − 2` after 1 to 5 iterations shrinks faster at every step: each iteration roughly squares the previous error.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const pluss::subsp::math::roots::Fn f = [](const Series &x) { return x * x - 2.0; };
+  const pluss::subsp::math::roots::Fn df = [](const Series &x) { return x * 2.0; };
+  for (const std::int64_t iterations : {1, 2, 3, 4, 5}) {
+    pluss::subsp::math::roots::Options options;
+    options.max_iterations = iterations;
+    const auto result = pluss::subsp::math::roots::newton(f, pluss::make_series(3.0), df, options);
+    out.writeln("iterations =", iterations, ", |f(x)| =", std::abs(result.residual.item<double>()));
+  }
+}
+```
+
+### Example 4
+
+A bad start. `x³ − 2x + 2` has a single real root near `−1.7693`, but Newton started at `0` or `1` cycles between `0` and `1` and never gets there: the residual stays large. Newton is not bracketed, so the residual is the only evidence; compare the bracketed `illinois` on `[−3, 0]`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const roots::Fn f = [](const Series &x) { return x * x * x - x * 2.0 + 2.0; };
+  const roots::Fn df = [](const Series &x) { return x * x * 3.0 - 2.0; };
+  roots::Options options;
+  options.max_iterations = 60;
+  const roots::Result stuck = roots::newton(f, pluss::make_series({0.0, 1.0, -2.0}), df, options);
+  out.writeln("newton from 0, 1, -2:", stuck.root.items<double>());
+  out.writeln("|f| at those        :", stuck.residual.abs().items<double>());
+
+  const roots::Result safe = roots::illinois(f, pluss::make_series(-3.0), pluss::make_series(0.0), options);
+  out.writeln("illinois on [-3, 0] :", safe.root.item<double>());
+}
+```
+
+## See Also
+
+- [`secant`](secant.md): no derivative, two starting values
+- [`householder`](householder.md): fourth order, with higher derivatives
+- [`illinois`](illinois.md): bracketed alternative
+- [`Options`](Options.md): `derivative_step` and tolerances
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="illinois.html">
+    <span class="label">Previous</span>
+    <span class="title">illinois</span>
+  </a>
+  <a class="next-link" href="secant.html">
+    <span class="label">Next</span>
+    <span class="title">secant</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

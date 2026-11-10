@@ -1,0 +1,81 @@
+# `structure::Frame`
+
+An immutable compiled frame of rigidly jointed members.
+
+## Signature
+
+```cpp
+std::int64_t structure::Frame::nodes() const noexcept;
+std::int64_t structure::Frame::members() const noexcept;
+std::int64_t structure::Frame::dofs() const noexcept;
+```
+
+## What It Does
+
+A `Frame` is what `structure::frame` returns: geometry, member lengths and directions, section properties and optional density of a validated plane frame, held immutably so the same model can be solved statically, for modes, for buckling, in time and in frequency. It has three public counts.
+
+## Methods
+
+`nodes()`
+: The number of nodes.
+
+`members()`
+: The number of members.
+
+`dofs()`
+: The degrees of freedom per node, always `3`: the displacements along x and y and the rotation, counterclockwise positive.
+
+## Returns
+
+Accessors return counts.
+
+## Errors
+
+Accessors do not fail. Invalid descriptions are rejected by `structure::frame`.
+
+## Changelog
+
+- **0.1** — Initial public contract.
+
+## Interpretation and Use
+
+A `Frame` cannot be default-constructed; build it with `frame`. It is cheap to copy. Loads, supports and results all use the order `(ux, uy, rz)` at each node.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Counts and degrees of freedom of a portal frame.
+
+@@example Eng/api/structure_frame_build.cpp@@
+
+### Example 2
+
+Solving a compiled frame.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 3
+
+Natural frequencies of a compiled frame.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="TrussModel.html">
+    <span class="label">Previous</span>
+    <span class="title">Truss</span>
+  </a>
+  <a class="next-link" href="truss.html">
+    <span class="label">Next</span>
+    <span class="title">truss</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

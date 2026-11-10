@@ -1,0 +1,150 @@
+<!-- generated from PopulationSolverStatus.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::PopulationSolverStatus`
+
+Why a differential-evolution or swarm run stopped.
+
+`Converged` means the relative improvement over `check_every` generations fell below `relative_improvement_tolerance`. `ReachedIterationBudget` means `max_generations` was reached and `ReachedEvaluationBudget` means `max_evaluations` was; the best member is returned either way. A population method has no gradient test, so `Converged` says the population stopped improving, not that it found the global minimum.
+
+## Fields
+
+### `Converged`
+
+`enumerator`, default `0`.
+
+The population stopped improving.
+
+### `ReachedIterationBudget`
+
+`enumerator`, default `1`.
+
+`max_generations` was reached.
+
+### `ReachedEvaluationBudget`
+
+`enumerator`, default `2`.
+
+`max_evaluations` was reached.
+
+## Guidance
+
+Read from `PopulationSolverOutcome::status`.
+
+## Practical Examples
+
+### Example 1
+
+Each outcome.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  const Series start = pluss::series::make({0.0, 0.0, 0.0, 0.0});
+  dfo::DifferentialEvolutionConfig by_tolerance, by_generations, by_evaluations;
+  by_tolerance.check_every = 5;  by_tolerance.initial_radius = 5.0;
+  by_generations.max_generations = 5;  by_generations.initial_radius = 5.0;
+  by_evaluations.max_evaluations = 500;  by_evaluations.initial_radius = 5.0;
+  out.writeln("tolerance :", dfo::to_string(dfo::differential_evolution_minimizer(f, start, by_tolerance).status));
+  out.writeln("5 gens    :", dfo::to_string(dfo::differential_evolution_minimizer(f, start, by_generations).status));
+  out.writeln("500 evals :", dfo::to_string(dfo::differential_evolution_minimizer(f, start, by_evaluations).status));
+}
+```
+
+Output
+
+```text
+tolerance : Converged
+5 gens    : ReachedIterationBudget
+500 evals : ReachedEvaluationBudget
+```
+
+### Example 2
+
+A swarm.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::ParticleSwarmConfig config;
+  config.max_generations = 5;
+  config.initial_radius = 5.0;
+  out.writeln(dfo::to_string(dfo::particle_swarm_minimizer(f, pluss::series::make({0.0, 0.0, 0.0, 0.0}), config).status));
+}
+```
+
+Output
+
+```text
+ReachedIterationBudget
+```
+
+### Example 3
+
+Acting on the status.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::DifferentialEvolutionConfig config;
+  config.check_every = 5;
+  config.initial_radius = 5.0;
+  const dfo::PopulationSolverOutcome o = dfo::differential_evolution_minimizer(f, pluss::series::make({0.0, 0.0, 0.0, 0.0}), config);
+  out.writeln(o.status == dfo::PopulationSolverStatus::Converged ? "the population stopped improving" : "a budget ran out");
+}
+```
+
+Output
+
+```text
+the population stopped improving
+```
+
+## See Also
+
+- [`PopulationSolverOutcome`](PopulationSolverOutcome.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PopulationSolverOutcome.html">
+    <span class="label">Previous</span>
+    <span class="title">PopulationSolverOutcome</span>
+  </a>
+  <a class="next-link" href="PsdMadsConfig.html">
+    <span class="label">Next</span>
+    <span class="title">PsdMadsConfig</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

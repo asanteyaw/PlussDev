@@ -1,0 +1,34 @@
+# Stochastic differential equations
+
+Simulation of `dY = μ(t, Y, θ) dt + σ(t, Y, θ) dW` over a whole `Series` of independent paths, and pathwise gradients of a result with respect to the initial state and the parameters. [`fluctua`](sde/fluctua.md) integrates with a fixed step and a chosen scheme ([`SdeMethod`](sde/SdeMethod.md)); [`fluctua_adjoint`](sde/fluctua_adjoint.md) differentiates the same simulation backwards. The noise is elementwise: `σ` has the shape of `Y` and drives one independent Wiener increment per entry, so a leading batch axis is a batch of independent paths.
+
+| You want | Use |
+|---|---|
+| The state at the end time for one or many paths | [`fluctua`](sde/fluctua.md) |
+| Gradients of a payoff with respect to `Y₀` and `θ` | [`fluctua_adjoint`](sde/fluctua_adjoint.md) |
+| Which scheme, how many steps, which seed | [`SdeOptions`](sde/SdeOptions.md), [`SdeMethod`](sde/SdeMethod.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`SdeAdjointResult`](sde/SdeAdjointResult.md) | The end state of a simulation and the pathwise gradients of a loss with respect to the initial state and the parameters. |
+| [`SdeMethod`](sde/SdeMethod.md) | The time-stepping scheme of `fluctua`: Euler-Maruyama, Milstein or Stratonovich-Heun. |
+| [`SdeOptions`](sde/SdeOptions.md) | The scheme, the number of steps and the seed of a simulation. |
+| [`SdeResult`](sde/SdeResult.md) | The state at the end time and the realised Wiener increment of a simulation. |
+| [`fluctua`](sde/fluctua.md) | Simulates `dY = μ(t, Y, θ) dt + σ(t, Y, θ) dW` from `t0` to `t1` for one path or a batch and returns the end state. |
+| [`fluctua_adjoint`](sde/fluctua_adjoint.md) | Differentiates a simulation backwards: the pathwise gradients of a loss of the end state with respect to the initial state and the parameters. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+sde/SdeAdjointResult
+sde/SdeMethod
+sde/SdeOptions
+sde/SdeResult
+sde/fluctua
+sde/fluctua_adjoint
+```
+<!-- apiref:toctree:end -->

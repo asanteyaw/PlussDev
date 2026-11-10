@@ -1,0 +1,72 @@
+# `signal::fir`
+
+## Signature
+
+```cpp
+pluss::Series signal::fir(
+    const pluss::Series& input,
+    const pluss::Series& taps,
+    std::int64_t dim = -1);
+```
+
+## What It Does
+
+Applies a causal finite-impulse-response filter with zero initial history. Unlike full convolution, the result is aligned to the input and has the same sample-axis length.
+
+## Parameters
+
+`input`
+: Floating or complex samples.
+
+`taps`
+: Feed-forward coefficients ordered from current sample to older samples.
+
+`dim`
+: Ordered sample axis.
+
+## Returns
+
+A same-length filtered `Series` on the promoted dtype and input platform.
+
+## Errors
+
+Rejects invalid axes, non-floating/non-complex data, empty taps, and incompatible batch structure.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Compare convolution, correlation, FIR filtering, and frequency response.
+
+@@example Eng/api/signal_filtering.cpp@@
+
+### Example 2
+
+Continue a recursive filter across blocks and apply forward-backward filtering.
+
+@@example Eng/api/signal_filter_state.cpp@@
+
+### Example 3
+
+Observe validation of signal dtype and recurrence coefficients.
+
+@@example Eng/api/signal_filter_errors.cpp@@
+
+## See Also
+
+See [Filtering and response](../filtering.md) for alignment, streaming-state, and axis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="corr.html">
+    <span class="label">Previous</span>
+    <span class="title">corr</span>
+  </a>
+  <a class="next-link" href="filter.html">
+    <span class="label">Next</span>
+    <span class="title">filter</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

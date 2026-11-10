@@ -1,0 +1,76 @@
+# `lti::zpk`
+
+## Signature
+
+```cpp
+lti::PoleZero lti::zpk(
+    const pluss::Series& zeros,
+    const pluss::Series& poles,
+    const pluss::Series& gain,
+    double sample_time = 0.0);
+```
+
+## What It Does
+
+Constructs a proper zero-pole-gain system, promotes roots and gain to one complex precision, and records a continuous or discrete timebase.
+
+## Parameters
+
+`zeros`
+: Finite rank-one floating or complex transmission zeros.
+
+`poles`
+: Finite rank-one floating or complex poles. A proper system has at least as many poles as zeros.
+
+`gain`
+: One finite floating or complex value.
+
+`sample_time`
+: Zero for continuous time or finite positive sampling interval for discrete time.
+
+## Returns
+
+A `PoleZero` on the common input platform with normalized complex root storage and scalar gain.
+
+## Errors
+
+Rejects undefined, nonvector, nonfinite, integer, cross-platform, or improper root data; nonscalar gain; and invalid sample time.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Inspect stability, response, and second-order-section realization.
+
+@@example Eng/api/lti_pole_zero.cpp@@
+
+### Example 2
+
+Compare frequency response across equivalent system representations.
+
+@@example Eng/api/lti_response.cpp@@
+
+### Example 3
+
+Exercise frequency-grid and realization validation.
+
+@@example Eng/api/lti_response_errors.cpp@@
+
+## See Also
+
+See [Pole-zero and response](../response.md) for timebase, stability, and angular-frequency conventions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PoleZero.html">
+    <span class="label">Previous</span>
+    <span class="title">PoleZero</span>
+  </a>
+  <a class="next-link" href="to_sos.html">
+    <span class="label">Next</span>
+    <span class="title">to_sos</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

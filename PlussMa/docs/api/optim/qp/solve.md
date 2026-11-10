@@ -1,0 +1,373 @@
+<!-- generated from solve.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `qp::solve`
+
+Solves a convex quadratic program `minimise ½ xᵀPx + qᵀx` subject to `lower ≤ Ax ≤ upper`, for one problem or a whole batch.
+
+## Signature
+
+```cpp
+qp::Result qp::solve(const pluss::Series &p, const pluss::Series &q, const pluss::Series &a, const pluss::Series &lower, const pluss::Series &upper, qp::Options options = {}, qp::WarmStart warm = {});
+```
+
+## What It Does
+
+`qp::solve` minimises `½ xᵀPx + qᵀx` over `x` subject to the two-sided constraints `lower ≤ A x ≤ upper`. That one form covers every linear constraint: an equality sets `lower = upper`, a one-sided bound sets the other side to `±inf`, a simple variable bound is a row of `A` with a single 1, and an unconstrained problem uses `A = I` with infinite bounds. `P` must be symmetric positive semidefinite (a convex problem); the solver checks this and refuses an indefinite `P`.
+
+The method is a first-order splitting method (an alternating-direction method of multipliers): it factorises one linear system, then alternates cheap steps until the primal and dual residuals fall below `abs_tol + rel_tol · scale`. That is fast and robust, and gives moderate accuracy, about the tolerance you set (the default 1e-5 gives roughly five digits); tighten the tolerances for more at proportionally more iterations. The penalty `rho` is rebalanced automatically during the run (`adaptive_rho`), which is why the starting value hardly matters.
+
+Leading dimensions are batch dimensions and follow `Series` broadcasting: a `q` of shape `[B, n]` with shared `P`, `A` and bounds solves `B` problems at once; `P`, `A` and the bounds may be batched too. If any argument is gradient-tracked, the solution is differentiable with respect to it. Pass a [`WarmStart`](WarmStart.md) (usually `previous.warm()`) to start near a known solution; this pays off when the new problem is close to the old one.
+
+When the same `P` and `A` are used again and again, prepare them once with [`qp::prepare`](prepare.md) and call the returned [`Solver`](Solver.md).
+
+## Parameters
+
+`const pluss::Series &p`
+: The quadratic matrix `P`, `n × n`, symmetric positive semidefinite. Leading dimensions are batch dimensions.
+
+`const pluss::Series &q`
+: The linear term, ending in `n`. A leading batch dimension solves a batch of problems.
+
+`const pluss::Series &a`
+: The constraint matrix `A`, `m × n`. To bound the variables themselves, use rows of the identity.
+
+`const pluss::Series &lower`
+: The lower bounds on `A x`, ending in `m`; `-inf` for no lower bound.
+
+`const pluss::Series &upper`
+: The upper bounds on `A x`, ending in `m`; `+inf` for no upper bound. Equal to `lower` for an equality. Must not be smaller than `lower`.
+
+`qp::Options options`
+: Iteration limit, tolerances and penalty settings. See `Options`.
+
+`qp::WarmStart warm`
+: A starting point, usually `previous.warm()`. Empty (the default) is a cold start. See `WarmStart`.
+
+## Returns
+
+A `qp::Result`: the solution `x`, the `objective`, the constraint values `z` and multipliers `y`, the residuals, the iteration count and `converged`.
+
+## Errors
+
+- `P must be positive semidefinite`.
+- `q must end in <n>` (and similarly for the bounds) when a shape does not match.
+- `lower must not exceed upper`.
+
+## Practical Examples
+
+### Example 1
+
+A first problem with all three kinds of constraint in one `A`. The equality `x₀ + x₁ = 1` is its first row (`lower = upper = 1`), the next rows bound `x₀ ≤ 0.7` and `x₁ ≥ 0`. The solution is `x = (0, 1)`: the unconstrained minimum `(1, 2.5)` violates the equality, and on the line `x₀ + x₁ = 1` the objective falls toward `x₁`. Read the result: the values, the objective, and the multipliers `y` (large for the active equality, negative for the active lower bound on `x₀`, zero for the slack ones).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  const qp::Result result = qp::solve(P, q, A, lower, upper);
+
+  out.writeln("x          =", result.x.items<double>());
+  out.writeln("objective  =", result.objective.item<double>());
+  out.writeln("Ax         =", result.z.items<double>());
+  out.writeln("multipliers y =", result.y.items<double>());
+  out.writeln("converged  =", result.converged, ", iterations =", result.iterations);
+  out.writeln("primal residual =", result.primal_residual, ", dual residual =", result.dual_residual);
+}
+```
+
+Output
+
+```text
+x          = [-0.000005, 1.000009]
+objective  = -4.000015
+Ax         = [1.000000, 0.000000, 1.000008]
+multipliers y = [2.999985, -0.999975, 0.000000]
+converged  = true , iterations = 60
+primal residual = 0.000005 , dual residual = 0.000002
+```
+
+### Example 2
+
+Tolerances. The default 1e-5 gives about five digits of `x`; setting both tolerances to 1e-9 gains four more digits and takes more iterations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  qp::Options tight;
+  tight.abs_tol = 1e-9;
+  tight.rel_tol = 1e-9;
+  const qp::Result loose = qp::solve(P, q, A, lower, upper);
+  const qp::Result precise = qp::solve(P, q, A, lower, upper, tight);
+
+  out.writeln("default : x1 - 1 =", loose.x.items<double>()[1] - 1.0, ", iterations =", loose.iterations);
+  out.writeln("1e-9    : x1 - 1 =", precise.x.items<double>()[1] - 1.0, ", iterations =", precise.iterations);
+}
+```
+
+Output
+
+```text
+default : x1 - 1 = 0.0000086133 , iterations = 60
+1e-9    : x1 - 1 = 0.0000000016 , iterations = 100
+```
+
+### Example 3
+
+A batch. A `q` of shape `[B, n]` solves `B` problems that share `P`, `A` and the bounds. Here `P = I` and no constraints, so each solution is `−q`; the result `x` has shape `[2, 2]`, one row per problem, and `objective` has one entry per problem.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series I = pluss::series::eye(2, pluss::ScalarType::Float64);
+  const Series q = pluss::series::make({{1.0, 1.0}, {-2.0, -4.0}});
+  const Series free_below = pluss::series::make({-inf, -inf}), free_above = pluss::series::make({inf, inf});
+  const qp::Result result = qp::solve(I, q, I, free_below, free_above);
+
+  out.writeln("x shape   =", result.x.sizes());
+  out.writeln("x         =", result.x.reshape({4}).items<double>());
+  out.writeln("objective =", result.objective.items<double>());
+}
+```
+
+Output
+
+```text
+x shape   = [2, 2]
+x         = [-1.000000, -1.000000, 2.000000, 4.000000]
+objective = [-1.000000, -10.000000]
+```
+
+### Example 4
+
+Warm starting. Re-solving a slightly changed problem (`q` shifted by 0.01) from the previous solution's `warm()` takes about half the iterations of a cold start.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  const qp::Result first = qp::solve(P, q, A, lower, upper);
+  const qp::Result cold = qp::solve(P, q + 0.01, A, lower, upper);
+  const qp::Result warm = qp::solve(P, q + 0.01, A, lower, upper, {}, first.warm());
+
+  out.writeln("cold start : iterations =", cold.iterations);
+  out.writeln("warm start : iterations =", warm.iterations);
+}
+```
+
+Output
+
+```text
+cold start : iterations = 60
+warm start : iterations = 30
+```
+
+### Example 5
+
+The iteration cap and `converged`. With `max_iters = 5` the solver stops early and returns its current iterate with `converged = false`; always check it. With `adaptive_rho` off and a poor starting `rho`, the same problem fails to converge within the default 4000 iterations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  qp::Options capped;
+  capped.max_iters = 5;
+  qp::Options stuck;
+  stuck.adaptive_rho = false;
+  stuck.rho = 0.0001;
+
+  const qp::Result early = qp::solve(P, q, A, lower, upper, capped);
+  const qp::Result no_adaptation = qp::solve(P, q, A, lower, upper, stuck);
+  out.writeln("5 iterations          : converged =", early.converged, ", x =", early.x.items<double>());
+  out.writeln("rho = 1e-4, no balance: converged =", no_adaptation.converged, ", iterations =", no_adaptation.iterations);
+}
+```
+
+Output
+
+```text
+5 iterations          : converged = false , x = [0.3764, 1.8569]
+rho = 1e-4, no balance: converged = false , iterations = 4000
+```
+
+### Example 6
+
+Sensitivities. If `q` tracks gradients, the solution is differentiable: for the unconstrained problem `min ½|x|² + qᵀx` the solution is `x = −q`, so `∂(x₀ + x₁)/∂q = (−1, −1)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series I = pluss::series::eye(2, pluss::ScalarType::Float64);
+  Series q = pluss::series::make({1.0, -2.0});
+  q.tracks_slope_(true);
+  const qp::Result result = qp::solve(I, q, I, pluss::series::make({-inf, -inf}), pluss::series::make({inf, inf}));
+  result.x.sum().reverse();
+
+  out.writeln("x                =", result.x.items<double>());
+  out.writeln("d sum(x) / d q   =", q.sensitivity().items<double>(), "  (-1, -1)");
+}
+```
+
+Output
+
+```text
+x                = [-1.000, 2.000]
+d sum(x) / d q   = [-1.000, -1.000]   (-1, -1)
+```
+
+### Example 7
+
+Refused inputs: an indefinite `P`, a `q` of the wrong length, and bounds with `lower > upper`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+#include <string>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const std::exception &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  const Series indefinite = pluss::series::make({{1.0, 2.0}, {2.0, -1.0}});
+  try { (void)qp::solve(indefinite, q, A, lower, upper); } catch (const std::exception &e) { out.writeln("indefinite P :", first_line(e)); }
+  try { (void)qp::solve(P, pluss::series::make({1.0, 2.0, 3.0}), A, lower, upper); } catch (const std::exception &e) { out.writeln("q length     :", first_line(e)); }
+  try { (void)qp::solve(P, q, A, upper, lower); } catch (const std::exception &e) { out.writeln("reversed bounds:", first_line(e)); }
+}
+```
+
+Output
+
+```text
+indefinite P : math::qp::solve: P must be positive semidefinite
+q length     : math::qp::solve: q must end in 2
+reversed bounds: math::qp::solve: lower must not exceed upper
+```
+
+## See Also
+
+- [`prepare`](prepare.md): factorise once for repeated solves
+- [`Options`](Options.md): tolerances, penalty and iteration cap
+- [`WarmStart`](WarmStart.md): starting from a previous solution
+- [`Result`](Result.md): what is returned
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="prepare.html">
+    <span class="label">Previous</span>
+    <span class="title">prepare</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

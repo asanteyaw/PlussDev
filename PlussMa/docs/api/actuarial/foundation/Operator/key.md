@@ -1,0 +1,159 @@
+<!-- generated from key.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 126d09e8d783 -->
+
+# `actuarial::Operator<Signature>::key`
+
+[Back to `actuarial::Operator<Signature>`](../Operator.md)
+
+The descriptive name given at construction.
+
+## Signature
+
+```cpp
+std::string_view actuarial::Operator<Signature>::key() const noexcept;
+```
+
+## What It Does
+
+The key is the string passed to [`make_operator`](../make_operator.md), or the name the library gave a built-in operator (`"value"`, `"deductible"`, `"mean"`, `"chain_ladder"`). It does not affect behaviour; it names the operator in logs and messages. An empty operator has an empty key. The view lives as long as the operator.
+
+## Returns
+
+A `std::string_view` of the key.
+
+## Practical Examples
+
+### Example 1: a user key
+
+The key is the string given to `make_operator`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Operator<double(double)> square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  out.writeln(square.key());
+}
+```
+
+Output
+
+```text
+square
+```
+
+### Example 2: library keys
+
+Library operators carry the name of the rule.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(pluss::make_series({0.01, 0.02}));
+  out.writeln(actuarial::operators::value({mortality, actuarial::discount::flat(0.04)}).key(), actuarial::operators::deductible(100.0).key(), actuarial::operators::mean().key());
+}
+```
+
+Output
+
+```text
+value deductible mean
+```
+
+### Example 3: an empty operator
+
+The key is empty.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("length:", actuarial::Operator<double(double)>{}.key().size());
+}
+```
+
+Output
+
+```text
+length: 0
+```
+
+### Example 4: labelling output
+
+Use the key to say which rule produced a number.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Operator<double(double)> square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  out.writeln(square.key(), "(3) =", square(3.0));
+}
+```
+
+Output
+
+```text
+square (3) = 9.000000
+```
+
+## See Also
+
+- [`Operator`](../Operator.md): the type
+- [`make_operator`](../make_operator.md): builds one
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="defined.html">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="operator_bool.html">
+    <span class="label">Next</span>
+    <span class="title">operator_bool</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

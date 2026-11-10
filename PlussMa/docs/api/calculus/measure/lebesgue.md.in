@@ -1,0 +1,210 @@
+# `operators::measure::lebesgue`
+
+Integration against Lebesgue measure on an interval, with optional null points that are never sampled.
+
+## Signature
+
+```cpp
+operators::Operator operators::measure::lebesgue(std::string_view variable, double lower, double upper, pluss::RangeView<double> null_points = {});
+```
+
+## What It Does
+
+`lebesgue("x", a, b)` is the operator `f ↦ ∫ₐᵇ f(x) dx`, a function of the variable's complement. It is the integral of ordinary calculus, packaged so that it composes with the other measure operators, and with one addition: the *null points*. A Lebesgue integral does not see single points, so the value of `f` at finitely many places cannot change the result. If you declare those places in `null_points`, the interval is split there, so they become quadrature endpoints and are never evaluated. That lets you integrate a function that is undefined at isolated points, such as `sin(x)/x` at 0, without special-casing.
+
+Either limit may be infinite for the whole line or a half line. For a bounded Riemann-integrable integrand the result is the Riemann integral. Reversed or equal limits are refused here (the measure needs `lower < upper`), unlike [`integral`](../integral/integral.md), which accepts them. A null point outside the interval is allowed and has no effect.
+
+## Parameters
+
+`std::string_view variable`
+: The integration variable.
+
+`double lower`
+: The lower limit; may be `-inf`.
+
+`double upper`
+: The upper limit, greater than `lower`; may be `+inf`.
+
+`pluss::RangeView<double> null_points`
+: Points declared measure-zero. The interval is split at them and the function is never evaluated there.
+
+## Returns
+
+An `Operator` whose application returns the integral as a function of the remaining variables.
+
+## Errors
+
+- `needs a variable and lower < upper`.
+
+## Practical Examples
+
+### Example 1
+
+Plain Lebesgue integrals: `∫₀¹ x² dx = 1/3`, and over the whole line `∫ exp(−x²) dx = √π`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace measure = pluss::operators::measure;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double inf = std::numeric_limits<double>::infinity();
+
+  const math::Function square = math::function({"x"}, [](math::Function x) { return x * x; });
+  const math::Function gauss = math::function({"x"}, [](math::Function x) { return (-(x * x)).exp(); });
+  out.writeln("int_0^1 x^2        =", operators::measure::lebesgue("x", 0.0, 1.0)(square)().item<double>(), "  (1/3)");
+  out.writeln("int exp(-x^2) dx   =", operators::measure::lebesgue("x", -inf, inf)(gauss)().item<double>(), "  sqrt(pi) =", std::sqrt(std::acos(-1.0)));
+}
+```
+
+### Example 2
+
+Null points keep the integrand from being sampled where it is undefined. `sin(x − a)/(x − a)` is `0/0` at `x = a`; with `a = 31/64` that point is one of the nodes of the default rule, so without a declaration the evaluation fails. Declared null, the interval is split there and the point is never evaluated: the integral over `[0, 1]` is `Si(1 − a) + Si(a) = 0.98618`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+#include <vector>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace measure = pluss::operators::measure;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const double a = 31.0 / 64.0;
+  const math::Function sinc = math::function({"x"}, [&](math::Function x) { return (x - a).sin() / (x - a); });
+  const std::vector<double> nulls = {a};
+  try {
+    (void)operators::measure::lebesgue("x", 0.0, 1.0)(sinc)().item<double>();
+  } catch (const pluss::Error &e) {
+    out.writeln("undeclared:", first_line(e));
+  }
+  out.writeln("declared:  ", operators::measure::lebesgue("x", 0.0, 1.0, pluss::RangeView<double>(nulls))(sinc)().item<double>());
+}
+```
+
+### Example 3
+
+Splitting at a kink makes each piece smooth, so the quadrature is exact there. `∫₀¹ |x − ⅓| dx = 1/18 + 2/9`; the error of the undeclared integral is about `2·10⁻¹¹`, and of the one cut at `⅓` it is zero to the printed digits.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace measure = pluss::operators::measure;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(14));
+  const math::Function kink = math::function({"x"}, [](math::Function x) { return (x - 1.0 / 3.0).abs(); });
+  const std::vector<double> at_kink = {1.0 / 3.0};
+  const double exact = 1.0 / 18.0 + 2.0 / 9.0;
+  out.writeln("error, undeclared:", operators::measure::lebesgue("x", 0.0, 1.0)(kink)().item<double>() - exact);
+  out.writeln("error, cut at 1/3:", operators::measure::lebesgue("x", 0.0, 1.0, pluss::RangeView<double>(at_kink))(kink)().item<double>() - exact);
+}
+```
+
+### Example 4
+
+A function of a parameter keeps the parameter: `∫₀¹ exp(−s x) dx = (1 − e^{−s})/s`, evaluated at three values of `s` at once.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace measure = pluss::operators::measure;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"x", "s"}, [](math::Function x, math::Function s) { return (-(s * x)).exp(); });
+  const math::Function F = operators::measure::lebesgue("x", 0.0, 1.0)(f);
+  const auto s = pluss::make_series({0.5, 1.0, 2.0});
+  out.writeln("F(s):            ", F({s}).items<double>());
+  out.writeln("(1 - e^-s) / s:  ", ((1.0 - (-s).exp()) / s).items<double>());
+}
+```
+
+### Example 5
+
+The interval must be proper: `lower < upper`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace measure = pluss::operators::measure;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function square = math::function({"x"}, [](math::Function x) { return x * x; });
+  try { (void)operators::measure::lebesgue("x", 1.0, 0.0)(square); } catch (const pluss::Error &e) { out.writeln(first_line(e)); }
+}
+```
+
+## See Also
+
+- [`weighted`](weighted.md): integration against a density
+- [`integral`](../integral/integral.md): the plain definite integral
+- [`atomic`](atomic.md): point masses
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="atomic.html">
+    <span class="label">Previous</span>
+    <span class="title">atomic</span>
+  </a>
+  <a class="next-link" href="stieltjes.html">
+    <span class="label">Next</span>
+    <span class="title">stieltjes</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

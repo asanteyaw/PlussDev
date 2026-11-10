@@ -1,0 +1,41 @@
+# Stochastic integrals and jump paths
+
+Integrals `∫ f dW` along an explicit, already simulated Wiener path. Because the path is a value, the same realised noise can be integrated several ways, which is how the Itô, Stratonovich and Marcus conventions are compared on identical data. [`simulate_wiener_path`](integrals/simulate_wiener_path.md) and [`simulate_jump_diffusion_path`](integrals/simulate_jump_diffusion_path.md) make the paths; [`ito_integral`](integrals/ito_integral.md), [`strat_integral`](integrals/strat_integral.md) and [`marcus_integral`](integrals/marcus_integral.md) integrate along them, and every call reports the realised quadratic variation and warns when the path is not a standard Wiener path.
+
+| You want | Use |
+|---|---|
+| A Wiener path to integrate along | [`simulate_wiener_path`](integrals/simulate_wiener_path.md) |
+| The Itô integral (integrand read at the start of each step) | [`ito_integral`](integrals/ito_integral.md) |
+| The Stratonovich integral (the average of both ends) | [`strat_integral`](integrals/strat_integral.md) |
+| A path with jumps and its Marcus integral | [`simulate_jump_diffusion_path`](integrals/simulate_jump_diffusion_path.md), [`marcus_integral`](integrals/marcus_integral.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`AdaptednessOptions`](integrals/AdaptednessOptions.md) | How hard the sampled-path integral forms probe an integrand for dependence on the future. |
+| [`JumpPath`](integrals/JumpPath.md) | A path with jumps together with the mask of the steps that contain one. |
+| [`StochasticIntegralResult`](integrals/StochasticIntegralResult.md) | The value of a stochastic integral together with the realised quadratic variation of its path and any warnings. |
+| [`WienerPath`](integrals/WienerPath.md) | A sampled path with its time grid: the data that the stochastic integrals integrate against. |
+| [`ito_integral`](integrals/ito_integral.md) | The Itô integral `∫ f dW` of an integrand along an explicit path, with the integrand read at the start of each step. |
+| [`marcus_integral`](integrals/marcus_integral.md) | The Marcus (canonical) integral `∫ f ∘ dX` along a path with jumps. |
+| [`simulate_jump_diffusion_path`](integrals/simulate_jump_diffusion_path.md) | Simulates a path with Brownian increments and compound-Poisson jumps, the driver of a jump-diffusion. |
+| [`simulate_wiener_path`](integrals/simulate_wiener_path.md) | Simulates standard Wiener paths on an equal grid and returns them with their times. |
+| [`strat_integral`](integrals/strat_integral.md) | The Stratonovich integral `∫ f ∘ dW`, with the integrand averaged over both ends of each step. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+integrals/AdaptednessOptions
+integrals/JumpPath
+integrals/StochasticIntegralResult
+integrals/WienerPath
+integrals/ito_integral
+integrals/marcus_integral
+integrals/simulate_jump_diffusion_path
+integrals/simulate_wiener_path
+integrals/strat_integral
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,94 @@
+# `structure::solve`
+
+Solves the static equilibrium of a truss or a frame.
+
+## Signature
+
+```cpp
+structure::StaticResult structure::solve(const structure::Truss& truss, const pluss::Series& load, const structure::Fix& fix, const structure::SolveOptions& options = {});
+structure::FrameResult structure::solve(const structure::Frame& frame, const pluss::Series& load, const structure::Fix& fix, const structure::SolveOptions& options = {});
+structure::FrameResult structure::solve(const structure::Frame& frame, const pluss::Series& load, const structure::MemberLoad& member_load, const structure::Fix& fix, const structure::SolveOptions& options = {});
+structure::NonlinearResult structure::solve(const structure::Frame& frame, const pluss::Series& load, const structure::Fix& fix, const structure::NonlinearOptions& options);
+```
+
+## What It Does
+
+Finds the displacements, support reactions and member results of a structure under steady loads. There are four forms. The truss form solves the linear equilibrium `K u = f` of a pin-jointed truss. The frame form does the same for a frame of beam-columns. The frame form with a `MemberLoad` also carries uniform loads along the members exactly. The last form, selected by passing `NonlinearOptions`, solves the large-displacement corotational equilibrium by load stepping and Newton iteration. The linear forms apply the stiffness bar by bar in a preconditioned conjugate-gradient iteration and never assemble a matrix; leading axes on the structure, the load and the member load are batches solved together.
+
+## Parameters
+
+`truss / frame`
+: The compiled structure.
+
+`load`
+: Nodal loads, `[..., node, axis]` for a truss and `[..., node, 3]` for a frame, with leading axes for load cases.
+
+`member_load`
+: Uniform loads along frame members.
+
+`fix`
+: The supported degrees of freedom and any prescribed values.
+
+`options`
+: `SolveOptions` for the linear forms, `NonlinearOptions` for the large-displacement form.
+
+## Returns
+
+A `StaticResult` for a truss, a `FrameResult` for the linear frame forms, a `NonlinearResult` for the large-displacement form.
+
+## Errors
+
+Throws `std::invalid_argument` for a malformed or non-finite load, a load that does not share the structure's dtype and platform, an empty or inconsistent `Fix`, a degree of freedom named twice or out of range, or a free degree of freedom with no stiffness. Throws `std::runtime_error` when the iteration cannot finish: the message says whether the structure is a mechanism or the iteration budget ran out, and a nonlinear continuation that stops short reports its load factor. `fail_on_nonconvergence = false` returns the diagnostics instead.
+
+## Interpretation and Use
+
+Choose the linear forms when displacements are small; use the nonlinear form when the load turns the structure through more than a few degrees. The nodal load places forces and moments at nodes; use a `MemberLoad` for uniform loads along members, which keeps `end_force` true. Check equilibrium of loads and reactions on any result.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Solve the hung three-bar truss and read every field, with a batch of designs and load cases.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+### Example 2
+
+Solve a cantilever frame and read the end actions.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 3
+
+Uniform member loads on a frame.
+
+@@example Eng/api/structure_member_load.cpp@@
+
+### Example 4
+
+Large-displacement solution of a cantilever against the elastica.
+
+@@example Eng/api/structure_nonlinear_solve.cpp@@
+
+### Example 5
+
+Solver options and the failure switch.
+
+@@example Eng/api/structure_solve_options.cpp@@
+
+### Example 6
+
+Supports, rollers and prescribed displacements.
+
+@@example Eng/api/structure_fix.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="NonlinearResult.html">
+    <span class="label">Previous</span>
+    <span class="title">NonlinearResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

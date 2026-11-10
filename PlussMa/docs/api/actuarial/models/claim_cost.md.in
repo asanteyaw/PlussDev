@@ -1,0 +1,204 @@
+# `actuarial::models::claim_cost`
+
+Expected claim cost from exposure, frequency and severity.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::models::claim_cost(const pluss::Series &exposure, const pluss::Series &claim_frequency, const pluss::Series &claim_severity);
+```
+
+## What It Does
+
+Returns {math}`\text{exposure}\times\text{frequency}\times\text{severity}`, elementwise: the expected total claims of a rating cell is its volume times the claims per unit of volume times the average claim. The three arguments broadcast, so a single severity can be combined with a vector of cells. The product of frequency and severity is the pure premium per unit of exposure; multiplied by exposure it is the expected loss. Use it to build an expected loss from assumptions, and [`pure_premium`](pure_premium.md) for the reverse step from observed losses.
+
+## Parameters
+
+`exposure`
+: Volume of each cell, finite and 0 or more.
+
+`claim_frequency`
+: Claims per unit of exposure, finite and 0 or more.
+
+`claim_severity`
+: Average amount of a claim, finite and 0 or more.
+
+## Returns
+
+A series of the broadcast shape of the inputs.
+
+## Errors
+
+Throws `<argument> must be defined`, `<argument> must be finite` and `<argument> must be >= 0`, prefixed with the function name for each argument (`exposure`, `claim_frequency`, `claim_severity`), and `broadcast: incompatible shapes` when the shapes do not broadcast.
+
+## Practical Examples
+
+### Example 1: three cells
+
+Exposure, frequency and severity per cell.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0});
+  const pluss::Series frequency = pluss::make_series({0.08, 0.10, 0.07});
+  const pluss::Series severity = pluss::make_series({5000.0, 4800.0, 5200.0});
+  out.writeln(actuarial::models::claim_cost(exposure, frequency, severity).items<double>());
+}
+```
+
+### Example 2: by hand
+
+Cell 0: 1,000 x 0.08 x 5,000.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  out.writeln(1000.0 * 0.08 * 5000.0, actuarial::models::claim_cost(pluss::make_series({1000.0}), pluss::make_series({0.08}), pluss::make_series({5000.0})).items<double>()[0]);
+}
+```
+
+### Example 3: one severity for every cell
+
+A single severity broadcasts across the cells.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  out.writeln(actuarial::models::claim_cost(pluss::make_series({1000.0, 1200.0, 1500.0}), pluss::make_series({0.08, 0.10, 0.07}), pluss::make_series({5000.0})).items<double>());
+}
+```
+
+### Example 4: back to a pure premium
+
+Dividing the cost by the exposure recovers frequency times severity, which is what pure_premium measures from data.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0});
+  const pluss::Series cost = actuarial::models::claim_cost(exposure, pluss::make_series({0.08, 0.10, 0.07}), pluss::make_series({5000.0, 4800.0, 5200.0}));
+  out.writeln(cost.div(exposure).items<double>());
+  out.writeln(actuarial::models::premium_curve(cost, exposure).items<double>());
+}
+```
+
+### Example 5: a cell with no exposure
+
+Zero exposure gives zero cost.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  out.writeln(actuarial::models::claim_cost(pluss::make_series({0.0, 1000.0}), pluss::make_series({0.08, 0.08}), pluss::make_series({5000.0, 5000.0})).items<double>());
+}
+```
+
+### Example 6: the errors
+
+Negative and non-finite inputs and shapes that do not broadcast are refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::models::claim_cost(pluss::make_series({-1.0}), pluss::make_series({0.1}), pluss::make_series({100.0})); });
+  report([&] { (void)actuarial::models::claim_cost(pluss::make_series({10.0}), pluss::make_series({std::nan("")}), pluss::make_series({100.0})); });
+  report([&] { (void)actuarial::models::claim_cost(pluss::series::undefined(), pluss::make_series({0.1}), pluss::make_series({100.0})); });
+  report([&] { (void)actuarial::models::claim_cost(pluss::make_series({1.0, 2.0}), pluss::make_series({0.1, 0.2, 0.3}), pluss::make_series({100.0})); });
+}
+```
+
+## See Also
+
+- [`pure_premium`](pure_premium.md): the measured counterpart
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="pure_premium.html">
+    <span class="label">Next</span>
+    <span class="title">pure_premium</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

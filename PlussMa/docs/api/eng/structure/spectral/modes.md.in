@@ -1,0 +1,71 @@
+# `structure::modes`
+
+Finds the lowest natural frequencies and mode shapes of a frame.
+
+## Signature
+
+```cpp
+structure::ModeResult structure::modes(const structure::Frame& frame, const structure::Fix& fix, const structure::EigOptions& options = {});
+```
+
+## What It Does
+
+Solves `K phi = omega^2 M phi` for the lowest few frequencies of the frame with the supports of `fix` held fixed, returning the angular frequencies, the frequencies in hertz and mass-normalised shapes. The frame needs a density.
+
+## Parameters
+
+`frame`
+: A frame with density.
+
+`fix`
+: The supported degrees of freedom; prescribed values must be zero.
+
+`options`
+: Mode count, iteration limit, tolerances and inner-solve controls.
+
+## Returns
+
+A `ModeResult`.
+
+## Errors
+
+Throws `std::invalid_argument` when the frame has no density, a free degree of freedom has no stiffness or mass, `fix` is malformed or prescribes a motion, the mode count is non-positive or exceeds the free degree count, or the tolerances are invalid. Throws `std::runtime_error` when an inner stiffness solve does not converge.
+
+## Interpretation and Use
+
+The lowest modes of a frame are bending modes; axial modes appear among the higher frequencies. Ask for no more modes than the mesh resolves, and check the highest one you use by refining the mesh.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The lowest three modes of a cantilever against the closed formula.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+
+### Example 2
+
+Refused inputs.
+
+@@example Eng/api/structure_spectral_errors.cpp@@
+
+### Example 3
+
+Modes as the start of a damped free vibration.
+
+@@example Eng/api/structure_motion.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="mass.html">
+    <span class="label">Previous</span>
+    <span class="title">mass</span>
+  </a>
+  <a class="next-link" href="buckling.html">
+    <span class="label">Next</span>
+    <span class="title">buckling</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

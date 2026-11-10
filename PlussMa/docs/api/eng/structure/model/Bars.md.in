@@ -1,0 +1,67 @@
+# `structure::Bars`
+
+Cross-section area and modulus of each truss bar.
+
+## Signature
+
+```cpp
+structure::Bars
+```
+
+## What It Does
+
+A `Bars` holds the section properties of the bars of a truss: the cross-sectional area and Young's modulus of each. A bar of length `L` acts as an axial spring of stiffness `E A / L`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `area` | Cross-sectional area of each bar, shape `[..., bar]`, positive. | required |
+| `modulus` | Young's modulus of each bar, shape `[..., bar]`, positive. | required |
+
+## Returns
+
+A value; validated by `truss`.
+
+## Errors
+
+A non-positive or non-finite entry, a length that differs from the bar count, or a dtype or platform different from the mesh is rejected by `truss`.
+
+## Interpretation and Use
+
+Use one consistent system of units for coordinates, areas, moduli and loads; nothing can detect a mixture. Leading axes are batches of designs (a sweep of areas) that broadcast against the batch axes of the mesh and the load.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A mesh and bars compiled into a truss, with a batch of apex heights.
+
+@@example Eng/api/structure_truss_build.cpp@@
+
+### Example 2
+
+A batch of four middle-bar areas solved against two load cases.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+### Example 3
+
+Rejected bar properties.
+
+@@example Eng/api/structure_truss_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Mesh.html">
+    <span class="label">Previous</span>
+    <span class="title">Mesh</span>
+  </a>
+  <a class="next-link" href="Sections.html">
+    <span class="label">Next</span>
+    <span class="title">Sections</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

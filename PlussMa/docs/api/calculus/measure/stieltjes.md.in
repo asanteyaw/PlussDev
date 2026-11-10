@@ -1,0 +1,147 @@
+# `operators::measure::stieltjes`
+
+Lebesgue–Stieltjes integration: a continuous part given by a distribution function plus a list of jumps.
+
+## Signature
+
+```cpp
+operators::Operator operators::measure::stieltjes(std::string_view variable, const math::Function &cdf, double lower, double upper, pluss::RangeView<double> jump_points = {}, pluss::RangeView<double> jump_sizes = {});
+```
+
+## What It Does
+
+A distribution function `F` can increase smoothly and by jumps. `stieltjes("x", cdf, a, b, jump_points, jump_sizes)` is the operator `f ↦ ∫ₐᵇ f F′ dx + Σⱼ f(xⱼ) sⱼ`: integrate `f` against the derivative of the *continuous (jump-free) part* `cdf`, then add `f` at each jump point times the jump size. It is the integral against `dF` for a mixed distribution: a density with atoms, such as an insurance claim that is zero with positive probability and otherwise continuous, or a price that can jump to a barrier.
+
+The continuous part is given as a function, not a density: the operator differentiates it. The jump points and sizes are parallel lists (and may be empty). With no jumps it is the integral against `cdf′`, which [`weighted`](weighted.md) with the derivative as the density also computes; with no continuous part (`cdf` equal to 0) it is [`atomic`](atomic.md).
+
+## Parameters
+
+`std::string_view variable`
+: The integration variable.
+
+`const math::Function &cdf`
+: The continuous, jump-free part of the distribution function; the integral uses its derivative.
+
+`double lower`
+: The lower limit.
+
+`double upper`
+: The upper limit.
+
+`pluss::RangeView<double> jump_points`
+: Locations `xⱼ` of the jumps.
+
+`pluss::RangeView<double> jump_sizes`
+: Sizes `sⱼ` of the jumps, one per point.
+
+## Returns
+
+An `Operator` whose application returns `∫ f dF` as a function of the remaining variables.
+
+## Errors
+
+- Inconsistent jump points and sizes, or `lower >= upper`, are refused.
+
+## Practical Examples
+
+### Example 1
+
+A mixed distribution on `[0, 1]`: continuous part `F(x) = x/2` (density ½) plus an atom of mass ½ at `x = 1`. The total mass is 1; the mean is `∫ x·½ dx + 1·½ = 0.25 + 0.5 = 0.75`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace measure = pluss::operators::measure;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function cdf = math::function({"x"}, [](math::Function x) { return x * 0.5; });
+  const std::vector<double> points = {1.0}, sizes = {0.5};
+  const operators::Operator mix = operators::measure::stieltjes("x", cdf, 0.0, 1.0, pluss::RangeView<double>(points), pluss::RangeView<double>(sizes));
+  const math::Function one = math::function({"x"}, [](math::Function x) { return x * 0.0 + 1.0; });
+  const math::Function id = math::function({"x"}, [](math::Function x) { return x; });
+  out.writeln("mass:", mix(one)().item<double>(), "  mean:", mix(id)().item<double>());
+}
+```
+
+### Example 2
+
+No jumps: the integral against `F′`. With `F(x) = x²` on `[0, 1]` (density `2x`), `E[x] = 2/3`, the same as `weighted` with density `2x`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace measure = pluss::operators::measure;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function cdf = math::function({"x"}, [](math::Function x) { return x * x; });
+  const math::Function density = math::function({"x"}, [](math::Function x) { return 2.0 * x; });
+  const math::Function id = math::function({"x"}, [](math::Function x) { return x; });
+  out.writeln("stieltjes:", operators::measure::stieltjes("x", cdf, 0.0, 1.0)(id)().item<double>());
+  out.writeln("weighted: ", operators::measure::weighted("x", density, 0.0, 1.0)(id)().item<double>());
+}
+```
+
+### Example 3
+
+Only jumps: a zero continuous part and atoms at `1` and `3` of sizes `0.3` and `0.7` reproduce the atomic measure.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace measure = pluss::operators::measure;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function zero = math::function({"x"}, [](math::Function x) { return x * 0.0; });
+  const std::vector<double> points = {1.0, 3.0}, sizes = {0.3, 0.7};
+  const math::Function square = math::function({"x"}, [](math::Function x) { return x * x; });
+  out.writeln("stieltjes:", operators::measure::stieltjes("x", zero, 0.0, 4.0, pluss::RangeView<double>(points), pluss::RangeView<double>(sizes))(square)().item<double>());
+  out.writeln("atomic:   ", operators::measure::atomic("x", pluss::RangeView<double>(points), pluss::RangeView<double>(sizes))(square)().item<double>(), "  (0.3 + 6.3)");
+}
+```
+
+## See Also
+
+- [`weighted`](weighted.md): the continuous part alone
+- [`atomic`](atomic.md): the jumps alone
+- [`lebesgue`](lebesgue.md): Lebesgue measure
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lebesgue.html">
+    <span class="label">Previous</span>
+    <span class="title">lebesgue</span>
+  </a>
+  <a class="next-link" href="weighted.html">
+    <span class="label">Next</span>
+    <span class="title">weighted</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

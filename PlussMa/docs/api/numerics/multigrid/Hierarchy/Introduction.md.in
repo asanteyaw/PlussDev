@@ -1,0 +1,12 @@
+# `multigrid::Hierarchy` Introduction
+
+A `Hierarchy` is built once for a [`Problem`](../Problem.md) and a template field `like` (which fixes the dtype, device and batch shape of the fields it will act on), and reused for every operator application and V-cycle. Construction coarsens the grid, forms the coarse operators by rediscretisation (face coefficients are the coincident fine face averaged over the transverse fine faces), and precomputes the diagonals and spectral bounds used by the smoother.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="apply.html">
+    <span class="label">Next</span>
+    <span class="title">apply</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,131 @@
+<!-- generated from pack_series.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::pack_series`
+
+Wraps one Series as a single-block parameter pack, named `x` unless you choose a name.
+
+## Signature
+
+```cpp
+optim::ParameterPack<pluss::Series> optim::pack_series(const pluss::Series &values, std::string name = "x");
+```
+
+## What It Does
+
+The forms of `optima` that take a plain `Series` use `pack_series` internally, which is why their answer is read as `params.at("x")`. Call it yourself to build the start of a one-block pack for the `ParameterPack` forms, or to return a gradient from an analytic objective.
+
+## Parameters
+
+`values`
+: The block value.
+
+`name`
+: The block name.
+
+## Returns
+
+A one-block `ParameterPack<Series>`.
+
+## Practical Examples
+
+### Example 1
+
+The default block name is `x`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack pack = optim::pack_series(pluss::series::make({1.0, 2.0}));
+  out.writeln("blocks =", pack.size(), ", x =", pack.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+blocks = 1 , x = [1.0000, 2.0000]
+```
+
+### Example 2
+
+A chosen block name.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack pack = optim::pack_series(pluss::series::make({1.0, 2.0}), "theta");
+  out.writeln("theta =", pack.at("theta").items<double>());
+}
+```
+
+Output
+
+```text
+theta = [1.0000, 2.0000]
+```
+
+### Example 3
+
+As the gradient of an analytic objective: value `Σ (x − c)²`, gradient `2(x − c)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series c = pluss::series::make({3.0, -4.0});
+  const optim::OptimaState result = optim::optima(
+      [&](const Pack &p) { const pluss::Series d = p.at("x") - c; return std::pair{d.square().sum(), optim::pack_series(2.0 * d)}; },
+      optim::pack_series(pluss::series::make({0.0, 0.0})));
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+x = [3.0000, -4.0000]
+```
+
+## See Also
+
+- [`pack_scalars`](pack_scalars.md): scalar blocks
+- [`pack_vector`](pack_vector.md): several vector blocks
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pack_scalars.html">
+    <span class="label">Previous</span>
+    <span class="title">pack_scalars</span>
+  </a>
+  <a class="next-link" href="pack_vector.html">
+    <span class="label">Next</span>
+    <span class="title">pack_vector</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

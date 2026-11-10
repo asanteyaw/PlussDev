@@ -1,0 +1,224 @@
+<!-- generated from antiderivative.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::antiderivative`
+
+A function whose derivative is the input: an indefinite integral with respect to one variable.
+
+## Signature
+
+```cpp
+operators::Operator operators::antiderivative(std::string_view variable);
+```
+
+## What It Does
+
+`antiderivative("x")` is the inverse of `differential("x")`: it returns a function `F` with `∂F/∂x = f`. The input's other variables stay in place, so the antiderivative of `y x²` with respect to `x` is `y x³/3`, still a function of `x` and `y`.
+
+An antiderivative is defined only up to an additive constant, and this operator does not promise which. When the integrand matches a rule in the library's table of exact primitives (powers, `1/x`, `exp`, `sin`, `cos`, `sinh`, `cosh`, sums, and constant multiples; see the integrals guide for the full list) the result is that closed form: for `exp(x)` it is `exp(x)`, whose value at 0 is 1. When no rule applies, the result is an *unresolved integral* anchored at 0, `∫₀ˣ f`, which is evaluated numerically when values are supplied. [`provenance()`](../functions/Function/provenance.md) tells the two apart: `Structural` for an exact result, `Quadrature` for a numerical one.
+
+Use `antiderivative` when you want *a* primitive, for example to integrate a rate into an accumulated quantity or to verify that differentiating returns the original. When the constant matters, use [`integral`](integral.md) with a lower limit, which fixes it. A vector- or matrix-valued input is integrated component by component and keeps its shape.
+
+## Parameters
+
+`std::string_view variable`
+: The variable to integrate with respect to. It must be a variable of the function the operator is applied to.
+
+## Returns
+
+An `Operator` whose application returns an antiderivative as a `Function` with the same variables and output shape.
+
+## Errors
+
+- An empty variable name is refused when the operator is built.
+- A variable the function lacks raises `unknown variable '<name>'`.
+
+## Practical Examples
+
+### Example 1
+
+Exact primitives from the rule table, and the fundamental theorem. The antiderivative of `x³ + sin x` is `x⁴/4 − cos x`; differentiating it recovers the original. Both are `Structural`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::Provenance p) {
+  switch (p) {
+  case math::Provenance::Structural: return "Structural";
+  case math::Provenance::Opaque: return "Opaque";
+  case math::Provenance::Quadrature: return "Quadrature";
+  case math::Provenance::Autodiff: return "Autodiff";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.pow(3) + x.sin(); });
+  const math::Function F = operators::antiderivative("x")(f);
+  const math::Function back = operators::differential("x")(F);
+  const auto x = pluss::make_series({0.5, 1.0, 2.0});
+  out.writeln("F(x):        ", F({x}).items<double>());
+  out.writeln("x^4/4 - cos x:", (x.pow(4.0) / 4.0 - x.cos()).items<double>());
+  out.writeln("F' = f:      ", back({x}).items<double>(), " vs ", f({x}).items<double>());
+  out.writeln("provenance F:", name(F.provenance()));
+}
+```
+
+Output
+
+```text
+F(x):         [-0.8620, -0.2903, 4.4161]
+x^4/4 - cos x: [-0.8620, -0.2903, 4.4161]
+F' = f:       [0.6044, 1.8415, 8.9093]  vs  [0.6044, 1.8415, 8.9093]
+provenance F: Structural
+```
+
+### Example 2
+
+Other variables stay free. The antiderivative of `y x²` with respect to `x` is `y x³/3`: still a function of both. A term outside the table (here `exp(2x)`, which needs a substitution) makes the whole result a numerical integral anchored at 0, but its values are correct.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function g = math::function({"x", "y"}, [](math::Function x, math::Function y) { return y * x.pow(2); });
+  const math::Function G = operators::antiderivative("x")(g);
+  const auto point = {pluss::make_series(3.0), pluss::make_series(2.0)};
+  out.writeln("G(3, 2) =", G(point).item<double>(), "  (y x^3 / 3 = 18)   variables", G.arity());
+
+  const math::Function h = math::function({"x"}, [](math::Function x) { return (2.0 * x).exp(); });
+  const math::Function H = operators::antiderivative("x")(h);
+  out.writeln("H(1) =", H(1.0).item<double>(), "  provenance Quadrature:", H.provenance() == math::Provenance::Quadrature, "  exact (e^2 - 1)/2 =", (std::exp(2.0) - 1.0) / 2.0);
+}
+```
+
+Output
+
+```text
+G(3, 2) = 18.0000   (y x^3 / 3 = 18)   variables 2
+H(1) = 3.1945   provenance Quadrature: true   exact (e^2 - 1)/2 = 3.1945
+```
+
+### Example 3
+
+The constant is not promised. The antiderivative of `exp(x)` is the table's `exp(x)`, which is 1 at 0; the integral anchored at 0 is `exp(x) − 1`, which is 0 there. Both differentiate to `exp(x)`. When the constant matters, anchor it with `integral`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+  const math::Function primitive = operators::antiderivative("x")(f);
+  const math::Function anchored = operators::integral("x", 0.0)(f);
+  out.writeln("antiderivative at 0, 1: ", primitive(0.0).item<double>(), primitive(1.0).item<double>());
+  out.writeln("anchored at 0 at 0, 1:  ", anchored(0.0).item<double>(), anchored(1.0).item<double>());
+  out.writeln("difference at 0 and 1:  ", (primitive(0.0) - anchored(0.0)).item<double>(), (primitive(1.0) - anchored(1.0)).item<double>(), " (a constant)");
+}
+```
+
+Output
+
+```text
+antiderivative at 0, 1:  1.0000 2.7183
+anchored at 0 at 0, 1:   0.0000 1.7183
+difference at 0 and 1:   1.0000 1.0000  (a constant)
+```
+
+### Example 4
+
+A vector-valued integrand is integrated component by component and keeps its shape. The curve `(1, x, x²)` has antiderivative `(x, x²/2, x³/3)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function v = math::function({"x"}, [](math::Function x) { return math::stack({x * 0.0 + 1.0, x, x * x}); });
+  const math::Function V = operators::antiderivative("x")(v);
+  out.writeln("shape:", V.shape(), "  V(3) =", V(3.0).items<double>(), " (3, 4.5, 9)");
+}
+```
+
+Output
+
+```text
+shape: [3]   V(3) = [3.0000, 4.5000, 9.0000]  (3, 4.5, 9)
+```
+
+### Example 5
+
+A variable the function does not have is refused when the operator is applied, and an empty name when it is built.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+  try { (void)operators::antiderivative("z")(f); } catch (const pluss::Error &e) { out.writeln("unknown variable:", first_line(e)); }
+  try { (void)operators::antiderivative(""); } catch (const pluss::Error &e) { out.writeln("empty name:      ", first_line(e)); }
+}
+```
+
+Output
+
+```text
+unknown variable: operators::antiderivative: unknown variable 'z'
+empty name:       operators::antiderivative: variable must not be empty
+```
+
+## See Also
+
+- [`integral`](integral.md): fix the constant with a limit, or integrate over a range
+- [`differential`](../differential/differential.md): the inverse operator
+- [`provenance`](../functions/Function/provenance.md): tells exact from numerical
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="convolution.html">
+    <span class="label">Next</span>
+    <span class="title">convolution</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

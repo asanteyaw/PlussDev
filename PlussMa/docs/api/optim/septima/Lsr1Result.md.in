@@ -1,0 +1,183 @@
+# `optim::Lsr1Result`
+
+What `l_sr1_trust_region` returns: the flat solution, the objective, the gradient norm and the exit flag.
+
+`params` is the solution as one flat vector (the block form also returns the blocks in their own shapes). `objective_value` and `objective` give the final objective, `gradient_norm` the 2-norm of its gradient, and `step_norm` the last step. `iteration` and `function_evaluations` count the work (a trust-region step may be tried more than once). `converged`, `exit_flag` and `message` say how it ended, and `state` holds the method's memory.
+
+## Fields
+
+### `params`
+
+`pluss::Series`, default `undefined`.
+
+The flat solution vector.
+
+### `state`
+
+`optim::Lsr1State`, default `{}`.
+
+The method's memory.
+
+### `objective`
+
+`pluss::Series`, default `undefined`.
+
+The final objective.
+
+### `iteration`
+
+`std::int64_t`, default `0`.
+
+Iterations.
+
+### `function_evaluations`
+
+`std::int64_t`, default `0`.
+
+Objective evaluations.
+
+### `objective_value`
+
+`double`, default `+inf`.
+
+The final objective as a number.
+
+### `gradient_norm`
+
+`double`, default `+inf`.
+
+The 2-norm of the final gradient.
+
+### `step_norm`
+
+`double`, default `0`.
+
+The last step.
+
+### `converged`
+
+`bool`, default `false`.
+
+Whether the gradient test was met.
+
+### `exit_flag`
+
+`optim::Lsr1ExitFlag`, default `MaxIterations`.
+
+Why it stopped.
+
+### `message`
+
+`std::string`, default `empty`.
+
+A sentence about the ending.
+
+## Guidance
+
+Check `converged` before using `params`.
+
+## Practical Examples
+
+### Example 1
+
+Every field of a result for a quadratic.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto objective = [](const Series &x) { return (x - 3.0).square().sum(); };
+
+  const optim::Lsr1Result result = optim::l_sr1_trust_region(objective, pluss::series::make({0.0, 0.0}));
+  out.writeln("converged =", result.converged, ", exit =", optim::lsr1_exit_flag_name(result.exit_flag), ", message =", result.message);
+  out.writeln("params =", result.params.items<double>(), ", objective =", result.objective_value);
+  out.writeln("gradient norm =", result.gradient_norm, ", step norm =", result.step_norm);
+  out.writeln("iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+### Example 2
+
+A run that does not finish.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  optim::Lsr1SolveOptions options;
+  options.max_iterations = 3;
+  const optim::Lsr1Result result = optim::l_sr1_trust_region(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+  out.writeln("converged =", result.converged, ", exit =", optim::lsr1_exit_flag_name(result.exit_flag), ", gradient norm =", result.gradient_norm);
+}
+```
+
+### Example 3
+
+Evaluations versus iterations. Rejected trust-region steps cost evaluations without counting as iterations.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  const optim::Lsr1Result result = optim::l_sr1_trust_region(rosenbrock, pluss::series::make({-1.2, 1.0}));
+  out.writeln("iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+## See Also
+
+- [`l_sr1_trust_region`](l_sr1_trust_region.md): produces it
+- [`Lsr1State`](Lsr1State.md): the method's memory
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Lsr1ProgressSnapshot.html">
+    <span class="label">Previous</span>
+    <span class="title">Lsr1ProgressSnapshot</span>
+  </a>
+  <a class="next-link" href="Lsr1SolveOptions.html">
+    <span class="label">Next</span>
+    <span class="title">Lsr1SolveOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

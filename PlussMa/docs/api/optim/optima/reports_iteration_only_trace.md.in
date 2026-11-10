@@ -1,0 +1,136 @@
+# `optim::reports::iteration_only_trace`
+
+A progress hook that prints only iteration lines, without start, end, message or Krylov counts.
+
+## Signature
+
+```cpp
+std::function<bool(const optim::OptimaProgressSnapshot &)> optim::reports::iteration_only_trace(std::ostream &os, int precision = 6);
+```
+
+## What It Does
+
+The shortest trace: `iter`, `evals`, `objective`, `viol`, `stationarity`, `backend`, `step` and the stall category per iteration, with `precision` decimals. [`reports::iter`](reports_iter.md) is built on it and adds the `every` thinning and `septima` support.
+
+## Parameters
+
+`os`
+: The stream.
+
+`precision`
+: Decimals.
+
+## Returns
+
+A hook function.
+
+## Practical Examples
+
+### Example 1
+
+Four decimals.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.progress_hook = optim::reports::iteration_only_trace(std::cout, 4);
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+}
+```
+
+### Example 2
+
+Two decimals, on the penalty algorithm.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::MeritMethod;
+  options.penalty.max_iterations = 4;
+  options.penalty.progress_hook = optim::reports::iteration_only_trace(std::cout, 2);
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+}
+```
+
+### Example 3
+
+Combined with an early stop: the trace never stops the run, so wrap it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  const auto trace = optim::reports::iteration_only_trace(std::cout, 3);
+  optim::OptimaOptions options;
+  options.progress_hook = [trace](const optim::OptimaProgressSnapshot &s) { trace(s); return s.iteration >= 2; };
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+## See Also
+
+- [`reports::iter`](reports_iter.md): adds thinning
+- [`reports::trace`](reports_trace.md): fuller lines
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="reports_iter.html">
+    <span class="label">Previous</span>
+    <span class="title">iter</span>
+  </a>
+  <a class="next-link" href="reports_trace.html">
+    <span class="label">Next</span>
+    <span class="title">trace</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

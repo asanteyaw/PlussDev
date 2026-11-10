@@ -1,0 +1,288 @@
+# `regression::glm_predict`
+
+Applies a fitted generalised linear model to new predictor rows, on the scale of the mean or of the linear predictor.
+
+## Signature
+
+```cpp
+Series regression::glm_predict(const regression::GLMFitResult &fit, const Series &x, regression::GLMPredictionType type = regression::GLMPredictionType::Mean, Config cfg = {});
+Series regression::glm_predict(const regression::GLMFitResult &fit, const Series &x, const Series &offset, regression::GLMPredictionType type = regression::GLMPredictionType::Mean, Config cfg = {});
+```
+
+## What It Does
+
+Forms the linear predictor η = Xβ from the stored coefficients and, for `Mean`, passes it through the inverse link, μ = g⁻¹(η), so that the answer is an expected count, a probability or an expected value on the scale of the response. With `Linear` it returns η itself. The intercept convention comes from the fit: give only the original predictors. The second overload adds a known offset, one value per new row, to η before the inverse link; a model fitted with an offset must be predicted with one, or the rate it learned is applied to a unit of exposure it was not measured on.
+
+Call it for a point prediction of the mean at new rows; it returns no interval. For an interval, build it on the `Linear` scale from `std_errors` and `covariance` and transform the endpoints through the inverse link, which keeps a probability inside (0, 1).
+
+## Parameters
+
+`fit`
+: A completed result from `glm_fit`.
+
+`x`
+: The new rows. For a one-predictor fit, `[m]` is accepted. For several predictors use `[m, p]`; a single new observation is `[1, p]`. A matrix whose width equals `fit.k_params` is read as the full design with its leading column of ones.
+
+`offset`
+: A `Series` of length `m`, the offset of each new row. Only in the second overload.
+
+`type`
+: `GLMPredictionType::Mean` (the default) or `GLMPredictionType::Linear`; see [`GLMPredictionType`](GLMPredictionType.md).
+
+`cfg`
+: Computation configuration for the returned `Series`.
+
+## Returns
+
+A one-dimensional `Series` with one value per new row.
+
+## Errors
+
+Throws `glm_predict: fit.coefficients is undefined` for a default-constructed fit, `glm_predict: offset must have one value per row of X` when the offset length differs from the number of rows, and an error naming the expected width when `x` has neither `num_predictors` nor `k_params` columns.
+
+## Practical Examples
+
+### Example 1: expected counts
+
+Fit counts against dose and predict the expected count at three new doses.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto doses = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, as_f64());
+  out.writeln("expected counts", reg::glm_predict(fit, doses).items<double>());
+}
+```
+
+### Example 2: the linear scale
+
+The same predictions as log-counts, and the exponential that recovers the means.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto doses = pluss::make_series(std::vector<double>{1.0, 2.0, 3.0}, {3}, as_f64());
+  const auto eta = reg::glm_predict(fit, doses, reg::GLMPredictionType::Linear);
+  out.writeln("linear", eta.items<double>(), " exp", eta.exp().items<double>());
+}
+```
+
+### Example 3: several predictors, one new row
+
+With two predictors a single new observation is a `[1, 2]` matrix.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  std::vector<double> flat;
+  for (int i = 0; i < 10; ++i) flat.push_back(0.5 * (i + 1));
+  for (int i = 0; i < 10; ++i) flat.push_back((i % 4) * 0.7);
+  const auto x2 = pluss::make_series(flat, {2, 10}, as_f64()).transpose(0, 1);
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x2, options);
+  const auto row = pluss::make_series(std::vector<double>{3.0, 1.4}, {1, 2}, as_f64());
+  out.writeln("expected count at (3.0, 1.4)", reg::glm_predict(fit, row).items<double>());
+}
+```
+
+### Example 4: a rate with an offset
+
+A fit with the log of the exposure as its offset predicts a count only once the new exposure is supplied. The program predicts for the same dose over one and over four units of exposure.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  const auto exposure = pluss::make_series(std::vector<double>{1, 1, 2, 2, 2, 3, 3, 3, 4, 4}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  options.offset = exposure.log();
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto dose = pluss::make_series(std::vector<double>{2.0, 2.0}, {2}, as_f64());
+  const auto time = pluss::make_series(std::vector<double>{1.0, 4.0}, {2}, as_f64());
+  out.writeln("expected counts over 1 and 4 units", reg::glm_predict(fit, dose, time.log()).items<double>());
+}
+```
+
+### Example 5: probabilities from a logistic fit
+
+For a binomial fit the default prediction is a probability; the linear scale is the log-odds.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1, 1, 1}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Binomial;
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto hours = pluss::make_series(std::vector<double>{1.0, 3.0, 5.0}, {3}, as_f64());
+  out.writeln("probabilities", reg::glm_predict(fit, hours).items<double>());
+  out.writeln("log-odds     ", reg::glm_predict(fit, hours, reg::GLMPredictionType::Linear).items<double>());
+}
+```
+
+### Example 5: the offset overload on the linear scale
+
+The overload that takes an offset also accepts the prediction type. With `Linear` it returns the log-count including the offset, and the exponential of that is the expected count.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  const auto exposure = pluss::make_series(std::vector<double>{1, 1, 2, 2, 2, 3, 3, 3, 4, 4}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  options.offset = exposure.log();
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto dose = pluss::make_series(std::vector<double>{2.0, 2.0}, {2}, as_f64());
+  const auto offset = pluss::make_series(std::vector<double>{1.0, 4.0}, {2}, as_f64()).log();
+  const auto eta = reg::glm_predict(fit, dose, offset, reg::GLMPredictionType::Linear);
+  out.writeln("linear scale", eta.items<double>(), " exponential", eta.exp().items<double>());
+  out.writeln("mean scale  ", reg::glm_predict(fit, dose, offset).items<double>());
+}
+```
+
+### Example 6: an interval on the linear scale
+
+A prediction has no interval of its own, but one is built from the result: the variance of the linear predictor at a new point is c₀₀ + 2x c₀₁ + x² c₁₁ from `covariance`, the interval is η ± 1.96 times its square root, and its endpoints go through the inverse link. For the logistic fit the endpoints become probabilities, and they stay inside (0, 1).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1, 1, 1}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Binomial;
+  const auto fit = reg::glm_fit(y, x, options);
+  const std::vector<std::vector<double>> cov = fit.covariance.host<double>();
+  const double at = 3.0;
+  const auto b = fit.coefficients.items<double>();
+  const double eta = b[0] + b[1] * at;
+  const double half = 1.959964 * std::sqrt(cov[0][0] + 2.0 * at * cov[0][1] + at * at * cov[1][1]);
+  const auto inverse_logit = [](double v) { return 1.0 / (1.0 + std::exp(-v)); };
+  out.writeln("probability at 3", reg::glm_predict(fit, pluss::make_series(std::vector<double>{at}, {1}, as_f64())).items<double>()[0]);
+  out.writeln("95% interval", inverse_logit(eta - half), inverse_logit(eta + half));
+}
+```
+
+### Example 7: the errors
+
+The errors of prediction: a fit that was never made, an offset of the wrong length and rows of the wrong width.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      const std::string text(e.what());
+      out.writeln(text.substr(0, text.find('\n')));
+    }
+  };
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  report([&] { reg::glm_predict(reg::GLMFitResult{}, x); });
+  report([&] { reg::glm_predict(fit, x, pluss::make_series(std::vector<double>{1.0, 2.0}, {2}, as_f64())); });
+  report([&] { reg::glm_predict(fit, pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6}, {2, 3}, as_f64())); });
+}
+```
+
+## See Also
+
+[`glm_fit`](glm_fit.md) produces the fit, [`GLMPredictionType`](GLMPredictionType.md) chooses the scale, and [`GLMFitResult`](GLMFitResult.md) holds the coefficients applied.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="glm_fit.html">
+    <span class="label">Previous</span>
+    <span class="title">glm_fit</span>
+  </a>
+  <a class="next-link" href="glm_summary.html">
+    <span class="label">Next</span>
+    <span class="title">glm_summary</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

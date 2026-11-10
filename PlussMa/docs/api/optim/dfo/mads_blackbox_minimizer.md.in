@@ -1,0 +1,150 @@
+# `dfo::mads_blackbox_minimizer`
+
+Minimises a black box with mesh adaptive direct search, with constraints, several objectives, failed evaluations, a cache and a surrogate.
+
+## Signature
+
+```cpp
+dfo::BlackboxAdvancedOutcome dfo::mads_blackbox_minimizer(const std::function<dfo::BlackboxEvaluation(const pluss::Series &)> &blackbox, const pluss::Series &initial, const dfo::MadsBlackboxAdvancedConfig &config = {});
+template <class Fn> dfo::BlackboxAdvancedOutcome dfo::mads_blackbox_minimizer(Fn &&blackbox, const pluss::Series &initial, const dfo::MadsBlackboxAdvancedConfig &config = {});
+```
+
+## What It Does
+
+The general mesh-adaptive solver and the one the front door runs for a black box. The callback returns a [`BlackboxEvaluation`](BlackboxEvaluation.md): one or more **objectives**, optional **constraints** (`g(x) ≤ 0`), a flag for a **failed** evaluation and a flag for whether the call **counts**. Constraints are handled by the policy in [`ConstraintHandling`](ConstraintHandling.md); several objectives are reduced to one by a [scalarisation](MultiObjectiveScalarization.md) while the non-dominated points are kept in an archive; evaluated points are cached, and an optional [surrogate](SurrogateMode.md) orders the poll candidates so that an opportunistic poll stops sooner. The poll scheme follows the configuration, orthogonal by default.
+
+## Parameters
+
+`Fn &&blackbox`
+: A callable returning a `BlackboxEvaluation`, a `Series` of objectives or a number.
+
+`const pluss::Series &initial`
+: The starting point.
+
+`const dfo::MadsBlackboxAdvancedConfig &config`
+: The settings.
+
+## Returns
+
+A [`BlackboxAdvancedOutcome`](BlackboxAdvancedOutcome.md).
+
+## Errors
+
+- A black box that returns neither objectives nor a failure flag throws on the first call.
+
+## Practical Examples
+
+### Example 1
+
+A black box with an objective only.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});   // minimum 0 at (3, 3)
+    return e;
+  };
+
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}));
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", minimum =", o.scalarized_minimum, ", status =", dfo::to_string(o.status));
+}
+```
+
+### Example 2
+
+Failed evaluations. The simulator fails where `x₀ > 1.5`, so the best usable point is at the edge of the failing region, `(1.5, 1)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  std::int64_t failures = 0;
+  const auto black_box = [&](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    if (x.select(0, 0).item<double>() > 1.5) {
+      ++failures;
+      e.evaluation_ok = false;
+      e.objectives = pluss::make_series(0.0).reshape({1});
+      return e;
+    }
+    e.objectives = (x - pluss::series::make({2.0, 1.0})).square().sum().reshape({1});
+    return e;
+  };
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}));
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", minimum =", o.scalarized_minimum, ", failed calls =", failures);
+}
+```
+
+### Example 3
+
+Two objectives with a Chebyshev scalarisation. For `f₁ = x`, `f₂ = 1 − x²` on `[0, 1]` (a non-convex front) the compromise `x = 0.618` balances the two.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    const Series a = x.select(0, 0);
+    e.objectives = a.reshape({1}).unite({(1.0 - a.square()).reshape({1})}, 0);
+    return e;
+  };
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.lower_bounds = pluss::series::make({0.0});
+  config.upper_bounds = pluss::series::make({1.0});
+  config.multiobjective_scalarization = dfo::MultiObjectiveScalarization::Chebyshev;
+  config.objective_weights = pluss::series::make({1.0, 1.0});
+  config.objective_reference = pluss::series::make({0.0, 0.0});
+  config.max_evaluations = 3000;
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.8}), config);
+  out.writeln("x =", o.minimizer.items<double>(), ", objectives =", o.objective_vector.items<double>());
+}
+```
+
+## See Also
+
+- [`MadsBlackboxAdvancedConfig`](MadsBlackboxAdvancedConfig.md): the settings
+- [`BlackboxEvaluation`](BlackboxEvaluation.md): what the black box returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ltmads_minimizer.html">
+    <span class="label">Previous</span>
+    <span class="title">ltmads_minimizer</span>
+  </a>
+  <a class="next-link" href="mesh_adaptive_direct_search_minimizer.html">
+    <span class="label">Next</span>
+    <span class="title">mesh_adaptive_direct_search_minimizer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

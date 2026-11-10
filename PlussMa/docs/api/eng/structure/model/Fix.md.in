@@ -1,0 +1,68 @@
+# `structure::Fix`
+
+Constrained degrees of freedom and the displacement prescribed at each.
+
+## Signature
+
+```cpp
+structure::Fix
+```
+
+## What It Does
+
+A `Fix` names the supported degrees of freedom of a structure as pairs of a node and an axis, and optionally prescribes the displacement each holds. A pin constrains every axis of a node; a roller constrains only the axis it cannot move along.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `node` | The node of each constrained degree of freedom. | required |
+| `axis` | The axis of each constrained degree of freedom: `0`, `1` (and `2` for a space truss) are the displacements along x, y and z; for a frame `2` is the rotation. | required |
+| `value` | The displacement held at each constrained pair, shape `[..., constrained dof]`, in the same order as `node` and `axis`. An undefined `value` holds every degree of freedom at zero. | undefined (all zero) |
+
+## Returns
+
+A value; validated by the solver that receives it.
+
+## Errors
+
+An empty `Fix`, mismatched list sizes, a degree of freedom named twice and an out-of-range node or axis are rejected by `solve`, `modes`, `buckling`, `motion` and `harmonic`. Non-zero values are refused by `modes`, `buckling`, `motion` and `harmonic`, which analyse a structure about its supports.
+
+## Interpretation and Use
+
+The pairs of `node`, `axis` and `value` are matched by position: `value[i]` belongs to the `i`-th pair. The supports must stop rigid motion and must leave no mechanism; a solve that finds a direction with no stiffness reports a mechanism. A prescribed value in an indeterminate structure stresses it, and in a determinate one only moves it.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pin and a roller, two pins, a prescribed displacement and a repeated degree of freedom.
+
+@@example Eng/api/structure_fix.cpp@@
+
+### Example 2
+
+Supports for a cantilever frame.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 3
+
+Supports for the three-bar truss.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Sections.html">
+    <span class="label">Previous</span>
+    <span class="title">Sections</span>
+  </a>
+  <a class="next-link" href="TrussModel.html">
+    <span class="label">Next</span>
+    <span class="title">Truss</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

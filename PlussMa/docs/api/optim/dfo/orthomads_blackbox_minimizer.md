@@ -1,0 +1,161 @@
+<!-- generated from orthomads_blackbox_minimizer.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::orthomads_blackbox_minimizer`
+
+Minimises a black box with OrthoMADS, mesh adaptive direct search with orthogonal poll directions.
+
+## Signature
+
+```cpp
+dfo::BlackboxAdvancedOutcome dfo::orthomads_blackbox_minimizer(const std::function<dfo::BlackboxEvaluation(const pluss::Series &)> &blackbox, const pluss::Series &initial, const dfo::MadsBlackboxAdvancedConfig &config = {});
+template <class Fn> dfo::BlackboxAdvancedOutcome dfo::orthomads_blackbox_minimizer(Fn &&blackbox, const pluss::Series &initial, const dfo::MadsBlackboxAdvancedConfig &config = {});
+```
+
+## What It Does
+
+The same solver as [`mads_blackbox_minimizer`](mads_blackbox_minimizer.md) with the poll scheme fixed to `Ortho2N`, whatever the configuration says. The `2n` directions come from an orthogonal basis rotated at every iteration, so they are evenly spread and reproducible.
+
+## Parameters
+
+`Fn &&blackbox`
+: A callable returning a `BlackboxEvaluation`, a `Series` of objectives or a number.
+
+`const pluss::Series &initial`
+: The starting point.
+
+`const dfo::MadsBlackboxAdvancedConfig &config`
+: The settings.
+
+## Returns
+
+A [`BlackboxAdvancedOutcome`](BlackboxAdvancedOutcome.md).
+
+## Errors
+
+- A black box that returns neither objectives nor a failure flag throws on the first call.
+
+## Practical Examples
+
+### Example 1
+
+A black box with a constraint, with the progressive barrier.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});
+    e.constraints = (x.select(0, 0) - 1.0).reshape({1});
+    return e;
+  };
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.constraint_handling = dfo::ConstraintHandling::ProgressiveBarrier;
+  const dfo::BlackboxAdvancedOutcome o = dfo::orthomads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), config);
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", status =", dfo::to_string(o.status));
+}
+```
+
+Output
+
+```text
+minimizer = [1.00, 3.00] , status = Converged
+```
+
+### Example 2
+
+The Rosenbrock valley.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    e.objectives = ((b - a * a).square() * 100.0 + (1.0 - a).square()).reshape({1});
+    return e;
+  };
+
+  const dfo::BlackboxAdvancedOutcome o = dfo::orthomads_blackbox_minimizer(black_box, pluss::series::make({-1.2, 1.0}));
+  out.writeln("minimum =", o.scalarized_minimum, ", evaluations =", o.diagnostics.evaluations);
+}
+```
+
+Output
+
+```text
+minimum = 0.008380 , evaluations = 1000
+```
+
+### Example 3
+
+The scheme is fixed. Asking for `LtMadsRandom2N` in the configuration does not change it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    e.objectives = ((b - a * a).square() * 100.0 + (1.0 - a).square()).reshape({1});
+    return e;
+  };
+
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.poll_scheme = dfo::MadsPollScheme::LtMadsRandom2N;
+  const dfo::BlackboxAdvancedOutcome a = dfo::orthomads_blackbox_minimizer(black_box, pluss::series::make({-1.2, 1.0}), config);
+  const dfo::BlackboxAdvancedOutcome b = dfo::orthomads_blackbox_minimizer(black_box, pluss::series::make({-1.2, 1.0}));
+  out.writeln("same run =", a.diagnostics.evaluations == b.diagnostics.evaluations && a.scalarized_minimum == b.scalarized_minimum);
+}
+```
+
+Output
+
+```text
+same run = true
+```
+
+## See Also
+
+- [`MadsBlackboxAdvancedConfig`](MadsBlackboxAdvancedConfig.md): the settings
+- [`BlackboxEvaluation`](BlackboxEvaluation.md): what the black box returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="nelder_mead_minimizer.html">
+    <span class="label">Previous</span>
+    <span class="title">nelder_mead_minimizer</span>
+  </a>
+  <a class="next-link" href="orthomads_minimizer.html">
+    <span class="label">Next</span>
+    <span class="title">orthomads_minimizer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

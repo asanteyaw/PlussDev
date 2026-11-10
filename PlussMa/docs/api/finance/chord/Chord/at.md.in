@@ -1,0 +1,211 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9ec6a4610573 -->
+
+# `module::Chord::at`
+
+[Back to `module::Chord`](../Chord.md)
+
+Returns the Field of one asset, by name, for reading or editing.
+
+## Signature
+
+```cpp
+module::Field &module::Chord::at(const std::string &name);
+const module::Field &module::Chord::at(const std::string &name) const;
+```
+
+## What It Does
+
+Returns a reference to the stored `Field` of the asset, so a member can be read, or changed in place (a new spot, another engine, a different strike) before the next `price`. The reference is to the Chord's own copy, and `at` is the only way to edit an asset once it has been added. The const overload gives read-only access from a const Chord. [`operator[]`](operator_index.md) is the same call written as an index.
+
+Call it to bump an input and reprice one asset, to switch the engine of one asset while the others keep theirs, or to read back what an asset holds. Check [`contains`](contains.md) first when the name comes from outside.
+
+## Parameters
+
+`const std::string &name`
+: The asset's name, as given to `add`.
+
+## Returns
+
+A reference to the asset's Field, const when the Chord is const.
+
+## Errors
+
+Throws `subsp::math::finance::module::Chord::at: no asset named '<name>'` when no asset has that name.
+
+## Practical Examples
+
+### Example 1: reading an asset
+
+Read what the stored Field holds.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 105.0, 0.20));
+  const auto &field = chord.at("a");
+  out.writeln("spot", field.market.spot.items<double>(), " strike", field.instrument.strike.items<double>(), " model", field.model_name());
+}
+```
+
+### Example 2: bumping one asset
+
+Raise the spot of one asset and reprice: only that asset moves.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20)).add("b", bs(100.0, 100.0, 0.20));
+  const auto before = chord.price();
+  chord.at("a").market.spot = pluss::make_series({101.0});
+  const auto after = chord.price();
+  out.writeln("a", before["a"].price.items<double>(), "->", after["a"].price.items<double>());
+  out.writeln("b", before["b"].price.items<double>(), "->", after["b"].price.items<double>());
+}
+```
+
+### Example 3: switching one asset to another engine
+
+Move one Heston asset from the COS engine to the Fourier engine; the other keeps COS.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("cos", heston(100.0, {100.0})).add("fft", heston(100.0, {100.0}));
+  chord.at("fft").controls.engine = mod::Engine::Fft;
+  out.writeln("engines", chord.at("cos").engine_name(), chord.at("fft").engine_name());
+  const auto result = chord.price();
+  out.writeln("cos", result["cos"].price.items<double>(), " fft", result["fft"].price.items<double>());
+}
+```
+
+### Example 4: a const chord
+
+The const overload reads from a const Chord and cannot be used to change it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20));
+  const mod::Chord &view = chord;
+  out.writeln("spot through a const chord", view.at("a").market.spot.items<double>());
+}
+```
+
+### Example 5: the error
+
+An unknown name is refused, and so is a name that differs in case.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  mod::Chord chord;
+  chord.add("spx", bs(100.0, 100.0, 0.20));
+  report([&] { (void)chord.at("ndx"); });
+  report([&] { (void)chord.at("SPX"); });
+}
+```
+
+## See Also
+
+- [`Chord`](../Chord.md): the class
+- [`operator[]`](operator_index.md): the same call as an index
+- [`add`](add.md): adds assets
+- [`contains`](contains.md): checks a name first
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="add.html">
+    <span class="label">Previous</span>
+    <span class="title">add</span>
+  </a>
+  <a class="next-link" href="batches.html">
+    <span class="label">Next</span>
+    <span class="title">batches</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

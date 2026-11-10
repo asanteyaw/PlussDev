@@ -1,0 +1,53 @@
+# Actuarial Mathematics API Reference
+
+The actuarial framework is available through the public alias `pluss::ma::actuarial`. It separates actuarial data from transformations: mortality laws, discount assumptions, cashflows, experience and triangles are values; valuation, contract, pricing and reserving calculations are reusable typed operators.
+
+```cpp
+#include <pluss/ma.h>
+
+namespace actuarial = pluss::ma::actuarial;
+```
+
+This reference documents the operator-first surface. The {guide}`actuarial guide <actuarial>` develops complete workflows and the underlying mathematics; these pages specify every public type and callable, including validation rules and executable examples.
+
+## Families
+
+| Family | What it covers |
+|---|---|
+| [Foundation](actuarial/foundation.md) | The typed `Operator` value and user-defined operator factory |
+| [Mortality](actuarial/mortality.md) | Validated mortality laws, life-table conversions and parametric laws |
+| [Life-table functions](actuarial/life_contingencies.md) | Elementwise conversions between `qx`, `px`, force and survivors, lifetime distributions and tables |
+| [Valuation](actuarial/valuation.md) | Discount bases, contingent cashflows and expected present values |
+| [Loss contracts](actuarial/loss.md) | Deductibles, limits, layers, participation and empirical loss measures |
+| [Pricing](actuarial/pricing.md) | Pure premium, expense/profit loading, rate indication and credibility |
+| [Reserving](actuarial/reserving.md) | Labeled cumulative triangles, chain ladder and Bornhuetter-Ferguson |
+| [Contingent values](actuarial/core.md) | Survival, annuities, insurances, commutation columns, endowment premium and reserve from a probability vector and a rate |
+| [Frequency, severity and layers](actuarial/losses.md) | Claim-count and claim-size moments, aggregate loss, probabilities, limited values and layer costs |
+| [Rating and reserving formulas](actuarial/models.md) | The single steps of a rate indication and a reserve estimate as functions on `Series` |
+
+## Design Boundary
+
+The actuarial `Operator<Signature>` is a typed orchestration value. It does not duplicate `Series` arithmetic, distribution formulas or calculus operators. Its callable delegates numerical work to those lower kernels while preserving an actuarially meaningful input and output contract. This is why `Valuation` accepts a `Cashflow`, `Pricing` accepts `Experience`, and `Reserving` accepts a `Triangle`, rather than exposing unrelated lists of scalar formulas. The scalar formulas those operators are built from are documented too, as the free-function families at the end of the table, for the cases where one step is wanted on its own.
+
+## Conventions
+
+- Examples use concise `pluss::make_series({...})` construction and print the carried values rather than full `Series` metadata unless shape or platform is relevant.
+- Actuarial numerical inputs are evaluated as `Float64`; the input platform is preserved.
+- Invalid probabilities, discount factors, inconsistent horizons, non-contiguous triangle masks and incompatible shapes raise `pluss::Error`.
+- Operator objects are reusable. Construct assumptions once, then apply the operator to many compatible domain values.
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+actuarial/foundation
+actuarial/mortality
+actuarial/life_contingencies
+actuarial/valuation
+actuarial/loss
+actuarial/pricing
+actuarial/reserving
+actuarial/core
+actuarial/losses
+actuarial/models
+```

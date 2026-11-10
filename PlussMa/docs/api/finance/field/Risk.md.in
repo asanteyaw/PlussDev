@@ -1,0 +1,132 @@
+# `module::Risk`
+
+Whether pricing also returns the Greeks.
+
+`PriceOnly` returns just the price, `All` returns the price and the five Greeks (delta, gamma, vega, theta, rho). The Greeks cost extra: the Analytic Black-Scholes engine computes them in closed form for little, and so does the COS engine for a European Heston or Bates option (all five come from the same pass over the characteristic function as the price); the FFT engine needs three more transforms, Monte Carlo (Heston, Bates and the rough models) two more simulations, and the lattice and Heston PDE read most of them off the solved grid, SABR differentiates Black's formula exactly, the American spectral and COS engines read most of them off the solved boundary or the final expansion, and only Monte Carlo with American exercise obtains them by repricing at shifted inputs, at the cost of about nine pricings. Use `PriceOnly` in any loop, and in calibration, where only the prices enter the loss.
+
+## Fields
+
+### `PriceOnly`
+
+`enumerator`, default `0`.
+
+Price only.
+
+### `All`
+
+`enumerator`, default `1`.
+
+Price and the five Greeks.
+
+## Guidance
+
+Set as `Controls::risk`.
+
+## Practical Examples
+
+### Example 1
+
+The two settings. With `All` the Greeks are defined; with `PriceOnly` they are not.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.05, 0.02),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::All}};
+
+  for (const mod::Risk risk : {mod::Risk::All, mod::Risk::PriceOnly}) {
+    field.controls.risk = risk;
+    const auto result = field.price();
+    out.writeln(risk == mod::Risk::All ? "All      " : "PriceOnly", ": delta defined =", result.greeks.delta.defined(), ", vega defined =", result.greeks.vega.defined());
+  }
+}
+```
+
+### Example 2
+
+The Greeks of a Heston option by the COS engine, in closed form. Delta, gamma, vega, theta, rho come back with the price.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::All}};
+
+  const auto r = field.price();
+  out.writeln("price", r.price.items<double>(), " delta", r.greeks.delta.items<double>(), " gamma", r.greeks.gamma.items<double>());
+  out.writeln("vega", r.greeks.vega.items<double>(), " theta", r.greeks.theta.items<double>(), " rho", r.greeks.rho.items<double>());
+}
+```
+
+### Example 3
+
+The closed-form delta agrees with a bump of the spot done by hand.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::All}};
+
+  const double delta = field.price().greeks.delta.items<double>()[0];
+  field.controls.risk = mod::Risk::PriceOnly;
+  const double h = 0.01;
+  field.market = fin::market::make(100.0 + h, 0.02, 0.0);
+  const double up = field.price().price.items<double>()[0];
+  field.market = fin::market::make(100.0 - h, 0.02, 0.0);
+  const double down = field.price().price.items<double>()[0];
+  out.writeln("delta =", delta, ", central difference =", (up - down) / (2.0 * h));
+}
+```
+
+## See Also
+
+- [`Controls`](Controls.md): holds the choice
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Result.html">
+    <span class="label">Previous</span>
+    <span class="title">Result</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

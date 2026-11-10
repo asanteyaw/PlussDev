@@ -1,0 +1,50 @@
+# Optimization API Reference
+
+The optimization tools of PlussMa live in `pluss::subsp::math`. Each solver takes its problem as `Series` data, returns a result record you can read field by field, and reports in that record why it stopped, so a run that did not converge is a value to inspect rather than an exception.
+
+```cpp
+#include <pluss/ma.h>
+
+namespace roots = pluss::subsp::math::roots;
+namespace qp = pluss::subsp::math::qp;
+namespace linprog = pluss::subsp::math::linprog;
+namespace milp = pluss::subsp::math::milp;
+namespace optim = pluss::subsp::math::optim;
+namespace dfo = pluss::subsp::math::optimization;
+```
+
+Every page of this reference documents one function, method, enumeration or options structure: what it is, when to call it, every parameter and field, what it returns, what it refuses, and programs with real output that cover each overload and each option.
+
+Not sure which solver fits your problem? The {guide}`optimization guide <optim>` opens with a chooser.
+
+## The families
+
+| Family | What it covers |
+|---|---|
+| [Root finding](optim/roots.md) | Bracketing and derivative-based solvers for a scalar equation |
+| [Quadratic programming](optim/qp.md) | Convex quadratic programs, batches, warm starts, prepared solvers |
+| [Linear programming](optim/linprog.md) | Interior-point and simplex linear programming with certificates |
+| [Mixed-integer linear programming](optim/milp.md) | Branch-and-bound over integer variables |
+| [Constrained optimization (Optima)](optim/optima.md) | Nonlinear programs: problem builders, four algorithms, options, results, reports |
+| [First-order and quasi-Newton optimization (Septima)](optim/septima.md) | Adam, L-BFGS and L-SR1: options, constraints, results, standalone Adam steps |
+| [Derivative-free search](optim/dfo.md) | The `DFO` front door and builder, Nelder-Mead, pattern search, differential evolution, swarms, mesh-adaptive search |
+
+## Conventions
+
+- Examples print with `pluss::tils::OutputEngine`; a `Series` is read with `.items<double>()` for a vector and `.item<double>()` for a single number.
+- Constraints are written `g(x) ≤ 0` and `h(x) = 0`; linear rows are `A x ≤ b` and `A x = b`; infinite bounds mean no bound.
+- A run that stops without converging returns normally with a status or exit flag. Check it before using the answer.
+- Errors are `pluss::Error`; the message names the operation and the problem.
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+optim/roots
+optim/qp
+optim/linprog
+optim/milp
+optim/optima
+optim/septima
+optim/dfo
+```

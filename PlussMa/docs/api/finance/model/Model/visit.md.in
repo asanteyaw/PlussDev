@@ -1,0 +1,133 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: f2bde6e1b3a9 -->
+
+# `module::Model::visit`
+
+[Back to `module::Model`](../Model.md)
+
+Applies a function to whichever struct the model holds.
+
+## Signature
+
+```cpp
+template <typename F> decltype(auto) module::Model::visit(F &&f);
+template <typename F> decltype(auto) module::Model::visit(F &&f) const;
+```
+
+## What It Does
+
+Calls `f` with the held struct (`model::Heston &`, `model::Sabr &`, ...), so one generic lambda handles every family (typically with `if constexpr` on the type). It is `std::visit` on the underlying variant. The non-const form lets `f` edit the struct.
+
+## Parameters
+
+`F &&f`
+: A callable accepting each of the six structs.
+
+## Returns
+
+Whatever `f` returns (the same type for every family).
+
+## Practical Examples
+
+### Example 1
+
+Classifying whatever the model holds. One generic lambda returns a label for every family.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+#include <type_traits>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  for (const auto &m : {fin::model::make(fin::model::Kind::BlackScholes, {0.2}), fin::model::make(fin::model::Kind::Bates, {1.5, 0.04, 0.3, -0.7, 0.04, 0.5, -0.1, 0.2})}) {
+    const std::string label = m.visit([](const auto &s) -> std::string {
+      if constexpr (std::is_same_v<std::decay_t<decltype(s)>, fin::model::BlackScholes>) return "constant volatility";
+      else return "stochastic volatility";
+    });
+    out.writeln(m.name(), ":", label);
+  }
+}
+```
+
+### Example 2
+
+Type-dependent behaviour with `if constexpr`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <type_traits>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  m.visit([&](const auto &s) {
+    using T = std::decay_t<decltype(s)>;
+    if constexpr (std::is_same_v<T, fin::model::Heston>) out.writeln("long-run volatility =", std::sqrt(s.theta.template items<double>()[0]));
+    else out.writeln("not Heston");
+  });
+}
+```
+
+### Example 3
+
+Editing through the non-const form: scale every Heston volatility-of-variance by 2.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <type_traits>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  m.visit([](auto &s) {
+    if constexpr (std::is_same_v<std::decay_t<decltype(s)>, fin::model::Heston>) s.sigma = s.sigma * 2.0;
+  });
+  out.writeln(m.parameters().items<double>());
+}
+```
+
+## See Also
+
+- [`Model`](../Model.md): the class
+- [`as`](as.md): one known family
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="validate.html">
+    <span class="label">Previous</span>
+    <span class="title">validate</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

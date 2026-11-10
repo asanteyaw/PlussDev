@@ -1,0 +1,108 @@
+# `control::KalmanResult`
+
+The full forward Kalman-filter trajectory and likelihood record.
+
+## Signature
+
+```cpp
+control::KalmanResult
+```
+
+## What It Does
+
+This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+
+
+
+## Fields
+
+### `filtered_mean`
+
+Posterior state means after each observation update.
+
+### `filtered_cov`
+
+Posterior state covariances after each observation update.
+
+### `predicted_mean`
+
+Prior state means before each update.
+
+### `predicted_cov`
+
+Prior state covariances before each update.
+
+### `predicted_obs`
+
+Predicted observations `C x + D u`.
+
+### `innovation`
+
+Observation residuals relative to `predicted_obs`.
+
+### `innovation_cov`
+
+Innovation covariance matrices.
+
+### `gain`
+
+Time-varying Kalman gains.
+
+### `data_used`
+
+Mask recording which observed values participated in each update.
+
+### `loglik_terms`
+
+Per-step Gaussian log-likelihood contributions.
+
+### `loglik`
+
+The accumulated log likelihood over the trajectory.
+
+## Returns
+
+This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+
+## Errors
+
+The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+
+## Interpretation and Use
+
+Use prior fields (`predicted_*`) to evaluate forecasts and posterior fields (`filtered_*`) to evaluate updated state knowledge. `innovation` and `innovation_cov` support residual diagnostics; `loglik_terms` localize poor fit while `loglik` supports whole-run comparison.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Inspect posterior means, predicted observations, and total likelihood.
+
+@@example Eng/api/control_estimation.cpp@@
+
+### Example 2
+
+Pass the forward result into the smoothing interpretation.
+
+@@example Eng/api/control_smooth.cpp@@
+
+### Example 3
+
+See which invalid models fail before a result can be produced.
+
+@@example Eng/api/control_estimation_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="KalmanOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">KalmanOptions</span>
+  </a>
+  <a class="next-link" href="SmoothResult.html">
+    <span class="label">Next</span>
+    <span class="title">SmoothResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

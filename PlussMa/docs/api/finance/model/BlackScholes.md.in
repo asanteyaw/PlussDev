@@ -1,0 +1,91 @@
+# `model::BlackScholes`
+
+Constant-volatility model: one parameter, the volatility.
+
+The geometric Brownian motion `dS = (r − q) S dt + σ S dW` with a single constant volatility `σ`. It prices in closed form (the Analytic engine) and is the reference every other model reduces to (a Heston model with `σ → 0` and `v₀ = θ` collapses to it). Its one parameter is a `Series` of one element.
+
+## Fields
+
+### `volatility`
+
+`pluss::Series`, default `undefined`.
+
+The annual volatility `σ`; must be positive. The price of every option is increasing in it.
+
+## Guidance
+
+Held by `Model` when its kind is `BlackScholes`; accepted by `Field::price`.
+
+## Practical Examples
+
+### Example 1
+
+The price of an at-the-money call rises with the volatility.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  for (const double v : {0.1, 0.2, 0.3, 0.4}) {
+    fin::model::BlackScholes m = field.model.as<fin::model::BlackScholes>();
+    m.volatility = pluss::make_series({v});
+    out.writeln("volatility", v, ": price =", field.price(m).price.items<double>()[0]);
+  }
+}
+```
+
+### Example 2
+
+A model built directly from the struct, then priced.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.25})}, .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  out.writeln(field.model_name(), field.price().price.items<double>());
+}
+```
+
+## See Also
+
+- [`Model`](Model.md): holds one
+- [`Kind`](Kind.md): the parameter order
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Bates.html">
+    <span class="label">Previous</span>
+    <span class="title">Bates</span>
+  </a>
+  <a class="next-link" href="Heston.html">
+    <span class="label">Next</span>
+    <span class="title">Heston</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

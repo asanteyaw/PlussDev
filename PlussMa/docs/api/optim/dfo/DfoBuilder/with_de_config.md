@@ -1,0 +1,145 @@
+<!-- generated from with_de_config.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: b383f779c1e3 -->
+
+# `DfoBuilder::with_de_config`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Sets the settings of the differential evolution method.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_de_config(const dfo::DifferentialEvolutionConfig &cfg) const;
+```
+
+## What It Does
+
+Sets `DfoOptions::differential_evolution`, a [`DifferentialEvolutionConfig`](../DifferentialEvolutionConfig.md) that carries every setting of the differential evolution method. It is read only when that method runs, whether chosen by `Auto` or by [`with_solver`](with_solver.md). The common settings (budgets, tolerance, seed, display) and the bounds of the problem are applied on top of it when the method starts.
+
+## Parameters
+
+`const dfo::DifferentialEvolutionConfig &cfg`
+: The differential evolution settings.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+A smaller population.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  for (const std::int64_t n : {20, 100}) {
+    dfo::DifferentialEvolutionConfig cfg;
+    cfg.population_size = n;
+    const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::DifferentialEvolution).with_de_config(cfg).solve();
+    out.writeln("population", n, ": evaluations =", r.diagnostics.evaluations, ", minimum =", r.minimum);
+  }
+}
+```
+
+Output
+
+```text
+population 20 : evaluations = 7420 , minimum = 0.00000000
+population 100 : evaluations = 33100 , minimum = 0.00000000
+```
+
+### Example 2
+
+Mutation and crossover.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::DifferentialEvolutionConfig cfg;
+  cfg.mutation_factor = 0.5;
+  cfg.crossover_rate = 0.5;
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::DifferentialEvolution).with_de_config(cfg).solve();
+  out.writeln("evaluations =", r.diagnostics.evaluations, ", minimum =", r.minimum);
+}
+```
+
+Output
+
+```text
+evaluations = 48200 , minimum = 0.00000000
+```
+
+### Example 3
+
+Sampling radius when there are no bounds.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::DifferentialEvolutionConfig cfg;
+  cfg.initial_radius = 5.0;
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::DifferentialEvolution).with_de_config(cfg).solve();
+  out.writeln("minimizer =", r.minimizer.items<double>());
+}
+```
+
+Output
+
+```text
+minimizer = [1.000, -2.000, 0.500, 3.000]
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_constraints_values.html">
+    <span class="label">Previous</span>
+    <span class="title">with_constraints_values</span>
+  </a>
+  <a class="next-link" href="with_de_prmm_config.html">
+    <span class="label">Next</span>
+    <span class="title">with_de_prmm_config</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

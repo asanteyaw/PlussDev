@@ -1,0 +1,219 @@
+<!-- generated from l_sr1_trust_region.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::l_sr1_trust_region`
+
+Minimises a smooth objective by limited-memory SR1 with a trust region, which can follow negative curvature.
+
+## Signature
+
+```cpp
+optim::Lsr1Result optim::l_sr1_trust_region(const std::function<pluss::Series(const pluss::Series &)> &objective, const pluss::Series &x0, const optim::Lsr1SolveOptions &options = {});
+std::pair<std::vector<pluss::Series>, optim::Lsr1Result> optim::l_sr1_trust_region(const std::function<pluss::Series(const std::vector<pluss::Series> &)> &objective, const std::vector<pluss::Series> &params0, const optim::Lsr1SolveOptions &options = {});
+```
+
+## What It Does
+
+`l_sr1_trust_region` is the third optimizer beside Adam and L-BFGS. It builds a model of the objective from the last `memory_size` steps with the symmetric-rank-one update, which, unlike BFGS, can represent *negative* curvature, and minimises that model inside a ball (the trust region). The ball grows when the model predicted the real decrease well and shrinks when it did not, and a backtracking line search then guards the step. The point of the method is problems where positive-definite models stall: near a saddle, L-BFGS sees no reason to leave while L-SR1 steps along the direction of negative curvature. It handles unconstrained problems only.
+
+The paper's algorithm works on one flat vector, so the single-`Series` form returns an [`Lsr1Result`](Lsr1Result.md) whose `params` is that vector. The block form takes a list of `Series` blocks, flattens them, solves, and returns the blocks in their original shapes and dtypes alongside the result. Complex parameters are optimised as independent real and imaginary parts. Settings are in [`Lsr1SolveOptions`](Lsr1SolveOptions.md); the objective must return a scalar `Series`.
+
+## Parameters
+
+`objective`
+: A function returning a scalar `Series`.
+
+`x0 / params0`
+: The start: one `Series`, or a list of blocks.
+
+`options`
+: Budgets, tolerances and the L-SR1 settings.
+
+## Returns
+
+An `Lsr1Result` (single `Series`), or a pair of the answer blocks and an `Lsr1Result` (block form).
+
+## Practical Examples
+
+### Example 1
+
+The smallest problem. A quadratic is solved in a couple of iterations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto objective = [](const Series &x) { return (x - 3.0).square().sum(); };
+
+  const optim::Lsr1Result result = optim::l_sr1_trust_region(objective, pluss::series::make({0.0, 0.0}));
+  out.writeln("x =", result.params.items<double>(), ", exit =", optim::lsr1_exit_flag_name(result.exit_flag), ", iterations =", result.iteration);
+}
+```
+
+Output
+
+```text
+x = [3.000000, 3.000000] , exit = Converged , iterations = 3
+```
+
+### Example 2
+
+The Rosenbrock valley from `(−1.2, 1)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  const optim::Lsr1Result result = optim::l_sr1_trust_region(rosenbrock, pluss::series::make({-1.2, 1.0}));
+  out.writeln("x =", result.params.items<double>(), ", exit =", optim::lsr1_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+Output
+
+```text
+x = [1.000000, 1.000000] , exit = Converged , iterations = 43 , evaluations = 65
+```
+
+### Example 3
+
+A saddle. `f(x, y) = x² − y² + y⁴/4` has a saddle at the origin and minima at `(0, ±√2)` with `f = −1`. Starting almost on the saddle line `y = 0`, L-SR1 follows the negative curvature to a minimum.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series index_x = pluss::series::make({0.0}).to(pluss::ScalarType::Int64);
+  const Series index_y = pluss::series::make({1.0}).to(pluss::ScalarType::Int64);
+  const auto saddle = [&](const Series &v) {
+    const Series x = v.index_select(0, index_x), y = v.index_select(0, index_y);
+    return (x.square() - y.square() + 0.25 * y.square().square()).sum();
+  };
+  const optim::Lsr1Result result = optim::l_sr1_trust_region(saddle, pluss::series::make({0.5, 1e-6}));
+  out.writeln("x =", result.params.items<double>(), ", objective =", result.objective_value);
+}
+```
+
+Output
+
+```text
+x = [0.0000, 1.4142] , objective = -1.0000
+```
+
+### Example 4
+
+Blocks. The block form returns the blocks with their original shapes: a weight vector `w` and a scalar bias `b`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series target = pluss::series::make({1.0, 2.0, 3.0});
+  const std::function<Series(const std::vector<Series> &)> objective = [&](const std::vector<Series> &blocks) {
+    return (blocks[0] - target).square().sum() + (blocks[1] + 1.0).square().sum() + (blocks[0].sum() - blocks[1]).square().sum();
+  };
+  const auto [params, result] = optim::l_sr1_trust_region(objective, std::vector<Series>{pluss::series::make({0.0, 0.0, 0.0}), pluss::series::make({0.0})});
+  out.writeln("w =", params[0].items<double>(), " b =", params[1].items<double>(), ", exit =", optim::lsr1_exit_flag_name(result.exit_flag));
+}
+```
+
+Output
+
+```text
+w = [-0.4000, 0.6000, 1.6000]  b = [0.4000] , exit = Converged
+```
+
+### Example 5
+
+A complex parameter.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  using C = std::complex<double>;
+  const Series target = pluss::make_series(std::vector<C>{{1.0, 2.0}}, {1});
+  const optim::Lsr1Result result = optim::l_sr1_trust_region([&](const Series &z) { return (z - target).abs().pow(2.0).sum(); }, pluss::make_series(std::vector<C>{{0.0, 0.0}}, {1}));
+  const C z = result.params.items<C>()[0];
+  out.writeln("z =", z.real(), "+", z.imag(), "i");
+}
+```
+
+Output
+
+```text
+z = 1.0000 + 2.0000 i
+```
+
+## See Also
+
+- [`Lsr1SolveOptions`](Lsr1SolveOptions.md): budgets and tolerances
+- [`Lsr1Options`](Lsr1Options.md): the method's settings
+- [`Lsr1Result`](Lsr1Result.md): the result
+- [`septima`](septima.md): Adam and L-BFGS
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="adam_step_inplace.html">
+    <span class="label">Previous</span>
+    <span class="title">adam_step_inplace</span>
+  </a>
+  <a class="next-link" href="lsr1_exit_flag_name.html">
+    <span class="label">Next</span>
+    <span class="title">lsr1_exit_flag_name</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,64 @@
+# `signal::hann`
+
+## Signature
+
+```cpp
+pluss::Series signal::hann(
+    std::int64_t size,
+    const signal::WindowOptions& options = {});
+```
+
+## What It Does
+
+Creates a raised-cosine Hann window. Symmetric Hann reaches zero at both endpoints; periodic Hann tiles cleanly for an equal-length DFT.
+
+## Parameters
+
+`size`
+: Number of coefficients to return. Zero returns an empty rank-one `Series`; one returns the mathematically useful singleton coefficient.
+
+`options`
+: Endpoint, dtype, and platform policy. Hann is a common general-purpose taper because it balances main-lobe width and sidelobe suppression.
+
+## Returns
+
+A rank-one floating `Series` of length `size`, allocated with the requested dtype and platform.
+
+## Errors
+
+Rejects a negative `size`, a non-floating dtype, or an unsupported platform request.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Generate and compare every built-in window at a common length.
+
+@@example Eng/api/signal_windows.cpp@@
+
+### Example 2
+
+Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+
+@@example Eng/api/signal_window_options.cpp@@
+
+### Example 3
+
+Observe the validation errors for invalid size and dtype requests.
+
+@@example Eng/api/signal_window_errors.cpp@@
+
+## See Also
+
+See the [Signal windows](../windows.md) family page for selection guidance and endpoint semantics.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="hamming.html">
+    <span class="label">Previous</span>
+    <span class="title">hamming</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

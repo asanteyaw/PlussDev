@@ -1,0 +1,209 @@
+<!-- generated from cosine_series.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::fourier::cosine_series`
+
+The truncated half-range cosine series of a function, as a function of the original variable.
+
+## Signature
+
+```cpp
+operators::Operator operators::fourier::cosine_series(std::string_view variable, double lower, double upper, std::int64_t terms);
+```
+
+## What It Does
+
+`cosine_series("x", a, b, n)` applied to `f` returns the function `x ↦ A₀/2 + Σₖ₌₁^{n−1} Aₖ cos(uₖ (x − a))`, where the coefficients are those of [`cosine_coefficients`](cosine_coefficients.md). It is an ordinary function of `x` (and of the other variables of `f`): it can be evaluated on arrays, differentiated exactly (term by term), integrated and composed. It approximates `f` on `[a, b]`; outside the interval it repeats as the even, periodic extension of `f`.
+
+Half-range expansions on `[lower, upper]` use `uₖ = kπ / (upper − lower)`:
+
+- cosine: `f ≈ A₀/2 + Σₖ₌₁ Aₖ cos(uₖ (x − lower))`, with `Aₖ = 2/(b − a) ∫ f cos(uₖ (x − lower)) dx`,
+- sine: `f ≈ Σₖ₌₁ Bₖ sin(uₖ (x − lower))`, with `Bₖ = 2/(b − a) ∫ f sin(uₖ (x − lower)) dx`.
+
+More terms give a better approximation. For a smooth `f` the error decreases quickly; at a jump the series overshoots (Gibbs). The term count must lie in `[1, 4096]`.
+
+## Parameters
+
+`std::string_view variable`
+: The variable to expand in.
+
+`double lower`
+: The left end of the interval.
+
+`double upper`
+: The right end.
+
+`std::int64_t terms`
+: The number of terms, between 1 and 4096.
+
+## Returns
+
+An `Operator` whose application returns the series as a `Function` with the same variables as the input.
+
+## Errors
+
+- `terms must lie in [1, 4096]`.
+- `the interval must be finite with lower < upper`.
+
+## Practical Examples
+
+### Example 1
+
+Convergence. The cosine series of `f(x) = x` on `[0, π]` with 2, 5, 20 and 80 terms: the maximum error over a grid falls roughly like `1/n²`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double pi = std::acos(-1.0);
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+
+  const auto x = pluss::series::linspace(0.0, pi, 41, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  for (const std::int64_t terms : {2, 5, 20, 80}) {
+    const math::Function approx = fourier::cosine_series("x", 0.0, pi, terms)(f);
+    const double error = (approx({x}) - x).abs().max().item<double>();
+    out.writeln("terms", terms, ": max |series - x| =", error);
+  }
+}
+```
+
+Output
+
+```text
+terms 2 : max |series - x| = 0.297557
+terms 5 : max |series - x| = 0.156086
+terms 20 : max |series - x| = 0.031805
+terms 80 : max |series - x| = 0.007957
+```
+
+### Example 2
+
+Values inside and outside the interval. Inside `[0, π]` the series reproduces `f`; outside, it is the even, `2π`-periodic extension, so the value at `−1` equals the value at `1`, and at `π + 1` equals that at `π − 1`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double pi = std::acos(-1.0);
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+
+  const math::Function approx = fourier::cosine_series("x", 0.0, pi, 60)(f);
+  const auto x = pluss::make_series({1.0, -1.0, 2.0, pi + 1.0, pi - 1.0});
+  out.writeln("x:      ", x.items<double>());
+  out.writeln("series: ", approx({x}).items<double>());
+}
+```
+
+Output
+
+```text
+x:       [1.0000, -1.0000, 2.0000, 4.1416, 2.1416]
+series:  [1.0001, 1.0001, 1.9999, 2.1415, 2.1415]
+```
+
+### Example 3
+
+The series is a function, so it differentiates. Term-by-term differentiation of the 40-term series of `x` approximates the derivative 1 in the interior (it does not converge at the ends, where the even extension has a kink).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const double pi = std::acos(-1.0);
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+
+  const math::Function approx = fourier::cosine_series("x", 0.0, pi, 40)(f);
+  const math::Function slope = operators::differential("x")(approx);
+  const auto x = pluss::make_series({0.5, 1.0, 1.5, 2.0, 2.5});
+  out.writeln("series':", slope({x}).items<double>(), "  (exact slope 1)");
+}
+```
+
+Output
+
+```text
+series': [0.985, 1.012, 1.015, 1.002, 0.977]   (exact slope 1)
+```
+
+### Example 4
+
+A function of a parameter gives a series in `x` that still depends on the parameter: the cosine series of `exp(a x)` on `[0, 1]`, evaluated at `x = 0.5` for three values of `a`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function f = math::function({"x", "a"}, [](math::Function x, math::Function a) { return (a * x).exp(); });
+  const math::Function approx = fourier::cosine_series("x", 0.0, 1.0, 12)(f);
+  const auto a = pluss::make_series({0.0, 1.0, 2.0});
+  out.writeln("series at x = 0.5:", approx({pluss::make_series({0.5, 0.5, 0.5}), a}).items<double>());
+  out.writeln("exp(a x):         ", (a * 0.5).exp().items<double>());
+}
+```
+
+Output
+
+```text
+series at x = 0.5: [1.00000, 1.64732, 2.70786]
+exp(a x):          [1.00000, 1.64872, 2.71828]
+```
+
+## See Also
+
+- [`cosine_coefficients`](cosine_coefficients.md): the coefficients
+- [`sine_series`](sine_series.md): the odd counterpart
+- [`series`](series.md): the full Fourier series on a period
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="cosine_coefficients.html">
+    <span class="label">Previous</span>
+    <span class="title">cosine_coefficients</span>
+  </a>
+  <a class="next-link" href="cosine_transform.html">
+    <span class="label">Next</span>
+    <span class="title">cosine_transform</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

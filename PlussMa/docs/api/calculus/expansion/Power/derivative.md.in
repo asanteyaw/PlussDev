@@ -1,0 +1,154 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4c2af7456322 -->
+
+# `operators::expansion::Power::derivative`
+
+[Back to `operators::expansion::Power`](../Power.md)
+
+Differentiates a power series termwise: `c′ₖ = (k + 1) c_{k+1}`.
+
+## Signature
+
+```cpp
+operators::Operator operators::expansion::Power::derivative() const;
+```
+
+## What It Does
+
+`power().derivative()` acts on a coefficient vector `c = [c₀, c₁, …, c_n]` and returns the coefficients of the derivative series, `[c₁, 2c₂, 3c₃, …, n c_n]`: one entry fewer. The centre does not matter, since the derivative of `Σ cₖ (x − a)ᵏ` has the same form for any `a`. Working on the coefficients avoids building and differentiating the polynomial, and it is exact. The input must be a rank-1 coefficient vector with at least two entries.
+
+## Returns
+
+An `Operator` whose application returns the derivative coefficients, one entry fewer.
+
+## Errors
+
+- `needs a coefficient vector with at least two entries`.
+
+## Practical Examples
+
+### Example 1
+
+The derivative of `1 + 2x + 3x²` is `2 + 6x`: from `[1, 2, 3]` to `[2, 6]`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function c = math::function(pluss::make_series({1.0, 2.0, 3.0}));
+  out.writeln("derivative coefficients:", operators::expansion::power().derivative()(c)().items<double>());
+}
+```
+
+### Example 2
+
+For `exp`, every coefficient is `1/k!` and the derivative of the series is the series with the last term dropped: the coefficient vector loses one entry and is otherwise unchanged in its leading entries.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+
+  const math::Function c = operators::expansion::taylor().coefficients("x", 0.0, 5)(f);
+  const math::Function dc = operators::expansion::power().derivative()(c);
+  out.writeln("c : ", c().items<double>());
+  out.writeln("c': ", dc().items<double>());
+}
+```
+
+### Example 3
+
+Consistency with the polynomial: differentiating the coefficients and rebuilding agrees with differentiating the polynomial. Both give `f′` of the order-4 Taylor polynomial of `sin` at `x = 0.7`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const math::Function s = math::function({"x"}, [](math::Function x) { return x.sin(); });
+  const math::Function c = operators::expansion::taylor().coefficients("x", 0.0, 4)(s);
+  const math::Function by_coefficients = operators::expansion::power("x", 0.0)(operators::expansion::power().derivative()(c));
+  const math::Function by_polynomial = operators::differential("x")(operators::expansion::taylor("x", 0.0, 4)(s));
+  out.writeln("termwise: ", by_coefficients(0.7).item<double>());
+  out.writeln("polynomial:", by_polynomial(0.7).item<double>());
+}
+```
+
+### Example 4
+
+The input must be a coefficient vector with at least two entries.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function single = math::function(pluss::make_series({5.0}));
+  try { (void)operators::expansion::power().derivative()(single); } catch (const pluss::Error &e) { out.writeln(first_line(e)); }
+}
+```
+
+## See Also
+
+- [`integral`](integral.md): the termwise integral
+- [`product`](product.md): the Cauchy product
+- [`power`](../power_operator.md): rebuilds the polynomial
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="integral.html">
+    <span class="label">Next</span>
+    <span class="title">integral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

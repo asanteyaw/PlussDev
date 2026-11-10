@@ -1,0 +1,70 @@
+# `signal::PadMode`
+
+## Signature
+
+```cpp
+signal::PadMode signal::PadMode::Odd;
+signal::PadMode signal::PadMode::Even;
+signal::PadMode signal::PadMode::Constant;
+signal::PadMode signal::PadMode::None;
+```
+
+## What It Does
+
+Selects how `zero_phase` extends samples at both boundaries before forward-backward filtering. Boundary policy is central to transient behavior because a non-causal pass sees both ends.
+
+## Fields
+
+| Value | Meaning |
+|---|---|
+| `Odd` | Reflects with odd symmetry around each endpoint. This is the default and preserves local slope. |
+| `Even` | Reflects with even symmetry around each endpoint. |
+| `Constant` | Repeats the endpoint values. |
+| `None` | Disables extension; use only when edge transients are acceptable. |
+
+## Returns
+
+Stored in `PhaseOpts::pad` and consumed by `zero_phase`.
+
+## Errors
+
+Requested edge length must remain compatible with the selected axis and input length.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Compare convolution, correlation, FIR filtering, and frequency response.
+
+@@example Eng/api/signal_filtering.cpp@@
+
+### Example 2
+
+Continue a recursive filter across blocks and apply forward-backward filtering.
+
+@@example Eng/api/signal_filter_state.cpp@@
+
+### Example 3
+
+Observe validation of signal dtype and recurrence coefficients.
+
+@@example Eng/api/signal_filter_errors.cpp@@
+
+## See Also
+
+See [Filtering and response](../filtering.md) for alignment, streaming-state, and axis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ConvMode.html">
+    <span class="label">Previous</span>
+    <span class="title">ConvMode</span>
+  </a>
+  <a class="next-link" href="FilterRun.html">
+    <span class="label">Next</span>
+    <span class="title">FilterRun</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

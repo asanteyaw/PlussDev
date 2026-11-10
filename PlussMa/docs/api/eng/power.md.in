@@ -1,0 +1,50 @@
+# Power systems
+
+Transmission networks described in per unit, compiled into an immutable grid, and analysed by linear and exact power flow, sensitivity and outage analysis, economic dispatch, optimal power flow, state estimation and continuation. A network is described once, as a `Net`, compiled by `make` into a `Grid`, and analysed under any number of scenarios.
+
+## Choosing A Surface
+
+| Task | Branch |
+|---|---|
+| Describe a network, convert units and compile a grid | [Network model](power/model.md) |
+| DC and AC power flow | [Power flow](power/flow.md) |
+
+## Practical Examples
+
+The examples build a two-bus network, solve a ring with the DC power flow and a three-bus network with the AC power flow.
+
+### Example 1
+
+Compile a two-bus network and compare its admittance matrix with a hand value.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 2
+
+Solve a ring with the DC power flow against hand values.
+
+@@example Eng/api/power_dc_ring.cpp@@
+
+### Example 3
+
+Solve a three-bus network with the AC power flow and check it against its defining equation.
+
+@@example Eng/api/power_ac_solve.cpp@@
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+power/model
+power/flow
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+power/model
+power/flow
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,157 @@
+# Valuation
+
+The valuation family separates assumptions from benefits. A [`Basis`](valuation/Basis.md) combines a mortality law and a discount, a [`Cashflow`](valuation/Cashflow.md) describes payments by contingency and time, and [`operators::value`](valuation/value.md) binds a basis into a [`Valuation`](valuation/Valuation.md) that values any cashflow.
+
+## What This Family Owns
+
+An annuity, a term insurance, a pure endowment and an endowment insurance are not four valuation engines: they are four cashflows, built by `cashflow::annuity`, `death`, `survival` and `endowment`, and valued by the same operator. A benefit that none of them describes, one that rises or falls, one that nets premiums against benefits, is a pair of payment vectors given to `cashflow::make`. The discount is either a level rate (`discount::flat`) or an explicit curve (`discount::curve`).
+
+| You want | Use |
+|---|---|
+| The interest assumption | [`discount::flat`](valuation/flat.md), [`discount::curve`](valuation/curve.md), [`Discount`](valuation/Discount.md) |
+| A standard benefit | [`cashflow::annuity`](valuation/annuity.md), [`death`](valuation/death.md), [`survival`](valuation/survival.md), [`endowment`](valuation/endowment.md) |
+| Any other benefit | [`cashflow::make`](valuation/make.md) |
+| The timing of an annuity | [`PaymentTiming`](valuation/PaymentTiming.md) |
+| The assumptions together | [`Basis`](valuation/Basis.md) |
+| The expected present value | [`operators::value`](valuation/value.md), [`Valuation`](valuation/Valuation.md) |
+
+## Practical Examples
+
+### Example 1: the four standard benefits
+
+The program builds a basis from five years of mortality and a 4% rate, binds it into a valuation, and values the four standard benefits and a benefit of its own.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  out.writeln("annuity-due  =", value(actuarial::cashflow::annuity(5)).item<double>());
+  out.writeln("term         =", value(actuarial::cashflow::death(5)).item<double>());
+  out.writeln("pure         =", value(actuarial::cashflow::survival(5)).item<double>());
+  out.writeln("endowment    =", value(actuarial::cashflow::endowment(5)).item<double>());
+  const actuarial::Cashflow decreasing = actuarial::cashflow::make(pluss::series::zeros({6}), pluss::make_series({5.0, 4.0, 3.0, 2.0, 1.0}));
+  out.writeln("decreasing   =", value(decreasing).item<double>());
+}
+```
+
+### Example 2: a rate that varies with maturity
+
+An explicit discount curve falls faster than a flat 4% in the later years, so the long benefits are worth less.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation flat = actuarial::operators::value({mortality, actuarial::discount::flat(0.04)});
+  const actuarial::Valuation curved = actuarial::operators::value({mortality, actuarial::discount::curve(pluss::make_series({1.0, 0.9615, 0.9246, 0.8890, 0.8548, 0.8200}))});
+  out.writeln("flat   =", flat(actuarial::cashflow::annuity(5)).item<double>());
+  out.writeln("curved =", curved(actuarial::cashflow::annuity(5)).item<double>());
+}
+```
+
+### Example 3: the family refuses an inconsistent request
+
+A cashflow longer than the mortality horizon cannot be valued.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(pluss::make_series({0.010, 0.012, 0.015}));
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(0.04)});
+  report([&] { (void)value(actuarial::cashflow::annuity(5)); });
+}
+```
+
+## Related Pages
+
+The {guide}`actuarial guide <actuarial>` develops valuation, premiums and reserves in longer form.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+valuation/Discount
+valuation/Basis
+valuation/Cashflow
+valuation/PaymentTiming
+valuation/Valuation
+valuation/flat
+valuation/curve
+valuation/make
+valuation/annuity
+valuation/death
+valuation/survival
+valuation/endowment
+valuation/value
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+valuation/Discount
+valuation/Basis
+valuation/Cashflow
+valuation/PaymentTiming
+valuation/Valuation
+valuation/flat
+valuation/curve
+valuation/make
+valuation/annuity
+valuation/death
+valuation/survival
+valuation/endowment
+valuation/value
+```
+<!-- apiref:toctree:end -->

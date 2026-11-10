@@ -1,0 +1,172 @@
+<!-- generated from add.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 4b5669684932 -->
+
+# `math::Function::add`
+
+[Back to `math::Function`](../Function.md)
+
+The sum of two functions, or of a function and a number, as a new function.
+
+## Signature
+
+```cpp
+math::Function math::Function::add(const math::Function &rhs) const;
+math::Function math::Function::add(double rhs) const;
+```
+
+## What It Does
+
+`add` builds the function `x ↦ f(x) + rhs(x)`. The right-hand side is either another function or a plain number, which is added at every point. The result is a new `Function` with the same variables; nothing is evaluated until you call it.
+
+`f.add(g)` and `f + g` are the same operation (see [`operator+`](../operator_add.md)); the named method is convenient in chains such as `x.sin().add(x.cos())` and when the operand comes from a callable you pass around.
+
+Two functions can be added only if they belong to the same variable trace: both were built inside one `math::function(...)` callable, or one was derived from the other (a function and its derivative, a function and `f.arg("x")`), or one is a constant. Functions from unrelated `math::function(...)` calls cannot be added directly because their variables are different placeholders; the error says so. To combine such functions, build them inside one callable, or substitute one into the other with [`compose`](compose.md).
+
+The sum of a function and a number broadcasts: adding a scalar to a vector-valued function adds it to every component.
+
+## Parameters
+
+`const math::Function &rhs`
+: The function to add. It must belong to the same trace as the receiver, or be a constant.
+
+`double rhs`
+: A number added to the value at every point and every component.
+
+## Returns
+
+A new `Function` with the receiver's variables whose value is the sum.
+
+## Errors
+
+- Functions from different traces: `expressions from different variable traces cannot be combined directly`.
+- Both operands must be defined.
+
+## Practical Examples
+
+### Example 1
+
+Two functions built in one callable: the method and the operator are the same function.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function method = math::function({"x"}, [](math::Function x) { return x.sin().add(x * x); });
+  const math::Function plus = math::function({"x"}, [](math::Function x) { return x.sin() + x * x; });
+  const auto x = pluss::make_series({0.0, 0.5, 1.0, 2.0});
+  out.writeln("add:      ", method({x}).items<double>());
+  out.writeln("operator +:", plus({x}).items<double>());
+}
+```
+
+Output
+
+```text
+add:       [0.0000, 0.7294, 1.8415, 4.9093]
+operator +: [0.0000, 0.7294, 1.8415, 4.9093]
+```
+
+Identical values: `sin(x) + x²`.
+
+### Example 2
+
+Adding a number shifts the function; it disappears under differentiation. A function and its own derivative share a trace, so they can be added too.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp().add(1.0); });
+  const math::Function df = operators::differential("x")(f);
+  const math::Function f_plus_df = f.add(df);
+  out.writeln("f(0)         =", f(0.0).item<double>(), " (e^0 + 1)");
+  out.writeln("f'(0)        =", df(0.0).item<double>(), " (the constant is gone)");
+  out.writeln("f(0) + f'(0) =", f_plus_df(0.0).item<double>());
+}
+```
+
+Output
+
+```text
+f(0)         = 2.0000  (e^0 + 1)
+f'(0)        = 1.0000  (the constant is gone)
+f(0) + f'(0) = 3.0000
+```
+
+`f' = eˣ`, so the sum at 0 is `2 + 1 = 3`.
+
+### Example 3
+
+The sum of a vector-valued function and a scalar adds to each component; a function from another `function(...)` call cannot be added, and the error says why.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function v = math::function({"x"}, [](math::Function x) { return math::stack({x, x * x}); });
+  out.writeln("v(3)     =", v(3.0).items<double>());
+  out.writeln("v(3) + 10 =", v.add(10.0)(3.0).items<double>());
+
+  const math::Function other = math::function({"x"}, [](math::Function x) { return x.cos(); });
+  try {
+    (void)v.add(other);
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+v(3)     = [3.0000, 9.0000]
+v(3) + 10 = [13.0000, 19.0000]
+math::Function: expressions from different variable traces cannot be combined directly
+```
+
+Build both inside one callable, or use `compose`, when the pieces start separate.
+
+## See Also
+
+- [`operator+`](../operator_add.md): the infix spelling, including both operand orders
+- [`sub`](sub.md): the difference
+- [`compose`](compose.md): substitutes one function into another
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="abs.html">
+    <span class="label">Previous</span>
+    <span class="title">abs</span>
+  </a>
+  <a class="next-link" href="angle.html">
+    <span class="label">Next</span>
+    <span class="title">angle</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

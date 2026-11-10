@@ -1,0 +1,124 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: ba519c5b2ba7 -->
+
+# `DfoBuilder::with_max_evaluations`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Sets the objective-evaluation budget.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_max_evaluations(std::int64_t max_evaluations) const;
+```
+
+## What It Does
+
+Sets `DfoOptions::max_evaluations`, the budget to use when each objective call is expensive. A positive value overrides the method's own limit. A method checks the budget between steps, so the reported count can exceed the budget slightly. Zero keeps the default.
+
+## Parameters
+
+`std::int64_t max_evaluations`
+: The budget; 0 keeps the default.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+A budget of 30 evaluations.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_max_evaluations(30).solve();
+  out.writeln(dfo::to_string(r.status), ", evaluations =", r.diagnostics.evaluations);
+}
+```
+
+### Example 2
+
+Quality per budget. With 50 evaluations the run is cut short; with 200 or 800 the simplex converges on its own after the same number of evaluations, so the extra budget is not used.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const std::int64_t n : {50, 200, 800}) {
+    const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({-1.2, 1.0})).with_objective(rosenbrock).with_max_evaluations(n).solve();
+    out.writeln("budget", n, ": evaluations =", r.diagnostics.evaluations, ", minimum =", r.minimum);
+  }
+}
+```
+
+### Example 3
+
+The budget on a swarm. The population is evaluated each generation, so the count moves in steps of the population size.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f)
+                               .with_solver(dfo::DfoSolverKind::ParticleSwarm).with_max_evaluations(1000).solve();
+  out.writeln(dfo::to_string(r.status), ", evaluations =", r.diagnostics.evaluations, ", generations =", r.diagnostics.iterations);
+}
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_mads_config.html">
+    <span class="label">Previous</span>
+    <span class="title">with_mads_config</span>
+  </a>
+  <a class="next-link" href="with_max_iterations.html">
+    <span class="label">Next</span>
+    <span class="title">with_max_iterations</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

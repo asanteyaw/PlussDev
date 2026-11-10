@@ -1,0 +1,75 @@
+# `structure::StaticResult`
+
+Displacements, reactions and bar results of a truss solve.
+
+## Signature
+
+```cpp
+structure::StaticResult
+```
+
+## What It Does
+
+The result of `solve` on a `Truss`. Arrays keep the leading batch axes of the structure and the load.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `displacement` | Node displacements, `[..., node, axis]`. |  |
+| `reaction` | Support forces, `[..., node, axis]`, zero at free degrees of freedom. |  |
+| `strain` | Engineering strain of each bar, `[..., bar]`. |  |
+| `stress` | Axial stress of each bar, `force / area`, `[..., bar]`. |  |
+| `force` | Axial force of each bar, `[..., bar]`, positive in tension. |  |
+| `energy` | Total strain energy, `[...]`. |  |
+| `residual_norm` | Size of the force left unbalanced by the iteration, `[...]`. |  |
+| `converged` | One where the iteration reached its tolerance, `[...]`. |  |
+| `breakdown` | One where the iteration met a direction of zero stiffness (a mechanism), `[...]`. |  |
+| `iterations` | The iteration count, a number. |  |
+
+## Returns
+
+Returned by `solve(const Truss&, ...)`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+Check `converged` before using the numbers when the solve was run with `fail_on_nonconvergence` false. Reactions are the forces the supports apply; equilibrium of the loads and reactions is a check that needs no known answer.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of a truss solve on the three-bar truss.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+### Example 2
+
+The diagnostic fields under a short iteration budget.
+
+@@example Eng/api/structure_solve_options.cpp@@
+
+### Example 3
+
+Prescribed displacements and the reactions they produce.
+
+@@example Eng/api/structure_fix.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SolveOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">SolveOptions</span>
+  </a>
+  <a class="next-link" href="FrameResult.html">
+    <span class="label">Next</span>
+    <span class="title">FrameResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

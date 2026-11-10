@@ -1,0 +1,132 @@
+# `optim::reports::trace`
+
+A progress hook that prints a line for the start, each iteration and the end, with the algorithm's message.
+
+## Signature
+
+```cpp
+std::function<bool(const optim::OptimaProgressSnapshot &)> optim::reports::trace(std::ostream &os, optim::reports::ProgressTracePreset preset = {});
+```
+
+## What It Does
+
+Prints `iter`, `evals`, `objective`, `viol`, `stationarity`, `backend`, `step`, optionally `krylov`, the stall category and the message of the step (for example `step accepted` or `optimality and feasibility tolerances satisfied`). The `ProgressTracePreset` chooses what to include: `include_start` and `include_done` for the initial and final lines, `include_message`, `include_krylov`, and the number of decimals `precision`. It never stops the run. After the last step the converged state is reported once more with the reason for stopping as the message, and the done line repeats it, so the final point appears in three lines.
+
+## Parameters
+
+`os`
+: The stream.
+
+`preset`
+: What to print and with how many decimals.
+
+## Returns
+
+A hook function.
+
+## Practical Examples
+
+### Example 1
+
+The full trace.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.progress_hook = optim::reports::trace(std::cout, {.precision = 4});
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+}
+```
+
+### Example 2
+
+Without the start and end lines or the message.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::reports::ProgressTracePreset preset;
+  preset.include_start = false;
+  preset.include_done = false;
+  preset.include_message = false;
+  optim::OptimaOptions options;
+  options.sequential_qp.progress_hook = optim::reports::trace(std::cout, preset);
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+}
+```
+
+### Example 3
+
+On the interior algorithm the lines show the barrier parameter shrinking in `backend`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options = optim::presets::internal_protocol();
+  options.internal_protocol.progress_hook = optim::reports::trace(std::cout, {.include_message = false, .precision = 4});
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+}
+```
+
+## See Also
+
+- [`reports::iter`](reports_iter.md): compact lines
+- [`reports::iteration_only_trace`](reports_iteration_only_trace.md): iterations only
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="reports_iteration_only_trace.html">
+    <span class="label">Previous</span>
+    <span class="title">iteration_only_trace</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

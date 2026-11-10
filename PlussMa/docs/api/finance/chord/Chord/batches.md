@@ -1,0 +1,292 @@
+<!-- generated from batches.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 86896913316c -->
+
+# `module::Chord::batches`
+
+[Back to `module::Chord`](../Chord.md)
+
+Counts the calls price would make: assets that share a call count once.
+
+## Signature
+
+```cpp
+std::size_t module::Chord::batches() const;
+```
+
+## What It Does
+
+The number of groups [`price`](price.md) runs: each set of assets that can be priced together is one call, and each asset that cannot be merged is one call. It prices nothing and does not validate. A Chord of ten Black-Scholes assets on the analytic engine is one call, because the closed form takes every parameter per option; ten lattice assets are ten.
+
+Two assets merge when they have the same engine and controls, European exercise and the same model family, and the engine can take their differing inputs in one pass. Black-Scholes on the analytic engine and Heston or Bates on the COS engine merge whatever their parameters; the Fourier engine merges assets only with equal model parameters; Monte Carlo Heston and Bates assets with the same controls share one simulation; and the lattice, the PDE, the American engines and Monte Carlo with a control variate or importance sampling make one call per asset. Call `batches` to see how much a book is being merged, and to explain a price time that does not grow with the number of assets.
+
+## Returns
+
+The number of calls, zero for an empty Chord, never more than `size()`.
+
+## Practical Examples
+
+### Example 1: Black-Scholes assets merge
+
+Five Black-Scholes assets with different spots, strikes and volatilities are one call.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  for (int i = 0; i < 5; ++i) chord.add("a" + std::to_string(i), bs(90.0 + 5.0 * i, 100.0, 0.15 + 0.03 * i));
+  out.writeln("assets", chord.size(), " calls", chord.batches());
+}
+```
+
+Output
+
+```text
+assets 5  calls 1
+```
+
+### Example 2: Heston on COS merges, Black-Scholes and Heston do not
+
+Two Black-Scholes assets share a call and two COS Heston assets share another: the families do not mix.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("b1", bs(100.0, 100.0, 0.20)).add("b2", bs(90.0, 95.0, 0.30)).add("h1", heston(100.0, {100.0})).add("h2", heston(90.0, {90.0}));
+  out.writeln("assets", chord.size(), " calls", chord.batches());
+}
+```
+
+Output
+
+```text
+assets 4  calls 2
+```
+
+### Example 3: the Fourier engine needs equal parameters
+
+Two Heston assets on the FFT engine merge when their parameters are equal and split when they differ.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord same;
+  same.add("a", heston(100.0, {100.0}, mod::Engine::Fft)).add("b", heston(100.0, {110.0}, mod::Engine::Fft));
+  mod::Field other = heston(100.0, {110.0}, mod::Engine::Fft);
+  other.model = fin::model::make(fin::model::Kind::Heston, {2.0, 0.09, 0.4, -0.5, 0.09});
+  mod::Chord different;
+  different.add("a", heston(100.0, {100.0}, mod::Engine::Fft)).add("b", other);
+  out.writeln("equal parameters", same.batches(), " different parameters", different.batches());
+}
+```
+
+Output
+
+```text
+equal parameters 1  different parameters 2
+```
+
+### Example 4: Monte Carlo shares one simulation
+
+Heston Monte Carlo assets with the same controls share a simulation; a control variate on one takes it out.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field a = heston(100.0, {100.0}, mod::Engine::MonteCarlo);
+  mod::Field b = heston(90.0, {90.0}, mod::Engine::MonteCarlo);
+  a.controls.mc.paths = b.controls.mc.paths = 5000;
+  mod::Chord shared;
+  shared.add("a", a).add("b", b);
+  b.controls.mc.control_variate = true;
+  mod::Chord split;
+  split.add("a", a).add("b", b);
+  out.writeln("same controls", shared.batches(), " one with a control variate", split.batches());
+}
+```
+
+Output
+
+```text
+same controls 1  one with a control variate 2
+```
+
+### Example 5: American options are one call each
+
+Early-exercise assets are never merged.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field american_put(double spot) {
+  return mod::Field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.25})}, .controls = {.engine = mod::Engine::Lattice}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", american_put(100.0)).add("b", american_put(90.0)).add("c", american_put(110.0));
+  out.writeln("assets", chord.size(), " calls", chord.batches());
+}
+```
+
+Output
+
+```text
+assets 3  calls 3
+```
+
+### Example 6: a mixed book
+
+Three Black-Scholes assets (one call), two COS Heston assets (one call) and one American asset (one call).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+static mod::Field american_put(double spot) {
+  return mod::Field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.25})}, .controls = {.engine = mod::Engine::Lattice}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("b1", bs(100.0, 100.0, 0.20)).add("b2", bs(100.0, 110.0, 0.25)).add("b3", bs(90.0, 95.0, 0.30));
+  chord.add("h1", heston(100.0, {100.0})).add("h2", heston(90.0, {90.0}));
+  chord.add("am", american_put(100.0));
+  out.writeln("assets", chord.size(), " calls", chord.batches());
+}
+```
+
+Output
+
+```text
+assets 6  calls 3
+```
+
+### Example 7: an empty chord
+
+Nothing to price, no calls.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  out.writeln("calls", chord.batches());
+}
+```
+
+Output
+
+```text
+calls 0
+```
+
+## See Also
+
+- [`Chord`](../Chord.md): the class
+- [`price`](price.md): makes the calls
+- [`size`](size.md): the number of assets
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="at.html">
+    <span class="label">Previous</span>
+    <span class="title">at</span>
+  </a>
+  <a class="next-link" href="contains.html">
+    <span class="label">Next</span>
+    <span class="title">contains</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

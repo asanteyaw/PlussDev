@@ -1,0 +1,63 @@
+# `structure::MotionState`
+
+The initial displacement and velocity of a time integration.
+
+## Signature
+
+```cpp
+structure::MotionState
+```
+
+## What It Does
+
+The starting state of `motion`. Either field may be left undefined, and an undefined field means zero.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `displacement` | Initial node displacements, `[..., node, 3]`. | undefined (zero) |
+| `velocity` | Initial node velocities, `[..., node, 3]`. | undefined (zero) |
+
+## Returns
+
+A value; validated by `motion`.
+
+## Errors
+
+Shapes, dtype or platform different from the frame, or a non-zero value at a supported degree of freedom, are rejected by `motion`.
+
+## Interpretation and Use
+
+Start from a mode shape to excite one mode, from a static deflection to release a loaded structure, or from a rigid rotation to start a swing. Omitting the state starts the structure at rest in its undeformed configuration.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A damped free vibration started from the first mode shape.
+
+@@example Eng/api/structure_motion.cpp@@
+
+### Example 2
+
+A swing started from a rigid rotation.
+
+@@example Eng/api/structure_motion_nonlinear.cpp@@
+
+### Example 3
+
+Rejected states.
+
+@@example Eng/api/structure_dynamics_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="MotionOptions.html">
+    <span class="label">Next</span>
+    <span class="title">MotionOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

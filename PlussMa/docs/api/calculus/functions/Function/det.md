@@ -1,0 +1,174 @@
+<!-- generated from det.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7c0189996663 -->
+
+# `math::Function::det`
+
+[Back to `math::Function`](../Function.md)
+
+The determinant of a square matrix function, as a scalar function.
+
+## Signature
+
+```cpp
+math::Function math::Function::det() const;
+```
+
+## What It Does
+
+`f.det()` is the function `x ↦ det f(x)` for a function whose output is a square matrix. The result is a scalar function (rank 0) that, on a batch, gives one determinant per matrix.
+
+The determinant measures how a linear map scales volume and is zero exactly when the matrix is singular. Use it for volume factors (the Jacobian determinant of a change of variables), for likelihoods of multivariate normal models, and as a smooth test of invertibility. It differentiates exactly by Jacobi's formula, `(det A)′ = det A · tr(A⁻¹ A′)`.
+
+A non-square output is refused when the determinant is built.
+
+## Returns
+
+A new scalar `Function` (rank 0).
+
+## Errors
+
+- A non-square output raises `this operation requires a square matrix output`.
+
+## Practical Examples
+
+### Example 1
+
+The determinant of a `2 × 2` matrix function. `det [[2, 1], [1, 3]] = 5`, and scaling the matrix by `x` multiplies the determinant by `x²`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto M = pluss::make_series({2.0, 1.0, 1.0, 3.0}).reshape({2, 2});  // [[2, 1], [1, 3]]
+
+  const math::Function m = math::function({"x"}, [&](math::Function x) { return math::function(M) * x; });
+  out.writeln("det at x = 1:", m.det()(1.0).item<double>());
+  out.writeln("det at x = 2:", m.det()(2.0).item<double>(), "  (5 * 2^2 = 20)");
+}
+```
+
+Output
+
+```text
+det at x = 1: 5.0000
+det at x = 2: 20.0000   (5 * 2^2 = 20)
+```
+
+### Example 2
+
+The Jacobian determinant of the polar-coordinate map `(r, θ) ↦ (r cos θ, r sin θ)` is `r`, the area scaling factor in `∫ f dx dy = ∫ f r dr dθ`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function polar = math::function({"r", "theta"}, [](math::Function r, math::Function theta) { return math::stack({r * theta.cos(), r * theta.sin()}); });
+  const math::Function jacobian_determinant = operators::jacobian()(polar).det();
+  out.writeln("det J at r = 2.5, theta = 0.7:", jacobian_determinant({pluss::make_series(2.5), pluss::make_series(0.7)}).item<double>(), "  (r = 2.5)");
+}
+```
+
+Output
+
+```text
+det J at r = 2.5, theta = 0.7: 2.5000   (r = 2.5)
+```
+
+### Example 3
+
+Batches and singularity. One call gives the determinant of every matrix in the batch; a matrix that is singular has determinant 0 (use `inverse` to have singularity refused instead).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function m = math::function({"x"}, [](math::Function x) {
+    return math::stack({math::stack({x, x * 0.0}), math::stack({x * 0.0, x - 2.0})});  // diag(x, x - 2)
+  });
+  const auto x = pluss::make_series({1.0, 2.0, 3.0});
+  out.writeln("det diag(x, x-2) at x = 1, 2, 3:", m.det()({x}).items<double>());
+}
+```
+
+Output
+
+```text
+det diag(x, x-2) at x = 1, 2, 3: [-1.0000, 0.0000, 3.0000]
+```
+
+`x (x − 2)` is `−1, 0, 3`; the middle matrix is singular.
+
+### Example 4
+
+A non-square output is refused at construction.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function wide = math::function({"x"}, [](math::Function x) { return math::function(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0}).reshape({2, 3})) * x; });
+  try {
+    (void)wide.det();
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+math::Function: this operation requires a square matrix output
+```
+
+## See Also
+
+- [`inverse`](inverse.md): the inverse
+- [`trace`](trace.md): the trace
+- [`operators::jacobian`](../../differential/jacobian.md): builds the matrix of a coordinate change
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="defined.html">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="div.html">
+    <span class="label">Next</span>
+    <span class="title">div</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

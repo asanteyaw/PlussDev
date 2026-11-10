@@ -1,0 +1,68 @@
+# `signal::hamming`
+
+## Signature
+
+```cpp
+pluss::Series signal::hamming(
+    std::int64_t size,
+    const signal::WindowOptions& options = {});
+```
+
+## What It Does
+
+Creates a raised-cosine Hamming window. Unlike Hann, symmetric Hamming endpoints remain nonzero, reducing the discontinuity without forcing samples completely to zero.
+
+## Parameters
+
+`size`
+: Number of coefficients to return. Zero returns an empty rank-one `Series`; one returns the mathematically useful singleton coefficient.
+
+`options`
+: Endpoint, dtype, and platform policy. Hamming is often selected where sidelobe suppression matters but discarding endpoint contribution is undesirable.
+
+## Returns
+
+A rank-one floating `Series` of length `size`, allocated with the requested dtype and platform.
+
+## Errors
+
+Rejects a negative `size`, a non-floating dtype, or an unsupported platform request.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Generate and compare every built-in window at a common length.
+
+@@example Eng/api/signal_windows.cpp@@
+
+### Example 2
+
+Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+
+@@example Eng/api/signal_window_options.cpp@@
+
+### Example 3
+
+Observe the validation errors for invalid size and dtype requests.
+
+@@example Eng/api/signal_window_errors.cpp@@
+
+## See Also
+
+See the [Signal windows](../windows.md) family page for selection guidance and endpoint semantics.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="blackman.html">
+    <span class="label">Previous</span>
+    <span class="title">blackman</span>
+  </a>
+  <a class="next-link" href="hann.html">
+    <span class="label">Next</span>
+    <span class="title">hann</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

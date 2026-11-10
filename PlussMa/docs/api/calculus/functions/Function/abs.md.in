@@ -1,0 +1,148 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c72a38c89cf5 -->
+
+# `math::Function::abs`
+
+[Back to `math::Function`](../Function.md)
+
+The absolute value of a real function, or the modulus of a complex one.
+
+## Signature
+
+```cpp
+math::Function math::Function::abs() const;
+```
+
+## What It Does
+
+`f.abs()` builds `x ↦ |f(x)|`. For a real function it is the usual absolute value; for a complex one it is the modulus `√(Re² + Im²)`, which is real. The result is therefore always real, which is why a complex function's `abs` can be compared, minimised and used as a magnitude. It is defined everywhere and raises no domain error.
+
+The absolute value has a corner at 0, so its derivative is the sign function `x/|x|` everywhere except there. What happens when you differentiate and then evaluate at the corner is controlled by the [`NonSmooth`](../../differential/differential.md) option of the differential operator: `Strict` refuses, `Piecewise` returns `NaN` (the formula `x/|x|` has no value at 0), `Subgradient` returns 0 (the midpoint of the subdifferential), and `Autodiff` returns the automatic-differentiation value, also 0. The second example shows all four. For a complex function the derivative of `|z|` with respect to a real parameter is `Re(z̄ z′)/|z|`, with the same corner rule at `z = 0`.
+
+If the sign of the variable is known, [`assume`](assume.md) removes the absolute value entirely.
+
+## Returns
+
+A new `Function` whose value is the absolute value or modulus, always real.
+
+## Errors
+
+- The function must be defined.
+- Differentiating at 0 under `NonSmooth::Strict` raises `the derivative is undefined at a zero denominator`.
+
+## Practical Examples
+
+### Example 1
+
+Real values, and the modulus of complex values. `|3 + 4i| = 5`, the hypotenuse of the 3-4-5 triangle.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"z"}, [](math::Function z) { return z.abs(); });
+  const auto real_values = pluss::make_series({-2.0, 0.0, 3.5});
+  const auto complex_values = pluss::make_series({std::complex<double>{3.0, 4.0}, std::complex<double>{-5.0, 0.0}, std::complex<double>{0.0, -2.0}});
+  out.writeln("|x| for x = -2, 0, 3.5:       ", f({real_values}).items<double>());
+  out.writeln("|z| for 3+4i, -5, -2i:        ", f({complex_values}).items<double>());
+}
+```
+
+### Example 2
+
+The four `NonSmooth` policies at the corner. Away from 0 the derivative is the sign (−1 and 1 here). At 0, `Strict` refuses, `Piecewise` returns NaN, `Subgradient` and `Autodiff` return 0.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::NonSmooth n) {
+  switch (n) {
+  case math::NonSmooth::Strict: return "Strict";
+  case math::NonSmooth::Piecewise: return "Piecewise";
+  case math::NonSmooth::Subgradient: return "Subgradient";
+  case math::NonSmooth::Autodiff: return "Autodiff";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.abs(); });
+  const auto x = pluss::make_series({-2.0, 0.0, 3.0});
+  for (const math::NonSmooth policy : {math::NonSmooth::Strict, math::NonSmooth::Piecewise, math::NonSmooth::Subgradient, math::NonSmooth::Autodiff}) {
+    const math::Function d = operators::differential("x", 1, {.nonsmooth = policy})(f);
+    try {
+      out.writeln(name(policy), d({x}).items<double>());
+    } catch (const pluss::Error &e) {
+      const std::string text(e.what());
+      out.writeln(name(policy), "refused:", text.substr(0, text.find('\n')));
+    }
+  }
+}
+```
+
+### Example 3
+
+Absolute value as a distance. The L1 penalty `|x − 1|` has slope −1 left of 1 and +1 right of it; the triangle inequality `|x| + |y| ≥ |x + y|` holds on a few points.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function penalty = math::function({"x"}, [](math::Function x) { return (x - 1.0).abs(); });
+  const math::Function slope = operators::differential("x")(penalty);
+  const auto x = pluss::make_series({-1.0, 0.5, 2.0, 4.0});
+  out.writeln("|x - 1|:  ", penalty({x}).items<double>());
+  out.writeln("slope:    ", slope({x}).items<double>());
+
+  const math::Function gap = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x.abs() + y.abs() - (x + y).abs(); });
+  out.writeln("|x|+|y|-|x+y|:", gap({pluss::make_series({1.0, -2.0, 3.0}), pluss::make_series({2.0, 1.0, -3.0})}).items<double>());
+}
+```
+
+## See Also
+
+- [`assume`](assume.md): removes the absolute value when the sign is known
+- [`sqrt`](sqrt.md): `sqrt(x²) = |x|`
+- [`real`](real.md): the real part
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="add.html">
+    <span class="label">Next</span>
+    <span class="title">add</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

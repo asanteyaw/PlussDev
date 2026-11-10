@@ -1,0 +1,164 @@
+# `optim::OptimaExitFlag`
+
+Why a run of `optima` stopped.
+
+`OptimaState::exit_flag` is one of these. Only `Converged` (1) means the optimality and feasibility tests were met; `MaxIterations` (0) means the budget ran out with the point still improving; every negative value means the run ended for a reason that needs a decision: `Stopped` (−1) is a progress hook returning `true`, `NoFeasiblePoint` (−2) means no point satisfying the constraints was found, `ObjectiveTargetReached` (−3) means the objective fell below the `objective_limit`, `NonFiniteEvaluation` (−4) means the objective or a constraint returned NaN or infinity where the solver could not recover, `InvalidProblem` (−5) means a callback broke its contract, `NoProgress` (−6) means steps stopped making progress away from a solution, and `ConstraintStationary` (−7) means the point is stationary for the constraint violation but still infeasible. `OptimaState::message` and the stall category say more.
+
+## Fields
+
+### `Converged`
+
+`enumerator`, default `1`.
+
+Optimality and feasibility tests met.
+
+### `MaxIterations`
+
+`enumerator`, default `0`.
+
+The iteration budget ran out.
+
+### `Stopped`
+
+`enumerator`, default `-1`.
+
+A progress hook returned `true`.
+
+### `NoFeasiblePoint`
+
+`enumerator`, default `-2`.
+
+No feasible point was found.
+
+### `ObjectiveTargetReached`
+
+`enumerator`, default `-3`.
+
+The objective passed `objective_limit`.
+
+### `NonFiniteEvaluation`
+
+`enumerator`, default `-4`.
+
+A callback returned NaN or infinity unrecoverably.
+
+### `InvalidProblem`
+
+`enumerator`, default `-5`.
+
+A callback broke its contract (wrong shape or dtype).
+
+### `NoProgress`
+
+`enumerator`, default `-6`.
+
+Steps stopped making progress.
+
+### `ConstraintStationary`
+
+`enumerator`, default `-7`.
+
+Stationary for the violation but infeasible.
+
+## Guidance
+
+Read as `OptimaState::exit_flag`.
+
+## Practical Examples
+
+### Example 1
+
+Converged and out-of-iterations runs.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.max_iterations = 1;
+  out.writeln("default :", optim::optima_exit_flag_name(optim::optima(objective, pluss::series::make({0.0, 0.0}), {}, disc).exit_flag));
+  out.writeln("1 iter  :", optim::optima_exit_flag_name(optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc).exit_flag));
+}
+```
+
+### Example 2
+
+Stopped by a hook, and the numeric codes. The codes are the integer values of the enumerators.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.progress_hook = [](const optim::OptimaProgressSnapshot &) { return true; };
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), "=", static_cast<int>(result.exit_flag));
+}
+```
+
+### Example 3
+
+An infeasible problem: the constraint `x² + 1 ≤ 0` can never hold. The run cannot converge and ends with a failure flag (here `NoProgress`: the steps stop getting closer to feasibility).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const optim::OptimaState result = optim::optima([](const pluss::Series &x) { return x.square().sum(); }, pluss::series::make({1.0}), {},
+      optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() + 1.0; }));
+  out.writeln("converged =", result.converged, ", exit =", optim::optima_exit_flag_name(result.exit_flag));
+}
+```
+
+## See Also
+
+- [`optima_exit_flag_name`](optima_exit_flag_name.md): names a flag
+- [`OptimaState`](OptimaState.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OptimaAlgorithm.html">
+    <span class="label">Previous</span>
+    <span class="title">OptimaAlgorithm</span>
+  </a>
+  <a class="next-link" href="OptimaHessianApproximation.html">
+    <span class="label">Next</span>
+    <span class="title">OptimaHessianApproximation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,67 @@
+# `signal::IirOptions`
+
+## Signature
+
+```cpp
+signal::IirOptions options{};
+```
+
+## What It Does
+
+Controls the band transformation, frequency interpretation, output precision, and execution platform of every IIR prototype factory.
+
+## Fields
+
+| Field | Default | Meaning |
+|---|---:|---|
+| `band` | `Band::Low` | Chooses low-pass, high-pass, band-pass, or band-stop transformation. |
+| `sample_rate` | `2.0` | Present: digital design with cutoff in matching ordinary-frequency units. `std::nullopt`: continuous analog design with angular-frequency cutoffs. |
+| `dtype` | `ScalarType::Float64` | Real precision used to construct poles, zeros, and gain. |
+| `platform` | `Platform::CPU` | Storage and execution platform of the resulting pole-zero payload. |
+
+## Returns
+
+Pass by const reference to a design factory; the result is an `lti::PoleZero` carrying the selected continuous/digital interpretation.
+
+## Errors
+
+Rejects nonpositive/nonfinite sample rates, unsupported dtypes/platforms, or a band incompatible with the chosen cutoff overload.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Compare the three prototype families and inspect a second-order-section conversion.
+
+@@example Eng/api/signal_design.cpp@@
+
+### Example 2
+
+Exercise band transformations and analog-versus-digital interpretation.
+
+@@example Eng/api/signal_design_bands.cpp@@
+
+### Example 3
+
+Observe validation of cutoffs, ripple, and band/cutoff shape.
+
+@@example Eng/api/signal_design_errors.cpp@@
+
+## See Also
+
+See [IIR design](../design.md) for prototype tradeoffs and digital-versus-analog frequency conventions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Band.html">
+    <span class="label">Previous</span>
+    <span class="title">Band</span>
+  </a>
+  <a class="next-link" href="butter.html">
+    <span class="label">Next</span>
+    <span class="title">butter</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

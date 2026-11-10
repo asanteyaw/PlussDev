@@ -1,0 +1,354 @@
+<!-- generated from InternalProtocolOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::InternalProtocolOptions`
+
+Settings of the interior (barrier) algorithm: barrier schedule, trust region, safeguards, linear algebra.
+
+Used when `OptimaOptions::algorithm` is `InternalProtocol`, through `OptimaOptions::internal_protocol`. Inequalities are replaced by slack variables kept strictly positive and a *barrier parameter* is driven toward zero; each barrier problem is solved by a primal-dual Newton method with a line search, a trust region, a watchdog that accepts temporary increases, second-order corrections, a restoration phase, and recovery from non-finite evaluations. The barrier schedule (`initial_barrier_parameter`, `minimum_barrier_parameter`, `barrier_decay`), the tolerances and `max_iterations` are the settings people change; the rest are safeguards with sensible defaults. The presets [`internal_protocol`](presets_internal_protocol.md) and [`robust_internal_protocol`](presets_robust_internal_protocol.md) return tuned sets.
+
+## Fields
+
+### `max_iterations`
+
+`std::int64_t`, default `100`.
+
+The iteration budget.
+
+### `initial_barrier_parameter`
+
+`double`, default `1e-2`.
+
+The starting barrier weight.
+
+### `minimum_barrier_parameter`
+
+`double`, default `1e-8`.
+
+The barrier weight at which it stops decreasing.
+
+### `barrier_decay`
+
+`double`, default `0.2`.
+
+The factor by which the barrier is multiplied when a barrier problem is solved.
+
+### `constraint_tolerance`
+
+`double`, default `1e-6`.
+
+The largest violation accepted as feasible.
+
+### `optimality_tolerance`
+
+`double`, default `1e-6`.
+
+The stationarity accepted as optimal (relative to the starting gradient).
+
+### `step_tolerance`
+
+`double`, default `1e-10`.
+
+Steps shorter than this count as no progress.
+
+### `value_progress_tolerance`
+
+`double`, default `1e-10`.
+
+Objective changes smaller than this count as no progress.
+
+### `armijo`
+
+`double`, default `1e-4`.
+
+The sufficient-decrease constant of the line search.
+
+### `backtracking`
+
+`double`, default `0.5`.
+
+The factor by which a rejected step is multiplied.
+
+### `max_line_search_iterations`
+
+`std::int64_t`, default `25`.
+
+The most step reductions per iteration.
+
+### `fraction_to_boundary`
+
+`double`, default `0.99`.
+
+How close to a slack's zero boundary one step may go.
+
+### `initialization_margin`
+
+`double`, default `1e-4`.
+
+How far inside the bounds the start is pushed.
+
+### `trust_region_initial_radius`
+
+`double`, default `1.0`.
+
+The starting trust-region radius.
+
+### `trust_region_min_radius`
+
+`double`, default `1e-8`.
+
+The smallest radius.
+
+### `trust_region_max_radius`
+
+`double`, default `10.0`.
+
+The largest radius.
+
+### `enable_watchdog`
+
+`bool`, default `true`.
+
+Accept temporary increases of the merit function to escape short steps.
+
+### `nonmonotone_window`
+
+`std::int64_t`, default `5`.
+
+How many past merit values the nonmonotone line search compares against.
+
+### `enable_soc_correction`
+
+`bool`, default `true`.
+
+Try second-order corrections of rejected steps.
+
+### `enable_restoration`
+
+`bool`, default `true`.
+
+Allow the restoration phase.
+
+### `enable_nonfinite_recovery`
+
+`bool`, default `true`.
+
+Shrink the step and retry when the objective or a constraint returns NaN or infinity.
+
+### `enable_feasibility_phase`
+
+`bool`, default `false`.
+
+Run a separate phase that minimises violation first.
+
+### `independent_nonlinear_slacks`
+
+`bool`, default `true`.
+
+Give each nonlinear inequality its own slack (iterates may violate it on the way); false keeps every iterate strictly feasible.
+
+### `hessian_approximation`
+
+`optim::OptimaHessianApproximation`, default `Bfgs`.
+
+The curvature model.
+
+### `lbfgs_memory`
+
+`std::int64_t`, default `10`.
+
+The number of step pairs of the limited-memory model.
+
+### `linear_system_solver`
+
+`optim::OptimaLinearSystemSolver`, default `Auto`.
+
+How the Newton system is solved.
+
+### `system_structure`
+
+`optim::OptimaLinearSystemStructure`, default `Auto`.
+
+Dense or sparse treatment.
+
+### `problem_scaling`
+
+`optim::OptimaProblemScaling`, default `ObjectiveAndConstraints`.
+
+Whether the problem is rescaled before solving.
+
+### `objective_limit`
+
+`double`, default `-inf`.
+
+Stop with `ObjectiveTargetReached` below this objective.
+
+### `project_bounds`
+
+`bool`, default `true`.
+
+Clip iterates back inside the bounds.
+
+### `progress_hook`
+
+`std::function<bool(const optim::OptimaProgressSnapshot &)>`, default `empty`.
+
+Called each iteration; return `true` to stop.
+
+## Guidance
+
+Set through `OptimaOptions::internal_protocol`.
+
+## Practical Examples
+
+### Example 1
+
+The barrier schedule. A different starting barrier changes the path and the iteration count, not the answer.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  for (const double mu : {1e-1, 1e-3}) {
+    optim::OptimaOptions options;
+    options.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+    options.internal_protocol.initial_barrier_parameter = mu;
+    out.writeln("initial barrier", mu, ": iterations =", optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc).iteration);
+  }
+}
+```
+
+Output
+
+```text
+initial barrier 0.1000 : iterations = 6
+initial barrier 0.0010 : iterations = 7
+```
+
+### Example 2
+
+Slack handling. With `independent_nonlinear_slacks = false` every iterate satisfies every inequality strictly; use it when the objective is undefined outside the feasible region. Here the objective is `log(1 − |x|²)`-like and only defined inside the disc.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto inside = [](const pluss::Series &x) { return -(1.0 - x.square().sum()).log() + (x - 0.3).square().sum(); };
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.independent_nonlinear_slacks = false;
+  const optim::OptimaState result = optim::optima(inside, pluss::series::make({0.0, 0.0}), options,
+      optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; }));
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag));
+}
+```
+
+Output
+
+```text
+exit = Converged
+```
+
+### Example 3
+
+An iteration budget.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.max_iterations = 3;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+Output
+
+```text
+exit = MaxIterations , iterations = 3 , evaluations = 9
+```
+
+### Example 4
+
+Tolerances.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+  options.internal_protocol.optimality_tolerance = 1e-10;
+  options.internal_protocol.constraint_tolerance = 1e-10;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+Output
+
+```text
+exit = Converged , iterations = 8 , evaluations = 14
+```
+
+## See Also
+
+- [`OptimaOptions`](OptimaOptions.md): holds it
+- [`presets_internal_protocol`](presets_internal_protocol.md): tuned sets
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DerivativeAuditReport.html">
+    <span class="label">Previous</span>
+    <span class="title">DerivativeAuditReport</span>
+  </a>
+  <a class="next-link" href="OptimaAlgorithm.html">
+    <span class="label">Next</span>
+    <span class="title">OptimaAlgorithm</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

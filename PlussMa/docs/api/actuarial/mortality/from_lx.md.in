@@ -1,0 +1,175 @@
+# `actuarial::mortality::from_lx`
+
+Builds a mortality law from the lives of a life table.
+
+## Signature
+
+```cpp
+actuarial::Mortality actuarial::mortality::from_lx(const pluss::Series &lx);
+```
+
+## What It Does
+
+Takes {math}`l_0,l_1,\ldots,l_n`, the expected number of lives at each age, and stores {math}`q_{x+k}=1-l_{k+1}/l_k`. The horizon is one less than the number of values, since `lx` includes the starting cohort. The scale of the table does not matter, only the ratios. Call it for a published life table; [`Mortality::life_table`](Mortality/life_table.md) is the inverse. A table that ends at zero is accepted and gives a final probability of one.
+
+## Parameters
+
+`lx`
+: One-dimensional series of lives, positive at the first age and non-increasing.
+
+## Returns
+
+A defined `Mortality` with horizon `lx.numel() − 1`; a single value gives horizon 0.
+
+## Errors
+
+Throws `qx_lx: lx[0] must be > 0` for a table that starts at zero and `qx_lx: lx must be non-increasing` for one that rises.
+
+## Practical Examples
+
+### Example 1: a published table
+
+Lives at five ages and the probabilities they imply.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Mortality m = actuarial::mortality::from_lx(pluss::make_series({100000.0, 99000.0, 97812.0, 96347.0, 94516.0}));
+  out.writeln("horizon =", m.horizon());
+  out.writeln("qx      =", m.qx().items<double>());
+}
+```
+
+### Example 2: the scale does not matter
+
+A table of 1,000 lives and one of 100,000 give the same law.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(actuarial::mortality::from_lx(pluss::make_series({1000.0, 990.0, 978.12})).qx().items<double>());
+  out.writeln(actuarial::mortality::from_lx(pluss::make_series({100000.0, 99000.0, 97812.0})).qx().items<double>());
+}
+```
+
+### Example 3: a table that dies out
+
+Ending at zero gives a final probability of one.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(actuarial::mortality::from_lx(pluss::make_series({100.0, 50.0, 0.0})).qx().items<double>());
+}
+```
+
+### Example 4: a single value
+
+One age and no years is a law with horizon 0.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(actuarial::mortality::from_lx(pluss::make_series({100.0})).horizon());
+}
+```
+
+### Example 5: the errors
+
+A table that rises or starts at zero is refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::mortality::from_lx(pluss::make_series({100.0, 90.0, 95.0})); });
+  report([&] { (void)actuarial::mortality::from_lx(pluss::make_series({0.0, 0.0})); });
+}
+```
+
+## See Also
+
+- [`Mortality`](Mortality.md): the value returned and its accessors
+- [`Basis`](../valuation/Basis.md): pairs the law with a discount
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="from_force.html">
+    <span class="label">Previous</span>
+    <span class="title">from_force</span>
+  </a>
+  <a class="next-link" href="select_ultimate.html">
+    <span class="label">Next</span>
+    <span class="title">select_ultimate</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

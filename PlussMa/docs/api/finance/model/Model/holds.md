@@ -1,0 +1,127 @@
+<!-- generated from holds.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7bcbd870b0d5 -->
+
+# `module::Model::holds`
+
+[Back to `module::Model`](../Model.md)
+
+Whether the model currently holds a given family struct.
+
+## Signature
+
+```cpp
+template <SupportedModel M> [[nodiscard]] bool module::Model::holds() const;
+```
+
+## What It Does
+
+`holds<model::Heston>()` is true when the held struct is a `Heston`. Test before [`as`](as.md), which throws if the family is wrong.
+
+## Returns
+
+`true` if the held struct is an `M`.
+
+## Practical Examples
+
+### Example 1
+
+Testing a Heston model.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  out.writeln("Heston:", m.holds<fin::model::Heston>(), ", Bates:", m.holds<fin::model::Bates>(), ", BlackScholes:", m.holds<fin::model::BlackScholes>());
+}
+```
+
+Output
+
+```text
+Heston: true , Bates: false , BlackScholes: false
+```
+
+### Example 2
+
+Branching on the family.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const mod::Model m = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3});
+  if (m.holds<fin::model::Sabr>()) out.writeln("beta =", m.as<fin::model::Sabr>().beta.items<double>());
+}
+```
+
+Output
+
+```text
+beta = [1.00]
+```
+
+### Example 3
+
+A default model is Black-Scholes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln(mod::Model{}.holds<fin::model::BlackScholes>());
+}
+```
+
+Output
+
+```text
+true
+```
+
+## See Also
+
+- [`Model`](../Model.md): the class
+- [`as`](as.md): access the struct
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="as.html">
+    <span class="label">Previous</span>
+    <span class="title">as</span>
+  </a>
+  <a class="next-link" href="kind.html">
+    <span class="label">Next</span>
+    <span class="title">kind</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

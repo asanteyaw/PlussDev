@@ -1,0 +1,189 @@
+# `actuarial::losses::compound_negbin`
+
+Mean and variance of a compound negative binomial aggregate loss.
+
+## Signature
+
+```cpp
+actuarial::losses::AggregateMoments compound_negbin(double r, double p, double severity_mean, double severity_variance, pluss::Platform platform = pluss::Platform::CPU);
+```
+
+## What It Does
+
+The aggregate of a negative binomial number of claims ([`negbin_moments`](negbin_moments.md)) with a severity of mean {math}`\mu_X` and variance {math}`\sigma_X^2`: {math}`E[S]=E[N]\mu_X` and {math}`\mathrm{Var}[S]=E[N]\sigma_X^2+\mathrm{Var}[N]\mu_X^2`. The count variance enters through the squared mean claim, so an overdispersed count raises the aggregate variance well above the Poisson figure at the same mean. It is the one-call form of [`negbin_moments`](negbin_moments.md) followed by [`aggregate_moments`](aggregate_moments.md).
+
+## Parameters
+
+`r`, `p`
+: The negative binomial parameters: `r` greater than 0 and `p` strictly between 0 and 1.
+
+`severity_mean`, `severity_variance`
+: Mean and variance of one claim; finite and 0 or more.
+
+`platform`
+: Where the result is placed. Default `pluss::Platform::CPU`.
+
+## Returns
+
+An [`AggregateMoments`](AggregateMoments.md) of two rank-zero series.
+
+## Errors
+
+Throws the `negbin_moments` errors for `r` and `p`, and `compound_negbin: severity_mean must be >= 0` and `compound_negbin: severity_variance must be >= 0`.
+
+## Practical Examples
+
+### Example 1: a portfolio
+
+Mean count 4.5, severity mean 100 and variance 10,000.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto m = actuarial::losses::compound_negbin(3.0, 0.4, 100.0, 10000.0);
+  out.writeln("mean =", m.mean.item<double>(), " variance =", m.variance.item<double>());
+}
+```
+
+### Example 2: by hand
+
+E[N] = 4.5 and Var[N] = 11.25.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto m = actuarial::losses::compound_negbin(3.0, 0.4, 100.0, 10000.0);
+  out.writeln(m.mean.item<double>(), 4.5 * 100.0);
+  out.writeln(m.variance.item<double>(), 4.5 * 10000.0 + 11.25 * 100.0 * 100.0);
+}
+```
+
+### Example 3: against Poisson at the same mean
+
+The overdispersed count gives a larger aggregate variance.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto nb = actuarial::losses::compound_negbin(3.0, 0.4, 100.0, 10000.0);
+  const auto po = actuarial::losses::compound_poisson(4.5, 100.0, 10000.0);
+  out.writeln("same mean:", nb.mean.item<double>(), po.mean.item<double>());
+  out.writeln("negbin variance", nb.variance.item<double>(), " poisson variance", po.variance.item<double>());
+}
+```
+
+### Example 4: the same as the two steps
+
+Equal to aggregate_moments on the negative binomial moments.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto n = actuarial::losses::negbin_moments(3.0, 0.4);
+  const auto a = actuarial::losses::aggregate_moments(n.mean, n.variance, pluss::make_series(100.0), pluss::make_series(10000.0));
+  const auto b = actuarial::losses::compound_negbin(3.0, 0.4, 100.0, 10000.0);
+  out.writeln(a.variance.item<double>(), b.variance.item<double>());
+}
+```
+
+### Example 5: the errors
+
+Invalid count parameters and severity moments are refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::losses::compound_negbin(0.0, 0.4, 100.0, 10000.0); });
+  report([&] { (void)actuarial::losses::compound_negbin(3.0, 1.0, 100.0, 10000.0); });
+  report([&] { (void)actuarial::losses::compound_negbin(3.0, 0.4, 100.0, -1.0); });
+}
+```
+
+## See Also
+
+- [`AggregateMoments`](AggregateMoments.md): the result type
+- [`aggregate_moments`](aggregate_moments.md): combine a frequency and a severity
+- [`compound_poisson`](compound_poisson.md): with an equidispersed count
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="compound_poisson.html">
+    <span class="label">Previous</span>
+    <span class="title">compound_poisson</span>
+  </a>
+  <a class="next-link" href="poisson_pmf.html">
+    <span class="label">Next</span>
+    <span class="title">poisson_pmf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

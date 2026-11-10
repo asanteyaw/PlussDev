@@ -1,0 +1,112 @@
+# `integ::analytica::cosine`
+
+The integral of `cos(k x)` from `a` to `b`.
+
+## Signature
+
+```cpp
+double integ::analytica::cosine(double k, double a, double b);
+```
+
+## What It Does
+
+`(sin(kb) − sin(ka))/k`, and `b − a` when `k = 0` (the integrand is then 1).
+
+## Parameters
+
+`double k`
+: The angular frequency.
+
+`double a, double b`
+: The limits.
+
+## Returns
+
+The exact value of the integral, a `double`.
+
+## Practical Examples
+
+### Example 1
+
+Over a quarter period. `∫₀^{π/2} cos x dx = 1`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::cosine(1.0, 0.0, 3.14159265358979323846 / 2.0));
+}
+```
+
+### Example 2
+
+Symmetric limits. `∫₋ₐᵃ cos(kx) dx = 2 sin(ka)/k`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::cosine(2.0, -1.0, 1.0), ", expected =", 2.0 * std::sin(2.0) / 2.0);
+}
+```
+
+### Example 3
+
+The zero frequency is the constant 1.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln(analytica::cosine(0.0, 1.0, 4.0));
+}
+```
+
+## See Also
+
+- [`quadra`](quadra.md): numerical quadrature of any integrand
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="analytica_arcsine_kernel.html">
+    <span class="label">Previous</span>
+    <span class="title">arcsine_kernel</span>
+  </a>
+  <a class="next-link" href="analytica_exponential.html">
+    <span class="label">Next</span>
+    <span class="title">exponential</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

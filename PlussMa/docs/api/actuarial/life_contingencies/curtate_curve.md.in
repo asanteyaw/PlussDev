@@ -1,0 +1,171 @@
+# `actuarial::life_contingencies::curtate_curve`
+
+Expected remaining complete years at every duration.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::life_contingencies::curtate_curve(const pluss::Series &qx);
+```
+
+## What It Does
+
+Entry `t` is the expected number of complete years lived after duration `t`, within the horizon, for `t = 0, 1, …, n`: {math}`e_t=\sum_{k>t}{}_{k-t}p_{x+t}`. The curve has `n + 1` entries; the first equals [`curtate_mean`](curtate_mean.md) and the last, at the end of the horizon, is 0. It falls as the remaining horizon shrinks.
+
+## Parameters
+
+`qx`
+: One-dimensional series of probabilities in {math}`[0,1]`.
+
+## Returns
+
+A series of `qx.numel() + 1` values, ending at 0.
+
+## Errors
+
+Throws the `survival_curve: …` errors of invalid probabilities.
+
+## Practical Examples
+
+### Example 1: the curve
+
+Three years of mortality.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(life::curtate_curve(pluss::make_series({0.1, 0.2, 0.3})).items<double>());
+}
+```
+
+### Example 2: the start and end
+
+The first value is the mean and the last is zero.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const auto c = life::curtate_curve(qx).items<double>();
+  out.writeln("first =", c.front(), " curtate_mean =", life::curtate_mean(qx).item<double>(), " last =", c.back());
+}
+```
+
+### Example 3: the recursion by hand
+
+{math}`e_t=p_t\,(1+e_{t+1})`, working back from the end.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto c = life::curtate_curve(pluss::make_series({0.1, 0.2, 0.3})).items<double>();
+  out.writeln(0.9 * (1.0 + c[1]), c[0]);
+  out.writeln(0.8 * (1.0 + c[2]), c[1]);
+  out.writeln(0.7 * (1.0 + c[3]), c[2]);
+}
+```
+
+### Example 4: no mortality
+
+Every remaining year is lived, so the curve counts down.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(life::curtate_curve(pluss::make_series({0.0, 0.0, 0.0})).items<double>());
+}
+```
+
+### Example 5: the error
+
+An invalid probability.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)life::curtate_curve(pluss::make_series({0.1, -0.2})); });
+}
+```
+
+## See Also
+
+- [`curtate_mean`](curtate_mean.md): the first value- [`Mortality`](../mortality/Mortality.md): the same conversions as accessors
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="curtate_mean.html">
+    <span class="label">Next</span>
+    <span class="title">curtate_mean</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

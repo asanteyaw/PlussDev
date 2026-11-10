@@ -1,0 +1,46 @@
+<!-- generated from operators.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Operators
+
+An `operators::Operator` is a transformation of functions: differentiate, integrate, shift, scale, transform. This family documents the operator value type, its option structs, and the factories that build and combine operators; the individual operators (derivatives, integrals, transforms, series and so on) are in their own families.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`Capabilities`](operators/Capabilities.md) | The record of properties an operator promises: structural, linear, savable, with a known adjoint. |
+| [`DiffOptions`](operators/DiffOptions.md) | How the differential operators treat non-smooth points, opaque functions and runaway expression growth. |
+| [`Operator`](operators/Operator.md) | A transformation that takes a `math::Function` and returns another one. |
+| [`Options`](operators/Options.md) | What you declare about an operator you define with `operators::define`. |
+| [`adjoint`](operators/adjoint.md) | The formal adjoint of an operator: the operator `A*` with `⟨A f, g⟩ = ⟨f, A* g⟩`. |
+| [`bind`](operators/bind.md) | Registers a loader that rebuilds a custom operator when it is read back from a saved artifact. |
+| [`commutator`](operators/commutator.md) | The commutator `[A, B] = AB − BA` of two operators. |
+| [`compose`](operators/compose.md) | Chains two operators into one: first `inner`, then `outer`. |
+| [`define`](operators/define.md) | Builds your own `Operator` from a callable that turns a function into a function. |
+| [`identity`](operators/identity.md) | The operator that returns its input unchanged: the neutral element of composition and of linear combinations. |
+| [`linear_combination`](operators/linear_combination.md) | The weighted sum of operators: `c₁A₁ + c₂A₂ + …`. |
+| [`multiply`](operators/multiply.md) | The operator that multiplies a function by a given function of the same variables. |
+| [`scale`](operators/scale.md) | The operator that multiplies a function by a fixed real number. |
+| [`shift`](operators/shift.md) | The translation operator: replaces `x` by `x + amount`, so `(shift f)(x) = f(x + amount)`. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+operators/Capabilities
+operators/DiffOptions
+operators/Operator
+operators/Options
+operators/adjoint
+operators/bind
+operators/commutator
+operators/compose
+operators/define
+operators/identity
+operators/linear_combination
+operators/multiply
+operators/scale
+operators/shift
+```
+<!-- apiref:toctree:end -->

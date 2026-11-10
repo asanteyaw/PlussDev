@@ -1,0 +1,172 @@
+<!-- generated from Greeks.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pricer::Greeks`
+
+The five Greeks of a priced strip, each a `Series` with one entry per option.
+
+`delta`, `gamma`, `vega`, `theta` and `rho` are: `delta = ∂V/∂S`, `gamma = ∂²V/∂S²`, `vega = ∂V/∂σ` (per unit of volatility, that is per 100 percentage points), `theta = ∂V/∂t` (per year of calendar time, negative for a long option) and `rho = ∂V/∂r` (per unit of rate); divide vega and rho by 100 for a percentage point, theta by 365 for a day. They are defined only when the pricing was run with `Risk::All`; with `PriceOnly` the members are undefined `Series`. For Black-Scholes by the Analytic engine they are the closed forms; for other models and engines they are obtained by repricing at shifted inputs.
+
+## Fields
+
+### `delta`
+
+`pluss::Series`, default `undefined`.
+
+`∂V/∂S` per option.
+
+### `gamma`
+
+`pluss::Series`, default `undefined`.
+
+`∂²V/∂S²` per option.
+
+### `vega`
+
+`pluss::Series`, default `undefined`.
+
+`∂V/∂σ` per option.
+
+### `theta`
+
+`pluss::Series`, default `undefined`.
+
+`∂V/∂t` per option, per year.
+
+### `rho`
+
+`pluss::Series`, default `undefined`.
+
+`∂V/∂r` per option, per unit of rate.
+
+## Guidance
+
+Member `Result::greeks`.
+
+## Practical Examples
+
+### Example 1
+
+The Greeks of a strip of five strikes. Delta falls with the strike, vega peaks near the money.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.05}), .dividend_yield = pluss::make_series({0.02})},
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::All}};
+
+  const auto g = field.price().greeks;
+  out.writeln("delta :", g.delta.items<double>());
+  out.writeln("vega  :", g.vega.items<double>());
+}
+```
+
+Output
+
+```text
+delta : [0.8959, 0.7659, 0.5869, 0.4023, 0.2491]
+vega  : [15.3888, 28.9196, 37.9012, 38.1135, 31.4176]
+```
+
+### Example 2
+
+Undefined under PriceOnly.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.05, 0.02),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+
+  const auto g = field.price().greeks;
+  out.writeln("delta", g.delta.defined(), "gamma", g.gamma.defined(), "vega", g.vega.defined(), "theta", g.theta.defined(), "rho", g.rho.defined());
+}
+```
+
+Output
+
+```text
+delta false gamma false vega false theta false rho false
+```
+
+### Example 3
+
+The analytic Greeks match bump-and-revalue of the price. Gamma by a second difference in the spot, theta by minus the derivative in maturity.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(7));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.05, 0.02),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::All}};
+
+  const auto g = field.price().greeks;
+  field.controls.risk = mod::Risk::PriceOnly;
+  auto price_at = [&](double spot, double maturity) {
+    field.market = fin::market::make(spot, 0.05, 0.02);
+    field.instrument = fin::instrument::make(fin::pricing::Call, 100.0, maturity);
+    return field.price().price.items<double>()[0];
+  };
+  const double h = 1e-2, dt = 1e-5;
+  out.writeln("gamma", g.gamma.items<double>()[0], (price_at(100.0 + h, 1.0) - 2.0 * price_at(100.0, 1.0) + price_at(100.0 - h, 1.0)) / (h * h));
+  out.writeln("theta", g.theta.items<double>()[0], -(price_at(100.0, 1.0 + dt) - price_at(100.0, 1.0 - dt)) / (2.0 * dt));
+}
+```
+
+Output
+
+```text
+gamma 0.0189506 0.0189506
+theta -5.0893189 -5.0893189
+```
+
+## See Also
+
+- [`Result`](Result.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Field.html">
+    <span class="label">Previous</span>
+    <span class="title">Field</span>
+  </a>
+  <a class="next-link" href="Loss.html">
+    <span class="label">Next</span>
+    <span class="title">Loss</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

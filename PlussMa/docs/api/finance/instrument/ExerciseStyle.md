@@ -1,0 +1,154 @@
+<!-- generated from ExerciseStyle.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pricing::ExerciseStyle`
+
+When the holder may exercise: at maturity only, on a schedule, or at any time.
+
+`European` exercises at maturity only. `Bermudan` exercises on a fixed schedule of dates plus maturity (a Bermudan with no interim dates is a European). `American` exercises at any time up to maturity; it is the limit of Bermudans on ever finer schedules. Early exercise has value for a put (the holder prefers cash now to waiting) and, when dividends are paid, for a call. Set the style by building the instrument with [`american`](american.md) or [`bermudan`](bermudan.md), or by setting `Vanilla::exercise`.
+
+**Engines for early exercise.** `Lattice` and `Spectral` (Black-Scholes), `Cos` (Black-Scholes, Heston, Bates), `Pde` (Heston) and `MonteCarlo` (any model, by least-squares regression). The `Analytic`, `Fft` engines price European exercise only, and asking them for another style fails with a message listing what works.
+
+## Fields
+
+### `European`
+
+`enumerator`, default `0`.
+
+Exercise at maturity only.
+
+### `Bermudan`
+
+`enumerator`, default `1`.
+
+Exercise on the dates in `exercise_times`, and at maturity.
+
+### `American`
+
+`enumerator`, default `2`.
+
+Exercise at any time up to maturity.
+
+## Guidance
+
+Set as `Vanilla::exercise`.
+
+## Practical Examples
+
+### Example 1
+
+The three styles on the same put under the binomial tree: the American put is worth more than the European, and a Bermudan with a few dates lies between.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> dates = {0.25, 0.5, 0.75};
+  for (const auto &instrument : {fin::instrument::make(fin::pricing::Put, 100.0, 1.0), fin::instrument::bermudan(fin::pricing::Put, 100.0, 1.0, dates), fin::instrument::american(fin::pricing::Put, 100.0, 1.0)}) {
+    mod::Field field{.instrument = instrument, .market = fin::market::make(100.0, 0.05, 0.0), .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                     .controls = {.engine = mod::Engine::Lattice, .risk = mod::Risk::PriceOnly}};
+    field.controls.lattice.steps = 2000;
+    out.writeln(static_cast<int>(instrument.exercise), ":", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+0 : 5.57253
+1 : 5.95612
+2 : 6.08999
+```
+
+### Example 2
+
+An American call on a non-dividend asset is never exercised early: it is worth the European call.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  for (const auto &instrument : {fin::instrument::make(fin::pricing::Call, 100.0, 1.0), fin::instrument::american(fin::pricing::Call, 100.0, 1.0)}) {
+    mod::Field field{.instrument = instrument, .market = fin::market::make(100.0, 0.05, 0.0), .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                     .controls = {.engine = mod::Engine::Lattice, .risk = mod::Risk::PriceOnly}};
+    field.controls.lattice.steps = 2000;
+    out.writeln(static_cast<int>(instrument.exercise), ":", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+0 : 10.44958
+2 : 10.44958
+```
+
+### Example 3
+
+An engine that prices European exercise only refuses the others, naming the alternatives.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(100.0, 0.05, 0.0),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::Analytic}};
+  try {
+    (void)(field.price());
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::finance::module::Field: controls.engine Analytic prices European exercise only; American and Bermudan options need the MonteCarlo engine (any model) or the Lattice or Spectral engine (BlackScholes) or the Pde engine (Heston)
+```
+
+## See Also
+
+- [`Vanilla`](Vanilla.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="OptionType.html">
+    <span class="label">Next</span>
+    <span class="title">OptionType</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

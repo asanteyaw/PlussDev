@@ -1,0 +1,223 @@
+<!-- generated from deductible.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `actuarial::operators::deductible`
+
+Creates the ordinary-deductible transform.
+
+## Signature
+
+```cpp
+actuarial::LossTransform actuarial::operators::deductible(double amount);
+```
+
+## What It Does
+
+Returns the operator {math}`X\mapsto(X-d)_+=\max(X-d,0)`: the part of each loss above the deductible `d`, which is what the insurer pays when the policyholder bears the first `d`. Losses at or below the deductible give zero, so the payment is zero for many claims and the result is much more skewed than the loss. Use it to turn ground-up losses into insurer payments before pricing; combine it with [`limit`](limit.md) for a policy that has both, or use [`layer`](layer.md) for both in one step. The operator is elementwise and keeps the shape and platform of its input.
+
+## Parameters
+
+`amount`
+: The deductible `d`, finite and 0 or more.
+
+`losses` (of the returned operator)
+: One-dimensional, finite, non-negative, defined series of loss amounts.
+
+## Returns
+
+A `LossTransform` with key `"deductible"`.
+
+## Errors
+
+Throws `operators::deductible: amount must be >= 0` and `operators::deductible: amount must be finite` when the operator is built. Calling the returned operator throws `<name>: losses must be defined`, `<name>: losses must be 1D`, `<name>: losses must be finite` or `<name>: losses must be >= 0`, with the operator's own name.
+
+## Practical Examples
+
+### Example 1: payments above a deductible
+
+A deductible of 100 on six losses.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  const actuarial::LossTransform pay = actuarial::operators::deductible(100.0);
+  out.writeln("loss    =", x.items<double>());
+  out.writeln("payment =", pay(x).items<double>());
+}
+```
+
+Output
+
+```text
+loss    = [80.000000, 150.000000, 300.000000, 700.000000, 1200.000000, 4000.000000]
+payment = [0.000000, 50.000000, 200.000000, 600.000000, 1100.000000, 3900.000000]
+```
+
+### Example 2: the average payment
+
+The mean payment falls by less than the deductible, because small losses pay nothing instead of a negative amount.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  const actuarial::LossMeasure mean = actuarial::operators::mean();
+  out.writeln("mean loss               =", mean(x).item<double>());
+  out.writeln("mean payment, d = 100   =", mean(actuarial::operators::deductible(100.0)(x)).item<double>());
+  out.writeln("mean loss - 100         =", mean(x).item<double>() - 100.0);
+}
+```
+
+Output
+
+```text
+mean loss               = 1071.666667
+mean payment, d = 100   = 975.000000
+mean loss - 100         = 971.666667
+```
+
+### Example 3: zero deductible
+
+A deductible of zero leaves the losses unchanged.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  out.writeln(actuarial::operators::deductible(0.0)(x).items<double>());
+}
+```
+
+Output
+
+```text
+[80.000000, 150.000000, 300.000000, 700.000000, 1200.000000, 4000.000000]
+```
+
+### Example 4: a bigger deductible
+
+The payments shrink monotonically as the deductible rises.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  for (const double d : {0.0, 100.0, 500.0, 2000.0})
+    out.writeln("d =", d, " mean payment =", actuarial::operators::mean()(actuarial::operators::deductible(d)(x)).item<double>());
+}
+```
+
+Output
+
+```text
+d = 0.000000  mean payment = 1071.666667
+d = 100.000000  mean payment = 975.000000
+d = 500.000000  mean payment = 733.333333
+d = 2000.000000  mean payment = 333.333333
+```
+
+### Example 5: the errors
+
+A negative deductible, a non-finite one, and bad loss input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::operators::deductible(-1.0); });
+  report([&] { (void)actuarial::operators::deductible(std::nan("")); });
+  report([&] { (void)actuarial::operators::deductible(10.0)(pluss::make_series({-5.0, 20.0})); });
+  report([&] { (void)actuarial::operators::deductible(10.0)(pluss::make_series({1.0, 2.0, 3.0, 4.0}).reshape({2, 2})); });
+}
+```
+
+Output
+
+```text
+operators::deductible: amount must be >= 0
+operators::deductible: amount must be finite
+deductible: losses must be >= 0
+deductible: losses must be 1D
+```
+
+## See Also
+
+- [`LossTransform`](LossTransform.md): the type
+- [`layer`](layer.md): deductible and limit in one step
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LossMeasure.html">
+    <span class="label">Previous</span>
+    <span class="title">LossMeasure</span>
+  </a>
+  <a class="next-link" href="limit.html">
+    <span class="label">Next</span>
+    <span class="title">limit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

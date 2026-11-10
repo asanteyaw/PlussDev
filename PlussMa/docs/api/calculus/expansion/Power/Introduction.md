@@ -1,0 +1,16 @@
+<!-- generated from Introduction.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::expansion::Power` Introduction
+
+A truncated power series `Σ cₖ (x − a)ᵏ` is determined by its coefficient vector `c`, a rank-1 `Function` such as `taylor().coefficients(...)` returns. `Power` groups the operators that act on such vectors *without building the polynomial*: `power().derivative()` differentiates termwise, `power().integral()` integrates termwise from the centre, and `power().product(g)` multiplies two series by the Cauchy product. The polynomial itself is built from a coefficient vector by [`power(variable, center)`](../power_operator.md).
+
+Working with the coefficients is exact and cheap: a series can be differentiated, integrated and multiplied as data, and the result evaluated or turned into a polynomial at the end. The object holds no state; you obtain it from the no-argument [`power()`](../power_operator.md).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="derivative.html">
+    <span class="label">Next</span>
+    <span class="title">derivative</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

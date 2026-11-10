@@ -1,0 +1,129 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9ef0daaecea4 -->
+
+# `DfoBuilder::with_problem`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Replaces the whole problem.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_problem(const dfo::DfoProblem &problem) const;
+```
+
+## What It Does
+
+Swaps in a complete [`DfoProblem`](../DfoProblem.md), keeping the options already collected. Use it to start from a problem value built elsewhere and still add settings with the chained calls.
+
+## Parameters
+
+`const dfo::DfoProblem &problem`
+: The problem to use.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+A problem value, then a setting.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoProblem problem;
+  problem.initial = pluss::series::make({0.0, 0.0});
+  problem.objective = f;
+  const dfo::DfoResult r = dfo::DFO::build().with_problem(problem).with_solver(dfo::DfoSolverKind::PatternSearch).solve();
+  out.writeln(dfo::to_string(r.selected_solver), ", minimizer =", r.minimizer.items<double>());
+}
+```
+
+### Example 2
+
+Options survive the swap. The seed set before `with_problem` still applies.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoProblem problem;
+  problem.initial = pluss::series::make({0.0, 0.0});
+  problem.objective = f;
+  const dfo::DfoBuilder tuned = dfo::DFO::build().with_seed(7).with_max_evaluations(200);
+  out.writeln("seed =", tuned.with_problem(problem).options().rng_seed, ", budget =", tuned.with_problem(problem).options().max_evaluations);
+}
+```
+
+### Example 3
+
+Replacing a problem. The second `with_problem` discards the first problem's objective.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoProblem a, b;
+  a.initial = pluss::series::make({0.0, 0.0});
+  a.objective = f;
+  b.initial = pluss::series::make({1.0});
+  b.objective = [](const Series &x) { return (x - 5.0).square().sum(); };
+  const dfo::DfoResult r = dfo::DFO::build().with_problem(a).with_problem(b).solve();
+  out.writeln("minimizer =", r.minimizer.items<double>());
+}
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_options.html">
+    <span class="label">Previous</span>
+    <span class="title">with_options</span>
+  </a>
+  <a class="next-link" href="with_promote_cpu_to_float64.html">
+    <span class="label">Next</span>
+    <span class="title">with_promote_cpu_to_float64</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

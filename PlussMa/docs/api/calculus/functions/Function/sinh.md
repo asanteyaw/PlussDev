@@ -1,0 +1,179 @@
+<!-- generated from sinh.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e904292133af -->
+
+# `math::Function::sinh`
+
+[Back to `math::Function`](../Function.md)
+
+The hyperbolic sine of a function, as a new function.
+
+## Signature
+
+```cpp
+math::Function math::Function::sinh() const;
+```
+
+## What It Does
+
+`f.sinh()` builds `x ↦ sinh f(x) = (e^{f} − e^{−f}) / 2`. It is defined for every argument, is odd, and grows exponentially for large `|x|`. Its derivative is `(sinh u)′ = u′ cosh u`.
+
+The hyperbolic functions parametrise the hyperbola the way sine and cosine parametrise the circle: `(cosh t, sinh t)` satisfies `cosh² − sinh² = 1`. They appear in arc-length formulas, in the solutions of `y″ = y`, and as the inverse of the inverse-hyperbolic substitutions in integrals.
+
+## Returns
+
+A new `Function` whose value is `sinh` of the receiver's value, with the same variables and output shape.
+
+## Errors
+
+- The function must be defined.
+
+## Practical Examples
+
+### Example 1
+
+`sinh` evaluated on a small grid, next to the standard-library value. Each element is computed independently, so the result has the shape of the input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sinh(); });
+  const auto x = pluss::make_series({-2.0, 0.0, 1.0, 3.0});
+  out.writeln("x:           ", x.items<double>());
+  out.writeln("f(x):        ", f({x}).items<double>());
+  out.writeln("std::sinh(x):", pluss::make_series({std::sinh((-2.0)), std::sinh((0.0)), std::sinh((1.0)), std::sinh((3.0))}).items<double>());
+}
+```
+
+Output
+
+```text
+x:            [-2.0000, 0.0000, 1.0000, 3.0000]
+f(x):         [-3.6269, 0.0000, 1.1752, 10.0179]
+std::sinh(x): [-3.6269, 0.0000, 1.1752, 10.0179]
+```
+
+The two rows agree to the printed digits.
+
+### Example 2
+
+The derivative rule. Differentiating `sinh` with `operators::differential` gives the exact formula, `(sinh x)′ = cosh x`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sinh(); });
+  const math::Function df = operators::differential("x")(f);
+  const auto x = pluss::make_series({-2.0, 0.0, 1.0, 3.0});
+  const auto exact = [](double v) { return std::cosh(v); };
+  out.writeln("f'(x):        ", df({x}).items<double>());
+  out.writeln("closed form:  ", pluss::make_series({exact(-2.0), exact(0.0), exact(1.0), exact(3.0)}).items<double>());
+}
+```
+
+Output
+
+```text
+f'(x):         [3.7622, 1.0000, 1.5431, 10.0677]
+closed form:   [3.7622, 1.0000, 1.5431, 10.0677]
+```
+
+### Example 3
+
+Oddness: `sinh(−x) = −sinh(x)`, and the exponential definition `(eˣ − e⁻ˣ)/2`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sinh(); });
+  const math::Function definition = math::function({"x"}, [](math::Function x) { return (x.exp() - (-x).exp()) / 2.0; });
+  const auto x = pluss::make_series({0.5, 1.5, 3.0});
+  out.writeln("sinh x:            ", f({x}).items<double>());
+  out.writeln("(e^x - e^-x)/2:    ", definition({x}).items<double>());
+  out.writeln("sinh(-x):          ", f({-x}).items<double>());
+}
+```
+
+Output
+
+```text
+sinh x:             [0.5211, 2.1293, 10.0179]
+(e^x - e^-x)/2:     [0.5211, 2.1293, 10.0179]
+sinh(-x):           [-0.5211, -2.1293, -10.0179]
+```
+
+### Example 4
+
+The solutions of `y″ = y`: `sinh` is one, because differentiating twice returns the function.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const math::Function y = math::function({"x"}, [](math::Function x) { return x.sinh(); });
+  const math::Function ypp = operators::differential("x", 2)(y);
+  const auto x = pluss::make_series({0.2, 1.0, 2.0});
+  out.writeln("y'' - y:", (ypp({x}) - y({x})).items<double>());
+}
+```
+
+Output
+
+```text
+y'' - y: [0.000000000000, 0.000000000000, 0.000000000000]
+```
+
+## See Also
+
+- [`cosh`](cosh.md): the hyperbolic cosine
+- [`tanh`](tanh.md): the hyperbolic tangent
+- [`sin`](sin.md): the circular sine
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sin.html">
+    <span class="label">Previous</span>
+    <span class="title">sin</span>
+  </a>
+  <a class="next-link" href="sqrt.html">
+    <span class="label">Next</span>
+    <span class="title">sqrt</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

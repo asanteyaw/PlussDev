@@ -1,0 +1,191 @@
+# `optim::AdamOptions`
+
+Settings of the Adam optimizer: learning rate, moment decay, regularisation and variants.
+
+Read when `SeptimaOptions::optimizer` is `Adam` (as `options.step.adam`), and by the standalone [`adam_step`](adam_step.md). Adam keeps a running average `m` of the gradient (decay `beta1`) and of its square `v` (decay `beta2`), corrects both for their start at zero, and moves each coordinate by `learning_rate · m / (√v + eps)`. `weight_decay` shrinks the parameters, either folded into the gradient or, with `decoupled_weight_decay`, applied directly. `amsgrad` replaces `v` with its running maximum, which keeps the effective step from growing. `maximize` ascends instead of descending.
+
+## Fields
+
+### `learning_rate`
+
+`double`, default `1e-3`.
+
+The size of a step.
+
+### `beta1`
+
+`double`, default `0.9`.
+
+Decay of the running average of the gradient.
+
+### `beta2`
+
+`double`, default `0.999`.
+
+Decay of the running average of its square.
+
+### `eps`
+
+`double`, default `1e-8`.
+
+Added to the denominator for stability.
+
+### `weight_decay`
+
+`double`, default `0`.
+
+Strength of the pull toward zero.
+
+### `amsgrad`
+
+`bool`, default `false`.
+
+Use the running maximum of the second moment.
+
+### `maximize`
+
+`bool`, default `false`.
+
+Ascend instead of descend.
+
+### `decoupled_weight_decay`
+
+`bool`, default `false`.
+
+Apply the decay to the parameters directly instead of adding it to the gradient.
+
+## Guidance
+
+Set as `SeptimaOptions::adam` or passed to `adam_step`.
+
+## Practical Examples
+
+### Example 1
+
+The learning rate sets the pace. The step per iteration is about `learning_rate`, so `0.5` reaches the minimum of `Σ (x − 3)²` far sooner than `0.01`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto objective = [](const Series &x) { return (x - 3.0).square().sum(); };
+
+  for (const double rate : {0.01, 0.5}) {
+    optim::SeptimaSolveOptions options;
+    options.step.adam.learning_rate = rate;
+    options.max_iterations = 3000;
+    const optim::SeptimaResult result = optim::septima(objective, pluss::series::make({0.0, 0.0}), options);
+    out.writeln("learning rate", rate, ": iterations =", result.iteration, ", exit =", optim::septima_exit_flag_name(result.exit_flag));
+  }
+}
+```
+
+### Example 2
+
+Maximising. With `maximize = true` Adam climbs: the maximum of `−(x − 3)²` is at `3`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  optim::SeptimaSolveOptions options;
+  options.step.adam.learning_rate = 0.2;
+  options.step.adam.maximize = true;
+  options.max_iterations = 2000;
+  const optim::SeptimaResult result = optim::septima([](const Series &x) { return -(x - 3.0).square().sum(); }, pluss::series::make({0.0}), options);
+  out.writeln("x =", result.params[0].items<double>(), ", exit =", optim::septima_exit_flag_name(result.exit_flag));
+}
+```
+
+### Example 3
+
+Weight decay pulls the minimiser toward zero. For `Σ (x − 3)²` plus decay `0.5`, the fixed point of the gradient rule is `x = 3 / 1.25 = 2.4`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto objective = [](const Series &x) { return (x - 3.0).square().sum(); };
+
+  optim::SeptimaSolveOptions options;
+  options.step.adam.learning_rate = 0.1;
+  options.step.adam.weight_decay = 0.5;
+  options.max_iterations = 3000;
+  const optim::SeptimaResult result = optim::septima(objective, pluss::series::make({0.0, 0.0}), options);
+  out.writeln("x =", result.params[0].items<double>());
+}
+```
+
+### Example 4
+
+AMSGrad with a gentler second-moment decay.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto objective = [](const Series &x) { return (x - 3.0).square().sum(); };
+
+  optim::SeptimaSolveOptions options;
+  options.step.adam.learning_rate = 0.1;
+  options.step.adam.amsgrad = true;
+  options.step.adam.beta2 = 0.99;
+  options.max_iterations = 3000;
+  const optim::SeptimaResult result = optim::septima(objective, pluss::series::make({0.0, 0.0}), options);
+  out.writeln("exit =", optim::septima_exit_flag_name(result.exit_flag), ", x =", result.params[0].items<double>());
+}
+```
+
+## See Also
+
+- [`SeptimaOptions`](SeptimaOptions.md): holds it
+- [`adam_step`](adam_step.md): one Adam step on its own
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="AdamState.html">
+    <span class="label">Next</span>
+    <span class="title">AdamState</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

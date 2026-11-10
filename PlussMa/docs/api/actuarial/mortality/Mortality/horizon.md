@@ -1,0 +1,145 @@
+<!-- generated from horizon.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a401b5b4f6e1 -->
+
+# `actuarial::Mortality::horizon`
+
+[Back to `actuarial::Mortality`](../Mortality.md)
+
+The number of years the law covers.
+
+## Signature
+
+```cpp
+std::int64_t actuarial::Mortality::horizon() const noexcept;
+```
+
+## What It Does
+
+The number of one-year probabilities `n`. The survival curve has `n + 1` points and the lifetime distribution `n + 1` masses. A valuation requires the cashflow's horizon not to exceed this value. An undefined law has horizon 0.
+
+## Returns
+
+The horizon in years.
+
+## Practical Examples
+
+### Example 1: the horizon of each factory
+
+`from_qx`, `from_px` and `from_force` give the length of the vector; `from_lx` gives one less, since `lx` has one more value than there are years.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("from_qx 3 values:", actuarial::mortality::from_qx(pluss::make_series({0.01, 0.02, 0.03})).horizon());
+  out.writeln("from_lx 4 values:", actuarial::mortality::from_lx(pluss::make_series({1000.0, 990.0, 975.0, 950.0})).horizon());
+}
+```
+
+Output
+
+```text
+from_qx 3 values: 3
+from_lx 4 values: 3
+```
+
+### Example 2: a parametric law
+
+A Gompertz law over four attained ages has horizon 4.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0});
+  out.writeln(actuarial::mortality::gompertz(ages, 0.0001, 1.08).horizon());
+}
+```
+
+Output
+
+```text
+4
+```
+
+### Example 3: the limit on a valuation
+
+A cashflow can be no longer than the law it is valued on.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(0.04)});
+  out.writeln("horizon", mortality.horizon(), " longest valid annuity", value(actuarial::cashflow::annuity(mortality.horizon())).item<double>());
+  report([&] { (void)value(actuarial::cashflow::annuity(mortality.horizon() + 1)); });
+}
+```
+
+Output
+
+```text
+horizon 5  longest valid annuity 4.520664
+valuation: cashflow horizon exceeds mortality horizon
+```
+
+## See Also
+
+- [`Mortality`](../Mortality.md): the type
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="force.html">
+    <span class="label">Previous</span>
+    <span class="title">force</span>
+  </a>
+  <a class="next-link" href="life_table.html">
+    <span class="label">Next</span>
+    <span class="title">life_table</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

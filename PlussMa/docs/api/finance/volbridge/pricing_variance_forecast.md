@@ -1,0 +1,201 @@
+<!-- generated from pricing_variance_forecast.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pricing::pricing_variance_forecast`
+
+The multi-step variance forecast under NGARCH or GARCH pricing dynamics, from the end of a return sample.
+
+## Signature
+
+```cpp
+pluss::Series pricing::pricing_variance_forecast(std::int64_t horizon, const pluss::Series &returns, const volatility::Ngarch11Params &params, pluss::Config cfg = {});
+pluss::Series pricing::pricing_variance_forecast(std::int64_t horizon, const pluss::Series &returns, const volatility::Garch11Params &params, pluss::Config cfg = {});
+```
+
+## What It Does
+
+Computes the variance at the end of the sample and propagates its expectation `horizon` periods ahead: `E h_{t+k+1} = ω + (β + α(1 + γ²)) E h_{t+k}`, which converges to the unconditional variance at the rate of the persistence. The sum of the entries is the forecast total variance to the option's expiry. Compare with [`variance_forecast`](variance_forecast.md), which forecasts under the real-world fit; the two differ by the leverage term in the persistence.
+
+## Parameters
+
+`std::int64_t horizon`
+: Periods ahead, positive.
+
+`const pluss::Series &returns`
+: The sample up to now.
+
+`const volatility::Ngarch11Params &params / Garch11Params`
+: The pricing dynamics.
+
+`pluss::Config cfg`
+: Device.
+
+## Returns
+
+A `[horizon]` `Series` of forecast variances.
+
+## Errors
+
+- A non-positive horizon, non-stationary parameters or invalid returns throw (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+Convergence to the long-run variance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const Series daily = returns * 0.01;   // log returns in decimals, the unit the pricing model assumes
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const fin::volatility::Ngarch11Params p{.omega = 3e-6, .alpha = 0.05, .beta = 0.88, .gamma = 0.5};
+  const Series f = fin::pricing::pricing_variance_forecast(80, daily, p, cfg);
+  out.writeln("forecast at steps 1, 20, 80:", f.select(0, 0).item<double>(), f.select(0, 19).item<double>(), f.select(0, 79).item<double>(), "; long-run", fin::volatility::unconditional_variance(p));
+}
+```
+
+Output
+
+```text
+forecast at steps 1, 20, 80: 0.00006236 0.00005548 0.00005227 ; long-run 0.00005217
+```
+
+### Example 2
+
+The recursion of the expectation: each step multiplies the gap to the long-run level by the persistence.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const Series daily = returns * 0.01;   // log returns in decimals, the unit the pricing model assumes
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const fin::volatility::Garch11Params p{.omega = 3e-6, .alpha = 0.06, .beta = 0.90};
+  const Series f = fin::pricing::pricing_variance_forecast(5, daily, p, cfg);
+  const double level = fin::volatility::unconditional_variance(p);
+  out.writeln("gap ratios:", (f.select(0, 2) - level).item<double>() / (f.select(0, 1) - level).item<double>(), (f.select(0, 3) - level).item<double>() / (f.select(0, 2) - level).item<double>(), "(persistence 0.96)");
+}
+```
+
+Output
+
+```text
+gap ratios: 0.9600 0.9600 (persistence 0.96)
+```
+
+### Example 3
+
+The total variance to expiry: the sum over the horizon, and the implied annualised volatility for 252 periods a year.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const Series daily = returns * 0.01;   // log returns in decimals, the unit the pricing model assumes
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const fin::volatility::Ngarch11Params p{.omega = 3e-6, .alpha = 0.05, .beta = 0.88, .gamma = 0.5};
+  const Series f = fin::pricing::pricing_variance_forecast(63, daily, p, cfg);
+  out.writeln("total variance over 63 periods", f.sum().item<double>(), ", annualised volatility", std::sqrt(252.0 * f.sum().item<double>() / 63.0));
+}
+```
+
+Output
+
+```text
+total variance over 63 periods 0.003460 , annualised volatility 0.117640
+```
+
+### Example 4
+
+A non-positive horizon is refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const fin::volatility::Garch11Params p{};
+  try {
+    (void)(fin::pricing::pricing_variance_forecast(0, pluss::make_series({0.1, 0.2}), p));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::finance::pricing_variance_forecast: horizon must be > 0
+```
+
+## See Also
+
+- [`variance_forecast`](variance_forecast.md): under a fitted real-world model
+- [`pricing_metrics`](pricing_metrics.md): the likelihood
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pricing_metrics.html">
+    <span class="label">Previous</span>
+    <span class="title">pricing_metrics</span>
+  </a>
+  <a class="next-link" href="returns_metrics.html">
+    <span class="label">Next</span>
+    <span class="title">returns_metrics</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,12 @@
+# `operators::expansion::Taylor` Introduction
+
+`Taylor` is a small object that groups the operators related to a Taylor expansion. You obtain it by calling [`taylor()`](../taylor_operator.md) with no arguments and use its two methods: `taylor().coefficients(...)` returns the expansion as a *vector of coefficients* (data) rather than as a polynomial, and `taylor().remainder(...)` returns the Lagrange factor that bounds the truncation error. The object holds no state; it exists to give the companions a common home, so that `taylor(x, a, n)` is the polynomial, `taylor().coefficients(x, a, n)` the coefficients and `taylor().remainder(x, n)` the error factor.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="coefficients.html">
+    <span class="label">Next</span>
+    <span class="title">coefficients</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

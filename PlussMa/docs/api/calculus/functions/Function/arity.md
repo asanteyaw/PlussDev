@@ -1,0 +1,203 @@
+<!-- generated from arity.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: e4a42a867e8a -->
+
+# `math::Function::arity`
+
+[Back to `math::Function`](../Function.md)
+
+The number of variables the function takes.
+
+## Signature
+
+```cpp
+std::int64_t math::Function::arity() const;
+```
+
+## What It Does
+
+The arity is the number of variables you must supply when you evaluate the function: one for a function of `x`, three for a function of `x`, `y` and `z`, zero for a constant. It is the length of [`variables()`](variables.md) and the number of arguments a by-position call [`f({a, b, ...})`](call.md) expects.
+
+Call `arity()` when code has to work with functions it did not build: to size an argument list, to check that a function has the shape an algorithm needs (a root finder wants one variable, an optimizer wants however many parameters there are), or to report a useful error before evaluating.
+
+Two points are worth knowing. First, a variable counts as soon as it is *declared*, whether or not the formula uses it: a function declared over `{"x", "y"}` whose body only uses `x` still has arity 2, and must be evaluated with both. Second, operators change the arity in the way you would expect mathematically: integrating over a variable binds it, so the result has one fewer; differentiating keeps all variables.
+
+## Returns
+
+The number of variables, a non-negative integer.
+
+## Errors
+
+- The function must be defined; an undefined function raises `math::Function: operation requires a defined function`.
+
+## Practical Examples
+
+### Example 1
+
+The arity is the number of declared variables: one, three, and zero for a constant.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sin(); });
+  const math::Function g = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return x * y + z; });
+  const math::Function c = math::function(2.5);
+  out.writeln("f(x):      ", f.arity());
+  out.writeln("g(x, y, z):", g.arity());
+  out.writeln("constant:  ", c.arity());
+}
+```
+
+Output
+
+```text
+f(x):       1
+g(x, y, z): 3
+constant:   0
+```
+
+A constant built with `math::function(2.5)` has no variables, so it is evaluated with an empty call, `c()`.
+
+### Example 2
+
+A variable counts once it is declared, even when the formula never uses it. `h` below depends only on `x`, but it still takes two arguments, and calling it with one is rejected.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function h = math::function({"x", "y"}, [](math::Function x, math::Function) { return x.sin(); });
+  out.writeln("arity of h:", h.arity());
+  out.writeln("h(1, 99) =", h({pluss::make_series(1.0), pluss::make_series(99.0)}).item<double>());
+  try {
+    (void)h({pluss::make_series(1.0)});
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+arity of h: 2
+h(1, 99) = 0.8415
+math::Function: ordered argument count 1 does not match function arity 2
+```
+
+The unused variable is still part of the function's signature. This is deliberate: a function of `(x, y)` that happens not to use `y` can be passed to code that expects two variables.
+
+### Example 3
+
+Operators change the arity as the mathematics does. Differentiating keeps every variable; integrating over one binds it, so the result has one fewer; a definite integral over the last variable leaves a constant.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y * y; });
+  const math::Function dfdx = operators::differential("x")(f);
+  const math::Function over_x = operators::integral("x", 0.0, 1.0)(f);
+  const math::Function over_both = operators::integral("y", 0.0, 2.0)(over_x);
+
+  out.writeln("f:                 ", f.arity());
+  out.writeln("df/dx:             ", dfdx.arity());
+  out.writeln("integral over x:   ", over_x.arity());
+  out.writeln("then integral over y:", over_both.arity(), "  value", over_both().item<double>());
+}
+```
+
+Output
+
+```text
+f:                  2
+df/dx:              2
+integral over x:    1
+then integral over y: 0   value 1.3333
+```
+
+`∫₀² ∫₀¹ x y² dx dy = ½ · 8/3 = 4/3`. The final function has arity 0, so it is evaluated with `over_both()`.
+
+### Example 4
+
+Writing code that works for a function of any arity: build an argument list of the right length from `arity()` and evaluate along the diagonal.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto along_diagonal = [](const math::Function &f, const pluss::Series &t) {
+    std::vector<pluss::Series> args(static_cast<std::size_t>(f.arity()), t);
+    return f(pluss::RangeView<pluss::Series>(args));
+  };
+
+  const auto t = pluss::make_series({1.0, 2.0, 3.0});
+  const math::Function one = math::function({"x"}, [](math::Function x) { return x * x; });
+  const math::Function three = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return x + 10.0 * y + 100.0 * z; });
+
+  out.writeln("x^2 along (t):          ", along_diagonal(one, t).items<double>());
+  out.writeln("x + 10y + 100z on (t,t,t):", along_diagonal(three, t).items<double>());
+}
+```
+
+Output
+
+```text
+x^2 along (t):           [1.0000, 4.0000, 9.0000]
+x + 10y + 100z on (t,t,t): [111.0000, 222.0000, 333.0000]
+```
+
+`RangeView<Series>` wraps the vector without copying it. The same helper serves both functions because the argument count comes from `arity()`.
+
+## See Also
+
+- [`variables`](variables.md): the names of the variables, in the order they are bound
+- [`operator()`](call.md): the ways to supply the arguments
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="arg.html">
+    <span class="label">Previous</span>
+    <span class="title">arg</span>
+  </a>
+  <a class="next-link" href="assume.html">
+    <span class="label">Next</span>
+    <span class="title">assume</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

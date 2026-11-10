@@ -1,0 +1,70 @@
+# `power::DcResult`
+
+Angles, injections and flows of the DC power flow.
+
+## Signature
+
+```cpp
+power::DcResult
+```
+
+## What It Does
+
+The result of `dc`. Arrays keep the leading scenario axes of the grid.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `angle` | Voltage angles in radians, `[..., bus]`, zero at the slack. |  |
+| `injection` | Net active injection at each bus, `[..., bus]`; at the slack it is whatever balances the rest. |  |
+| `from_power` | Active flow into each line at its sending end, `[..., line]`. |  |
+| `to_power` | Active flow into each line at its receiving end, `[..., line]`; equal and opposite to `from_power`. |  |
+| `residual` | The largest power-balance violation, `[...]`. |  |
+
+## Returns
+
+Returned by `dc`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+A DC solution balances exactly and has no losses, so it cannot show them. Out-of-service lines carry no flow.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field on a ring with known flows.
+
+@@example Eng/api/power_dc_ring.cpp@@
+
+### Example 2
+
+Generation moved to a generator.
+
+@@example Eng/api/power_dc_generation.cpp@@
+
+### Example 3
+
+A sweep of load levels.
+
+@@example Eng/api/power_dc_sweep.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Options.html">
+    <span class="label">Previous</span>
+    <span class="title">Options</span>
+  </a>
+  <a class="next-link" href="AcResult.html">
+    <span class="label">Next</span>
+    <span class="title">AcResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,220 @@
+<!-- generated from Result.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `linprog::Result`
+
+What `linprog::solve` returns: solutions, objective values, duals, certificates, and (for the simplex) the optimal bases.
+
+Every `Series` member has the batch axes in front, so a single problem gives plain vectors and scalars and a batch gives one entry per lane. `status` holds the verdict of each lane as a code (see [`Status`](Status.md); [`to_string`](to_string.md) names it). The members that are only meaningful for some verdicts say so: `ray` for `Unbounded`, `farkas` for `PrimalInfeasible`.
+
+## Fields
+
+### `x`
+
+`pluss::Series`, default `undefined`.
+
+The solution, `[..., n]`.
+
+### `objective`
+
+`pluss::Series`, default `undefined`.
+
+`cᵀx` per lane, `[...]`.
+
+### `dual_objective`
+
+`pluss::Series`, default `undefined`.
+
+The dual objective per lane; equal to `objective` at an optimum, as a certificate.
+
+### `status`
+
+`pluss::Series`, default `undefined`.
+
+Each lane's `Status` as a `Float64` code, `[...]`.
+
+### `dual_eq`
+
+`pluss::Series`, default `undefined`.
+
+The multipliers of the equality rows, `d objective / d b_eq`, `[..., m_eq]`.
+
+### `dual_ub`
+
+`pluss::Series`, default `undefined`.
+
+The multipliers of the inequality rows, `[..., m_ub]`, non-positive for a minimisation.
+
+### `ray`
+
+`pluss::Series`, default `undefined`.
+
+A recession direction `d` along which the objective falls without bound; meaningful when `Unbounded`.
+
+### `farkas`
+
+`pluss::Series`, default `undefined`.
+
+Farkas multipliers `(y_eq, y_ub)`, `[..., m_eq + m_ub]`, proving no feasible point exists; meaningful when `PrimalInfeasible`.
+
+### `iterations`
+
+`int`, default `0`.
+
+The number of iterations of the (batched) solve.
+
+### `basis`
+
+`std::vector<std::vector<std::int64_t>>`, default `empty`.
+
+Simplex only: the optimal basis of every lane, to be passed back as `Problem::warm_basis`.
+
+### `at_upper`
+
+`std::vector<std::vector<char>>`, default `empty`.
+
+Simplex only: the at-upper flags of the non-basic columns of every lane.
+
+### `warm_started`
+
+`std::vector<char>`, default `empty`.
+
+Simplex only: 1 for each lane that really started from the supplied basis, 0 if it fell back to a cold start.
+
+## Guidance
+
+Check `status` (or `linprog::success`) before using `x`.
+
+## Practical Examples
+
+### Example 1
+
+An optimal lane. `x`, `objective`, the matching `dual_objective`, and the duals. Strong duality: at an optimum the primal and dual objectives agree.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise -x0 - 2 x1   subject to   x0 + x1 <= 4,  x0 + 3 x1 <= 6,  x >= 0
+  linprog::Problem problem;
+  problem.c = pluss::series::make({-1.0, -2.0});
+  problem.a_ub = pluss::series::make({{1.0, 1.0}, {1.0, 3.0}});
+  problem.b_ub = pluss::series::make({4.0, 6.0});
+  problem.lower = pluss::series::make({0.0, 0.0});
+
+  const linprog::Result result = linprog::solve(problem);
+  out.writeln("objective      =", result.objective.item<double>());
+  out.writeln("dual objective =", result.dual_objective.item<double>());
+  out.writeln("dual_ub        =", result.dual_ub.items<double>(), "(<= 0 for a minimisation)");
+}
+```
+
+Output
+
+```text
+objective      = -5.000000
+dual objective = -5.000000
+dual_ub        = [-0.500000, -0.500000] (<= 0 for a minimisation)
+```
+
+### Example 2
+
+The failure certificates. For an infeasible problem `farkas = (y_eq, y_ub)`; for an unbounded one `ray` is a direction `d` with `A_ub d ≤ 0` along which the objective keeps falling. Both are only meaningful for those verdicts.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  linprog::Problem infeasible, unbounded;
+  infeasible.c = pluss::series::make({1.0, 1.0});
+  infeasible.a_ub = pluss::series::make({{1.0, 1.0}, {-1.0, -1.0}});
+  infeasible.b_ub = pluss::series::make({1.0, -3.0});
+  infeasible.lower = pluss::series::make({0.0, 0.0});
+  unbounded.c = pluss::series::make({-1.0, 0.0});
+  unbounded.a_ub = pluss::series::make({{1.0, -1.0}});
+  unbounded.b_ub = pluss::series::make({1.0});
+  unbounded.lower = pluss::series::make({0.0, 0.0});
+  out.writeln("farkas =", linprog::solve(infeasible).farkas.items<double>());
+  out.writeln("ray    =", linprog::solve(unbounded).ray.items<double>());
+}
+```
+
+Output
+
+```text
+farkas = [-1.6478, -0.8522]
+ray    = [0.8672, 1.5664]
+```
+
+### Example 3
+
+The simplex members. `basis[lane]` is the optimal basis, `at_upper[lane]` the at-upper flags, and `warm_started[lane]` is 1 when the lane really began from a supplied basis. They are empty for the interior-point method.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise -x0 - 2 x1   subject to   x0 + x1 <= 4,  x0 + 3 x1 <= 6,  x >= 0
+  linprog::Problem problem;
+  problem.c = pluss::series::make({-1.0, -2.0});
+  problem.a_ub = pluss::series::make({{1.0, 1.0}, {1.0, 3.0}});
+  problem.b_ub = pluss::series::make({4.0, 6.0});
+  problem.lower = pluss::series::make({0.0, 0.0});
+
+  linprog::Options simplex;
+  simplex.method = linprog::Method::Simplex;
+  const linprog::Result vertex = linprog::solve(problem, simplex);
+  const linprog::Result interior = linprog::solve(problem);
+  out.writeln("simplex : bases =", vertex.basis.size(), ", basis size =", vertex.basis[0].size());
+  out.writeln("interior: bases =", interior.basis.size());
+}
+```
+
+Output
+
+```text
+simplex : bases = 1 , basis size = 2
+interior: bases = 0
+```
+
+## See Also
+
+- [`solve`](solve.md): produces a Result
+- [`Status`](Status.md): the verdicts
+- [`Problem`](Problem.md): `warm_basis` takes a basis from here
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Problem.html">
+    <span class="label">Previous</span>
+    <span class="title">Problem</span>
+  </a>
+  <a class="next-link" href="Status.html">
+    <span class="label">Next</span>
+    <span class="title">Status</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

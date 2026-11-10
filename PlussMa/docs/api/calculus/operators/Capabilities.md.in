@@ -1,0 +1,128 @@
+# `operators::Capabilities`
+
+The record of properties an operator promises: structural, linear, savable, with a known adjoint.
+
+`Capabilities` is what [`Operator::capabilities`](Operator/capabilities.md) returns. It is a plain struct of booleans. The library consults it when it combines operators and when it saves them, and your own code can consult it to decide what is safe to do with an operator it was handed.
+
+For the built-in operators the flags are fixed facts: differentiation is linear and has a known adjoint, the magnitude of a derivative is not linear, and so on. For operators you define, the flags are exactly what you declared in [`Options`](Options.md). They are promises, not checks: the library does not test that an operator you declared `linear` really is.
+
+## Fields
+
+| Field | Default | Meaning |
+|---|---|---|
+| `structural` | `true` | The operator builds its result from the recorded graph of the input (an exact analytic `Function`). |
+| `evaluated_only` | `false` | The operator works on values only. Cannot be combined with `structural` in a definition. No built-in operator sets it. |
+| `linear` | `false` | The operator is linear: `L(af + bg) = aLf + bLg`. |
+| `adjoint_known` | `false` | The formal adjoint is known, so `operators::adjoint` can build it. |
+| `serializable` | `false` | The operator can be written by `io::save` and read back. |
+| `platform_pure` | `true` | The operator does not move data between platforms. |
+| `path_functional` | `false` | Evaluation needs a sampled path axis (the stochastic family). |
+
+## Guidance
+
+Check the flags before relying on a property: `serializable` before saving, `adjoint_known` before calling `adjoint`, `linear` before assuming superposition. `evaluated_only` is set only by custom operators declared that way; no built-in operator sets it. `path_functional` marks the stochastic operators that act on samples along a path axis.
+
+## Practical Examples
+
+### Example 1
+
+The flags of several operators side by side: a linear structural operator, a non-linear one, one that cannot be saved, and a stochastic one that needs a sampled path.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static void show(OutputEngine &out, const char *label, const operators::Operator &op) {
+  const operators::Capabilities c = op.capabilities();
+  out.writeln(label, "structural", c.structural, "linear", c.linear, "adjoint_known", c.adjoint_known, "serializable", c.serializable, "path_functional", c.path_functional);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  show(out, "differential:     ", operators::differential("x"));
+  show(out, "magnitude of d/dx:", operators::magnitude_differential("x"));
+  show(out, "multiply:         ", operators::multiply(math::function(2.0)));
+  show(out, "quadratic var.:   ", operators::stochastic::quadratic_variation());
+}
+```
+
+### Example 2
+
+How flags combine. A composition is `structural`, `linear`, `adjoint_known`, `serializable` and `platform_pure` only if every part is (logical AND); it is `evaluated_only` or `path_functional` if any part is (logical OR).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static void show(OutputEngine &out, const char *label, const operators::Operator &op) {
+  const operators::Capabilities c = op.capabilities();
+  out.writeln(label, "structural", c.structural, "linear", c.linear, "adjoint_known", c.adjoint_known, "serializable", c.serializable, "path_functional", c.path_functional);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const operators::Operator linear_chain = operators::compose(operators::scale(2.0), operators::differential("x"));
+  const operators::Operator nonlinear_chain = operators::compose(operators::differential("x"), operators::magnitude_differential("x"));
+  const operators::Operator path_chain = operators::compose(operators::stochastic::quadratic_variation(), operators::scale(2.0));
+  show(out, "scale . d:        ", linear_chain);
+  show(out, "d . magnitude:    ", nonlinear_chain);
+  show(out, "qv . scale:       ", path_chain);
+
+  const operators::Operator values_only = operators::define("example.values_only", [](const math::Function &f) { return f; },
+                                                            operators::Options{.structural = false, .evaluated_only = true});
+  out.writeln("evaluated_only of values_only . d:", operators::compose(values_only, operators::differential("x")).capabilities().evaluated_only);
+}
+```
+
+### Example 3
+
+What `linear` means in practice: `L(a f + b g) = a L f + b L g`. The derivative satisfies it; the magnitude of the derivative does not, and the difference is visible numerically.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x; });
+  const math::Function g = math::function({"x"}, [](math::Function x) { return -x * x * x; });
+  const math::Function sum = math::function({"x"}, [](math::Function x) { return x * x - x * x * x; });
+  const auto check = [&](const char *label, const operators::Operator &op) {
+    out.writeln(label, "L(f+g)(1.5) =", op(sum)(1.5).item<double>(), " L(f)+L(g) =", op(f)(1.5).item<double>() + op(g)(1.5).item<double>(), " declared linear:", op.capabilities().linear);
+  };
+  check("differential:", operators::differential("x"));
+  check("magnitude:   ", operators::magnitude_differential("x"));
+}
+```
+
+## See Also
+
+- [`Operator::capabilities`](Operator/capabilities.md): returns this record
+- [`Options`](Options.md): declare the flags for your own operator
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="DiffOptions.html">
+    <span class="label">Next</span>
+    <span class="title">DiffOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

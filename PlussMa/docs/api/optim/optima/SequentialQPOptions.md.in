@@ -1,0 +1,384 @@
+# `optim::SequentialQPOptions`
+
+Settings of the sequential quadratic programming algorithm: limits, tolerances, curvature model, linear algebra and scaling.
+
+Used when `OptimaOptions::algorithm` is `SequentialQP`, through `OptimaOptions::sequential_qp`. At each iteration the algorithm builds a quadratic model of the problem around the current point, solves it for a step, and takes a fraction of that step chosen by a line search on a penalty merit function. The fields below fall in four groups: the iteration budget and tolerances that decide when to stop; the line search and merit penalty (`armijo`, `backtracking`, `initial_penalty`, second-order corrections); the model (`hessian_approximation`, `lbfgs_memory`); and the linear algebra of the subproblem (`linear_system_solver`, `system_structure`, regularisation, Krylov settings). `problem_scaling` rescales the problem automatically. Most problems need none of these changed; the usual ones to touch are `max_iterations`, the two tolerances and `hessian_approximation`.
+
+## Fields
+
+### `max_iterations`
+
+`std::int64_t`, default `100`.
+
+The iteration budget. A run that uses it all ends `MaxIterations`.
+
+### `max_line_search_iterations`
+
+`std::int64_t`, default `20`.
+
+The most step reductions tried per iteration.
+
+### `max_second_order_corrections`
+
+`std::int64_t`, default `2`.
+
+The most corrections tried when a full step is rejected only because it breaks a nonlinear constraint.
+
+### `max_restoration_iterations`
+
+`std::int64_t`, default `8`.
+
+The iteration cap of the restoration phase that pulls an infeasible point back toward feasibility.
+
+### `max_restoration_line_search_iterations`
+
+`std::int64_t`, default `20`.
+
+Line-search steps within one restoration iteration.
+
+### `initial_step_size`
+
+`double`, default `1.0`.
+
+The first trial fraction of the step (1 is the full step).
+
+### `backtracking`
+
+`double`, default `0.5`.
+
+The factor by which a rejected step fraction is multiplied.
+
+### `armijo`
+
+`double`, default `1e-4`.
+
+The sufficient-decrease constant of the line search.
+
+### `initial_penalty`
+
+`double`, default `10.0`.
+
+The starting weight of the constraint violation in the merit function; raised as needed.
+
+### `constraint_tolerance`
+
+`double`, default `1e-6`.
+
+The largest violation accepted as feasible.
+
+### `optimality_tolerance`
+
+`double`, default `1e-6`.
+
+The stationarity accepted as optimal, relative to the size of the starting gradient.
+
+### `step_tolerance`
+
+`double`, default `1e-6`.
+
+Steps shorter than this count as no progress.
+
+### `value_progress_tolerance`
+
+`double`, default `1e-6`.
+
+Objective changes smaller than this count as no progress.
+
+### `active_set_tolerance`
+
+`double`, default `1e-4`.
+
+A constraint within this of its limit is treated as active.
+
+### `regularization`
+
+`double`, default `1e-6`.
+
+The first diagonal shift tried when a factorisation fails; grown tenfold per retry.
+
+### `bfgs_curvature_tolerance`
+
+`double`, default `1e-8`.
+
+A curvature pair is used by the BFGS update only if its curvature exceeds this.
+
+### `second_order_correction_tolerance`
+
+`double`, default `1e-4`.
+
+A rejected step is corrected only if its violation exceeds this.
+
+### `fraction_to_boundary`
+
+`double`, default `0.995`.
+
+How close to the boundary of the subproblem's inequalities a step may go.
+
+### `pivot_threshold`
+
+`double`, default `1e-12`.
+
+The smallest pivot a factorisation accepts.
+
+### `max_krylov_iterations`
+
+`std::int64_t`, default `0`.
+
+The cap of conjugate-gradient iterations; 0 chooses automatically.
+
+### `iterative_dimension_threshold`
+
+`std::int64_t`, default `3000`.
+
+At this many unknowns the subproblem switches to conjugate gradients.
+
+### `krylov_tolerance`
+
+`double`, default `1e-2`.
+
+The relative tolerance of the iterative solves (capped at 1e-8).
+
+### `krylov_absolute_tolerance`
+
+`double`, default `1e-10`.
+
+The absolute tolerance of the iterative solves.
+
+### `objective_limit`
+
+`double`, default `-inf`.
+
+Stop with `ObjectiveTargetReached` once a feasible objective falls below this.
+
+### `project_bounds`
+
+`bool`, default `true`.
+
+Clip iterates back inside the bounds.
+
+### `enable_restoration`
+
+`bool`, default `true`.
+
+Allow the restoration phase.
+
+### `system_structure`
+
+`optim::OptimaLinearSystemStructure`, default `Auto`.
+
+Dense or sparse treatment of the subproblem matrices.
+
+### `linear_system_solver`
+
+`optim::OptimaLinearSystemSolver`, default `Auto`.
+
+How the reduced subproblem system is solved.
+
+### `hessian_approximation`
+
+`optim::OptimaHessianApproximation`, default `Bfgs`.
+
+The curvature model of the quadratic subproblem.
+
+### `lbfgs_memory`
+
+`std::int64_t`, default `10`.
+
+The number of step pairs kept by the limited-memory model.
+
+### `hvp_options`
+
+`diff::HvpOptions`, default `{}`.
+
+Settings of the Hessian-vector products used by `Exact` and `HessianVector`.
+
+### `problem_scaling`
+
+`optim::OptimaProblemScaling`, default `ObjectiveAndConstraints`.
+
+Whether and how the problem is rescaled before solving.
+
+### `progress_hook`
+
+`std::function<bool(const optim::OptimaProgressSnapshot &)>`, default `empty`.
+
+Called each iteration; return `true` to stop.
+
+## Guidance
+
+Set through `OptimaOptions::sequential_qp`.
+
+## Practical Examples
+
+### Example 1
+
+Tolerances set how long the run goes on. The Rosenbrock valley `(1−a)² + 100(b−a²)²` from `(−1.2, 1)`: a loose optimality tolerance stops early, a tight one follows the valley to the minimum at `(1, 1)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto rosenbrock = [](const pluss::Series &x) {
+    const pluss::Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+  for (const double tolerance : {1e-2, 1e-8}) {
+    optim::OptimaOptions options;
+    options.sequential_qp.optimality_tolerance = tolerance;
+    const optim::OptimaState result = optim::optima(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+    out.writeln("tolerance", tolerance, ": iterations =", result.iteration, ", x =", result.params.at("x").items<double>());
+  }
+}
+```
+
+### Example 2
+
+Curvature models on the same valley. The default BFGS builds curvature from gradients; `Exact` takes the exact Hessian of the Lagrangian and needs the fewest iterations; `Identity` uses no curvature and is far too slow here.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <utility>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rosenbrock = [](const pluss::Series &x) {
+    const pluss::Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+  const std::pair<const char *, optim::OptimaHessianApproximation> models[] = {
+      {"Bfgs", optim::OptimaHessianApproximation::Bfgs}, {"Lbfgs", optim::OptimaHessianApproximation::Lbfgs},
+      {"Exact", optim::OptimaHessianApproximation::Exact}, {"Identity", optim::OptimaHessianApproximation::Identity}};
+  for (const auto &[name, model] : models) {
+    optim::OptimaOptions options;
+    options.sequential_qp.hessian_approximation = model;
+    const optim::OptimaState result = optim::optima(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+    out.writeln(name, ": iterations =", result.iteration, ", exit =", optim::optima_exit_flag_name(result.exit_flag));
+  }
+}
+```
+
+### Example 3
+
+An iteration budget. With `max_iterations = 2` the run ends `MaxIterations`; the point is the best so far.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.max_iterations = 2;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+### Example 4
+
+Automatic problem scaling. `None` solves the problem as written; the default `ObjectiveAndConstraints` rescales each function so one tolerance fits all. An objective multiplied by 1e6 converges either way and returns the same point; the scaled run reaches the objective `1e6 · 1.527864` more exactly.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+
+  const auto big = [&](const pluss::Series &x) { return 1.0e6 * (x - target).square().sum(); };
+  for (const optim::OptimaProblemScaling scaling : {optim::OptimaProblemScaling::None, optim::OptimaProblemScaling::ObjectiveAndConstraints}) {
+    optim::OptimaOptions options;
+    options.sequential_qp.problem_scaling = scaling;
+    const optim::OptimaState result = optim::optima(big, pluss::series::make({0.0, 0.0}), options,
+        optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; }));
+    out.writeln(optim::optima_problem_scaling_name(scaling), ": exit =", optim::optima_exit_flag_name(result.exit_flag), ", objective =", result.evaluation.value.item<double>());
+  }
+}
+```
+
+### Example 5
+
+Watching a run with a hook inside the algorithm's own options.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.progress_hook = [&out](const optim::OptimaProgressSnapshot &s) {
+    if (s.stage == optim::OptimaProgressStage::Iteration) out.writeln("iteration", s.iteration, ": violation =", s.evaluation.max_constraint_violation);
+    return false;
+  };
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+}
+```
+
+## See Also
+
+- [`OptimaOptions`](OptimaOptions.md): holds it
+- [`OptimaHessianApproximation`](OptimaHessianApproximation.md): curvature models
+- [`OptimaProblemScaling`](OptimaProblemScaling.md): scaling modes
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ProblemEvaluation.html">
+    <span class="label">Previous</span>
+    <span class="title">ProblemEvaluation</span>
+  </a>
+  <a class="next-link" href="WorkingSetOptions.html">
+    <span class="label">Next</span>
+    <span class="title">WorkingSetOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

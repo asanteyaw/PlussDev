@@ -1,0 +1,143 @@
+<!-- generated from MeasureResult.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `integ::MeasureResult`
+
+The measure of a level set with its error estimate.
+
+`value` is the measure (a `Series`, one entry per batch row), `error_estimate` the change between the last two refinements, `evaluations` and `refinements` the work spent, and `converged` whether the change fell within the tolerance.
+
+## Fields
+
+### `value`
+
+`pluss::Series`, default `undefined`.
+
+The measure.
+
+### `error_estimate`
+
+`double`, default `+inf`.
+
+Change between the last two refinements.
+
+### `evaluations`
+
+`std::int64_t`, default `0`.
+
+Integrand evaluations.
+
+### `refinements`
+
+`std::int64_t`, default `0`.
+
+Doublings made.
+
+### `converged`
+
+`bool`, default `false`.
+
+Whether the change fell within the tolerance.
+
+## Guidance
+
+Returned by `measure_of`.
+
+## Practical Examples
+
+### Example 1
+
+Reading a result.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const integ::MeasureResult r = integ::measure_of([](const Series &t) { return t; }, 0.0, 1.0, 0.3);
+  out.writeln("value =", r.value.item<double>(), ", error estimate =", r.error_estimate, ", refinements =", r.refinements, ", converged =", r.converged);
+}
+```
+
+Output
+
+```text
+value = 0.7000000000 , error estimate = 0.0000000000 , refinements = 1 , converged = true
+```
+
+### Example 2
+
+An empty set. A level above the maximum gives measure zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const integ::MeasureResult r = integ::measure_of([](const Series &t) { return t; }, 0.0, 1.0, 5.0);
+  out.writeln("value =", r.value.item<double>());
+}
+```
+
+Output
+
+```text
+value = 0.000000
+```
+
+### Example 3
+
+The whole interval. A level below the minimum gives the full length.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const integ::MeasureResult r = integ::measure_of([](const Series &t) { return t; }, 0.0, 2.0, -1.0);
+  out.writeln("value =", r.value.item<double>());
+}
+```
+
+Output
+
+```text
+value = 2.000000
+```
+
+## See Also
+
+- [`measure_of`](measure_of.md): produces it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LebesgueResult.html">
+    <span class="label">Previous</span>
+    <span class="title">LebesgueResult</span>
+  </a>
+  <a class="next-link" href="QuadraNdOptions.html">
+    <span class="label">Next</span>
+    <span class="title">QuadraNdOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

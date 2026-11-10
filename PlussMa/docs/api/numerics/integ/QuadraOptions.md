@@ -1,0 +1,218 @@
+<!-- generated from QuadraOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `integ::QuadraOptions`
+
+Rule, resolution, tolerance and precision of one-variable quadrature.
+
+`rule` picks the composite rule. `nodes` is the starting node count of the trapezoid and Simpson rules (Simpson rounds it up to an odd number), and `panels` and `gauss_points` (5 or 10) set the Gauss-Legendre rule, which uses `panels` panels of `gauss_points` nodes. With `adaptive` on, the resolution is doubled up to `max_refinements` times until the change between levels is within `tolerance` (relative for a large value, absolute near zero). `dtype` and `platform` say where the nodes live and in what precision, and `infinite_domain_epsilon` applies only to infinite bounds.
+
+## Fields
+
+### `rule`
+
+`integ::QuadraRule`, default `Simpson`.
+
+The composite rule.
+
+### `nodes`
+
+`std::int64_t`, default `257`.
+
+Starting node count of the trapezoid and Simpson rules.
+
+### `panels`
+
+`std::int64_t`, default `32`.
+
+Gauss-Legendre: number of composite panels.
+
+### `gauss_points`
+
+`std::int64_t`, default `5`.
+
+Gauss-Legendre: nodes per panel, 5 or 10.
+
+### `adaptive`
+
+`bool`, default `true`.
+
+Double the resolution until the change is within `tolerance`.
+
+### `tolerance`
+
+`double`, default `1e-10`.
+
+Convergence threshold on the change between levels.
+
+### `max_refinements`
+
+`std::int64_t`, default `10`.
+
+The most doublings.
+
+### `dtype`
+
+`pluss::ScalarType`, default `Float64`.
+
+Precision of nodes and result.
+
+### `platform`
+
+`pluss::Platform`, default `CPU`.
+
+Where the nodes live.
+
+### `infinite_domain_epsilon`
+
+`double`, default `1e-10`.
+
+For infinite bounds: how close to the substitution's singular end to integrate.
+
+## Guidance
+
+Passed to `quadra`, `integra` (as `IntegraOptions::quadrature`).
+
+## Practical Examples
+
+### Example 1
+
+The rule. Both reach the exact value to twelve digits on a smooth integrand; Gauss-Legendre needs fewer evaluations (480 against 774).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  for (const integ::QuadraRule rule : {integ::QuadraRule::Simpson, integ::QuadraRule::GaussLegendre}) {
+    integ::QuadraOptions options;
+    options.rule = rule;
+    const integ::QuadraResult r = integ::quadra([](const Series &t) { return t.exp(); }, 0.0, 1.0, options);
+    out.writeln(static_cast<int>(rule), ": value =", r.value.item<double>(), ", evaluations =", r.evaluations);
+  }
+}
+```
+
+Output
+
+```text
+1 : value = 1.718281828459 , evaluations = 774
+2 : value = 1.718281828459 , evaluations = 480
+```
+
+### Example 2
+
+The tolerance. A tolerance that the first refinement already meets costs the same as a looser one; only a very tight tolerance buys more refinements.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  for (const double tol : {1e-4, 1e-8, 1e-12}) {
+    integ::QuadraOptions options;
+    options.tolerance = tol;
+    const integ::QuadraResult r = integ::quadra([](const Series &t) { return t.sin(); }, 0.0, 3.14159265358979323846, options);
+    out.writeln("tolerance", tol, ": evaluations =", r.evaluations, ", refinements =", r.refinements);
+  }
+}
+```
+
+Output
+
+```text
+tolerance 0.000100000000 : evaluations = 774 , refinements = 1
+tolerance 0.000000010000 : evaluations = 774 , refinements = 1
+tolerance 0.000000000001 : evaluations = 3860 , refinements = 3
+```
+
+### Example 3
+
+A fixed resolution. With `adaptive` off the rule is applied once, at exactly `nodes` nodes: a quick estimate with no error control.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  integ::QuadraOptions options;
+  options.adaptive = false;
+  options.nodes = 17;
+  const integ::QuadraResult r = integ::quadra([](const Series &t) { return t.exp(); }, 0.0, 1.0, options);
+  out.writeln("value =", r.value.item<double>(), ", evaluations =", r.evaluations, ", converged =", r.converged);
+}
+```
+
+Output
+
+```text
+value = 1.7182819194 , evaluations = 19 , converged = true
+```
+
+### Example 4
+
+Single precision. The nodes and the result are computed in the requested type.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  integ::QuadraOptions options;
+  options.dtype = pluss::ScalarType::Float32;
+  const integ::QuadraResult r = integ::quadra([](const Series &t) { return t.sin(); }, 0.0, 3.14159265358979323846, options);
+  out.writeln("value =", r.value.item<float>(), ", is Float32 =", r.value.scalar_type() == pluss::ScalarType::Float32);
+}
+```
+
+Output
+
+```text
+value = 2.000000 , is Float32 = true
+```
+
+## See Also
+
+- [`quadra`](quadra.md): uses it
+- [`QuadraRule`](QuadraRule.md): the rules
+- [`QuadraResult`](QuadraResult.md): what it returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="QuadraNdResult.html">
+    <span class="label">Previous</span>
+    <span class="title">QuadraNdResult</span>
+  </a>
+  <a class="next-link" href="QuadraResult.html">
+    <span class="label">Next</span>
+    <span class="title">QuadraResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

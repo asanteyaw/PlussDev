@@ -1,0 +1,206 @@
+# `interp::linear`
+
+Evaluates the piecewise-linear interpolant of one or many curves at one or many query points.
+
+## Signature
+
+```cpp
+pluss::Series interp::linear(const pluss::Series &coordinate, const pluss::Series &values, const pluss::Series &query, interp::EdgeMode edge = interp::EdgeMode::Clamp);
+```
+
+## What It Does
+
+`coordinate` is a strictly increasing one-dimensional grid of at least two points. `values` has shape `[..., n]`, the sample of each curve at the `n` grid points; every leading axis is a separate curve, so a matrix of samples is a batch of curves sharing one grid. `query` is a scalar or a one-dimensional `Series` of points. Each query is placed in its grid interval and the two bracketing samples are blended linearly. The result has shape `[...]` for a scalar query and `[..., m]` for `m` queries.
+
+Outside the grid the behaviour is set by [`EdgeMode`](EdgeMode.md): clamp to the end value, extend the end segments linearly, or throw. Values may be real or complex (interpolated component-wise); `coordinate` and `query` are real floating `Series` of the same type and on the same platform as the values. The interval search and the gather run as `Series` operations, and the interpolant is built from differentiable operations, so a `Series` marked for differentiation receives the interpolation weights of the two samples that bracket each query.
+
+## Parameters
+
+`const pluss::Series &coordinate`
+: A strictly increasing 1-D grid of at least two points.
+
+`const pluss::Series &values`
+: Samples with shape `[..., n]`; real or complex.
+
+`const pluss::Series &query`
+: A scalar or 1-D `Series` of points; the same floating type as `coordinate`.
+
+`interp::EdgeMode edge`
+: Behaviour outside the grid; default `Clamp`.
+
+## Returns
+
+A `Series` of shape `[...]` for a scalar query and `[..., m]` for `m` queries.
+
+## Errors
+
+- A coordinate that is not 1-D, strictly increasing and finite, with at least two points, throws (`std::invalid_argument`).
+- `values` whose last axis is not the grid length, a query of rank above 1, mismatched dtypes or platforms, or non-finite data throws.
+- With `EdgeMode::Error`, a query outside the grid throws (`std::out_of_range`).
+
+## Practical Examples
+
+### Example 1
+
+One curve at several queries. The samples `0, 10, 40, 30` at `x = 0, 1, 2, 4`: halfway between the first two is 5, a quarter of the way from 2 to 4 is 37.5.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace interp = pluss::subsp::math::interp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series x = pluss::make_series({0.0, 1.0, 2.0, 4.0});
+  const Series y = pluss::make_series({0.0, 10.0, 40.0, 30.0});
+
+  out.writeln("values =", interp::linear(x, y, pluss::make_series({0.5, 2.0, 2.5, 3.0})).items<double>());
+}
+```
+
+### Example 2
+
+A scalar query returns a scalar.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace interp = pluss::subsp::math::interp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series x = pluss::make_series({0.0, 1.0, 2.0, 4.0});
+  const Series y = pluss::make_series({0.0, 10.0, 40.0, 30.0});
+
+  out.writeln("y(3) =", interp::linear(x, y, pluss::make_series(3.0)).item<double>());
+}
+```
+
+### Example 3
+
+A batch of curves. Two curves on the same grid, read at the same two queries: the result is `[2, 2]`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace interp = pluss::subsp::math::interp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series x = pluss::make_series({0.0, 1.0, 2.0});
+  const Series y = pluss::make_series({0.0, 10.0, 40.0, 0.0, -2.0, -4.0}, {2, 3});
+  const Series r = interp::linear(x, y, pluss::make_series({0.5, 1.5}));
+  out.writeln("shape =", r.sizes(), ", values =", r.reshape({4}).items<double>());
+}
+```
+
+### Example 4
+
+Outside the grid. By default a query beyond the ends takes the end value; `Linear` extends the end segments; `Error` throws.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace interp = pluss::subsp::math::interp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series x = pluss::make_series({0.0, 1.0, 2.0, 4.0});
+  const Series y = pluss::make_series({0.0, 10.0, 40.0, 30.0});
+
+  const Series outside = pluss::make_series({-1.0, 5.0});
+  out.writeln("Clamp  :", interp::linear(x, y, outside).items<double>());
+  out.writeln("Linear :", interp::linear(x, y, outside, interp::EdgeMode::Linear).items<double>());
+}
+```
+
+### Example 5
+
+A gradient through the interpolant. At `x = 0.5` between samples 0 and 10, the derivative with respect to each sample is its weight, 0.5.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace interp = pluss::subsp::math::interp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series x = pluss::make_series({0.0, 1.0, 2.0});
+  Series y = pluss::make_series({0.0, 10.0, 40.0});
+  y.tracks_slope_(true);
+  const Series v = interp::linear(x, y, pluss::make_series(0.5));
+  v.reverse();
+  out.writeln("value =", v.item<double>(), ", weights =", y.sensitivity().items<double>());
+}
+```
+
+### Example 6
+
+A bad grid is rejected: the coordinate must be strictly increasing.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace interp = pluss::subsp::math::interp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  try {
+    (void)interp::linear(pluss::make_series({0.0, 2.0, 1.0}), pluss::make_series({1.0, 2.0, 3.0}), pluss::make_series({0.5}));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`EdgeMode`](EdgeMode.md): outside the grid
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="EdgeMode.html">
+    <span class="label">Previous</span>
+    <span class="title">EdgeMode</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,154 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 6f148aed8db2 -->
+
+# `module::Field::simulate`
+
+[Back to `module::Field`](../Field.md)
+
+Simulates paths and stores them in `field.paths`.
+
+## Signature
+
+```cpp
+void module::Field::simulate(pluss::Config cfg = {});
+void module::Field::simulate(const module::Model &candidate, pluss::Config cfg = {});
+```
+
+## What It Does
+
+The same as [`simulate_paths`](simulate_paths.md) but the result is assigned to the field's `paths` member, so several payoffs, strikes and maturities can be read from the same simulated future, and a later `simulate` replaces them. Use [`clear_paths`](clear_paths.md) to release the memory.
+
+## Parameters
+
+`const module::Model &candidate`
+: Another model to simulate.
+
+`pluss::Config cfg`
+: Device.
+
+## Returns
+
+Nothing.
+
+## Errors
+
+- As for `simulate_paths`.
+
+## Practical Examples
+
+### Example 1
+
+Simulate and keep. The stored paths serve two strikes: an Asian-style average and a terminal payoff.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 2000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 7;
+
+  field.simulate();
+  const Series terminal = field.paths.asset.select(1, 50);
+  const Series average = field.paths.asset.mean(1);
+  out.writeln("E[max(S_T - 100, 0)] =", (terminal - 100.0).relu().mean().item<double>(), ", E[max(avg - 100, 0)] =", (average - 100.0).relu().mean().item<double>());
+}
+```
+
+### Example 2
+
+Storing the paths of a candidate.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 2000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 7;
+
+  field.simulate(fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.9, -0.7, 0.04}));
+  out.writeln("stored shape:", field.paths.asset.sizes());
+}
+```
+
+### Example 3
+
+A second `simulate` replaces the first.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 2000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 7;
+
+  field.simulate();
+  const double first = field.paths.asset.select(1, 50).mean().item<double>();
+  field.controls.mc.seed = 99;
+  field.simulate();
+  out.writeln("mean S_T, seed 7 :", first, ", seed 99 :", field.paths.asset.select(1, 50).mean().item<double>());
+}
+```
+
+## See Also
+
+- [`Field`](../Field.md): the class
+- [`simulate_paths`](simulate_paths.md): without storing
+- [`clear_paths`](clear_paths.md): release
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="residuals.html">
+    <span class="label">Previous</span>
+    <span class="title">residuals</span>
+  </a>
+  <a class="next-link" href="simulate_paths.html">
+    <span class="label">Next</span>
+    <span class="title">simulate_paths</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

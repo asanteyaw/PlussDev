@@ -1,0 +1,156 @@
+<!-- generated from key.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3af036625193 -->
+
+# `operators::Operator::key`
+
+[Back to `operators::Operator`](../Operator.md)
+
+The name the operator is known by, used when saving and loading it.
+
+## Signature
+
+```cpp
+std::string_view operators::Operator::key() const;
+```
+
+## What It Does
+
+Every operator has a key: a short string that identifies *what kind* of operator it is. The built-in ones have fixed keys (`"differential"`, `"scale"`, `"shift"`, `"fourier_transform"`, `"laplace_transform"`, ...). Combined operators have the key of the combination (`"compose"`, `"linear_combination"`, `"commutator"`). An operator made with [`define`](../define.md) has the key you gave it, or an empty key if you gave none.
+
+The key matters for saving and loading. A saved operator records its key and [`version`](version.md); on load, the library looks up a loader for that pair. Built-in keys are known; for your own savable operators you register a loader under your key with [`bind`](../bind.md). Choose keys that cannot clash with another library's, such as `"myproject.log_derivative"`.
+
+The view refers to storage inside the operator; copy it (`std::string(op.key())`) if you need it after the operator is gone.
+
+## Returns
+
+A `std::string_view` of the key; empty for an anonymous custom operator.
+
+## Errors
+
+- The operator must be defined.
+
+## Practical Examples
+
+### Example 1
+
+Keys of built-in operators: the key is the operator's kind, not its parameters, so two differential operators with different variables and orders share one key.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("differential:        ", operators::differential("x").key(), "/", operators::differential("y", 2).key());
+  out.writeln("scale:               ", operators::scale(2.0).key());
+  out.writeln("shift:               ", operators::shift("x", 1.0).key());
+  out.writeln("integral:            ", operators::integral("x", 0.0, 1.0).key());
+  out.writeln("fourier transform:   ", operators::fourier::transform("x", "w").key());
+  out.writeln("laplace transform:   ", operators::laplace::transform("t", "s").key());
+  out.writeln("taylor:              ", operators::expansion::taylor("x", 0.0, 3).key());
+}
+```
+
+Output
+
+```text
+differential:         differential / differential
+scale:                scale
+shift:                shift
+integral:             integral
+fourier transform:    fourier_transform
+laplace transform:    laplace_transform
+taylor:               taylor
+```
+
+A key names a family of operators; the parameters (variable, order, offset) are saved separately as the operator's payload.
+
+### Example 2
+
+Combinations get the key of the combination, whatever they contain.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const operators::Operator d = operators::differential("x");
+  out.writeln("compose:             ", operators::compose(d, operators::scale(2.0)).key());
+  out.writeln("linear_combination:  ", operators::linear_combination({{1.0, d}, {2.0, operators::identity()}}).key());
+  out.writeln("commutator:          ", operators::commutator(d, operators::scale(2.0)).key());
+  out.writeln("identity:            ", operators::identity().key());
+}
+```
+
+Output
+
+```text
+compose:              compose
+linear_combination:   linear_combination
+commutator:           commutator
+identity:             identity
+```
+
+### Example 3
+
+Your own operators. A key you choose is reported back; an operator defined without one has an empty key.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto pass_through = [](const math::Function &f) { return f; };
+  const operators::Operator named = operators::define("example.pass_through", pass_through);
+  const operators::Operator anonymous = operators::define(pass_through);
+  out.writeln("named:     \"" + std::string(named.key()) + "\"");
+  out.writeln("anonymous: \"" + std::string(anonymous.key()) + "\"  (empty: ", anonymous.key().empty(), ")");
+}
+```
+
+Output
+
+```text
+named:     "example.pass_through"
+anonymous: ""  (empty:  true )
+```
+
+## See Also
+
+- [`version`](version.md): the key's companion
+- [`define`](../define.md): choose a key for your own operator
+- [`bind`](../bind.md): register a loader for a key
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="defined.html">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="version.html">
+    <span class="label">Next</span>
+    <span class="title">version</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,130 @@
+<!-- generated from pack_scalars.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::pack_scalars`
+
+Builds a parameter pack of named scalar blocks: the natural way to name the unknowns of a model.
+
+## Signature
+
+```cpp
+optim::ParameterPack<pluss::Series> optim::pack_scalars(std::initializer_list<std::pair<std::string, pluss::Series>> blocks);
+```
+
+## What It Does
+
+A parameter pack is an ordered list of named blocks; objectives, constraints, bounds, starts and answers are all packs with the same layout. `pack_scalars` makes a pack in which every block is one number. Each value is stored with shape `[1]`. Reading a block back (`pack.at("a")`) gives a length-one `Series`, so use `items<double>()[0]` or arithmetic on it directly, not `item<double>()`. Bounds are given as packs with the same names; linear rows address the blocks in order, one column per scalar.
+
+## Parameters
+
+`blocks`
+: Name and scalar value of each block, in order.
+
+## Returns
+
+A `ParameterPack<Series>` with one length-one block per name.
+
+## Practical Examples
+
+### Example 1
+
+Two named scalars, read back by name.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack pack = optim::pack_scalars({{"mu", pluss::make_series(0.5)}, {"sigma", pluss::make_series(2.0)}});
+  out.writeln("size =", pack.size(), ", mu =", pack.at("mu").items<double>(), ", sigma =", pack.at("sigma").items<double>());
+}
+```
+
+Output
+
+```text
+size = 2 , mu = [0.5000] , sigma = [2.0000]
+```
+
+### Example 2
+
+As a start and as bounds. `lbs` takes a pack with the same names as the start.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack start = optim::pack_scalars({{"a", pluss::make_series(1.0)}, {"b", pluss::make_series(1.0)}});
+  const Pack lower = optim::pack_scalars({{"a", pluss::make_series(0.0)}, {"b", pluss::make_series(1.5)}});
+  const optim::OptimaState result = optim::optima([](const Pack &p) { return p.at("a").square() + p.at("b").square(); }, start, {}, optim::constraints().lbs(lower));
+  out.writeln("a =", result.params.at("a").items<double>(), " b =", result.params.at("b").items<double>());
+}
+```
+
+Output
+
+```text
+a = [0.0000]  b = [1.5000]
+```
+
+### Example 3
+
+The block order is the column order of linear rows. With blocks `a, b` the row `{1, 1}` means `a + b`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack start = optim::pack_scalars({{"a", pluss::make_series(0.0)}, {"b", pluss::make_series(0.0)}});
+  const optim::OptimaState result = optim::optima([](const Pack &p) { return (p.at("a") - 3.0).square() + (p.at("b") - 3.0).square(); }, start, {},
+      optim::constraints().ln_eq(pluss::series::make({{1.0, 1.0}}), pluss::series::make({2.0})));
+  out.writeln("a =", result.params.at("a").items<double>(), " b =", result.params.at("b").items<double>());
+}
+```
+
+Output
+
+```text
+a = [1.0000]  b = [1.0000]
+```
+
+## See Also
+
+- [`pack_vector`](pack_vector.md): vector blocks
+- [`pack_series`](pack_series.md): a single block
+- [`optima`](optima.md): uses packs
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="optima_stall_category_name.html">
+    <span class="label">Previous</span>
+    <span class="title">optima_stall_category_name</span>
+  </a>
+  <a class="next-link" href="pack_series.html">
+    <span class="label">Next</span>
+    <span class="title">pack_series</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,160 @@
+<!-- generated from multiply.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::multiply`
+
+The operator that multiplies a function by a given function of the same variables.
+
+## Signature
+
+```cpp
+operators::Operator operators::multiply(math::Function coefficient);
+```
+
+## What It Does
+
+`multiply(c)` is the operator `f ↦ c · f`, where `c` is itself a function. It is how a weight, a density, a window or a potential enters an operator expression: the multiplication operator by `x` in `x d/dx`, by a potential `V(x)` in a Hamiltonian `−d²/dx² + V`, by a Radon–Nikodym density in a change of measure.
+
+The coefficient's variables are matched to the input's *by name*: a coefficient written in `x` multiplies whichever `x` the input has, even when the input also has other variables, so `multiply(c(x))` applied to a function of `x` and `y` multiplies by `c` at each `x`. A coefficient that mentions a variable the input lacks is an error. A constant coefficient (`math::function(2.0)`) works with any input.
+
+The operator is linear and its adjoint is itself for a real coefficient. It cannot be saved, because the coefficient is a function, not a number; for a numeric coefficient use [`scale`](scale.md).
+
+## Parameters
+
+`math::Function coefficient`
+: The function to multiply by. Its variables are matched to the input's by name; a constant works with any input.
+
+## Returns
+
+An `Operator` that multiplies its input by the coefficient.
+
+## Errors
+
+- An undefined coefficient is refused.
+- A coefficient with a variable the input lacks raises `cannot rebind variable '<name>' onto the target Function`.
+
+## Practical Examples
+
+### Example 1
+
+Multiplication by `x` is not the same as differentiating: `x f` versus `f′`. Applied to a function of `x`, the coefficient is matched to `x` by name.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x * x; });
+
+  const operators::Operator times_x = operators::multiply(math::function({"x"}, [](math::Function x) { return x; }));
+  out.writeln("x f at 2   =", times_x(f)(2.0).item<double>(), "  (2 * 8)");
+  out.writeln("f' at 2    =", operators::differential("x")(f)(2.0).item<double>());
+}
+```
+
+Output
+
+```text
+x f at 2   = 16.0000   (2 * 8)
+f' at 2    = 12.0000
+```
+
+### Example 2
+
+Applied to a function of two variables, the coefficient in `x` multiplies at each `x` and leaves `y` alone.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function g = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y; });
+  const operators::Operator weight = operators::multiply(math::function({"x"}, [](math::Function x) { return x.exp(); }));
+  const auto point = {pluss::make_series(1.0), pluss::make_series(2.0)};
+  out.writeln("e^x * (x y) at (1, 2) =", weight(g)(point).item<double>(), "  by hand", std::exp(1.0) * 2.0);
+}
+```
+
+Output
+
+```text
+e^x * (x y) at (1, 2) = 5.4366   by hand 5.4366
+```
+
+### Example 3
+
+The Cauchy–Euler operator `x d/dx` multiplies after differentiating. Acting on a power it returns the exponent times the power, `x · n xⁿ⁻¹ = n xⁿ`, so the powers are its eigenfunctions. A coefficient with a variable the input lacks is refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const operators::Operator euler = operators::compose(operators::multiply(math::function({"x"}, [](math::Function x) { return x; })), operators::differential("x"));
+  for (const double n : {2.0, 3.0, 5.0}) {
+    const math::Function power = math::function({"x"}, [n](math::Function x) { return x.pow(n); });
+    out.writeln("x d/dx x^", n, "at 2 =", euler(power)(2.0).item<double>(), "  n x^n =", n * std::pow(2.0, n));
+  }
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+  try {
+    (void)operators::multiply(math::function({"z"}, [](math::Function z) { return z; }))(f);
+  } catch (const pluss::Error &e) {
+    out.writeln("variable the input lacks:", first_line(e));
+  }
+}
+```
+
+Output
+
+```text
+x d/dx x^ 2.0000 at 2 = 8.0000   n x^n = 8.0000
+x d/dx x^ 3.0000 at 2 = 24.0000   n x^n = 24.0000
+x d/dx x^ 5.0000 at 2 = 160.0000   n x^n = 160.0000
+variable the input lacks: math::Function: cannot rebind variable 'z' onto the target Function
+```
+
+## See Also
+
+- [`scale`](scale.md): a numeric coefficient
+- [`compose`](compose.md): build `x d/dx` and similar
+- [`commutator`](commutator.md): `[d/dx, x] = I`
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="linear_combination.html">
+    <span class="label">Previous</span>
+    <span class="title">linear_combination</span>
+  </a>
+  <a class="next-link" href="scale.html">
+    <span class="label">Next</span>
+    <span class="title">scale</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

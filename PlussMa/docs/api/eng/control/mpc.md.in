@@ -1,0 +1,57 @@
+# Model-predictive control
+
+The `control::mpc` branch solves condensed finite-horizon regulation for a discrete linear system. State and input tracking penalties define the objective, while input bounds and optional state bounds define hard trajectory constraints.
+
+## Compile Once, Solve Repeatedly
+
+`build` assembles prediction matrices, condenses the dynamics, and factorizes the invariant quadratic program. Reuse the returned `Plan` when the model, weights, bounds, and horizon remain fixed but initial state or reference changes. The one-shot `solve` overload builds and solves in one call for occasional use.
+
+## Practical Examples
+
+The examples solve a bounded regulation problem, reuse a compiled plan with a warm start, and demonstrate timebase and horizon validation.
+
+### Example 1
+
+Solve a constrained scalar tracking problem and inspect the planned trajectories.
+
+@@example Eng/api/control_mpc.cpp@@
+
+### Example 2
+
+Compile a reusable plan and warm-start the next receding-horizon solve.
+
+@@example Eng/api/control_mpc_plan.cpp@@
+
+### Example 3
+
+Reject a continuous plant and a non-positive prediction horizon.
+
+@@example Eng/api/control_mpc_errors.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+mpc/Weights
+mpc/Bounds
+mpc/Options
+mpc/Result
+mpc/Plan
+mpc/build
+mpc/solve
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+mpc/Weights
+mpc/Bounds
+mpc/Options
+mpc/Result
+mpc/Plan
+mpc/build
+mpc/solve
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,113 @@
+# `optim::adam_state_like`
+
+Creates a zeroed `AdamState` for a list of parameters.
+
+## Signature
+
+```cpp
+optim::AdamState optim::adam_state_like(const std::vector<pluss::Series> &params);
+```
+
+## What It Does
+
+Returns a state whose `m`, `v` and `max_v` are zero with the shape, dtype and platform of each parameter, and `step` is zero. `adam_step` creates one automatically if the state it is given does not match the parameters, so call this only to hold the state yourself.
+
+## Parameters
+
+`params`
+: The parameters to match.
+
+## Returns
+
+A zeroed `AdamState`.
+
+## Practical Examples
+
+### Example 1
+
+One block.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const optim::AdamState state = optim::adam_state_like({pluss::series::make({1.0, 2.0, 3.0})});
+  out.writeln("m =", state.m[0].items<double>(), ", step =", state.step);
+}
+```
+
+### Example 2
+
+Two blocks of different shapes.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const optim::AdamState state = optim::adam_state_like({pluss::series::make({1.0, 2.0}), pluss::make_series(5.0)});
+  out.writeln("blocks =", state.v.size(), ", first size =", state.v[0].numel(), ", second size =", state.v[1].numel());
+}
+```
+
+### Example 3
+
+A complex parameter keeps its dtype.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  using C = std::complex<double>;
+  const optim::AdamState state = optim::adam_state_like({pluss::make_series(std::vector<C>{{1.0, 2.0}}, {1})});
+  out.writeln("complex moment =", state.m[0].items<C>()[0].real(), "+", state.m[0].items<C>()[0].imag(), "i");
+}
+```
+
+## See Also
+
+- [`AdamState`](AdamState.md): the type
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SeptimaState.html">
+    <span class="label">Previous</span>
+    <span class="title">SeptimaState</span>
+  </a>
+  <a class="next-link" href="adam_step.html">
+    <span class="label">Next</span>
+    <span class="title">adam_step</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

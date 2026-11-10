@@ -1,0 +1,182 @@
+# `multigrid::Problem`
+
+Everything that defines the operator: the axes, the face coefficients and an optional mass term.
+
+`axes` lists one to three [`Axis`](Axis.md) values. `face_high[a]` holds the coefficient `b⁺` on the face between cell `i` and `i+1` along axis `a`, and `face_low[a]` the coefficient `b⁻` between `i−1` and `i`; leaving both empty means every coefficient is 1 (the plain Laplacian). Give only one of the pair and the other is derived from it (`b⁻ᵢ = b⁺_{i−1}`). A coefficient field may carry the batch dimensions, so each lane has its own medium, or be shared by all lanes; it must be positive and finite. `mass` adds a non-negative cell-wise term, `A + diag(mass)`, in units of `1/length²`, which removes the constant null mode and makes the operator positive definite.
+
+## Fields
+
+### `axes`
+
+`std::vector<multigrid::Axis>`, default `{}`.
+
+One to three axes; they are the last dimensions of every field.
+
+### `face_low`
+
+`std::vector<pluss::Series>`, default `{}`.
+
+Coefficient `b⁻` per axis; empty means 1. Positive and finite.
+
+### `face_high`
+
+`std::vector<pluss::Series>`, default `{}`.
+
+Coefficient `b⁺` per axis; empty means 1. If only one of the pair is given, the other is derived.
+
+### `mass`
+
+`pluss::Series`, default `undefined`.
+
+Optional non-negative cell-wise term added to the operator; makes it positive definite.
+
+## Guidance
+
+Passed to the `Hierarchy` constructor.
+
+## Practical Examples
+
+### Example 1
+
+Variable coefficients. Doubling the coefficient on the face between cells 4 and 5 (entry 4 of `face_high`) changes the flux across that face only: only cells 4 and 5 see a different residual.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::make_series({0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0});
+  const Series plain = pluss::series::ones({8}, pluss::ScalarType::Float64);
+  const Series jump = pluss::make_series({1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0});
+  const mg::Hierarchy a({.axes = {{8, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}}, u);
+  const mg::Hierarchy b({.axes = {{8, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}, .face_high = {jump}}, u);
+  out.writeln("b = 1      :", a.apply(u).items<double>());
+  out.writeln("jump face  :", b.apply(u).items<double>());
+}
+```
+
+### Example 2
+
+Giving one side of the pair. Only `face_low` is supplied, and `face_high` is derived from it, so the two operators agree.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::make_series({0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0});
+  const Series lo = pluss::make_series({1.0, 2.0, 3.0, 4.0, 4.0, 3.0, 2.0, 1.0});
+  const mg::Hierarchy h({.axes = {{8, 1.0, mg::Edge::Neumann, mg::Edge::Neumann}}, .face_low = {lo}}, u);
+  out.writeln("A u =", h.apply(u).items<double>());
+}
+```
+
+### Example 3
+
+The mass term. A constant field is annihilated by the pure periodic operator but is mapped to `mass · u` once a mass is added; the operator is then no longer singular.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::series::ones({8}, pluss::ScalarType::Float64);
+  const Series m = pluss::series::ones({8}, pluss::ScalarType::Float64) * 0.25;
+  const mg::Hierarchy without({.axes = {{8, 1.0, mg::Edge::Periodic, mg::Edge::Periodic}}}, u);
+  const mg::Hierarchy with({.axes = {{8, 1.0, mg::Edge::Periodic, mg::Edge::Periodic}}, .mass = m}, u);
+  out.writeln("without mass: singular =", without.singular(), ", A 1 =", without.apply(u).items<double>());
+  out.writeln("with mass   : singular =", with.singular(), ", A 1 =", with.apply(u).items<double>());
+}
+```
+
+### Example 4
+
+Two dimensions with different spacings. The axes are the last two dimensions of the field.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::series::ones({4, 6}, pluss::ScalarType::Float64);
+  const mg::Hierarchy h({.axes = {{4, 0.5, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {6, 1.0, mg::Edge::Neumann, mg::Edge::Neumann}}}, u);
+  out.writeln("shape =", h.apply(u).sizes(), ", first row =", h.apply(u).select(0, 0).items<double>());
+}
+```
+
+### Example 5
+
+A non-positive coefficient is rejected.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series u = pluss::series::ones({4}, pluss::ScalarType::Float64);
+  try {
+    const mg::Hierarchy h({.axes = {{4, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}, .face_high = {pluss::make_series({1.0, -1.0, 1.0, 1.0})}}, u);
+  } catch (const std::exception &e) {
+    out.writeln(e.what());
+  }
+}
+```
+
+## See Also
+
+- [`Hierarchy`](Hierarchy.md): built from it
+- [`Axis`](Axis.md): one dimension
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Options.html">
+    <span class="label">Previous</span>
+    <span class="title">Options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

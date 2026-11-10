@@ -1,0 +1,179 @@
+<!-- generated from lifetime_pmf.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 72846608a180 -->
+
+# `actuarial::Mortality::lifetime_pmf`
+
+[Back to `actuarial::Mortality`](../Mortality.md)
+
+The probability that death falls in each year, and that the life outlasts the horizon.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::Mortality::lifetime_pmf() const;
+```
+
+## What It Does
+
+Returns `n + 1` masses: entry `k` for `k < n` is the probability of dying in year `k + 1`, {math}`{}_kp_x\,q_{x+k}`, and the last entry is the probability of surviving all `n` years. They sum to one, so this is a complete distribution of the curtate lifetime truncated at the horizon.
+
+## Returns
+
+A one-dimensional `Series` of `horizon + 1` probabilities summing to 1.
+
+## Errors
+
+Throws `Mortality is undefined` for a default-constructed law.
+
+## Practical Examples
+
+### Example 1: the distribution
+
+Five years of mortality: five death masses and the survivors.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  out.writeln(mortality.lifetime_pmf().items<double>());
+}
+```
+
+Output
+
+```text
+[0.010000, 0.011880, 0.014672, 0.018306, 0.022683, 0.922459]
+```
+
+### Example 2: it sums to one
+
+The masses are a probability distribution.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  out.writeln("sum =", mortality.lifetime_pmf().sum().item<double>());
+}
+```
+
+Output
+
+```text
+sum = 1.000000
+```
+
+### Example 3: the expected lifetime within the horizon
+
+The mean number of whole years lived within the horizon, {math}`\sum_{k} k\,\Pr(K=k)` capped at `n`, equals the sum of the survival probabilities from 1 to `n`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const auto pmf = mortality.lifetime_pmf().items<double>();
+  double mean = 0.0;
+  for (std::size_t k = 0; k < pmf.size(); ++k) mean += static_cast<double>(k) * pmf[k];
+  const auto s = mortality.survival().items<double>();
+  out.writeln("mean =", mean, " sum of survival 1..n =", s[1] + s[2] + s[3] + s[4] + s[5]);
+}
+```
+
+Output
+
+```text
+mean = 4.799170  sum of survival 1..n = 4.799170
+```
+
+### Example 4: the error
+
+An undefined law is refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::Mortality{}.lifetime_pmf(); });
+}
+```
+
+Output
+
+```text
+Mortality is undefined
+```
+
+## See Also
+
+- [`Mortality`](../Mortality.md): the type
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="life_table.html">
+    <span class="label">Previous</span>
+    <span class="title">life_table</span>
+  </a>
+  <a class="next-link" href="px.html">
+    <span class="label">Next</span>
+    <span class="title">px</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

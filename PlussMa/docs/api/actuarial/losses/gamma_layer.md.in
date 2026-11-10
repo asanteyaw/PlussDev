@@ -1,0 +1,211 @@
+# `actuarial::losses::gamma_layer`
+
+Expected loss to a layer under a gamma severity.
+
+## Signature
+
+```cpp
+actuarial::losses::pluss::Series gamma_layer(double shape, double scale, double location, double attachment, double limit, std::int64_t quadrature_steps = 2048, pluss::Platform platform = pluss::Platform::CPU);
+```
+
+## What It Does
+
+The expected payment per claim of a layer of width `l` above attachment `a`: {math}`E[\min(X,a+l)]-E[\min(X,a)]`, the difference of two [`gamma_lev`](gamma_lev.md) values with the same quadrature. It is the parametric counterpart of [`layer_premium`](layer_premium.md). The location shift comes before the attachment, as in `gamma_lev`.
+
+## Parameters
+
+`shape`, `scale`
+: Gamma parameters, finite and greater than 0.
+
+`location`
+: The shift, finite and 0 or more.
+
+`attachment`
+: Where the layer starts, 0 or more.
+
+`limit`
+: The width of the layer, 0 or more.
+
+`quadrature_steps`
+: Number of equal subintervals of `[0, cap]` in the midpoint rule, greater than 0. Default 2048. More steps give a more accurate value.
+
+`platform`
+: Where the result is placed. Default `pluss::Platform::CPU`.
+
+## Returns
+
+A rank-zero series.
+
+## Errors
+
+Throws `gamma_layer: attachment must be >= 0`, `gamma_layer: limit must be >= 0` and the `gamma_lev` errors for the other arguments.
+
+## Practical Examples
+
+### Example 1: 4 xs 2
+
+Shape 2, scale 3.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(actuarial::losses::gamma_layer(2.0, 3.0, 0.0, 2.0, 4.0).item<double>());
+}
+```
+
+### Example 2: the exponential closed form
+
+With shape 1 the layer is theta (exp(-a / theta) - exp(-(a + l) / theta)).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(4.0 * (std::exp(-2.0 / 4.0) - std::exp(-6.0 / 4.0)), actuarial::losses::gamma_layer(1.0, 4.0, 0.0, 2.0, 4.0).item<double>());
+}
+```
+
+### Example 3: with a location
+
+No claim is below 5, so every claim already fills the 3 between the attachment 2 and the location; the layer costs more than the unshifted one.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("layer 4 xs 2 with location 5:", actuarial::losses::gamma_layer(2.0, 3.0, 5.0, 2.0, 4.0).item<double>());
+  out.writeln("layer 4 xs 2 without:", actuarial::losses::gamma_layer(2.0, 3.0, 0.0, 2.0, 4.0).item<double>());
+}
+```
+
+### Example 4: a ladder of layers
+
+Layers that meet add up to the limited value at the top.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const double a = actuarial::losses::gamma_layer(2.0, 3.0, 0.0, 0.0, 3.0).item<double>();
+  const double b = actuarial::losses::gamma_layer(2.0, 3.0, 0.0, 3.0, 7.0).item<double>();
+  out.writeln(a + b, actuarial::losses::gamma_lev(2.0, 3.0, 0.0, 10.0).item<double>());
+}
+```
+
+### Example 5: a layer premium for a portfolio
+
+Expected number of claims times the layer per claim.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double claims = 120.0;
+  out.writeln("expected annual layer loss =", claims * actuarial::losses::gamma_layer(2.0, 3.0, 0.0, 6.0, 6.0).item<double>());
+}
+```
+
+### Example 6: the errors
+
+A negative attachment or limit and an invalid shape.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::losses::gamma_layer(2.0, 3.0, 0.0, -2.0, 4.0); });
+  report([&] { (void)actuarial::losses::gamma_layer(2.0, 3.0, 0.0, 2.0, -4.0); });
+  report([&] { (void)actuarial::losses::gamma_layer(0.0, 3.0, 0.0, 2.0, 4.0); });
+}
+```
+
+## See Also
+
+- [`gamma_lev`](gamma_lev.md): the limited expected value
+- [`layer_premium`](layer_premium.md): the sample-based counterpart
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lognormal_layer.html">
+    <span class="label">Previous</span>
+    <span class="title">lognormal_layer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

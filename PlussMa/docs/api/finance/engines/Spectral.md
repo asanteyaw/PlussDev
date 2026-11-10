@@ -1,0 +1,233 @@
+<!-- generated from Spectral.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `pricer::Spectral`
+
+The collocation engine for American options under Black-Scholes: the exercise boundary by Chebyshev collocation.
+
+Solves the integral equation for the early-exercise boundary on `nodes` Chebyshev points, with `quadrature` Gauss nodes for the integrals, iterating until the boundary changes by less than `tolerance`; if `max_iterations` is reached first the engine throws rather than return an unconverged boundary. The price follows from the boundary. It is accurate for American puts under Black-Scholes at a small cost. It prices European and American exercise, not Bermudan.
+
+## Fields
+
+### `nodes`
+
+`std::int64_t`, default `24`.
+
+Chebyshev collocation nodes of the boundary, at least 3.
+
+### `quadrature`
+
+`std::int64_t`, default `48`.
+
+Gauss quadrature nodes for the integrals, at least 4.
+
+### `max_iterations`
+
+`std::int64_t`, default `60`.
+
+Iteration cap of the fixed-point solve, at least 1.
+
+### `tolerance`
+
+`double`, default `1e-13`.
+
+Stop when the boundary changes by less than this; positive.
+
+## Guidance
+
+`Controls::spectral`; also usable directly through `Spectral::price`.
+
+## Practical Examples
+
+### Example 1
+
+The collocation nodes. The price converges quickly: 3 nodes are within 3e-3 of the converged value and 8 nodes within 1e-6.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(9));
+  const auto inst = fin::instrument::american(fin::pricing::Put, 100.0, 1.0);
+  const auto mkt = fin::market::make(100.0, 0.05, 0.0);
+  const auto mdl = fin::model::make(fin::model::Kind::BlackScholes, {0.2}).as<fin::model::BlackScholes>();
+  for (const auto v : {3, 4, 8, 24, 48}) {
+    fin::pricer::Spectral e;
+    e.nodes = v;
+    try {
+      out.writeln("nodes", v, ": price =", e.price(inst, mdl, mkt, fin::pricer::RiskSpec::PriceOnly).price.items<double>()[0]);
+    } catch (const std::exception &error) {
+      const std::string text(error.what());
+      const std::string rest = text.substr(text.find("::", 20) + 2);
+      out.writeln("nodes", v, ": refused:", rest.substr(0, rest.find('\n')));
+    }
+  }
+}
+```
+
+Output
+
+```text
+nodes 3 : price = 6.092964839
+nodes 4 : price = 6.090407653
+nodes 8 : price = 6.090371537
+nodes 24 : price = 6.090370592
+nodes 48 : price = 6.090370591
+```
+
+### Example 2
+
+The quadrature nodes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(9));
+  const auto inst = fin::instrument::american(fin::pricing::Put, 100.0, 1.0);
+  const auto mkt = fin::market::make(100.0, 0.05, 0.0);
+  const auto mdl = fin::model::make(fin::model::Kind::BlackScholes, {0.2}).as<fin::model::BlackScholes>();
+  for (const auto v : {8, 16, 48, 96}) {
+    fin::pricer::Spectral e;
+    e.quadrature = v;
+    try {
+      out.writeln("quadrature", v, ": price =", e.price(inst, mdl, mkt, fin::pricer::RiskSpec::PriceOnly).price.items<double>()[0]);
+    } catch (const std::exception &error) {
+      const std::string text(error.what());
+      const std::string rest = text.substr(text.find("::", 20) + 2);
+      out.writeln("quadrature", v, ": refused:", rest.substr(0, rest.find('\n')));
+    }
+  }
+}
+```
+
+Output
+
+```text
+quadrature 8 : price = 6.090441226
+quadrature 16 : price = 6.090371031
+quadrature 48 : price = 6.090370592
+quadrature 96 : price = 6.090370592
+```
+
+### Example 3
+
+The iteration cap. Too few iterations cannot reach the tolerance, and the engine refuses instead of returning an unconverged boundary.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(9));
+  const auto inst = fin::instrument::american(fin::pricing::Put, 100.0, 1.0);
+  const auto mkt = fin::market::make(100.0, 0.05, 0.0);
+  const auto mdl = fin::model::make(fin::model::Kind::BlackScholes, {0.2}).as<fin::model::BlackScholes>();
+  for (const auto v : {1, 3, 10, 60}) {
+    fin::pricer::Spectral e;
+    e.max_iterations = v;
+    try {
+      out.writeln("max_iterations", v, ": price =", e.price(inst, mdl, mkt, fin::pricer::RiskSpec::PriceOnly).price.items<double>()[0]);
+    } catch (const std::exception &error) {
+      const std::string text(error.what());
+      const std::string rest = text.substr(text.find("::", 20) + 2);
+      out.writeln("max_iterations", v, ": refused:", rest.substr(0, rest.find('\n')));
+    }
+  }
+}
+```
+
+Output
+
+```text
+max_iterations 1 : refused: pricing::spectral_price: the exercise boundary did not converge; raise max_iterations or nodes
+max_iterations 3 : refused: pricing::spectral_price: the exercise boundary did not converge; raise max_iterations or nodes
+max_iterations 10 : refused: pricing::spectral_price: the exercise boundary did not converge; raise max_iterations or nodes
+max_iterations 60 : price = 6.090370592
+```
+
+### Example 4
+
+The tolerance. A looser tolerance stops sooner and leaves the price slightly less converged, here by a few parts in 1e-6 at 1e-3.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const auto inst = fin::instrument::american(fin::pricing::Put, 100.0, 1.0);
+  const auto mkt = fin::market::make(100.0, 0.05, 0.0);
+  const auto mdl = fin::model::make(fin::model::Kind::BlackScholes, {0.2}).as<fin::model::BlackScholes>();
+  for (const auto v : {0.001, 1e-08, 1e-13}) {
+    fin::pricer::Spectral e;
+    e.tolerance = v;
+    try {
+      out.writeln("tolerance", v, ": price =", e.price(inst, mdl, mkt, fin::pricer::RiskSpec::PriceOnly).price.items<double>()[0]);
+    } catch (const std::exception &error) {
+      const std::string text(error.what());
+      const std::string rest = text.substr(text.find("::", 20) + 2);
+      out.writeln("tolerance", v, ": refused:", rest.substr(0, rest.find('\n')));
+    }
+  }
+}
+```
+
+Output
+
+```text
+tolerance 0.0010000000 : price = 6.0903757252
+tolerance 0.0000000100 : price = 6.0903705923
+tolerance 0.0000000000 : price = 6.0903705917
+```
+
+## See Also
+
+- [`Controls`](../field/Controls.md): holds one of each
+- [`Engine`](../field/Engine.md): the engines
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SimScheme.html">
+    <span class="label">Previous</span>
+    <span class="title">SimScheme</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

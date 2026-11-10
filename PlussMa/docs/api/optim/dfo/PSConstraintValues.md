@@ -1,0 +1,151 @@
+<!-- generated from PSConstraintValues.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::PSConstraintValues`
+
+The nonlinear constraint values a pattern-search constraint callback returns.
+
+Returned by `PSConfig::nonlinear_constraints`. `inequality` holds `g(x)` and is feasible when every element is `≤ 0`; `equality` holds `h(x)` and is feasible when every element is `0`. Either may be left undefined; both may be vectors.
+
+## Fields
+
+### `inequality`
+
+`pluss::Series`, default `undefined`.
+
+Values `g(x)` that must be `≤ 0`.
+
+### `equality`
+
+`pluss::Series`, default `undefined`.
+
+Values `h(x)` that must be `0`.
+
+## Guidance
+
+Returned by `PSConfig::nonlinear_constraints`.
+
+## Practical Examples
+
+### Example 1
+
+An inequality: the unit disc.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f = [](const Series &x) { return (x - 2.0).square().sum(); };   // exact constrained optimum 3.3431 at (0.7071, 0.7071)
+  dfo::PSConfig config;
+  config.nonlinear_constraints = [](const Series &x) {
+    dfo::PSConstraintValues v;
+    v.inequality = (x.square().sum() - 1.0).reshape({1});   // inside the unit disc
+    return v;
+  };
+
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0}), config);
+  out.writeln("minimizer =", o.minimizer.items<double>());
+}
+```
+
+Output
+
+```text
+minimizer = [0.706, 0.708]
+```
+
+### Example 2
+
+An equality: the unit circle `x₀² + x₁² = 1`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f = [](const Series &x) { return (x - 2.0).square().sum(); };   // exact constrained optimum 3.3431 at (0.7071, 0.7071)
+
+  dfo::PSConfig config;
+  config.nonlinear_constraints = [](const Series &x) {
+    dfo::PSConstraintValues v;
+    v.equality = (x.square().sum() - 1.0).reshape({1});
+    return v;
+  };
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0}), config);
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", violation =", o.diagnostics.max_constraint_violation);
+}
+```
+
+Output
+
+```text
+minimizer = [0.707, 0.707] , violation = 0.000
+```
+
+### Example 3
+
+Both together: the unit circle and the half-plane `x₀ ≤ 0`. The circle point nearest `(2, 2)` with `x₀ ≤ 0` is `(0, 1)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f = [](const Series &x) { return (x - 2.0).square().sum(); };   // exact constrained optimum 3.3431 at (0.7071, 0.7071)
+
+  dfo::PSConfig config;
+  config.nonlinear_constraints = [](const Series &x) {
+    dfo::PSConstraintValues v;
+    v.equality = (x.square().sum() - 1.0).reshape({1});
+    v.inequality = x.select(0, 0).reshape({1});
+    return v;
+  };
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 1.0}), config);
+  out.writeln("minimizer =", o.minimizer.items<double>());
+}
+```
+
+Output
+
+```text
+minimizer = [0.000, 1.000]
+```
+
+## See Also
+
+- [`PSConfig`](PSConfig.md): holds the callback
+- [`PSConstraintPolicy`](PSConstraintPolicy.md): how violations are handled
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PSConstraintPolicy.html">
+    <span class="label">Previous</span>
+    <span class="title">PSConstraintPolicy</span>
+  </a>
+  <a class="next-link" href="PSDiagnostics.html">
+    <span class="label">Next</span>
+    <span class="title">PSDiagnostics</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

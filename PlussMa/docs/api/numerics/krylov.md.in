@@ -1,0 +1,42 @@
+# Krylov solvers
+
+Iterative solvers for linear systems and matrix exponentials that never need the matrix itself: you supply a function that applies the operator `A` to a `Series`, and the solver builds the answer from repeated applications. That is what makes them the tool for large or structured operators (a stencil, a sparse matrix, a product of factors), and every leading axis of the data is an independent solve, so a whole batch of right-hand sides is handled in one call.
+
+| You have | Use |
+|---|---|
+| A symmetric positive-definite operator | [`cg`](krylov/cg.md), or [`pcg`](krylov/pcg.md) with a preconditioner |
+| A general (non-symmetric, possibly complex) operator | [`gmres`](krylov/gmres.md) |
+| An operator and a vector, and you want `exp(t A) v` | [`exp_action`](krylov/exp_action.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`CgOptions`](krylov/CgOptions.md) | Iteration limit, tolerances and convergence-check cadence of conjugate gradients. |
+| [`CgResult`](krylov/CgResult.md) | The solution of a conjugate-gradient solve with per-lane residuals and flags. |
+| [`ExpOptions`](krylov/ExpOptions.md) | Krylov dimension and convergence tolerances of `exp_action`. |
+| [`ExpResult`](krylov/ExpResult.md) | The result of `exp_action` with its residual estimate and the work done. |
+| [`GmresOptions`](krylov/GmresOptions.md) | Iteration limit, restart length and tolerances of GMRES. |
+| [`GmresResult`](krylov/GmresResult.md) | The solution of a GMRES solve with per-lane residuals and the work done. |
+| [`cg`](krylov/cg.md) | Solves `A x = b` for a symmetric positive-definite operator by conjugate gradients. |
+| [`exp_action`](krylov/exp_action.md) | Applies the matrix exponential `exp(t A)` to a vector without forming the matrix. |
+| [`gmres`](krylov/gmres.md) | Solves `A x = b` for a general, possibly non-symmetric or complex operator by restarted GMRES. |
+| [`pcg`](krylov/pcg.md) | Solves `A x = b` by preconditioned conjugate gradients, for a symmetric positive-definite operator and a preconditioner. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+krylov/CgOptions
+krylov/CgResult
+krylov/ExpOptions
+krylov/ExpResult
+krylov/GmresOptions
+krylov/GmresResult
+krylov/cg
+krylov/exp_action
+krylov/gmres
+krylov/pcg
+```
+<!-- apiref:toctree:end -->

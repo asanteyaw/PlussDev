@@ -1,0 +1,31 @@
+# `math::Function` Introduction
+
+A `Function` is a value, not a procedure. `math::function(variables, callable)` runs the callable once on placeholder variables and records the arithmetic it performs as an expression graph; after that the callable is never called again. Evaluating the `Function` replays the recorded graph on the `Series` you supply, so one function serves a single point, a vector of points and a batch of grids alike.
+
+What makes a `Function` more than a lambda is that it can be *operated on*. Because the formula is recorded rather than compiled away, [`operators::differential`](../../operators.md), the integral operators, the transforms and the series operators can take it as input and return another `Function`: an exact derivative, an antiderivative, a Fourier coefficient, a Taylor polynomial. A `Function` can also be saved to a file and loaded back, which an opaque C++ callable cannot.
+
+A function has several kinds of properties, and the accessor methods answer one question each:
+
+| Question | Method |
+|---|---|
+| Is there a function here at all? | [`defined`](defined.md) |
+| Which variables does it take, and how many? | [`variables`](variables.md), [`arity`](arity.md) |
+| What does one evaluation produce? | [`rank`](rank.md), [`shape`](shape.md) |
+| How was it built, and can it be differentiated exactly? | [`provenance`](provenance.md) |
+| What do we know about each variable? | [`assume`](assume.md), [`assumption`](assumption.md) |
+| How do I get at a variable as an expression? | [`arg`](arg.md) |
+
+The rest of the methods build new functions from this one (arithmetic, elementwise functions, tensor operations, composition) and are listed in the table below.
+
+**Variables and traces.** Every function belongs to the *trace* of the `math::function(...)` call that created it. Two functions can be combined only when they share a trace (for example, a function and its own derivative, or two expressions built inside one callable). Combining functions from unrelated `function(...)` calls fails with an error that says so; use [`compose`](compose.md) to substitute one function into another.
+
+**Output axes.** The value of a function at scalar inputs may itself be a scalar (rank 0), a vector (rank 1), a matrix (rank 2) or a higher tensor; those axes are the function's *output axes*. When you evaluate on arrays, batch axes are added in front of them.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="abs.html">
+    <span class="label">Next</span>
+    <span class="title">abs</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,124 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 305b59833a65 -->
+
+# `DfoBuilder::with_max_iterations`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Sets the iteration (generation) budget.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_max_iterations(std::int64_t max_iterations) const;
+```
+
+## What It Does
+
+Sets `DfoOptions::max_iterations`. A positive value overrides the method's own iteration or generation limit; the run then ends `ReachedIterationBudget` if the method has not converged first. Zero keeps the method's own limit, which for Nelder-Mead, pattern search and MADS is a multiple of the number of variables.
+
+## Parameters
+
+`std::int64_t max_iterations`
+: The budget; 0 keeps the default.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+A short run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_max_iterations(3).solve();
+  out.writeln(dfo::to_string(r.status), ", iterations =", r.diagnostics.iterations, ", minimum =", r.minimum);
+}
+```
+
+### Example 2
+
+More iterations, a better answer.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const std::int64_t n : {5, 20, 80}) {
+    const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({-1.2, 1.0})).with_objective(rosenbrock).with_max_iterations(n).solve();
+    out.writeln("iterations", n, ": minimum =", r.minimum);
+  }
+}
+```
+
+### Example 3
+
+For a population method the unit is a generation.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f)
+                               .with_solver(dfo::DfoSolverKind::ParticleSwarm).with_max_iterations(10).solve();
+  out.writeln(dfo::to_string(r.status), ", generations =", r.diagnostics.iterations, ", evaluations =", r.diagnostics.evaluations);
+}
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_max_evaluations.html">
+    <span class="label">Previous</span>
+    <span class="title">with_max_evaluations</span>
+  </a>
+  <a class="next-link" href="with_max_total_evaluations.html">
+    <span class="label">Next</span>
+    <span class="title">with_max_total_evaluations</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

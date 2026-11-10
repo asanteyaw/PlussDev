@@ -1,0 +1,55 @@
+# Interest-rate models
+
+Simulated short-rate paths and zero-coupon bond prices for the Vasicek, Cox-Ingersoll-Ross and Hull-White models, and the arbitrage-free Heath-Jarrow-Morton forward-rate model. The path functions return `Series` of `[steps + 1, paths]` (the rate at every date of every path) so that a whole portfolio of scenarios is a few vectorised operations; the closed-form bond prices (`vasicek_zcb`, `cir_zcb`, `hull_white_zcb`) check the simulations and price directly.
+
+| You want | Use |
+|---|---|
+| Simulated short rates | [`vasicek_paths`](rates/vasicek_paths.md), [`cir_paths`](rates/cir_paths.md), [`hull_white_paths`](rates/hull_white_paths.md) |
+| A simulated forward curve | [`hjm_paths`](rates/hjm_paths.md) |
+| A zero-coupon bond price | [`vasicek_zcb`](rates/vasicek_zcb.md), [`cir_zcb`](rates/cir_zcb.md), [`hull_white_zcb`](rates/hull_white_zcb.md), [`hjm_zcb_mc`](rates/hjm_zcb_mc.md) |
+| Time stepping and random numbers | [`SimOptions`](rates/SimOptions.md), [`Scheme`](rates/Scheme.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`CirParams`](rates/CirParams.md) | Parameters of the Cox-Ingersoll-Ross short-rate model `dr = κ(θ − r)dt + σ√r dW`. |
+| [`HjmParams`](rates/HjmParams.md) | Parameters of the one-factor Heath-Jarrow-Morton forward-rate model: the starting level, the tenor grid and the volatility at each tenor. |
+| [`HjmPaths`](rates/HjmPaths.md) | Simulated forward curves, the short rate and the normals of an HJM simulation. |
+| [`HullWhiteParams`](rates/HullWhiteParams.md) | Parameters of the Hull-White (extended Vasicek) model `dr = κ(θ₀ + θ₁t − r)dt + σ dW` with a linear target. |
+| [`RatePaths`](rates/RatePaths.md) | Simulated short-rate paths and the normals that drove them. |
+| [`Scheme`](rates/Scheme.md) | The time-stepping scheme of the rate simulators: Euler, Milstein or the exact transition. |
+| [`SimOptions`](rates/SimOptions.md) | The scheme, random-number source, layout and seed of the rate simulators. |
+| [`VasicekParams`](rates/VasicekParams.md) | Parameters of the Vasicek short-rate model `dr = κ(θ − r)dt + σ dW`. |
+| [`cir_paths`](rates/cir_paths.md) | Simulates paths of the Cox-Ingersoll-Ross short rate `dr = κ(θ − r)dt + σ√r dW`. |
+| [`cir_zcb`](rates/cir_zcb.md) | The closed-form Cox-Ingersoll-Ross price of a zero-coupon bond. |
+| [`hjm_paths`](rates/hjm_paths.md) | Simulates the forward curve of the one-factor Heath-Jarrow-Morton model. |
+| [`hjm_zcb_mc`](rates/hjm_zcb_mc.md) | The price of a zero-coupon bond in the HJM model, by simulation. |
+| [`hull_white_paths`](rates/hull_white_paths.md) | Simulates paths of the Hull-White short rate `dr = κ(θ₀ + θ₁t − r)dt + σ dW`. |
+| [`hull_white_zcb`](rates/hull_white_zcb.md) | The closed-form Hull-White price of a zero-coupon bond for a linear reversion level. |
+| [`vasicek_paths`](rates/vasicek_paths.md) | Simulates paths of the Vasicek short rate `dr = κ(θ − r)dt + σ dW`. |
+| [`vasicek_zcb`](rates/vasicek_zcb.md) | The closed-form Vasicek price of a zero-coupon bond. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+rates/CirParams
+rates/HjmParams
+rates/HjmPaths
+rates/HullWhiteParams
+rates/RatePaths
+rates/Scheme
+rates/SimOptions
+rates/VasicekParams
+rates/cir_paths
+rates/cir_zcb
+rates/hjm_paths
+rates/hjm_zcb_mc
+rates/hull_white_paths
+rates/hull_white_zcb
+rates/vasicek_paths
+rates/vasicek_zcb
+```
+<!-- apiref:toctree:end -->

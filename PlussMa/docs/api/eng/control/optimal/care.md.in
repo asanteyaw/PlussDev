@@ -1,0 +1,93 @@
+# `control::care`
+
+Solves a continuous algebraic Riccati equation.
+
+## Signature
+
+```cpp
+control::RiccatiResult control::care(
+    const pluss::Series& a,
+    const pluss::Series& b,
+    const pluss::Series& q,
+    const pluss::Series& r,
+    pluss::ma::linearalg::MatrixEqOptions options = {});
+
+control::RiccatiResult control::care(
+    const pluss::Series& a,
+    const pluss::Series& b,
+    const pluss::Series& q,
+    const pluss::Series& r,
+    const pluss::Series& cross,
+    pluss::ma::linearalg::MatrixEqOptions options = {});
+```
+
+## What It Does
+
+`care` solves the continuous-time equation and synthesizes the stabilizing feedback law. Leading dimensions are batch axes and broadcast under normal `Series` rules.
+
+## Parameters
+
+`a`
+: The continuous state matrix `A`, shaped `[..., states, states]`.
+
+`b`
+: The input matrix `B`, shaped `[..., states, inputs]`.
+
+`q`
+: Hermitian positive-semidefinite state cost `Q`.
+
+`r`
+: Hermitian positive-definite input cost `R`.
+
+`cross`
+: Optional state-input cross cost `S`; the joint cost block must remain positive semidefinite.
+
+`options`
+: Numerical matrix-equation tolerances and iteration controls.
+
+## Returns
+
+A `control::RiccatiResult` containing `X`, `K`, and `A - B K`.
+
+## Errors
+
+Throws when shapes are incompatible, costs violate their Hermitian definiteness contracts, or no stabilizing solution can be established.
+
+## Interpretation and Use
+
+Use `care` when matrices are already available and the dynamics are continuous. The cross-weight overload is not a numerical hint: it changes the quadratic objective. Start without it unless the model genuinely contains state-input coupling, and always inspect `closed_loop` after synthesis.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Solve the cross-weight overload and inspect its stabilizing solution.
+
+@@example Eng/api/control_care_cross.cpp@@
+
+### Example 2
+
+Use the equivalent state-space route for a standard continuous regulator.
+
+@@example Eng/api/control_optimal.cpp@@
+
+### Example 3
+
+See the exact failures for singular `R` and non-Hermitian `Q`.
+
+@@example Eng/api/control_optimal_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="RiccatiResult.html">
+    <span class="label">Previous</span>
+    <span class="title">RiccatiResult</span>
+  </a>
+  <a class="next-link" href="dare.html">
+    <span class="label">Next</span>
+    <span class="title">dare</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

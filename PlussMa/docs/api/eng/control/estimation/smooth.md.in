@@ -1,0 +1,99 @@
+# `control::smooth`
+
+Runs forward filtering followed by backward smoothing.
+
+## Signature
+
+```cpp
+control::SmoothResult control::smooth(
+    const lti::StateSpace& system,
+    const pluss::Series& observations,
+    const pluss::Series& process_cov,
+    const pluss::Series& noise_cov,
+    const pluss::Series& initial_mean,
+    const pluss::Series& initial_cov,
+    control::KalmanOptions options = {});
+
+control::SmoothResult control::smooth(
+    const lti::StateSpace& system,
+    const pluss::Series& observations,
+    const pluss::Series& input,
+    const pluss::Series& process_cov,
+    const pluss::Series& noise_cov,
+    const pluss::Series& initial_mean,
+    const pluss::Series& initial_cov,
+    control::KalmanOptions options = {});
+```
+
+## What It Does
+
+`smooth` first delegates to the forward filter and then conditions each earlier state on all later observations. Smoothed estimates can therefore differ from filtered estimates even though both use the same model and options.
+
+## Parameters
+
+`system`
+: A discrete state-space model. Filtering advances one model step per observation.
+
+`observations`
+: Observation trajectory with time on its penultimate structural axis.
+
+`input`
+: Optional known input trajectory aligned to the observations.
+
+`process_cov`
+: Process-noise covariance `Q`.
+
+`noise_cov`
+: Measurement-noise covariance `R`.
+
+`initial_mean`
+: Prior state mean before the first prediction/update.
+
+`initial_cov`
+: Prior state covariance.
+
+`options`
+: Information threshold and covariance jitter controls.
+
+## Returns
+
+A `SmoothResult` containing the forward filter and the Rauch-Tung-Striebel backward trajectory.
+
+## Errors
+
+Throws under the same model, shape, covariance, and numerical conditions as `kalman`.
+
+## Interpretation and Use
+
+Smoothing performs a complete forward filter before the backward pass, so its memory cost includes trajectory covariances. Use it only when the full observation block is available. For streaming or causal decisions, retain `kalman` instead.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Run the smoother and inspect its retrospective correction.
+
+@@example Eng/api/control_smooth.cpp@@
+
+### Example 2
+
+Compare against the causal forward-filter output.
+
+@@example Eng/api/control_estimation.cpp@@
+
+### Example 3
+
+Review validation inherited from the forward pass.
+
+@@example Eng/api/control_estimation_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="kalman.html">
+    <span class="label">Previous</span>
+    <span class="title">kalman</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

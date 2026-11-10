@@ -1,0 +1,90 @@
+# `control::pid`
+
+Constructs a continuous or discrete PID controller.
+
+## Signature
+
+```cpp
+control::Pid control::pid(
+    const pluss::Series& kp,
+    const pluss::Series& ki,
+    const pluss::Series& kd,
+    const pluss::Series& filter,
+    double sample_time = 0.0,
+    control::PidRule int_rule = control::PidRule::Forward,
+    control::PidRule diff_rule = control::PidRule::Forward);
+```
+
+## What It Does
+
+The represented continuous transfer function is `Kp + Ki/s + Kd*s/(filter*s + 1)`. For discrete controllers, the selected rules replace the integral and filtered-derivative factors.
+
+## Parameters
+
+`kp`
+: Proportional gain, scalar or batched.
+
+`ki`
+: Integral gain, broadcast-compatible with the other gains.
+
+`kd`
+: Derivative gain.
+
+`filter`
+: Non-negative derivative-filter time constant in `Kd*s/(filter*s+1)`.
+
+`sample_time`
+: Zero for continuous time or a positive discrete sampling interval.
+
+`int_rule`
+: Discrete integrator substitution.
+
+`diff_rule`
+: Discrete filtered-derivative substitution.
+
+## Returns
+
+A validated immutable `control::Pid`.
+
+## Errors
+
+Throws when gains cannot broadcast, the filter is negative, or the sample time is negative/non-finite.
+
+## Interpretation and Use
+
+A zero sample time creates the continuous parallel form. A positive sample time activates the stored substitution rules. Keep `filter` positive when derivative action is nonzero to limit high-frequency amplification; zero remains valid when an ideal derivative is intentional.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Construct a continuous filtered PID.
+
+@@example Eng/api/control_pid.cpp@@
+
+### Example 2
+
+Construct a sampled controller with explicit rules.
+
+@@example Eng/api/control_pid_discrete.cpp@@
+
+### Example 3
+
+Reject a negative derivative-filter constant.
+
+@@example Eng/api/control_controller_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="place.html">
+    <span class="label">Previous</span>
+    <span class="title">place</span>
+  </a>
+  <a class="next-link" href="freqresp.html">
+    <span class="label">Next</span>
+    <span class="title">freqresp</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

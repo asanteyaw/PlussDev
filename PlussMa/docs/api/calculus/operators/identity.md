@@ -1,0 +1,140 @@
+<!-- generated from identity.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::identity`
+
+The operator that returns its input unchanged: the neutral element of composition and of linear combinations.
+
+## Signature
+
+```cpp
+operators::Operator operators::identity();
+```
+
+## What It Does
+
+`identity()` returns the operator `I` with `I f = f`. On its own it does nothing, and that is its value: it is the "zero step" of a pipeline, the `1` in a linear combination such as `I + D`, and the starting value when an operator is built up in a loop. Composition recognises it and drops it, so `compose(identity(), op)` is just `op` and carries no extra node.
+
+It is linear, has a known adjoint (itself), and can be saved.
+
+## Returns
+
+An `Operator` that maps every function to itself.
+
+## Practical Examples
+
+### Example 1
+
+The identity returns the function it is given: same values, same variables.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x * x; });
+
+  const math::Function same = operators::identity()(f);
+  out.writeln("f(2)      =", f(2.0).item<double>());
+  out.writeln("I(f)(2)   =", same(2.0).item<double>());
+  out.writeln("variables:", same.variables()[0], "  arity", same.arity());
+}
+```
+
+Output
+
+```text
+f(2)      = 8.0000
+I(f)(2)   = 8.0000
+variables: x   arity 1
+```
+
+### Example 2
+
+The `1` in a linear combination: `(I + D) f = f + f′`, here for `f = x³`, giving `x³ + 3x²`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x * x; });
+
+  const operators::Operator I_plus_D = operators::linear_combination({{1.0, operators::identity()}, {1.0, operators::differential("x")}});
+  out.writeln("(I + D) x^3 at 2 =", I_plus_D(f)(2.0).item<double>(), "  (8 + 12 = 20)");
+}
+```
+
+Output
+
+```text
+(I + D) x^3 at 2 = 20.0000   (8 + 12 = 20)
+```
+
+### Example 3
+
+The starting value of a loop. Composing a run-time number of derivative stages onto the identity gives the `n`-th derivative operator; with `n = 0` the loop never runs and the result is the identity itself.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x * x; });
+
+  const auto nth_derivative = [](int n) {
+    operators::Operator op = operators::identity();
+    for (int i = 0; i < n; ++i) op = operators::compose(operators::differential("x"), op);
+    return op;
+  };
+  for (int n = 0; n <= 3; ++n) {
+    out.writeln("n =", n, " (d/dx)^n x^3 at 2 =", nth_derivative(n)(f)(2.0).item<double>());
+  }
+}
+```
+
+Output
+
+```text
+n = 0  (d/dx)^n x^3 at 2 = 8.0000
+n = 1  (d/dx)^n x^3 at 2 = 12.0000
+n = 2  (d/dx)^n x^3 at 2 = 12.0000
+n = 3  (d/dx)^n x^3 at 2 = 6.0000
+```
+
+`8, 12, 12, 6`: the value, then `3x²`, `6x` and `6` at `x = 2`.
+
+## See Also
+
+- [`compose`](compose.md): drops the identity from chains
+- [`linear_combination`](linear_combination.md): uses it as the unit term
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="define.html">
+    <span class="label">Previous</span>
+    <span class="title">define</span>
+  </a>
+  <a class="next-link" href="linear_combination.html">
+    <span class="label">Next</span>
+    <span class="title">linear_combination</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

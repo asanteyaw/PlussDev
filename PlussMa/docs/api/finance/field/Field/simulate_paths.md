@@ -1,0 +1,278 @@
+<!-- generated from simulate_paths.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: fd3e28d4e45f -->
+
+# `module::Field::simulate_paths`
+
+[Back to `module::Field`](../Field.md)
+
+Simulates paths of the held (or a candidate) model and returns them without storing them.
+
+## Signature
+
+```cpp
+module::Paths module::Field::simulate_paths(pluss::Config cfg = {}) const;
+module::Paths module::Field::simulate_paths(const module::Model &candidate, pluss::Config cfg = {}) const;
+```
+
+## What It Does
+
+Generates `controls.mc.paths` paths on a uniform grid of `controls.mc.steps` steps from 0 to the **longest maturity** in the field, with the scheme, random-number method and seed of `controls.mc`. The engine must be `MonteCarlo`. The model parameters must be single numbers (one element each) because one parameter set is simulated, and the market is read from its **first** element: its spot, rate and yield drive the drift, while the strikes play no part, so one simulation serves every strike. The `candidate` form simulates a different model without changing the field. The result is a [`Paths`](../Paths.md); [`simulate`](simulate.md) stores it in the field.
+
+## Parameters
+
+`const module::Model &candidate`
+: Another model to simulate.
+
+`pluss::Config cfg`
+: Device.
+
+## Returns
+
+A [`Paths`](../Paths.md).
+
+## Errors
+
+- An engine other than `MonteCarlo`, an invalid field, or non-scalar model parameters throw.
+
+## Practical Examples
+
+### Example 1
+
+Simulating Heston paths and checking the forward. Under the pricing measure `E[S_T] = S₀ e^{(r−q)T}`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 2000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 7;
+
+  field.controls.mc.paths = 20000;
+  const mod::Paths paths = field.simulate_paths();
+  out.writeln("asset shape :", paths.asset.sizes());
+  out.writeln("mean S_T =", paths.asset.select(1, 50).mean().item<double>(), ", forward =", 100.0 * std::exp(0.02));
+}
+```
+
+Output
+
+```text
+asset shape : [20000, 51]
+mean S_T = 102.039 , forward = 102.020
+```
+
+### Example 2
+
+A candidate model: the same field, simulated with a different volatility of variance. The field is unchanged.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 2000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 7;
+
+  const mod::Paths base = field.simulate_paths();
+  const mod::Paths wild = field.simulate_paths(fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 1.2, -0.7, 0.04}));
+  out.writeln("variance spread, base :", base.variance.select(1, 50).std().item<double>(), ", candidate :", wild.variance.select(1, 50).std().item<double>());
+  out.writeln("field has stored paths:", field.paths.asset.defined());
+}
+```
+
+Output
+
+```text
+variance spread, base : 0.03359 , candidate : 0.16137
+field has stored paths: false
+```
+
+### Example 3
+
+Black-Scholes paths too. The variance is the constant `σ²`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.05, 0.02),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::All}};
+
+  field.controls.mc.paths = 1000;
+  field.controls.mc.steps = 20;
+  const mod::Paths paths = field.simulate_paths();
+  out.writeln("variance at t = T, first three paths:", paths.variance.select(1, 20).slice(0, 0, 3, 1).items<double>());
+}
+```
+
+Output
+
+```text
+variance at t = T, first three paths: [0.040000, 0.040000, 0.040000]
+```
+
+### Example 4
+
+Reproducible: the same seed gives the same paths.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 2000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 7;
+
+  const Series a = field.simulate_paths().asset;
+  const Series b = field.simulate_paths().asset;
+  out.writeln("max difference =", (a - b).abs().max().item<double>());
+}
+```
+
+Output
+
+```text
+max difference = 0.000000
+```
+
+### Example 5
+
+Only the MonteCarlo engine simulates.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  try {
+    (void)(field.simulate_paths());
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::finance::module::Field::simulate_paths: controls.engine must be MonteCarlo
+```
+
+## See Also
+
+- [`Field`](../Field.md): the class
+- [`simulate`](simulate.md): store the paths in the field
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="simulate.html">
+    <span class="label">Previous</span>
+    <span class="title">simulate</span>
+  </a>
+  <a class="next-link" href="validate.html">
+    <span class="label">Next</span>
+    <span class="title">validate</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

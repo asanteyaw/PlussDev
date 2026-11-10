@@ -1,0 +1,155 @@
+# `milp::Status`
+
+The verdict of a mixed-integer solve.
+
+`Optimal` means an incumbent was proven optimal within `gap_tolerance`. `Infeasible` means the relaxation is infeasible or every node was pruned without an incumbent, so no integer solution exists. `Unbounded` is reported when the relaxation is unbounded (integrality is not examined further). `NodeLimit` means `max_nodes` was reached; `x` holds the incumbent if one was found and `best_bound` the proven bound.
+
+## Fields
+
+### `Optimal`
+
+`enumerator`, default `0`.
+
+The incumbent is proven optimal within `gap_tolerance`.
+
+### `Infeasible`
+
+`enumerator`, default `1`.
+
+No integer-feasible solution exists.
+
+### `Unbounded`
+
+`enumerator`, default `2`.
+
+The relaxation is unbounded.
+
+### `NodeLimit`
+
+`enumerator`, default `3`.
+
+`max_nodes` was reached before the search finished.
+
+## Guidance
+
+Only `Optimal` carries a proof of optimality.
+
+## Practical Examples
+
+### Example 1
+
+Optimal and infeasible verdicts.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace milp = pluss::subsp::math::milp;
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // maximise 10a + 13b + 7c + 8d   subject to   3a + 4b + 2c + 3d <= 7,  each item taken or not
+  milp::Problem problem;
+  problem.lp.c = pluss::series::make({-10.0, -13.0, -7.0, -8.0});
+  problem.lp.a_ub = pluss::series::make({{3.0, 4.0, 2.0, 3.0}});
+  problem.lp.b_ub = pluss::series::make({7.0});
+  problem.lp.lower = pluss::series::make({0.0, 0.0, 0.0, 0.0});
+  problem.lp.upper = pluss::series::make({1.0, 1.0, 1.0, 1.0});
+  problem.integer = pluss::series::make({1.0, 1.0, 1.0, 1.0});
+
+  milp::Problem none;
+  none.lp.c = pluss::series::make({1.0});
+  none.lp.lower = pluss::series::make({0.2});
+  none.lp.upper = pluss::series::make({0.8});
+  none.integer = pluss::series::make({1.0});
+  out.writeln("knapsack :", milp::to_string(milp::solve(problem).status));
+  out.writeln("no integer:", milp::to_string(milp::solve(none).status));
+}
+```
+
+### Example 2
+
+`Unbounded`. The relaxation of `min −y` with `y ≥ 0` free to grow, next to a bounded integer `x`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace milp = pluss::subsp::math::milp;
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  milp::Problem problem;
+  problem.lp.c = pluss::series::make({1.0, -1.0});
+  problem.lp.lower = pluss::series::make({0.0, 0.0});
+  problem.lp.upper = pluss::series::make({3.0, std::numeric_limits<double>::infinity()});
+  problem.integer = pluss::series::make({1.0, 0.0});
+  out.writeln("status =", milp::to_string(milp::solve(problem).status));
+}
+```
+
+### Example 3
+
+`NodeLimit`. A cut-off search keeps the bound.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace milp = pluss::subsp::math::milp;
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // maximise 10a + 13b + 7c + 8d   subject to   3a + 4b + 2c + 3d <= 7,  each item taken or not
+  milp::Problem problem;
+  problem.lp.c = pluss::series::make({-10.0, -13.0, -7.0, -8.0});
+  problem.lp.a_ub = pluss::series::make({{3.0, 4.0, 2.0, 3.0}});
+  problem.lp.b_ub = pluss::series::make({7.0});
+  problem.lp.lower = pluss::series::make({0.0, 0.0, 0.0, 0.0});
+  problem.lp.upper = pluss::series::make({1.0, 1.0, 1.0, 1.0});
+  problem.integer = pluss::series::make({1.0, 1.0, 1.0, 1.0});
+
+  milp::Options options;
+  options.max_nodes = 1;
+  const milp::Result result = milp::solve(problem, options);
+  out.writeln("status =", milp::to_string(result.status), ", best bound =", result.best_bound);
+}
+```
+
+## See Also
+
+- [`to_string`](to_string.md): names a status
+- [`Result`](Result.md): holds the status
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Result.html">
+    <span class="label">Previous</span>
+    <span class="title">Result</span>
+  </a>
+  <a class="next-link" href="solve.html">
+    <span class="label">Next</span>
+    <span class="title">solve</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

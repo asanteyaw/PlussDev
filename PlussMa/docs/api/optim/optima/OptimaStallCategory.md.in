@@ -1,0 +1,178 @@
+# `optim::OptimaStallCategory`
+
+A diagnosis of why a run stalled or ended without converging.
+
+`OptimaOutput::stall_category` (and each progress snapshot) classifies the cause of a failed or cut-short run, so that a caller can decide what to do. `None` means no stall. `UserStop` is a progress hook stopping the run. `InvalidCallbackContract` means a callback returned the wrong shape or dtype. `NonFiniteCallbackRegion` means the objective or a constraint was NaN or infinite near the iterate. `SearchDirectionCollapse` means the step shrank to nothing. `BoundaryLimited` means progress is blocked by a bound. `InfeasibleStationary` means the point is stationary for the violation but infeasible. `ComplementarityStagnation` means the barrier or complementarity measure stopped improving. `FeasibilityFailure` means no feasible point was reached. `RecoveryFailure` means restoration or non-finite recovery failed. `IterationLimit` means the budget ran out. [`optima_stall_category_name`](optima_stall_category_name.md) names a value; `stall_measure` and `stall_reference` give the numbers behind the call.
+
+## Fields
+
+### `None`
+
+`enumerator`, default `0`.
+
+No stall.
+
+### `UserStop`
+
+`enumerator`, default `1`.
+
+A progress hook stopped the run.
+
+### `InvalidCallbackContract`
+
+`enumerator`, default `2`.
+
+A callback returned the wrong shape or dtype.
+
+### `NonFiniteCallbackRegion`
+
+`enumerator`, default `3`.
+
+NaN or infinity near the iterate.
+
+### `SearchDirectionCollapse`
+
+`enumerator`, default `4`.
+
+The step shrank to nothing.
+
+### `BoundaryLimited`
+
+`enumerator`, default `5`.
+
+A bound blocks progress.
+
+### `InfeasibleStationary`
+
+`enumerator`, default `6`.
+
+Stationary for the violation but infeasible.
+
+### `ComplementarityStagnation`
+
+`enumerator`, default `7`.
+
+Complementarity stopped improving.
+
+### `FeasibilityFailure`
+
+`enumerator`, default `8`.
+
+No feasible point reached.
+
+### `RecoveryFailure`
+
+`enumerator`, default `9`.
+
+Restoration or recovery failed.
+
+### `IterationLimit`
+
+`enumerator`, default `10`.
+
+Budget exhausted.
+
+## Guidance
+
+Read from `state.output.stall_category` or a snapshot.
+
+## Practical Examples
+
+### Example 1
+
+A run cut short by its iteration limit.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.max_iterations = 1;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("stall =", optim::optima_stall_category_name(result.output.stall_category), ", measure =", result.output.stall_measure, ", reference =", result.output.stall_reference);
+}
+```
+
+### Example 2
+
+A hook stop.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.progress_hook = [](const optim::OptimaProgressSnapshot &) { return true; };
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("stall =", optim::optima_stall_category_name(result.output.stall_category));
+}
+```
+
+### Example 3
+
+A converged run has no stall.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), {}, disc);
+  out.writeln("stall =", optim::optima_stall_category_name(result.output.stall_category));
+}
+```
+
+## See Also
+
+- [`optima_stall_category_name`](optima_stall_category_name.md): names a value
+- [`OptimaOutput`](OptimaOutput.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OptimaProgressSnapshot.html">
+    <span class="label">Previous</span>
+    <span class="title">OptimaProgressSnapshot</span>
+  </a>
+  <a class="next-link" href="OptimaState.html">
+    <span class="label">Next</span>
+    <span class="title">OptimaState</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

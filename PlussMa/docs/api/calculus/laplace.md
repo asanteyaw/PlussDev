@@ -1,0 +1,22 @@
+<!-- generated from laplace.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Laplace transforms
+
+The one-sided Laplace transform of a function of time, and its numerical inverse by Talbot's method. Transforms of exponential polynomials are exact closed forms; other transforms are evaluated by quadrature.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`inverse_transform`](laplace/inverse_transform.md) | The inverse Laplace transform by Talbot's method: an explicit formula in `t`, with no quadrature at evaluation. |
+| [`transform`](laplace/transform.md) | The one-sided Laplace transform `∫₀^∞ f(t) e^{−st} dt` as a function of a new variable. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+laplace/inverse_transform
+laplace/transform
+```
+<!-- apiref:toctree:end -->

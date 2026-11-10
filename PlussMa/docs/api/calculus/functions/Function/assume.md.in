@@ -1,0 +1,228 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a4076b9b2b62 -->
+
+# `math::Function::assume`
+
+[Back to `math::Function`](../Function.md)
+
+Declares what is known about a variable, and returns a new function simplified by that knowledge.
+
+## Signature
+
+```cpp
+math::Function math::Function::assume(std::string_view variable, math::Assumption assumption) const;
+```
+
+## What It Does
+
+Some algebraic identities hold only on part of the real line. `|x| = x` only when `x ≥ 0`; `√(x²) = x` only when `x ≥ 0` (and `= −x` when `x ≤ 0`); `x / x = 1` only when `x ≠ 0`. A function cannot know which case applies, so by default it keeps the general form. `assume(variable, assumption)` is how you tell it: it returns a new function in which the declaration has been recorded and the rewrites it justifies have been applied.
+
+| `Assumption` | Meaning for the variable |
+|---|---|
+| `Real` | no information (the default; declaring it changes nothing) |
+| `Zero` | equals 0 |
+| `NonZero` | never 0 |
+| `NonNegative` | at least 0 |
+| `Positive` | greater than 0 (nonnegative and nonzero) |
+| `NonPositive` | at most 0 |
+| `Negative` | less than 0 (nonpositive and nonzero) |
+
+The rewrites act on the variable itself:
+
+- `abs(x)` becomes `x` when `x` is nonnegative (`Zero`, `NonNegative`, `Positive`) and `−x` when it is nonpositive (`Zero`, `NonPositive`, `Negative`).
+- `sqrt(x²)`, written `x.pow(2).sqrt()`, becomes `x` or `−x` in the same two cases.
+- `x / x` becomes the constant 1 when `x` is nonzero (`NonZero`, `Positive`, `Negative`).
+
+Declarations accumulate: stating a second one combines it with the first and keeps the strongest statement both imply. Two that cannot both hold, such as `Positive` and `Negative`, are an error.
+
+**An assumption is a promise, not a check.** The function does not test your data against it. If you declare `Positive` and evaluate at a negative number, you get the answer the simplified formula gives, not an error. Use it for properties that are true by construction (a rate, a variance, a distance), not to silence a failure you do not understand. Domain checks such as `log` and `sqrt` of a negative number are not removed by an assumption; they are made on the values that actually arrive.
+
+## Parameters
+
+`std::string_view variable`
+: The name of one of the function's variables.
+
+`math::Assumption assumption`
+: What to declare about that variable. It is combined with anything already declared for it.
+
+## Returns
+
+A new `Function` with the declaration recorded and the justified rewrites applied. The receiver is unchanged.
+
+## Errors
+
+- An unknown variable name raises `math::Function::assume: unknown variable '<name>'`.
+- Declarations that contradict each other raise `math::Function: contradictory variable assumptions`.
+- The function must be defined.
+
+## Practical Examples
+
+### Example 1
+
+`NonNegative` and `Positive` remove the absolute value and the square root of a square. Without the declaration, `|x|` stays `|x|`; with it, the function is just `x`. The last line shows the promise: at `−2` the simplified function returns `−2`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function magnitude = math::function({"x"}, [](math::Function x) { return x.abs(); });
+  const math::Function root = math::function({"x"}, [](math::Function x) { return x.pow(2).sqrt(); });
+  const auto x = pluss::make_series({-2.0, 0.0, 3.0});
+
+  out.writeln("|x| without a declaration:       ", magnitude({x}).items<double>());
+  out.writeln("|x| with NonNegative:            ", magnitude.assume("x", math::Assumption::NonNegative)({x}).items<double>());
+  out.writeln("sqrt(x^2) with Positive:         ", root.assume("x", math::Assumption::Positive)({x}).items<double>());
+  out.writeln("sqrt(x^2) without a declaration: ", root({x}).items<double>());
+}
+```
+
+Where the declaration is true (the points 0 and 3) both agree. At −2 the declaration is false, and the simplified function returns −2 instead of 2: it was rewritten to `x` before it ever saw the data.
+
+### Example 2
+
+`NonZero`, `Positive` and `Negative` all say the variable is never zero, so `x / x` is the constant 1. Without a declaration it is a division that fails at the zero denominator.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::Assumption a) {
+  switch (a) {
+  case math::Assumption::Real: return "Real";
+  case math::Assumption::Zero: return "Zero";
+  case math::Assumption::NonZero: return "NonZero";
+  case math::Assumption::NonNegative: return "NonNegative";
+  case math::Assumption::Positive: return "Positive";
+  case math::Assumption::NonPositive: return "NonPositive";
+  case math::Assumption::Negative: return "Negative";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function ratio = math::function({"x"}, [](math::Function x) { return x / x; });
+  const auto x = pluss::make_series({-4.0, 2.0});
+
+  for (const math::Assumption a : {math::Assumption::NonZero, math::Assumption::Positive, math::Assumption::Negative}) {
+    out.writeln("x / x declared", name(a), "->", ratio.assume("x", a)({x}).items<double>());
+  }
+  try {
+    (void)ratio({pluss::make_series({0.0, 1.0})});
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln("without a declaration, at 0:", text.substr(0, text.find('\n')));
+  }
+}
+```
+
+The three declarations give the same function here: each one rules out zero.
+
+### Example 3
+
+`NonPositive` and `Negative` mirror the nonnegative cases: the absolute value of a nonpositive number is its negative, and so is the square root of its square. `Zero` is both nonnegative and nonpositive, so either rewrite gives the same answer.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function magnitude = math::function({"x"}, [](math::Function x) { return x.abs(); });
+  const math::Function root = math::function({"x"}, [](math::Function x) { return x.pow(2).sqrt(); });
+  const auto x = pluss::make_series({-3.0, -1.5, -0.25});
+
+  out.writeln("|x| with NonPositive:     ", magnitude.assume("x", math::Assumption::NonPositive)({x}).items<double>());
+  out.writeln("|x| with Negative:        ", magnitude.assume("x", math::Assumption::Negative)({x}).items<double>());
+  out.writeln("sqrt(x^2) with NonPositive:", root.assume("x", math::Assumption::NonPositive)({x}).items<double>());
+  out.writeln("|x| with Zero:            ", magnitude.assume("x", math::Assumption::Zero)({pluss::make_series({0.0, 0.0})}).items<double>());
+}
+```
+
+Both rewrites produce `−x`, so −3, −1.5 and −0.25 map to 3, 1.5 and 0.25. With `Zero` the variable is 0, and either rewrite gives 0.
+
+### Example 4
+
+Declarations combine. `NonNegative` with `NonZero` is `Positive`; `NonNegative` with `NonPositive` is `Zero`; `Real` adds nothing; and contradictory declarations are refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::Assumption a) {
+  switch (a) {
+  case math::Assumption::Real: return "Real";
+  case math::Assumption::Zero: return "Zero";
+  case math::Assumption::NonZero: return "NonZero";
+  case math::Assumption::NonNegative: return "NonNegative";
+  case math::Assumption::Positive: return "Positive";
+  case math::Assumption::NonPositive: return "NonPositive";
+  case math::Assumption::Negative: return "Negative";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+  out.writeln("NonNegative + NonZero:     ", name(f.assume("x", math::Assumption::NonNegative).assume("x", math::Assumption::NonZero).assumption("x")));
+  out.writeln("NonNegative + NonPositive: ", name(f.assume("x", math::Assumption::NonNegative).assume("x", math::Assumption::NonPositive).assumption("x")));
+  out.writeln("Positive + Real:           ", name(f.assume("x", math::Assumption::Positive).assume("x", math::Assumption::Real).assumption("x")));
+  try {
+    (void)f.assume("x", math::Assumption::Positive).assume("x", math::Assumption::Negative);
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln("Positive + Negative:       ", text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Restating a weaker fact keeps the stronger one (`Positive` then `Real` stays `Positive`).
+
+## See Also
+
+- [`assumption`](assumption.md): reads back the declaration held for a variable
+- [`abs`](abs.md): one of the functions the rewrites simplify
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="arity.html">
+    <span class="label">Previous</span>
+    <span class="title">arity</span>
+  </a>
+  <a class="next-link" href="assumption.html">
+    <span class="label">Next</span>
+    <span class="title">assumption</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

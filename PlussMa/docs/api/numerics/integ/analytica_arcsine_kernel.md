@@ -1,0 +1,135 @@
+<!-- generated from analytica_arcsine_kernel.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `integ::analytica::arcsine_kernel`
+
+The integral of `1 / sqrt(1 − x²)` from `a` to `b`, both in `[−1, 1]`.
+
+## Signature
+
+```cpp
+double integ::analytica::arcsine_kernel(double a, double b);
+```
+
+## What It Does
+
+`asin(b) − asin(a)`. The integrand is unbounded at the end points `±1` yet integrable, and is the kernel of the arcsine distribution; over `[−1, 1]` the integral is `π`.
+
+## Parameters
+
+`double a, double b`
+: The limits, each in `[−1, 1]`.
+
+## Returns
+
+The exact value of the integral, a `double`.
+
+## Errors
+
+- A limit outside `[−1, 1]` throws.
+
+## Practical Examples
+
+### Example 1
+
+The whole kernel. `∫₋₁¹ dx/√(1 − x²) = π`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::arcsine_kernel(-1.0, 1.0));
+}
+```
+
+Output
+
+```text
+3.14159265
+```
+
+### Example 2
+
+Half the interval. `∫₀¹ dx/√(1 − x²) = π/2`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::arcsine_kernel(0.0, 1.0));
+}
+```
+
+Output
+
+```text
+1.57079633
+```
+
+### Example 3
+
+Outside `[−1, 1]` the integrand is undefined, and the call says so.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  try {
+    (void)analytica::arcsine_kernel(0.0, 2.0);
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::integ::analytica::arcsine_kernel: a and b must both lie in [-1, 1]
+```
+
+## See Also
+
+- [`quadra`](quadra.md): numerical quadrature of any integrand
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="aleatoria.html">
+    <span class="label">Previous</span>
+    <span class="title">aleatoria</span>
+  </a>
+  <a class="next-link" href="analytica_cosine.html">
+    <span class="label">Next</span>
+    <span class="title">cosine</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

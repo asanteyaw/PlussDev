@@ -1,0 +1,202 @@
+# `volatility::Garch11Params`
+
+Parameters of a plain GARCH(1,1)-in-mean model for pricing: Ngarch11Params without the leverage.
+
+`R_t = r + λ√h_t − ½h_t + √h_t z_t`, `h_{t+1} = ω + β h_t + α h_t z_t²`: the NGARCH of [`Ngarch11Params`](Ngarch11Params.md) with `γ = 0`. The variance is stationary when `α + β < 1 − stationarity_margin`, with long-run level `ω/(1 − α − β)`.
+
+## Fields
+
+### `omega`
+
+`double`, default `0.02`.
+
+Variance intercept, positive.
+
+### `alpha`
+
+`double`, default `0.08`.
+
+Reaction to the shock.
+
+### `beta`
+
+`double`, default `0.90`.
+
+Persistence.
+
+### `lambda`
+
+`double`, default `0.0`.
+
+Risk premium per unit of volatility.
+
+### `r`
+
+`double`, default `0.0`.
+
+Risk-free rate per period.
+
+### `variance_floor`
+
+`double`, default `1e-12`.
+
+Floor under the variance.
+
+### `stationarity_margin`
+
+`double`, default `1e-6`.
+
+Persistence must be below `1 − margin`.
+
+## Guidance
+
+Passed to `pricing_metrics`, `pricing_variance_forecast` and `unconditional_variance`.
+
+## Practical Examples
+
+### Example 1
+
+`omega`: the long-run variance `ω/(1 − α − β)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (const double omega : {0.01, 0.02, 0.04})
+    out.writeln("omega", omega, ": unconditional variance", fin::volatility::unconditional_variance(fin::volatility::Garch11Params{.omega = omega}), ", formula", omega / (1.0 - 0.98));
+}
+```
+
+### Example 2
+
+`alpha` and `beta`: moving mass from `β` to `α` keeps the persistence and the long-run variance but changes how the variance reacts to shocks. Compare the variance after a large return.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <utility>
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series returns = pluss::make_series({0.0, 0.0, 0.0, 0.03, 0.0});
+  for (const auto &[alpha, beta] : std::vector<std::pair<double, double>>{{0.04, 0.94}, {0.15, 0.83}}) {
+    const auto m = fin::pricing::pricing_metrics(returns, fin::volatility::Garch11Params{.omega = 2e-6, .alpha = alpha, .beta = beta}, cfg);
+    out.writeln("alpha", alpha, "beta", beta, ": variances", m.variance.items<double>());
+  }
+}
+```
+
+### Example 3
+
+`lambda`: the risk premium enters the conditional mean as `λ√h`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series returns = pluss::make_series({0.001, -0.002, 0.003});
+  for (const double lambda : {0.0, 0.1})
+    out.writeln("lambda", lambda, ": conditional means", fin::pricing::pricing_metrics(returns, fin::volatility::Garch11Params{.omega = 2e-6, .lambda = lambda}, cfg).mean.items<double>());
+}
+```
+
+### Example 4
+
+`r`: the risk-free rate per period enters the conditional mean.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series returns = pluss::make_series({0.001, -0.002, 0.003});
+  for (const double r : {0.0, 0.0002})
+    out.writeln("r", r, ": conditional means", fin::pricing::pricing_metrics(returns, fin::volatility::Garch11Params{.omega = 2e-6, .r = r}, cfg).mean.items<double>());
+}
+```
+
+### Example 5
+
+`variance_floor` and `stationarity_margin`: a non-stationary parameter set is refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const fin::volatility::Garch11Params p{.omega = 0.02, .alpha = 0.1, .beta = 0.9};
+  try {
+    (void)(fin::volatility::unconditional_variance(p));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`pricing_metrics`](pricing_metrics.md): uses it
+- [`unconditional_variance`](unconditional_variance.md): its long-run variance
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="JointLikelihoodWeights.html">
+    <span class="label">Next</span>
+    <span class="title">JointLikelihoodWeights</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,56 @@
+# Structures
+
+Plane and space trusses, plane frames, and their static, modal, buckling, time and frequency analysis. A structure is described once, as a `Mesh` with `Bars` or `Sections`, compiled into an immutable `Truss` or `Frame`, and then analysed under any number of loads and supports.
+
+## Choosing A Surface
+
+| Task | Branch |
+|---|---|
+| Describe the structure and its supports | [Structural models](structure/model.md) |
+| Displacements, reactions and member forces under steady loads | [Static analysis](structure/statics.md) |
+| Natural frequencies, mode shapes and buckling loads | [Mass, modes and buckling](structure/spectral.md) |
+| Response in time or at each frequency | [Time and frequency response](structure/dynamics.md) |
+
+## Practical Examples
+
+The examples build a truss and a frame, solve the hung three-bar truss and read every field, and find the modes of a cantilever.
+
+### Example 1
+
+Build a plane and a space truss and a batch of three apex heights.
+
+@@example Eng/api/structure_truss_build.cpp@@
+
+### Example 2
+
+Solve the hung three-bar truss and read every result field.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+### Example 3
+
+Find the lowest modes of a cantilever against the closed formula.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+structure/model
+structure/statics
+structure/spectral
+structure/dynamics
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+structure/model
+structure/statics
+structure/spectral
+structure/dynamics
+```
+<!-- apiref:toctree:end -->

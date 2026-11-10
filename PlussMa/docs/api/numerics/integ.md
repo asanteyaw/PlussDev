@@ -1,0 +1,105 @@
+<!-- generated from integ.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Numerical integration
+
+Integrals of sampled data and of functions, over finite and infinite intervals and over boxes. A callable integrand takes a whole `Series` of nodes or samples at once and returns the values in the same shape, so one call to the integrand evaluates every node, and an integral built from differentiable `Series` operations can be differentiated by the same tape that records the rest of your program.
+
+## Choosing a method
+
+| You have | Use |
+|---|---|
+| Values `y` sampled at points `x` | [`trapezoid`](integ/trapezoid.md), [`cumulative_trapezoid`](integ/cumulative_trapezoid.md) |
+| A smooth function on an interval | [`quadra`](integ/quadra.md) (Simpson or Gauss-Legendre, adaptive) |
+| A function on a box in a few dimensions | [`quadra`](integ/quadra.md), the N-dimensional overload |
+| A function in many dimensions, or a rough one | [`aleatoria`](integ/aleatoria.md) (Monte Carlo) |
+| A function and no preference | [`integra`](integ/integra.md), which tries quadrature and falls back to Monte Carlo |
+| A plain `double(double)` function | [`quadra_scalar`](integ/quadra_scalar.md) |
+| An integrand of one of the named families | [`integ::analytica`](integ/analytica_exponential.md), the closed forms |
+| The measure of a level set, or a range-partitioned integral | [`lebesgue`](integ/lebesgue.md), [`measure_of`](integ/measure_of.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`AleatoriaOptions`](integ/AleatoriaOptions.md) | Sample count, seed and variance-reduction setting of Monte Carlo integration. |
+| [`AleatoriaResult`](integ/AleatoriaResult.md) | A Monte Carlo estimate with its standard error. |
+| [`IntegraOptions`](integ/IntegraOptions.md) | The strategy of `integra` and the settings of its two engines. |
+| [`IntegraResult`](integ/IntegraResult.md) | The value `integra` found, its error estimate and which engine produced it. |
+| [`IntegraStrategy`](integ/IntegraStrategy.md) | Which engine `integra` runs. |
+| [`LebesgueOptions`](integ/LebesgueOptions.md) | Cell count, refinement budget, grading and tolerance of Lebesgue integration. |
+| [`LebesgueResult`](integ/LebesgueResult.md) | A Lebesgue integral with the bracket that encloses it. |
+| [`MeasureResult`](integ/MeasureResult.md) | The measure of a level set with its error estimate. |
+| [`QuadraNdOptions`](integ/QuadraNdOptions.md) | Rule and per-axis resolution of the multi-dimensional tensor-product rule. |
+| [`QuadraNdResult`](integ/QuadraNdResult.md) | The value of a multi-dimensional integral and the size of the grid it used. |
+| [`QuadraOptions`](integ/QuadraOptions.md) | Rule, resolution, tolerance and precision of one-variable quadrature. |
+| [`QuadraResult`](integ/QuadraResult.md) | The value of a one-variable integral with its error estimate and the work spent. |
+| [`QuadraRule`](integ/QuadraRule.md) | The composite rule `quadra` applies on an interval. |
+| [`QuadraScalarOptions`](integ/QuadraScalarOptions.md) | Node count and adaptivity of the scalar Simpson rule. |
+| [`QuadraScalarResult`](integ/QuadraScalarResult.md) | The value of a scalar integral with its error estimate. |
+| [`aleatoria`](integ/aleatoria.md) | Estimates an integral by Monte Carlo: the average of the integrand at random points, with its standard error. |
+| [`analytica_arcsine_kernel`](integ/analytica_arcsine_kernel.md) | The integral of `1 / sqrt(1 − x²)` from `a` to `b`, both in `[−1, 1]`. |
+| [`analytica_cosine`](integ/analytica_cosine.md) | The integral of `cos(k x)` from `a` to `b`. |
+| [`analytica_exponential`](integ/analytica_exponential.md) | The integral of `exp(k x)` from `a` to `b`. |
+| [`analytica_gaussian`](integ/analytica_gaussian.md) | The integral of the unnormalised Gaussian `exp(−(x − mean)² / (2 stddev²))`. |
+| [`analytica_gaussian_moment`](integ/analytica_gaussian_moment.md) | The integral of `(x − mean)` times the unnormalised Gaussian, from `a` to `b`. |
+| [`analytica_gaussian_probability`](integ/analytica_gaussian_probability.md) | The probability a normal variable falls between `a` and `b`. |
+| [`analytica_hyperbolic_cosine`](integ/analytica_hyperbolic_cosine.md) | The integral of `cosh(k x)` from `a` to `b`. |
+| [`analytica_hyperbolic_sine`](integ/analytica_hyperbolic_sine.md) | The integral of `sinh(k x)` from `a` to `b`. |
+| [`analytica_hyperbolic_tangent`](integ/analytica_hyperbolic_tangent.md) | The integral of `tanh x` from `a` to `b`. |
+| [`analytica_lorentzian`](integ/analytica_lorentzian.md) | The integral of the Lorentzian kernel `1 / (x² + scale²)` from `a` to `b`. |
+| [`analytica_polynomial`](integ/analytica_polynomial.md) | The integral of a polynomial `c₀ + c₁x + c₂x² + …` from `a` to `b`. |
+| [`analytica_power`](integ/analytica_power.md) | The integral of `x^n` from `a` to `b`. |
+| [`analytica_sigmoid`](integ/analytica_sigmoid.md) | The integral of the logistic sigmoid `1 / (1 + e^{−x})` from `a` to `b`. |
+| [`analytica_sine`](integ/analytica_sine.md) | The integral of `sin(k x)` from `a` to `b`. |
+| [`cumulative_trapezoid`](integ/cumulative_trapezoid.md) | The running trapezoidal integral of sampled values: the area up to each point. |
+| [`integra`](integ/integra.md) | Integrates a function over an interval, choosing between quadrature and Monte Carlo itself. |
+| [`lebesgue`](integ/lebesgue.md) | Integrates a function by partitioning its range instead of its domain, and returns a bracket the exact value must lie in. |
+| [`measure_of`](integ/measure_of.md) | The Lebesgue measure of the set where a function exceeds a level: the length of `{x : f(x) > level}`. |
+| [`quadra`](integ/quadra.md) | Integrates a function over an interval, or over a box, by a quadrature rule that refines itself until it converges. |
+| [`quadra_scalar`](integ/quadra_scalar.md) | Integrates an ordinary `double(double)` function over an interval by composite Simpson. |
+| [`trapezoid`](integ/trapezoid.md) | Integrates sampled values by the trapezoidal rule, along one axis. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+integ/AleatoriaOptions
+integ/AleatoriaResult
+integ/IntegraOptions
+integ/IntegraResult
+integ/IntegraStrategy
+integ/LebesgueOptions
+integ/LebesgueResult
+integ/MeasureResult
+integ/QuadraNdOptions
+integ/QuadraNdResult
+integ/QuadraOptions
+integ/QuadraResult
+integ/QuadraRule
+integ/QuadraScalarOptions
+integ/QuadraScalarResult
+integ/aleatoria
+integ/analytica_arcsine_kernel
+integ/analytica_cosine
+integ/analytica_exponential
+integ/analytica_gaussian
+integ/analytica_gaussian_moment
+integ/analytica_gaussian_probability
+integ/analytica_hyperbolic_cosine
+integ/analytica_hyperbolic_sine
+integ/analytica_hyperbolic_tangent
+integ/analytica_lorentzian
+integ/analytica_polynomial
+integ/analytica_power
+integ/analytica_sigmoid
+integ/analytica_sine
+integ/cumulative_trapezoid
+integ/integra
+integ/lebesgue
+integ/measure_of
+integ/quadra
+integ/quadra_scalar
+integ/trapezoid
+```
+<!-- apiref:toctree:end -->

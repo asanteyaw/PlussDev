@@ -1,0 +1,64 @@
+# `power::BusKind`
+
+Selects which pair of quantities a bus fixes.
+
+## Signature
+
+```cpp
+power::BusKind
+```
+
+## What It Does
+
+Every bus in a network is one of three kinds. The kind says which two of the four bus quantities (active and reactive injection, voltage magnitude and angle) are fixed and which are solved for.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Slack` | Fixes the voltage magnitude and angle; its active and reactive injection are solved for and absorb the losses. Exactly one slack bus is required. |  |
+| `PV` | Fixes the active injection and the voltage magnitude; its reactive injection and angle are solved for. Use for a bus where a generator or regulator holds the voltage. |  |
+| `PQ` | Fixes the active and reactive injection; its voltage magnitude and angle are solved for. Use for load buses. |  |
+
+## Returns
+
+A scoped enumeration, stored in `Buses::kind`.
+
+## Errors
+
+A network with no slack bus or with more than one is rejected by `make`.
+
+## Interpretation and Use
+
+The injections of a bus are signed, with generation positive and load negative. A `PV` bus holds its voltage only while its reactive output is free; the library does not apply reactive limits in the power flow.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Generator buses as PV and as PQ.
+
+@@example Eng/api/power_ac_buskinds.cpp@@
+
+### Example 2
+
+Network validation, including the slack bus rules.
+
+@@example Eng/api/power_net_errors.cpp@@
+
+### Example 3
+
+A network with a voltage-controlled bus.
+
+@@example Eng/api/power_generators.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Base.html">
+    <span class="label">Next</span>
+    <span class="title">Base</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

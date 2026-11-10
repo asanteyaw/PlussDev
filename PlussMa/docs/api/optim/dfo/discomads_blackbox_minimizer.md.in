@@ -1,0 +1,178 @@
+# `dfo::discomads_blackbox_minimizer`
+
+Minimises a black box that fails at many points with Disco MADS, which looks for valid points around each failure.
+
+## Signature
+
+```cpp
+dfo::BlackboxAdvancedOutcome dfo::discomads_blackbox_minimizer(const std::function<dfo::BlackboxEvaluation(const pluss::Series &)> &blackbox, const pluss::Series &initial, const dfo::DiscoMadsConfig &config = {});
+template <class Fn> dfo::BlackboxAdvancedOutcome dfo::discomads_blackbox_minimizer(Fn &&blackbox, const pluss::Series &initial, const dfo::DiscoMadsConfig &config = {});
+```
+
+## What It Does
+
+For a simulation that does not always converge. A failed or non-finite evaluation stays a failure for the search, as in plain MADS, but Disco also looks around each failure: up to `rescue_trials` nearby points (random offsets of radius `rescue_radius`, shrinking by `rescue_radius_decay` each trial) are evaluated and any valid result is kept as a candidate, so valid information near failures is not thrown away. At the end the best candidate replaces the search result if it is better. The rescue only starts once a share `rescue_failure_rate` of the evaluations has failed (after a warm-up of 20 calls), because plain MADS copes with an occasional failure on its own; the rescue calls are extra calls of the black box.
+
+## Parameters
+
+`Fn &&blackbox`
+: A callable returning a `BlackboxEvaluation`, a `Series` of objectives or a number.
+
+`const pluss::Series &initial`
+: The starting point.
+
+`const dfo::DiscoMadsConfig &config`
+: The settings.
+
+## Returns
+
+A [`BlackboxAdvancedOutcome`](BlackboxAdvancedOutcome.md).
+
+## Errors
+
+- A black box that returns neither objectives nor a failure flag throws on the first call.
+
+## Practical Examples
+
+### Example 1
+
+A black box in which 80% of the points fail (it returns NaN there). The minimum of `(x₀ − 2)² + (x₁ − 1)²` is 0. Plain MADS stalls at 4.99, Disco reaches a better point, with more calls.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto make_box = [](double rate, std::int64_t *calls) {
+    return [rate, calls](const Series &x) {
+      ++*calls;
+      dfo::BlackboxEvaluation e;
+      const double a = x.select(0, 0).item<double>(), b = x.select(0, 1).item<double>();
+      double h = std::sin(12345.678 * a + 9876.543 * b + 0.5) * 43758.5453;   // a fixed pseudo-random fraction of points fails
+      h -= std::floor(h);
+      e.objectives = (h < rate) ? pluss::make_series(std::nan("")).reshape({1}) : (x - pluss::series::make({2.0, 1.0})).square().sum().reshape({1});
+      return e;
+    };
+  };
+  std::int64_t plain_calls = 0, disco_calls = 0;
+  dfo::MadsBlackboxAdvancedConfig plain;
+  plain.max_evaluations = 3000;
+  dfo::DiscoMadsConfig disco;
+  disco.base = plain;
+  const Series start = pluss::series::make({0.0, 0.0});
+  const dfo::BlackboxAdvancedOutcome a = dfo::mads_blackbox_minimizer(make_box(0.8, &plain_calls), start, plain);
+  const dfo::BlackboxAdvancedOutcome b = dfo::discomads_blackbox_minimizer(make_box(0.8, &disco_calls), start, disco);
+  out.writeln("plain MADS: minimum =", a.scalarized_minimum, ", calls =", plain_calls);
+  out.writeln("Disco     : minimum =", b.scalarized_minimum, ", calls =", disco_calls);
+}
+```
+
+### Example 2
+
+The number of rescue trials. More trials per failure find a better point and cost more calls.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto make_box = [](double rate, std::int64_t *calls) {
+    return [rate, calls](const Series &x) {
+      ++*calls;
+      dfo::BlackboxEvaluation e;
+      const double a = x.select(0, 0).item<double>(), b = x.select(0, 1).item<double>();
+      double h = std::sin(12345.678 * a + 9876.543 * b + 0.5) * 43758.5453;   // a fixed pseudo-random fraction of points fails
+      h -= std::floor(h);
+      e.objectives = (h < rate) ? pluss::make_series(std::nan("")).reshape({1}) : (x - pluss::series::make({2.0, 1.0})).square().sum().reshape({1});
+      return e;
+    };
+  };
+  for (const std::int64_t trials : {3, 12}) {
+    std::int64_t calls = 0;
+    dfo::DiscoMadsConfig config;
+    config.base.max_evaluations = 3000;
+    config.rescue_trials = trials;
+    const dfo::BlackboxAdvancedOutcome o = dfo::discomads_blackbox_minimizer(make_box(0.8, &calls), pluss::series::make({0.0, 0.0}), config);
+    out.writeln("rescue trials", trials, ": minimum =", o.scalarized_minimum, ", calls =", calls);
+  }
+}
+```
+
+### Example 3
+
+A mild failure rate. With 30% of the points failing, plain MADS copes: the rescue stays off below the default threshold of 50% and the two runs are identical.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto make_box = [](double rate, std::int64_t *calls) {
+    return [rate, calls](const Series &x) {
+      ++*calls;
+      dfo::BlackboxEvaluation e;
+      const double a = x.select(0, 0).item<double>(), b = x.select(0, 1).item<double>();
+      double h = std::sin(12345.678 * a + 9876.543 * b + 0.5) * 43758.5453;   // a fixed pseudo-random fraction of points fails
+      h -= std::floor(h);
+      e.objectives = (h < rate) ? pluss::make_series(std::nan("")).reshape({1}) : (x - pluss::series::make({2.0, 1.0})).square().sum().reshape({1});
+      return e;
+    };
+  };
+  std::int64_t plain_calls = 0, disco_calls = 0;
+  dfo::MadsBlackboxAdvancedConfig plain;
+  plain.max_evaluations = 3000;
+  dfo::DiscoMadsConfig disco;
+  disco.base = plain;
+  const Series start = pluss::series::make({0.0, 0.0});
+  out.writeln("plain MADS: minimum =", dfo::mads_blackbox_minimizer(make_box(0.3, &plain_calls), start, plain).scalarized_minimum, ", calls =", plain_calls);
+  out.writeln("Disco     : minimum =", dfo::discomads_blackbox_minimizer(make_box(0.3, &disco_calls), start, disco).scalarized_minimum, ", calls =", disco_calls);
+}
+```
+
+## See Also
+
+- [`DiscoMadsConfig`](DiscoMadsConfig.md): the settings
+- [`BlackboxEvaluation`](BlackboxEvaluation.md): what the black box returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="differential_evolution_prmm_minimizer.html">
+    <span class="label">Previous</span>
+    <span class="title">differential_evolution_prmm_minimizer</span>
+  </a>
+  <a class="next-link" href="ltmads_blackbox_minimizer.html">
+    <span class="label">Next</span>
+    <span class="title">ltmads_blackbox_minimizer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

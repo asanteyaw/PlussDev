@@ -1,0 +1,129 @@
+<!-- generated from platform.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: dcb846c559cc -->
+
+# `qp::Solver::platform`
+
+[Back to `qp::Solver`](../Solver.md)
+
+The device the prepared problem lives on: CPU or an accelerator.
+
+## Signature
+
+```cpp
+pluss::Platform qp::Solver::platform() const noexcept;
+```
+
+## What It Does
+
+The matrices of a prepared solver, and its factorisation, live on one platform, and solves run there. Read it to confirm where a solver is, or to create the data for later solves on the same device. Inputs on another platform must be moved with `.to(...)` before solving.
+
+## Returns
+
+A `pluss::Platform`.
+
+## Practical Examples
+
+### Example 1
+
+Matrices built on the CPU give a CPU solver.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const qp::Solver solver = qp::prepare(pluss::series::eye(2, pluss::ScalarType::Float64), pluss::series::eye(2, pluss::ScalarType::Float64));
+  out.writeln("on the CPU =", solver.platform() == pluss::pCPU);
+}
+```
+
+Output
+
+```text
+on the CPU = true
+```
+
+### Example 2
+
+Placing data with the solver. A new `q` is moved to the solver's platform before solving.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double inf = std::numeric_limits<double>::infinity();
+  const qp::Solver solver = qp::prepare(pluss::series::eye(2, pluss::ScalarType::Float64), pluss::series::eye(2, pluss::ScalarType::Float64));
+  const Series q = pluss::make_series({1.0, 2.0}).to(solver.platform(), solver.dtype());
+  const qp::Result result = solver.solve(q, pluss::series::make({-inf, -inf}), pluss::series::make({inf, inf}));
+  out.writeln("x =", result.x.items<double>());
+}
+```
+
+Output
+
+```text
+x = [-1.00000, -2.00000]
+```
+
+### Example 3
+
+Platform and dtype together describe where and how a solver computes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const qp::Solver solver = qp::prepare(pluss::series::eye(3, pluss::ScalarType::Float64), pluss::series::eye(3, pluss::ScalarType::Float64));
+  out.writeln("CPU =", solver.platform() == pluss::pCPU, ", Float64 =", solver.dtype() == pluss::ScalarType::Float64, ", variables =", solver.variables());
+}
+```
+
+Output
+
+```text
+CPU = true , Float64 = true , variables = 3
+```
+
+## See Also
+
+- [`dtype`](dtype.md): the arithmetic
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="dtype.html">
+    <span class="label">Previous</span>
+    <span class="title">dtype</span>
+  </a>
+  <a class="next-link" href="solve.html">
+    <span class="label">Next</span>
+    <span class="title">solve</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

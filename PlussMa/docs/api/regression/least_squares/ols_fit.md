@@ -1,0 +1,257 @@
+<!-- generated from ols_fit.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `regression::ols_fit`
+
+Fits an ordinary or case-weighted least-squares regression and returns the coefficients, their uncertainty, the measures of fit and the residual diagnostics.
+
+## Signature
+
+```cpp
+regression::OLSFitResult regression::ols_fit(const Series &y, const Series &x, const regression::OLSOptions &options = {}, Config cfg = {});
+```
+
+## What It Does
+
+Finds the coefficients β that minimise the weighted sum of squared residuals Σ wᵢ (yᵢ − xᵢβ)², with an intercept column added unless `add_intercept` is false. Call it as the first model for a continuous response: the coefficients answer how the mean of the response changes with each predictor, the residual diagnostics say whether a straight line is a fair description, and the other families are the alternatives when it is not: `poly_fit` for a curve, `glm_fit` for a binary or count response, `quantile_fit` for a median or another quantile. The coefficients come from a pseudoinverse of the weighted design, cut off at `rcond`, so a rank-deficient design still returns a fit, with the rank and a warning recorded. Standard errors, t tests and intervals use the classical covariance mse × (X′X)⁻¹ and the Student t distribution on `df_resid` degrees of freedom.
+
+Rows with non-finite values are dropped unless `drop_missing` is false, and rows of weight zero are not used. A weight is a repeat count, not an inverse-variance weight with a separately estimated covariance.
+
+## Parameters
+
+`y`
+: The response, `[n]` (a `[n, 1]` or `[1, n]` column or row is accepted).
+
+`x`
+: The predictors. A vector `[n]` is one predictor; a matrix `[n, p]` is `p` predictors. A matrix with no columns, `[n, 0]`, is an intercept-only model.
+
+`options`
+: An [`OLSOptions`](OLSOptions.md) choosing the level, intercept, missing-row handling, conditioning cutoff, weights and labels.
+
+`cfg`
+: Computation configuration for the returned `Series`.
+
+## Returns
+
+An [`OLSFitResult`](OLSFitResult.md).
+
+## Errors
+
+The call throws, with the message beginning `subsp::stats::regression::ols_fit:`, for each of these: `expected defined response`; `row mismatch between y and X`; `requires n >= number of parameters`; `alpha must be in (0,1)`; `rcond must be > 0`; `weights must be non-negative`; `weights must have one value per row`; `predictor_names size must equal number of design columns before intercept handling`; `non-finite values found and drop_missing=false`; `no observations left after filtering missing values`; and `a model needs at least one predictor or an intercept`.
+
+## Practical Examples
+
+### Example 1: a straight line
+
+Eight points close to a line. The fit recovers the slope and intercept and reports how well the line explains them.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  const auto fit = reg::ols_fit(y, x);
+  out.writeln(fit.coefficient_names, fit.coefficients.items<double>());
+  out.writeln("R^2", fit.rsquared, " rmse", fit.rmse, " nobs", fit.nobs);
+}
+```
+
+Output
+
+```text
+[const, x1] [0.21786, 1.97381]
+R^2 0.99895  rmse 0.16891  nobs 8
+```
+
+### Example 2: inference
+
+The standard errors, t statistics, p-values and 95% intervals of both coefficients.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  const auto fit = reg::ols_fit(y, x);
+  const std::vector<std::vector<double>> ci = fit.conf_int.host<double>();
+  out.writeln("std_errors", fit.std_errors.items<double>());
+  out.writeln("t_values  ", fit.t_values.items<double>(), " p_values", fit.p_values.items<double>());
+  out.writeln("intercept interval", ci[0], " slope interval", ci[1]);
+}
+```
+
+Output
+
+```text
+std_errors [0.13162, 0.02606]
+t_values   [1.65524, 75.72961]  p_values [0.14896, 0.00000]
+intercept interval [-0.10420, 0.53991]  slope interval [1.91003, 2.03759]
+```
+
+### Example 3: two predictors
+
+A matrix `x` of two columns, named for the report.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  std::vector<double> flat;
+  for (int i = 0; i < 8; ++i) flat.push_back(1.0 * (i + 1));
+  for (int i = 0; i < 8; ++i) flat.push_back((i % 3) * 1.5);
+  const auto x2 = pluss::make_series(flat, {2, 8}, as_f64()).transpose(0, 1);
+  reg::OLSOptions options;
+  options.response_name = "load";
+  options.predictor_names = {"hours", "shift"};
+  const auto fit = reg::ols_fit(y, x2, options);
+  out.writeln(fit.coefficient_names, fit.coefficients.items<double>());
+  out.writeln("adjusted R^2", fit.adj_rsquared, " df_resid", fit.df_resid);
+}
+```
+
+Output
+
+```text
+[const, hours, shift] [0.15278, 1.97056, 0.06074]
+adjusted R^2 0.99888  df_resid 5
+```
+
+### Example 4: an intercept-only model
+
+With no predictors the intercept is the mean of the response.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  const auto none = pluss::series::zeros({8, 0}, as_f64());
+  const auto fit = reg::ols_fit(y, none);
+  out.writeln("intercept", fit.coefficients.items<double>(), " mean of y", y.mean().item<double>());
+}
+```
+
+Output
+
+```text
+intercept [9.10000]  mean of y 9.10000
+```
+
+### Example 5: case weights
+
+Doubling the weight of the last row pulls the line towards it, exactly as repeating that row would.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  reg::OLSOptions options;
+  options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 1, 2}, {8}, as_f64());
+  const auto weighted = reg::ols_fit(y, x, options);
+  const auto plain = reg::ols_fit(y, x);
+  out.writeln("plain   ", plain.coefficients.items<double>());
+  out.writeln("weighted", weighted.coefficients.items<double>());
+}
+```
+
+Output
+
+```text
+plain    [0.21786, 1.97381]
+weighted [0.18403, 1.98508]
+```
+
+### Example 6: the errors
+
+Bad calls throw a message that names the problem: a response of the wrong length, negative weights, a wrong number of predictor names and more parameters than observations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      const std::string text(e.what());
+      out.writeln(text.substr(0, text.find('\n')));
+    }
+  };
+  report([&] { reg::ols_fit(y.slice(0, 0, 5), x); });
+  reg::OLSOptions options;
+  options.weights = pluss::make_series(std::vector<double>{-1, 1, 1, 1, 1, 1, 1, 1}, {8}, as_f64());
+  report([&] { reg::ols_fit(y, x, options); });
+  options.weights = pluss::series::undefined();
+  options.predictor_names = {"a", "b"};
+  report([&] { reg::ols_fit(y, x, options); });
+  report([&] { reg::ols_fit(y.slice(0, 0, 1), x.slice(0, 0, 1)); });
+}
+```
+
+Output
+
+```text
+subsp::stats::regression::ols_fit: row mismatch between y and X
+subsp::stats::regression::ols_fit: weights must be non-negative
+subsp::stats::regression::ols_fit: predictor_names size must equal number of design columns before intercept handling
+subsp::stats::regression::ols_fit: requires n >= number of parameters
+```
+
+## See Also
+
+[`ols_predict`](ols_predict.md) applies the result to new rows, [`OLSOptions`](OLSOptions.md) lists every control, and [`OLSFitResult`](OLSFitResult.md) describes each output.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OLSFitResult.html">
+    <span class="label">Previous</span>
+    <span class="title">OLSFitResult</span>
+  </a>
+  <a class="next-link" href="ols_predict.html">
+    <span class="label">Next</span>
+    <span class="title">ols_predict</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,52 @@
+<!-- generated from volbridge.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# The volatility bridge
+
+Moves between the time-series world of fitted GARCH-type models and the pricing world. **Returns side**: [`returns_metrics`](volbridge/returns_metrics.md) and [`variance_forecast`](volbridge/variance_forecast.md) read the log-likelihood, the conditional variances and a variance forecast out of a fitted GARCH, EGARCH or GJR model. **Pricing side**: [`Garch11Params`](volbridge/Garch11Params.md) and [`Ngarch11Params`](volbridge/Ngarch11Params.md) are GARCH-in-mean dynamics with a risk premium for option pricing under Duan's NGARCH, with [`pricing_metrics`](volbridge/pricing_metrics.md), [`pricing_variance_forecast`](volbridge/pricing_variance_forecast.md) and the conversion [`to_pricing_params`](volbridge/to_pricing_params.md). [`weighted_joint_loglik`](volbridge/weighted_joint_loglik.md) combines the return likelihood with an option-price likelihood for joint estimation.
+
+| You want | Use |
+|---|---|
+| The likelihood and variances of a fitted GARCH/EGARCH/GJR | [`returns_metrics`](volbridge/returns_metrics.md) |
+| A multi-step variance forecast | [`variance_forecast`](volbridge/variance_forecast.md) |
+| Pricing dynamics from a fitted model | [`to_pricing_params`](volbridge/to_pricing_params.md) |
+| The likelihood of returns under pricing dynamics | [`pricing_metrics`](volbridge/pricing_metrics.md) |
+| Returns and options in one objective | [`weighted_joint_loglik`](volbridge/weighted_joint_loglik.md), [`weighted_joint_nll`](volbridge/weighted_joint_nll.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`Garch11Params`](volbridge/Garch11Params.md) | Parameters of a plain GARCH(1,1)-in-mean model for pricing: Ngarch11Params without the leverage. |
+| [`JointLikelihoodWeights`](volbridge/JointLikelihoodWeights.md) | Weights of the returns and the option prices in a joint log-likelihood. |
+| [`Ngarch11Params`](volbridge/Ngarch11Params.md) | Parameters of Duan's NGARCH(1,1)-in-mean model for pricing: the variance recursion with leverage, the risk premium and the risk-free rate. |
+| [`OptionVolMetrics`](volbridge/OptionVolMetrics.md) | The log-likelihood, conditional variances, conditional means and standardised innovations of returns under pricing (NGARCH) dynamics. |
+| [`ReturnsMetrics`](volbridge/ReturnsMetrics.md) | The log-likelihood, its per-observation terms and the conditional variances of returns under a fitted GARCH-type model. |
+| [`pricing_metrics`](volbridge/pricing_metrics.md) | The likelihood, variances and innovations of returns under NGARCH or GARCH pricing dynamics. |
+| [`pricing_variance_forecast`](volbridge/pricing_variance_forecast.md) | The multi-step variance forecast under NGARCH or GARCH pricing dynamics, from the end of a return sample. |
+| [`returns_metrics`](volbridge/returns_metrics.md) | The log-likelihood and conditional variances of returns under a fitted GARCH, EGARCH or GJR model. |
+| [`to_pricing_params`](volbridge/to_pricing_params.md) | Converts a fitted GARCH model into NGARCH pricing parameters, adding the risk-free rate and the premium. |
+| [`unconditional_variance`](volbridge/unconditional_variance.md) | The long-run variance of an NGARCH or GARCH pricing model. |
+| [`variance_forecast`](volbridge/variance_forecast.md) | The multi-step variance forecast of a fitted GARCH, EGARCH or GJR model, starting from the end of a return sample. |
+| [`weighted_joint_loglik`](volbridge/weighted_joint_loglik.md) | The weighted sum of a returns log-likelihood and an options log-likelihood. |
+| [`weighted_joint_nll`](volbridge/weighted_joint_nll.md) | The negative of the weighted joint log-likelihood: the quantity a minimiser reduces. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+volbridge/Garch11Params
+volbridge/JointLikelihoodWeights
+volbridge/Ngarch11Params
+volbridge/OptionVolMetrics
+volbridge/ReturnsMetrics
+volbridge/pricing_metrics
+volbridge/pricing_variance_forecast
+volbridge/returns_metrics
+volbridge/to_pricing_params
+volbridge/unconditional_variance
+volbridge/variance_forecast
+volbridge/weighted_joint_loglik
+volbridge/weighted_joint_nll
+```
+<!-- apiref:toctree:end -->

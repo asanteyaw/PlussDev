@@ -1,0 +1,64 @@
+# `lti::SimOptions`
+
+## Signature
+
+```cpp
+lti::SimOptions options{};
+```
+
+## What It Does
+
+Carries simulation interpolation policy without changing the state-space model itself.
+
+## Fields
+
+| Field | Default | Meaning |
+|---|---:|---|
+| `hold` | `Hold::Auto` | Chooses automatic, zero-order, or linear input interpolation between continuous-time samples. |
+
+## Returns
+
+Pass by const reference to either `sim` overload.
+
+## Errors
+
+A hold policy incompatible with a discrete system is rejected when simulation begins.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Simulate a continuous first-order step response on an irregular time grid.
+
+@@example Eng/api/lti_sim.cpp@@
+
+### Example 2
+
+Compare hold policies with an explicit initial state.
+
+@@example Eng/api/lti_sim_modes.cpp@@
+
+### Example 3
+
+Exercise timestamp and input-shape validation.
+
+@@example Eng/api/lti_sim_errors.cpp@@
+
+## See Also
+
+See [Simulation](../simulation.md) for shapes, batching, hold policy, and continuous/discrete behavior.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Hold.html">
+    <span class="label">Previous</span>
+    <span class="title">Hold</span>
+  </a>
+  <a class="next-link" href="SimRun.html">
+    <span class="label">Next</span>
+    <span class="title">SimRun</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

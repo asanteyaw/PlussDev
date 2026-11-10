@@ -1,0 +1,185 @@
+# `dfo::BlackboxAdvancedDiagnostics`
+
+The counters of a black-box mesh-adaptive run.
+
+`evaluations` counts calls that count against `max_evaluations`; `total_evaluations` counts every call including free ones and, by default, cache hits; `cache_hits` counts repeats answered from memory; `surrogate_orderings` counts the polls the surrogate reordered; `pareto_size` is the archive size; `objective_dimension` and `constraint_dimension` are the numbers of objectives and constraints seen; `mesh_size` and `frame_size` are the final sizes.
+
+## Fields
+
+### `iterations`
+
+`std::int64_t`, default `0`.
+
+Iterations performed.
+
+### `evaluations`
+
+`std::int64_t`, default `0`.
+
+Counted evaluations.
+
+### `total_evaluations`
+
+`std::int64_t`, default `0`.
+
+All calls, including free ones and cache hits.
+
+### `cache_hits`
+
+`std::int64_t`, default `0`.
+
+Repeats answered from the cache.
+
+### `surrogate_orderings`
+
+`std::int64_t`, default `0`.
+
+Polls reordered by the surrogate.
+
+### `pareto_size`
+
+`std::int64_t`, default `0`.
+
+Points in the archive.
+
+### `objective_dimension`
+
+`std::int64_t`, default `1`.
+
+Number of objectives.
+
+### `constraint_dimension`
+
+`std::int64_t`, default `0`.
+
+Number of constraints.
+
+### `last_phase`
+
+`std::string`, default `empty`.
+
+Name of the last kind of iteration.
+
+### `mesh_size`
+
+`double`, default `0`.
+
+Final mesh size.
+
+### `frame_size`
+
+`double`, default `0`.
+
+Final frame size.
+
+## Guidance
+
+Read from `BlackboxAdvancedOutcome::diagnostics`.
+
+## Practical Examples
+
+### Example 1
+
+The counters of a plain run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});   // minimum 0 at (3, 3)
+    return e;
+  };
+
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), dfo::MadsBlackboxAdvancedConfig{});
+  const dfo::BlackboxAdvancedDiagnostics &d = o.diagnostics;
+  out.writeln("iterations =", d.iterations, ", evaluations =", d.evaluations, ", total =", d.total_evaluations, ", cache hits =", d.cache_hits);
+}
+```
+
+### Example 2
+
+Dimensions of the problem as seen by the solver.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1}).unite({(x + 3.0).square().sum().reshape({1})}, 0);
+    e.constraints = (x.select(0, 0) - 5.0).reshape({1});
+    return e;
+  };
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.objective_weights = pluss::series::make({0.5, 0.5});
+  config.max_evaluations = 200;
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), config);
+  out.writeln("objectives =", o.diagnostics.objective_dimension, ", constraints =", o.diagnostics.constraint_dimension, ", archive =", o.diagnostics.pareto_size);
+}
+```
+
+### Example 3
+
+The surrogate counts its reorderings.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series weights = pluss::series::make({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0});
+  const auto black_box = [&](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = ((x - 1.0).square() * weights).sum().reshape({1});
+    return e;
+  };
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.surrogate_mode = dfo::SurrogateMode::CandidateOrdering;
+  config.max_evaluations = 3000;
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make(std::vector<double>(8, -1.0)), config);
+  out.writeln("orderings =", o.diagnostics.surrogate_orderings, ", evaluations =", o.diagnostics.evaluations);
+}
+```
+
+## See Also
+
+- [`BlackboxAdvancedOutcome`](BlackboxAdvancedOutcome.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="BlackboxAdvancedOutcome.html">
+    <span class="label">Next</span>
+    <span class="title">BlackboxAdvancedOutcome</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

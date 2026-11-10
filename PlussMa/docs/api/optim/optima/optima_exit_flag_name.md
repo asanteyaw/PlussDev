@@ -1,0 +1,140 @@
+<!-- generated from optima_exit_flag_name.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::optima_exit_flag_name`
+
+The name of an `OptimaExitFlag` as text.
+
+## Signature
+
+```cpp
+std::string_view optim::optima_exit_flag_name(optim::OptimaExitFlag flag);
+```
+
+## What It Does
+
+Returns the enumerator name such as `Converged` or `NoFeasiblePoint`; `Unknown` for an invalid value. Use it in logs instead of printing the integer.
+
+## Parameters
+
+`flag`
+: The exit flag.
+
+## Returns
+
+A static name.
+
+## Practical Examples
+
+### Example 1
+
+All nine.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (const optim::OptimaExitFlag f : {optim::OptimaExitFlag::Converged, optim::OptimaExitFlag::MaxIterations, optim::OptimaExitFlag::Stopped, optim::OptimaExitFlag::NoFeasiblePoint, optim::OptimaExitFlag::ObjectiveTargetReached,
+                                         optim::OptimaExitFlag::NonFiniteEvaluation, optim::OptimaExitFlag::InvalidProblem, optim::OptimaExitFlag::NoProgress, optim::OptimaExitFlag::ConstraintStationary})
+    out.writeln(static_cast<int>(f), "->", optim::optima_exit_flag_name(f));
+}
+```
+
+Output
+
+```text
+1 -> Converged
+0 -> MaxIterations
+-1 -> Stopped
+-2 -> NoFeasiblePoint
+-3 -> ObjectiveTargetReached
+-4 -> NonFiniteEvaluation
+-5 -> InvalidProblem
+-6 -> NoProgress
+-7 -> ConstraintStationary
+```
+
+### Example 2
+
+Naming the flag of a solve.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), {}, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag));
+}
+```
+
+Output
+
+```text
+exit = Converged
+```
+
+### Example 3
+
+Branching on the flag.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), {}, disc);
+  if (result.exit_flag == optim::OptimaExitFlag::Converged) out.writeln("converged in", result.iteration, "iterations");
+  else out.writeln("did not converge:", optim::optima_exit_flag_name(result.exit_flag));
+}
+```
+
+Output
+
+```text
+converged in 4 iterations
+```
+
+## See Also
+
+- [`OptimaExitFlag`](OptimaExitFlag.md): the enumeration
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="optima_algorithm_name.html">
+    <span class="label">Previous</span>
+    <span class="title">optima_algorithm_name</span>
+  </a>
+  <a class="next-link" href="optima_problem_scaling_name.html">
+    <span class="label">Next</span>
+    <span class="title">optima_problem_scaling_name</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

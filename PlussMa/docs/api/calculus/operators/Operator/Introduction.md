@@ -1,0 +1,27 @@
+<!-- generated from Introduction.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::Operator` Introduction
+
+An `Operator` is a mathematical operator: a rule that turns one function into another. `differential("x")` turns `f` into `df/dx`; `integral("x", 0.0, 1.0)` turns `f(x, y)` into a function of `y` alone; `scale(2.0)` doubles; `shift("x", 1.0)` moves a function along `x`. Applying an operator is a function call, `op(f)`, and the result is an ordinary `math::Function`: it can be evaluated, differentiated, saved, or fed to another operator.
+
+An operator is a *value*, separate from the function it is applied to. Build it once, keep it, and apply it to as many functions as you like: this is the *staged* style. Or apply it at once, as in `operators::differential("x")(f)`, the *compact* style. Both build the same function. Because operators are values they can also be combined with each other before any function is involved: [`compose`](../compose.md) chains them, [`linear_combination`](../linear_combination.md) sums them, [`commutator`](../commutator.md) forms `AB − BA`, [`adjoint`](../adjoint.md) builds the formal adjoint.
+
+Every operator carries a few facts about itself:
+
+| Question | Method |
+|---|---|
+| Is there an operator here at all? | [`defined`](defined.md) |
+| What is the result of applying it? | [`operator()`](call.md) |
+| What properties does it promise (linear, savable, ...)? | [`capabilities`](capabilities.md) |
+| What is it called, for saving and loading? | [`key`](key.md), [`version`](version.md) |
+
+The built-in operators are produced by factory functions, one family per area of calculus (differential, integral, Fourier, Laplace, measure, geometry, expansion, stochastic, and so on). You can make your own with [`define`](../define.md).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="call.html">
+    <span class="label">Next</span>
+    <span class="title">call</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

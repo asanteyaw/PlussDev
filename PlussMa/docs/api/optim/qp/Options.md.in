@@ -1,0 +1,200 @@
+# `qp::Options`
+
+Iteration limit, stopping tolerances and penalty settings of the quadratic-program solver.
+
+`Options` configures [`qp::solve`](solve.md) and [`qp::prepare`](prepare.md). The defaults are a good general-purpose choice; the fields most worth changing are the tolerances (accuracy against iterations) and `max_iters` (the budget). The penalty settings rarely need attention because the penalty is rebalanced automatically.
+
+## Fields
+
+### `max_iters`
+
+`std::int64_t`, default `4000`.
+
+The most iterations a solve may take. Reaching it returns the current iterate with `converged = false`.
+
+### `rho`
+
+`double`, default `0.1`.
+
+The starting value of the penalty parameter. With `adaptive_rho` on it is only a starting value, rebalanced during the run; with it off it stays fixed and a poor value can make convergence very slow.
+
+### `sigma`
+
+`double`, default `1e-6`.
+
+A small regularisation added to the factored system for numerical stability. Rarely changed.
+
+### `alpha`
+
+`double`, default `1.6`.
+
+The over-relaxation parameter, between 1 and 2. Values above 1 usually speed convergence.
+
+### `abs_tol`
+
+`double`, default `1e-5`.
+
+The absolute part of the stopping tolerance on the primal and dual residuals.
+
+### `rel_tol`
+
+`double`, default `1e-5`.
+
+The relative part of the stopping tolerance: the residuals are compared with `abs_tol + rel_tol · scale`, where the scale is the size of the quantities involved.
+
+### `check_every`
+
+`std::int64_t`, default `10`.
+
+How often, in iterations, the residuals are evaluated and the stopping test and penalty rebalancing are performed. Checking costs a synchronisation, so a larger value is cheaper per iteration but stops at coarser steps.
+
+### `adaptive_rho`
+
+`bool`, default `true`.
+
+Whether to rescale the penalty at each check so the primal and dual residuals stay comparable. This makes the starting `rho` unimportant.
+
+### `adaptive_rho_tolerance`
+
+`double`, default `5.0`.
+
+The system is refactorised only when the penalty has changed by more than this factor, since refactorising costs more than an iteration.
+
+## Guidance
+
+Start with the defaults. Tighten both tolerances together when more digits are needed; raise `max_iters` only if `converged` is false at the cap; leave the penalty settings alone unless you switch `adaptive_rho` off.
+
+## Practical Examples
+
+### Example 1
+
+Tolerances against iterations. `abs_tol` and `rel_tol` together set when the residuals are small enough: tightening both to 1e-9 buys several digits and costs more iterations; loosening to 1e-3 does the reverse.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  for (const double tolerance : {1e-3, 1e-5, 1e-9}) {
+    qp::Options options;
+    options.abs_tol = tolerance;
+    options.rel_tol = tolerance;
+    const qp::Result result = qp::solve(P, q, A, lower, upper, options);
+    out.writeln("tolerance =", tolerance, ": iterations =", result.iterations, ", |x1 - 1| =", std::abs(result.x.items<double>()[1] - 1.0));
+  }
+}
+```
+
+### Example 2
+
+`max_iters` and `check_every`. The residuals are examined every `check_every` iterations, so a run stops at a multiple of it; a small `max_iters` returns the current iterate with `converged` false.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  qp::Options every_iteration, rare;
+  every_iteration.check_every = 1;
+  rare.check_every = 25;
+  qp::Options capped;
+  capped.max_iters = 10;
+  out.writeln("check_every = 1  : stops at iteration", qp::solve(P, q, A, lower, upper, every_iteration).iterations);
+  out.writeln("check_every = 10 : stops at iteration", qp::solve(P, q, A, lower, upper).iterations);
+  out.writeln("check_every = 25 : stops at iteration", qp::solve(P, q, A, lower, upper, rare).iterations);
+  const qp::Result partial = qp::solve(P, q, A, lower, upper, capped);
+  out.writeln("max_iters = 10   : converged =", partial.converged, ", iterations =", partial.iterations);
+}
+```
+
+### Example 3
+
+The penalty. With `adaptive_rho` on, the starting `rho` hardly matters (three starts spanning orders of magnitude converge in similar numbers of iterations); switched off, a poor `rho` may not converge within the cap.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace qp = pluss::subsp::math::qp;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  // minimise x0^2 + x1^2 - 2 x0 - 5 x1 = 0.5 x'Px + q'x   subject to   x0 + x1 = 1,  0 <= x0 <= 0.7,  x1 >= 0
+  const double inf = std::numeric_limits<double>::infinity();
+  const Series P = pluss::series::make({{2.0, 0.0}, {0.0, 2.0}});
+  const Series q = pluss::series::make({-2.0, -5.0});
+  const Series A = pluss::series::make({{1.0, 1.0}, {1.0, 0.0}, {0.0, 1.0}});
+  const Series lower = pluss::series::make({1.0, 0.0, 0.0});
+  const Series upper = pluss::series::make({1.0, 0.7, inf});
+
+  for (const double rho : {0.001, 0.1, 10.0}) {
+    qp::Options adaptive, fixed_penalty;
+    adaptive.rho = rho;
+    fixed_penalty.rho = rho;
+    fixed_penalty.adaptive_rho = false;
+    fixed_penalty.max_iters = 500;
+    const qp::Result a = qp::solve(P, q, A, lower, upper, adaptive);
+    const qp::Result f = qp::solve(P, q, A, lower, upper, fixed_penalty);
+    out.writeln("rho =", rho, ": adaptive iterations =", a.iterations, ", fixed (cap 500): converged =", f.converged);
+  }
+}
+```
+
+## See Also
+
+- [`solve`](solve.md): consumes Options
+- [`prepare`](prepare.md): fixes them for a Solver
+- [`Result`](Result.md): reports converged and iterations
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Result.html">
+    <span class="label">Next</span>
+    <span class="title">Result</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

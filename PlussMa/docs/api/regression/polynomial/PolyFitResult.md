@@ -1,0 +1,215 @@
+<!-- generated from PolyFitResult.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `regression::PolyFitResult`
+
+The outcome of `poly_fit`: the least-squares fit of the expanded design, and what the expansion was.
+
+## Signature
+
+```cpp
+regression::PolyFitResult regression::poly_fit(const Series &y, const Series &x, const regression::PolyOptions &options = {}, Config cfg = {});
+```
+
+A polynomial fit is a linear fit on expanded columns, so everything numerical lives in the nested `ols` result and has the meaning given on [`OLSFitResult`](../least_squares/OLSFitResult.md). The other three members record how the expansion was made, which `poly_predict` needs to repeat it.
+
+## Fields
+
+### `ols`
+
+The least-squares fit of the response on the expanded design: coefficients, standard errors, t statistics, p-values, intervals, fitted values, residuals, R², F statistic, information criteria and the rest. Its `coefficient_names` name the expanded columns (`const`, `x1`, `x1^2`, ...). The program reads the coefficients and their significance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  const auto fit = reg::poly_fit(y, x);
+  out.writeln("names", fit.ols.coefficient_names);
+  out.writeln("coefficients", fit.ols.coefficients.items<double>());
+  out.writeln("t values    ", fit.ols.t_values.items<double>());
+  out.writeln("p values    ", fit.ols.p_values.items<double>());
+}
+```
+
+Output
+
+```text
+names [const, x1, x1^2]
+coefficients [2.91786, -0.52976, 0.75357]
+t values     [31.09515, -11.07322, 145.22016]
+p values     [0.00000, 0.00010, 0.00000]
+```
+
+The same result carries the measures of fit; the program prints the ones most used.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  const auto fit = reg::poly_fit(y, x);
+  out.writeln("R^2", fit.ols.rsquared, " adjusted", fit.ols.adj_rsquared, " rmse", fit.ols.rmse);
+  out.writeln("nobs", fit.ols.nobs, " k_params", fit.ols.k_params, " df_resid", fit.ols.df_resid);
+}
+```
+
+Output
+
+```text
+R^2 0.99999  adjusted 0.99998  rmse 0.06726
+nobs 8  k_params 3  df_resid 5
+```
+
+And the fitted values and residuals of the training rows.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  const auto fit = reg::poly_fit(y, x);
+  out.writeln("fitted   ", fit.ols.fitted_values.items<double>());
+  out.writeln("residuals", fit.ols.residuals.items<double>());
+}
+```
+
+Output
+
+```text
+fitted    [3.14167, 4.87262, 8.11071, 12.85595, 19.10833, 26.86786, 36.13452, 46.90833]
+residuals [-0.04167, 0.02738, 0.08929, -0.05595, -0.00833, -0.06786, 0.06548, -0.00833]
+```
+
+### `degree`
+
+The degree the fit used, copied from the options.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  out.writeln("default degree", reg::poly_fit(y, x).degree);
+  reg::PolyOptions options;
+  options.degree = 3;
+  out.writeln("degree 3", reg::poly_fit(y, x, options).degree);
+}
+```
+
+Output
+
+```text
+default degree 2
+degree 3 3
+```
+
+### `include_cross`
+
+Whether mixed terms were included, copied from the options.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x1 = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, {10}, as_f64());
+  const auto x2 = pluss::make_series(std::vector<double>{3, 1, 4, 1, 5, 9, 2, 6, 5, 3}, {10}, as_f64());
+  const auto xx = x1.unsqueeze(1).unite({x2.unsqueeze(1)}, 1);
+  const auto yy = pluss::make_series(std::vector<double>{4.22, 3.7, 8.45, 6.6, 13.35, 22.38, 11.7, 21.82, 21.45, 18.6}, {10}, as_f64());
+  reg::PolyOptions options;
+  const auto plain = reg::poly_fit(yy, xx, options);
+  options.include_cross = true;
+  const auto crossed = reg::poly_fit(yy, xx, options);
+  out.writeln("default", plain.include_cross, " with cross terms", crossed.include_cross);
+}
+```
+
+Output
+
+```text
+default false  with cross terms true
+```
+
+### `base_predictor_names`
+
+The names of the original predictors, before expansion: `predictor_names` from the options, or `x1`, `x2` and so on. The expanded column names are built from them.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x1 = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, {10}, as_f64());
+  const auto x2 = pluss::make_series(std::vector<double>{3, 1, 4, 1, 5, 9, 2, 6, 5, 3}, {10}, as_f64());
+  const auto xx = x1.unsqueeze(1).unite({x2.unsqueeze(1)}, 1);
+  const auto yy = pluss::make_series(std::vector<double>{4.22, 3.7, 8.45, 6.6, 13.35, 22.38, 11.7, 21.82, 21.45, 18.6}, {10}, as_f64());
+  reg::PolyOptions options;
+  const auto unnamed = reg::poly_fit(yy, xx, options);
+  options.predictor_names = {"width", "depth"};
+  const auto named = reg::poly_fit(yy, xx, options);
+  out.writeln("default", unnamed.base_predictor_names);
+  out.writeln("given  ", named.base_predictor_names, " expanded", named.ols.coefficient_names);
+}
+```
+
+Output
+
+```text
+default [x1, x2]
+given   [width, depth]  expanded [const, width, width^2, depth, depth^2]
+```
+
+## See Also
+
+[`poly_fit`](poly_fit.md) produces the result, [`poly_predict`](poly_predict.md) applies it to new rows, [`poly_summary`](poly_summary.md) prints it, and [`OLSFitResult`](../least_squares/OLSFitResult.md) describes the nested fit.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PolyOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">PolyOptions</span>
+  </a>
+  <a class="next-link" href="poly_expand.html">
+    <span class="label">Next</span>
+    <span class="title">poly_expand</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

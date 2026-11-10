@@ -1,0 +1,69 @@
+# `power::Net`
+
+The complete description of a power network.
+
+## Signature
+
+```cpp
+power::Net
+```
+
+## What It Does
+
+A `Net` is the input of `make`: the per-unit base, the buses, the generators and the lines.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `base` | The per-unit `Base`. | required |
+| `buses` | The `Buses`. | required |
+| `gens` | The `Gens`. | empty (none) |
+| `lines` | The `Lines`. | required |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+Every inconsistency in the contained values is reported by `make`.
+
+## Interpretation and Use
+
+Build a `Net` once, compile it with `make`, and vary scenarios through leading axes or `active` flags rather than by rebuilding.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A minimal two-bus network.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 2
+
+A network with a generator.
+
+@@example Eng/api/power_generators.cpp@@
+
+### Example 3
+
+Batches and outages.
+
+@@example Eng/api/power_scenarios.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Lines.html">
+    <span class="label">Previous</span>
+    <span class="title">Lines</span>
+  </a>
+  <a class="next-link" href="Grid.html">
+    <span class="label">Next</span>
+    <span class="title">Grid</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

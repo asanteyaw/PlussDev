@@ -1,0 +1,175 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 1893e74e6800 -->
+
+# `module::Field::validate`
+
+[Back to `module::Field`](../Field.md)
+
+Checks the whole field and throws, listing every problem, if it cannot be priced.
+
+## Signature
+
+```cpp
+void module::Field::validate() const;
+```
+
+## What It Does
+
+`validate` runs the checks that `price` runs first, without pricing: every member must be defined, finite and in its domain (positive strikes, volatilities and mean-reversion speeds, a correlation in (−1, 1), non-negative maturities and so on); strike, maturity, spot, rate and yield must each have one element or the same number; the engine must support the model and the exercise style; and the engine's own settings must be sensible (positive path counts, enough lattice steps). All problems are reported together, each naming its member, so a field assembled by hand can be corrected in one pass. A model that is legal but suspicious (a Heston parameter set that violates the Feller condition) is accepted.
+
+Call it after building or editing a field when you want a clear failure before an expensive pricing or calibration.
+
+## Returns
+
+Nothing; throws on error.
+
+## Errors
+
+- An invalid field throws (`pluss::Error`) listing every problem.
+
+## Practical Examples
+
+### Example 1
+
+A sound field passes silently.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.05, 0.02),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::All}};
+
+  field.validate();
+  out.writeln("valid");
+}
+```
+
+### Example 2
+
+A mismatch of lengths. Three strikes and two maturities cannot be paired; the problem is named.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series({90.0, 100.0, 110.0}), .maturity = pluss::make_series({0.5, 1.0})},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic}};
+  try {
+    (void)(field.validate());
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find("Triggered")));
+  }
+}
+```
+
+### Example 3
+
+An engine that does not support the model is caught before pricing; so is a setting of the engine in use that is out of range.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Lattice, .risk = mod::Risk::PriceOnly}};
+
+  try {
+    (void)(field.validate());
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find("Triggered")));
+  }
+
+  field.controls.engine = mod::Engine::MonteCarlo;
+  field.controls.mc.paths = -1;
+  try {
+    (void)(field.validate());
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find("Triggered")));
+  }
+}
+```
+
+### Example 4
+
+A legal but suspicious model does not stop validation. This Heston set violates the Feller condition `2κθ ≥ σ²` (the variance can reach zero), yet the field validates and prices.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {0.5, 0.02, 0.8, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  field.validate();
+  out.writeln("valid; price =", field.price().price.items<double>());
+}
+```
+
+## See Also
+
+- [`Field`](../Field.md): the class
+- [`price`](price.md): validates first
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="simulate_paths.html">
+    <span class="label">Previous</span>
+    <span class="title">simulate_paths</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

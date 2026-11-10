@@ -1,0 +1,57 @@
+# Controller construction
+
+This branch builds explicit feedback controllers. `place` computes state-feedback gain that assigns requested closed-loop poles. `pid` constructs an immutable parallel-form PID controller whose continuous or discrete frequency response can be evaluated through `freqresp`.
+
+## Choosing A Surface
+
+Pole placement specifies desired dynamics directly and requires a controllable state-space realization. PID construction requires only proportional, integral, derivative, and derivative-filter gains, making it useful when a low-order error-feedback law is preferable to full-state feedback.
+
+## Practical Examples
+
+The examples place second-order poles, construct and inspect a continuous PID controller, and exercise controllability and PID-parameter guards.
+
+### Example 1
+
+Assign two continuous closed-loop poles and inspect placement diagnostics.
+
+@@example Eng/api/control_place.cpp@@
+
+### Example 2
+
+Construct a filtered parallel PID controller and evaluate its frequency response.
+
+@@example Eng/api/control_pid.cpp@@
+
+### Example 3
+
+Reject an uncontrollable plant and a negative derivative-filter constant.
+
+@@example Eng/api/control_controller_errors.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+controllers/PlaceOptions
+controllers/PlaceResult
+controllers/PidRule
+controllers/PidController
+controllers/place
+controllers/pid
+controllers/freqresp
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+controllers/PlaceOptions
+controllers/PlaceResult
+controllers/PidRule
+controllers/PidController
+controllers/place
+controllers/pid
+controllers/freqresp
+```
+<!-- apiref:toctree:end -->

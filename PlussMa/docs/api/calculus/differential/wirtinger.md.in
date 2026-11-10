@@ -1,0 +1,167 @@
+# `operators::wirtinger`
+
+The Wirtinger derivative `∂/∂z` of a function of a complex variable.
+
+## Signature
+
+```cpp
+operators::Operator operators::wirtinger(std::string_view variable, std::int64_t order = 1, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+A function of a complex variable `z = x + iy` can depend on `z` and on its conjugate `z̄` separately. The Wirtinger derivatives are `∂/∂z = ½(∂/∂x − i ∂/∂y)` and `∂/∂z̄ = ½(∂/∂x + i ∂/∂y)`. `wirtinger("z")` is the first; [`conjugate_wirtinger`](conjugate_wirtinger.md) is the second.
+
+For a holomorphic function (one that depends on `z` only) `∂/∂z` is the ordinary complex derivative and `∂/∂z̄` is zero; that second condition is the Cauchy–Riemann equations written as one equation. For a function that also depends on `z̄`, such as `|z|²`, both derivatives are non-zero and together they carry all of the real information.
+
+The rules for `conj`, `real`, `imag`, `abs` and `angle` are built in, so expressions that mix them differentiate exactly. Fractional powers, `log` and `sqrt` use the principal branch. Higher orders repeat the derivative: `wirtinger("z", 2)` is `∂²/∂z²`. For a function of a *real* parameter, whose values happen to be complex, use [`differential`](differential.md).
+
+## Parameters
+
+`std::string_view variable`
+: The complex variable. It must be a variable of the function the operator is applied to.
+
+`std::int64_t order`
+: How many times to differentiate. Positive; default 1.
+
+`operators::DiffOptions options`
+: Non-smooth policy, fallback and size limit; see `DiffOptions`.
+
+## Returns
+
+An `Operator` whose application returns `∂ⁿf/∂zⁿ` as a `Function` with the same variables.
+
+## Errors
+
+- A non-positive order is refused.
+- A variable the function lacks is refused when applied.
+
+## Practical Examples
+
+### Example 1
+
+A holomorphic function has `∂/∂z` equal to the ordinary derivative and `∂/∂z̄` zero. For `z²` at `z = 1 + 2i`, `∂/∂z = 2z = 2 + 4i`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"z"}, [](math::Function z) { return z * z; });
+  const std::complex<double> point{1.0, 2.0};
+  const std::complex<double> dz = operators::wirtinger("z")(f)(point).item<std::complex<double>>();
+  const std::complex<double> dzbar = operators::conjugate_wirtinger("z")(f)(point).item<std::complex<double>>();
+  out.writeln("d/dz  z^2 =", dz.real(), "+", dz.imag(), "i  (2z = 2 + 4i)");
+  out.writeln("|d/dzb z^2| =", std::abs(dzbar));
+}
+```
+
+### Example 2
+
+A function of `z` and `z̄`: `z z̄ = |z|²`. Then `∂/∂z = z̄` and `∂/∂z̄ = z`. At `z = 1 + 2i` those are `1 − 2i` and `1 + 2i`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"z"}, [](math::Function z) { return z * z.conj(); });
+  const std::complex<double> point{1.0, 2.0};
+  const std::complex<double> dz = operators::wirtinger("z")(f)(point).item<std::complex<double>>();
+  const std::complex<double> dzbar = operators::conjugate_wirtinger("z")(f)(point).item<std::complex<double>>();
+  out.writeln("d/dz  |z|^2 =", dz.real(), dz.imag(), "  (conj z = 1 - 2i)");
+  out.writeln("d/dzb |z|^2 =", dzbar.real(), dzbar.imag(), "  (z = 1 + 2i)");
+}
+```
+
+### Example 3
+
+The built-in rules for the parts of a complex number. At `z = 3 + 4i`: `∂|z|/∂z = z̄/(2|z|) = (3 − 4i)/10`, and `∂(Re z)/∂z = ½`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function modulus = math::function({"z"}, [](math::Function z) { return z.abs(); });
+  const math::Function real_part = math::function({"z"}, [](math::Function z) { return z.real(); });
+  const std::complex<double> point{3.0, 4.0};
+  const std::complex<double> a = operators::wirtinger("z")(modulus)(point).item<std::complex<double>>();
+  const std::complex<double> b = operators::wirtinger("z")(real_part)(point).item<std::complex<double>>();
+  out.writeln("d|z|/dz  =", a.real(), a.imag(), "  (0.3 - 0.4i)");
+  out.writeln("dRe/dz   =", b.real(), b.imag(), "  (0.5)");
+}
+```
+
+### Example 4
+
+Higher orders. `∂²/∂z²` of `z³` is `6z`, which is `6 + 12i` at `1 + 2i`. The order must be positive.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function f = math::function({"z"}, [](math::Function z) { return z * z * z; });
+  const std::complex<double> w = operators::wirtinger("z", 2)(f)(std::complex<double>{1.0, 2.0}).item<std::complex<double>>();
+  out.writeln("d2/dz2 z^3 =", w.real(), w.imag());
+  try { (void)operators::wirtinger("z", 0); } catch (const pluss::Error &e) { out.writeln("order zero:", first_line(e)); }
+}
+```
+
+## See Also
+
+- [`conjugate_wirtinger`](conjugate_wirtinger.md): the derivative with respect to `z̄`
+- [`differential`](differential.md): derivative with respect to a real parameter
+- [`math::Function::conj`](../functions/Function/conj.md): the conjugate
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="magnitude_differential.html">
+    <span class="label">Previous</span>
+    <span class="title">magnitude_differential</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

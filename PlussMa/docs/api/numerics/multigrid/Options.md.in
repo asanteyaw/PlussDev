@@ -1,0 +1,306 @@
+# `multigrid::Options`
+
+Tuning of the smoother, the coarsening and the execution path of the V-cycle.
+
+The smoother is a Chebyshev polynomial in the diagonally scaled operator, aimed at the upper part of its spectrum, which damps the high-frequency error that coarse grids cannot represent; it needs no inner products, so each level is a few whole-field expressions. `smoothing_degree` is the polynomial degree per pre- and post-smoothing and `smoothing_ratio` sets how much of the spectrum it targets. `coarsest_cells`, `max_levels` and `dense_limit` shape the hierarchy and the coarsest solve, and the two `native_*` flags choose a fused host path. The defaults suit most problems.
+
+## Fields
+
+### `smoothing_degree`
+
+`std::int64_t`, default `3`.
+
+Chebyshev degree of each pre- and post-smoothing. Raise for fewer iterations at more work per cycle.
+
+### `coarsest_cells`
+
+`std::int64_t`, default `64`.
+
+Coarsening stops at or below this many cells (per lane).
+
+### `smoothing_ratio`
+
+`double`, default `4.0`.
+
+The smoother targets `[2/ratio, 2.2]` of the scaled spectrum.
+
+### `max_levels`
+
+`std::int64_t`, default `32`.
+
+Upper bound on the number of levels.
+
+### `dense_limit`
+
+`std::int64_t`, default `1024`.
+
+A coarsest level of at most this many cells is inverted by pseudo-inverse (handling singular problems); a larger one is smoothed.
+
+### `native_smoother`
+
+`bool`, default `true`.
+
+On the CPU, for fields that record no derivative, smooth with the fused native loop (the identical polynomial).
+
+### `native_cycle`
+
+`bool`, default `true`.
+
+On the CPU, for fields that record no derivative, run the whole V-cycle on host arrays.
+
+## Guidance
+
+Passed to the `Hierarchy` constructor.
+
+## Practical Examples
+
+### Example 1
+
+The smoothing degree. A higher degree smooths more per cycle, so the preconditioned iteration needs fewer iterations (at more work per iteration).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const std::int64_t n = 64;
+  const std::vector<mg::Axis> axes = {{n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}};
+  const Series rhs = pluss::series::ones({n, n}, pluss::ScalarType::Float64);
+
+  for (const std::int64_t degree : {1, 2, 3, 6}) {
+    mg::Options options;
+    options.smoothing_degree = degree;
+  mg::Hierarchy h({.axes = axes}, rhs, options);
+  krylov::CgOptions cg_options;
+  cg_options.check_interval = 1;
+  cg_options.max_iterations = 1000;
+  const auto apply = [&](const Series &u) { return h.apply(u); };
+  const krylov::CgResult r = krylov::pcg(apply, [&](const Series &z) { return h.vcycle(z); }, rhs, {-2, -1}, cg_options);
+    out.writeln("degree", degree, ": iterations =", r.iterations);
+  }
+}
+```
+
+### Example 2
+
+The coarsest size. Coarsening stops when a level has at most this many cells; a smaller value gives more levels and a smaller coarsest problem.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const std::int64_t n = 64;
+  const std::vector<mg::Axis> axes = {{n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}};
+  const Series rhs = pluss::series::ones({n, n}, pluss::ScalarType::Float64);
+
+  for (const std::int64_t coarsest : {4, 64, 1024}) {
+    mg::Options options;
+    options.coarsest_cells = coarsest;
+    const mg::Hierarchy h({.axes = axes}, rhs, options);
+    out.writeln("coarsest_cells", coarsest, ": levels =", h.levels(), ", coarsest =", h.coarsest_cells());
+  }
+}
+```
+
+### Example 3
+
+The smoothing ratio. It sets the lower end of the target interval of the Chebyshev smoother (`2/ratio`); a larger ratio targets a wider band of high frequencies.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const std::int64_t n = 64;
+  const std::vector<mg::Axis> axes = {{n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}};
+  const Series rhs = pluss::series::ones({n, n}, pluss::ScalarType::Float64);
+
+  for (const double ratio : {2.0, 4.0, 8.0}) {
+    mg::Options options;
+    options.smoothing_ratio = ratio;
+  mg::Hierarchy h({.axes = axes}, rhs, options);
+  krylov::CgOptions cg_options;
+  cg_options.check_interval = 1;
+  cg_options.max_iterations = 1000;
+  const auto apply = [&](const Series &u) { return h.apply(u); };
+  const krylov::CgResult r = krylov::pcg(apply, [&](const Series &z) { return h.vcycle(z); }, rhs, {-2, -1}, cg_options);
+    out.writeln("ratio", ratio, ": iterations =", r.iterations);
+  }
+}
+```
+
+### Example 4
+
+The level limit. A cap on the number of levels leaves a larger coarsest problem.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const std::int64_t n = 64;
+  const std::vector<mg::Axis> axes = {{n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}};
+  const Series rhs = pluss::series::ones({n, n}, pluss::ScalarType::Float64);
+
+  for (const std::int64_t levels : {2, 4, 32}) {
+    mg::Options options;
+    options.max_levels = levels;
+    const mg::Hierarchy h({.axes = axes}, rhs, options);
+    out.writeln("max_levels", levels, ": levels =", h.levels(), ", coarsest =", h.coarsest_cells());
+  }
+}
+```
+
+### Example 5
+
+The dense limit. A coarsest level with at most this many cells is inverted exactly; a larger one is only smoothed by a high-degree polynomial. With a coarsest level of 16 cells the two choices give the same iteration count here, because the polynomial solves so small a problem accurately; the exact inverse matters for large coarsest levels and for singular problems, where it is the pseudo-inverse that handles the null space.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const std::int64_t n = 64;
+  const std::vector<mg::Axis> axes = {{n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}};
+  const Series rhs = pluss::series::ones({n, n}, pluss::ScalarType::Float64);
+
+  for (const std::int64_t dense : {4, 1024}) {
+    mg::Options options;
+    options.dense_limit = dense;
+    options.coarsest_cells = 16;
+  mg::Hierarchy h({.axes = axes}, rhs, options);
+  krylov::CgOptions cg_options;
+  cg_options.check_interval = 1;
+  cg_options.max_iterations = 1000;
+  const auto apply = [&](const Series &u) { return h.apply(u); };
+  const krylov::CgResult r = krylov::pcg(apply, [&](const Series &z) { return h.vcycle(z); }, rhs, {-2, -1}, cg_options);
+    out.writeln("dense_limit", dense, ": iterations =", r.iterations);
+  }
+}
+```
+
+### Example 6
+
+The native smoother. The fused host loop and the expression path apply the identical polynomial: their results agree to rounding.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const std::int64_t n = 64;
+  const std::vector<mg::Axis> axes = {{n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}};
+  const Series rhs = pluss::series::ones({n, n}, pluss::ScalarType::Float64);
+
+  mg::Options fused;
+  mg::Options expression;
+  expression.native_smoother = false;
+  const mg::Hierarchy a({.axes = axes}, rhs, fused);
+  const mg::Hierarchy b({.axes = axes}, rhs, expression);
+  out.writeln("difference =", (a.vcycle(rhs) - b.vcycle(rhs)).abs().max().item<double>());
+}
+```
+
+### Example 7
+
+The native cycle. The whole V-cycle on host arrays against the same cycle as `Series` expressions: the same operator, so the same output.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const std::int64_t n = 64;
+  const std::vector<mg::Axis> axes = {{n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {n, 1.0 / n, mg::Edge::Dirichlet, mg::Edge::Dirichlet}};
+  const Series rhs = pluss::series::ones({n, n}, pluss::ScalarType::Float64);
+
+  mg::Options host;
+  mg::Options expressions;
+  expressions.native_cycle = false;
+  expressions.native_smoother = false;
+  const mg::Hierarchy a({.axes = axes}, rhs, host);
+  const mg::Hierarchy b({.axes = axes}, rhs, expressions);
+  out.writeln("difference =", (a.vcycle(rhs) - b.vcycle(rhs)).abs().max().item<double>());
+}
+```
+
+## See Also
+
+- [`Hierarchy`](Hierarchy.md): built with it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Hierarchy.html">
+    <span class="label">Previous</span>
+    <span class="title">Hierarchy</span>
+  </a>
+  <a class="next-link" href="Problem.html">
+    <span class="label">Next</span>
+    <span class="title">Problem</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

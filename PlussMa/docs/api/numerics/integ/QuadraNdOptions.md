@@ -1,0 +1,169 @@
+<!-- generated from QuadraNdOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `integ::QuadraNdOptions`
+
+Rule and per-axis resolution of the multi-dimensional tensor-product rule.
+
+The same rule and resolution are used on every axis. `resolution` is the number of nodes per axis for the trapezoid and Simpson rules and the number of panels per axis for Gauss-Legendre (which then uses `gauss_points` nodes in each); the total node count is the product over the axes, and `max_total_nodes` makes a larger request throw instead of allocating. There is no adaptive refinement here; raise `resolution` and compare, or use [`aleatoria`](aleatoria.md) when the dimension is high.
+
+## Fields
+
+### `rule`
+
+`integ::QuadraRule`, default `GaussLegendre`.
+
+The rule on every axis.
+
+### `resolution`
+
+`std::int64_t`, default `5`.
+
+Nodes per axis (trapezoid, Simpson) or panels per axis (Gauss-Legendre).
+
+### `gauss_points`
+
+`std::int64_t`, default `5`.
+
+Gauss-Legendre: nodes per panel, 5 or 10.
+
+### `dtype`
+
+`pluss::ScalarType`, default `Float64`.
+
+Precision of nodes and result.
+
+### `platform`
+
+`pluss::Platform`, default `CPU`.
+
+Where the nodes live.
+
+### `max_total_nodes`
+
+`std::int64_t`, default `2000000`.
+
+The largest grid allowed; a bigger request throws.
+
+## Guidance
+
+Passed to the N-dimensional `quadra`.
+
+## Practical Examples
+
+### Example 1
+
+The resolution. For a smooth integrand, `∫₀¹∫₀¹ e^{x+y} = (e − 1)² = 2.95249244`, two Gauss-Legendre panels per axis already give the value to ten digits, and more panels only add evaluations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  for (const std::int64_t resolution : {2, 4, 8}) {
+    integ::QuadraNdOptions options;
+    options.resolution = resolution;
+    const integ::QuadraNdResult r = integ::quadra([](const std::vector<Series> &c) { return (c[0] + c[1]).exp(); }, {{0.0, 1.0}, {0.0, 1.0}}, options);
+    out.writeln("resolution", resolution, ": value =", r.value.item<double>(), ", evaluations =", r.evaluations);
+  }
+}
+```
+
+Output
+
+```text
+resolution 2 : value = 2.9524924420 , evaluations = 100
+resolution 4 : value = 2.9524924420 , evaluations = 400
+resolution 8 : value = 2.9524924420 , evaluations = 1600
+```
+
+### Example 2
+
+Simpson on each axis, with more nodes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  integ::QuadraNdOptions options;
+  options.rule = integ::QuadraRule::Simpson;
+  options.resolution = 17;
+  const integ::QuadraNdResult r = integ::quadra([](const std::vector<Series> &c) { return (c[0] + c[1]).exp(); }, {{0.0, 1.0}, {0.0, 1.0}}, options);
+  out.writeln("value =", r.value.item<double>(), ", evaluations =", r.evaluations);
+}
+```
+
+Output
+
+```text
+value = 2.9524927544 , evaluations = 361
+```
+
+### Example 3
+
+The size guard. A request for far more nodes than `max_total_nodes` throws rather than allocating.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  integ::QuadraNdOptions options;
+  options.rule = integ::QuadraRule::Trapezoidal;
+  options.resolution = 1000;
+  options.max_total_nodes = 10000;
+  try {
+    (void)integ::quadra([](const std::vector<Series> &c) { return c[0] * c[1]; }, {{0.0, 1.0}, {0.0, 1.0}}, options);
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::integ::quadra: tensor-product node count exceeds max_total_nodes -- reduce resolution/dimensions (deterministic ND quadrature scales exponentially with dimension), or use aleatoria()'s N-D Monte Carlo overload instead for high-dimensional integrals
+```
+
+## See Also
+
+- [`quadra`](quadra.md): uses it
+- [`QuadraNdResult`](QuadraNdResult.md): what it returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MeasureResult.html">
+    <span class="label">Previous</span>
+    <span class="title">MeasureResult</span>
+  </a>
+  <a class="next-link" href="QuadraNdResult.html">
+    <span class="label">Next</span>
+    <span class="title">QuadraNdResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

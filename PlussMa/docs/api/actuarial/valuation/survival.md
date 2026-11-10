@@ -1,0 +1,218 @@
+<!-- generated from survival.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `actuarial::cashflow::survival`
+
+A benefit paid at the end of a term only if the life survives it: a pure endowment.
+
+## Signature
+
+```cpp
+actuarial::Cashflow actuarial::cashflow::survival(std::int64_t years, double benefit = 1.0);
+```
+
+## What It Does
+
+Creates a pure endowment: `benefit` is paid at time `years` if the life is alive then, and nothing is paid on death. Its expected present value is {math}`{}_nE_x=v^n\,{}_np_x`. The cashflow has one non-zero survival payment, the last, and zero death payments.
+
+A zero-year term pays the benefit at time 0 for certain. A negative benefit is accepted.
+
+## Parameters
+
+`std::int64_t years`
+: The length of the term in years; at least 0.
+
+`double benefit`
+: The survival benefit, finite; default 1.
+
+## Returns
+
+A defined `Cashflow` whose only payment is `benefit` at time `years`.
+
+## Errors
+
+Throws `cashflow::survival: years must be >= 0` for a negative term and a message naming `benefit` for a non-finite benefit.
+
+## Practical Examples
+
+### Example 1: the schedule
+
+A benefit of 7 at the end of three years: only the last survival payment is non-zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const actuarial::Cashflow c = actuarial::cashflow::survival(3, 7.0);
+  out.writeln("survival", c.survival_payments().items<double>(), " death", c.death_payments().items<double>());
+}
+```
+
+Output
+
+```text
+survival [0.0, 0.0, 0.0, 7.0]  death [0.0, 0.0, 0.0]
+```
+
+### Example 2: the value
+
+The expected present value is the discounted probability of surviving the term.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  const double survive = actuarial::survival_curve(qx).items<double>().back();
+  out.writeln("value =", value(actuarial::cashflow::survival(5)).item<double>(), " v^n * nPx =", std::pow(1.0 / 1.04, 5) * survive);
+}
+```
+
+Output
+
+```text
+value = 0.758194  v^n * nPx = 0.758194
+```
+
+### Example 3: endowment is term plus pure endowment
+
+Adding the term insurance and the pure endowment gives the endowment insurance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  out.writeln("term + pure =", value(actuarial::cashflow::death(5)).item<double>() + value(actuarial::cashflow::survival(5)).item<double>(), " endowment =", value(actuarial::cashflow::endowment(5)).item<double>());
+}
+```
+
+Output
+
+```text
+term + pure = 0.826128  endowment = 0.826128
+```
+
+### Example 4: a term of zero years
+
+The benefit is paid at once, with certainty.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  out.writeln("survival(0, 100) value =", value(actuarial::cashflow::survival(0, 100.0)).item<double>());
+}
+```
+
+Output
+
+```text
+survival(0, 100) value = 100.000000
+```
+
+### Example 5: the errors
+
+A negative term and a non-finite benefit are refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::cashflow::survival(-1); });
+  report([&] { (void)actuarial::cashflow::survival(3, std::nan("")); });
+}
+```
+
+Output
+
+```text
+cashflow::survival: years must be >= 0
+cashflow::survival: benefit must be finite
+```
+
+## See Also
+
+[`death`](death.md) pays on death, [`endowment`](endowment.md) pays on both, and [`make`](make.md) builds any benefit.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="death.html">
+    <span class="label">Previous</span>
+    <span class="title">death</span>
+  </a>
+  <a class="next-link" href="endowment.html">
+    <span class="label">Next</span>
+    <span class="title">endowment</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

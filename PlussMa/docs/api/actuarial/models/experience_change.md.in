@@ -1,0 +1,192 @@
+# `actuarial::models::experience_change`
+
+The rate change indicated by loss experience.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::models::experience_change(const pluss::Series &incurred_losses, const pluss::Series &exposure, const pluss::Series &current_premium, double fixed_expense, double variable_expense_ratio, double profit_ratio);
+```
+
+## What It Does
+
+Runs the whole indication and returns only its last stage: the pure premium of each cell ([`premium_curve`](premium_curve.md)), the loaded premium ([`indicated_premium`](indicated_premium.md)) and the change from the current premium ([`rate_change`](rate_change.md)). It is the `rate_change` field of the [`PricingResult`](../pricing/PricingResult.md) of [`operators::price`](../pricing/price.md); use it when only the change is wanted, and the operator when the intermediate figures are too.
+
+## Parameters
+
+`incurred_losses`, `exposure`, `current_premium`
+: Series of the same length: losses and exposure 0 or more, current premium strictly greater than 0.
+
+`fixed_expense`, `variable_expense_ratio`, `profit_ratio`
+: The loads, as for [`indicated_premium`](indicated_premium.md).
+
+## Returns
+
+A series of rate changes, one per cell.
+
+## Errors
+
+Throws the errors of [`operators::price`](../pricing/price.md): invalid loads when the operator is built and `premium_curve: …`, `rate_change: current_premium must be strictly > 0` for the data.
+
+## Practical Examples
+
+### Example 1: the rate change of each cell
+
+Four cells with the standard loads.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700.0, 720.0, 740.0, 760.0});
+  out.writeln(actuarial::models::experience_change(losses, exposure, premium, 50.0, 0.15, 0.05).items<double>());
+}
+```
+
+### Example 2: the same as the step functions
+
+Chaining the three functions gives the same figures.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700.0, 720.0, 740.0, 760.0});
+  const pluss::Series chained = actuarial::models::rate_change(premium, actuarial::models::indicated_premium(actuarial::models::premium_curve(losses, exposure), 50.0, 0.15, 0.05));
+  out.writeln(chained.items<double>());
+  out.writeln(actuarial::models::experience_change(losses, exposure, premium, 50.0, 0.15, 0.05).items<double>());
+}
+```
+
+### Example 3: the same as the operator
+
+The rate_change field of a pricing run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700.0, 720.0, 740.0, 760.0});
+  const actuarial::Experience experience{losses, exposure, premium};
+  out.writeln(actuarial::operators::price(actuarial::Loads{50.0, 0.15, 0.05})(experience).rate_change.items<double>());
+}
+```
+
+### Example 4: an unloaded indication
+
+With no loads the change compares the pure premium with the premium.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700.0, 720.0, 740.0, 760.0});
+  out.writeln(actuarial::models::experience_change(losses, exposure, premium, 0.0, 0.0, 0.0).items<double>());
+}
+```
+
+### Example 5: the errors
+
+Invalid loads, a zero premium and mismatched lengths are refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::models::experience_change(pluss::make_series({1.0}), pluss::make_series({1.0}), pluss::make_series({1.0}), -1.0, 0.1, 0.1); });
+  report([&] { (void)actuarial::models::experience_change(pluss::make_series({1.0}), pluss::make_series({1.0}), pluss::make_series({1.0}), 0.0, 0.6, 0.5); });
+  report([&] { (void)actuarial::models::experience_change(pluss::make_series({1.0}), pluss::make_series({1.0}), pluss::make_series({0.0}), 0.0, 0.1, 0.1); });
+  report([&] { (void)actuarial::models::experience_change(pluss::make_series({1.0, 2.0}), pluss::make_series({1.0}), pluss::make_series({1.0, 1.0}), 0.0, 0.1, 0.1); });
+}
+```
+
+## See Also
+
+- [`rate_change`](rate_change.md), [`indicated_premium`](indicated_premium.md): the steps
+- [`operators::price`](../pricing/price.md): the operator that runs these steps together
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rate_change.html">
+    <span class="label">Previous</span>
+    <span class="title">rate_change</span>
+  </a>
+  <a class="next-link" href="bf_ultimate.html">
+    <span class="label">Next</span>
+    <span class="title">bf_ultimate</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

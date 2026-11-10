@@ -1,0 +1,65 @@
+# `power::ibase`
+
+Current base of a per-unit system.
+
+## Signature
+
+```cpp
+double power::ibase(const power::Base& base);
+```
+
+## What It Does
+
+Returns `power / (sqrt(3) voltage)`, the line current in amperes that equals `1` per unit.
+
+## Parameters
+
+`base`
+: The power and voltage bases.
+
+## Returns
+
+The current base in amperes.
+
+## Errors
+
+Throws `std::invalid_argument` for a base that is not positive and finite.
+
+## Interpretation and Use
+
+Divide a line current in amperes by it to get per unit.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The three derived bases.
+
+@@example Eng/api/power_units.cpp@@
+
+### Example 2
+
+A base in a network.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 3
+
+A rejected base.
+
+@@example Eng/api/power_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ybase.html">
+    <span class="label">Previous</span>
+    <span class="title">ybase</span>
+  </a>
+  <a class="next-link" href="pu.html">
+    <span class="label">Next</span>
+    <span class="title">pu</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

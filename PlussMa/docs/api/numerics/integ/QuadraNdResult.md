@@ -1,0 +1,138 @@
+<!-- generated from QuadraNdResult.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `integ::QuadraNdResult`
+
+The value of a multi-dimensional integral and the size of the grid it used.
+
+`value` is a scalar `Series`, `dimensions` the number of axes and `evaluations` the number of grid nodes the integrand was called on (the product of the per-axis counts).
+
+## Fields
+
+### `value`
+
+`pluss::Series`, default `undefined`.
+
+The integral.
+
+### `dimensions`
+
+`std::int64_t`, default `0`.
+
+Number of axes.
+
+### `evaluations`
+
+`std::int64_t`, default `0`.
+
+Grid nodes the integrand was called on.
+
+## Guidance
+
+Returned by the N-dimensional `quadra`.
+
+## Practical Examples
+
+### Example 1
+
+Reading a result.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const integ::QuadraNdResult r = integ::quadra([](const std::vector<Series> &c) { return c[0] * c[1]; }, {{0.0, 1.0}, {0.0, 2.0}});
+  out.writeln("value =", r.value.item<double>(), ", dimensions =", r.dimensions, ", evaluations =", r.evaluations);
+}
+```
+
+Output
+
+```text
+value = 1.00000000 , dimensions = 2 , evaluations = 625
+```
+
+### Example 2
+
+Evaluations grow as the power of the dimension. The same resolution on two, three and four axes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  integ::QuadraNdOptions options;
+  options.resolution = 4;
+  const auto one = [](const std::vector<Series> &c) { return c[0] * 0.0 + 1.0; };
+  out.writeln("2 axes :", integ::quadra(one, {{0.0, 1.0}, {0.0, 1.0}}, options).evaluations);
+  out.writeln("3 axes :", integ::quadra(one, {{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}}, options).evaluations);
+  out.writeln("4 axes :", integ::quadra(one, {{0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}, {0.0, 1.0}}, options).evaluations);
+}
+```
+
+Output
+
+```text
+2 axes : 400
+3 axes : 8000
+4 axes : 160000
+```
+
+### Example 3
+
+The volume of a box as a check. Integrating 1 returns the product of the side lengths.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const integ::QuadraNdResult r = integ::quadra([](const std::vector<Series> &c) { return c[0] * 0.0 + 1.0; }, {{0.0, 2.0}, {1.0, 4.0}, {-1.0, 1.0}});
+  out.writeln("volume =", r.value.item<double>(), ", exact =", 2.0 * 3.0 * 2.0);
+}
+```
+
+Output
+
+```text
+volume = 12.00000000 , exact = 12.00000000
+```
+
+## See Also
+
+- [`quadra`](quadra.md): produces it
+- [`QuadraNdOptions`](QuadraNdOptions.md): the settings
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="QuadraNdOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">QuadraNdOptions</span>
+  </a>
+  <a class="next-link" href="QuadraOptions.html">
+    <span class="label">Next</span>
+    <span class="title">QuadraOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

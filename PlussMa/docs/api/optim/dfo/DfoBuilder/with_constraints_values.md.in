@@ -1,0 +1,128 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8b0633b7b9ea -->
+
+# `DfoBuilder::with_constraints_values`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Sets inequality and equality constraints through `DfoConstraintValues`.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_constraints_values(std::function<dfo::DfoConstraintValues(const pluss::Series &)> constraints_values) const;
+template <class Fn> dfo::DfoBuilder dfo::DfoBuilder::with_constraints_values(Fn &&constraints_values) const;
+```
+
+## What It Does
+
+The callable returns a [`DfoConstraintValues`](../DfoConstraintValues.md) with an `inequality` part (`≤ 0`) and an `equality` part (`= 0`). A callable that returns a plain `Series` or number is taken as inequality values. Equality constraints are supported by pattern search, the method the front door chooses for constrained problems.
+
+## Parameters
+
+`std::function<dfo::DfoConstraintValues(const pluss::Series &)> constraints_values`
+: The constraint values.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+An equality constraint. Minimise `Σ (xᵢ − 3)²` on the line `x₀ + x₁ = 2`: the answer is `(1, 1)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_constraints_values([](const Series &x) {
+    dfo::DfoConstraintValues c;
+    c.equality = x.sum() - 2.0;
+    return c;
+  }).solve();
+  out.writeln("minimizer =", r.minimizer.items<double>(), ", violation =", r.diagnostics.max_constraint_violation);
+}
+```
+
+### Example 2
+
+Both kinds: the line `x₀ − x₁ = 0` and the half-plane `x₀ + x₁ ≤ 4`. The answer is `(2, 2)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_constraints_values([](const Series &x) {
+    dfo::DfoConstraintValues c;
+    c.inequality = x.sum() - 4.0;
+    c.equality = x.select(0, 0) - x.select(0, 1);
+    return c;
+  }).solve();
+  out.writeln("minimizer =", r.minimizer.items<double>());
+}
+```
+
+### Example 3
+
+A callable that returns a Series is read as inequality values.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_constraints_values([](const Series &x) { return x.sum() - 2.0; }).solve();
+  out.writeln("minimizer =", r.minimizer.items<double>());
+}
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_constraints.html">
+    <span class="label">Previous</span>
+    <span class="title">with_constraints</span>
+  </a>
+  <a class="next-link" href="with_de_config.html">
+    <span class="label">Next</span>
+    <span class="title">with_de_config</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

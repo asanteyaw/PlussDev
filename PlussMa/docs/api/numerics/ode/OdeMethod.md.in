@@ -1,0 +1,136 @@
+# `ode::OdeMethod`
+
+The step rule of `fluxa`.
+
+`RK4` is the classical fourth-order Runge-Kutta rule with a fixed number of equal steps (`OdeOptions::steps`): four evaluations per step, error of order `h⁴`, a cost known in advance. `RK45` is the adaptive Dormand-Prince 5(4) pair: it adjusts the step to a requested tolerance, which is cheaper when the solution is smooth in places and needs fine steps in others. The adjoint solver [`fluxa_adjoint`](fluxa_adjoint.md) and the event solver [`fluxa_until`](fluxa_until.md) are defined for `RK4` only.
+
+## Fields
+
+### `RK4`
+
+`enumerator`, default `0`.
+
+Fixed-step classical Runge-Kutta.
+
+### `RK45`
+
+`enumerator`, default `1`.
+
+Adaptive Dormand-Prince 5(4).
+
+## Guidance
+
+Set as `OdeOptions::method`.
+
+## Practical Examples
+
+### Example 1
+
+Both methods on `y' = −y`. RK4 uses a fixed 400 evaluations; RK45 uses what the tolerance requires.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &) { return y * -1.0; };   // y' = -y, exact solution e^{-t}
+
+  for (const ode::OdeMethod method : {ode::OdeMethod::RK4, ode::OdeMethod::RK45}) {
+    ode::OdeOptions options;
+    options.method = method;
+    const ode::OdeResult r = ode::fluxa(decay, pluss::make_series({1.0}), 0.0, 1.0, pluss::series::undefined(), options);
+    out.writeln(static_cast<int>(method), ": error =", std::abs(r.y_final.items<double>()[0] - std::exp(-1.0)), ", evaluations =", r.function_evaluations);
+  }
+}
+```
+
+### Example 2
+
+A fixed method ignores tolerances; an adaptive one honours them. Tightening the tolerance buys accuracy with more steps.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(14));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &) { return y * -1.0; };   // y' = -y, exact solution e^{-t}
+
+  for (const double tol : {1e-4, 1e-8, 1e-12}) {
+    ode::OdeOptions options;
+    options.method = ode::OdeMethod::RK45;
+    options.relative_tolerance = tol;
+    options.absolute_tolerance = tol * 1e-3;
+    const ode::OdeResult r = ode::fluxa(decay, pluss::make_series({1.0}), 0.0, 1.0, pluss::series::undefined(), options);
+    out.writeln("tolerance", tol, ": steps =", r.steps, ", error =", std::abs(r.y_final.items<double>()[0] - std::exp(-1.0)));
+  }
+}
+```
+
+### Example 3
+
+Adjoint and event solving need `RK4`: asking for another method is rejected.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &) { return y * -1.0; };
+  ode::OdeOptions options;
+  options.method = ode::OdeMethod::RK45;
+  try {
+    (void)ode::fluxa_adjoint(decay, pluss::make_series({1.0}), 0.0, 1.0, pluss::make_series({1.0}), pluss::make_series({1.0}), options);
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`fluxa`](fluxa.md): the solver
+- [`OdeOptions`](OdeOptions.md): its settings
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OdeEventResult.html">
+    <span class="label">Previous</span>
+    <span class="title">OdeEventResult</span>
+  </a>
+  <a class="next-link" href="OdeOptions.html">
+    <span class="label">Next</span>
+    <span class="title">OdeOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

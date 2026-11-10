@@ -1,0 +1,200 @@
+<!-- generated from PSDiagnostics.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::PSDiagnostics`
+
+The counters and last-state values of a pattern-search run.
+
+`iterations` and `evaluations` count polls and objective calls; `cache_hits` counts repeated points answered from the cache; `search_trials` and `search_successes` count search-step points and the ones that improved; `nups_updates` counts per-variable mesh rescalings; `outer_iterations` counts augmented-Lagrangian rounds; `mesh_size` is the final mesh; `penalty` the final penalty weight; `max_constraint_violation` the largest violation at the answer; `last_step` names the last kind of step.
+
+## Fields
+
+### `iterations`
+
+`std::int64_t`, default `0`.
+
+Polls performed.
+
+### `evaluations`
+
+`std::int64_t`, default `0`.
+
+Objective evaluations.
+
+### `cache_hits`
+
+`std::int64_t`, default `0`.
+
+Evaluations answered from the cache.
+
+### `nups_updates`
+
+`std::int64_t`, default `0`.
+
+Per-variable mesh rescalings.
+
+### `search_trials`
+
+`std::int64_t`, default `0`.
+
+Search-step points evaluated.
+
+### `search_successes`
+
+`std::int64_t`, default `0`.
+
+Search-step points that improved.
+
+### `outer_iterations`
+
+`std::int64_t`, default `0`.
+
+Augmented-Lagrangian rounds.
+
+### `last_step`
+
+`std::string`, default `empty`.
+
+Name of the last step.
+
+### `mesh_size`
+
+`double`, default `0`.
+
+Final mesh size.
+
+### `penalty`
+
+`double`, default `0`.
+
+Final penalty weight.
+
+### `max_constraint_violation`
+
+`double`, default `0`.
+
+Largest violation at the answer.
+
+## Guidance
+
+Read from `PSOutcome::diagnostics`.
+
+## Practical Examples
+
+### Example 1
+
+An unconstrained run.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}));
+  const dfo::PSDiagnostics &d = o.diagnostics;
+  out.writeln("iterations =", d.iterations, ", evaluations =", d.evaluations, ", cache hits =", d.cache_hits, ", mesh =", d.mesh_size, ", last step =", d.last_step);
+}
+```
+
+Output
+
+```text
+iterations = 200 , evaluations = 663 , cache hits = 0 , mesh = 0.00097656 , last step = successful_poll
+```
+
+### Example 2
+
+The search step. With the search on, the diagnostics count its trials and successes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  dfo::PSConfig config;
+  config.search_strategy = dfo::PSSearchStrategy::ExpandAndRandomDirections;
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config);
+  out.writeln("search trials =", o.diagnostics.search_trials, ", successes =", o.diagnostics.search_successes);
+}
+```
+
+Output
+
+```text
+search trials = 1238 , successes = 39
+```
+
+### Example 3
+
+A constrained run. The augmented-Lagrangian rounds and the final penalty are reported.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f = [](const Series &x) { return (x - 2.0).square().sum(); };   // exact constrained optimum 3.3431 at (0.7071, 0.7071)
+  dfo::PSConfig config;
+  config.nonlinear_constraints = [](const Series &x) {
+    dfo::PSConstraintValues v;
+    v.inequality = (x.square().sum() - 1.0).reshape({1});   // inside the unit disc
+    return v;
+  };
+
+  const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0}), config);
+  out.writeln("outer rounds =", o.diagnostics.outer_iterations, ", penalty =", o.diagnostics.penalty, ", violation =", o.diagnostics.max_constraint_violation);
+}
+```
+
+Output
+
+```text
+outer rounds = 12 , penalty = 781250.000000 , violation = 0.000000
+```
+
+## See Also
+
+- [`PSOutcome`](PSOutcome.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PSConstraintValues.html">
+    <span class="label">Previous</span>
+    <span class="title">PSConstraintValues</span>
+  </a>
+  <a class="next-link" href="PSDirectionFamily.html">
+    <span class="label">Next</span>
+    <span class="title">PSDirectionFamily</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

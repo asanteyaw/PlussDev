@@ -1,0 +1,69 @@
+# `structure::Sections`
+
+Cross-section properties and density of each frame member.
+
+## Signature
+
+```cpp
+structure::Sections
+```
+
+## What It Does
+
+A `Sections` holds what a frame member needs besides its geometry: area for axial stiffness, the second moment of area for bending stiffness, the modulus and, optionally, the density that gives the member mass.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `area` | Cross-sectional area `A` of each member, shape `[..., member]`, positive. Axial stiffness is `E A / L`. | required |
+| `inertia` | Second moment of area `I` of each member about the axis perpendicular to the plane of the frame, shape `[..., member]`, positive. Bending stiffness scales with `E I / L^3`. | required |
+| `modulus` | Young's modulus `E` of each member, shape `[..., member]`, positive. | required |
+| `density` | Mass per volume of each member, shape `[..., member]`, positive. It is optional and is needed only by `mass`, `modes`, `motion` and `harmonic`. | undefined (no mass) |
+
+## Returns
+
+A value; validated by `frame`.
+
+## Errors
+
+Non-positive entries, a wrong member count, or a dtype or platform different from the mesh are rejected by `frame`. A density that is present must be positive.
+
+## Interpretation and Use
+
+Compute `I` for the actual cross-section and bending axis: a rectangle `b` wide and `d` deep has `I = b d^3 / 12` for bending in the plane of the depth. Leave `density` undefined for static analysis; `modes`, `mass`, `motion` and `harmonic` refuse a frame without it and say so.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Sections with and without density, and the total mass the density implies.
+
+@@example Eng/api/structure_frame_build.cpp@@
+
+### Example 2
+
+Rejected section data, including a zero density.
+
+@@example Eng/api/structure_frame_errors.cpp@@
+
+### Example 3
+
+Modes of a frame whose sections carry a density.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Bars.html">
+    <span class="label">Previous</span>
+    <span class="title">Bars</span>
+  </a>
+  <a class="next-link" href="Fix.html">
+    <span class="label">Next</span>
+    <span class="title">Fix</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

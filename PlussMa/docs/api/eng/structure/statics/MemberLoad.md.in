@@ -1,0 +1,67 @@
+# `structure::MemberLoad`
+
+Uniform loads along frame members.
+
+## Signature
+
+```cpp
+structure::MemberLoad
+```
+
+## What It Does
+
+A `MemberLoad` describes loads spread uniformly along members, given in each member's own axes. `solve(frame, load, member_load, fix)` carries them exactly: they are converted to consistent nodal loads, and the reported end actions include the members' own loads.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `transverse` | Intensity along the member's local y axis, force per length, shape `[..., member]`. For a member running from left to right local y points up, so a downward load is negative. | undefined (none) |
+| `axial` | Intensity along the member's local x axis, from the first node to the second, force per length, shape `[..., member]`. | undefined (none) |
+
+## Returns
+
+A value; validated by `solve`.
+
+## Errors
+
+A length that differs from the member count, a non-finite value, a dtype or platform different from the frame, or batch axes that cannot broadcast with the nodal load are rejected by `solve`.
+
+## Interpretation and Use
+
+Either field may be left undefined. A loading that varies along a member is written as a uniform intensity on each of several shorter members. Leading axes are a batch of intensities and broadcast with the batch axes of the nodal load. For a load of `w` per length over a member of length `l`, the consistent nodal loads are `w l / 2` at each end and `w l^2 / 12` as a moment, with opposite signs at the two ends.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A uniform load, a load on one member, an axial load and a batch of intensities.
+
+@@example Eng/api/structure_member_load.cpp@@
+
+### Example 2
+
+The frame solve that the member load adds to.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 3
+
+Validation raised by the frame.
+
+@@example Eng/api/structure_frame_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="FrameResult.html">
+    <span class="label">Previous</span>
+    <span class="title">FrameResult</span>
+  </a>
+  <a class="next-link" href="NonlinearOptions.html">
+    <span class="label">Next</span>
+    <span class="title">NonlinearOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

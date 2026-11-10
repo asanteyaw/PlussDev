@@ -1,0 +1,65 @@
+# `lti::SimRun`
+
+## Signature
+
+```cpp
+lti::SimRun run = lti::sim(system, input, time);
+```
+
+## What It Does
+
+Owns both externally visible outputs and internal state history from one simulation, allowing diagnostics and chained analysis without rerunning dynamics.
+
+## Fields
+
+| Field | Meaning |
+|---|---|
+| `values` | Output history with shape `[..., time, outputs]`. |
+| `states` | State history with shape `[..., time, states]`, including the state associated with each output sample. |
+
+## Returns
+
+Returned by both `lti::sim` overloads.
+
+## Errors
+
+The result itself is valid by construction; errors occur during simulation before a `SimRun` is returned.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Simulate a continuous first-order step response on an irregular time grid.
+
+@@example Eng/api/lti_sim.cpp@@
+
+### Example 2
+
+Compare hold policies with an explicit initial state.
+
+@@example Eng/api/lti_sim_modes.cpp@@
+
+### Example 3
+
+Exercise timestamp and input-shape validation.
+
+@@example Eng/api/lti_sim_errors.cpp@@
+
+## See Also
+
+See [Simulation](../simulation.md) for shapes, batching, hold policy, and continuous/discrete behavior.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SimOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">SimOptions</span>
+  </a>
+  <a class="next-link" href="sim.html">
+    <span class="label">Next</span>
+    <span class="title">sim</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

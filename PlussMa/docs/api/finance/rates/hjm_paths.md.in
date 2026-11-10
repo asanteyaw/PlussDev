@@ -1,0 +1,205 @@
+# `rates::hjm_paths`
+
+Simulates the forward curve of the one-factor Heath-Jarrow-Morton model.
+
+## Signature
+
+```cpp
+rates::HjmPaths rates::hjm_paths(std::int64_t steps, std::int64_t paths, double dt, const rates::HjmParams &params, const rates::SimOptions &options, pluss::Config cfg = {}, std::uint64_t seed = 0);
+rates::HjmPaths rates::hjm_paths(std::int64_t steps, std::int64_t paths, double dt, const rates::HjmParams &params, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+Follows the forward curve `f(t, τ)` on the tenor grid of `params` in the Musiela form: each step moves the curve along the tenor axis (the transport term), adds the no-arbitrage drift `σ(τ)∫₀^τ σ(u)du` and the shock `σ(τ)√dt·Z`, with one `Z` per path per step shared by all tenors. An extra node at time to maturity zero is the short rate. Because the transport is a forward difference stepped explicitly, `dt` may not exceed the smallest spacing of the tenor grid; the tenor grid also sets the accuracy (the interpolation smooths the curve by an amount of the order of half the spacing). The result is an [`HjmPaths`](HjmPaths.md). The two signatures differ in where the random-number settings come from.
+
+## Parameters
+
+`std::int64_t steps`
+: Number of steps.
+
+`std::int64_t paths`
+: Number of paths.
+
+`double dt`
+: Step length in years; not larger than the smallest tenor spacing.
+
+`const rates::HjmParams &params`
+: The model.
+
+`const rates::SimOptions &options`
+: Random-number settings (first form).
+
+`pluss::Config cfg`
+: Device of the result.
+
+`std::uint64_t seed`
+: Seed (second form).
+
+## Returns
+
+An [`HjmPaths`](HjmPaths.md).
+
+## Errors
+
+- Invalid parameters or options, or `dt` above the smallest tenor spacing, throw (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+A year of weekly steps: the curve before and after, and the short rate.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const rt::HjmParams p;
+  const rt::HjmPaths sim = rt::hjm_paths(52, 4, 1.0 / 52.0, p, pluss::Config{}, 3);
+  out.writeln("t = 0 :", sim.forward.select(0, 0).select(0, 0).items<double>());
+  out.writeln("t = 1 :", sim.forward.select(0, 52).select(0, 0).items<double>());
+  out.writeln("short rate at 0 and 1:", sim.rate.select(1, 0).select(0, 0).item<double>(), sim.rate.select(1, 0).select(0, 52).item<double>());
+}
+```
+
+### Example 2
+
+No-arbitrage: the average discount factor from the simulation reproduces the flat starting curve. Here the 2-year zero price from simulation against `e^{−r₀ T}`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rt::HjmParams p;
+  rt::SimOptions options;
+  options.seed = 3;
+  const double dt = 1.0 / 252.0;
+  const rt::HjmPaths sim = rt::hjm_paths(504, 100000, dt, p, options);
+  const Series integral = sim.rate.slice(0, 0, 504, 1).sum(0, false) * dt;
+  out.writeln("simulated", (integral * -1.0).exp().mean().item<double>(), ", exact", std::exp(-0.03 * 2.0));
+}
+```
+
+### Example 3
+
+The step restriction: a step larger than the smallest tenor spacing (0.25 here) is refused, as the transport would be unstable.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const rt::HjmParams p;
+  try {
+    (void)(rt::hjm_paths(4, 4, 0.5, p));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+### Example 4
+
+Paths first, and one factor: every tenor on a path is moved by the same shock, so the forwards of one path move together.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  rt::SimOptions options;
+  options.paths_first = true;
+  options.seed = 3;
+  const rt::HjmPaths sim = rt::hjm_paths(26, 6, 1.0 / 52.0, rt::HjmParams{}, options);
+  out.writeln("forward shape", sim.forward.sizes(), ", rate shape", sim.rate.sizes());
+}
+```
+
+### Example 5
+
+The curve is conserved on average. With a constant volatility the mean forward after a year stays near its starting 3% apart from the no-arbitrage drift, which is small (order `σ²τ`); the spread follows the volatility.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  rt::HjmParams p;
+  p.tenors = {0.25, 1.0, 3.0};
+  p.vol = {0.010, 0.010, 0.010};
+  const rt::HjmPaths sim = rt::hjm_paths(52, 50000, 1.0 / 52.0, p, pluss::Config{}, 3);
+  const Series curve = sim.forward.select(0, 52);
+  out.writeln("mean forward by tenor:", curve.mean(0, false).items<double>());
+  out.writeln("sd of the forward by tenor:", curve.std(0, false).items<double>());
+}
+```
+
+## See Also
+
+- [`HjmParams`](HjmParams.md): the model
+- [`hjm_zcb_mc`](hjm_zcb_mc.md): a bond price from the simulation
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="cir_zcb.html">
+    <span class="label">Previous</span>
+    <span class="title">cir_zcb</span>
+  </a>
+  <a class="next-link" href="hjm_zcb_mc.html">
+    <span class="label">Next</span>
+    <span class="title">hjm_zcb_mc</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

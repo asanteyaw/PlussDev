@@ -1,0 +1,126 @@
+# `dfo::PSPollPattern`
+
+Which set of directions is polled.
+
+`PositiveBasis2N` polls the `2n` points `±mesh` along each direction of a basis. `PositiveBasisNp1` polls the `n + 1` points of a minimal positive basis, which costs about half as many evaluations per poll but gives a coarser picture of the neighbourhood.
+
+## Fields
+
+### `PositiveBasis2N`
+
+`enumerator`, default `0`.
+
+The `2n` points `±mesh` along each basis direction.
+
+### `PositiveBasisNp1`
+
+`enumerator`, default `1`.
+
+The `n + 1` points of a minimal positive basis.
+
+## Guidance
+
+Set as `PSConfig::poll_pattern`.
+
+## Practical Examples
+
+### Example 1
+
+Evaluations per run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const auto pattern : {dfo::PSPollPattern::PositiveBasis2N, dfo::PSPollPattern::PositiveBasisNp1}) {
+    dfo::PSConfig config;
+    config.poll_pattern = pattern;
+    config.search_strategy = dfo::PSSearchStrategy::Off;
+    const dfo::PSOutcome o = dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config);
+    out.writeln(pattern == dfo::PSPollPattern::PositiveBasis2N ? "2N " : "N+1", ": evaluations =", o.diagnostics.evaluations, ", minimum =", o.minimum);
+  }
+}
+```
+
+### Example 2
+
+In three variables the saving grows: `2n = 6` against `n + 1 = 4` points per poll.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -1.0, 2.0})).square().sum(); };
+  for (const auto pattern : {dfo::PSPollPattern::PositiveBasis2N, dfo::PSPollPattern::PositiveBasisNp1}) {
+    dfo::PSConfig config;
+    config.poll_pattern = pattern;
+    const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0, 0.0}), config);
+    out.writeln(pattern == dfo::PSPollPattern::PositiveBasis2N ? "2N " : "N+1", ": evaluations =", o.diagnostics.evaluations);
+  }
+}
+```
+
+### Example 3
+
+Both reach the same answer on a smooth problem.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::PSConfig config;
+  config.poll_pattern = dfo::PSPollPattern::PositiveBasisNp1;
+  out.writeln("N+1 minimizer =", dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0}), config).minimizer.items<double>());
+}
+```
+
+## See Also
+
+- [`PSConfig`](PSConfig.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PSOutcome.html">
+    <span class="label">Previous</span>
+    <span class="title">PSOutcome</span>
+  </a>
+  <a class="next-link" href="PSPollingOrder.html">
+    <span class="label">Next</span>
+    <span class="title">PSPollingOrder</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

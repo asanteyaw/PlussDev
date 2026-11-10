@@ -1,0 +1,75 @@
+# Filtering and response
+
+This family owns the sample-domain operations that combine signals with kernels, execute recursive filters, preserve continuation state, remove phase delay by forward-backward filtering, and evaluate coefficient frequency responses.
+
+## Execution Model
+
+Every operation works along a selected `Series` dimension. The default `dim = -1` means the final dimension, which matches ordinary one-dimensional signal vectors while allowing leading dimensions to represent independent batches. Floating and complex inputs are supported; integer samples are rejected rather than silently promoted under an unspecified policy.
+
+`conv` and `corr` are alignment operations. `fir`, `filter`, and `sos` are causal filtering operations. `zero_phase` is deliberately non-causal because it runs in both directions. `freqz` does not filter samples at all; it evaluates the delay polynomial at requested angular frequencies.
+
+## Streaming And State
+
+`FilterRun` returns both values and terminal state. Feed that state into the next overload to process a long or arriving signal in blocks without restarting the recurrence. State belongs to the filter definition and batch shape, so changing coefficients, axis, or independent batch dimensions between blocks is invalid.
+
+## Practical Examples
+
+The examples establish convolution and response conventions, continue one recursive filter across two blocks, apply zero-phase filtering, and demonstrate dtype and denominator validation.
+
+### Example 1
+
+Compare full and same convolution, correlation, causal FIR output, and complex frequency response on one compact signal.
+
+@@example Eng/api/signal_filtering.cpp@@
+
+### Example 2
+
+Carry recurrence state between blocks and contrast that causal workflow with a forward-backward zero-phase result.
+
+@@example Eng/api/signal_filter_state.cpp@@
+
+### Example 3
+
+Show the explicit failures for integer signal data and a direct-form denominator whose leading coefficient is zero.
+
+@@example Eng/api/signal_filter_errors.cpp@@
+
+## Related Pages
+
+Use [Signal windows](windows.md) to construct common FIR tap shapes and [IIR design](design.md) to produce stable pole-zero systems before converting them to direct or second-order-section coefficients.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+filtering/ConvMode
+filtering/PadMode
+filtering/FilterRun
+filtering/PhaseOpts
+filtering/conv
+filtering/corr
+filtering/fir
+filtering/filter
+filtering/sos
+filtering/zero_phase
+filtering/freqz
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+filtering/ConvMode
+filtering/PadMode
+filtering/FilterRun
+filtering/PhaseOpts
+filtering/conv
+filtering/corr
+filtering/fir
+filtering/filter
+filtering/sos
+filtering/zero_phase
+filtering/freqz
+```
+<!-- apiref:toctree:end -->

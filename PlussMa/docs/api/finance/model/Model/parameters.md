@@ -1,0 +1,301 @@
+<!-- generated from parameters.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 5231276f4a2d -->
+
+# `module::Model::parameters`
+
+[Back to `module::Model`](../Model.md)
+
+Reads the parameters as a flat vector, or sets them from a vector, a `Series`, a span, an array or a `std::vector`.
+
+## Signature
+
+```cpp
+pluss::Series module::Model::parameters(pluss::Config cfg = {}) const;
+void module::Model::parameters(const pluss::Series &params, pluss::Config cfg = {});
+void module::Model::parameters(std::span<const double> params, pluss::Config cfg = {});
+template <std::size_t N> void module::Model::parameters(const std::array<double, N> &params, pluss::Config cfg = {});
+void module::Model::parameters(const std::vector<double> &params, pluss::Config cfg = {});
+```
+
+## What It Does
+
+The getter returns a rank-1 `Series` of the model's parameters in the order of [`Kind`](../Kind.md); the setters take the same numbers in the same order from a `Series`, a `std::span`, a `std::array` or a `std::vector` and write them into the held struct. The count must match the family. This pair is the interface to an optimiser: read the starting point, write each trial point, price. Only the parameters in the vector are touched: the optional extras of a struct (`mu`, the floors, SABR's volatility type) keep their values. Setting does not validate; call [`validate`](validate.md) or price.
+
+## Parameters
+
+`const pluss::Series &params`
+: The parameters in `Kind` order.
+
+`std::span<const double> / std::array / std::vector params`
+: The same numbers.
+
+`pluss::Config cfg`
+: Type and device of the stored `Series` (setters) or of the result (getter).
+
+## Returns
+
+The getter returns a rank-1 `Series`; the setters return nothing.
+
+## Errors
+
+- A wrong parameter count throws (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+Reading and writing a Heston model.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  out.writeln("before:", m.parameters().items<double>());
+  m.parameters(std::vector<double>{2.0, 0.05, 0.4, -0.6, 0.05});
+  out.writeln("after :", m.parameters().items<double>());
+}
+```
+
+Output
+
+```text
+before: [1.500, 0.040, 0.300, -0.700, 0.040]
+after : [2.000, 0.050, 0.400, -0.600, 0.050]
+```
+
+### Example 2
+
+From a `std::array` and from a `std::span`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <array>
+#include <span>
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Model m = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3});
+  m.parameters(std::array<double, 4>{0.25, 0.6, 0.5, -0.2});
+  out.writeln("array:", m.parameters().items<double>());
+  const std::vector<double> data = {0.3, 0.7, 0.6, -0.1};
+  m.parameters(std::span<const double>(data.data(), data.size()));
+  out.writeln("span :", m.parameters().items<double>());
+}
+```
+
+Output
+
+```text
+array: [0.250, 0.600, 0.500, -0.200]
+span : [0.300, 0.700, 0.600, -0.100]
+```
+
+### Example 3
+
+From a `Series`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Model m = fin::model::make(fin::model::Kind::BlackScholes, {0.2});
+  m.parameters(pluss::make_series({0.35}));
+  out.writeln(m.parameters().items<double>());
+}
+```
+
+Output
+
+```text
+[0.350]
+```
+
+### Example 4
+
+A round trip is the identity, and the optional extras are untouched. The Heston `mu` set on the struct survives a parameter write.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  m.as<fin::model::Heston>().mu = pluss::make_series({0.07});
+  m.parameters(m.parameters());
+  out.writeln("parameters:", m.parameters().items<double>(), ", mu still", m.as<fin::model::Heston>().mu.items<double>());
+}
+```
+
+Output
+
+```text
+parameters: [1.500, 0.040, 0.300, -0.700, 0.040] , mu still [0.070]
+```
+
+### Example 5
+
+The count must match the family: five numbers for Heston, not four.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  try {
+    (void)(m.parameters(std::vector<double>{1.0, 0.04, 0.3, -0.7}));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::finance::module::Model::parameters: Heston expects 5 parameters (kappa, theta, sigma, rho, v0)
+```
+
+### Example 6
+
+Feeding a minimiser. A one-dimensional search over Black-Scholes volatility writes each trial into the model, prices it and keeps the best.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(100.0, 0.05, 0.0),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  mod::Field truth = field;
+  truth.model = fin::model::make(fin::model::Kind::BlackScholes, {0.27});
+  const double target = truth.price().price.items<double>()[0];
+  double best_error = 1e9, best_vol = 0.0;
+  for (double vol = 0.15; vol <= 0.401; vol += 0.01) {
+    field.model.parameters(std::vector<double>{vol});
+    const double error = std::abs(field.price().price.items<double>()[0] - target);
+    if (error < best_error) { best_error = error; best_vol = vol; }
+  }
+  out.writeln("best volatility =", best_vol);
+}
+```
+
+Output
+
+```text
+best volatility = 0.270
+```
+
+## See Also
+
+- [`Model`](../Model.md): the class
+- [`Kind`](../Kind.md): the order
+- [`make`](make.md): build from numbers
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="name.html">
+    <span class="label">Previous</span>
+    <span class="title">name</span>
+  </a>
+  <a class="next-link" href="validate.html">
+    <span class="label">Next</span>
+    <span class="title">validate</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

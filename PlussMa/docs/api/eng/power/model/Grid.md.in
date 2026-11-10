@@ -1,0 +1,91 @@
+# `power::Grid`
+
+An immutable compiled network.
+
+## Signature
+
+```cpp
+std::int64_t power::Grid::buses() const noexcept;
+std::int64_t power::Grid::gens() const noexcept;
+std::int64_t power::Grid::lines() const noexcept;
+const std::vector<std::int64_t>& power::Grid::batch_shape() const noexcept;
+double power::Grid::base_power() const noexcept;
+const power::Base& power::Grid::base() const noexcept;
+const pluss::Series& power::Grid::ybus() const noexcept;
+```
+
+## What It Does
+
+A `Grid` is what `power::make` returns: the validated network with its admittance matrices and incidence maps, held immutably so that one grid can be analysed repeatedly. Every analysis takes a `Grid`.
+
+## Methods
+
+`buses(), gens(), lines()`
+: The numbers of buses, generators and lines.
+
+`batch_shape()`
+: The leading scenario axes shared by all values.
+
+`base_power(), base()`
+: The per-unit base.
+
+`dtype(), platform()`
+: The element type and device of the stored data.
+
+`ybus(), yfrom(), yto()`
+: The complex bus admittance matrix, and the admittances from each line's ends to the buses.
+
+## Returns
+
+Accessors return counts, the base and the admittance matrices.
+
+## Errors
+
+Accessors do not fail. Invalid networks are rejected by `make` before a `Grid` exists.
+
+## Changelog
+
+- **0.1** — Initial public contract.
+
+## Interpretation and Use
+
+A `Grid` cannot be default-constructed. The admittance matrix `Y` relates the complex bus current injections to the voltages, and `V conj(Y V)` is the complex power injected at every bus.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Counts and the admittance matrix of a two-bus grid.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 2
+
+The admittance matrix used to check an AC solution.
+
+@@example Eng/api/power_ac_solve.cpp@@
+
+### Example 3
+
+The batch shape of a scenario sweep.
+
+@@example Eng/api/power_scenarios.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Net.html">
+    <span class="label">Previous</span>
+    <span class="title">Net</span>
+  </a>
+  <a class="next-link" href="make.html">
+    <span class="label">Next</span>
+    <span class="title">make</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

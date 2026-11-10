@@ -1,0 +1,156 @@
+<!-- generated from ConstraintHandling.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::ConstraintHandling`
+
+What a black-box mesh-adaptive search does with constraint values.
+
+`Ignore` records the constraint values but never uses them: the right choice when the black box handles feasibility itself. `ExtremeBarrier` throws away any point that violates a constraint. `ProgressiveBarrier` accepts a violating point at a penalty `progressive_barrier_penalty` per unit of violation, so the search can cross infeasible ground; the penalty must outweigh the objective's pull toward the infeasible side, or the search settles outside the feasible set. Through the front door, constraints supplied with the problem (`constraints` or `constraints_values`) switch `Ignore` to `ProgressiveBarrier`; constraint values returned by a black box are used only when the configuration chooses a barrier, since `Ignore` is the default for a black box that handles feasibility itself. With either barrier, a poll that fails at a point on the constraint boundary is followed by a **boundary poll**: the gradients of the active constraints are estimated from the constraint values the failed poll has just computed, and the search tries the tangent directions of the boundary, in both senses and tilted slightly inward, so it follows the boundary to the constrained optimum instead of stalling beside it. A boundary step that improves is reported with the phase `accept_boundary`.
+
+## Fields
+
+### `Ignore`
+
+`enumerator`, default `0`.
+
+Constraint values are recorded and not used.
+
+### `ExtremeBarrier`
+
+`enumerator`, default `1`.
+
+Violating points are discarded.
+
+### `ProgressiveBarrier`
+
+`enumerator`, default `2`.
+
+Violating points are accepted at a penalty.
+
+## Guidance
+
+Set as `MadsBlackboxAdvancedConfig::constraint_handling`.
+
+## Practical Examples
+
+### Example 1
+
+The three policies on the constraint `x₀ ≤ 1` for `Σ (xᵢ − 3)²`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});
+    e.constraints = (x.select(0, 0) - 1.0).reshape({1});
+    return e;
+  };
+  for (const auto mode : {dfo::ConstraintHandling::Ignore, dfo::ConstraintHandling::ExtremeBarrier, dfo::ConstraintHandling::ProgressiveBarrier}) {
+    dfo::MadsBlackboxAdvancedConfig config;
+    config.constraint_handling = mode;
+    out.writeln(static_cast<int>(mode), ": minimizer =", dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), config).minimizer.items<double>());
+  }
+}
+```
+
+Output
+
+```text
+0 : minimizer = [3.000, 3.000]
+1 : minimizer = [1.000, 3.000]
+2 : minimizer = [1.000, 3.000]
+```
+
+### Example 2
+
+A penalty that is too small. With a weak penalty the progressive barrier accepts the infeasible side.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});
+    e.constraints = (x.select(0, 0) - 1.0).reshape({1});
+    return e;
+  };
+  for (const double penalty : {0.01, 100.0}) {
+    dfo::MadsBlackboxAdvancedConfig config;
+    config.constraint_handling = dfo::ConstraintHandling::ProgressiveBarrier;
+    config.progressive_barrier_penalty = penalty;
+    out.writeln("penalty", penalty, ": minimizer =", dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), config).minimizer.items<double>());
+  }
+}
+```
+
+Output
+
+```text
+penalty 0.010 : minimizer = [2.995, 3.000]
+penalty 100.000 : minimizer = [1.000, 3.000]
+```
+
+### Example 3
+
+The front door switches `Ignore` to the progressive barrier when constraints are supplied with the problem.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_constraints([](const Series &x) { return x.select(0, 0) - 1.0; })
+                               .with_solver(dfo::DfoSolverKind::OrthoMads).solve();
+  out.writeln("minimizer =", r.minimizer.items<double>());
+}
+```
+
+Output
+
+```text
+minimizer = [1.000, 3.000]
+```
+
+## See Also
+
+- [`MadsBlackboxAdvancedConfig`](MadsBlackboxAdvancedConfig.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="BlackboxSolverStatus.html">
+    <span class="label">Previous</span>
+    <span class="title">BlackboxSolverStatus</span>
+  </a>
+  <a class="next-link" href="CoopMadsConfig.html">
+    <span class="label">Next</span>
+    <span class="title">CoopMadsConfig</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

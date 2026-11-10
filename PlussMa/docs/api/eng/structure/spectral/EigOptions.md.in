@@ -1,0 +1,66 @@
+# `structure::EigOptions`
+
+Controls of the modal and buckling eigenvalue searches.
+
+## Signature
+
+```cpp
+structure::EigOptions
+```
+
+## What It Does
+
+Controls for `modes` and `buckling`, which find the lowest few eigenpairs of a frame by an iteration that applies the stiffness inverse through inner solves.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `count` | How many modes to find, at most the number of free degrees of freedom. | `1` |
+| `max_iterations` | Iterations allowed to the eigen search. | `64` |
+| `relative_tolerance` | Relative convergence tolerance of each pair. | `1e-8` |
+| `absolute_tolerance` | Absolute convergence tolerance. | `1e-10` |
+| `solve` | Conjugate-gradient controls of the inner stiffness solves (budget 8192, relative tolerance `1e-10`). |  |
+
+## Returns
+
+A value; validated by `modes` and `buckling`.
+
+## Errors
+
+A non-positive `count` or `max_iterations`, negative or non-finite tolerances, or a `count` above the number of free degrees of freedom are rejected.
+
+## Interpretation and Use
+
+Ask for no more modes than the mesh can represent. A pair that has not reached its tolerance is flagged in `converged`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Count, tolerance and iteration budget on a cantilever.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+
+### Example 2
+
+Four end conditions of a column with default options.
+
+@@example Eng/api/structure_buckling_cases.cpp@@
+
+### Example 3
+
+Rejected counts.
+
+@@example Eng/api/structure_spectral_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ModeResult.html">
+    <span class="label">Next</span>
+    <span class="title">ModeResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

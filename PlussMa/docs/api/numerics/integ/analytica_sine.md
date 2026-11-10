@@ -1,0 +1,129 @@
+<!-- generated from analytica_sine.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `integ::analytica::sine`
+
+The integral of `sin(k x)` from `a` to `b`.
+
+## Signature
+
+```cpp
+double integ::analytica::sine(double k, double a, double b);
+```
+
+## What It Does
+
+`(cos(ka) − cos(kb))/k`, and 0 when `k = 0` (the integrand is then zero).
+
+## Parameters
+
+`double k`
+: The angular frequency.
+
+`double a, double b`
+: The limits.
+
+## Returns
+
+The exact value of the integral, a `double`.
+
+## Practical Examples
+
+### Example 1
+
+One arch. `∫₀^π sin x dx = 2`, and over a full period the integral is 0.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln("one arch    :", analytica::sine(1.0, 0.0, 3.14159265358979323846));
+  out.writeln("full period :", analytica::sine(1.0, 0.0, 2.0 * 3.14159265358979323846));
+}
+```
+
+Output
+
+```text
+one arch    : 2.00000000
+full period : 0.00000000
+```
+
+### Example 2
+
+A faster wave. With `k = 3` over `[0, π/3]` the arch has area `2/3`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::sine(3.0, 0.0, 3.14159265358979323846 / 3.0));
+}
+```
+
+Output
+
+```text
+0.66666667
+```
+
+### Example 3
+
+The zero frequency.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln(analytica::sine(0.0, 0.0, 10.0));
+}
+```
+
+Output
+
+```text
+0.0000
+```
+
+## See Also
+
+- [`quadra`](quadra.md): numerical quadrature of any integrand
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="analytica_sigmoid.html">
+    <span class="label">Previous</span>
+    <span class="title">sigmoid</span>
+  </a>
+  <a class="next-link" href="cumulative_trapezoid.html">
+    <span class="label">Next</span>
+    <span class="title">cumulative_trapezoid</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

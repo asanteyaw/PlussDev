@@ -1,0 +1,126 @@
+# `integ::lebesgue`
+
+Integrates a function by partitioning its range instead of its domain, and returns a bracket the exact value must lie in.
+
+## Signature
+
+```cpp
+integ::LebesgueResult integ::lebesgue(const integ::IntegrandFn &fn, double a, double b, const integ::LebesgueOptions &options = {});
+```
+
+## What It Does
+
+Riemann-style rules such as [`quadra`](quadra.md) cut the **domain** into pieces. The Lebesgue construction cuts the **range**: it chooses levels `0 = t₀ < t₁ < … `, and the simple functions `s_lo = Σ tⱼ·1{tⱼ ≤ f < tⱼ₊₁}` and `s_hi = Σ tⱼ₊₁·1{tⱼ < f ≤ tⱼ₊₁}` squeeze `f` between them, so `∫ s_lo ≤ ∫ f ≤ ∫ s_hi`. The levels are chosen so that this bracket is narrower than `tolerance`, and the bracket is **returned** (`lower` and `upper`), so a value never arrives without the evidence for it. The interval is divided into graded cells whose number doubles until the value stops changing; the bracket certifies the range-partition error and the refinement difference reports the domain discretization.
+
+It works on any integrand, including one with a singularity at an end point: set `grading > 1` to concentrate cells near `a` (the integrand `1/√x` on `(0, 1]`, which a uniform rule resolves badly). A non-negative and a negative part are bracketed separately. The integrand may return a batch, `[..., n]`, with the node axis last. This is an eager numerical evaluator; the analytic Lebesgue measures are in the calculus operators.
+
+## Parameters
+
+`const integ::IntegrandFn &fn`
+: `Series -> Series`, the integrand at a `Series` of cell midpoints.
+
+`double a, double b`
+: A finite interval, `a < b`.
+
+`const integ::LebesgueOptions &options`
+: Cells, refinements, grading, tolerance.
+
+## Returns
+
+A [`LebesgueResult`](LebesgueResult.md).
+
+## Errors
+
+- A missing integrand, an infinite or empty interval, or a non-positive tolerance, grading or fewer than two cells throw.
+
+## Practical Examples
+
+### Example 1
+
+A bracket around `∫₀¹ x² dx = 1/3`. The lower and upper simple-function integrals enclose the value, and the estimate is half the bracket plus the refinement change.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(9));
+  const integ::LebesgueResult r = integ::lebesgue([](const Series &t) { return t.square(); }, 0.0, 1.0);
+  out.writeln("lower =", r.lower.item<double>(), ", value =", r.value.item<double>(), ", upper =", r.upper.item<double>());
+  out.writeln("error estimate =", r.error_estimate, ", refinements =", r.refinements, ", converged =", r.converged, ", monotone =", r.monotone);
+}
+```
+
+### Example 2
+
+An endpoint singularity. `∫₀¹ x^(−1/2) dx = 2`; the cells are graded toward 0, where the integrand is unbounded.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  integ::LebesgueOptions options;
+  options.grading = 3.0;
+  options.tolerance = 1e-6;
+  options.max_refinements = 12;
+  const integ::LebesgueResult r = integ::lebesgue([](const Series &t) { return t.pow(-0.5); }, 0.0, 1.0, options);
+  out.writeln("value =", r.value.item<double>(), ", exact = 2, converged =", r.converged);
+}
+```
+
+### Example 3
+
+A function that changes sign. `∫₋₁¹ x³ dx = 0`: the positive and negative parts are bracketed separately and cancel.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(9));
+  const integ::LebesgueResult r = integ::lebesgue([](const Series &t) { return t.pow(3.0); }, -1.0, 1.0);
+  out.writeln("value =", r.value.item<double>(), ", lower =", r.lower.item<double>(), ", upper =", r.upper.item<double>());
+}
+```
+
+## See Also
+
+- [`LebesgueOptions`](LebesgueOptions.md): the settings
+- [`measure_of`](measure_of.md): the measure of a level set
+- [`quadra`](quadra.md): Riemann-style quadrature
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="integra.html">
+    <span class="label">Previous</span>
+    <span class="title">integra</span>
+  </a>
+  <a class="next-link" href="measure_of.html">
+    <span class="label">Next</span>
+    <span class="title">measure_of</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

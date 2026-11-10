@@ -1,0 +1,69 @@
+# Network model
+
+This branch describes a power network. A `Net` collects a per-unit `Base`, the `Buses`, the generators `Gens` and the `Lines`; `make` validates it and compiles an immutable `Grid` that every analysis takes. `pu` and `si` convert values to and from per unit.
+
+## Choosing A Surface
+
+Write every quantity in per unit on one `Base`. Use the three bus kinds to say which pair of quantities each bus fixes. Use leading axes on any value to describe a batch of scenarios, and `active` flags to switch lines and generators.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Per-unit conversion on a 100 MVA, 230 kV base.
+
+@@example Eng/api/power_units.cpp@@
+
+### Example 2
+
+Compile a two-bus network.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 3
+
+Generators and voltage-controlled buses.
+
+@@example Eng/api/power_generators.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+model/BusKind
+model/Base
+model/Buses
+model/Gens
+model/Lines
+model/Net
+model/Grid
+model/make
+model/zbase
+model/ybase
+model/ibase
+model/pu
+model/si
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+model/BusKind
+model/Base
+model/Buses
+model/Gens
+model/Lines
+model/Net
+model/Grid
+model/make
+model/zbase
+model/ybase
+model/ibase
+model/pu
+model/si
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,39 @@
+# Instruments and market
+
+What is priced and the market it is priced in. A [`Vanilla`](instrument/Vanilla.md) is a strip of European, Bermudan or American calls and puts, one strike and one maturity per option; a [`State`](instrument/State.md) holds the spot, interest rate and dividend yield. Both are plain structs of `Series`, and the factories ([`instrument::make`](instrument/make.md), [`american`](instrument/american.md), [`bermudan`](instrument/bermudan.md), [`market::make`](instrument/market_make.md)) build them from numbers.
+
+| You want | Use |
+|---|---|
+| A European call or put | [`instrument::make`](instrument/make.md) |
+| American or Bermudan exercise | [`american`](instrument/american.md), [`bermudan`](instrument/bermudan.md), [`ExerciseStyle`](instrument/ExerciseStyle.md) |
+| A strip of strikes and maturities, or mixed calls and puts | [`Vanilla`](instrument/Vanilla.md) fields |
+| The spot, rate and yield | [`market::make`](instrument/market_make.md), [`State`](instrument/State.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`ExerciseStyle`](instrument/ExerciseStyle.md) | When the holder may exercise: at maturity only, on a schedule, or at any time. |
+| [`OptionType`](instrument/OptionType.md) | Whether an option is a call or a put (and `Auto`, which only instruments that carry their own flag may use). |
+| [`State`](instrument/State.md) | The market a strip is priced in: spot, interest rate and dividend yield. |
+| [`Vanilla`](instrument/Vanilla.md) | A strip of vanilla calls and puts: types, strikes, maturities and exercise style. |
+| [`american`](instrument/american.md) | An American call or put: exercisable at any time up to maturity. |
+| [`bermudan`](instrument/bermudan.md) | A Bermudan call or put: exercisable on a schedule of dates and at maturity. |
+| [`make`](instrument/make.md) | A European call or put with one strike and one maturity. |
+| [`market_make`](instrument/market_make.md) | A market state with one spot, one rate and one dividend yield. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+instrument/ExerciseStyle
+instrument/OptionType
+instrument/State
+instrument/Vanilla
+instrument/american
+instrument/bermudan
+instrument/make
+instrument/market_make
+```
+<!-- apiref:toctree:end -->

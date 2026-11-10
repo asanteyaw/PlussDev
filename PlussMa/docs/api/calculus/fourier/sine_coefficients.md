@@ -1,0 +1,216 @@
+<!-- generated from sine_coefficients.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::fourier::sine_coefficients`
+
+The sine-series coefficients `B₁ … B_terms` of a function on an interval, as a vector function.
+
+## Signature
+
+```cpp
+operators::Operator operators::fourier::sine_coefficients(std::string_view variable, double lower, double upper, std::int64_t terms);
+operators::Operator operators::fourier::sine_coefficients(std::string_view variable, double lower, double upper, std::int64_t terms, double support_lower, double support_upper);
+```
+
+## What It Does
+
+`sine_coefficients("x", a, b, n)` returns the vector `[B₁, …, B_n]` of the half-range sine coefficients of `f` on `[a, b]`, a rank-1 `Function` of shape `[n]` (note the indexing: the first entry is `B₁`; there is no zeroth sine term).
+
+Half-range expansions on `[lower, upper]` use `uₖ = kπ / (upper − lower)`:
+
+- cosine: `f ≈ A₀/2 + Σₖ₌₁ Aₖ cos(uₖ (x − lower))`, with `Aₖ = 2/(b − a) ∫ f cos(uₖ (x − lower)) dx`,
+- sine: `f ≈ Σₖ₌₁ Bₖ sin(uₖ (x − lower))`, with `Bₖ = 2/(b − a) ∫ f sin(uₖ (x − lower)) dx`.
+
+The sine series extends `f` to an *odd* function about `lower`, so it represents functions that vanish at both ends well (like `1/k³` for smooth ones) and converges slowly, like `1/k`, when `f` does not vanish there: the series then converges to zero at the ends, not to `f`. Use it for the modes of a string fixed at both ends, for solutions of the heat equation with zero boundary values, and for odd functions. The terms count must lie in `[1, 4096]`; the interval must be finite. The second overload restricts the integration to a sub-interval, as for [`cosine_coefficients`](cosine_coefficients.md).
+
+## Parameters
+
+`std::string_view variable`
+: The variable to expand in.
+
+`double lower`
+: The left end of the interval.
+
+`double upper`
+: The right end; must be greater than `lower` and finite.
+
+`std::int64_t terms`
+: How many coefficients to return, `B₁ … B_terms`; between 1 and 4096.
+
+`double support_lower`
+: The left end of the sub-interval of integration (second overload).
+
+`double support_upper`
+: The right end of the sub-interval.
+
+## Returns
+
+An `Operator` whose application returns a rank-1 `Function` of shape `[terms]`.
+
+## Errors
+
+- `terms must lie in [1, 4096]`.
+- `the interval must be finite with lower < upper`.
+- `the support must be a non-empty sub-interval`.
+
+## Practical Examples
+
+### Example 1
+
+The coefficients of `f(x) = x` on `[0, π]`: `Bₖ = 2(−1)^{k+1}/k`, so `2, −1, 2/3, −1/2, 2/5`. They decay like `1/k` because `x` does not vanish at `π`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double pi = std::acos(-1.0);
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+
+  const math::Function B = fourier::sine_coefficients("x", 0.0, pi, 5)(f);
+  out.writeln("shape:", B.shape());
+  out.writeln("B1..B5: ", B().items<double>());
+  out.writeln("formula:", pluss::make_series({2.0, -1.0, 2.0 / 3.0, -0.5, 0.4}).items<double>());
+}
+```
+
+Output
+
+```text
+shape: [5]
+B1..B5:  [2.00000, -1.00000, 0.66667, -0.50000, 0.40000]
+formula: [2.00000, -1.00000, 0.66667, -0.50000, 0.40000]
+```
+
+### Example 2
+
+A function that vanishes at both ends has rapidly decaying sine coefficients. For `f = x(π − x)` they are `8/(π k³)` for odd `k` and `0` for even `k`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double pi = std::acos(-1.0);
+
+  const math::Function f = math::function({"x"}, [&](math::Function x) { return x * (pi - x); });
+  const math::Function B = fourier::sine_coefficients("x", 0.0, pi, 5)(f);
+  out.writeln("B1..B5: ", B().items<double>());
+  out.writeln("8/(pi k^3):", pluss::make_series({8.0 / pi, 0.0, 8.0 / (27.0 * pi), 0.0, 8.0 / (125.0 * pi)}).items<double>());
+}
+```
+
+Output
+
+```text
+B1..B5:  [2.54648, 0.00000, 0.09431, 0.00000, 0.02037]
+8/(pi k^3): [2.54648, 0.00000, 0.09431, 0.00000, 0.02037]
+```
+
+### Example 3
+
+The sub-interval overload: integrating over only `[0, π/2]` of the interval `[0, π]`. For `f = x`, `B₁ = (2/π) ∫₀^{π/2} x sin x dx = 2/π`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double pi = std::acos(-1.0);
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+
+  const math::Function B = fourier::sine_coefficients("x", 0.0, pi, 3, 0.0, pi / 2)(f);
+  out.writeln("B1..B3:", B().items<double>(), "   B1 = 2/pi =", 2.0 / pi);
+}
+```
+
+Output
+
+```text
+B1..B3: [0.63662, 0.50000, -0.07074]    B1 = 2/pi = 0.63662
+```
+
+### Example 4
+
+The same checks as for the cosine coefficients, with the same messages.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double pi = std::acos(-1.0);
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  try { (void)fourier::sine_coefficients("x", 0.0, pi, 5000); } catch (const pluss::Error &e) { out.writeln("terms = 5000:  ", first_line(e)); }
+  try { (void)fourier::sine_coefficients("x", 2.0, 1.0, 3); } catch (const pluss::Error &e) { out.writeln("lower > upper: ", first_line(e)); }
+}
+```
+
+Output
+
+```text
+terms = 5000:   operators::fourier::sine_coefficients: terms must lie in [1, 4096]
+lower > upper:  operators::fourier::sine_coefficients: the interval must be finite with lower < upper
+```
+
+## See Also
+
+- [`sine_series`](sine_series.md): the reconstruction
+- [`cosine_coefficients`](cosine_coefficients.md): the cosine counterpart
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="series.html">
+    <span class="label">Previous</span>
+    <span class="title">series</span>
+  </a>
+  <a class="next-link" href="sine_series.html">
+    <span class="label">Next</span>
+    <span class="title">sine_series</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

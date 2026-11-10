@@ -1,0 +1,260 @@
+<!-- generated from ParticleSwarmDvConfig.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::ParticleSwarmDvConfig`
+
+Swarm size, differential and social scales, crossover and stagnation settings of the differential-velocity swarm.
+
+`beta` scales the difference between two other particles in the velocity; `social` is the pull toward the best particle; `crossover_rate` is the probability a coordinate takes the new value; `inertia` starts at 1 and is multiplied by `inertia_damp` every generation. `stagnation_limit` is the number of generations without improvement after which a particle is re-seeded.
+
+## Fields
+
+### `population_size`
+
+`std::int64_t`, default `200`.
+
+Particles.
+
+### `max_generations`
+
+`std::int64_t`, default `1000`.
+
+Generation limit.
+
+### `max_evaluations`
+
+`std::int64_t`, default `0`.
+
+Evaluation limit; 0 leaves the generation limit as the only bound.
+
+### `check_every`
+
+`std::int64_t`, default `0`.
+
+Generations between improvement tests; 0 disables the test.
+
+### `relative_improvement_tolerance`
+
+`double`, default `1e-8`.
+
+Stop when the relative improvement is below this.
+
+### `inertia`
+
+`double`, default `1`.
+
+Starting inertia.
+
+### `inertia_damp`
+
+`double`, default `0.99`.
+
+Per-generation inertia factor.
+
+### `beta`
+
+`double`, default `0.5`.
+
+Scale of the difference between two other particles.
+
+### `social`
+
+`double`, default `1.494`.
+
+Pull toward the best particle.
+
+### `crossover_rate`
+
+`double`, default `0.7`.
+
+Probability a coordinate takes the new value.
+
+### `stagnation_limit`
+
+`std::int64_t`, default `50`.
+
+Generations without improvement before a particle is re-seeded.
+
+### `initial_radius`
+
+`double`, default `+inf`.
+
+Half-width of the sampling box around the start; infinity means the whole box when bounded, otherwise `start ± 0.5`.
+
+### `lower_bounds`
+
+`pluss::Series`, default `undefined`.
+
+Lower bound per variable; set together with `upper_bounds`.
+
+### `upper_bounds`
+
+`pluss::Series`, default `undefined`.
+
+Upper bound per variable.
+
+### `rng_seed`
+
+`std::uint64_t`, default `5489`.
+
+Seed of the random numbers.
+
+### `promote_cpu_to_float64`
+
+`bool`, default `true`.
+
+Compute single-precision CPU inputs in double precision.
+
+### `display`
+
+`dfo::PopulationSolverDisplay`, default `None`.
+
+Print a line per generation when `Iter`.
+
+### `execution_mode`
+
+`dfo::PopulationSolverExecutionMode`, default `Vectorized`.
+
+How a generation is computed.
+
+## Guidance
+
+Passed to `particle_swarm_dv_minimizer`, or set as `DfoOptions::particle_swarm_dv`.
+
+## Practical Examples
+
+### Example 1
+
+The differential scale.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rastrigin = [](const Series &x) {
+    const double pi = 3.14159265358979323846;
+    return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();   // minimum 0 at the origin, many local minima
+  };
+
+  for (const double beta : {0.2, 0.5, 0.9}) {
+    dfo::ParticleSwarmDvConfig config;
+    config.beta = beta;
+    config.lower_bounds = pluss::series::make({-5.12, -5.12, -5.12});
+    config.upper_bounds = pluss::series::make({5.12, 5.12, 5.12});
+    config.max_evaluations = 10000;
+    out.writeln("beta", beta, ": minimum =", dfo::particle_swarm_dv_minimizer(rastrigin, pluss::series::make({3.0, 3.0, 3.0}), config).minimum);
+  }
+}
+```
+
+Output
+
+```text
+beta 0.200000 : minimum = 7.999203
+beta 0.500000 : minimum = 9.366993
+beta 0.900000 : minimum = 12.226604
+```
+
+### Example 2
+
+The swarm size.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rastrigin = [](const Series &x) {
+    const double pi = 3.14159265358979323846;
+    return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();   // minimum 0 at the origin, many local minima
+  };
+
+  for (const std::int64_t n : {20, 100}) {
+    dfo::ParticleSwarmDvConfig config;
+    config.population_size = n;
+    config.lower_bounds = pluss::series::make({-5.12, -5.12, -5.12});
+    config.upper_bounds = pluss::series::make({5.12, 5.12, 5.12});
+    config.max_evaluations = 10000;
+    const dfo::PopulationSolverOutcome o = dfo::particle_swarm_dv_minimizer(rastrigin, pluss::series::make({3.0, 3.0, 3.0}), config);
+    out.writeln("swarm", n, ": evaluations =", o.diagnostics.evaluations, ", minimum =", o.minimum);
+  }
+}
+```
+
+Output
+
+```text
+swarm 20 : evaluations = 10013 , minimum = 0.000000
+swarm 100 : evaluations = 10070 , minimum = 5.571153
+```
+
+### Example 3
+
+The stagnation limit. Re-seeding sooner keeps the swarm exploring.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const std::int64_t limit : {10, 200}) {
+    dfo::ParticleSwarmDvConfig config;
+    config.stagnation_limit = limit;
+    config.population_size = 40;
+    config.max_generations = 300;
+    const dfo::PopulationSolverOutcome o = dfo::particle_swarm_dv_minimizer(rosenbrock, pluss::series::make({0.0, 0.0}), config);
+    out.writeln("stagnation limit", limit, ": minimum =", o.minimum);
+  }
+}
+```
+
+Output
+
+```text
+stagnation limit 10 : minimum = 0.00013966
+stagnation limit 200 : minimum = 0.00000000
+```
+
+## See Also
+
+- [`particle_swarm_dv_minimizer`](particle_swarm_dv_minimizer.md): uses it
+- [`DfoOptions`](DfoOptions.md): holds one
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ParticleSwarmConfig.html">
+    <span class="label">Previous</span>
+    <span class="title">ParticleSwarmConfig</span>
+  </a>
+  <a class="next-link" href="PopulationSolverDiagnostics.html">
+    <span class="label">Next</span>
+    <span class="title">PopulationSolverDiagnostics</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

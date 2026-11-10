@@ -1,0 +1,137 @@
+# `module::Field::Result`
+
+What pricing returns: the prices, the Greeks, and (for the FFT engine) the strike grid. It is the type `Field::price` returns, and the one a [`Chord::Result`](../chord/Result.md) holds for each asset; it is declared by the pricer layer, which the engines also return it from, and `Field::Result` is its name on a field.
+
+`price` has one entry per option in the strip. `greeks` is a [`Greeks`](Greeks.md) whose members are defined only under `Risk::All`. `strike_grid` is defined only when the FFT engine was asked to return its grid (`Fft::return_grid`). In that case `price` is no longer one entry per option: it holds the transform's price at **every** strike of the grid (16384 entries by default), and `strike_grid` holds those strikes, from which any strike in the range can be read.
+
+## Fields
+
+### `price`
+
+`pluss::Series`, default `undefined`.
+
+One price per option.
+
+### `greeks`
+
+`pricer::Greeks`, default `{}`.
+
+The Greeks; defined only under `Risk::All`.
+
+### `strike_grid`
+
+`pluss::Series`, default `undefined`.
+
+The strikes of the FFT grid when `return_grid` was set; undefined otherwise.
+
+## Guidance
+
+Returned by `Field::price` and the engines' `price`.
+
+## Practical Examples
+
+### Example 1
+
+The grid. With `return_grid` the FFT engine returns its price at every strike of the transform, with the strikes beside it; without it, one price for the one option.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Fft, .risk = mod::Risk::PriceOnly}};
+
+  const auto single = field.price();
+  field.controls.fft.return_grid = true;
+  const auto grid = field.price();
+  out.writeln("single: price", single.price.sizes(), " grid defined", single.strike_grid.defined());
+  out.writeln("grid  : price", grid.price.sizes(), " strike_grid", grid.strike_grid.sizes());
+}
+```
+
+### Example 2
+
+Prices of a strip with Greeks.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.05}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::All}};
+
+  const auto r = field.price();
+  out.writeln("price :", r.price.items<double>());
+  out.writeln("delta :", r.greeks.delta.items<double>());
+}
+```
+
+### Example 3
+
+Without the grid request the grid is undefined.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  const auto r = field.price();
+  out.writeln("strike_grid defined:", r.strike_grid.defined());
+}
+```
+
+## See Also
+
+- [`price`](Field/price.md): returns it
+- [`Greeks`](Greeks.md): the sensitivities
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Paths.html">
+    <span class="label">Previous</span>
+    <span class="title">Paths</span>
+  </a>
+  <a class="next-link" href="Risk.html">
+    <span class="label">Next</span>
+    <span class="title">Risk</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

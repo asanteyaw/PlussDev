@@ -1,0 +1,206 @@
+<!-- generated from assumption.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 01ab475037ab -->
+
+# `math::Function::assumption`
+
+[Back to `math::Function`](../Function.md)
+
+Reads back what has been declared about one variable with `assume`.
+
+## Signature
+
+```cpp
+math::Assumption math::Function::assumption(std::string_view variable) const;
+```
+
+## What It Does
+
+Each variable of a function carries one `Assumption`: what you have told the function about its sign or whether it can be zero. A new function starts with `Real` for every variable, which means "nothing declared". [`assume`](assume.md) adds knowledge and returns a new function; `assumption(variable)` reports the knowledge currently held for one variable.
+
+Call it to check what a function you received already assumes before adding to it, to log the assumptions a result was computed under, or in a test that confirms two statements combined into the one you expected. The value is the *combined* result: declaring `NonNegative` and then `NonZero` reads back as `Positive`. Assumptions are per variable, so one variable's declaration never shows up on another.
+
+## Parameters
+
+`std::string_view variable`
+: The name of one of the function's variables.
+
+## Returns
+
+The `math::Assumption` currently held for that variable: `Real`, `Zero`, `NonZero`, `NonNegative`, `Positive`, `NonPositive` or `Negative`.
+
+## Errors
+
+- An unknown variable name raises `math::Function::assumption: unknown variable '<name>'`.
+- The function must be defined.
+
+## Practical Examples
+
+### Example 1
+
+A new function assumes nothing about any variable. After `assume` the new function reports the declaration, and the original is unchanged.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::Assumption a) {
+  switch (a) {
+  case math::Assumption::Real: return "Real";
+  case math::Assumption::Zero: return "Zero";
+  case math::Assumption::NonZero: return "NonZero";
+  case math::Assumption::NonNegative: return "NonNegative";
+  case math::Assumption::Positive: return "Positive";
+  case math::Assumption::NonPositive: return "NonPositive";
+  case math::Assumption::Negative: return "Negative";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y; });
+  const math::Function g = f.assume("x", math::Assumption::Positive);
+  out.writeln("f: x", name(f.assumption("x")), " y", name(f.assumption("y")));
+  out.writeln("g: x", name(g.assumption("x")), " y", name(g.assumption("y")));
+}
+```
+
+Output
+
+```text
+f: x Real  y Real
+g: x Positive  y Real
+```
+
+`assume` returned a new function; `f` still reports `Real`. The declaration was on `x`, so `y` is untouched.
+
+### Example 2
+
+Every value of the enumeration, read back one at a time. `Real` is the default and declares nothing; the other six restrict the variable.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::Assumption a) {
+  switch (a) {
+  case math::Assumption::Real: return "Real";
+  case math::Assumption::Zero: return "Zero";
+  case math::Assumption::NonZero: return "NonZero";
+  case math::Assumption::NonNegative: return "NonNegative";
+  case math::Assumption::Positive: return "Positive";
+  case math::Assumption::NonPositive: return "NonPositive";
+  case math::Assumption::Negative: return "Negative";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+  for (const math::Assumption a : {math::Assumption::Real, math::Assumption::Zero, math::Assumption::NonZero, math::Assumption::NonNegative,
+                                   math::Assumption::Positive, math::Assumption::NonPositive, math::Assumption::Negative}) {
+    out.writeln("declared", name(a), "-> reads", name(f.assume("x", a).assumption("x")));
+  }
+}
+```
+
+Output
+
+```text
+declared Real -> reads Real
+declared Zero -> reads Zero
+declared NonZero -> reads NonZero
+declared NonNegative -> reads NonNegative
+declared Positive -> reads Positive
+declared NonPositive -> reads NonPositive
+declared Negative -> reads Negative
+```
+
+Declaring a value on a function that assumes nothing reads back unchanged.
+
+### Example 3
+
+Declarations accumulate, and the result is the strongest statement implied by all of them. Two that cannot both hold are an error, and so is a variable the function does not have.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::Assumption a) {
+  switch (a) {
+  case math::Assumption::Real: return "Real";
+  case math::Assumption::Zero: return "Zero";
+  case math::Assumption::NonZero: return "NonZero";
+  case math::Assumption::NonNegative: return "NonNegative";
+  case math::Assumption::Positive: return "Positive";
+  case math::Assumption::NonPositive: return "NonPositive";
+  case math::Assumption::Negative: return "Negative";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+  const math::Function positive = f.assume("x", math::Assumption::NonNegative).assume("x", math::Assumption::NonZero);
+  const math::Function zero = f.assume("x", math::Assumption::NonNegative).assume("x", math::Assumption::NonPositive);
+  out.writeln("NonNegative then NonZero:      ", name(positive.assumption("x")));
+  out.writeln("NonNegative then NonPositive:  ", name(zero.assumption("x")));
+
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+  try { (void)f.assume("x", math::Assumption::Zero).assume("x", math::Assumption::NonZero); } catch (const pluss::Error &e) { out.writeln("Zero then NonZero:", first_line(e)); }
+  try { (void)f.assumption("z"); } catch (const pluss::Error &e) { out.writeln("unknown variable:  ", first_line(e)); }
+}
+```
+
+Output
+
+```text
+NonNegative then NonZero:       Positive
+NonNegative then NonPositive:   Zero
+Zero then NonZero: math::Function: contradictory variable assumptions
+unknown variable:   math::Function::assumption: unknown variable 'z'
+```
+
+A nonnegative, nonzero number is positive; a nonnegative, nonpositive one is zero; `Zero` and `NonZero` contradict.
+
+## See Also
+
+- [`assume`](assume.md): declares knowledge about a variable
+- [`variables`](variables.md): the variable names
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="assume.html">
+    <span class="label">Previous</span>
+    <span class="title">assume</span>
+  </a>
+  <a class="next-link" href="call.html">
+    <span class="label">Next</span>
+    <span class="title">call</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

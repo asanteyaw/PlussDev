@@ -1,0 +1,191 @@
+# `actuarial::mortality::gompertz`
+
+Builds a mortality law from a Gompertz force.
+
+## Signature
+
+```cpp
+actuarial::Mortality actuarial::mortality::gompertz(const pluss::Series &attained_ages, double b, double c);
+actuarial::MortalityModel actuarial::mortality::gompertz(double b, double c);
+```
+
+## What It Does
+
+The Gompertz force of mortality is {math}`\mu_x=b\,c^{x}` with `b ≥ 0` and `c > 1`: it grows by the factor `c` every year of age. The law over the attained ages `x` has {math}`q_x=1-\exp(-\mu_x)`. The first overload evaluates the law at the given ages and returns the `Mortality`. The second binds `b` and `c` into a [`MortalityModel`](MortalityModel.md) to be applied to many age vectors. Use Gompertz for adult ages, where the exponential growth of mortality is a good description; [`makeham`](makeham.md) adds an age-independent term for accidents.
+
+## Parameters
+
+`attained_ages`
+: One-dimensional, finite, non-negative ages at the start of each year.
+
+`b`
+: Level of the force at age 0, 0 or more.
+
+`c`
+: Yearly growth factor of the force, greater than 1.
+
+## Returns
+
+A `Mortality` of one probability per age, or a `MortalityModel` that produces one when called with ages.
+
+## Errors
+
+Throws `gompertz_force: b must be >= 0`, `gompertz_force: c must be > 1 for Gompertz-style age acceleration`, `gompertz_force: attained_ages must be >= 0` and `... must be 1D`. Calling an undefined `MortalityModel` throws `actuarial Operator is undefined`.
+
+## Practical Examples
+
+### Example 1: a law at four ages
+
+Gompertz mortality from age 60: probabilities rise each year.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Mortality m = actuarial::mortality::gompertz(pluss::make_series({60.0, 61.0, 62.0, 63.0}), 0.0001, 1.08);
+  out.writeln("qx    =", m.qx().items<double>());
+  out.writeln("force =", m.force().items<double>());
+}
+```
+
+### Example 2: the force doubles every ln 2 / ln c years
+
+With c = 1.08 the force doubles in about 9 years.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Mortality m = actuarial::mortality::gompertz(pluss::make_series({60.0, 69.0}), 0.0001, 1.08);
+  const auto mu = m.force().items<double>();
+  out.writeln("force at 69 / force at 60 =", mu[1] / mu[0], " c^9 =", std::pow(1.08, 9.0));
+}
+```
+
+### Example 3: a reusable model
+
+Bind the parameters once and call the model with different ages.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::MortalityModel model = actuarial::mortality::gompertz(0.0001, 1.08);
+  out.writeln("key:", model.key());
+  out.writeln("from 60:", model(pluss::make_series({60.0, 61.0})).qx().items<double>());
+  out.writeln("from 70:", model(pluss::make_series({70.0, 71.0})).qx().items<double>());
+}
+```
+
+### Example 4: stronger acceleration
+
+A larger c makes the old ages much more dangerous.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 70.0, 80.0, 90.0});
+  out.writeln("c = 1.08:", actuarial::mortality::gompertz(ages, 0.0001, 1.08).qx().items<double>());
+  out.writeln("c = 1.10:", actuarial::mortality::gompertz(ages, 0.0001, 1.10).qx().items<double>());
+}
+```
+
+### Example 5: the errors
+
+Parameters outside their range are refused, and so is an undefined model.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::mortality::gompertz(pluss::make_series({60.0, 61.0, 62.0, 63.0}), -0.1, 1.08); });
+  report([&] { (void)actuarial::mortality::gompertz(pluss::make_series({60.0, 61.0, 62.0, 63.0}), 0.0001, 1.0); });
+  report([&] { (void)actuarial::mortality::gompertz(pluss::make_series({-1.0}), 0.0001, 1.08); });
+  report([&] { (void)actuarial::MortalityModel{}(pluss::make_series({60.0, 61.0, 62.0, 63.0})); });
+}
+```
+
+## See Also
+
+- [`Mortality`](Mortality.md): the value returned and its accessors
+- [`Basis`](../valuation/Basis.md): pairs the law with a discount
+- [`makeham`](makeham.md): adds an age-independent term
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="select_ultimate.html">
+    <span class="label">Previous</span>
+    <span class="title">select_ultimate</span>
+  </a>
+  <a class="next-link" href="makeham.html">
+    <span class="label">Next</span>
+    <span class="title">makeham</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

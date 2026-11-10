@@ -1,0 +1,181 @@
+<!-- generated from directional.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::directional`
+
+The derivative of a scalar function along a direction field: `v · ∇f`.
+
+## Signature
+
+```cpp
+operators::Operator operators::directional(math::Function direction, pluss::StackArray<std::string_view> variables, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+`directional(v, {"x", "y", "z"})` is the operator `f ↦ v · ∇f`: the rate of change of `f` along the vector `v`. The direction `v` is itself a function of the coordinates (a rank-1 function with one component per coordinate), so it can vary from point to point: a constant direction gives the usual directional derivative, `v = e_x` gives `∂f/∂x`, and a velocity field gives the change of `f` seen by a particle that moves with the flow.
+
+The direction need not be a unit vector: the result scales with its length. The direction's variables are matched to the function's by name. The input must be scalar-valued.
+
+## Parameters
+
+`math::Function direction`
+: The direction field `v`: a rank-1 function with one component per coordinate.
+
+`pluss::StackArray<std::string_view> variables`
+: The coordinates, in the order of the direction's components.
+
+`operators::DiffOptions options`
+: Non-smooth policy, fallback and size limit.
+
+## Returns
+
+An `Operator` whose application returns `v · ∇f` as a scalar `Function`.
+
+## Errors
+
+- The function must be scalar-valued.
+- The direction must have one component per coordinate.
+
+## Practical Examples
+
+### Example 1
+
+A direction field. For `f = x² + y³ + z` and `v = (y, x, 1)`: `v·∇f = y·2x + x·3y² + 1`, which is `17` at `(1, 2, 3)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return x * x + y * y * y + z; });
+  const math::Function v = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return math::stack({y, x, z * 0.0 + 1.0}); });
+  const math::Function rate = operators::directional(v, {"x", "y", "z"})(f);
+  out.writeln("v . grad f at (1, 2, 3) =", rate({pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)}).item<double>(), "  (4 + 12 + 1)");
+}
+```
+
+Output
+
+```text
+v . grad f at (1, 2, 3) = 17.0000   (4 + 12 + 1)
+```
+
+### Example 2
+
+A constant direction. Along `e_x = (1, 0, 0)` it is `∂f/∂x`; along a diagonal `(1, 1, 0)` it is `f_x + f_y`; along `(2, 0, 0)` it is twice `∂f/∂x` (the length of the direction matters).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return x * x * y + z; });
+  const auto along = [&](double a, double b, double c) {
+    const math::Function v = math::function({"x", "y", "z"}, [&](math::Function x, math::Function, math::Function) { return math::stack({x * 0.0 + a, x * 0.0 + b, x * 0.0 + c}); });
+    return operators::directional(v, {"x", "y", "z"})(f)({pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)}).item<double>();
+  };
+  out.writeln("(1, 0, 0):", along(1, 0, 0), "  f_x = 2xy = 4");
+  out.writeln("(1, 1, 0):", along(1, 1, 0), "  f_x + f_y = 4 + 1 = 5");
+  out.writeln("(2, 0, 0):", along(2, 0, 0), "  2 f_x = 8");
+}
+```
+
+Output
+
+```text
+(1, 0, 0): 4.0000   f_x = 2xy = 4
+(1, 1, 0): 5.0000   f_x + f_y = 4 + 1 = 5
+(2, 0, 0): 8.0000   2 f_x = 8
+```
+
+### Example 3
+
+The rate of change along a curve. A particle moves with velocity `v = (−y, x)` (a rotation) in a temperature field `T = x² + 2y`. The rate at which it feels the temperature change is `v·∇T = −y·2x + x·2`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function T = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * x + 2.0 * y; });
+  const math::Function v = math::function({"x", "y"}, [](math::Function x, math::Function y) { return math::stack({-y, x}); });
+  const math::Function rate = operators::directional(v, {"x", "y"})(T);
+  out.writeln("at (1, 2):", rate({pluss::make_series(1.0), pluss::make_series(2.0)}).item<double>(), "  (-2·1·2 + 1·2 = -2)");
+}
+```
+
+Output
+
+```text
+at (1, 2): -2.0000   (-2·1·2 + 1·2 = -2)
+```
+
+### Example 4
+
+The direction needs one component per coordinate, and the function must be scalar-valued.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y; });
+  const math::Function short_direction = math::function({"x", "y"}, [](math::Function x, math::Function) { return math::stack({x}); });
+  try { (void)operators::directional(short_direction, {"x", "y"})(f); } catch (const pluss::Error &e) { out.writeln(first_line(e)); }
+}
+```
+
+Output
+
+```text
+operators::directional: the direction needs one component per coordinate
+```
+
+## See Also
+
+- [`material`](material.md): adds the time derivative
+- [`gradient`](../differential/gradient.md): the vector `v` is dotted with
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="curl.html">
+    <span class="label">Previous</span>
+    <span class="title">curl</span>
+  </a>
+  <a class="next-link" href="divergence.html">
+    <span class="label">Next</span>
+    <span class="title">divergence</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

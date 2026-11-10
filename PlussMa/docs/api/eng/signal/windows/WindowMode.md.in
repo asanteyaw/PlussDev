@@ -1,0 +1,62 @@
+# `signal::WindowMode`
+
+## Signature
+
+```cpp
+signal::WindowMode signal::WindowMode::Symmetric;
+signal::WindowMode signal::WindowMode::Periodic;
+```
+
+## What It Does
+
+Selects how the finite coefficient vector treats its endpoints. The choice changes the denominator used by cosine windows and therefore changes every interior coefficient except in trivial sizes.
+
+## Fields
+
+| Value | Meaning |
+|---|---|
+| `Symmetric` | Makes the returned vector symmetric about its midpoint. Use it for finite-window analysis or FIR coefficient construction. |
+| `Periodic` | Samples a window that would close at the omitted next point. Use it when the returned coefficients precede a same-length DFT. |
+
+## Returns
+
+The enum is stored in `WindowOptions::mode`; it does not allocate data by itself.
+
+## Errors
+
+The enum has no invalid public enumerators. Window factories still validate size, dtype, and platform.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Generate and compare every built-in window at a common length.
+
+@@example Eng/api/signal_windows.cpp@@
+
+### Example 2
+
+Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+
+@@example Eng/api/signal_window_options.cpp@@
+
+### Example 3
+
+Observe the validation errors for invalid size and dtype requests.
+
+@@example Eng/api/signal_window_errors.cpp@@
+
+## See Also
+
+See the [Signal windows](../windows.md) family page for selection guidance and endpoint semantics.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="WindowOptions.html">
+    <span class="label">Next</span>
+    <span class="title">WindowOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

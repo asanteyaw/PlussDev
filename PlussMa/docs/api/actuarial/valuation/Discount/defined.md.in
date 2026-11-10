@@ -1,0 +1,112 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 651c520cd1b2 -->
+
+# `actuarial::Discount::defined`
+
+[Back to `actuarial::Discount`](../Discount.md)
+
+Tells whether the discount was built by a factory.
+
+## Signature
+
+```cpp
+bool actuarial::Discount::defined() const noexcept;
+```
+
+## What It Does
+
+True for a `Discount` made by `discount::flat` or `discount::curve`, false for a default-constructed one. The check does not validate the assumption beyond what the factories already did; it only distinguishes a real discount from the empty value, which `factors` and `operators::value` refuse. Call it before using a `Discount` that may be empty, for example one stored in a configuration that is filled in later.
+
+## Returns
+
+`true` if the discount was built by a factory.
+
+## Practical Examples
+
+### Example 1: built and empty
+
+A flat discount and a curve are defined; the default value is not.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("flat:", actuarial::discount::flat(0.04).defined(), " curve:", actuarial::discount::curve(pluss::make_series({1.0, 0.96})).defined(), " default:", actuarial::Discount{}.defined());
+}
+```
+
+### Example 2: guarding a stored discount
+
+Use a discount only if it was set.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  actuarial::Discount slot;
+  out.writeln("before it is set: factors usable:", slot.defined());
+  slot = actuarial::discount::flat(0.03);
+  out.writeln("after it is set:  factors usable:", slot.defined(), " factors", slot.factors(2).items<double>());
+}
+```
+
+### Example 3: a copy keeps the assumption
+
+Copies are values: both are defined and give the same factors.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Discount original = actuarial::discount::flat(0.05);
+  const actuarial::Discount copy = original;
+  out.writeln("copy defined:", copy.defined(), " same factors:", copy.factors(3).items<double>() == original.factors(3).items<double>());
+}
+```
+
+## See Also
+
+- [`Discount`](../Discount.md): the type
+- [`factors`](factors.md): the factors of a defined discount
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="factors.html">
+    <span class="label">Next</span>
+    <span class="title">factors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

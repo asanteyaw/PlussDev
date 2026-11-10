@@ -1,0 +1,118 @@
+# `linprog::to_string`
+
+The name of a linear-programming `Status` as text.
+
+## Signature
+
+```cpp
+const char *linprog::to_string(linprog::Status value);
+```
+
+## What It Does
+
+`Status` is carried in `Result::status` as a `Float64` code, so a lane's verdict prints as a number. `to_string` turns the code (cast back to `Status`) into its name: `Optimal`, `PrimalInfeasible`, `Unbounded`, `IterationLimit` or `NearOptimal`. Use it for reports and log lines. It returns a pointer to a static string.
+
+## Parameters
+
+`linprog::Status value`
+: The status to name.
+
+## Returns
+
+A static, null-terminated name; `"Unknown"` for an invalid value.
+
+## Practical Examples
+
+### Example 1
+
+All five names.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  for (const linprog::Status status : {linprog::Status::Optimal, linprog::Status::PrimalInfeasible, linprog::Status::Unbounded, linprog::Status::IterationLimit, linprog::Status::NearOptimal}) {
+    out.writeln(static_cast<int>(status), "->", linprog::to_string(status));
+  }
+}
+```
+
+### Example 2
+
+Naming the verdicts of a batch. Two lanes of one call, one feasible and one infeasible, are reported by name.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  linprog::Problem problem;
+  problem.c = pluss::series::make({{1.0, 1.0}, {1.0, 1.0}});
+  problem.a_ub = pluss::series::make({{1.0, 1.0}, {-1.0, -1.0}});
+  problem.b_ub = pluss::series::make({{4.0, -1.0}, {1.0, -3.0}});
+  problem.lower = pluss::series::make({0.0, 0.0});
+  const linprog::Result result = linprog::solve(problem);
+  const std::vector<double> codes = result.status.items<double>();
+  for (std::size_t lane = 0; lane < codes.size(); ++lane) {
+    out.writeln("lane", lane, ":", linprog::to_string(static_cast<linprog::Status>(static_cast<int>(codes[lane]))));
+  }
+}
+```
+
+### Example 3
+
+The text of a code read from the result series of a single problem.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  linprog::Problem problem;
+  problem.c = pluss::series::make({-1.0});
+  problem.lower = pluss::series::make({0.0});
+  const linprog::Result result = linprog::solve(problem);
+  out.writeln("verdict =", linprog::to_string(static_cast<linprog::Status>(static_cast<int>(result.status.item<double>()))));
+}
+```
+
+## See Also
+
+- [`success`](success.md): tests for an acceptable verdict
+- [`Status`](Status.md): the meaning of each
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="success.html">
+    <span class="label">Previous</span>
+    <span class="title">success</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

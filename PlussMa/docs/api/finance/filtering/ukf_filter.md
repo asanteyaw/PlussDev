@@ -1,0 +1,308 @@
+<!-- generated from ukf_filter.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `filtering::ukf_filter`
+
+The unscented Kalman filter: sigma points through the nonlinear model, with no Jacobians.
+
+## Signature
+
+```cpp
+filtering::KalmanResult filtering::ukf_filter(const pluss::Series &observations, const filtering::UkfModel &model, pluss::Config cfg = {});
+```
+
+## What It Does
+
+Chooses `2n + 1` sigma points with the mean and covariance of the current estimate, propagates them through `f`, forms the predicted mean and covariance (adding `Q`), propagates the predicted points through `h`, and updates with the Kalman gain computed from the sample cross-covariance. It captures the effect of curvature to second order, where the extended filter ignores it, and needs no derivatives. On a linear model it equals the Kalman filter exactly. It returns a [`KalmanResult`](KalmanResult.md).
+
+## Parameters
+
+`const pluss::Series &observations`
+: `[T]` or `[T, m]`.
+
+`const filtering::UkfModel &model`
+: The nonlinear model.
+
+`pluss::Config cfg`
+: Device.
+
+## Returns
+
+A [`KalmanResult`](KalmanResult.md).
+
+## Errors
+
+- A missing function, invalid sigma-point options or mis-shaped covariances throw (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+The nonlinear level tracking problem of the extended filter, here without Jacobians.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const std::int64_t T = 200;
+  const double q = 0.01, r = 0.01;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + x.square() * 0.2 + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::UkfModel m;
+  m.transition = [&](const Series &s, std::int64_t) { return s; };
+  m.observation = [&](const Series &s, std::int64_t) { return s + s.square() * 0.2; };
+  m.process_cov = pluss::series::full({1, 1}, q, cfg);
+  m.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  m.initial_mean = pluss::series::zeros({1}, cfg);
+  m.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+
+  const auto res = flt::ukf_filter(y, m, cfg);
+  out.writeln("rms error of the filtered level:", (res.filtered_mean.reshape({T}) - x).square().mean().sqrt().item<double>());
+}
+```
+
+Output
+
+```text
+rms error of the filtered level: 0.0729
+```
+
+### Example 2
+
+Against the extended filter on a strong nonlinearity from a diffuse start, `h(x) = 0.05 e^{3x}` with `P₀ = 1`: linearising at a poorly known mean is misleading, while the sigma points sample the whole prior.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const std::int64_t T = 200;
+  const double q = 0.01, r = 0.01;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false) + 1.0;
+  const Series y = (x * 3.0).exp() * 0.05 + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::UkfModel m;
+  m.transition = [&](const Series &s, std::int64_t) { return s; };
+  m.observation = [&](const Series &s, std::int64_t) { return (s * 3.0).exp() * 0.05; };
+  m.process_cov = pluss::series::full({1, 1}, q, cfg);
+  m.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  m.initial_mean = pluss::series::zeros({1}, cfg);
+  m.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+
+  flt::EkfModel e;
+  e.transition = m.transition; e.observation = m.observation;
+  e.transition_jacobian = [&](const Series &, std::int64_t) { return pluss::series::full({1, 1}, 1.0, cfg); };
+  e.observation_jacobian = [&](const Series &s, std::int64_t) { return ((s * 3.0).exp() * 0.15).reshape({1, 1}); };
+  e.process_cov = m.process_cov; e.observation_cov = m.observation_cov; e.initial_mean = m.initial_mean; e.initial_cov = m.initial_cov;
+  m.options.alpha = 0.5;
+  const auto ru = flt::ukf_filter(y, m, cfg), re = flt::ekf_filter(y, e, cfg);
+  out.writeln("rms error, unscented:", (ru.filtered_mean.reshape({T}) - x).square().mean().sqrt().item<double>(), ", extended:", (re.filtered_mean.reshape({T}) - x).square().mean().sqrt().item<double>());
+}
+```
+
+Output
+
+```text
+rms error, unscented: 0.0868 , extended: 0.5080
+```
+
+### Example 3
+
+On a linear model it equals the Kalman filter: mean, covariance and log-likelihood.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(11));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 100;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::full({1}, 0.0, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+
+  flt::UkfModel u;
+  u.transition = [&](const Series &s, std::int64_t) { return s; };
+  u.observation = [&](const Series &s, std::int64_t) { return s; };
+  u.process_cov = km.process_cov; u.observation_cov = km.observation_cov; u.initial_mean = km.initial_mean; u.initial_cov = km.initial_cov;
+  const auto a = flt::ukf_filter(y, u, cfg), b = flt::kalman_filter(y, km, cfg);
+  out.writeln("mean difference", (a.filtered_mean - b.filtered_mean).abs().max().item<double>(), ", covariance difference", (a.filtered_cov - b.filtered_cov).abs().max().item<double>(), ", loglik difference", a.loglik - b.loglik);
+}
+```
+
+Output
+
+```text
+mean difference 0.00000000169 , covariance difference 0.00000000010 , loglik difference 0.00000006059
+```
+
+### Example 4
+
+Two states: a position observed through its square, with a velocity. The filter infers both from the squared observation.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const std::int64_t T = 100;
+  const Series time = pluss::series::arange(1.0, 101.0, 1.0, cfg);
+  const Series position = time * 0.05 + 1.0;
+  const Series y = position.square() + pluss::series::randn({T}, cfg, 3) * 0.2;
+  flt::UkfModel u;
+  u.transition = [&](const Series &s, std::int64_t) { return pluss::make_series({s.select(0, 0).sum().item<double>() + s.select(0, 1).sum().item<double>(), s.select(0, 1).sum().item<double>()}); };
+  u.observation = [&](const Series &s, std::int64_t) { return s.select(0, 0).square().reshape({1}); };
+  u.process_cov = pluss::make_series({1e-4, 0.0, 0.0, 1e-6}, {2, 2});
+  u.observation_cov = pluss::series::full({1, 1}, 0.04, cfg);
+  u.initial_mean = pluss::make_series({1.0, 0.0});
+  u.initial_cov = pluss::make_series({1.0, 0.0, 0.0, 0.01}, {2, 2});
+  const auto res = flt::ukf_filter(y, u, cfg);
+  out.writeln("final position and velocity:", res.filtered_mean.select(0, T - 1).items<double>(), "(true 6.0, 0.05)");
+}
+```
+
+Output
+
+```text
+final position and velocity: [6.000, 0.050] (true 6.0, 0.05)
+```
+
+### Example 5
+
+A missing function is refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const std::int64_t T = 200;
+  const double q = 0.01, r = 0.01;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + x.square() * 0.2 + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::UkfModel m;
+  m.transition = [&](const Series &s, std::int64_t) { return s; };
+  m.observation = [&](const Series &s, std::int64_t) { return s + s.square() * 0.2; };
+  m.process_cov = pluss::series::full({1, 1}, q, cfg);
+  m.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  m.initial_mean = pluss::series::zeros({1}, cfg);
+  m.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  m.transition = nullptr;
+  try {
+    (void)(flt::ukf_filter(y, m, cfg));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::finance::filtering::ukf_filter: transition function missing
+```
+
+## See Also
+
+- [`UkfModel`](UkfModel.md): the model
+- [`ekf_filter`](ekf_filter.md): with Jacobians
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sv_particle_filter.html">
+    <span class="label">Previous</span>
+    <span class="title">sv_particle_filter</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

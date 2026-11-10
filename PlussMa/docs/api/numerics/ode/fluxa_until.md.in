@@ -1,0 +1,176 @@
+# `ode::fluxa_until`
+
+Solves an initial-value problem until an event function changes sign, and returns the state and time of the event.
+
+## Signature
+
+```cpp
+ode::OdeEventResult ode::fluxa_until(const ode::OdeFn &f, const ode::OdeEventFn &event, const pluss::Series &y0, double t0, double t1, const pluss::Series &theta = pluss::series::undefined(), const ode::OdeOptions &options = {}, const ode::OdeEventOptions &event_options = {});
+```
+
+## What It Does
+
+Many problems end not at a fixed time but when something happens: a projectile hits the ground, a concentration crosses a threshold. `event(t, y, θ)` returns a scalar `Series`; the solver advances with fixed RK4 steps from `t0` toward `t1` and watches the event value at every step. When it changes sign in the direction selected by [`OdeEventDirection`](OdeEventDirection.md), the bracketing step is **refined by bisection** until the event time is within `time_tolerance` or the event value within `value_tolerance`, at most `max_refinements` times. The result gives the state and time at the event, the event value there, and whether an event was found; if none occurs the solve ends at `t1` with `triggered` false.
+
+Only fixed-step `RK4` is supported here, and `options.steps` is the number of steps over `[t0, t1]`, so it must be fine enough that an event is not stepped over (two sign changes inside one step cancel). The result is an [`OdeEventResult`](OdeEventResult.md).
+
+**How the event is found.** The solver integrates with the fixed-step `RK4` and, after each step, evaluates the event function. A sign change in the requested direction brackets the crossing inside that step; the solver then bisects the bracket, integrating a sub-step from the step's start to each trial time, until the bracket is below `time_tolerance`, the event value is below `value_tolerance`, or `max_refinements` bisections are done. The result carries the time, the state at that time and the event value.
+
+**Using it.** The event function must return a rank-0 `Series`. Typical events are an impact (height reaches zero), a threshold (concentration crosses a level) and a turning point (a velocity changes sign); combine with the direction option to ignore the crossings you do not want. The accuracy of the time is limited both by the bisection tolerance and by the accuracy of the underlying `RK4` steps.
+
+## Parameters
+
+`const ode::OdeFn &f`
+: The derivative.
+
+`const ode::OdeEventFn &event`
+: `(t, y, theta) -> scalar Series`: the quantity whose sign change ends the solve.
+
+`const pluss::Series &y0`
+: The initial state.
+
+`double t0, double t1`
+: The time window.
+
+`const pluss::Series &theta`
+: Parameters passed to both callbacks.
+
+`const ode::OdeOptions &options`
+: RK4 with `steps` over the window.
+
+`const ode::OdeEventOptions &event_options`
+: Direction and refinement tolerances.
+
+## Returns
+
+An [`OdeEventResult`](OdeEventResult.md).
+
+## Errors
+
+- A missing callback, `steps ≤ 0`, an invalid refinement setting, or a method other than `RK4` throws.
+
+## Practical Examples
+
+### Example 1
+
+An impact. A ball dropped from 10 m under gravity: the time and velocity when the height reaches zero. The time is `√(2h/g) = 1.4278 s` and the speed `g t = 14.007 m/s`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const ode::OdeFn ball = [](double, const Series &y, const Series &) {   // y = [height, velocity] under gravity
+    return y.select(0, 1).reshape({1}).unite({(y.select(0, 1) * 0.0 - 9.81).reshape({1})}, 0);
+  };
+
+  const ode::OdeEventFn hit = [](double, const Series &y, const Series &) { return y.select(0, 0); };
+  ode::OdeEventOptions event;
+  event.direction = ode::OdeEventDirection::Falling;
+  const ode::OdeEventResult r = ode::fluxa_until(ball, hit, pluss::make_series({10.0, 0.0}), 0.0, 5.0, pluss::series::undefined(), ode::OdeOptions{}, event);
+  out.writeln("t =", r.t_final, ", state =", r.y_final.items<double>(), ", event value =", r.event_value.item<double>());
+}
+```
+
+### Example 2
+
+A threshold. `y' = −y` from 1 crosses 0.5 at `t = ln 2 = 0.693147`; the event function is `y − 0.5`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &) { return y * -1.0; };
+  const ode::OdeEventFn threshold = [](double, const Series &y, const Series &) { return y.select(0, 0) - 0.5; };
+  const ode::OdeEventResult r = ode::fluxa_until(decay, threshold, pluss::make_series({1.0}), 0.0, 5.0);
+  out.writeln("t =", r.t_final, ", ln 2 =", std::log(2.0));
+}
+```
+
+### Example 3
+
+No event. If the quantity never changes sign before `t1` the solve runs to `t1` and `triggered` is false.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &) { return y * -1.0; };
+  const ode::OdeEventFn never = [](double, const Series &y, const Series &) { return y.select(0, 0) + 1.0; };
+  const ode::OdeEventResult r = ode::fluxa_until(decay, never, pluss::make_series({1.0}), 0.0, 2.0);
+  out.writeln("triggered =", r.triggered, ", t =", r.t_final, ", y =", r.y_final.items<double>());
+}
+```
+
+### Example 4
+
+Tightening the event tolerance. A looser tolerance stops the bisection sooner.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &) { return y * -1.0; };
+  const ode::OdeEventFn threshold = [](double, const Series &y, const Series &) { return y.select(0, 0) - 0.5; };
+  for (const double tol : {1e-3, 1e-10}) {
+    ode::OdeEventOptions event;
+    event.time_tolerance = tol;
+    event.value_tolerance = 0.0;
+    const ode::OdeEventResult r = ode::fluxa_until(decay, threshold, pluss::make_series({1.0}), 0.0, 5.0, pluss::series::undefined(), ode::OdeOptions{}, event);
+    out.writeln("time tolerance", tol, ": error =", std::abs(r.t_final - std::log(2.0)), ", event evaluations =", r.event_evaluations);
+  }
+}
+```
+
+## See Also
+
+- [`OdeEventOptions`](OdeEventOptions.md): the refinement settings
+- [`OdeEventDirection`](OdeEventDirection.md): which crossings count
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fluxa_linear.html">
+    <span class="label">Previous</span>
+    <span class="title">fluxa_linear</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

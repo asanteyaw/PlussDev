@@ -1,0 +1,67 @@
+# `power::Base`
+
+The power and voltage bases of a per-unit system.
+
+## Signature
+
+```cpp
+power::Base
+```
+
+## What It Does
+
+The two bases from which every per-unit quantity follows. The impedance base is `voltage^2 / power`, the admittance base its inverse and the current base `power / (sqrt(3) voltage)`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `power` | Three-phase apparent-power base, volt-amperes. | required, positive |
+| `voltage` | Line-to-line voltage base, volts. | required, positive |
+
+## Returns
+
+A value; validated by `make` and by `zbase`, `ybase` and `ibase`.
+
+## Errors
+
+A non-positive or non-finite base is rejected.
+
+## Interpretation and Use
+
+Choose one base for a whole study. All per-unit values of a network are on it.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Derived bases and conversions on a 100 MVA, 230 kV base.
+
+@@example Eng/api/power_units.cpp@@
+
+### Example 2
+
+A base inside a network description.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 3
+
+A rejected base is described with the other validation errors.
+
+@@example Eng/api/power_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="BusKind.html">
+    <span class="label">Previous</span>
+    <span class="title">BusKind</span>
+  </a>
+  <a class="next-link" href="Buses.html">
+    <span class="label">Next</span>
+    <span class="title">Buses</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

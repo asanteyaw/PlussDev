@@ -1,0 +1,134 @@
+# `regression::print_poly_summary`
+
+Writes the report of a fitted polynomial regression to an output stream.
+
+## Signature
+
+```cpp
+std::ostream &regression::print_poly_summary(std::ostream &os, const regression::PolyFitResult &fit);
+```
+
+## What It Does
+
+Writes exactly the text that `poly_summary` returns to `os` and returns `os`, so the call can be chained or used with any stream: `std::cout`, a file, a string stream.
+
+## Parameters
+
+`os`
+: The destination stream.
+
+`fit`
+: A completed result from `poly_fit`.
+
+## Returns
+
+The stream `os`.
+
+## Errors
+
+Throws `subsp::stats::regression::print_poly_summary: fit.ols.coefficients is undefined` for a default-constructed result, which has nothing to report.
+
+## Practical Examples
+
+### Example 1: to the standard output
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  reg::print_poly_summary(std::cout, reg::poly_fit(y, x));
+}
+```
+
+### Example 2: into a string stream
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  const auto fit = reg::poly_fit(y, x);
+  std::ostringstream stream;
+  reg::print_poly_summary(stream, fit);
+  out.writeln("same as poly_summary:", stream.str() == reg::poly_summary(fit));
+}
+```
+
+### Example 3: chaining
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  reg::PolyOptions options;
+  options.degree = 3;
+  reg::print_poly_summary(std::cout << "a cubic\n", reg::poly_fit(y, x, options));
+}
+```
+
+### Example 4: the errors
+
+A default-constructed result has nothing to report, and the call says so.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      const std::string text(e.what());
+      out.writeln(text.substr(0, text.find('\n')));
+    }
+  };
+  const reg::PolyFitResult fit;
+  report([&] { reg::print_poly_summary(std::cout, fit); });
+}
+```
+
+## See Also
+
+[`poly_summary`](poly_summary.md) returns the text instead of writing it, and [`PolyFitResult`](PolyFitResult.md) holds the numbers.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="poly_summary.html">
+    <span class="label">Previous</span>
+    <span class="title">poly_summary</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,16 @@
+<!-- generated from Introduction.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::DFO` Introduction
+
+`DFO` ties a [`DfoProblem`](../DfoProblem.md) to a [`DfoOptions`](../DfoOptions.md). It checks the problem, chooses a method (see [`DfoSolverKind`](../DfoSolverKind.md)), runs it, and returns a [`DfoResult`](../DfoResult.md) that also says which method ran and why. Use the static `solve` for a one-off call, an instance with `run` when one set of options solves several problems, and `build` to describe a problem with chained setters.
+
+The common entry points are three spellings of the same run: [`solve_dfo`](../solve_dfo.md) for an objective and a start, `DFO::solve` for a filled-in problem, and the builder for chained setters. With the same options and seed they give identical results.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="build.html">
+    <span class="label">Next</span>
+    <span class="title">build</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

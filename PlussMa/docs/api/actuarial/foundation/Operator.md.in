@@ -1,0 +1,165 @@
+# `actuarial::Operator<Signature>`
+
+A named callable with a fixed signature: the common form of every reusable transformation in the actuarial surface.
+
+## Signature
+
+```cpp
+bool actuarial::Operator<Signature>::defined() const noexcept;
+std::string_view actuarial::Operator<Signature>::key() const noexcept;
+explicit actuarial::Operator<Signature>::operator bool() const noexcept;
+Result actuarial::Operator<Signature>::operator()(Args... args) const;
+```
+
+## What It Represents
+
+An `Operator<R(A...)>` holds a callable taking `A...` and returning `R`, together with a descriptive **key**. `Signature` fixes the types at compile time, so an operator that values a cashflow cannot be handed a triangle. The key names the transformation for logs and diagnostics. Operators are cheap to copy and are values: the library returns them from [`operators::value`](../valuation/Basis.md), `deductible`, `chain_ladder` and the other builders, and [`make_operator`](make_operator.md) creates your own with the same contract, so a custom rule can be used anywhere a library one can. A default-constructed operator is empty.
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`defined`](Operator/defined.md) | Tells whether a callable is installed. |
+| [`key`](Operator/key.md) | The descriptive name given at construction. |
+| [`operator bool`](Operator/operator_bool.md) | The explicit boolean form of `defined`. |
+| [`operator()`](Operator/operator_call.md) | Calls the stored callable. |
+
+## Practical Examples
+
+### Example 1: a scalar operator
+
+`make_operator` wraps a lambda; the operator reports its key and is called like the lambda.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Operator<double(double)> square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  out.writeln("key:", square.key(), " defined:", square.defined());
+  out.writeln("square(3) =", square(3.0));
+}
+```
+
+### Example 2: an operator on a Series
+
+The same contract carries whole vectors, so one call does the work of a loop.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto cube = actuarial::make_operator<pluss::Series(const pluss::Series &)>("cube", [](const pluss::Series &x) { return x.mul(x).mul(x); });
+  out.writeln(cube(pluss::make_series({1.0, 2.0, 3.0, 4.0})).items<double>());
+}
+```
+
+### Example 3: the library builds operators too
+
+The operators the library returns are the same type, with keys that name them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(pluss::make_series({0.01, 0.02, 0.03}));
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(0.04)});
+  out.writeln("key:", value.key(), " 3-year annuity =", value(actuarial::cashflow::annuity(3)).item<double>());
+}
+```
+
+### Example 4: an empty operator
+
+A default-constructed operator is not defined, has an empty key, and throws when called.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const actuarial::Operator<double(double)> none;
+  out.writeln("defined:", none.defined(), " key empty:", none.key().empty());
+  report([&] { (void)none(1.0); });
+}
+```
+
+## Changelog
+
+- **0.1**: initial operator-first actuarial surface.
+
+## See Also
+
+[`make_operator`](make_operator.md) builds one, and [`Valuation`](../valuation/Basis.md) is the library operator you will meet first.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="make_operator.html">
+    <span class="label">Next</span>
+    <span class="title">make_operator</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+Operator/defined
+Operator/key
+Operator/operator_bool
+Operator/operator_call
+```
+<!-- apiref:toctree:end -->

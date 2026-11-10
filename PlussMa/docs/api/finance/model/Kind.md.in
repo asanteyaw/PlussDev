@@ -1,0 +1,182 @@
+# `model::Kind`
+
+The six model families, in the order that fixes each family's parameter vector.
+
+`Kind` names the family for [`Model::make`](Model/make.md) and reports it from [`Model::kind`](Model/kind.md). Each family has a fixed parameter order, used by `make`, by `parameters` (both reading and writing), and by every calibration that treats the model as a vector:
+
+| Kind | Parameters, in order | Count |
+|---|---|---|
+| `BlackScholes` | `volatility` | 1 |
+| `Sabr` | `alpha0, beta, nu, rho` | 4 |
+| `Heston` | `kappa, theta, sigma, rho, v0` | 5 |
+| `Bates` | `kappa, theta, sigma, rho, v0, jump_intensity, jump_mean, jump_vol` | 8 |
+| `RoughHeston` | `kappa, theta, sigma, alpha, rho, v0` | 6 |
+| `RoughBergomi` | `xi, eta, alpha, rho` | 4 |
+
+Only these parameters are in the vector; the optional extras of each struct (`mu`, the variance floors, SABR's volatility type) are set on the struct itself.
+
+## Fields
+
+### `BlackScholes`
+
+`enumerator`, default `0`.
+
+Constant volatility; 1 parameter.
+
+### `Sabr`
+
+`enumerator`, default `1`.
+
+Stochastic alpha-beta-rho; 4 parameters.
+
+### `Heston`
+
+`enumerator`, default `2`.
+
+Mean-reverting stochastic variance; 5 parameters.
+
+### `Bates`
+
+`enumerator`, default `3`.
+
+Heston with jumps; 8 parameters.
+
+### `RoughHeston`
+
+`enumerator`, default `4`.
+
+Heston with a rough kernel; 6 parameters.
+
+### `RoughBergomi`
+
+`enumerator`, default `5`.
+
+Rough Bergomi; 4 parameters.
+
+## Guidance
+
+Argument of `Model::make`; returned by `Model::kind`.
+
+## Practical Examples
+
+### Example 1
+
+Building each family by kind. The parameter count differs; the name follows.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  struct Case { fin::model::Kind kind; std::vector<double> params; };
+  const std::vector<Case> cases = {{fin::model::Kind::BlackScholes, {0.2}}, {fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}}, {fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}},
+                                   {fin::model::Kind::Bates, {1.5, 0.04, 0.3, -0.7, 0.04, 0.5, -0.1, 0.2}}, {fin::model::Kind::RoughHeston, {1.5, 0.04, 0.3, -0.3, -0.7, 0.04}}, {fin::model::Kind::RoughBergomi, {0.04, 1.5, -0.1, -0.7}}};
+  for (const Case &c : cases) {
+    const mod::Model m = fin::model::make(c.kind, c.params);
+    out.writeln(m.name(), ": kind", static_cast<int>(m.kind()), ", parameters", m.parameters().numel());
+  }
+}
+```
+
+### Example 2
+
+The order is the contract. Reading a Heston model back gives the five numbers in `kappa, theta, sigma, rho, v0` order.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  out.writeln(m.parameters().items<double>());
+}
+```
+
+### Example 3
+
+A wrong count is refused with the expected order in the message.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  try {
+    (void)(fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3}));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+### Example 4
+
+The kind of a model is recoverable: `Model::kind()` returns it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mod::Model m = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3});
+  out.writeln("is Sabr:", m.kind() == fin::model::Kind::Sabr, ", is Heston:", m.kind() == fin::model::Kind::Heston);
+}
+```
+
+## See Also
+
+- [`Model`](Model.md): uses it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Heston.html">
+    <span class="label">Previous</span>
+    <span class="title">Heston</span>
+  </a>
+  <a class="next-link" href="Model.html">
+    <span class="label">Next</span>
+    <span class="title">Model</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

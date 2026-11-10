@@ -1,0 +1,43 @@
+<!-- generated from plussma_eng.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Engineering API Reference
+
+The engineering framework is available beneath `pluss::ma::eng`. Its public families model engineered systems and signals while delegating array execution, differentiation, linear algebra, optimization and transforms to their lower numerical owners.
+
+```cpp
+#include <pluss/ma.h>
+
+namespace sig = pluss::ma::eng::signal;
+namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::ma::eng::control;
+namespace structure = pluss::ma::eng::structure;
+```
+
+## Families
+
+| Family | Concern |
+|---|---|
+| `signal` | Windows, convolution, stateful filtering, frequency response and IIR design |
+| `lti` | State-space and pole-zero models, system response, Gramians and simulation |
+| `control` | Riccati equations, LQR/LQE, loop analysis, pole placement, PID and MPC |
+| `circuit` | Compiled electrical networks and operating-point analysis |
+| `power` | AC/DC power flow, sensitivities, contingencies, estimation, continuation and dispatch |
+| `fluid` | Hydraulic networks, controls, transport and heat propagation |
+| `structure` | Truss/frame assembly, static, modal, buckling, motion and nonlinear response |
+
+The reference currently expands `signal`, `lti`, `control`, `structure` and the power-flow part of `power` completely. Signal pages cover coefficient generation, filtering and IIR design; LTI pages cover state-space analysis, pole-zero systems, frequency response and simulation; Control pages cover feedback synthesis, estimation, stability analysis, controller construction, and predictive control; Structure pages cover model description, static and large-displacement solves, modes and buckling, and time and frequency response. The remaining families retain their public contracts and will be expanded in the same hierarchy rather than compressed into a superficial omnibus page.
+
+## Design Boundary
+
+Engineering functions accept and return `Series` so batch axes, dtype, platform and reverse sensitivity remain available. Small host loops are reserved for structural recurrences such as filter order or state propagation; numerical lanes remain vectorized through the shared Series and linear-algebra kernels.
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+eng/signal
+eng/lti
+eng/control
+eng/structure
+eng/power
+```

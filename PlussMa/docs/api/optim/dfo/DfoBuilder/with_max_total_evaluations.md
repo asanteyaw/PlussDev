@@ -1,0 +1,138 @@
+<!-- generated from with_max_total_evaluations.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: dc3cbb195880 -->
+
+# `DfoBuilder::with_max_total_evaluations`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Sets a budget that also counts cache hits (MADS).
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_max_total_evaluations(std::int64_t max_total_evaluations) const;
+```
+
+## What It Does
+
+Sets `DfoOptions::max_total_evaluations`, read by the mesh-adaptive methods. Those methods cache evaluations, and by default a repeated point is a cache hit that does not use the evaluation budget but is counted in `total_evaluations`; this budget bounds the total, hits included. Other methods ignore it.
+
+## Parameters
+
+`std::int64_t max_total_evaluations`
+: The budget; 0 uses 4 times the evaluation limit.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+Bounding the total.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::OrthoMads).with_max_total_evaluations(50).solve();
+  out.writeln(dfo::to_string(r.status), ", evaluations =", r.diagnostics.evaluations, ", total =", r.diagnostics.total_evaluations, ", cache hits =", r.diagnostics.cache_hits);
+}
+```
+
+Output
+
+```text
+ReachedEvaluationBudget , evaluations = 48 , total = 50 , cache hits = 2
+```
+
+### Example 2
+
+Evaluations against totals. Without the total budget a run can do more work than `evaluations` shows.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::OrthoMads).with_max_evaluations(40).solve();
+  out.writeln("evaluations =", r.diagnostics.evaluations, ", total =", r.diagnostics.total_evaluations);
+}
+```
+
+Output
+
+```text
+evaluations = 40 , total = 42
+```
+
+### Example 3
+
+Ignored by other methods: Nelder-Mead reports the same count either way.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  for (const std::int64_t n : {0, 10}) {
+    const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::NelderMead).with_max_total_evaluations(n).solve();
+    out.writeln("total budget", n, ": evaluations =", r.diagnostics.evaluations);
+  }
+}
+```
+
+Output
+
+```text
+total budget 0 : evaluations = 82
+total budget 10 : evaluations = 82
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_max_iterations.html">
+    <span class="label">Previous</span>
+    <span class="title">with_max_iterations</span>
+  </a>
+  <a class="next-link" href="with_nelder_mead_config.html">
+    <span class="label">Next</span>
+    <span class="title">with_nelder_mead_config</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

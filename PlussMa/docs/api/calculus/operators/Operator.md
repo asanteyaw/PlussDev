@@ -1,0 +1,62 @@
+<!-- generated from Operator.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::Operator`
+
+A transformation that takes a `math::Function` and returns another one.
+
+## Signature
+
+```cpp
+operators::Operator::Operator() noexcept;
+operators::Operator::Operator(const operators::Operator &) noexcept;
+operators::Operator::Operator(operators::Operator &&) noexcept;
+```
+
+## Construction
+
+An `Operator` is made by one of the factory functions (`differential`, `integral`, `scale`, ...), by [`define`](../operators/define.md) from your own callable, or by combining operators with `compose`, `linear_combination`, `commutator` or `adjoint`. The default constructor makes an *undefined* operator that holds nothing; test for it with [`defined`](Operator/defined.md). Copies share the same underlying operator and are cheap.
+
+## State
+
+An operator is immutable once built; applying it never changes it.
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`call`](Operator/call.md) | The call operator, `op(f)`: applies the operator to a function and returns the resulting function. |
+| [`capabilities`](Operator/capabilities.md) | Reports the properties the operator promises: linearity, whether it can be saved, whether its adjoint is known. |
+| [`defined`](Operator/defined.md) | Reports whether an `Operator` holds an operation, or is the empty default-constructed value. |
+| [`key`](Operator/key.md) | The name the operator is known by, used when saving and loading it. |
+| [`version`](Operator/version.md) | The version number of the operator's definition, saved with it and used to choose a loader. |
+
+## Changelog
+
+- **0.1**: initial documented surface.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+Operator/Introduction
+Operator/call
+Operator/capabilities
+Operator/defined
+Operator/key
+Operator/version
+```
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DiffOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">DiffOptions</span>
+  </a>
+  <a class="next-link" href="Options.html">
+    <span class="label">Next</span>
+    <span class="title">Options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,65 @@
+# `signal::FilterRun`
+
+## Signature
+
+```cpp
+signal::FilterRun run = signal::filter(input, numerator, denominator);
+```
+
+## What It Does
+
+Bundles one filter invocation's visible samples with the terminal recurrence state needed to continue the same filter on a later block.
+
+## Fields
+
+| Field | Meaning |
+|---|---|
+| `values` | Filtered samples with the same processed-axis length as the input. |
+| `state` | Final direct-form or section state. Pass it to the stateful overload for exact block continuation. |
+
+## Returns
+
+A value object returned by `filter` and `sos`. It owns both `Series` payloads.
+
+## Errors
+
+A saved state is valid only for compatible coefficients, axis, dtype, platform, and batch shape. Stateful overloads reject incompatible shapes.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Compare convolution, correlation, FIR filtering, and frequency response.
+
+@@example Eng/api/signal_filtering.cpp@@
+
+### Example 2
+
+Continue a recursive filter across blocks and apply forward-backward filtering.
+
+@@example Eng/api/signal_filter_state.cpp@@
+
+### Example 3
+
+Observe validation of signal dtype and recurrence coefficients.
+
+@@example Eng/api/signal_filter_errors.cpp@@
+
+## See Also
+
+See [Filtering and response](../filtering.md) for alignment, streaming-state, and axis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PadMode.html">
+    <span class="label">Previous</span>
+    <span class="title">PadMode</span>
+  </a>
+  <a class="next-link" href="PhaseOpts.html">
+    <span class="label">Next</span>
+    <span class="title">PhaseOpts</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

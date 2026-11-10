@@ -1,0 +1,463 @@
+<!-- generated from Chord.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `module::Chord`
+
+Named single-asset Fields priced together, with assets that can share a call merged into one vectorised call.
+
+## Signature
+
+```cpp
+module::Chord::Chord();
+module::Chord::Chord(std::initializer_list<module::Chord::Entry> assets);
+explicit module::Chord::Chord(pluss::RangeView<module::Chord::Entry> assets);
+static module::Chord module::Chord::from_model_params(const module::Chord::Parameters &parameters);
+module::Chord &module::Chord::add(std::string name, module::Field field);
+module::Chord &module::Chord::add(pluss::RangeView<module::Chord::Entry> assets);
+module::Chord::Result module::Chord::price(Config cfg = {}) const;
+module::Chord::Paths module::Chord::simulate_paths(Config cfg = {}) const;
+bool module::Chord::parallel = true;
+Series module::Chord::price_corr = pluss::series::undefined();
+Series module::Chord::var_corr = pluss::series::undefined();
+Series module::Chord::price_var_cross = pluss::series::undefined();
+```
+
+## Construction
+
+A `Chord` holds assets, each a complete single-asset [`Field`](../field/Field.md) stored by value under a unique name, so each keeps its own market, model and engine; the `Chord` adds the names, one `price` over all of them, and the batching that makes a book cheap. There are three ways to fill one, and the order of the assets is the order of every result.
+
+- **A dictionary at construction**, with no `add`: `module::Chord book{{{{"spx", spx}}, {{"ndx", ndx}}}}`, written like a map literal. See [`Chord::Chord`](Chord/Chord.md). A list of entries built in a loop (a `std::vector<module::Chord::Entry>`, where an `Entry` is a name and a Field) is passed the same way.
+- **`add`**, one asset at a time (`chord.add("spx", spx)`, which returns the Chord so calls chain) or a dictionary at once (`chord.add({{{{"spx", spx}}, {{"ndx", ndx}}}})`), so a book of many assets does not need a long chain. A dictionary is all or none. See [`add`](Chord/add.md).
+- **From model parameters**, [`Chord::from_model_params`](Chord/from_model_params.md), when the assets are of any of the six models and the numbers are columns of a table: no Field is written, and the correlations come with the table. See [`Chord::Parameters`](Parameters.md).
+
+The dictionary is an ordered list of pairs and not a `std::map`: the order matters because the correlation matrices are indexed by it, and a map would reorder the assets by name.
+
+## Public members
+
+The four public members configure how the Chord runs and how its assets are related. They are plain data: set them before calling `price` or `simulate_paths`.
+
+### `parallel`
+
+`bool`, default `true`.
+
+Whether the independent engine calls of a `price` run on several threads, one call per task. It never changes the numbers: each call writes only its own assets' results, so the output is identical bit for bit either way. Set it to `false` to price on the calling thread, for example when the caller already manages its own threads.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field american_put(double spot) {
+  return mod::Field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.25})}, .controls = {.engine = mod::Engine::Lattice}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  out.writeln("default", chord.parallel);
+  chord.add("a", american_put(100.0)).add("b", american_put(90.0));
+  const auto threaded = chord.price();
+  chord.parallel = false;
+  const auto serial = chord.price();
+  out.writeln("identical prices:", threaded.price.items<double>() == serial.price.items<double>());
+}
+```
+
+Output
+
+```text
+default true
+identical prices: true
+```
+
+### `price_corr`
+
+`Series`, default `undefined`.
+
+The `[assets, assets]` correlation matrix of the price shocks, in the order the assets were added, used by [`simulate_paths`](Chord/simulate_paths.md). It must be symmetric and positive definite with a unit diagonal. Undefined means the assets' price shocks are independent. It does not affect `price`: each asset's own law is the same whatever the correlation, so only payoffs on several assets depend on it. The program sets 0.6 between two assets and measures the sample correlation of their price shocks.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field heston_mc(double spot, double strike) {
+  mod::Field f{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series({strike}), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+               .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  f.controls.mc.paths = 20000;
+  f.controls.mc.steps = 20;
+  f.controls.mc.seed = 3;
+  return f;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto corr = [](const pluss::Series &a, const pluss::Series &b) { return a.mul(b).mean().item<double>(); };
+  mod::Chord chord;
+  chord.add("a", heston_mc(100.0, 100.0)).add("b", heston_mc(90.0, 90.0));
+  chord.price_corr = pluss::make_series({1.0, 0.6, 0.6, 1.0}, {2, 2});
+  const auto p = chord.simulate_paths();
+  out.writeln("sample correlation of the price shocks", corr(p.asset_shocks.select(2, 0), p.asset_shocks.select(2, 1)));
+}
+```
+
+Output
+
+```text
+sample correlation of the price shocks 0.6017
+```
+
+### `var_corr`
+
+`Series`, default `undefined`.
+
+The `[assets, assets]` correlation matrix of the variance shocks `dW^v` of the assets, with the same requirements: the correlation between the variance Brownians themselves. Within an asset the price and variance shocks keep the correlation ρ of its model, so each variance shock is ρ times its own price shock plus an independent remainder. From `price_corr` and the ρ of each asset the cross terms are built (corr(price_a, variance_b) = ρ_b R_s[a, b]) and the remainders are correlated so that the variance shocks correlate by exactly this matrix, which needs it to be one that `price_corr` and the ρ allow: with independent prices, two assets with ρ = −0.7 can have variance shocks correlated at most 0.51. A larger value is refused by `simulate_paths`, naming `var_corr`; set `price_var_cross` to give the cross terms yourself. Undefined means the variance shocks carry only what the price correlation implies, ρₐρ_b R_s[a, b]. The program sets 0.4 on two assets with independent prices and measures the variance shocks.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field heston_mc(double spot, double strike) {
+  mod::Field f{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series({strike}), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+               .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  f.controls.mc.paths = 20000;
+  f.controls.mc.steps = 20;
+  f.controls.mc.seed = 3;
+  return f;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto corr = [](const pluss::Series &a, const pluss::Series &b) { return a.mul(b).mean().item<double>(); };
+  mod::Chord chord;
+  chord.add("a", heston_mc(100.0, 100.0)).add("b", heston_mc(90.0, 90.0));
+  chord.var_corr = pluss::make_series({1.0, 0.4, 0.4, 1.0}, {2, 2});
+  const auto p = chord.simulate_paths();
+  out.writeln("variance a with variance b", corr(p.vol_shocks.select(2, 0), p.vol_shocks.select(2, 1)), " (0.4, from independent prices)");
+}
+```
+
+Output
+
+```text
+variance a with variance b 0.4006  (0.4, from independent prices)
+```
+
+### `price_var_cross`
+
+`Series`, default `undefined`.
+
+An optional `[assets, assets]` cross correlation between the price shock of asset a and the variance shock of asset b. When it is undefined the cross terms are built from the model correlations: corr(price_a, variance_b) = ρ_b R_s[a, b]. When it is defined, the off-diagonal entries are the cross correlations, each diagonal entry is replaced by the asset's own ρ whatever value is given, and the price, variance and cross blocks together must form one positive-definite matrix. The program sets 0.1 for both off-diagonal entries and measures it; the second part sets an impossible cross correlation and shows the refusal.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field heston_mc(double spot, double strike) {
+  mod::Field f{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series({strike}), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+               .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  f.controls.mc.paths = 20000;
+  f.controls.mc.steps = 20;
+  f.controls.mc.seed = 3;
+  return f;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const auto corr = [](const pluss::Series &a, const pluss::Series &b) { return a.mul(b).mean().item<double>(); };
+  mod::Chord chord;
+  chord.add("a", heston_mc(100.0, 100.0)).add("b", heston_mc(90.0, 90.0));
+  chord.price_var_cross = pluss::make_series({-0.7, 0.1, 0.1, -0.7}, {2, 2});
+  const auto p = chord.simulate_paths();
+  out.writeln("price a with variance b", corr(p.asset_shocks.select(2, 0), p.vol_shocks.select(2, 1)), " price b with variance a", corr(p.asset_shocks.select(2, 1), p.vol_shocks.select(2, 0)));
+  chord.price_var_cross = pluss::make_series({-0.7, 0.99, 0.99, -0.7}, {2, 2});
+  report([&] { (void)chord.simulate_paths(); });
+}
+```
+
+Output
+
+```text
+price a with variance b 0.0992  price b with variance a 0.0999
+subsp::math::finance::module::Chord::simulate_paths: the joint correlation of the price and variance shocks (price_corr, var_corr, price_var_cross and rho) must be positive definite
+```
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`Chord`](Chord/Chord.md) | Builds an empty Chord, or one from a dictionary of assets. |
+| [`from_model_params`](Chord/from_model_params.md) | Builds a Chord of assets of any model from a table of model parameters. |
+| [`add`](Chord/add.md) | Adds a Field, or a dictionary of Fields, to the Chord under unique names. |
+| [`at`](Chord/at.md) | Returns the Field of one asset, by name, for reading or editing. |
+| [`operator[]`](Chord/operator_index.md) | The same as `at`, written as an index. |
+| [`contains`](Chord/contains.md) | Tells whether an asset of that name is in the Chord. |
+| [`names`](Chord/names.md) | The names of the assets, in the order they were added. |
+| [`size`](Chord/size.md) | The number of assets. |
+| [`batches`](Chord/batches.md) | Counts the calls price would make: assets that share a call count once. |
+| [`validate`](Chord/validate.md) | Validates every asset and reports all problems together, each naming its asset. |
+| [`price`](Chord/price.md) | Prices every asset, merging assets that can share a call, and returns a result per asset. |
+| [`implied_vol`](Chord/implied_vol.md) | The Black-Scholes implied volatilities of every asset's own model prices. |
+| [`simulate_paths`](Chord/simulate_paths.md) | Simulates all assets together (all six models can be mixed), correlated across assets, in one vectorised pass. |
+
+## Practical Examples
+
+### Example 1: a book of two assets
+
+Two Black-Scholes assets given as a dictionary at construction, priced in one call.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord{{"spx", bs(100.0, 100.0, 0.20)}, {"ndx", bs(90.0, 95.0, 0.30)}};
+  const auto result = chord.price();
+  out.writeln("assets", chord.names(), " engine calls", chord.batches());
+  out.writeln("spx", result["spx"].price.items<double>(), " ndx", result["ndx"].price.items<double>());
+}
+```
+
+Output
+
+```text
+assets [spx, ndx]  engine calls 1
+spx [8.34941]  ndx [8.97264]
+```
+
+### Example 2: different models and engines
+
+The assets keep their own models and engines: a closed-form asset, a Heston strip on the COS engine and an American put on the lattice.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+static mod::Field american_put(double spot) {
+  return mod::Field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.25})}, .controls = {.engine = mod::Engine::Lattice}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Chord chord{{"flat", bs(100.0, 100.0, 0.20)}, {"smile", heston(100.0, {90.0, 100.0, 110.0})}, {"american", american_put(100.0)}};
+  const auto result = chord.price();
+  for (const auto &name : chord.names()) out.writeln(name, result[name].price.items<double>());
+}
+```
+
+Output
+
+```text
+flat [8.3494]
+smile [15.1137, 8.6281, 4.0596]
+american [9.4120]
+```
+
+### Example 3: reading and editing the book
+
+Look an asset up, change an input in place and reprice: only that asset moves.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20)).add("b", bs(100.0, 100.0, 0.20));
+  out.writeln("size", chord.size(), " contains a:", chord.contains("a"));
+  chord["a"].market.spot = pluss::make_series({105.0});
+  const auto result = chord.price();
+  out.writeln("a", result["a"].price.items<double>(), " b", result["b"].price.items<double>());
+}
+```
+
+Output
+
+```text
+size 2  contains a: true
+a [11.35570]  b [8.34941]
+```
+
+### Example 4: from a table of model parameters
+
+Two Heston assets from columns of numbers, with the price correlation: no Field is written. The variance shocks follow from the price correlation through each asset's own rho.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Chord::Parameters p;
+  p.spot = {100.0, 90.0};
+  p.kappa = {1.5};
+  p.theta = {0.04};
+  p.sigma = {0.3};
+  p.rho = {-0.7};
+  p.v0 = {0.04};
+  p.price_corr = pluss::make_series({1.0, 0.6, 0.6, 1.0}, {2, 2});
+  p.controls.mc.paths = 20000;
+  p.controls.mc.steps = 20;
+  p.controls.mc.seed = 3;
+  const mod::Chord chord = mod::Chord::from_model_params(p);
+  const auto paths = chord.simulate_paths();
+  out.writeln(chord.names(), " price shocks correlate at", paths.asset_shocks.select(2, 0).mul(paths.asset_shocks.select(2, 1)).mean().item<double>(), "(0.6)");
+}
+```
+
+Output
+
+```text
+[asset1, asset2]  price shocks correlate at 0.602 (0.6)
+```
+
+### Example 5: many assets in one call
+
+A list of entries built in a loop is added in one call, instead of a chain of calls.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  std::vector<mod::Chord::Entry> entries;
+  for (int i = 0; i < 6; ++i) entries.emplace_back("strike" + std::to_string(80 + 10 * i), bs(100.0, 80.0 + 10.0 * i, 0.25));
+  mod::Chord chord;
+  chord.add(entries);
+  const auto result = chord.price();
+  out.writeln(chord.names(), " engine calls", chord.batches());
+  for (const auto &name : chord.names()) out.write(result[name].price.items<double>()[0], " ");
+  out.writeln();
+}
+```
+
+Output
+
+```text
+[strike80, strike90, strike100, strike110, strike120, strike130]  engine calls 1
+22.66230  15.67347  10.30002  6.46844  3.90788  2.28627
+```
+
+## Changelog
+
+- **0.1**: initial documented surface.
+
+## See Also
+
+[`Chord::Result`](Result.md) is what `price` returns and [`Chord::Paths`](Paths.md) what `simulate_paths` returns; [`Field`](../field/Field.md) is the single-asset object each asset is.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Result.html">
+    <span class="label">Next</span>
+    <span class="title">Result</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+Chord/Introduction
+Chord/Chord
+Chord/add
+Chord/at
+Chord/batches
+Chord/contains
+Chord/from_model_params
+Chord/implied_vol
+Chord/names
+Chord/operator_index
+Chord/price
+Chord/simulate_paths
+Chord/size
+Chord/validate
+Parameters
+Paths
+Result
+```
+<!-- apiref:toctree:end -->

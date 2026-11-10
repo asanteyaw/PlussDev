@@ -1,0 +1,93 @@
+# `control::Pid`
+
+An immutable validated parallel-form PID controller.
+
+## Signature
+
+```cpp
+const pluss::Series& control::Pid::kp() const noexcept;
+const pluss::Series& control::Pid::ki() const noexcept;
+const pluss::Series& control::Pid::kd() const noexcept;
+const pluss::Series& control::Pid::filter() const noexcept;
+double control::Pid::sample_time() const noexcept;
+bool control::Pid::is_cont() const noexcept;
+bool control::Pid::is_disc() const noexcept;
+control::PidRule control::Pid::int_rule() const noexcept;
+control::PidRule control::Pid::diff_rule() const noexcept;
+```
+
+## What It Does
+
+`Pid` stores proportional, integral, derivative, derivative-filter, timebase, and discretization data after `control::pid` has validated them. The object is immutable so it can be shared safely between repeated frequency-response analyses.
+
+## Methods
+
+`kp()`, `ki()`, `kd()`
+: Return the controller gains without copying.
+
+`filter()`
+: Returns the non-negative derivative-filter time constant.
+
+`sample_time()`
+: Returns zero for continuous time or the positive sampling interval for discrete time.
+
+`is_cont()`, `is_disc()`
+: Report the mutually exclusive timebase state.
+
+`int_rule()`, `diff_rule()`
+: Return the selected discrete substitutions.
+
+## Returns
+
+Accessors return const `Series` references, scalar metadata, or `PidRule` values.
+
+## Errors
+
+Accessors do not fail. Invalid gains, filter values, or sample times are rejected by `control::pid` before a `Pid` exists.
+
+## Changelog
+
+- **0.1** — Initial immutable continuous/discrete parallel PID contract.
+
+## Interpretation and Use
+
+`Pid` is immutable: construction validates the controller, and accessors expose its stored contract without recomputation. Use `is_cont()`/`is_disc()` before interpreting rules, and preserve the object for repeated frequency sweeps.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Inspect and evaluate a continuous PID controller.
+
+@@example Eng/api/control_pid.cpp@@
+
+### Example 2
+
+Inspect timebase and rule accessors on a sampled controller.
+
+@@example Eng/api/control_pid_discrete.cpp@@
+
+### Example 3
+
+See invalid construction rejected before an object exists.
+
+@@example Eng/api/control_controller_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PidRule.html">
+    <span class="label">Previous</span>
+    <span class="title">PidRule</span>
+  </a>
+  <a class="next-link" href="place.html">
+    <span class="label">Next</span>
+    <span class="title">place</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

@@ -1,0 +1,157 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 3cf29ab88eca -->
+
+# `math::Function::exp`
+
+[Back to `math::Function`](../Function.md)
+
+The exponential `eˣ` of a function, as a new function.
+
+## Signature
+
+```cpp
+math::Function math::Function::exp() const;
+```
+
+## What It Does
+
+`f.exp()` builds `x ↦ exp(f(x))`. The exponential is defined for every real number and, for a complex function, for every complex number; it never raises a domain error, though a very large argument overflows to `inf` and a very negative one underflows to 0 as the arithmetic does.
+
+It is the function that is its own derivative, `(eᵘ)′ = u′ eᵘ`, which is why it appears wherever growth is proportional to size: compound interest, decay, densities. It is also the other half of [`log`](log.md): the library simplifies `log(exp(f))` to `f` before evaluating, so the round trip stays exact at arguments where the intermediate `exp` would overflow.
+
+## Returns
+
+A new `Function` whose value is `exp` of the receiver's value, with the same variables and output shape.
+
+## Errors
+
+- The function must be defined.
+
+## Practical Examples
+
+### Example 1
+
+`exp` evaluated on a small grid, next to the standard-library value. Each element is computed independently, so the result has the shape of the input.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+  const auto x = pluss::make_series({-2.0, 0.0, 1.0, 3.0});
+  out.writeln("x:           ", x.items<double>());
+  out.writeln("f(x):        ", f({x}).items<double>());
+  out.writeln("std::exp(x):", pluss::make_series({std::exp((-2.0)), std::exp((0.0)), std::exp((1.0)), std::exp((3.0))}).items<double>());
+}
+```
+
+The two rows agree to the printed digits.
+
+### Example 2
+
+The derivative rule. Differentiating `exp` with `operators::differential` gives the exact formula, `(eˣ)′ = eˣ`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+  const math::Function df = operators::differential("x")(f);
+  const auto x = pluss::make_series({-2.0, 0.0, 1.0, 3.0});
+  const auto exact = [](double v) { return std::exp(v); };
+  out.writeln("f'(x):        ", df({x}).items<double>());
+  out.writeln("closed form:  ", pluss::make_series({exact(-2.0), exact(0.0), exact(1.0), exact(3.0)}).items<double>());
+}
+```
+
+### Example 3
+
+Overflow, underflow, and the `log(exp(x))` simplification. `exp` of 800 overflows to infinity and `exp` of −800 underflows to zero, but `log(exp(x))` is simplified to `x` before evaluation, so it returns the argument at both.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function e = math::function({"x"}, [](math::Function x) { return x.exp(); });
+  const math::Function round_trip = math::function({"x"}, [](math::Function x) { return x.exp().log(); });
+  const auto x = pluss::make_series({-800.0, 0.0, 800.0});
+  out.writeln("exp(x):          ", e({x}).items<double>());
+  out.writeln("log(exp(x)):     ", round_trip({x}).items<double>());
+}
+```
+
+### Example 4
+
+The chain rule through an exponential, and the identity `exp(a + b) = exp(a) exp(b)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function product = math::function({"x"}, [](math::Function x) { return x.exp() * (2.0 * x).exp(); });
+  const math::Function sum = math::function({"x"}, [](math::Function x) { return (x + 2.0 * x).exp(); });
+  const math::Function gaussian = math::function({"x"}, [](math::Function x) { return (-(x * x)).exp(); });
+  const auto x = pluss::make_series({0.25, 0.5, 1.0});
+  out.writeln("e^x e^2x:  ", product({x}).items<double>());
+  out.writeln("e^(3x):    ", sum({x}).items<double>());
+  out.writeln("(e^-x^2)' =", operators::differential("x")(gaussian)({x}).items<double>());
+  out.writeln("-2x e^-x^2=", pluss::make_series({-2.0 * 0.25 * std::exp(-0.0625), -2.0 * 0.5 * std::exp(-0.25), -2.0 * std::exp(-1.0)}).items<double>());
+}
+```
+
+## See Also
+
+- [`log`](log.md): the inverse
+- [`expm1`](expm1.md): accurate near zero
+- [`pow`](pow.md): general powers
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="div.html">
+    <span class="label">Previous</span>
+    <span class="title">div</span>
+  </a>
+  <a class="next-link" href="expm1.html">
+    <span class="label">Next</span>
+    <span class="title">expm1</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

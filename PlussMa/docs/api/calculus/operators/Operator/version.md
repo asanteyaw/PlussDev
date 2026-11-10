@@ -1,0 +1,157 @@
+<!-- generated from version.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 873e2990bc2b -->
+
+# `operators::Operator::version`
+
+[Back to `operators::Operator`](../Operator.md)
+
+The version number of the operator's definition, saved with it and used to choose a loader.
+
+## Signature
+
+```cpp
+std::uint32_t operators::Operator::version() const;
+```
+
+## What It Does
+
+An operator's *version* is a positive integer that goes with its [`key`](key.md). Every built-in operator is version 1. For an operator you define, the version is `Options::version`, which defaults to 1. It exists so that a saved operator can outlive a change of definition: when you change what an operator does in a way old saved copies must not silently pick up, increase its version. A loader is registered for a `(key, version)` pair with [`bind`](../bind.md), so an artifact saved at version 1 is read by the version-1 loader and one saved at version 2 by the version-2 loader.
+
+You rarely read the version directly. It matters if you maintain saved operators across releases: bump it when the meaning of the payload changes, keep the old loader bound for as long as old artifacts must load, and report the version of an unexpected artifact in diagnostics.
+
+## Returns
+
+The version, a positive integer.
+
+## Errors
+
+- The operator must be defined.
+- A version of zero is refused by `define`.
+
+## Practical Examples
+
+### Example 1
+
+Built-in operators are all version 1; a custom operator reports the version it was defined with, defaulting to 1.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto pass_through = [](const math::Function &f) { return f; };
+  out.writeln("differential:      ", operators::differential("x").version());
+  out.writeln("compose:           ", operators::compose(operators::scale(2.0), operators::identity()).version());
+  out.writeln("custom, default:   ", operators::define("example.v", pass_through).version());
+  out.writeln("custom, version 4: ", operators::define("example.v", pass_through, operators::Options{.version = 4}).version());
+}
+```
+
+Output
+
+```text
+differential:       1
+compose:            1
+custom, default:    1
+custom, version 4:  4
+```
+
+### Example 2
+
+A version must be positive; zero is refused when the operator is defined.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const auto pass_through = [](const math::Function &f) { return f; };
+  try { (void)operators::define("example.zero", pass_through, operators::Options{.version = 0}); } catch (const pluss::Error &e) { out.writeln(first_line(e)); }
+}
+```
+
+Output
+
+```text
+operators::define: version must be positive
+```
+
+### Example 3
+
+Versions select the loader. A savable custom operator is bound twice, under versions 1 and 2, with different meanings; each saved artifact comes back through the loader for the version it was saved with.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <sstream>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto make = [](double factor, std::uint32_t version) {
+    return operators::define("example.versioned", [factor](const math::Function &f) { return f * factor; },
+                             operators::Options{.version = version, .serializable = true, .payload = std::to_string(factor)});
+  };
+  operators::bind("example.versioned", 1, [](std::string_view payload, std::uint32_t) { return operators::scale(std::stod(std::string(payload))); });
+  operators::bind("example.versioned", 2, [](std::string_view payload, std::uint32_t) { return operators::scale(10.0 * std::stod(std::string(payload))); });
+
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+  for (const std::uint32_t version : {1u, 2u}) {
+    std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
+    math::io::save(make(2.0, version), bytes);
+    const operators::Operator restored = math::io::load_operator(bytes);
+    out.writeln("saved at version", version, "-> applied to f(3):", restored(f)(3.0).item<double>());
+  }
+}
+```
+
+Output
+
+```text
+saved at version 1 -> applied to f(3): 6.0000
+saved at version 2 -> applied to f(3): 60.0000
+```
+
+The version-1 artifact multiplies by 2 and the version-2 artifact by 20, because each came back through the loader bound for its version.
+
+## See Also
+
+- [`key`](key.md): the name the version belongs to
+- [`bind`](../bind.md): register a loader for a key and version
+- [`Options`](../Options.md): the `version` field
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="key.html">
+    <span class="label">Previous</span>
+    <span class="title">key</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

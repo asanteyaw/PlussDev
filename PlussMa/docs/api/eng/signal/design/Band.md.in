@@ -1,0 +1,66 @@
+# `signal::Band`
+
+## Signature
+
+```cpp
+signal::Band signal::Band::Low;
+signal::Band signal::Band::High;
+signal::Band signal::Band::Pass;
+signal::Band signal::Band::Stop;
+```
+
+## What It Does
+
+Selects the frequency transformation applied to an analog low-pass prototype before optional digital conversion.
+
+## Fields
+
+| Value | Cutoff form | Meaning |
+|---|---|---|
+| `Low` | scalar | Retains frequencies below the edge. |
+| `High` | scalar | Retains frequencies above the edge. |
+| `Pass` | ordered pair | Retains frequencies between lower and upper edges. |
+| `Stop` | ordered pair | Rejects frequencies between lower and upper edges. |
+
+## Returns
+
+Stored in `IirOptions::band` and interpreted by `butter`, `cheby1`, and `cheby2`.
+
+## Errors
+
+Scalar and pair overloads enforce the corresponding band kinds; mismatches are rejected.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Compare the three prototype families and inspect a second-order-section conversion.
+
+@@example Eng/api/signal_design.cpp@@
+
+### Example 2
+
+Exercise band transformations and analog-versus-digital interpretation.
+
+@@example Eng/api/signal_design_bands.cpp@@
+
+### Example 3
+
+Observe validation of cutoffs, ripple, and band/cutoff shape.
+
+@@example Eng/api/signal_design_errors.cpp@@
+
+## See Also
+
+See [IIR design](../design.md) for prototype tradeoffs and digital-versus-analog frequency conventions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="IirOptions.html">
+    <span class="label">Next</span>
+    <span class="title">IirOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

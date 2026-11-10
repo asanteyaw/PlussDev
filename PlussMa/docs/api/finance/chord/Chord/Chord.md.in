@@ -1,0 +1,236 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a8196a60371b -->
+
+# `module::Chord::Chord`
+
+[Back to `module::Chord`](../Chord.md)
+
+Builds a Chord empty, or from a dictionary of assets in one expression.
+
+## Signature
+
+```cpp
+module::Chord::Chord();
+module::Chord::Chord(std::initializer_list<module::Chord::Entry> assets);
+explicit module::Chord::Chord(pluss::RangeView<module::Chord::Entry> assets);
+```
+
+## What It Does
+
+The default constructor makes an empty Chord, to be filled with [`add`](add.md). The other two take the assets at construction, so a book of many assets needs no chain of `add` calls. `module::Chord::Entry` is `std::pair<std::string, module::Field>`: a name and the Field it names. The initializer-list constructor is the dictionary form, `Chord book{{"spx", spx}, {"ndx", ndx}}`, written like a map literal; the `RangeView` constructor takes any contiguous list of entries (a `std::vector` built in a loop, a `std::array`, a span), which is read once and not kept.
+
+The assets are added in the order given, and that order is meaningful: it is the order of every result, of [`names`](names.md) and of the asset axis of the [correlation matrices](../Chord.md). That is why the dictionary is an ordered list and not a `std::map` or `std::unordered_map`, which would reorder the assets by name or arbitrarily and silently attach the wrong correlation row to an asset. The list is checked as a whole before anything is built: an empty name, a name repeated within the list, throws and no Chord is made.
+
+A Chord built from model parameters rather than from Fields is made by [`from_model_params`](from_model_params.md).
+
+## Parameters
+
+`std::initializer_list<module::Chord::Entry> assets`
+: The assets as `{name, field}` pairs, in the order they will be added. Names are non-empty, unique and case sensitive. Each Field is copied.
+
+`pluss::RangeView<module::Chord::Entry> assets`
+: The same from a contiguous list of entries. The constructor is `explicit`, so a Chord is not made from a vector by accident.
+
+## Returns
+
+A Chord holding the given assets, with `parallel` true and the correlation matrices undefined.
+
+## Errors
+
+Throws `subsp::math::finance::module::Chord::add: the asset name must not be empty`, `... there is already an asset named '<name>'`, or `... the asset name '<name>' appears twice in the list`. The constructors use the checks of [`add`](add.md).
+
+## Practical Examples
+
+### Example 1: an empty Chord
+
+The default constructor makes an empty Chord with its defaults.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  out.writeln("size", chord.size(), " parallel", chord.parallel, " correlations defined", chord.price_corr.defined());
+}
+```
+
+### Example 2: a dictionary of assets
+
+The assets in braces, named and ordered like a map literal, priced in one call.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord book{{"spx", bs(100.0, 100.0, 0.20)}, {"ndx", bs(90.0, 95.0, 0.30)}, {"rut", bs(50.0, 55.0, 0.35, 0.5)}};
+  const auto result = book.price();
+  out.writeln("assets", book.names(), " engine calls", book.batches());
+  for (const auto &name : book.names()) out.writeln(name, result[name].price.items<double>());
+}
+```
+
+### Example 3: a list built in a loop
+
+Many assets from data: fill a vector of entries and pass it to the RangeView constructor.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  std::vector<mod::Chord::Entry> entries;
+  for (int i = 0; i < 5; ++i) entries.emplace_back("strike" + std::to_string(90 + 5 * i), bs(100.0, 90.0 + 5.0 * i, 0.25));
+  const mod::Chord ladder(entries);
+  const auto result = ladder.price();
+  out.writeln(ladder.names());
+  for (const auto &name : ladder.names()) out.write(result[name].price.items<double>()[0], " ");
+  out.writeln();
+}
+```
+
+### Example 4: the same book either way
+
+The dictionary, the vector and a chain of add build the same Chord.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chained;
+  chained.add("a", bs(100.0, 100.0, 0.2)).add("b", bs(90.0, 95.0, 0.3));
+  mod::Chord braced{{"a", bs(100.0, 100.0, 0.2)}, {"b", bs(90.0, 95.0, 0.3)}};
+  std::vector<mod::Chord::Entry> list = {{"a", bs(100.0, 100.0, 0.2)}, {"b", bs(90.0, 95.0, 0.3)}};
+  const mod::Chord from_list(list);
+  out.writeln(chained.price().price.items<double>());
+  out.writeln(braced.price().price.items<double>());
+  out.writeln(from_list.price().price.items<double>());
+}
+```
+
+### Example 5: a single asset in braces
+
+One entry in braces is still a dictionary of one.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord one{{"only", bs(100.0, 100.0, 0.2)}};
+  out.writeln(one.size(), one.names());
+}
+```
+
+### Example 6: the errors
+
+A repeated name and an empty name refuse the whole list, and no Chord is made.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { mod::Chord c{{"a", bs(100.0, 100.0, 0.2)}, {"a", bs(90.0, 95.0, 0.3)}}; });
+  report([&] { mod::Chord c{{"a", bs(100.0, 100.0, 0.2)}, {"", bs(90.0, 95.0, 0.3)}}; });
+}
+```
+
+
+## See Also
+
+- [`Chord`](../Chord.md): the class
+- [`add`](add.md): adds one asset, or several as a dictionary, to an existing Chord
+- [`from_model_params`](from_model_params.md): builds a Chord from a table of model parameters
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="add.html">
+    <span class="label">Next</span>
+    <span class="title">add</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,165 @@
+<!-- generated from generator.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::stochastic::generator`
+
+The infinitesimal generator of a diffusion: `L g = μ·∇g + ½ tr(σσᵀ ∇²g)`.
+
+## Signature
+
+```cpp
+operators::Operator operators::stochastic::generator(math::Function drift, math::Function diffusion, pluss::StackArray<std::string_view> states, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+For a diffusion `dX = μ(X) dt + σ(X) dW` the *generator* `L` is the operator that gives the expected rate of change of a function of the process: `E[g(X_t)]` has time derivative `E[(Lg)(X_t)]`. It is
+
+`L g = μ · ∇g + ½ tr(σ σᵀ ∇²g)`: a drift term and a diffusion term with the second derivatives.
+
+`generator(μ, σ, {"x"})(g)` returns `L g` as a function of the state. The generator is the engine of the backward Kolmogorov equation `u_t = Lu`, of Feynman–Kac pricing formulas, of Dynkin's formula, and of martingale problems (`g(X_t) − ∫ Lg` is a martingale).
+
+For one state the drift and diffusion are scalar functions; for `n` states the drift is a vector `[n]` and the diffusion a matrix `[n, m]` for `m` noise sources, and `states` names the variables in order. The generator is a linear, structural operator.
+
+## Parameters
+
+`math::Function drift`
+: The drift `μ`: scalar for one state, a vector `[n]` for `n` states.
+
+`math::Function diffusion`
+: The diffusion `σ`: scalar for one state, a matrix `[n, m]` for several.
+
+`pluss::StackArray<std::string_view> states`
+: The state variables, in the order of the drift's components.
+
+`operators::DiffOptions options`
+: Options for the derivatives.
+
+## Returns
+
+An `Operator` whose application returns `L g` as a `Function` of the state.
+
+## Errors
+
+- The drift and diffusion shapes must match the number of states.
+
+## Practical Examples
+
+### Example 1
+
+Geometric Brownian motion `dX = aX dt + bX dW`. The generator applied to `x³` is `(3a + 3b²) x³`, and applied to `x²` it is `(2a + b²) x²`: the powers are eigenfunctions.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double a = 0.3, b = 0.5, x = 1.4;   // dX = a X dt + b X dW
+  const math::Function drift = math::function({"x"}, [&](math::Function v) { return v * a; });
+  const math::Function diffusion = math::function({"x"}, [&](math::Function v) { return v * b; });
+  const math::Function square = math::function({"x"}, [](math::Function v) { return v * v; });
+
+  const operators::Operator L = stochastic::generator(drift, diffusion, {"x"});
+  const math::Function cube = math::function({"x"}, [](math::Function v) { return v.pow(3.0); });
+  out.writeln("L x^3 =", L(cube)(x).item<double>(), "   (3a + 3b^2) x^3 =", (3 * a + 3 * b * b) * x * x * x);
+  out.writeln("L x^2 =", L(square)(x).item<double>(), "   (2a + b^2) x^2   =", (2 * a + b * b) * x * x);
+}
+```
+
+Output
+
+```text
+L x^3 = 4.527600    (3a + 3b^2) x^3 = 4.527600
+L x^2 = 1.666000    (2a + b^2) x^2   = 1.666000
+```
+
+### Example 2
+
+Brownian motion (zero drift, unit diffusion) has generator `½ ∂²/∂x²`: applied to `x³` it is `3x`, which is 6 at `x = 2`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function zero = math::function({"x"}, [](math::Function v) { return v * 0.0; });
+  const math::Function one = math::function({"x"}, [](math::Function v) { return v * 0.0 + 1.0; });
+  const math::Function cube = math::function({"x"}, [](math::Function v) { return v.pow(3.0); });
+  out.writeln("L x^3 at 2 =", stochastic::generator(zero, one, {"x"})(cube)(2.0).item<double>(), "  (3 x = 6)");
+}
+```
+
+Output
+
+```text
+L x^3 at 2 = 6.000000   (3 x = 6)
+```
+
+### Example 3
+
+Several states. The two-dimensional Ornstein–Uhlenbeck process `dX = −X dt + dW` (drift vector, identity diffusion matrix) has generator applied to `|x|² = x² + y²` equal to `−2|x|² + 2`: at `(1, 2)` that is `−8`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function drift = math::function({"x", "y"}, [](math::Function x, math::Function y) { return math::stack({-x, -y}); });
+  const math::Function diffusion = math::function({"x", "y"}, [](math::Function x, math::Function) {
+    const math::Function one = x * 0.0 + 1.0, zero = x * 0.0;
+    return math::stack({math::stack({one, zero}), math::stack({zero, one})});
+  });
+  const math::Function r2 = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * x + y * y; });
+  out.writeln("L |x|^2 at (1, 2) =", stochastic::generator(drift, diffusion, {"x", "y"})(r2)({pluss::make_series(1.0), pluss::make_series(2.0)}).item<double>(), "  (-2 * 5 + 2 = -8)");
+}
+```
+
+Output
+
+```text
+L |x|^2 at (1, 2) = -8.000000   (-2 * 5 + 2 = -8)
+```
+
+## See Also
+
+- [`stochastic_differential`](stochastic_differential.md): Itô's formula for the same process
+- [`hessian`](../differential/hessian.md): the second-derivative term
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="covariation.html">
+    <span class="label">Previous</span>
+    <span class="title">covariation</span>
+  </a>
+  <a class="next-link" href="malliavin_derivative.html">
+    <span class="label">Next</span>
+    <span class="title">malliavin_derivative</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,30 @@
+<!-- generated from qp.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Quadratic programming
+
+Convex quadratic programs with two-sided linear constraints, solved by a first-order method that factorises the problem once and then iterates with an adaptive penalty. Leading dimensions are batch dimensions, so a whole family of problems is solved in one call.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`Options`](qp/Options.md) | Iteration limit, stopping tolerances and penalty settings of the quadratic-program solver. |
+| [`Result`](qp/Result.md) | What a quadratic-program solve returns: the solution, the objective, the multipliers, the residuals and whether it converged. |
+| [`Solver`](qp/Solver.md) | A quadratic program whose matrices have been checked and factorised once, ready to be solved for many right-hand sides. |
+| [`WarmStart`](qp/WarmStart.md) | A starting point for a solve: the primal variables, the constraint values and the multipliers of a previous solution. |
+| [`prepare`](qp/prepare.md) | Checks and factorises the fixed part of a quadratic program once, and returns a `Solver` that solves it repeatedly. |
+| [`solve`](qp/solve.md) | Solves a convex quadratic program `minimise ½ xᵀPx + qᵀx` subject to `lower ≤ Ax ≤ upper`, for one problem or a whole batch. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+qp/Options
+qp/Result
+qp/Solver
+qp/WarmStart
+qp/prepare
+qp/solve
+```
+<!-- apiref:toctree:end -->

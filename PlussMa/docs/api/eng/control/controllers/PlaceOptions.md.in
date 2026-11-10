@@ -1,0 +1,72 @@
+# `control::PlaceOptions`
+
+Numerical controls for iterative pole placement.
+
+## Signature
+
+```cpp
+control::PlaceOptions
+```
+
+## What It Does
+
+This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+
+
+
+## Fields
+
+### `sweeps`
+
+Maximum eigenvector-refinement sweeps. The default is `5`; larger values allow more refinement for difficult multi-input assignments.
+
+### `tolerance`
+
+Residual convergence tolerance, default `1e-10`.
+
+### `condition_limit`
+
+Maximum accepted basis condition estimate, default `1e12`.
+
+## Returns
+
+This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+
+## Errors
+
+The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+
+## Interpretation and Use
+
+Increase `sweeps` only when multi-input refinement has not met `tolerance`. Tightening tolerance can expose numerical sensitivity rather than improve a poorly conditioned assignment. `condition_limit` is a safety boundary; relaxing it accepts a more fragile eigenvector basis.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Use defaults and inspect residual and conditioning diagnostics.
+
+@@example Eng/api/control_place.cpp@@
+
+### Example 2
+
+See a structural controllability failure options cannot repair.
+
+@@example Eng/api/control_controller_errors.cpp@@
+
+### Example 3
+
+Contrast exact pole assignment with cost-based feedback synthesis.
+
+@@example Eng/api/control_optimal.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="PlaceResult.html">
+    <span class="label">Next</span>
+    <span class="title">PlaceResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

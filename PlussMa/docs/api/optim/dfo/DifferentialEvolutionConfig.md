@@ -1,0 +1,280 @@
+<!-- generated from DifferentialEvolutionConfig.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::DifferentialEvolutionConfig`
+
+Population, mutation, crossover, stopping and sampling settings of differential evolution.
+
+`mutation_factor` (`F`) scales the difference vector and `crossover_rate` is the probability that a trial coordinate comes from the mutant rather than the member; `best_mix` blends the mutant toward the best member (0 is the classic random-base mutation, 1 follows the best; from 0.5 the best member is the base). A larger population explores more and costs more per generation. `max_generations` caps the generations (default 1000) and `max_evaluations` the evaluations; the relative-improvement test needs `check_every > 0` to be active.
+
+## Fields
+
+### `population_size`
+
+`std::int64_t`, default `200`.
+
+Members of the population.
+
+### `max_generations`
+
+`std::int64_t`, default `1000`.
+
+Generation limit.
+
+### `max_evaluations`
+
+`std::int64_t`, default `0`.
+
+Evaluation limit; 0 leaves the generation limit as the only bound.
+
+### `check_every`
+
+`std::int64_t`, default `0`.
+
+Generations between improvement tests; 0 disables the test.
+
+### `relative_improvement_tolerance`
+
+`double`, default `1e-8`.
+
+Stop when the relative improvement is below this.
+
+### `mutation_factor`
+
+`double`, default `0.8`.
+
+The scale `F` of the difference vector.
+
+### `crossover_rate`
+
+`double`, default `0.9`.
+
+Probability a trial coordinate comes from the mutant.
+
+### `best_mix`
+
+`double`, default `0`.
+
+Blend of the mutant toward the best member, from 0 to 1.
+
+### `initial_radius`
+
+`double`, default `+inf`.
+
+Half-width of the sampling box around the start; infinity means the whole box when bounded, otherwise `start ± 0.5`.
+
+### `lower_bounds`
+
+`pluss::Series`, default `undefined`.
+
+Lower bound per variable; set together with `upper_bounds`.
+
+### `upper_bounds`
+
+`pluss::Series`, default `undefined`.
+
+Upper bound per variable.
+
+### `rng_seed`
+
+`std::uint64_t`, default `5489`.
+
+Seed of the random numbers.
+
+### `promote_cpu_to_float64`
+
+`bool`, default `true`.
+
+Compute single-precision CPU inputs in double precision.
+
+### `display`
+
+`dfo::PopulationSolverDisplay`, default `None`.
+
+Print a line per generation when `Iter`.
+
+### `execution_mode`
+
+`dfo::PopulationSolverExecutionMode`, default `Vectorized`.
+
+How a generation is computed.
+
+## Guidance
+
+Passed to `differential_evolution_minimizer`, or set as `DfoOptions::differential_evolution`.
+
+## Practical Examples
+
+### Example 1
+
+The population size, with the evaluation budget fixed. A larger population explores more per generation but gets fewer generations; with 20000 evaluations here, the populations of 20 and 60 reach the minimum and the population of 200 ends at 0.18.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rastrigin = [](const Series &x) {
+    const double pi = 3.14159265358979323846;
+    return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();   // minimum 0 at the origin, many local minima
+  };
+
+  for (const std::int64_t n : {20, 60, 200}) {
+    dfo::DifferentialEvolutionConfig config;
+    config.population_size = n;
+    config.lower_bounds = pluss::series::make({-5.12, -5.12, -5.12});
+    config.upper_bounds = pluss::series::make({5.12, 5.12, 5.12});
+    config.max_evaluations = 20000;
+    const dfo::PopulationSolverOutcome o = dfo::differential_evolution_minimizer(rastrigin, pluss::series::make({3.0, 3.0, 3.0}), config);
+    out.writeln("population", n, ": evaluations =", o.diagnostics.evaluations, ", minimum =", o.minimum);
+  }
+}
+```
+
+Output
+
+```text
+population 20 : evaluations = 20000 , minimum = 0.000000
+population 60 : evaluations = 20040 , minimum = 0.000000
+population 200 : evaluations = 20000 , minimum = 0.178024
+```
+
+### Example 2
+
+Mutation factor and crossover rate. No setting wins everywhere; on this problem with 8000 evaluations the low factor with high crossover did best.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto rastrigin = [](const Series &x) {
+    const double pi = 3.14159265358979323846;
+    return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();   // minimum 0 at the origin, many local minima
+  };
+
+  for (const double mutation : {0.4, 0.8}) {
+    for (const double crossover : {0.3, 0.9}) {
+      dfo::DifferentialEvolutionConfig config;
+      config.mutation_factor = mutation;
+      config.crossover_rate = crossover;
+      config.lower_bounds = pluss::series::make({-5.12, -5.12, -5.12});
+      config.upper_bounds = pluss::series::make({5.12, 5.12, 5.12});
+      config.max_evaluations = 8000;
+      out.writeln("F", mutation, "CR", crossover, ": minimum =", dfo::differential_evolution_minimizer(rastrigin, pluss::series::make({3.0, 3.0, 3.0}), config).minimum);
+    }
+  }
+}
+```
+
+Output
+
+```text
+F 0.40000 CR 0.30000 : minimum = 0.58587
+F 0.40000 CR 0.90000 : minimum = 0.36120
+F 0.80000 CR 0.30000 : minimum = 0.69072
+F 0.80000 CR 0.90000 : minimum = 1.13689
+```
+
+### Example 3
+
+Following the best member. `best_mix = 1` bases every mutant on the best member, which converges faster on a unimodal problem.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  for (const double mix : {0.0, 1.0}) {
+    dfo::DifferentialEvolutionConfig config;
+    config.best_mix = mix;
+    config.initial_radius = 5.0;
+    config.max_evaluations = 4000;
+    const dfo::PopulationSolverOutcome o = dfo::differential_evolution_minimizer(f, pluss::series::make({0.0, 0.0, 0.0, 0.0}), config);
+    out.writeln("best_mix", mix, ": minimum =", o.minimum, ", evaluations =", o.diagnostics.evaluations);
+  }
+}
+```
+
+Output
+
+```text
+best_mix 0.0000000000 : minimum = 0.0938689900 , evaluations = 4000
+best_mix 1.0000000000 : minimum = 0.0007690645 , evaluations = 4000
+```
+
+### Example 4
+
+Stopping on improvement. With `check_every` set, the run stops as soon as the relative improvement over that many generations falls below the tolerance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  for (const double tol : {1e-3, 1e-9}) {
+    dfo::DifferentialEvolutionConfig config;
+    config.check_every = 5;
+    config.relative_improvement_tolerance = tol;
+    config.initial_radius = 5.0;
+    const dfo::PopulationSolverOutcome o = dfo::differential_evolution_minimizer(f, pluss::series::make({0.0, 0.0, 0.0, 0.0}), config);
+    out.writeln("tolerance", tol, ": generations =", o.diagnostics.iterations, ", minimum =", o.minimum);
+  }
+}
+```
+
+Output
+
+```text
+tolerance 0.0010000000 : generations = 75 , minimum = 0.0000174989
+tolerance 0.0000000010 : generations = 110 , minimum = 0.0000005547
+```
+
+## See Also
+
+- [`differential_evolution_minimizer`](differential_evolution_minimizer.md): uses it
+- [`DfoOptions`](DfoOptions.md): holds one
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DfoStatus.html">
+    <span class="label">Previous</span>
+    <span class="title">DfoStatus</span>
+  </a>
+  <a class="next-link" href="DifferentialEvolutionPrmmConfig.html">
+    <span class="label">Next</span>
+    <span class="title">DifferentialEvolutionPrmmConfig</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

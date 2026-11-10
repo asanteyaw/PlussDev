@@ -1,0 +1,70 @@
+# `structure::MotionOptions`
+
+Controls of the linear time integration.
+
+## Signature
+
+```cpp
+structure::MotionOptions
+```
+
+## What It Does
+
+Controls for the linear `motion`, which integrates `M a + C v + K u = f` with `C = mass_damping M + stiffness_damping K` by the generalised-alpha method.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `spectral_radius` | Response factor of the highest modes per step, in `[0, 1]`. `1` is the energy-conserving average-acceleration rule; smaller values add numerical damping of the poorly resolved high modes. | `1` |
+| `mass_damping` | The coefficient `a` of `a M`; the damping ratio of mode `n` is `a / (2 omega_n)`, so it damps low modes most. | `0` |
+| `stiffness_damping` | The coefficient `b` of `b K`; the damping ratio of mode `n` is `b omega_n / 2`, so it damps high modes most. | `0` |
+| `solve` | Conjugate-gradient controls of the inner solves. | budget 8192 |
+| `fail_on_nonconvergence` | When true a step whose solve does not converge throws; when false the history is returned with `converged` false at those steps. | `true` |
+
+## Returns
+
+A value; validated by `motion`.
+
+## Errors
+
+A `spectral_radius` outside `[0, 1]` or negative damping coefficients are rejected.
+
+## Interpretation and Use
+
+Set `a` and `b` for the damping ratio you want at the modes that matter; with both, the ratio is `(a / omega + b omega) / 2`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Rayleigh and numerical damping on a cantilever.
+
+@@example Eng/api/structure_motion.cpp@@
+
+### Example 2
+
+Rejected values.
+
+@@example Eng/api/structure_dynamics_errors.cpp@@
+
+### Example 3
+
+Damping in the frequency domain.
+
+@@example Eng/api/structure_harmonic.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MotionState.html">
+    <span class="label">Previous</span>
+    <span class="title">MotionState</span>
+  </a>
+  <a class="next-link" href="NonlinearMotionOptions.html">
+    <span class="label">Next</span>
+    <span class="title">NonlinearMotionOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,162 @@
+# `operators::divergence`
+
+The divergence of a vector field: `Σ ∂Fᵢ/∂xᵢ`, a scalar function.
+
+## Signature
+
+```cpp
+operators::Operator operators::divergence(pluss::StackArray<std::string_view> variables, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+`divergence({"x", "y", "z"})` is the operator that takes a vector field `F = (F₁, F₂, F₃)` (a rank-1 function with one component per coordinate) and returns the scalar function `∂F₁/∂x + ∂F₂/∂y + ∂F₃/∂z`. The divergence is the net outflow per unit volume: positive where the field spreads out (a source), negative where it converges (a sink), zero for an incompressible flow. It is the left side of every conservation law, `∂ρ/∂t + ∇·(ρv) = 0`.
+
+`variables` names the coordinates, in order; the components of a vector field are listed in the same order, so a field in three dimensions has three components and the coordinates `{"x", "y", "z"}`. The field must have exactly one component per coordinate, or the operator is refused.
+
+## Parameters
+
+`pluss::StackArray<std::string_view> variables`
+: The coordinates, in the order of the field's components.
+
+`operators::DiffOptions options`
+: Non-smooth policy, fallback and size limit.
+
+## Returns
+
+An `Operator` whose application returns the divergence as a scalar `Function`.
+
+## Errors
+
+- `the field needs one component per coordinate`.
+
+## Practical Examples
+
+### Example 1
+
+The divergence of `F = (xy, yz, zx)` is `y + z + x`, which is `6` at `(1, 2, 3)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function F = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return math::stack({x * y, y * z, z * x}); });
+  const auto point = {pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)};
+
+  const math::Function div = operators::divergence({"x", "y", "z"})(F);
+  out.writeln("rank", div.rank(), "  div F at (1, 2, 3) =", div(point).item<double>(), "  (x + y + z = 6)");
+}
+```
+
+### Example 2
+
+Sources, sinks and rotations. The radial field `(x, y, z)` has divergence 3 everywhere; the rotation `(−y, x, 0)` has divergence 0 (incompressible); the inverse-square field `(x, y, z)/r³` is divergence-free away from the origin.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto div3 = operators::divergence({"x", "y", "z"});
+  const math::Function radial = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return math::stack({x, y, z}); });
+  const math::Function rotation = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return math::stack({-y, x, z * 0.0}); });
+  const math::Function inverse_square = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) {
+    const math::Function r3 = (x * x + y * y + z * z).pow(1.5);
+    return math::stack({x / r3, y / r3, z / r3});
+  });
+  const auto point = {pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)};
+  out.writeln("radial:          ", div3(radial)(point).item<double>());
+  out.writeln("|rotation|:      ", std::abs(div3(rotation)(point).item<double>()));
+  out.writeln("|inverse square|:", std::abs(div3(inverse_square)(point).item<double>()));
+}
+```
+
+### Example 3
+
+An identity: the divergence of a curl is zero for every field. Composing the two operators on `F = (xy, yz, zx)` gives a function that is zero everywhere (here at `(1, 2, 3)`).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const math::Function F = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return math::stack({x * y, y * z, z * x}); });
+  const auto point = {pluss::make_series(1.0), pluss::make_series(2.0), pluss::make_series(3.0)};
+
+  const operators::Operator div_of_curl = operators::compose(operators::divergence({"x", "y", "z"}), operators::curl({"x", "y", "z"}));
+  out.writeln("div curl F =", div_of_curl(F)(point).item<double>());
+}
+```
+
+### Example 4
+
+The checks: one component per coordinate, so a scalar function or a field with too few components is refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function scalar = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function z) { return x * y * z; });
+  try { (void)operators::divergence({"x", "y", "z"})(scalar); } catch (const pluss::Error &e) { out.writeln("scalar input:    ", first_line(e)); }
+  const math::Function planar = math::function({"x", "y", "z"}, [](math::Function x, math::Function y, math::Function) { return math::stack({x, y}); });
+  try { (void)operators::divergence({"x", "y", "z"})(planar); } catch (const pluss::Error &e) { out.writeln("two components:  ", first_line(e)); }
+}
+```
+
+## See Also
+
+- [`curl`](curl.md): the circulation
+- [`laplacian`](laplacian.md): the divergence of the gradient
+- [`gradient`](../differential/gradient.md): the vector of partial derivatives
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="directional.html">
+    <span class="label">Previous</span>
+    <span class="title">directional</span>
+  </a>
+  <a class="next-link" href="laplacian.html">
+    <span class="label">Next</span>
+    <span class="title">laplacian</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

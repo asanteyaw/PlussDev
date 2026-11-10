@@ -1,0 +1,191 @@
+<!-- generated from american.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `instrument::american`
+
+An American call or put: exercisable at any time up to maturity.
+
+## Signature
+
+```cpp
+instrument::Vanilla instrument::american(pricing::OptionType type, double strike, double maturity, pluss::Config cfg = f64_default());
+```
+
+## What It Does
+
+Like [`make`](make.md) but with `exercise = American`. Price it with `Lattice` or `Spectral` (Black-Scholes), `Cos` (Black-Scholes, Heston, Bates), `Pde` (Heston) or `MonteCarlo` (any model); the European-only engines refuse it. The early-exercise premium of a put is the difference between this price and the European price.
+
+## Parameters
+
+`pricing::OptionType type`
+: `Call` or `Put`.
+
+`double strike`
+: The strike.
+
+`double maturity`
+: Years to expiry; positive.
+
+`pluss::Config cfg`
+: Type and device.
+
+## Returns
+
+A `Vanilla`.
+
+## Errors
+
+- An unsupported combination is reported when the field is priced, not when the instrument is built.
+
+## Practical Examples
+
+### Example 1
+
+The early-exercise premium of an American put: price it by the tree, the collocation and the cosine engines.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  for (const mod::Engine engine : {mod::Engine::Lattice, mod::Engine::Spectral, mod::Engine::Cos}) {
+    mod::Field field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(100.0, 0.05, 0.0),
+                     .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+    field.controls.lattice.steps = 4000;
+    out.writeln(field.engine_name(), ":", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+Lattice : 6.09018
+Spectral : 6.09037
+Cos : 6.09034
+```
+
+### Example 2
+
+The premium against the European put.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto european = fin::instrument::make(fin::pricing::Put, 100.0, 1.0);
+  const auto american = fin::instrument::american(fin::pricing::Put, 100.0, 1.0);
+  double prices[2];
+  int i = 0;
+  for (const auto &inst : {european, american}) {
+    mod::Field field{.instrument = inst, .market = fin::market::make(100.0, 0.05, 0.0), .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                     .controls = {.engine = mod::Engine::Lattice, .risk = mod::Risk::PriceOnly}};
+    field.controls.lattice.steps = 4000;
+    prices[i++] = field.price().price.items<double>()[0];
+  }
+  out.writeln("European", prices[0], "American", prices[1], "premium", prices[1] - prices[0]);
+}
+```
+
+Output
+
+```text
+European 5.57303 American 6.09018 premium 0.51715
+```
+
+### Example 3
+
+American options under Heston, by the cosine engine and by the PDE.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (const mod::Engine engine : {mod::Engine::Cos, mod::Engine::Pde}) {
+    mod::Field field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(100.0, 0.05, 0.0),
+                     .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+    out.writeln(field.engine_name(), ":", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+Cos : 5.9869
+Pde : 5.9853
+```
+
+### Example 4
+
+By simulation, for any model: least-squares Monte Carlo.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(100.0, 0.05, 0.0),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 50000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 3;
+  out.writeln("LSM American put:", field.price().price.items<double>()[0]);
+}
+```
+
+Output
+
+```text
+LSM American put: 6.0932
+```
+
+## See Also
+
+- [`Vanilla`](Vanilla.md): what it builds
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Vanilla.html">
+    <span class="label">Previous</span>
+    <span class="title">Vanilla</span>
+  </a>
+  <a class="next-link" href="bermudan.html">
+    <span class="label">Next</span>
+    <span class="title">bermudan</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

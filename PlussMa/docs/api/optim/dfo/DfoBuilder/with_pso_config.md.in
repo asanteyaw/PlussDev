@@ -1,0 +1,129 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 258d3bfd2c15 -->
+
+# `DfoBuilder::with_pso_config`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Sets the settings of the particle swarm method.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_pso_config(const dfo::ParticleSwarmConfig &cfg) const;
+```
+
+## What It Does
+
+Sets `DfoOptions::particle_swarm`, a [`ParticleSwarmConfig`](../ParticleSwarmConfig.md) that carries every setting of the particle swarm method. It is read only when that method runs, whether chosen by `Auto` or by [`with_solver`](with_solver.md). The common settings (budgets, tolerance, seed, display) and the bounds of the problem are applied on top of it when the method starts.
+
+## Parameters
+
+`const dfo::ParticleSwarmConfig &cfg`
+: The particle swarm settings.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+The swarm size.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  for (const std::int64_t n : {20, 100}) {
+    dfo::ParticleSwarmConfig cfg;
+    cfg.population_size = n;
+    const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::ParticleSwarm).with_pso_config(cfg).solve();
+    out.writeln("swarm", n, ": evaluations =", r.diagnostics.evaluations, ", minimum =", r.minimum);
+  }
+}
+```
+
+### Example 2
+
+Cognitive and social pull.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::ParticleSwarmConfig cfg;
+  cfg.cognitive = 1.5;
+  cfg.social = 1.5;
+  const dfo::DfoBuilder base = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::ParticleSwarm);
+  const dfo::DfoResult tuned = base.with_pso_config(cfg).solve(), plain = base.solve();
+  out.writeln("defaults (2, 2): evaluations =", plain.diagnostics.evaluations, ", minimum =", plain.minimum);
+  out.writeln("pull 1.5, 1.5  : evaluations =", tuned.diagnostics.evaluations, ", minimum =", tuned.minimum);
+}
+```
+
+### Example 3
+
+A velocity clamp.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::ParticleSwarmConfig cfg;
+  cfg.velocity_clamp_ratio = 0.2;
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_solver(dfo::DfoSolverKind::ParticleSwarm).with_pso_config(cfg).solve();
+  out.writeln("evaluations =", r.diagnostics.evaluations, ", minimum =", r.minimum);
+}
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_promote_cpu_to_float64.html">
+    <span class="label">Previous</span>
+    <span class="title">with_promote_cpu_to_float64</span>
+  </a>
+  <a class="next-link" href="with_pso_dv_config.html">
+    <span class="label">Next</span>
+    <span class="title">with_pso_dv_config</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

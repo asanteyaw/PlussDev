@@ -1,0 +1,117 @@
+# `regression::GLMFamily`
+
+Selects the distribution of the response, which fixes the variance function and the likelihood that `glm_fit` maximises.
+
+## Signature
+
+```cpp
+regression::GLMFamily regression::GLMOptions::family = regression::GLMFamily::Normal;
+regression::GLMFamily regression::GLMFitResult::family;
+```
+
+A family is chosen on [`GLMOptions`](GLMOptions.md) and recorded on the result as `GLMFitResult::family`. It decides what responses are legal, which link is canonical, and whether the dispersion is estimated or fixed at one. Its defining property is the variance of the response as a function of its mean μ, Var(y) = φ V(μ), with φ the dispersion:
+
+| Family | Variance function V(μ) | Dispersion φ | Deviance contribution of one observation |
+|---|---|---|---|
+| `Normal` | 1 | estimated, deviance / `df_resid` | (y − μ)² |
+| `Binomial` | μ(1 − μ) | 1 | 2 [y ln(y/μ) + (1 − y) ln((1 − y)/(1 − μ))] |
+| `Poisson` | μ | 1 | 2 [y ln(y/μ) − (y − μ)] |
+
+The deviance is the sum of these contributions, with y ln y read as zero at y = 0; it is what `glm_fit` reports as `deviance`, and smaller means a closer fit.
+
+## Fields
+
+### `Normal`
+
+The response is real-valued with constant variance. The canonical link is the identity, so a Normal GLM is ordinary least squares fitted by the iteratively reweighted algorithm; the dispersion is estimated from the residuals. Use it to get deviance, AIC and a Wald table from the same interface as the other families, or with a log link for a positive response whose mean grows geometrically.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1.1, 1.9, 3.2, 3.8, 5.1, 6.2, 6.8, 8.1, 9.0, 9.9}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Normal;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("coefficients", fit.coefficients.items<double>());
+  out.writeln("link", fit.link == reg::GLMLink::Identity ? "Identity" : fit.link == reg::GLMLink::Log ? "Log" : "Logit", " iterations", fit.iterations, " converged", fit.converged);
+  out.writeln("deviance", fit.deviance, " dispersion", fit.dispersion);
+}
+```
+
+### `Binomial`
+
+The response is a probability or a 0/1 outcome, so every value must lie in [0, 1]. The canonical link is the logit, and the dispersion is fixed at one. Use it for pass/fail, default/no default and any other binary outcome.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1, 1, 1}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Binomial;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("coefficients", fit.coefficients.items<double>());
+  out.writeln("link", fit.link == reg::GLMLink::Identity ? "Identity" : fit.link == reg::GLMLink::Log ? "Log" : "Logit", " iterations", fit.iterations, " converged", fit.converged);
+  out.writeln("deviance", fit.deviance, " dispersion", fit.dispersion);
+}
+```
+
+### `Poisson`
+
+The response is a non-negative count, and its variance equals its mean. The canonical link is the log, and the dispersion is fixed at one. Use it for event counts, and add an `offset` for rates per unit of exposure.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("coefficients", fit.coefficients.items<double>());
+  out.writeln("link", fit.link == reg::GLMLink::Identity ? "Identity" : fit.link == reg::GLMLink::Log ? "Log" : "Logit", " iterations", fit.iterations, " converged", fit.converged);
+  out.writeln("deviance", fit.deviance, " dispersion", fit.dispersion);
+}
+```
+
+## Guidance
+
+The family also decides which responses are rejected: a Binomial response outside [0, 1] throws `binomial family expects y in [0,1]`, and a negative Poisson response throws `poisson family expects y >= 0`. A non-integer Poisson response is accepted and fitted as a quasi-likelihood. Count data whose variance clearly exceeds its mean is overdispersed for the Poisson family; the fitted `dispersion` stays at one, so compare the deviance with its degrees of freedom before trusting the standard errors.
+
+## See Also
+
+[`GLMLink`](GLMLink.md) chooses the function that connects the mean to the linear predictor, [`GLMOptions`](GLMOptions.md) carries the choice into `glm_fit`, and [`GLMFitResult`](GLMFitResult.md) records it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="GLMLink.html">
+    <span class="label">Next</span>
+    <span class="title">GLMLink</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

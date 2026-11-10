@@ -1,0 +1,74 @@
+# `power::AcResult`
+
+Voltages, injections and flows of the AC power flow.
+
+## Signature
+
+```cpp
+power::AcResult
+```
+
+## What It Does
+
+The result of `ac`. Arrays keep the leading scenario axes of the grid.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `voltage` | Complex bus voltages, per unit, `[..., bus]`. |  |
+| `magnitude` | Voltage magnitudes, `[..., bus]`. |  |
+| `angle` | Voltage angles in radians, `[..., bus]`. |  |
+| `injection` | Complex power injected at each bus, `[..., bus]`, including the slack. |  |
+| `from_power` | Complex power entering each line at its sending end, `[..., line]`. |  |
+| `to_power` | Complex power entering each line at its receiving end, `[..., line]`; the sum of the two ends is the loss of the line. |  |
+| `residual` | The largest power mismatch after the last iteration, `[...]`. |  |
+| `converged` | True where the residual met the tolerance, `[...]`. |  |
+| `iterations` | Newton iterations used, the largest over the scenarios. |  |
+
+## Returns
+
+Returned by `ac`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+A scenario that did not converge has no solution in the iteration budget; its numbers are the last iterate, not an answer. Read `converged` and `residual` first.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field, checked against the defining equation.
+
+@@example Eng/api/power_ac_solve.cpp@@
+
+### Example 2
+
+Voltage-controlled and uncontrolled buses compared.
+
+@@example Eng/api/power_ac_buskinds.cpp@@
+
+### Example 3
+
+An unconverged scenario.
+
+@@example Eng/api/power_ac_unconverged.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DcResult.html">
+    <span class="label">Previous</span>
+    <span class="title">DcResult</span>
+  </a>
+  <a class="next-link" href="dc.html">
+    <span class="label">Next</span>
+    <span class="title">dc</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

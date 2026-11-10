@@ -1,0 +1,71 @@
+# `structure::ModeResult`
+
+Natural frequencies and mode shapes of a frame.
+
+## Signature
+
+```cpp
+structure::ModeResult
+```
+
+## What It Does
+
+The result of `modes`: the lowest natural frequencies and their mass-normalised shapes.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `omega` | Angular frequencies, radians per time, ascending, `[..., mode]`. |  |
+| `hertz` | The same frequencies in cycles per time, `[..., mode]`. |  |
+| `shape` | Mode shapes `(ux, uy, rz)`, `[..., mode, node, 3]`, normalised so that `phi_i^T M phi_j` is `1` for `i = j` and `0` otherwise. The overall sign is arbitrary. |  |
+| `residual` | `|| K phi - omega^2 M phi ||` of each pair, `[..., mode]`. |  |
+| `converged` | One where the pair reached its tolerance, `[..., mode]`. |  |
+| `iterations` | Iterations used. |  |
+
+## Returns
+
+Returned by `modes`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+The frequencies belong to the constrained structure. The shape has no physical size, only a pattern, and its sign is arbitrary.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of a modal solve.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+
+### Example 2
+
+Modes used to build a frequency response.
+
+@@example Eng/api/structure_harmonic_modal.cpp@@
+
+### Example 3
+
+Modes that start a damped free vibration.
+
+@@example Eng/api/structure_motion.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="EigOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">EigOptions</span>
+  </a>
+  <a class="next-link" href="BuckResult.html">
+    <span class="label">Next</span>
+    <span class="title">BuckResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

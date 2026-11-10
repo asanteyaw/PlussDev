@@ -1,0 +1,132 @@
+<!-- generated from JointLikelihoodWeights.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `bridge::JointLikelihoodWeights`
+
+Weights of the returns and the option prices in a joint log-likelihood.
+
+A joint estimation combines the log-likelihood of the returns with that of the option prices: `w_r · L_returns + w_o · L_options`. The two likelihoods are on different scales (thousands of returns, tens of options), so the weights express how much each source should count; equal weights of 1 are a plain sum, and scaling by the number of observations per source makes them per-observation averages.
+
+## Fields
+
+### `returns_weight`
+
+`double`, default `1.0`.
+
+Weight of the returns log-likelihood; non-negative.
+
+### `options_weight`
+
+`double`, default `1.0`.
+
+Weight of the options log-likelihood; non-negative.
+
+## Guidance
+
+Passed to `weighted_joint_loglik` and `weighted_joint_nll`.
+
+## Practical Examples
+
+### Example 1
+
+The returns weight scales the returns part.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  for (const double w : {0.0, 0.5, 1.0})
+    out.writeln("returns_weight", w, ": joint", fin::bridge::weighted_joint_loglik(-1500.0, -120.0, {.returns_weight = w, .options_weight = 1.0}));
+}
+```
+
+Output
+
+```text
+returns_weight 0.00 : joint -120.00
+returns_weight 0.50 : joint -870.00
+returns_weight 1.00 : joint -1620.00
+```
+
+### Example 2
+
+The options weight scales the options part.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  for (const double w : {0.0, 5.0, 50.0})
+    out.writeln("options_weight", w, ": joint", fin::bridge::weighted_joint_loglik(-1500.0, -120.0, {.returns_weight = 1.0, .options_weight = w}));
+}
+```
+
+Output
+
+```text
+options_weight 0.00 : joint -1500.00
+options_weight 5.00 : joint -2100.00
+options_weight 50.00 : joint -7500.00
+```
+
+### Example 3
+
+Per-observation weights put each source on an average: 1/1500 for 1500 returns and 1/40 for 40 option prices.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const fin::bridge::JointLikelihoodWeights w{.returns_weight = 1.0 / 1500.0, .options_weight = 1.0 / 40.0};
+  out.writeln("joint average log-likelihood:", fin::bridge::weighted_joint_loglik(-1500.0, -120.0, w), " (= -1.0 + -3.0)");
+}
+```
+
+Output
+
+```text
+joint average log-likelihood: -4.000  (= -1.0 + -3.0)
+```
+
+## See Also
+
+- [`weighted_joint_loglik`](weighted_joint_loglik.md): uses it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Garch11Params.html">
+    <span class="label">Previous</span>
+    <span class="title">Garch11Params</span>
+  </a>
+  <a class="next-link" href="Ngarch11Params.html">
+    <span class="label">Next</span>
+    <span class="title">Ngarch11Params</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

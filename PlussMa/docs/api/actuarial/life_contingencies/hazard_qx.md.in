@@ -1,0 +1,175 @@
+# `actuarial::life_contingencies::hazard_qx`
+
+Cumulative force of mortality from death probabilities.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::life_contingencies::hazard_qx(const pluss::Series &qx);
+```
+
+## What It Does
+
+Returns {math}`H_k=\sum_{j\le k}\mu_j` with {math}`\mu_j=-\ln(1-q_j)`: the running sum of the one-year forces, the same length as `qx`. The survival probability to the end of year `k + 1` is {math}`e^{-H_k}`, so this is the **cumulative hazard**; it is the function to plot or compare when mortality is described as a hazard. [`survival_force`](survival_force.md) goes the other way from forces to the curve.
+
+## Parameters
+
+`qx`
+: One-dimensional series of probabilities in {math}`[0,1)`.
+
+## Returns
+
+A non-decreasing series of the same length as `qx`.
+
+## Errors
+
+Throws `force_qx: qx must lie in [0,1)` for a probability of one or more.
+
+## Practical Examples
+
+### Example 1: cumulative hazard
+
+Five years of probabilities.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln(life::hazard_qx(qx).items<double>());
+}
+```
+
+### Example 2: the survival from the hazard
+
+`exp(-H)` is the survival at the end of each year.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln("exp(-H)   =", life::hazard_qx(qx).neg().exp().items<double>());
+  out.writeln("survival  =", actuarial::mortality::from_qx(qx).survival().items<double>());
+}
+```
+
+### Example 3: the last value is the total force
+
+It equals the sum of the forces.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln(life::hazard_qx(qx).items<double>().back(), life::force_qx(qx).sum().item<double>());
+}
+```
+
+### Example 4: a rising hazard
+
+The hazard of a Gompertz law grows faster than linearly.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0});
+  out.writeln(life::hazard_qx(life::gompertz_qx(ages, 0.0001, 1.08)).items<double>());
+}
+```
+
+### Example 5: the error
+
+A certain death makes the hazard infinite and is refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)life::hazard_qx(pluss::make_series({0.1, 1.0})); });
+}
+```
+
+## See Also
+
+- [`force_qx`](force_qx.md): the one-year forces- [`Mortality`](../mortality/Mortality.md): the same conversions as accessors
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="gompertz_qx.html">
+    <span class="label">Previous</span>
+    <span class="title">gompertz_qx</span>
+  </a>
+  <a class="next-link" href="lifetime_pmf.html">
+    <span class="label">Next</span>
+    <span class="title">lifetime_pmf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

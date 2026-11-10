@@ -1,0 +1,81 @@
+# `structure::motion`
+
+Integrates the motion of a frame under a load history.
+
+## Signature
+
+```cpp
+structure::MotionResult structure::motion(const structure::Frame& frame, const pluss::Series& load, const pluss::Series& time, const structure::Fix& fix, const structure::MotionState& initial = {}, const structure::MotionOptions& options = {});
+structure::NonlinearMotionResult structure::motion(const structure::Frame& frame, const pluss::Series& load, const pluss::Series& time, const structure::Fix& fix, const structure::MotionState& initial, const structure::NonlinearMotionOptions& options);
+```
+
+## What It Does
+
+Steps a frame through time under a load that varies with time. The linear form integrates `M a + C v + K u = f` by the generalised-alpha method; the form with `NonlinearMotionOptions` integrates the corotational equations of motion and follows large rotations. The step between the samples of `time` is the integration step.
+
+## Parameters
+
+`frame`
+: A frame with density.
+
+`load`
+: The load at every sample time, `[..., time, node, 3]`.
+
+`time`
+: Strictly increasing sample times, at least two.
+
+`fix`
+: The supports; prescribed values must be zero.
+
+`initial`
+: Starting displacement and velocity; zero when empty.
+
+`options`
+: `MotionOptions` for the linear form or `NonlinearMotionOptions` for the large-displacement form.
+
+## Returns
+
+A `MotionResult` or a `NonlinearMotionResult`.
+
+## Errors
+
+Throws `std::invalid_argument` when the frame has no density, `time` is not a finite strictly increasing vector with at least two samples, the load does not have the shape `[..., time, node, 3]` and the frame's dtype and platform, the initial state is malformed or non-zero at a supported degree of freedom, or the options are invalid. Throws `std::runtime_error` when a step does not converge and `fail_on_nonconvergence` is true.
+
+## Interpretation and Use
+
+Choose the step at most a tenth of the shortest period you need and small enough to resolve the load history. Use the linear form for small motion and the nonlinear form for swings through large angles. A steady sinusoidal load is cheaper in `harmonic`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A sudden load, a damped free vibration, mass and numerical damping.
+
+@@example Eng/api/structure_motion.cpp@@
+
+### Example 2
+
+A rod swinging through a large angle.
+
+@@example Eng/api/structure_motion_nonlinear.cpp@@
+
+### Example 3
+
+Rejected load histories, times and options.
+
+@@example Eng/api/structure_dynamics_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="HarmonicResult.html">
+    <span class="label">Previous</span>
+    <span class="title">HarmonicResult</span>
+  </a>
+  <a class="next-link" href="harmonic.html">
+    <span class="label">Next</span>
+    <span class="title">harmonic</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

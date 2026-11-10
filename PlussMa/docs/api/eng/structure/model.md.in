@@ -1,0 +1,59 @@
+# Structural models
+
+This branch describes a structure. A `Mesh` and `Bars` become a `Truss` through `truss`; a `Mesh` and `Sections` become a `Frame` through `frame`. A `Fix` names the supports, and is passed to every analysis.
+
+## Choosing A Surface
+
+Truss bars carry only axial force and are joined at pins, in a plane or in space; frame members carry axial force, shear and bending and are joined rigidly, in a plane. Choose a truss when the members are slender and loaded only at the joints.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Build a plane and a space truss and a batch of heights.
+
+@@example Eng/api/structure_truss_build.cpp@@
+
+### Example 2
+
+Build a portal frame with and without density.
+
+@@example Eng/api/structure_frame_build.cpp@@
+
+### Example 3
+
+Pins, rollers, prescribed displacements and a repeated degree of freedom.
+
+@@example Eng/api/structure_fix.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+model/Mesh
+model/Bars
+model/Sections
+model/Fix
+model/TrussModel
+model/FrameModel
+model/truss
+model/frame
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+model/Mesh
+model/Bars
+model/Sections
+model/Fix
+model/TrussModel
+model/FrameModel
+model/truss
+model/frame
+```
+<!-- apiref:toctree:end -->

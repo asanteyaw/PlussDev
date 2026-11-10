@@ -1,0 +1,797 @@
+# `regression::QuantileFitResult`
+
+Everything `quantile_fit` learned: the coefficients and their uncertainty, the fitted quantiles and residuals, the check-loss measures of fit, the residual density, the iteration outcome and the labels.
+
+## Signature
+
+```cpp
+regression::QuantileFitResult regression::quantile_fit(const Series &y, const Series &x, const regression::QuantileOptions &options = {}, Config cfg = {});
+```
+
+A result is returned by value from `quantile_fit` and is read-only data. Every example below fits the median of the same twelve points, whose spread grows with x, so the numbers can be compared across fields; where a field needs another setting the program says so.
+
+## Fields
+
+### `coefficients`
+
+`Series` of shape `[k]`.
+
+The estimated coefficients, `[k]`, in the order of `coefficient_names`: the intercept first when there is one, then one per predictor. They minimise the check loss, so the fitted line leaves a fraction tau of the observations below it. At the median, half the residuals are negative, half positive, and the observations that lie exactly on the line (at least as many as there are coefficients) are neither. The program counts them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  const auto r = fit.residuals.items<double>();
+  int below = 0, on = 0, above = 0;
+  for (const double v : r) (v < -1e-6 ? below : v > 1e-6 ? above : on)++;
+  out.writeln("coefficients", fit.coefficients.items<double>(), fit.coefficient_names);
+  out.writeln("residuals below the line", below, " on the line", on, " above the line", above);
+}
+```
+
+
+### `std_errors`
+
+`Series` of shape `[k]`.
+
+The standard error of each coefficient, `[k]`: the square root of the diagonal of `covariance`, whose estimator is set by `QuantileOptions::covariance`. The program computes them from the covariance matrix.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  const std::vector<std::vector<double>> cov = fit.covariance.host<double>();
+  out.writeln("std_errors", fit.std_errors.items<double>());
+  out.writeln("from covariance", std::sqrt(cov[0][0]), std::sqrt(cov[1][1]));
+}
+```
+
+
+### `t_values`
+
+`Series` of shape `[k]`.
+
+The test statistic of each coefficient, `[k]`: the coefficient over its standard error, compared with a Student t distribution on `df_resid` degrees of freedom. The program recomputes them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("t_values", fit.t_values.items<double>());
+  out.writeln("coefficient / std_error", fit.coefficients.div(fit.std_errors).items<double>());
+}
+```
+
+
+### `p_values`
+
+`Series` of shape `[k]`.
+
+The two-sided p-value of each t statistic against the Student t distribution on `df_resid` degrees of freedom, `[k]`. It is NaN when `df_resid` is zero. The program recomputes them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  const pluss::subsp::stats::distr::StudentT t{static_cast<double>(fit.df_resid), 0.0, 1.0};
+  out.writeln("p_values", fit.p_values.items<double>());
+  out.writeln("2 (1 - F(|t|))", t.cdf(fit.t_values.abs()).neg().add(1.0).mul(2.0).items<double>());
+}
+```
+
+
+### `conf_int`
+
+`Series` of shape `[k,2]`.
+
+The confidence interval of each coefficient, `[k, 2]` with the lower bound in the first column and the upper in the second: the coefficient plus and minus the Student t quantile of 1 − alpha/2, on `df_resid` degrees, times its standard error. The program recovers the multiplier from the slope interval and checks that the two-sided tail beyond it is alpha.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  const std::vector<std::vector<double>> ci = fit.conf_int.host<double>();
+  const auto se = fit.std_errors.items<double>();
+  const double multiplier = (ci[1][1] - ci[1][0]) / 2.0 / se[1];
+  const pluss::subsp::stats::distr::StudentT t{static_cast<double>(fit.df_resid), 0.0, 1.0};
+  const auto m = pluss::make_series(std::vector<double>{multiplier}, {1}, as_f64());
+  out.writeln("conf_int rows", ci[0], ci[1]);
+  out.writeln("multiplier", multiplier, " two-sided tail beyond it", t.cdf(m).neg().add(1.0).mul(2.0).items<double>(), " alpha", fit.alpha);
+}
+```
+
+
+### `covariance`
+
+`Series` of shape `[k,k]`.
+
+The covariance matrix of the coefficients, `[k, k]`. It is symmetric to rounding, its diagonal is the squared standard errors, and its off-diagonal entry is what an interval on a combination of coefficients needs.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  const std::vector<std::vector<double>> cov = fit.covariance.host<double>();
+  out.writeln("covariance", cov[0], cov[1]);
+  out.writeln("off-diagonals differ by", std::abs(cov[0][1] - cov[1][0]), " diagonal is std_errors squared", fit.std_errors.square().items<double>());
+}
+```
+
+
+### `fitted_values`
+
+`Series` of shape `[n]`.
+
+The fitted conditional quantile of every observation, `[n]`: the design times the coefficients. The program rebuilds it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  const auto b = fit.coefficients.items<double>();
+  out.writeln("fitted_values", fit.fitted_values.items<double>());
+  out.writeln("b0 + b1 x    ", x.mul(b[1]).add(b[0]).items<double>());
+}
+```
+
+
+### `residuals`
+
+`Series` of shape `[n]`.
+
+The residuals, `[n]`: the observation minus its fitted quantile. They are not squared: the fit minimises the check loss of exactly these values. The program recomputes them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("residuals ", fit.residuals.items<double>());
+  out.writeln("y - fitted", y.sub(fit.fitted_values).items<double>());
+}
+```
+
+
+### `nobs`
+
+`std::int64_t`.
+
+The number of observations used in the fit, after dropped rows are removed.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("nobs", fit.nobs);
+  auto values = std::vector<double>{1, 2, std::nan(""), 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  out.writeln("with a missing value", reg::quantile_fit(y, pluss::make_series(values, {12}, as_f64()), options).nobs);
+}
+```
+
+
+### `rank`
+
+`std::int64_t`.
+
+The numerical rank of the design, the number of coefficients that the data identify. It equals `k_params` for a well-conditioned design and falls below it when predictors are nearly or exactly collinear. The program fits a design whose second predictor is exactly twice the first.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("rank", fit.rank, " of", fit.k_params);
+  std::vector<double> flat;
+  for (int i = 0; i < 12; ++i) flat.push_back(1.0 * (i + 1));
+  for (int i = 0; i < 12; ++i) flat.push_back(2.0 * (i + 1));
+  const auto twice = pluss::make_series(flat, {2, 12}, as_f64()).transpose(0, 1);
+  const auto deficient = reg::quantile_fit(y, twice, options);
+  out.writeln("exactly collinear: rank", deficient.rank, " of", deficient.k_params);
+  out.writeln(deficient.warnings);
+}
+```
+
+
+### `k_params`
+
+`std::int64_t`.
+
+The number of coefficients, including the intercept: the width of the design and the length of `coefficients`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("k_params", fit.k_params, " coefficients", fit.coefficients.size(0));
+  options.add_intercept = false;
+  out.writeln("without intercept", reg::quantile_fit(y, x, options).k_params);
+}
+```
+
+
+### `num_predictors`
+
+`std::int64_t`.
+
+The number of predictor columns supplied, not counting the intercept: the width `quantile_predict` expects of new rows.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("num_predictors", fit.num_predictors, " k_params", fit.k_params);
+}
+```
+
+
+### `dropped_observations`
+
+`std::int64_t`.
+
+The number of rows left out of the fit: rows with a non-finite value when `drop_missing` is true, and rows of weight zero.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  auto values = std::vector<double>{1, 2, std::nan(""), 4, 5, 6, 7, 8, 9, 10, 11, 12};
+  out.writeln("complete data", fit.dropped_observations);
+  out.writeln("one missing value", reg::quantile_fit(y, pluss::make_series(values, {12}, as_f64()), options).dropped_observations);
+  options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0}, {12}, as_f64());
+  out.writeln("two rows of weight zero", reg::quantile_fit(y, x, options).dropped_observations);
+}
+```
+
+
+### `df_model`
+
+`std::int64_t`.
+
+The degrees of freedom of the model: the rank less one when there is an intercept, the rank itself when there is none.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("df_model", fit.df_model, " rank", fit.rank);
+}
+```
+
+
+### `df_resid`
+
+`std::int64_t`.
+
+The residual degrees of freedom: the observations minus the rank. It is the degrees of freedom of the Student t distribution behind `p_values` and `conf_int`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("df_resid", fit.df_resid, " nobs - rank", fit.nobs - fit.rank);
+}
+```
+
+
+### `iterations`
+
+`std::int64_t`.
+
+The number of reweighted least-squares steps taken. Unlike a least-squares fit, a quantile fit is iterative; the count shows how hard the data made it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("iterations", fit.iterations, " converged", fit.converged);
+}
+```
+
+
+### `tau`
+
+`double`.
+
+The quantile that was fitted, copied from the options.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("tau", fit.tau);
+  options.tau = 0.9;
+  out.writeln("with tau 0.9", reg::quantile_fit(y, x, options).tau);
+}
+```
+
+
+### `alpha`
+
+`double`.
+
+The significance level that the intervals in `conf_int` were built with, copied from the options.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("alpha", fit.alpha);
+  options.alpha = 0.10;
+  out.writeln("with alpha 0.10", reg::quantile_fit(y, x, options).alpha);
+}
+```
+
+
+### `objective`
+
+`double`.
+
+The minimised check loss, Σ ρ(residual), where ρ charges tau per unit of a positive residual and 1 − tau per unit of a negative one (weighted by the case weights). It is a sum, not a mean. The program recomputes it for the median, where ρ is half the absolute residual.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  double by_hand = 0.0;
+  for (const double r : fit.residuals.items<double>()) by_hand += r >= 0 ? options.tau * r : (options.tau - 1.0) * r;
+  out.writeln("objective", fit.objective, " by hand", by_hand);
+}
+```
+
+
+### `objective_null`
+
+`double`.
+
+The check loss of the model with only a constant, which is the sample tau-quantile of the response. It is the benchmark that `objective` is compared with. At the median the constant is the middle of the sorted response; the program recomputes the loss with it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  auto sorted = y.items<double>();
+  std::sort(sorted.begin(), sorted.end());
+  const double median = 0.5 * (sorted[5] + sorted[6]);
+  double by_hand = 0.0;
+  for (const double v : sorted) by_hand += 0.5 * std::abs(v - median);
+  out.writeln("objective_null", fit.objective_null, " by hand", by_hand, " median", median);
+}
+```
+
+
+### `pseudo_rsquared`
+
+`double`.
+
+The proportion of the null loss that the model removes, 1 − objective / objective_null. It is zero for a model no better than a constant and one for an exact fit; it is a measure of the same kind as an R² but of the check loss, so it varies with tau. The program recomputes it and prints it at three quantiles.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("pseudo_rsquared", fit.pseudo_rsquared, " by hand", 1.0 - fit.objective / fit.objective_null);
+  for (const double tau : {0.1, 0.9}) {
+    options.tau = tau;
+    out.writeln("tau", tau, " pseudo_rsquared", reg::quantile_fit(y, x, options).pseudo_rsquared);
+  }
+}
+```
+
+
+### `residual_density0`
+
+`double`.
+
+The estimated density of the residuals at zero, f₀: how tightly the errors cluster around the fitted quantile. It scales the standard errors, which are proportional to 1/f₀. With the classical estimator and a single predictor, the slope has standard error √(tau(1 − tau)) / (f₀ √Sxx) with Sxx the sum of squares of x about its mean; the program checks that.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  options.covariance = reg::QuantileCovariance::Iid;
+  const auto iid = reg::quantile_fit(y, x, options);
+  const double mean = x.mean().item<double>();
+  const double sxx = x.sub(mean).square().sum().item<double>();
+  out.writeln("residual_density0", iid.residual_density0);
+  out.writeln("slope std_error", iid.std_errors.items<double>()[1], " by hand", std::sqrt(0.5 * 0.5) / (iid.residual_density0 * std::sqrt(sxx)));
+}
+```
+
+
+### `converged`
+
+`bool`.
+
+Whether the iteration settled to `tol` before `max_iter`. The program forces a failure with three iterations.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("converged", fit.converged);
+  options.max_iter = 3;
+  out.writeln("with max_iter 3", reg::quantile_fit(y, x, options).converged);
+}
+```
+
+
+### `has_intercept`
+
+`bool`.
+
+Whether the design included a constant column, copied from `add_intercept`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("has_intercept", fit.has_intercept);
+  options.add_intercept = false;
+  out.writeln("add_intercept=false", reg::quantile_fit(y, x, options).has_intercept);
+}
+```
+
+
+### `response_name`
+
+`std::string`.
+
+The label of the response, copied from the options and printed by the summary.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("default", fit.response_name);
+  options.response_name = "price";
+  out.writeln("named", reg::quantile_fit(y, x, options).response_name);
+}
+```
+
+
+### `coefficient_names`
+
+`std::vector<std::string>`.
+
+The label of each coefficient, in the order of `coefficients`: `const` for the intercept, then the names from `predictor_names` or `x1`, `x2` and so on.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln(fit.coefficient_names);
+  options.predictor_names = {"size"};
+  out.writeln(reg::quantile_fit(y, x, options).coefficient_names);
+}
+```
+
+
+### `warnings`
+
+`std::vector<std::string>`.
+
+Notes that the fit attaches when something needs attention, as text: an iteration that did not converge, or a rank-deficient design solved with a pseudoinverse. The list is empty for a clean fit.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}, {12}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.1, 3.9, 3.2, 6.8, 5.1, 9.7, 6.4, 12.9, 7.7, 16.5, 8.2, 20.1}, {12}, as_f64());
+  reg::QuantileOptions options;
+  const auto fit = reg::quantile_fit(y, x, options);
+  out.writeln("clean fit:", fit.warnings.size(), "warnings");
+  options.max_iter = 3;
+  out.writeln(reg::quantile_fit(y, x, options).warnings);
+}
+```
+
+
+## See Also
+
+[`quantile_fit`](quantile_fit.md) produces the result, [`quantile_predict`](quantile_predict.md) applies its coefficients to new rows, [`quantile_summary`](quantile_summary.md) prints it as a report, and [`QuantileOptions`](QuantileOptions.md) holds the settings it records.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="QuantileOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">QuantileOptions</span>
+  </a>
+  <a class="next-link" href="quantile_fit.html">
+    <span class="label">Next</span>
+    <span class="title">quantile_fit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

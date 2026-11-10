@@ -1,0 +1,142 @@
+<!-- generated from with_auto_policy.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9d5b09866754 -->
+
+# `DfoBuilder::with_auto_policy`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Sets the thresholds `Auto` uses.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_auto_policy(const dfo::DfoAutoPolicy &policy) const;
+```
+
+## What It Does
+
+Sets `DfoOptions::auto_policy`, the dimension thresholds of the automatic choice (see [`DfoAutoPolicy`](../DfoAutoPolicy.md)). It matters only while the solver is `Auto`.
+
+## Parameters
+
+`const dfo::DfoAutoPolicy &policy`
+: The thresholds.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+A lower small-problem threshold.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::DfoAutoPolicy policy;
+  policy.low_dimension_threshold = 2;
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_auto_policy(policy).solve();
+  out.writeln(dfo::to_string(r.selected_solver), "|", r.selection_reason);
+}
+```
+
+Output
+
+```text
+DifferentialEvolutionPrmm | unconstrained medium-dimensional problem; DE-PRMM balances exploration/exploitation
+```
+
+### Example 2
+
+Swarm for high dimension.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::DfoAutoPolicy policy;
+  policy.low_dimension_threshold = 2;
+  policy.high_dimension_threshold = 3;
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_auto_policy(policy).solve();
+  out.writeln(dfo::to_string(r.selected_solver));
+}
+```
+
+Output
+
+```text
+ParticleSwarm
+```
+
+### Example 3
+
+Ignored once a method is named.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::DfoAutoPolicy policy;
+  policy.low_dimension_threshold = 2;
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0, 0.0, 0.0})).with_objective(f).with_auto_policy(policy).with_solver(dfo::DfoSolverKind::NelderMead).solve();
+  out.writeln(dfo::to_string(r.selected_solver), "|", r.selection_reason);
+}
+```
+
+Output
+
+```text
+NelderMead | explicit solver override
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="solve.html">
+    <span class="label">Previous</span>
+    <span class="title">solve</span>
+  </a>
+  <a class="next-link" href="with_blackbox.html">
+    <span class="label">Next</span>
+    <span class="title">with_blackbox</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

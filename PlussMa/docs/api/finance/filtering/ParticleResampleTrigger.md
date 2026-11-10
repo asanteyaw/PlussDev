@@ -1,0 +1,221 @@
+<!-- generated from ParticleResampleTrigger.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `filtering::ParticleResampleTrigger`
+
+When a particle filter resamples: when the weights degrade, or at fixed intervals.
+
+`Ratio` resamples when the effective sample size falls below `ess_threshold · N`: it resamples only when needed, which keeps the diversity of the cloud. `Interval` resamples every `resample_interval` dates regardless of the weights.
+
+## Fields
+
+### `Ratio`
+
+`enumerator`, default `0`.
+
+Resample when the ESS is below `ess_threshold · N`.
+
+### `Interval`
+
+`enumerator`, default `1`.
+
+Resample every `resample_interval` dates.
+
+## Guidance
+
+Set as `ParticleFilterOptions::resample_trigger`.
+
+## Practical Examples
+
+### Example 1
+
+Ratio against interval resampling: the minimum effective sample size and the log-likelihood.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  for (const auto trigger : {flt::ParticleResampleTrigger::Ratio, flt::ParticleResampleTrigger::Interval}) {
+    flt::ParticleFilterOptions options;
+    options.resample_trigger = trigger;
+    options.resample_interval = 5;
+    options.resample_seed = 3;
+    const auto res = flt::particle_filter(y, make_model(options), cfg);
+    out.writeln(static_cast<int>(trigger), ": minimum ESS", res.ess.amin().item<double>(), ", loglik", res.loglik);
+  }
+}
+```
+
+Output
+
+```text
+0 : minimum ESS 138.36 , loglik -29.66
+1 : minimum ESS 40.11 , loglik -30.27
+```
+
+### Example 2
+
+With the interval trigger the weights degrade between resamples; the effective sample size is sawtooth.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  flt::ParticleFilterOptions options;
+  options.resample_trigger = flt::ParticleResampleTrigger::Interval;
+  options.resample_interval = 5;
+  const auto res = flt::particle_filter(y, make_model(options), cfg);
+  out.writeln("ESS over the first 12 dates:", res.ess.slice(0, 0, 12, 1).items<double>());
+}
+```
+
+Output
+
+```text
+ESS over the first 12 dates: [576, 367, 313, 236, 190, 1382, 1363, 1035, 913, 396, 1212, 1216]
+```
+
+### Example 3
+
+With the ratio trigger the ESS never falls below the threshold times N at the end of a date.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  flt::ParticleFilterOptions options;
+  options.ess_threshold = 0.5;
+  const auto res = flt::particle_filter(y, make_model(options), cfg);
+  out.writeln("minimum ESS", res.ess.amin().item<double>(), "of", N, "particles (threshold", 0.5 * N, ")");
+}
+```
+
+Output
+
+```text
+minimum ESS 144.5 of 2000 particles (threshold 1000.0 )
+```
+
+## See Also
+
+- [`ParticleFilterOptions`](ParticleFilterOptions.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ParticleResampleMethod.html">
+    <span class="label">Previous</span>
+    <span class="title">ParticleResampleMethod</span>
+  </a>
+  <a class="next-link" href="UkfModel.html">
+    <span class="label">Next</span>
+    <span class="title">UkfModel</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

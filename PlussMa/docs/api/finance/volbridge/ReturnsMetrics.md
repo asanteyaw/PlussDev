@@ -1,0 +1,157 @@
+<!-- generated from ReturnsMetrics.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `bridge::ReturnsMetrics`
+
+The log-likelihood, its per-observation terms and the conditional variances of returns under a fitted GARCH-type model.
+
+`loglik` is the Gaussian log-likelihood of the whole sample, `loglik_per_obs` its `[T]` terms (which sum to it), `variance` the conditional variance `[T]` of each return given the past. They equal the fit's own `loglik` and `infer`, packaged for use beside option-price metrics.
+
+## Fields
+
+### `loglik`
+
+`double`, default `NaN`.
+
+Log-likelihood of the sample.
+
+### `loglik_per_obs`
+
+`pluss::Series`, default `undefined`.
+
+`[T]`: the terms.
+
+### `variance`
+
+`pluss::Series`, default `undefined`.
+
+`[T]`: conditional variances.
+
+## Guidance
+
+Returned by `returns_metrics`.
+
+## Practical Examples
+
+### Example 1
+
+Shapes and the sum of the per-observation terms.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const auto garch = ts::Garch::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const auto m = fin::bridge::returns_metrics(returns, gjr, cfg);
+  out.writeln("loglik_per_obs", m.loglik_per_obs.sizes(), " variance", m.variance.sizes(), "; sum of the terms", m.loglik_per_obs.sum().item<double>(), ", loglik", m.loglik, ", the fit's own", gjr.loglik(returns));
+}
+```
+
+Output
+
+```text
+loglik_per_obs [1500]  variance [1500] ; sum of the terms -1595.5360 , loglik -1595.5360 , the fit's own -1595.5360
+```
+
+### Example 2
+
+The conditional variance is large after large returns: it correlates with the squared return.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const auto garch = ts::Garch::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const auto m = fin::bridge::returns_metrics(returns, garch, cfg);
+  const Series sq = (returns - returns.mean()).square(), v = m.variance;
+  out.writeln("correlation of the variance with the squared return:", ((sq - sq.mean()) * (v - v.mean())).mean().item<double>() / (sq.std().item<double>() * v.std().item<double>()));
+}
+```
+
+Output
+
+```text
+correlation of the variance with the squared return: 0.270
+```
+
+### Example 3
+
+The per-observation terms locate the poorly explained days: the most negative term is the worst-fitted return.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const auto garch = ts::Garch::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+
+  const auto m = fin::bridge::returns_metrics(returns, garch, cfg);
+  const std::int64_t worst = m.loglik_per_obs.argmin().item<std::int64_t>();
+  out.writeln("worst-fitted day", worst, ": return", returns.select(0, worst).item<double>(), ", term", m.loglik_per_obs.select(0, worst).item<double>(), ", variance", m.variance.select(0, worst).item<double>());
+}
+```
+
+Output
+
+```text
+worst-fitted day 1393 : return 3.568 , term -7.256 , variance 0.988
+```
+
+## See Also
+
+- [`returns_metrics`](returns_metrics.md): produces it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OptionVolMetrics.html">
+    <span class="label">Previous</span>
+    <span class="title">OptionVolMetrics</span>
+  </a>
+  <a class="next-link" href="pricing_metrics.html">
+    <span class="label">Next</span>
+    <span class="title">pricing_metrics</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

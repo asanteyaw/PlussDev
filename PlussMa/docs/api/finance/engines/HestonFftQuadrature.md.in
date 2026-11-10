@@ -1,0 +1,131 @@
+# `pricing::HestonFftQuadrature`
+
+The weights of the integral inside the FFT pricing: Simpson or trapezoidal.
+
+The Carr-Madan transform approximates an integral over the integration variable by a weighted sum. Simpson weights are more accurate for smooth integrands at the same step; trapezoidal weights are simpler and can be preferable when the integrand oscillates quickly.
+
+## Fields
+
+### `Simpson`
+
+`enumerator`, default `0`.
+
+Simpson weights. The default.
+
+### `Trapezoidal`
+
+`enumerator`, default `1`.
+
+Trapezoidal weights.
+
+## Guidance
+
+Set as `Fft::quadrature`.
+
+## Practical Examples
+
+### Example 1
+
+The two rules agree to many decimals at the default step.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const auto inst = fin::instrument::make(fin::pricing::Call, 100.0, 1.0);
+  const auto mkt = fin::market::make(100.0, 0.02, 0.0);
+  const auto mdl = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}).as<fin::model::Heston>();
+
+  for (const auto q : {fin::pricing::HestonFftQuadrature::Simpson, fin::pricing::HestonFftQuadrature::Trapezoidal}) {
+    fin::pricer::Fft e;
+    e.quadrature = q;
+    out.writeln(static_cast<int>(q), ":", e.price(inst, mdl, mkt).price.items<double>()[0]);
+  }
+}
+```
+
+### Example 2
+
+At a coarse step the trapezoidal rule is the rougher.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto inst = fin::instrument::make(fin::pricing::Call, 100.0, 1.0);
+  const auto mkt = fin::market::make(100.0, 0.02, 0.0);
+  const auto mdl = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}).as<fin::model::Heston>();
+
+  for (const auto q : {fin::pricing::HestonFftQuadrature::Simpson, fin::pricing::HestonFftQuadrature::Trapezoidal}) {
+    fin::pricer::Fft e;
+    e.quadrature = q;
+    e.du = 0.6;
+    out.writeln(static_cast<int>(q), ":", e.price(inst, mdl, mkt).price.items<double>()[0], "(COS 8.62811)");
+  }
+}
+```
+
+### Example 3
+
+Through a Field.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Fft, .risk = mod::Risk::PriceOnly}};
+
+  field.controls.fft.quadrature = fin::pricing::HestonFftQuadrature::Trapezoidal;
+  out.writeln(field.price().price.items<double>()[0]);
+}
+```
+
+## See Also
+
+- [`Fft`](Fft.md): uses it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="HestonCfMode.html">
+    <span class="label">Previous</span>
+    <span class="title">HestonCfMode</span>
+  </a>
+  <a class="next-link" href="Lattice.html">
+    <span class="label">Next</span>
+    <span class="title">Lattice</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

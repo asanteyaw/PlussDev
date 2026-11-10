@@ -1,0 +1,64 @@
+# `lti::Hold`
+
+## Signature
+
+```cpp
+lti::Hold lti::Hold::Auto;
+lti::Hold lti::Hold::Zero;
+lti::Hold lti::Hold::Linear;
+```
+
+## What It Does
+
+Selects how continuous simulation interprets inputs between timestamps.
+
+## Fields
+
+| Field | Meaning |
+|---|---|
+| `Auto` | Chooses the surface default: zero-order behavior unless the system contract requires otherwise. |
+| `Zero` | Holds each input sample constant until the next timestamp. |
+| `Linear` | Interpolates linearly between neighboring samples. |
+
+## Returns
+
+Stored in `SimOptions::hold` and consumed by `lti::sim`.
+
+## Errors
+
+Discrete simulation rejects `Linear` because the recurrence already advances on fixed samples.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Simulate a continuous first-order step response on an irregular time grid.
+
+@@example Eng/api/lti_sim.cpp@@
+
+### Example 2
+
+Compare hold policies with an explicit initial state.
+
+@@example Eng/api/lti_sim_modes.cpp@@
+
+### Example 3
+
+Exercise timestamp and input-shape validation.
+
+@@example Eng/api/lti_sim_errors.cpp@@
+
+## See Also
+
+See [Simulation](../simulation.md) for shapes, batching, hold policy, and continuous/discrete behavior.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="SimOptions.html">
+    <span class="label">Next</span>
+    <span class="title">SimOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,132 @@
+# `optim::audit_optima_derivatives`
+
+Compares hand-written derivatives with automatic ones for the objective and the nonlinear constraints.
+
+## Signature
+
+```cpp
+optim::DerivativeAuditReport optim::audit_optima_derivatives(const optim::ConstrainedProblem &problem, const optim::ParameterPack<pluss::Series> &params, const optim::DerivativeAuditOptions &options = {});
+```
+
+## What It Does
+
+When a problem supplies both an analytic form and a traced form of the same function, the audit evaluates both at `params` and reports whether values and derivatives agree within `options.absolute_tolerance` (default `1e-8`) and `options.relative_tolerance` (default `1e-6`). The report has an entry for the objective, the nonlinear equalities and the nonlinear inequalities, each with `available`, `passed`, the differences and a message, plus an overall `passed`. An entry whose two forms are not both present is `available = false`. Run the audit once when you write an analytic gradient or Jacobian: a wrong derivative otherwise shows up only as a solver that fails to converge.
+
+## Parameters
+
+`problem`
+: A problem with analytic and traced forms.
+
+`params`
+: The point to compare at.
+
+`options`
+: Absolute and relative tolerances.
+
+## Returns
+
+A `DerivativeAuditReport`.
+
+## Practical Examples
+
+### Example 1
+
+A correct and a wrong analytic gradient.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const Pack at = optim::pack_series(pluss::series::make({1.0, 2.0}));
+  const auto make = [](double scale) {
+    return optim::problem().objective_analytic([scale](const Pack &p) { return std::pair{p.at("x").square().sum(), optim::pack_series(scale * p.at("x"))}; })
+        .objective([](const Pack &p) { return p.at("x").square().sum(); }).build();
+  };
+  const optim::DerivativeAuditReport good = optim::audit_optima_derivatives(make(2.0), at);
+  const optim::DerivativeAuditReport bad = optim::audit_optima_derivatives(make(3.0), at);
+  out.writeln("correct: passed =", good.passed, ", derivative difference =", good.objective.derivative_abs_diff);
+  out.writeln("wrong  : passed =", bad.passed, ", derivative difference =", bad.objective.derivative_abs_diff);
+}
+```
+
+### Example 2
+
+Nothing to compare. A problem with only a traced objective has no analytic form, so the entry is unavailable.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const optim::ConstrainedProblem problem =
+      optim::problem()
+          .objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); })
+          .nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  const optim::DerivativeAuditReport report = optim::audit_optima_derivatives(problem, optim::pack_series(pluss::series::make({0.0, 0.0})));
+  out.writeln("objective available =", report.objective.available, ", message =", report.objective.message);
+}
+```
+
+### Example 3
+
+Looser tolerances admit a small error.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const Pack at = optim::pack_series(pluss::series::make({1.0, 2.0}));
+  const optim::ConstrainedProblem nearly = optim::problem().objective_analytic([](const Pack &p) { return std::pair{p.at("x").square().sum(), optim::pack_series(2.0000001 * p.at("x"))}; })
+      .objective([](const Pack &p) { return p.at("x").square().sum(); }).build();
+  optim::DerivativeAuditOptions loose;
+  loose.absolute_tolerance = 1e-5;
+  out.writeln("default tolerance passes =", optim::audit_optima_derivatives(nearly, at).passed);
+  out.writeln("loose   tolerance passes =", optim::audit_optima_derivatives(nearly, at, loose).passed);
+}
+```
+
+## See Also
+
+- [`objective_analytic`](ProblemBuilder/objective_analytic.md): supplies a gradient
+- [`nonlinear_analytic`](ProblemBuilder/nonlinear_analytic.md): supplies Jacobians
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="WorkingSetOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">WorkingSetOptions</span>
+  </a>
+  <a class="next-link" href="constraints.html">
+    <span class="label">Next</span>
+    <span class="title">constraints</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

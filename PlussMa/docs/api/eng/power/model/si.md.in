@@ -1,0 +1,64 @@
+# `power::si`
+
+Converts a per-unit value to physical units.
+
+## Signature
+
+```cpp
+pluss::Series power::si(const pluss::Series& value, double base);
+```
+
+## What It Does
+
+Multiplies a per-unit value by a base: `value * base`.
+
+## Parameters
+
+`value`
+: The per-unit values, any shape.
+
+`base`
+: The base of the quantity.
+
+## Returns
+
+The physical values, the same shape as `value`.
+
+## Errors
+
+Throws `std::invalid_argument` for a base that is not finite and positive.
+
+## Interpretation and Use
+
+Use it to report results in watts, ohms or amperes.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Per-unit to watts.
+
+@@example Eng/api/power_units.cpp@@
+
+### Example 2
+
+Results of a solved network in per unit.
+
+@@example Eng/api/power_ac_solve.cpp@@
+
+### Example 3
+
+A rejected base is described with the validation errors.
+
+@@example Eng/api/power_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pu.html">
+    <span class="label">Previous</span>
+    <span class="title">pu</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

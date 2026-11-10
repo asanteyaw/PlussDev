@@ -1,0 +1,76 @@
+# `control::PidRule`
+
+Discretization rule used by a sampled PID controller.
+
+## Signature
+
+```cpp
+control::PidRule
+```
+
+## What It Does
+
+This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+
+The rule affects discrete controllers only. Continuous controllers retain their exact parallel-form expression.
+
+## Fields
+
+### `Forward`
+
+Forward-Euler substitution. It is explicit and inexpensive but least damping-preserving.
+
+### `Backward`
+
+Backward-Euler substitution. It is implicit and generally more damping-preserving.
+
+### `Trapezoid`
+
+Bilinear/trapezoidal substitution, balancing frequency fidelity and numerical robustness.
+
+## Returns
+
+This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+
+## Errors
+
+The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+
+## Interpretation and Use
+
+Rule choice matters only for sampled controllers. `Forward` is explicit, `Backward` is more damping-preserving, and `Trapezoid` usually offers better frequency fidelity. The integral and derivative rules may differ when implementation constraints demand it.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Select trapezoidal integration and backward differentiation explicitly.
+
+@@example Eng/api/control_pid_discrete.cpp@@
+
+### Example 2
+
+Show that continuous PID ignores discrete substitution rules.
+
+@@example Eng/api/control_pid.cpp@@
+
+### Example 3
+
+Review validation performed before rule evaluation.
+
+@@example Eng/api/control_controller_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PlaceResult.html">
+    <span class="label">Previous</span>
+    <span class="title">PlaceResult</span>
+  </a>
+  <a class="next-link" href="PidController.html">
+    <span class="label">Next</span>
+    <span class="title">Pid</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

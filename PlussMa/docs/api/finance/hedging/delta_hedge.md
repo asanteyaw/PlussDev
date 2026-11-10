@@ -1,0 +1,484 @@
+<!-- generated from delta_hedge.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `hedging::delta_hedge`
+
+Delta-hedges the field's European option along a spot path, with the delta of the field's own model and engine, and reports the hedging error.
+
+## Signature
+
+```cpp
+hedging::DeltaHedgeResult hedging::delta_hedge(const module::Field &field, const pluss::Series &spot_path, pluss::Config cfg = {});
+```
+
+## What It Does
+
+The seller of an option sells it for its value in the field (its model and engine), buys `Δ` units of the underlying with borrowed cash (the delta is the field's own: closed form for Black-Scholes and for Heston and Bates on the COS engine, from the same grid, paths or solved surface on every other engine), and rebalances to the new delta at every observation. The `n` observations of `spot_path` are equally spaced from 0 to the field's maturity (so the step is `maturity/(n − 1)`); the cash grows at the field's rate and the stock position earns its dividend yield. The field must be a European option with one strike, one maturity, one rate and one dividend yield; its spot is replaced by the path, and the maturity at each date by the time left. At the last date the option is worth its payoff and the delta is the step function. If the stock followed the model's volatility and the hedge were continuous, the portfolio would replicate the option exactly; with discrete rebalancing the **hedging error** `portfolio − option` is small, random and averages near zero, and its spread shrinks as `√(1/steps)`. If the path was generated with another volatility than the one hedged with, the error has a systematic part, proportional to the gamma and the difference of variances.
+
+## Parameters
+
+`const module::Field &field`
+: The option, market, model and engine that value and hedge it.
+
+`const pluss::Series &spot_path`
+: The spot at equally spaced dates from 0 to the field's maturity, at least two, positive.
+
+`pluss::Config cfg`
+: Device.
+
+## Returns
+
+A [`DeltaHedgeResult`](DeltaHedgeResult.md).
+
+## Errors
+
+- Fewer than two observations, non-positive or non-finite spots, a non-European instrument, a strip (more than one strike, maturity, rate or yield) or a non-positive maturity throw (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+A path simulated with the hedging volatility: the terminal error is small compared with the option's price.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double S0 = 100.0, r = 0.02, sigma = 0.2, T = 1.0;
+  const std::int64_t steps = 252;
+  const double dt = T / steps;
+  const Series z = pluss::series::randn({steps}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 7);
+  const Series increments = (z * (sigma * std::sqrt(dt)) + ((r - 0.5 * sigma * sigma) * dt)).cumsum(0);
+  const Series path = pluss::series::full({1}, S0, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).unite({increments.exp() * S0}, 0);
+  const auto result = hedge(path, fin::pricing::Call, 100.0, r, 0.0, T, sigma);
+  out.writeln("option premium", result.option_value.items<double>()[0], ", terminal hedging error", result.terminal_pnl);
+}
+```
+
+Output
+
+```text
+option premium 8.9160 , terminal hedging error 0.1473
+```
+
+### Example 2
+
+More rebalancing, smaller error: the spread of the terminal error over 200 paths at 12, 52 and 252 rebalances.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double S0 = 100.0, r = 0.02, sigma = 0.2, T = 1.0;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  for (const std::int64_t steps : {12, 52, 252}) {
+    const double dt = T / steps;
+    double sum = 0.0, sum2 = 0.0;
+    const int runs = 200;
+    for (int k = 0; k < runs; ++k) {
+      const Series z = pluss::series::randn({steps}, cfg, 100 + k);
+      const Series path = pluss::series::full({1}, S0, cfg).unite({(z * (sigma * std::sqrt(dt)) + ((r - 0.5 * sigma * sigma) * dt)).cumsum(0).exp() * S0}, 0);
+      const double e = hedge(path, fin::pricing::Call, 100.0, r, 0.0, T, sigma).terminal_pnl;
+      sum += e; sum2 += e * e;
+    }
+    const double mean = sum / runs;
+    out.writeln("rebalances", steps, ": mean error", mean, ", sd", std::sqrt((sum2 - runs * mean * mean) / (runs - 1)));
+  }
+}
+```
+
+Output
+
+```text
+rebalances 12 : mean error 0.1741 , sd 2.0097
+rebalances 52 : mean error 0.0060 , sd 1.0392
+rebalances 252 : mean error 0.0457 , sd 0.4234
+```
+
+### Example 3
+
+Hedging with the wrong volatility: paths generated at 30% hedged at 20% lose on average for a sold option (the hedge error is the portfolio minus the option, so a positive mean means the hedger gains).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double S0 = 100.0, r = 0.02, T = 1.0;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const std::int64_t steps = 252;
+  const double dt = T / steps;
+  for (const double hedge_vol : {0.2, 0.3}) {
+    double sum = 0.0;
+    const int runs = 200;
+    for (int k = 0; k < runs; ++k) {
+      const Series z = pluss::series::randn({steps}, cfg, 500 + k);
+      const Series path = pluss::series::full({1}, S0, cfg).unite({(z * (0.3 * std::sqrt(dt)) + ((r - 0.5 * 0.09) * dt)).cumsum(0).exp() * S0}, 0);
+      sum += hedge(path, fin::pricing::Call, 100.0, r, 0.0, T, hedge_vol).terminal_pnl;
+    }
+    out.writeln("hedge volatility", hedge_vol, ": mean terminal error", sum / runs);
+  }
+}
+```
+
+Output
+
+```text
+hedge volatility 0.2000 : mean terminal error -3.7834
+hedge volatility 0.3000 : mean terminal error 0.0081
+```
+
+### Example 4
+
+Dividends: with a yield the stock position earns it, and the mean error stays near zero rather than drifting by the dividends.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double S0 = 100.0, r = 0.02, q = 0.03, sigma = 0.2, T = 1.0;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const std::int64_t steps = 252;
+  const double dt = T / steps;
+  double sum = 0.0;
+  const int runs = 200;
+  for (int k = 0; k < runs; ++k) {
+    const Series z = pluss::series::randn({steps}, cfg, 900 + k);
+    const Series path = pluss::series::full({1}, S0, cfg).unite({(z * (sigma * std::sqrt(dt)) + ((r - q - 0.5 * sigma * sigma) * dt)).cumsum(0).exp() * S0}, 0);
+    sum += hedge(path, fin::pricing::Call, 100.0, r, q, T, sigma).terminal_pnl;
+  }
+  out.writeln("mean terminal error with q = 3%:", sum / runs);
+}
+```
+
+Output
+
+```text
+mean terminal error with q = 3%: 0.0828
+```
+
+### Example 5
+
+Any model the field prices: the same hedge with a Heston field (COS engine, closed-form delta) beside the Black-Scholes hedge, on one path. Each hedge takes its premium and its delta from its own field, so the premiums differ with the models; a single path says little about either hedge, which is judged by the spread of the error over many paths.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double S0 = 100.0, r = 0.02, T = 1.0;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const std::int64_t steps = 100;
+  const double dt = T / steps;
+  const Series z = pluss::series::randn({steps}, cfg, 11);
+  const Series path = pluss::series::full({1}, S0, cfg).unite({(z * (0.2 * std::sqrt(dt)) + ((r - 0.02) * dt)).cumsum(0).exp() * S0}, 0);
+  fin::module::Field heston{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, T), .market = fin::market::make(S0, r, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                    .controls = {.engine = fin::module::Engine::Cos}};
+  const auto h = fin::hedging::delta_hedge(heston, path);
+  const auto b = hedge(path, fin::pricing::Call, 100.0, r, 0.0, T, 0.2);
+  out.writeln("Heston premium", h.option_value.items<double>()[0], ", terminal error", h.terminal_pnl);
+  out.writeln("Black-Scholes premium", b.option_value.items<double>()[0], ", terminal error", b.terminal_pnl);
+}
+```
+
+Output
+
+```text
+Heston premium 8.6281 , terminal error 0.4785
+Black-Scholes premium 8.9160 , terminal error 1.2421
+```
+
+### Example 6
+
+Invalid input: a path of one observation, or a non-positive maturity.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  try {
+    (void)(hedge(pluss::make_series({100.0}), fin::pricing::Call, 100.0, 0.02, 0.0, 1.0, 0.2));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+  try {
+    (void)(hedge(pluss::make_series({100.0, 101.0}), fin::pricing::Call, 100.0, 0.02, 0.0, 0.0, 0.2));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::finance::hedging::delta_hedge: spot_path requires at least 2 observations
+subsp::math::finance::hedging::delta_hedge: maturity must be finite and > 0
+```
+
+## See Also
+
+- [`DeltaHedgeResult`](DeltaHedgeResult.md): the result
+- [`Field`](../field/Field.md): the pricing object
+- [`Greeks`](../field/Greeks.md): the delta, as the pricing field reports it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DeltaHedgeResult.html">
+    <span class="label">Previous</span>
+    <span class="title">DeltaHedgeResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

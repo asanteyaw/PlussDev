@@ -1,0 +1,258 @@
+<!-- generated from GmresOptions.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `krylov::GmresOptions`
+
+Iteration limit, restart length and tolerances of GMRES.
+
+A lane has converged when its residual norm is below `absolute_tolerance + relative_tolerance·‖b‖`. `max_iterations` is the total across restarts, `restart` the iterations per cycle (the Krylov basis kept in memory), and `rank_tolerance` the threshold below which a new Arnoldi direction is treated as already spanned (a lucky breakdown, meaning the solution lies in the current subspace).
+
+## Fields
+
+### `max_iterations`
+
+`std::int64_t`, default `128`.
+
+The total number of iterations across all restart cycles, 128 by default. Work is done in whole cycles of `restart` iterations (the last shortened to fit), so it is the cap on the total, not a per-cycle limit. If the cap is reached before the tolerance is met, the result says `converged = false`; raise it, enlarge `restart`, or improve the operator with a preconditioner.
+
+
+### `restart`
+
+`std::int64_t`, default `24`.
+
+The cycle length and the number of Krylov basis vectors held in memory, 24 by default. A longer cycle converges in fewer total iterations on a hard operator, because GMRES keeps all the information in the basis, but costs memory and orthogonalisation work that grow with the cycle; a short cycle is cheap but can stall (restarted GMRES can fail to converge where the full method would not). Sizes between 10 and 50 are typical.
+
+
+### `relative_tolerance`
+
+`double`, default `1e-8`.
+
+The relative part of the stopping threshold `absolute_tolerance + relative_tolerance·‖b‖`, `1e-8` by default. The residual must fall by this factor from the size of the right-hand side. Tighter tolerances cost more cycles; remember that convergence is checked only at the end of each cycle, so the solver may overshoot by up to one cycle.
+
+
+### `absolute_tolerance`
+
+`double`, default `1e-10`.
+
+The absolute part of the stopping threshold, `1e-10` by default. It guards the case of a tiny or zero right-hand side, where a purely relative test would be unreachable, and it is the whole threshold when `relative_tolerance` is 0.
+
+
+### `rank_tolerance`
+
+`double`, default `1e-12`.
+
+The size below which a new Arnoldi direction is taken to be linearly dependent on the basis so far, `1e-12` by default. When that happens the Krylov space has reached an invariant subspace and the least-squares solution inside it is exact (a lucky breakdown). Raising it makes the solver accept such a breakdown earlier; setting it too large would discard genuine directions, so leave it unless you know the operator's scale.
+
+## Guidance
+
+Passed to `gmres`, and as `LinearOdeOptions::linear`.
+
+## Practical Examples
+
+### Example 1
+
+The restart length against the iteration count.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::int64_t n = 40;
+  const auto apply = [n](const Series &x) {
+    const Series zero = pluss::make_series({0.0});
+    return x * 3.0 - zero.unite({x.slice(0, 0, n - 1, 1)}, 0) * 1.5 - x.slice(0, 1, n, 1).unite({zero}, 0) * 0.5;
+  };
+  const Series b = pluss::series::ones({n}, pluss::ScalarType::Float64);
+  for (const std::int64_t restart : {3, 10, 40}) {
+    krylov::GmresOptions options;
+    options.restart = restart;
+    options.relative_tolerance = 1e-12;
+    options.absolute_tolerance = 0.0;
+    options.max_iterations = 400;
+    out.writeln("restart", restart, ": iterations =", krylov::gmres(apply, b, {-1}, options).iterations);
+  }
+}
+```
+
+Output
+
+```text
+restart 3 : iterations = 45
+restart 10 : iterations = 50
+restart 40 : iterations = 40
+```
+
+### Example 2
+
+The tolerance, with a short restart so that the cycle count shows. A tighter tolerance needs more cycles.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const std::int64_t n = 40;
+  const auto apply = [n](const Series &x) {
+    const Series zero = pluss::make_series({0.0});
+    return x * 3.0 - zero.unite({x.slice(0, 0, n - 1, 1)}, 0) * 1.5 - x.slice(0, 1, n, 1).unite({zero}, 0) * 0.5;
+  };
+  for (const double tol : {1e-2, 1e-6, 1e-12}) {
+    krylov::GmresOptions options;
+    options.restart = 3;
+    options.max_iterations = 400;
+    options.relative_tolerance = tol;
+    options.absolute_tolerance = 0.0;
+    out.writeln("tolerance", tol, ": iterations =", krylov::gmres(apply, pluss::series::ones({n}, pluss::ScalarType::Float64), {-1}, options).iterations);
+  }
+}
+```
+
+Output
+
+```text
+tolerance 0.010000000000 : iterations = 6
+tolerance 0.000001000000 : iterations = 24
+tolerance 0.000000000001 : iterations = 45
+```
+
+### Example 3
+
+The iteration limit. Too few iterations leave the lane unconverged.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::int64_t n = 40;
+  const auto apply = [n](const Series &x) {
+    const Series zero = pluss::make_series({0.0});
+    return x * 3.0 - zero.unite({x.slice(0, 0, n - 1, 1)}, 0) * 1.5 - x.slice(0, 1, n, 1).unite({zero}, 0) * 0.5;
+  };
+  krylov::GmresOptions options;
+  options.max_iterations = 3;
+  options.restart = 3;
+  const krylov::GmresResult r = krylov::gmres(apply, pluss::series::ones({n}, pluss::ScalarType::Float64), {-1}, options);
+  out.writeln("converged =", r.converged.all().item<bool>(), ", relative residual =", r.relative_residual.reshape({r.relative_residual.numel()}).items<double>());
+}
+```
+
+Output
+
+```text
+converged = false , relative residual = [0.052549]
+```
+
+### Example 4
+
+The absolute tolerance on its own. With the relative tolerance switched off the threshold is the absolute number, so a looser absolute tolerance ends the solve sooner.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const std::int64_t n = 40;
+  const auto apply = [n](const Series &x) {
+    const Series zero = pluss::make_series({0.0});
+    return x * 3.0 - zero.unite({x.slice(0, 0, n - 1, 1)}, 0) * 1.5 - x.slice(0, 1, n, 1).unite({zero}, 0) * 0.5;
+  };
+  const Series b = pluss::series::ones({n}, pluss::ScalarType::Float64);
+
+  for (const double tol : {1e-2, 1e-8}) {
+    krylov::GmresOptions options;
+    options.restart = 3;
+    options.max_iterations = 400;
+    options.relative_tolerance = 0.0;
+    options.absolute_tolerance = tol;
+    out.writeln("absolute tolerance", tol, ": iterations =", krylov::gmres(apply, b, {-1}, options).iterations);
+  }
+}
+```
+
+Output
+
+```text
+absolute tolerance 0.0100000000 : iterations = 9
+absolute tolerance 0.0000000100 : iterations = 33
+```
+
+### Example 5
+
+The rank tolerance. A diagonal operator with two distinct eigenvalues has a Krylov space of dimension two, so the third Arnoldi direction is numerically zero and is recognised as dependent. Any sensible setting detects it and returns the same exact solution; the field only matters for operators whose directions fall near the threshold.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const Series d = pluss::make_series({1.0, 1.0, 2.0, 2.0});
+  const auto apply = [&](const Series &x) { return x * d; };
+  const Series b = pluss::make_series({1.0, 1.0, 1.0, 1.0});
+  for (const double rank_tol : {1e-12, 1e-6}) {
+    krylov::GmresOptions options;
+    options.rank_tolerance = rank_tol;
+    const krylov::GmresResult r = krylov::gmres(apply, b, {-1}, options);
+    out.writeln("rank tolerance", rank_tol, ": converged =", r.converged.items<bool>(), ", residual =", r.residual_norm.reshape({1}).items<double>());
+  }
+}
+```
+
+Output
+
+```text
+rank tolerance 0.000000 : converged = [true] , residual = [0.000000]
+rank tolerance 0.000001 : converged = [true] , residual = [0.000000]
+```
+
+## See Also
+
+- [`gmres`](gmres.md): uses it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ExpResult.html">
+    <span class="label">Previous</span>
+    <span class="title">ExpResult</span>
+  </a>
+  <a class="next-link" href="GmresResult.html">
+    <span class="label">Next</span>
+    <span class="title">GmresResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

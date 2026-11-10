@@ -1,0 +1,133 @@
+# `optim::reports::compact_summary`
+
+Writes the one-line summary of a result; the same text as `print_summary`.
+
+## Signature
+
+```cpp
+std::ostream &optim::reports::compact_summary(std::ostream &os, const optim::OptimaState &result);
+```
+
+## What It Does
+
+Identical to [`optim::print_summary`](print_summary.md); it lives in `reports` so the three summary forms read together.
+
+## Parameters
+
+`os`
+: The stream.
+
+`result`
+: The state.
+
+## Returns
+
+`os`.
+
+## Practical Examples
+
+### Example 1
+
+A compact line.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), {}, disc);
+  optim::reports::compact_summary(std::cout, result) << "\n";
+}
+```
+
+### Example 2
+
+For each of the four algorithms.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  for (const optim::OptimaAlgorithm a : {optim::OptimaAlgorithm::MeritMethod, optim::OptimaAlgorithm::SequentialQP, optim::OptimaAlgorithm::WorkingSet, optim::OptimaAlgorithm::InternalProtocol}) {
+    optim::OptimaOptions options;
+    options.algorithm = a;
+    optim::reports::compact_summary(std::cout, optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc)) << "\n";
+  }
+}
+```
+
+### Example 3
+
+After a failed run, the stall category is in the line.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.max_iterations = 1;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  optim::reports::compact_summary(std::cout, result) << "\n";
+}
+```
+
+## See Also
+
+- [`print_summary`](print_summary.md): same text
+- [`reports::detailed_summary`](reports_detailed_summary.md): one line per field
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="problem.html">
+    <span class="label">Previous</span>
+    <span class="title">problem</span>
+  </a>
+  <a class="next-link" href="reports_detailed_summary.html">
+    <span class="label">Next</span>
+    <span class="title">detailed_summary</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

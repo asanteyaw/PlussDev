@@ -1,0 +1,24 @@
+<!-- generated from io.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Saving and loading
+
+Functions and operators that have structure can be written to a stream or a file and read back. The artifact is a versioned binary format with a checksum; what is read back is a new, equivalent object.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`load_function`](io/load_function.md) | Reads a function back from a stream or a file written by `save`. |
+| [`load_operator`](io/load_operator.md) | Reads an operator back from a stream or a file written by `save`. |
+| [`save`](io/save.md) | Writes a function or an operator to a stream or a file. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+io/load_function
+io/load_operator
+io/save
+```
+<!-- apiref:toctree:end -->

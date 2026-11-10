@@ -1,0 +1,191 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: dff5931e483f -->
+
+# `module::Model::make`
+
+[Back to `module::Model`](../Model.md)
+
+Builds a model of a given kind from a plain list of numbers, validating it.
+
+## Signature
+
+```cpp
+static module::Model module::Model::make(model::Kind kind, std::span<const double> params, pluss::Config cfg = f64_default());
+static module::Model module::Model::make(model::Kind kind, std::initializer_list<double> params, pluss::Config cfg = f64_default());
+```
+
+## What It Does
+
+Creates the family named by `kind`, fills its parameters from `params` **in the order of [`Kind`](../Kind.md)**, and validates the result (positive volatilities, correlations inside (−1, 1), and so on), so a model that comes back from `make` is always legal. The two signatures differ only in how the numbers are given: a braced list (the usual way) or a `std::span` over existing data. `fin::model::make` is the same function. `cfg` selects the data type and device of the parameter `Series`; the default is Float64.
+
+## Parameters
+
+`model::Kind kind`
+: The family.
+
+`std::span<const double> params / std::initializer_list<double>`
+: The parameters in the family's order.
+
+`pluss::Config cfg`
+: Type and device of the parameter `Series`.
+
+## Returns
+
+A validated `Model`.
+
+## Errors
+
+- A wrong parameter count or a parameter outside its domain throws (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+A Heston model from a braced list.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  out.writeln(m.name(), m.parameters().items<double>());
+}
+```
+
+### Example 2
+
+From existing data: a `std::vector` as a span. This is how an optimiser's trial vector becomes a model.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+#include <span>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const std::vector<double> trial = {0.2, 1.0, 0.4, -0.3};
+  const mod::Model m = mod::Model::make(fin::model::Kind::Sabr, std::span<const double>(trial.data(), trial.size()));
+  out.writeln(m.name(), m.parameters().items<double>());
+}
+```
+
+### Example 3
+
+Validation on construction. A correlation outside (−1, 1) and a non-positive `kappa` are both refused, together.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  try {
+    (void)(fin::model::make(fin::model::Kind::Heston, {-1.0, 0.04, 0.3, -1.2, 0.04}));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find("Triggered")));
+  }
+}
+```
+
+### Example 4
+
+The stored type. The parameters of the held struct are Float64 by default; a `Config` chooses the type they are stored in (the vector read back by `parameters()` is Float64 unless asked otherwise).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mod::Model a = fin::model::make(fin::model::Kind::BlackScholes, {0.2});
+  const mod::Model b = fin::model::make(fin::model::Kind::BlackScholes, {0.2}, pluss::Config{}.with_dtype(pluss::ScalarType::Float32));
+  out.writeln("default:", a.as<fin::model::BlackScholes>().volatility.dtype(), ", Float32 config:", b.as<fin::model::BlackScholes>().volatility.dtype());
+}
+```
+
+### Example 5
+
+A wrong count: the message gives the expected order.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  try {
+    (void)(fin::model::make(fin::model::Kind::Bates, {1.5, 0.04, 0.3, -0.7, 0.04}));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`Model`](../Model.md): the class
+- [`Kind`](../Kind.md): the parameter order
+- [`validate`](validate.md): the rules
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="kind.html">
+    <span class="label">Previous</span>
+    <span class="title">kind</span>
+  </a>
+  <a class="next-link" href="name.html">
+    <span class="label">Next</span>
+    <span class="title">name</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

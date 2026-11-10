@@ -1,0 +1,61 @@
+# Time and frequency response
+
+This branch follows a frame through time and across frequency. `motion` integrates a load history (linear or with large rotations), and `harmonic` finds the steady response to sinusoidal loads at many frequencies in one call.
+
+## Choosing A Surface
+
+Use `harmonic` for a steady sinusoidal load and `motion` for loads that start, stop or change shape.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A sudden load, damping and free vibration.
+
+@@example Eng/api/structure_motion.cpp@@
+
+### Example 2
+
+A rod swinging through a large angle.
+
+@@example Eng/api/structure_motion_nonlinear.cpp@@
+
+### Example 3
+
+A frequency sweep.
+
+@@example Eng/api/structure_harmonic.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dynamics/MotionState
+dynamics/MotionOptions
+dynamics/NonlinearMotionOptions
+dynamics/HarmonicOptions
+dynamics/MotionResult
+dynamics/NonlinearMotionResult
+dynamics/HarmonicResult
+dynamics/motion
+dynamics/harmonic
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dynamics/MotionState
+dynamics/MotionOptions
+dynamics/NonlinearMotionOptions
+dynamics/HarmonicOptions
+dynamics/MotionResult
+dynamics/NonlinearMotionResult
+dynamics/HarmonicResult
+dynamics/motion
+dynamics/harmonic
+```
+<!-- apiref:toctree:end -->

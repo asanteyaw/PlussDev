@@ -1,0 +1,224 @@
+<!-- generated from transform.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::laplace::transform`
+
+The one-sided Laplace transform `∫₀^∞ f(t) e^{−st} dt` as a function of a new variable.
+
+## Signature
+
+```cpp
+operators::Operator operators::laplace::transform(std::string_view variable, std::string_view frequency);
+```
+
+## What It Does
+
+`laplace::transform("t", "s")` takes a function of time `t` and returns `F(s) = ∫₀^∞ f(t) e^{−st} dt`, a function of the new variable `s` (real `s` inside the region of convergence). It turns differentiation into multiplication, `L{f′} = sF − f(0)`, and convolution into a product, which is why it solves linear ODEs and describes linear systems.
+
+For exponentials, polynomials and their products and sums the integral has a closed form and the transform is exact (`Structural`): `L{e^{−at}} = 1/(s + a)`, `L{tⁿ} = n!/sⁿ⁺¹`, `L{sin ωt} = ω/(s² + ω²)`. For other functions the result is an unresolved integral over `[0, ∞)`, evaluated by quadrature when values arrive. The frequency name must differ from the time variable and from the function's other variables; other variables stay free. [`laplace::inverse_transform`](inverse_transform.md) goes back.
+
+## Parameters
+
+`std::string_view variable`
+: The time variable, integrated over `[0, ∞)`.
+
+`std::string_view frequency`
+: The name of the new variable `s`. Must differ from `variable` and every other variable.
+
+## Returns
+
+An `Operator` whose application returns `F(s)` as a `Function` of the frequency (and the function's other variables).
+
+## Errors
+
+- The integration and frequency names must be distinct and non-empty.
+- An unknown variable raises `unknown variable '<name>'`.
+- A numerical transform that does not converge raises `unresolved integral quadrature did not converge`.
+
+## Practical Examples
+
+### Example 1
+
+Closed forms. `e^{−t}` → `1/(s + 1)`, `t²` → `2/s³`, `sin t` → `1/(s² + 1)`; at `s = 2` those are `1/3`, `1/4`, `1/5`. Each is `Structural`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace laplace = pluss::operators::laplace;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto transform = operators::laplace::transform("t", "s");
+  const math::Function decay = math::function({"t"}, [](math::Function t) { return (-t).exp(); });
+  const math::Function ramp2 = math::function({"t"}, [](math::Function t) { return t * t; });
+  const math::Function wave = math::function({"t"}, [](math::Function t) { return t.sin(); });
+  out.writeln("e^-t   :", transform(decay)(2.0).item<double>(), "  1/3");
+  out.writeln("t^2    :", transform(ramp2)(2.0).item<double>(), "  2/s^3 = 0.25");
+  out.writeln("sin t  :", transform(wave)(2.0).item<double>(), "  1/(s^2+1) = 0.2");
+  out.writeln("provenance of e^-t transform is Structural:", transform(decay).provenance() == math::Provenance::Structural);
+}
+```
+
+Output
+
+```text
+e^-t   : 0.33333   1/3
+t^2    : 0.25000   2/s^3 = 0.25
+sin t  : 0.20000   1/(s^2+1) = 0.2
+provenance of e^-t transform is Structural: true
+```
+
+### Example 2
+
+A parameter stays free. `L{e^{−a t}} = 1/(s + a)` is a function of both `s` and `a`; evaluated at `s = 1` for three values of `a`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace laplace = pluss::operators::laplace;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function f = math::function({"t", "a"}, [](math::Function t, math::Function a) { return (-(a * t)).exp(); });
+  const math::Function F = operators::laplace::transform("t", "s")(f);
+  out.writeln("variables:", F.variables()[0], F.variables()[1]);
+  const auto a = pluss::make_series({0.5, 1.0, 3.0});
+  out.writeln("F(s = 1, a):", F({pluss::make_series({1.0, 1.0, 1.0}), a}).items<double>(), "  1/(1 + a):", (1.0 / (1.0 + a)).items<double>());
+}
+```
+
+Output
+
+```text
+variables: a s
+F(s = 1, a): [0.66667, 0.50000, 0.25000]   1/(1 + a): [0.66667, 0.50000, 0.25000]
+```
+
+### Example 3
+
+When there is no closed form the transform is numerical. `exp(−t²)` has `L{e^{−t²}}(s) = (√π/2) e^{s²/4} erfc(s/2)`; at `s = 1` that is `0.55 `; `provenance()` is `Quadrature`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace laplace = pluss::operators::laplace;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double pi = std::acos(-1.0);
+
+  const math::Function f = math::function({"t"}, [](math::Function t) { return (-(t * t)).exp(); });
+  const math::Function F = operators::laplace::transform("t", "s")(f);
+  out.writeln("F(1) =", F(1.0).item<double>(), "   (sqrt(pi)/2) e^(1/4) erfc(1/2) =", std::sqrt(pi) / 2.0 * std::exp(0.25) * std::erfc(0.5));
+  out.writeln("provenance is Quadrature:", F.provenance() == math::Provenance::Quadrature);
+}
+```
+
+Output
+
+```text
+F(1) = 0.545641    (sqrt(pi)/2) e^(1/4) erfc(1/2) = 0.545641
+provenance is Quadrature: true
+```
+
+### Example 4
+
+The derivative rule. `L{f′} = s F(s) − f(0)`: for `f = cos t` (so `f′ = −sin t`, `f(0) = 1`), the transform of the derivative at `s = 2` is `2 · 2/5 − 1 = −0.2`, which is `L{−sin t}(2) = −1/5`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace laplace = pluss::operators::laplace;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"t"}, [](math::Function t) { return t.cos(); });
+  const operators::Operator L = operators::laplace::transform("t", "s");
+  const math::Function df = operators::differential("t")(f);
+  out.writeln("L{f'}(2)       =", L(df)(2.0).item<double>());
+  out.writeln("s F(2) - f(0)  =", 2.0 * L(f)(2.0).item<double>() - 1.0);
+}
+```
+
+Output
+
+```text
+L{f'}(2)       = -0.200000
+s F(2) - f(0)  = -0.200000
+```
+
+### Example 5
+
+The checks: the frequency name must differ from the time variable, and the time variable must exist.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace laplace = pluss::operators::laplace;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function f = math::function({"t"}, [](math::Function t) { return (-t).exp(); });
+  try { (void)operators::laplace::transform("t", "t")(f); } catch (const pluss::Error &e) { out.writeln("same name:       ", first_line(e)); }
+  try { (void)operators::laplace::transform("u", "s")(f); } catch (const pluss::Error &e) { out.writeln("unknown variable: ", first_line(e)); }
+}
+```
+
+Output
+
+```text
+same name:        operators: the integration and frequency variables must be distinct, non-empty names
+unknown variable:  math::Function: unknown variable 'u'
+```
+
+## See Also
+
+- [`inverse_transform`](inverse_transform.md): the inverse
+- [`fourier::transform`](../fourier/transform.md): the two-sided cousin
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="inverse_transform.html">
+    <span class="label">Previous</span>
+    <span class="title">inverse_transform</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

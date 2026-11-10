@@ -1,0 +1,251 @@
+<!-- generated from save.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `math::io::save`
+
+Writes a function or an operator to a stream or a file.
+
+## Signature
+
+```cpp
+void math::io::save(const math::Function &function, std::ostream &output);
+void math::io::save(const math::Function &function, std::string_view path);
+void math::io::save(const operators::Operator &op, std::ostream &output);
+void math::io::save(const operators::Operator &op, std::string_view path);
+```
+
+## What It Does
+
+`save` writes the recorded structure of a `Function` or an `Operator` as a versioned binary artifact with a checksum, to an output stream or to a file by path. Open streams in binary mode. A saved function keeps its variables, constants (including arrays of any shape), structure and assumptions; it can be read back with [`load_function`](load_function.md) and evaluated, differentiated and transformed just like the original. A saved operator records its key, version and parameters and is read back with [`load_operator`](load_operator.md).
+
+Only things that are *data* can be saved. A function built from `Function` arithmetic, including every derivative, exact integral and transform, is data. A function that contains an opaque `Series` callable is not (a callable is code), and neither is an autodiff derivative of one; `save` refuses with `opaque Function callables are not serializable`. An operator can be saved when it is `serializable` (see its [capabilities](../operators/Operator/capabilities.md)) and, for a custom one, has a loader bound with [`bind`](../operators/bind.md). An undefined function or operator cannot be saved. A numerical integral is saved as the integral and evaluated again after loading.
+
+## Parameters
+
+`const math::Function &function`
+: The function to save. It must be defined and contain no opaque callable.
+
+`const operators::Operator &op`
+: The operator to save. It must be defined and serializable.
+
+`std::ostream &output`
+: A stream opened in binary mode.
+
+`std::string_view path`
+: A file path; the file is created or overwritten.
+
+## Returns
+
+Nothing. The artifact is written to the stream or file.
+
+## Errors
+
+- `opaque Function callables are not serializable`.
+- `operator '<key>' is not serializable`.
+- An undefined function or operator is refused.
+- A path that cannot be opened for writing raises an error.
+
+## Practical Examples
+
+### Example 1
+
+A function to a stream and back. A function of two variables that came out of `differential` is saved like any other; the restored function has the same variables, is still `Structural`, gives the same values, and can be differentiated further.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <sstream>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static math::Function through_a_stream(const math::Function &f) {
+  std::ostringstream output(std::ios::binary);
+  math::io::save(f, output);
+  std::istringstream input(output.str(), std::ios::binary);
+  return math::io::load_function(input);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x.pow(2) * (x * y).sin(); });
+  const math::Function dfdx = operators::differential("x")(f);
+  const math::Function restored = through_a_stream(dfdx);
+  const auto x = pluss::make_series({0.5, 1.0}), y = pluss::make_series({1.0, 2.0});
+  out.writeln("original ", dfdx({x, y}).items<double>());
+  out.writeln("restored ", restored({x, y}).items<double>());
+  out.writeln("variables:", restored.variables()[0], restored.variables()[1], "  Structural:", restored.provenance() == math::Provenance::Structural);
+  out.writeln("d/dy of the restored function:", operators::differential("y")(restored)({x, y}).items<double>());
+}
+```
+
+Output
+
+```text
+original  [0.698821, 0.986301]
+restored  [0.698821, 0.986301]
+variables: x y   Structural: true
+d/dy of the restored function: [0.598259, -3.067035]
+```
+
+### Example 2
+
+To a file by path. The same artifact written with the path overload and read back with `load_function(path)`. (The file is removed afterwards because the program wrote it only for this demonstration.)
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <filesystem>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.sin() + x * x; });
+  const std::string path = (std::filesystem::temp_directory_path() / "calculus_reference_function.bin").string();
+  math::io::save(f, path);
+  out.writeln("file written, size > 0:", std::filesystem::file_size(path) > 0);
+  out.writeln("loaded from the file at 0.5:", math::io::load_function(path)(0.5).item<double>(), "  original:", f(0.5).item<double>());
+  std::filesystem::remove(path);
+}
+```
+
+Output
+
+```text
+file written, size > 0: true
+loaded from the file at 0.5: 0.729426   original: 0.729426
+```
+
+### Example 3
+
+An operator. A pipeline built from built-in operators saves and loads like a function; the restored operator applies the same way. Its key is `compose`, because a chain is saved as a composition.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <sstream>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const operators::Operator pipeline = operators::compose(operators::scale(2.0), operators::differential("x"));
+  std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
+  math::io::save(pipeline, bytes);
+  const operators::Operator restored = math::io::load_operator(bytes);
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x * x * x; });
+  out.writeln("key:", restored.key(), "  original(f)(2) =", pipeline(f)(2.0).item<double>(), "  restored(f)(2) =", restored(f)(2.0).item<double>());
+}
+```
+
+Output
+
+```text
+key: compose   original(f)(2) = 24.0000   restored(f)(2) = 24.0000
+```
+
+### Example 4
+
+Array constants and assumptions are kept. A function that multiplies by a `[2, 2]` constant and one declared positive come back with the same shape and the same declaration.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <sstream>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static math::Function through_a_stream(const math::Function &f) {
+  std::ostringstream output(std::ios::binary);
+  math::io::save(f, output);
+  std::istringstream input(output.str(), std::ios::binary);
+  return math::io::load_function(input);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto weights = pluss::make_series({1.0, 2.0, 3.0, 4.0}).reshape({2, 2});
+  const math::Function with_constant = math::function({"x"}, [&](math::Function v) { return v * math::function(weights); });
+  const math::Function back = through_a_stream(with_constant);
+  out.writeln("array constant: rank", back.rank(), " shape", back.shape(), "  at x = 2:", back(2.0).reshape({4}).items<double>());
+  const math::Function assumed = math::function({"x"}, [](math::Function v) { return v.pow(2).sqrt(); }).assume("x", math::Assumption::Positive);
+  out.writeln("assumption kept (Positive):", through_a_stream(assumed).assumption("x") == math::Assumption::Positive);
+}
+```
+
+Output
+
+```text
+array constant: rank 2  shape [2, 2]   at x = 2: [2.0000, 4.0000, 6.0000, 8.0000]
+assumption kept (Positive): true
+```
+
+### Example 5
+
+What cannot be saved: an opaque function, an operator that is not serializable (`multiply` holds a function), and an undefined function. Each is refused with a message that names the reason.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <sstream>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  std::ostringstream sink(std::ios::binary);
+  const math::Function opaque = math::function({"x"}, [](const pluss::Series &x) { return x.sin(); });
+  try { math::io::save(opaque, sink); } catch (const pluss::Error &e) { out.writeln("opaque function:  ", first_line(e)); }
+  try { math::io::save(operators::multiply(math::function(2.0)), sink); } catch (const pluss::Error &e) { out.writeln("multiply operator: ", first_line(e)); }
+  try { math::io::save(math::Function{}, sink); } catch (const pluss::Error &e) { out.writeln("undefined function:", first_line(e)); }
+}
+```
+
+Output
+
+```text
+opaque function:   math::io::save: opaque Function callables are not serializable
+multiply operator:  math::io::save(Operator): operator 'multiply' is not serializable
+undefined function: math::Function: operation requires a defined function
+```
+
+## See Also
+
+- [`load_function`](load_function.md): reads a function back
+- [`load_operator`](load_operator.md): reads an operator back
+- [`provenance`](../functions/Function/provenance.md): tells whether a function is saveable
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="load_operator.html">
+    <span class="label">Previous</span>
+    <span class="title">load_operator</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

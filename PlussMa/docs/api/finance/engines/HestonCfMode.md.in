@@ -1,0 +1,144 @@
+# `pricing::HestonCfMode`
+
+Which algebraic form of the Heston characteristic function the Fourier engines evaluate.
+
+The characteristic function of the log-asset contains a complex square root and logarithm whose branch can jump at long maturities, producing a discontinuity in the integrand. `Original` is Heston's 1993 form; `LittleTrap` is the rearrangement that is continuous in the branch (Albrecher et al.), and is the default and the safe choice. At moderate maturities the two agree.
+
+## Fields
+
+### `Original`
+
+`enumerator`, default `0`.
+
+Heston's original form.
+
+### `LittleTrap`
+
+`enumerator`, default `1`.
+
+The branch-continuous 'little Heston trap' form. The default.
+
+## Guidance
+
+Set as `Fft::mode`.
+
+## Practical Examples
+
+### Example 1
+
+The two forms at one year agree.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const auto inst = fin::instrument::make(fin::pricing::Call, 100.0, 1.0);
+  const auto mkt = fin::market::make(100.0, 0.02, 0.0);
+  const auto mdl = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}).as<fin::model::Heston>();
+
+  for (const auto mode : {fin::pricing::HestonCfMode::Original, fin::pricing::HestonCfMode::LittleTrap}) {
+    fin::pricer::Fft e;
+    e.mode = mode;
+    out.writeln(static_cast<int>(mode), ":", e.price(inst, mdl, mkt).price.items<double>()[0]);
+  }
+}
+```
+
+### Example 2
+
+At a long maturity with a strong volatility of variance the original form overflows, and the engine refuses it with advice instead of returning NaN; the branch-continuous form prices. A Monte Carlo price (quadratic-exponential scheme, 200,000 paths) and the cosine engine confirm the stable form.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto inst = fin::instrument::make(fin::pricing::Call, 100.0, 10.0);
+  const auto mkt = fin::market::make(100.0, 0.02, 0.0);
+  const auto mdl = fin::model::make(fin::model::Kind::Heston, {0.5, 0.04, 1.0, -0.9, 0.04}).as<fin::model::Heston>();
+  for (const auto mode : {fin::pricing::HestonCfMode::Original, fin::pricing::HestonCfMode::LittleTrap}) {
+    fin::pricer::Fft e;
+    e.mode = mode;
+    try {
+      out.writeln(mode == fin::pricing::HestonCfMode::Original ? "Original  " : "LittleTrap", ":", e.price(inst, mdl, mkt).price.items<double>()[0]);
+    } catch (const std::exception &error) {
+      const std::string text(error.what());
+      out.writeln("Original  : refused:", text.substr(text.find("::", 20) + 2, 95), "...");
+    }
+  }
+  fin::pricer::COS cos;
+  out.writeln("COS       :", cos.price(inst, mdl, mkt).price.items<double>()[0]);
+  fin::pricer::MonteCarlo mc;
+  mc.scheme = fin::volatility::SimScheme::QuadExp;
+  mc.paths = 200000;
+  mc.steps = 200;
+  mc.seed = 5;
+  out.writeln("Monte Carlo:", mc.price(inst, mdl, mkt).price.items<double>()[0]);
+}
+```
+
+### Example 3
+
+Through a Field.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Fft, .risk = mod::Risk::PriceOnly}};
+
+  field.controls.fft.mode = fin::pricing::HestonCfMode::Original;
+  out.writeln("Original:", field.price().price.items<double>()[0]);
+}
+```
+
+## See Also
+
+- [`Fft`](Fft.md): uses it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Fft.html">
+    <span class="label">Previous</span>
+    <span class="title">Fft</span>
+  </a>
+  <a class="next-link" href="HestonFftQuadrature.html">
+    <span class="label">Next</span>
+    <span class="title">HestonFftQuadrature</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

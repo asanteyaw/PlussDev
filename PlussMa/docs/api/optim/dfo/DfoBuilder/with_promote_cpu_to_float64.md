@@ -1,0 +1,138 @@
+<!-- generated from with_promote_cpu_to_float64.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 84aa1fff81a9 -->
+
+# `DfoBuilder::with_promote_cpu_to_float64`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Chooses whether single-precision CPU inputs are computed in double precision.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_promote_cpu_to_float64(bool enabled) const;
+```
+
+## What It Does
+
+Sets `DfoOptions::promote_cpu_to_float64`, on by default. A start given in single precision on the CPU is then promoted to double for the search, so the iterates are not limited by single-precision rounding, and the minimizer is returned in the precision of the start. Turn it off to run the whole search in single precision.
+
+## Parameters
+
+`bool enabled`
+: Whether to promote.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+A single-precision start. The search runs in double precision and the minimizer comes back as `Float32`, the type of the start.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };
+  const Series start = pluss::series::make({0.0, 0.0}).to(pluss::ScalarType::Float32);
+  const dfo::DfoResult r = dfo::DFO::build(start).with_objective(f).with_promote_cpu_to_float64(true).solve();
+  out.writeln("minimizer is Float32 =", r.minimizer.scalar_type() == pluss::ScalarType::Float32, ", minimum =", r.minimum);
+}
+```
+
+Output
+
+```text
+minimizer is Float32 = true , minimum = 0.000000001962
+```
+
+### Example 2
+
+Searching in single precision. The minimizer has the same type; on this easy problem the minimum reached is of the same size.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };
+  const Series start = pluss::series::make({0.0, 0.0}).to(pluss::ScalarType::Float32);
+  const dfo::DfoResult r = dfo::DFO::build(start).with_objective(f).with_promote_cpu_to_float64(false).solve();
+  out.writeln("minimizer is Float32 =", r.minimizer.scalar_type() == pluss::ScalarType::Float32, ", minimum =", r.minimum);
+}
+```
+
+Output
+
+```text
+minimizer is Float32 = true , minimum = 0.000000000790
+```
+
+### Example 3
+
+A double start is unaffected.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  for (const bool promote : {true, false}) {
+    const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_promote_cpu_to_float64(promote).solve();
+    out.writeln("promote =", promote, ": minimum =", r.minimum);
+  }
+}
+```
+
+Output
+
+```text
+promote = true : minimum = 0.0000000020
+promote = false : minimum = 0.0000000020
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_problem.html">
+    <span class="label">Previous</span>
+    <span class="title">with_problem</span>
+  </a>
+  <a class="next-link" href="with_pso_config.html">
+    <span class="label">Next</span>
+    <span class="title">with_pso_config</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

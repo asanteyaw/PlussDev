@@ -1,0 +1,53 @@
+# Power flow
+
+This branch solves the steady state of a compiled grid. `dc` is the linear approximation, one solve for angles and active flows. `ac` is the exact nonlinear solution by Newton's method, with voltages, reactive power and losses.
+
+## Choosing A Surface
+
+Use `dc` for screening, sensitivities and market studies, where the resistance is small against the reactance and voltages are near nominal. Use `ac` whenever voltages, reactive power or losses are part of the question.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+DC power flow on a ring against hand values.
+
+@@example Eng/api/power_dc_ring.cpp@@
+
+### Example 2
+
+AC power flow checked against its defining equation.
+
+@@example Eng/api/power_ac_solve.cpp@@
+
+### Example 3
+
+The loadability limit against its closed form.
+
+@@example Eng/api/power_ac_limit.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+flow/Options
+flow/DcResult
+flow/AcResult
+flow/dc
+flow/ac
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+flow/Options
+flow/DcResult
+flow/AcResult
+flow/dc
+flow/ac
+```
+<!-- apiref:toctree:end -->

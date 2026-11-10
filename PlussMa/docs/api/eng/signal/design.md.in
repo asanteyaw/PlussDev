@@ -1,0 +1,63 @@
+# IIR design
+
+The IIR design family converts an order and frequency specification into an `lti::PoleZero` system. Pole-zero output is the stable interchange representation: inspect stability and continuity directly, convert to second-order sections for numerical filtering, or evaluate the response through the LTI family.
+
+## Digital And Analog Interpretation
+
+When `IirOptions::sample_rate` has a value, cutoff frequencies use the same ordinary-frequency units as that rate. A sample rate of `1000.0` therefore accepts a cutoff of `100.0` and rejects values at or beyond the `500.0` Nyquist boundary. When `sample_rate` is `std::nullopt`, the design is continuous and cutoffs are angular frequencies.
+
+`Band::Low` and `Band::High` take a scalar cutoff. `Band::Pass` and `Band::Stop` take an ordered cutoff pair. The API keeps these overloads separate so a mismatched specification fails immediately rather than being reinterpreted.
+
+## Prototype Choice
+
+Butterworth designs are maximally flat in the passband. Chebyshev type I accepts passband ripple to sharpen transition. Chebyshev type II keeps the passband monotonic and places equiripple behavior in the stopband, controlled through minimum attenuation. Order, ripple, and attenuation are design inputs, not post-processing hints.
+
+## Practical Examples
+
+The examples compare all three prototypes, exercise low-pass, band-pass, band-stop, digital, and analog designs, and show validation at Nyquist and at mismatched scalar/band specifications.
+
+### Example 1
+
+Design three fourth-order digital low-pass systems, inspect stability, and convert the Butterworth result to second-order sections.
+
+@@example Eng/api/signal_design.cpp@@
+
+### Example 2
+
+Compare band-pass and band-stop responses and construct a continuous-time analog Butterworth system.
+
+@@example Eng/api/signal_design_bands.cpp@@
+
+### Example 3
+
+Demonstrate rejected Nyquist cutoffs, invalid Chebyshev ripple, and a scalar cutoff paired with a two-edge band kind.
+
+@@example Eng/api/signal_design_errors.cpp@@
+
+## Related Pages
+
+Use [Filtering and response](filtering.md) for sample-domain execution and `eng::lti` for system conversion, state-space analysis, and general frequency response.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+design/Band
+design/IirOptions
+design/butter
+design/cheby1
+design/cheby2
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+design/Band
+design/IirOptions
+design/butter
+design/cheby1
+design/cheby2
+```
+<!-- apiref:toctree:end -->

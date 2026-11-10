@@ -1,0 +1,102 @@
+<!-- generated from optima.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Constrained optimization (Optima)
+
+Nonlinear optimization with bounds, linear rows and nonlinear equality and inequality constraints. Objectives are ordinary Series arithmetic differentiated automatically, or supplied with their gradient. Four algorithms share one problem description and one result.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`ConstrainedProblem`](optima/ConstrainedProblem.md) | An optimization problem as a plain value: objective, nonlinear constraints, linear constraints and bounds. |
+| [`ConstraintMultipliers`](optima/ConstraintMultipliers.md) | The Lagrange multipliers of a solution, one vector per constraint family. |
+| [`DerivativeAuditReport`](optima/DerivativeAuditReport.md) | The outcome of `audit_optima_derivatives`: one entry per function checked, and an overall verdict. |
+| [`InternalProtocolOptions`](optima/InternalProtocolOptions.md) | Settings of the interior (barrier) algorithm: barrier schedule, trust region, safeguards, linear algebra. |
+| [`OptimaAlgorithm`](optima/OptimaAlgorithm.md) | The four algorithms of `optima`. |
+| [`OptimaExitFlag`](optima/OptimaExitFlag.md) | Why a run of `optima` stopped. |
+| [`OptimaHessianApproximation`](optima/OptimaHessianApproximation.md) | The curvature model of the quadratic subproblem: BFGS, limited-memory BFGS, exact, Hessian-vector products, or none. |
+| [`OptimaLinearSystemSolver`](optima/OptimaLinearSystemSolver.md) | How the linear system inside each iteration is solved. |
+| [`OptimaLinearSystemStructure`](optima/OptimaLinearSystemStructure.md) | Whether the subproblem matrices are treated as dense or sparse. |
+| [`OptimaOptions`](optima/OptimaOptions.md) | Chooses the algorithm of `optima` and carries the settings of each algorithm. |
+| [`OptimaOutput`](optima/OptimaOutput.md) | The detailed record of a run, with the counts, residual measures and the stall diagnosis. |
+| [`OptimaProblemScaling`](optima/OptimaProblemScaling.md) | Whether `optima` rescales the problem before solving: not at all, by the start point, or the objective and each constraint. |
+| [`OptimaProgressSnapshot`](optima/OptimaProgressSnapshot.md) | What a progress hook receives: the state of the run at one moment. |
+| [`OptimaStallCategory`](optima/OptimaStallCategory.md) | A diagnosis of why a run stalled or ended without converging. |
+| [`OptimaState`](optima/OptimaState.md) | What `optima` returns: the point, how good it is, the multipliers, and how the run ended. |
+| [`PenaltyMethodOptions`](optima/PenaltyMethodOptions.md) | Settings of the penalty (merit) algorithm. |
+| [`ProblemBuilder`](optima/ProblemBuilder.md) | A chainable description of an optimization problem: one objective and any constraints, built into a reusable value. |
+| [`ProblemEvaluation`](optima/ProblemEvaluation.md) | A problem evaluated at a point: objective, gradient, constraint residuals, Jacobians and the violation. |
+| [`SequentialQPOptions`](optima/SequentialQPOptions.md) | Settings of the sequential quadratic programming algorithm: limits, tolerances, curvature model, linear algebra and scaling. |
+| [`WorkingSetOptions`](optima/WorkingSetOptions.md) | Settings of the working-set algorithm: every sequential-QP setting plus the controls of the active-set bookkeeping. |
+| [`audit_optima_derivatives`](optima/audit_optima_derivatives.md) | Compares hand-written derivatives with automatic ones for the objective and the nonlinear constraints. |
+| [`constraints`](optima/constraints.md) | Starts a builder for the constraints of a problem, to be passed to `optima` alongside a separately written objective. |
+| [`evaluate_problem`](optima/evaluate_problem.md) | Evaluates a problem at a point: objective, gradient, constraint residuals and Jacobians, and the violation. |
+| [`optima`](optima/optima.md) | Minimises an objective subject to bounds, linear rows and nonlinear constraints, and returns the answer with the multipliers and the reason it stopped. |
+| [`optima_algorithm_name`](optima/optima_algorithm_name.md) | The name of an `OptimaAlgorithm` as text. |
+| [`optima_exit_flag_name`](optima/optima_exit_flag_name.md) | The name of an `OptimaExitFlag` as text. |
+| [`optima_problem_scaling_name`](optima/optima_problem_scaling_name.md) | The name of an `OptimaProblemScaling` as text. |
+| [`optima_progress_stage_name`](optima/optima_progress_stage_name.md) | The name of an `OptimaProgressStage` as text: `start`, `iter` or `done`. |
+| [`optima_stall_category_name`](optima/optima_stall_category_name.md) | The name of an `OptimaStallCategory` as text. |
+| [`pack_scalars`](optima/pack_scalars.md) | Builds a parameter pack of named scalar blocks: the natural way to name the unknowns of a model. |
+| [`pack_series`](optima/pack_series.md) | Wraps one Series as a single-block parameter pack, named `x` unless you choose a name. |
+| [`pack_vector`](optima/pack_vector.md) | Builds a parameter pack of named vector blocks. |
+| [`presets_internal_protocol`](optima/presets_internal_protocol.md) | Options for the interior algorithm with the safeguards used by the broad test suite. |
+| [`presets_robust_internal_protocol`](optima/presets_robust_internal_protocol.md) | The interior preset with larger budgets for difficult problems. |
+| [`presets_sequential_qp`](optima/presets_sequential_qp.md) | Options for sequential quadratic programming with a tight feasibility tolerance. |
+| [`print_summary`](optima/print_summary.md) | Writes a one-line summary of an Optima result to a stream. |
+| [`problem`](optima/problem.md) | Starts a `ProblemBuilder` for describing an objective and constraints as one reusable value. |
+| [`reports_compact_summary`](optima/reports_compact_summary.md) | Writes the one-line summary of a result; the same text as `print_summary`. |
+| [`reports_detailed_summary`](optima/reports_detailed_summary.md) | Writes a multi-line summary of a result, one `name=value` per line. |
+| [`reports_iter`](optima/reports_iter.md) | A ready-made progress hook that prints one line per iteration; it works for both `optima` and `septima`. |
+| [`reports_iteration_only_trace`](optima/reports_iteration_only_trace.md) | A progress hook that prints only iteration lines, without start, end, message or Krylov counts. |
+| [`reports_trace`](optima/reports_trace.md) | A progress hook that prints a line for the start, each iteration and the end, with the algorithm's message. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima/ConstrainedProblem
+optima/ConstraintMultipliers
+optima/DerivativeAuditReport
+optima/InternalProtocolOptions
+optima/OptimaAlgorithm
+optima/OptimaExitFlag
+optima/OptimaHessianApproximation
+optima/OptimaLinearSystemSolver
+optima/OptimaLinearSystemStructure
+optima/OptimaOptions
+optima/OptimaOutput
+optima/OptimaProblemScaling
+optima/OptimaProgressSnapshot
+optima/OptimaStallCategory
+optima/OptimaState
+optima/PenaltyMethodOptions
+optima/ProblemBuilder
+optima/ProblemEvaluation
+optima/SequentialQPOptions
+optima/WorkingSetOptions
+optima/audit_optima_derivatives
+optima/constraints
+optima/evaluate_problem
+optima/optima
+optima/optima_algorithm_name
+optima/optima_exit_flag_name
+optima/optima_problem_scaling_name
+optima/optima_progress_stage_name
+optima/optima_stall_category_name
+optima/pack_scalars
+optima/pack_series
+optima/pack_vector
+optima/presets_internal_protocol
+optima/presets_robust_internal_protocol
+optima/presets_sequential_qp
+optima/print_summary
+optima/problem
+optima/reports_compact_summary
+optima/reports_detailed_summary
+optima/reports_iter
+optima/reports_iteration_only_trace
+optima/reports_trace
+```
+<!-- apiref:toctree:end -->

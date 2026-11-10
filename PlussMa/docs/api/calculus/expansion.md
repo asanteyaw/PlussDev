@@ -1,0 +1,26 @@
+<!-- generated from expansion.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Taylor and power series
+
+Truncated Taylor expansions of functions, as polynomial functions or as coefficient vectors, and termwise calculus on coefficient vectors. The results are analytic functions: they evaluate, differentiate, integrate and save like any other.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`Power`](expansion/Power.md) | Termwise calculus on coefficient vectors: derivative, integral and product of power series. |
+| [`Taylor`](expansion/Taylor.md) | The companions of the Taylor operator: the coefficient vector and the Lagrange remainder. |
+| [`power`](expansion/power_operator.md) | Builds the polynomial `Σ cₖ (x − a)ᵏ` from a coefficient vector. |
+| [`taylor`](expansion/taylor_operator.md) | The truncated Taylor expansion of a function: a polynomial function that approximates it near a point. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+expansion/Power
+expansion/Taylor
+expansion/power_operator
+expansion/taylor_operator
+```
+<!-- apiref:toctree:end -->

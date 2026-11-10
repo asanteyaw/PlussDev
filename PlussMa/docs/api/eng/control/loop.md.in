@@ -1,0 +1,51 @@
+# Loop analysis
+
+This branch evaluates the return ratio `L`, sensitivity `S = (I + L)^{-1}`, and complementary sensitivity `T = I - S`. It also extracts classical SISO gain, phase, and stability margins from a sampled angular-frequency grid.
+
+## Sampled Margins
+
+`margin` interpolates gain and phase crossings between adjacent samples rather than reporting only the nearest grid point. A sufficiently dense grid must still cover every crossing of interest. Missing gain or phase crossings are represented by an infinite margin and a `NaN` crossover frequency; stability margin is always the minimum sampled distance from the Nyquist response to `-1`.
+
+## Practical Examples
+
+The examples inspect all loop responses, calculate classical margins, and show the SISO and complex-response guards.
+
+### Example 1
+
+Evaluate open-loop, sensitivity, and complementary-sensitivity responses.
+
+@@example Eng/api/control_loop.cpp@@
+
+### Example 2
+
+Calculate gain, phase, and Nyquist-distance stability margins.
+
+@@example Eng/api/control_margin.cpp@@
+
+### Example 3
+
+Reject classical margins for a MIMO model and a real-valued response array.
+
+@@example Eng/api/control_loop_errors.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+loop/LoopResult
+loop/MarginResult
+loop/loop
+loop/margin
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+loop/LoopResult
+loop/MarginResult
+loop/loop
+loop/margin
+```
+<!-- apiref:toctree:end -->

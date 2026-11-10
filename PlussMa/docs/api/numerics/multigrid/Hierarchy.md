@@ -1,0 +1,64 @@
+<!-- generated from Hierarchy.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `multigrid::Hierarchy`
+
+The multigrid levels of one problem, with the operator, the V-cycle and the grid transfers.
+
+## Signature
+
+```cpp
+multigrid::Hierarchy::Hierarchy(multigrid::Problem problem, const pluss::Series &like, multigrid::Options options = {});
+```
+
+## Construction
+
+```cpp
+multigrid::Hierarchy(multigrid::Problem problem, const pluss::Series &like, multigrid::Options options = {});
+```
+
+`problem` defines the operator; `like` is a real floating `Series` whose trailing dimensions equal the axis sizes (leading dimensions are batch lanes); `options` tunes the cycle. It throws `std::invalid_argument` for an axis list that is not one to three long, a non-positive cell count or spacing, a half-periodic axis, non-floating or too-small `like`, extents that do not match the axes, or non-positive coefficients.
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`apply`](Hierarchy/apply.md) | Applies the operator `A` to a field on the finest grid. |
+| [`coarsest_cells`](Hierarchy/coarsest_cells.md) | The number of cells on the coarsest level. |
+| [`levels`](Hierarchy/levels.md) | The number of levels in the hierarchy, finest included. |
+| [`prolong_from_coarse`](Hierarchy/prolong_from_coarse.md) | Transfers a field from level `l + 1` up to the finer level `l`. |
+| [`restrict_to_coarse`](Hierarchy/restrict_to_coarse.md) | Transfers a field from level `l` to the next coarser level `l + 1`. |
+| [`singular`](Hierarchy/singular.md) | Whether the operator is singular, that is, whether constants are in its null space. |
+| [`vcycle`](Hierarchy/vcycle.md) | Applies one symmetric V-cycle: an approximation to `A⁻¹ r`. |
+
+## Changelog
+
+- **0.1**: initial documented surface.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+Hierarchy/Introduction
+Hierarchy/apply
+Hierarchy/coarsest_cells
+Hierarchy/levels
+Hierarchy/prolong_from_coarse
+Hierarchy/restrict_to_coarse
+Hierarchy/singular
+Hierarchy/vcycle
+```
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Edge.html">
+    <span class="label">Previous</span>
+    <span class="title">Edge</span>
+  </a>
+  <a class="next-link" href="Options.html">
+    <span class="label">Next</span>
+    <span class="title">Options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

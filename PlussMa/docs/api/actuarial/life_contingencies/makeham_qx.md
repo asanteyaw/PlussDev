@@ -1,0 +1,215 @@
+<!-- generated from makeham_qx.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `actuarial::life_contingencies::makeham_qx`
+
+One-year death probabilities from the Makeham law.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::life_contingencies::makeham_qx(const pluss::Series &attained_ages, double a, double b, double c);
+```
+
+## What It Does
+
+Returns {math}`q_x=1-\exp(-\mu_x)` with {math}`\mu_x=a+b\,c^{x}` the [`makeham_force`](makeham_force.md). It equals `qx_force(makeham_force(...))`. [`mortality::makeham`](../mortality/makeham.md) wraps the same numbers into a `Mortality`.
+
+## Parameters
+
+`attained_ages`
+: One-dimensional, finite, non-negative ages.
+
+`a`
+: Age-independent force, 0 or more.
+
+`b`
+: Force of the age-dependent part at age 0, 0 or more.
+
+`c`
+: Yearly growth factor, greater than 1.
+
+## Returns
+
+A series of probabilities, one per age.
+
+## Errors
+
+Throws the same errors as [`makeham_force`](makeham_force.md).
+
+## Practical Examples
+
+### Example 1: probabilities at four ages
+
+Makeham probabilities from age 60.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0});
+  out.writeln(life::makeham_qx(ages, 0.0005, 0.0001, 1.08).items<double>());
+}
+```
+
+Output
+
+```text
+[0.010569, 0.011371, 0.012235, 0.013168]
+```
+
+### Example 2: through the force
+
+The same as converting the force.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0});
+  out.writeln(life::qx_force(life::makeham_force(ages, 0.0005, 0.0001, 1.08)).items<double>());
+  out.writeln(life::makeham_qx(ages, 0.0005, 0.0001, 1.08).items<double>());
+}
+```
+
+Output
+
+```text
+[0.01056945, 0.01137062, 0.01223516, 0.01316801]
+[0.01056945, 0.01137062, 0.01223516, 0.01316801]
+```
+
+### Example 3: against Gompertz
+
+The accident term raises every probability.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0});
+  out.writeln("makeham :", life::makeham_qx(ages, 0.0005, 0.0001, 1.08).items<double>());
+  out.writeln("gompertz:", life::gompertz_qx(ages, 0.0001, 1.08).items<double>());
+}
+```
+
+Output
+
+```text
+makeham : [0.010569, 0.011371, 0.012235, 0.013168]
+gompertz: [0.010075, 0.010876, 0.011741, 0.012674]
+```
+
+### Example 4: expected years lived
+
+The curtate mean under the law over ten years from age 60.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  std::vector<double> a;
+  for (int x = 60; x < 70; ++x) a.push_back(x);
+  out.writeln(life::curtate_mean(life::makeham_qx(pluss::make_series(a), 0.0005, 0.0001, 1.08)).item<double>());
+}
+```
+
+Output
+
+```text
+9.294167
+```
+
+### Example 5: the errors
+
+A negative constant.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)life::makeham_qx(pluss::make_series({60.0}), -0.1, 0.0001, 1.08); });
+}
+```
+
+Output
+
+```text
+makeham_force: a must be >= 0
+```
+
+## See Also
+
+- [`makeham_force`](makeham_force.md): the force- [`Mortality`](../mortality/Mortality.md): the same conversions as accessors
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="makeham_force.html">
+    <span class="label">Previous</span>
+    <span class="title">makeham_force</span>
+  </a>
+  <a class="next-link" href="px_lx.html">
+    <span class="label">Next</span>
+    <span class="title">px_lx</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

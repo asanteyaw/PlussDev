@@ -1,0 +1,197 @@
+# `actuarial::Triangle`
+
+A validated cumulative claims triangle: rows are origin periods, columns are development ages, and the unobserved lower-right corner is tracked explicitly.
+
+## Signature
+
+```cpp
+actuarial::Triangle actuarial::triangle::cumulative(const pluss::Series &values, const pluss::Series &observed = pluss::series::undefined(), std::vector<std::string> origins = {}, std::vector<std::string> development = {});
+bool actuarial::Triangle::defined() const noexcept;
+const pluss::Series &actuarial::Triangle::values() const noexcept;
+const pluss::Series &actuarial::Triangle::observed() const noexcept;
+const std::vector<std::string> &actuarial::Triangle::origins() const noexcept;
+const std::vector<std::string> &actuarial::Triangle::development() const noexcept;
+std::int64_t actuarial::Triangle::norigins() const noexcept;
+std::int64_t actuarial::Triangle::ndevelopment() const noexcept;
+```
+
+## Construction
+
+A `Triangle` is made by [`triangle::cumulative`](cumulative.md), which checks the matrix before any estimator sees it. Row `i` holds the cumulative reported (or paid) claims of origin period `i` at each development age; origin 0 is the oldest and has the most observed ages. The **observed mask** says which cells are real data. Unobserved cells hold zero, and each row's observed cells are contiguous from the left, so the triangle has the familiar staircase shape. When no mask is given, positive cells are treated as observed; give a mask explicitly when an observed cumulative amount can genuinely be zero. A default-constructed `Triangle` is undefined.
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`defined`](Triangle/defined.md) | Tells whether the triangle was built by `cumulative`. |
+| [`values`](Triangle/values.md) | The cumulative amounts as a matrix, zero in unobserved cells. |
+| [`observed`](Triangle/observed.md) | The mask of observed cells. |
+| [`origins`](Triangle/origins.md) | The row labels, if any. |
+| [`development`](Triangle/development.md) | The column labels, if any. |
+| [`norigins`](Triangle/norigins.md) | The number of origin periods. |
+| [`ndevelopment`](Triangle/ndevelopment.md) | The number of development ages. |
+
+## Practical Examples
+
+### Example 1: a four-by-four triangle
+
+Cumulative claims of four origin years at ages 12 to 48 months. Origin 2021 is fully developed; 2024 has only its first age.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative);
+  out.writeln("origins:", triangle.norigins(), " ages:", triangle.ndevelopment());
+  out.writeln("values   =", triangle.values().reshape({16}).items<double>());
+  out.writeln("observed =", triangle.observed().reshape({16}).items<double>());
+}
+```
+
+### Example 2: the latest diagonal
+
+The most recent reported amount of each origin is the last observed cell of its row. It is what every estimator adds the reserve to.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative);
+  const auto v = triangle.values().reshape({16}).items<double>();
+  out.writeln("latest reported =", v[3], v[6], v[9], v[12]);
+  out.writeln("sum of values   =", triangle.values().sum().item<double>());
+}
+```
+
+### Example 3: labels
+
+Labels name the axes in reports; they play no part in the arithmetic.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative, pluss::series::undefined(), {"2021", "2022", "2023", "2024"}, {"12", "24", "36", "48"});
+  for (const auto &o : triangle.origins()) out.write(o, " ");
+  out.writeln();
+  for (const auto &d : triangle.development()) out.write(d, " ");
+  out.writeln();
+}
+```
+
+### Example 4: a bad matrix is refused
+
+The checks run at construction: wrong rank, decreasing cumulative amounts, negative or non-finite values, and masks that are not left-contiguous.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative);
+  report([&] { (void)actuarial::triangle::cumulative(pluss::make_series({1.0, 2.0})); });
+  report([&] { (void)actuarial::triangle::cumulative(pluss::make_series({100.0, 90.0, 0.0, 0.0}, {2, 2})); });
+  report([&] { (void)actuarial::triangle::cumulative(pluss::make_series({-1.0, 0.0, 0.0, 0.0}, {2, 2})); });
+}
+```
+
+## Changelog
+
+- **0.1**: initial operator-first actuarial surface.
+
+## See Also
+
+[`cumulative`](cumulative.md) builds a triangle, and [`chain_ladder`](chain_ladder.md) and [`bornhuetter_ferguson`](bornhuetter_ferguson.md) estimate from it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ReserveResult.html">
+    <span class="label">Next</span>
+    <span class="title">ReserveResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+Triangle/defined
+Triangle/development
+Triangle/ndevelopment
+Triangle/norigins
+Triangle/observed
+Triangle/origins
+Triangle/values
+```
+<!-- apiref:toctree:end -->

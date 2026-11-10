@@ -1,0 +1,133 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 0c56ab1a1827 -->
+
+# `module::Field::model_name`
+
+[Back to `module::Field`](../Field.md)
+
+The name of the model the field holds, as text.
+
+## Signature
+
+```cpp
+std::string module::Field::model_name() const;
+```
+
+## What It Does
+
+Returns one of `"BlackScholes"`, `"Sabr"`, `"Heston"`, `"Bates"`, `"RoughHeston"`, `"RoughBergomi"`. It is the same text as [`Model::name`](../../model/Model/name.md); use it for labels and logs.
+
+## Returns
+
+The model name.
+
+## Practical Examples
+
+### Example 1
+
+The name of a Black-Scholes and a Heston field.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.05, 0.02),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::All}};
+  mod::Field heston{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  out.writeln(field.model_name(), heston.model_name());
+}
+```
+
+### Example 2
+
+It follows the model: replace the model and the name changes.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  out.writeln("before:", field.model_name());
+  field.model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3});
+  out.writeln("after :", field.model_name());
+}
+```
+
+### Example 3
+
+All six names, from models built by kind.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  struct Case { fin::model::Kind kind; std::vector<double> params; };
+  const std::vector<Case> cases = {{fin::model::Kind::BlackScholes, {0.2}}, {fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}}, {fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}},
+                                   {fin::model::Kind::Bates, {1.5, 0.04, 0.3, -0.7, 0.04, 0.5, -0.1, 0.2}}, {fin::model::Kind::RoughHeston, {1.5, 0.04, 0.3, -0.3, -0.7, 0.04}}, {fin::model::Kind::RoughBergomi, {0.04, 1.5, -0.1, -0.7}}};
+  for (const Case &c : cases) {
+    mod::Field field;
+    field.model = fin::model::make(c.kind, c.params);
+    out.writeln(field.model_name());
+  }
+}
+```
+
+## See Also
+
+- [`Field`](../Field.md): the class
+- [`engine_name`](engine_name.md): the engine's name
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="loss_value.html">
+    <span class="label">Previous</span>
+    <span class="title">loss_value</span>
+  </a>
+  <a class="next-link" href="objective.html">
+    <span class="label">Next</span>
+    <span class="title">objective</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

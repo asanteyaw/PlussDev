@@ -1,0 +1,76 @@
+# `signal::corr`
+
+## Signature
+
+```cpp
+pluss::Series signal::corr(
+    const pluss::Series& input,
+    const pluss::Series& kernel,
+    std::int64_t dim = -1,
+    signal::ConvMode mode = signal::ConvMode::Full);
+```
+
+## What It Does
+
+Computes linear cross-correlation along one axis. For complex data the kernel is conjugated, so peaks retain their standard signal-processing interpretation.
+
+## Parameters
+
+`input`
+: Floating or complex observations.
+
+`kernel`
+: Floating or complex reference pattern.
+
+`dim`
+: Axis along which lag is evaluated.
+
+`mode`
+: Selects full, centered input-sized, or complete-overlap output.
+
+## Returns
+
+A floating or complex correlation `Series` whose lag-axis length follows `mode`.
+
+## Errors
+
+Rejects integer inputs, invalid axes, incompatible shapes, dtypes, or platforms.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Compare convolution, correlation, FIR filtering, and frequency response.
+
+@@example Eng/api/signal_filtering.cpp@@
+
+### Example 2
+
+Continue a recursive filter across blocks and apply forward-backward filtering.
+
+@@example Eng/api/signal_filter_state.cpp@@
+
+### Example 3
+
+Observe validation of signal dtype and recurrence coefficients.
+
+@@example Eng/api/signal_filter_errors.cpp@@
+
+## See Also
+
+See [Filtering and response](../filtering.md) for alignment, streaming-state, and axis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="conv.html">
+    <span class="label">Previous</span>
+    <span class="title">conv</span>
+  </a>
+  <a class="next-link" href="fir.html">
+    <span class="label">Next</span>
+    <span class="title">fir</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

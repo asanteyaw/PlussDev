@@ -1,0 +1,137 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: c366aff17f40 -->
+
+# `actuarial::Mortality::qx`
+
+[Back to `actuarial::Mortality`](../Mortality.md)
+
+The one-year death probabilities, the form the law is stored in.
+
+## Signature
+
+```cpp
+const pluss::Series &actuarial::Mortality::qx() const noexcept;
+```
+
+## What It Does
+
+Returns {math}`q_{x+k}` for `k = 0, ..., n−1`: the probability of dying in year `k + 1` given alive at its start. This is the stored representation, so the accessor costs nothing and returns a reference; every other view is computed from it. The reference lives as long as the law, and for an undefined law it is an undefined `Series`.
+
+## Returns
+
+A const reference to a one-dimensional `Series` of `horizon` probabilities.
+
+## Practical Examples
+
+### Example 1: reading the probabilities
+
+The values a law was built from.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  out.writeln(mortality.qx().items<double>());
+}
+```
+
+### Example 2: from another representation
+
+A law built from forces stores the corresponding probabilities, {math}`q=1-e^{-\mu}`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Mortality m = actuarial::mortality::from_force(pluss::make_series({0.01, 0.02, 0.03}));
+  out.writeln("qx =", m.qx().items<double>(), " 1 - exp(-0.02) =", 1.0 - std::exp(-0.02));
+}
+```
+
+### Example 3: probabilities of a parametric law
+
+The Gompertz law gives increasing probabilities with age.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const actuarial::Mortality m = actuarial::mortality::gompertz(pluss::make_series({60.0, 70.0, 80.0, 90.0}), 0.0001, 1.08);
+  out.writeln(m.qx().items<double>());
+}
+```
+
+### Example 4: an undefined law
+
+The accessor does not throw; it returns an undefined series.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("qx defined for a default law:", actuarial::Mortality{}.qx().defined());
+}
+```
+
+## See Also
+
+- [`Mortality`](../Mortality.md): the type
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="px.html">
+    <span class="label">Previous</span>
+    <span class="title">px</span>
+  </a>
+  <a class="next-link" href="survival.html">
+    <span class="label">Next</span>
+    <span class="title">survival</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

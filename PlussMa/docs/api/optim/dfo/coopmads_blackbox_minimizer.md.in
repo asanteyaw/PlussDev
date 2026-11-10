@@ -1,0 +1,155 @@
+# `dfo::coopmads_blackbox_minimizer`
+
+Minimises a black box in many variables with cooperative MADS, which optimises blocks of variables in turn.
+
+## Signature
+
+```cpp
+dfo::BlackboxAdvancedOutcome dfo::coopmads_blackbox_minimizer(const std::function<dfo::BlackboxEvaluation(const pluss::Series &)> &blackbox, const pluss::Series &initial, const dfo::CoopMadsConfig &config = {});
+template <class Fn> dfo::BlackboxAdvancedOutcome dfo::coopmads_blackbox_minimizer(Fn &&blackbox, const pluss::Series &initial, const dfo::CoopMadsConfig &config = {});
+```
+
+## What It Does
+
+Plain MADS polls `2n` directions, so its cost per iteration grows with the number of variables. Cooperative MADS splits the variables into blocks of `subproblem_size`, runs MADS on one block at a time with the rest held at their current values, and repeats for `cooperative_rounds` rounds, reshuffling the blocks each round when `randomized_subproblems` is on. The evaluation budget of `base` is divided among all blocks and rounds. A final full-space run from the best point (a share `polish_fraction` of the budget) removes the error that coupling between blocks leaves. It suits separable or weakly coupled problems with many variables.
+
+## Parameters
+
+`Fn &&blackbox`
+: A callable returning a `BlackboxEvaluation`, a `Series` of objectives or a number.
+
+`const pluss::Series &initial`
+: The starting point.
+
+`const dfo::CoopMadsConfig &config`
+: The settings.
+
+## Returns
+
+A [`BlackboxAdvancedOutcome`](BlackboxAdvancedOutcome.md).
+
+## Errors
+
+- A black box that returns neither objectives nor a failure flag throws on the first call.
+
+## Practical Examples
+
+### Example 1
+
+Twenty-four variables of a separable quadratic.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 1.0).square().sum().reshape({1});
+    return e;
+  };
+  dfo::CoopMadsConfig config;
+  config.base.max_evaluations = 12000;
+  config.subproblem_size = 6;
+  const dfo::BlackboxAdvancedOutcome o = dfo::coopmads_blackbox_minimizer(black_box, pluss::series::make(std::vector<double>(24, -1.0)), config);
+  out.writeln("minimum =", o.scalarized_minimum, ", evaluations =", o.diagnostics.evaluations, ", status =", dfo::to_string(o.status));
+}
+```
+
+### Example 2
+
+Plain MADS against cooperative MADS on the same budget.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 1.0).square().sum().reshape({1});
+    return e;
+  };
+  const Series start = pluss::series::make(std::vector<double>(24, -1.0));
+  dfo::MadsBlackboxAdvancedConfig plain;
+  plain.max_evaluations = 12000;
+  plain.max_iterations = 5000;
+  dfo::CoopMadsConfig coop;
+  coop.base = plain;
+  coop.subproblem_size = 6;
+  out.writeln("plain :", dfo::mads_blackbox_minimizer(black_box, start, plain).scalarized_minimum);
+  out.writeln("coop  :", dfo::coopmads_blackbox_minimizer(black_box, start, coop).scalarized_minimum);
+}
+```
+
+### Example 3
+
+The polish. A share of the budget kept for a final full-space run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 1.0).square().sum().reshape({1});
+    return e;
+  };
+  for (const double polish : {0.0, 0.25}) {
+    dfo::CoopMadsConfig config;
+    config.base.max_evaluations = 8000;
+    config.subproblem_size = 6;
+    config.polish_fraction = polish;
+    out.writeln("polish", polish, ": minimum =", dfo::coopmads_blackbox_minimizer(black_box, pluss::series::make(std::vector<double>(24, -1.0)), config).scalarized_minimum);
+  }
+}
+```
+
+## See Also
+
+- [`CoopMadsConfig`](CoopMadsConfig.md): the settings
+- [`BlackboxEvaluation`](BlackboxEvaluation.md): what the black box returns
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="VnsMadsConfig.html">
+    <span class="label">Previous</span>
+    <span class="title">VnsMadsConfig</span>
+  </a>
+  <a class="next-link" href="differential_evolution_minimizer.html">
+    <span class="label">Next</span>
+    <span class="title">differential_evolution_minimizer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

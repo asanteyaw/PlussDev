@@ -1,0 +1,71 @@
+<!-- generated from ProblemBuilder.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::ProblemBuilder`
+
+A chainable description of an optimization problem: one objective and any constraints, built into a reusable value.
+
+## Signature
+
+```cpp
+optim::ProblemBuilder optim::problem();
+optim::ConstrainedProblem optim::ProblemBuilder::build() const;
+```
+
+## Construction
+
+Obtain one from [`optim::problem()`](problem.md). Each method modifies the builder and returns it, so calls chain; the builder is a value and can be copied.
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`build`](ProblemBuilder/build.md) | Produces the finished `ConstrainedProblem` from the builder. |
+| [`lbs`](ProblemBuilder/lbs.md) | Sets lower bounds on the unknowns. |
+| [`ln_eq`](ProblemBuilder/ln_eq.md) | Adds the linear equalities `Aeq x = beq`. |
+| [`ln_ineq`](ProblemBuilder/ln_ineq.md) | Adds the linear inequalities `Aineq x ≤ bineq`. |
+| [`nl_eq`](ProblemBuilder/nl_eq.md) | The short name of `nonlinear_equality`. |
+| [`nl_ineq`](ProblemBuilder/nl_ineq.md) | The short name of `nonlinear_inequality`. |
+| [`nonlinear_analytic`](ProblemBuilder/nonlinear_analytic.md) | Supplies nonlinear constraints together with their Jacobians, instead of differentiating them. |
+| [`nonlinear_equality`](ProblemBuilder/nonlinear_equality.md) | Adds the constraint `h(x) = 0`, differentiated automatically. |
+| [`nonlinear_inequality`](ProblemBuilder/nonlinear_inequality.md) | Adds the constraint `g(x) ≤ 0`, differentiated automatically. |
+| [`objective`](ProblemBuilder/objective.md) | Sets the objective to a function of the parameters, differentiated automatically. |
+| [`objective_analytic`](ProblemBuilder/objective_analytic.md) | Sets the objective to a function that returns the value together with its gradient. |
+| [`ubs`](ProblemBuilder/ubs.md) | Sets upper bounds on the unknowns. |
+
+## Changelog
+
+- **0.1**: initial documented surface.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+ProblemBuilder/Introduction
+ProblemBuilder/build
+ProblemBuilder/lbs
+ProblemBuilder/ln_eq
+ProblemBuilder/ln_ineq
+ProblemBuilder/nl_eq
+ProblemBuilder/nl_ineq
+ProblemBuilder/nonlinear_analytic
+ProblemBuilder/nonlinear_equality
+ProblemBuilder/nonlinear_inequality
+ProblemBuilder/objective
+ProblemBuilder/objective_analytic
+ProblemBuilder/ubs
+```
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PenaltyMethodOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">PenaltyMethodOptions</span>
+  </a>
+  <a class="next-link" href="ProblemEvaluation.html">
+    <span class="label">Next</span>
+    <span class="title">ProblemEvaluation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

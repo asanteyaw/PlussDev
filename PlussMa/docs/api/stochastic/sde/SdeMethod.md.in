@@ -1,0 +1,161 @@
+# `sde::SdeMethod`
+
+The time-stepping scheme of `fluctua`: Euler-Maruyama, Milstein or Stratonovich-Heun.
+
+All three advance the state by a fixed step `h` using one Wiener increment `ΔW ~ N(0, h)` per entry.
+
+- `EulerMaruyama`: `Y ← Y + μ h + σ ΔW`. The simplest scheme, an Itô scheme of strong order 0.5: the pathwise error shrinks like `√h`.
+- `Milstein`: Euler-Maruyama plus the correction `½ σ σ′ (ΔW² − h)`. It is an Itô scheme of strong order 1.0 for diagonal noise: the pathwise error shrinks like `h`. The derivative `σ′ = ∂σᵢ/∂yᵢ` is taken by automatic differentiation, so `σᵢ` must depend on `yᵢ` only, which the elementwise-noise convention already requires.
+- `StratonovichHeun`: reads the equation in the **Stratonovich** sense and uses a predictor-corrector with the trapezoidal average of the coefficients; strong order 1.0 for scalar or commutative noise. The same coefficients `μ, σ` therefore describe a different process than under the Itô schemes; convert a drift between readings with the Stratonovich/Itô drift functions of the `Series` calculus.
+
+Strong order measures the error of each *path* against the exact solution driven by the same noise; the weak order (the error of expectations) is typically higher and is what a pricing problem needs.
+
+## Fields
+
+### `EulerMaruyama`
+
+`enumerator`, default `0`.
+
+Itô, strong order 0.5.
+
+### `Milstein`
+
+`enumerator`, default `1`.
+
+Itô, strong order 1.0 for diagonal noise; `σᵢ` must depend on `yᵢ` only.
+
+### `StratonovichHeun`
+
+`enumerator`, default `2`.
+
+Stratonovich reading, predictor-corrector, strong order 1.0 for scalar or commutative noise.
+
+## Guidance
+
+Set as `SdeOptions::method`.
+
+## Practical Examples
+
+### Example 1
+
+Strong error by scheme on geometric Brownian motion, whose exact solution on the same noise is `Y₀ exp((r − σ²/2)T + σW)`. Milstein is more accurate than Euler-Maruyama at the same step.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double r = 0.05, s = 0.4, T = 1.0;
+  const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
+  const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
+  const std::int64_t paths = 4000;
+  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+
+  for (const sde::SdeMethod method : {sde::SdeMethod::EulerMaruyama, sde::SdeMethod::Milstein}) {
+    sde::SdeOptions options;
+    options.method = method;
+    options.steps = 32;
+    options.seed = 3;
+    const sde::SdeResult res = sde::fluctua(drift, vol, y0, 0.0, T, pluss::series::undefined(), options);
+    const Series truth = y0 * (res.wiener_final * s + (r - 0.5 * s * s) * T).exp();
+    out.writeln(method == sde::SdeMethod::Milstein ? "Milstein        " : "Euler-Maruyama  ", ": mean |error| =", (res.y_final - truth).abs().mean().item<double>());
+  }
+}
+```
+
+### Example 2
+
+How the error falls with the step. Euler-Maruyama's pathwise error roughly halves when the step is quartered; Milstein's falls about fourfold.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double r = 0.05, s = 0.4, T = 1.0;
+  const sde::DriftFn drift = [=](double, const Series &y, const Series &) { return y * r; };
+  const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
+  const std::int64_t paths = 4000;
+  const Series y0 = Series::full({paths}, 100.0, pluss::ScalarType::Float64);
+
+  for (const sde::SdeMethod method : {sde::SdeMethod::EulerMaruyama, sde::SdeMethod::Milstein})
+    for (const std::int64_t steps : {16, 64, 256}) {
+      sde::SdeOptions options;
+      options.method = method;
+      options.steps = steps;
+      options.seed = 3;
+      const sde::SdeResult res = sde::fluctua(drift, vol, y0, 0.0, T, pluss::series::undefined(), options);
+      const Series truth = y0 * (res.wiener_final * s + (r - 0.5 * s * s) * T).exp();
+      out.writeln(method == sde::SdeMethod::Milstein ? "Milstein" : "Euler   ", "steps", steps, ": mean |error| =", (res.y_final - truth).abs().mean().item<double>());
+    }
+}
+```
+
+### Example 3
+
+The reading of the equation. `dY = σ Y ∘ dW` with no drift: read as Stratonovich it is `Y₀ exp(σW)`, whose mean is `e^{σ²T/2}`; read as Itô it is `Y₀ exp(σW − σ²T/2)`, whose mean is 1.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double s = 0.4, T = 1.0;
+  const std::int64_t paths = 40000;
+  const Series y0 = Series::full({paths}, 1.0, pluss::ScalarType::Float64);
+  const sde::DriftFn none = [](double, const Series &y, const Series &) { return y * 0.0; };
+  const sde::DiffusionFn vol = [=](double, const Series &y, const Series &) { return y * s; };
+  for (const sde::SdeMethod method : {sde::SdeMethod::EulerMaruyama, sde::SdeMethod::StratonovichHeun}) {
+    sde::SdeOptions options;
+    options.method = method;
+    options.steps = 200;
+    options.seed = 5;
+    out.writeln(method == sde::SdeMethod::StratonovichHeun ? "Stratonovich" : "Ito         ", ": mean Y_T =", sde::fluctua(none, vol, y0, 0.0, T, pluss::series::undefined(), options).y_final.mean().item<double>());
+  }
+  out.writeln("exp(s^2 T / 2) =", std::exp(0.5 * s * s * T));
+}
+```
+
+## See Also
+
+- [`SdeOptions`](SdeOptions.md): method, steps and seed
+- [`fluctua`](fluctua.md): the solver
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SdeAdjointResult.html">
+    <span class="label">Previous</span>
+    <span class="title">SdeAdjointResult</span>
+  </a>
+  <a class="next-link" href="SdeOptions.html">
+    <span class="label">Next</span>
+    <span class="title">SdeOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

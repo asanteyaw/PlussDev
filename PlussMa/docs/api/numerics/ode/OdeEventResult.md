@@ -1,0 +1,147 @@
+<!-- generated from OdeEventResult.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `ode::OdeEventResult`
+
+The outcome of an event-terminated solve: everything in `OdeResult`, plus whether and when the event happened.
+
+It extends [`OdeResult`](OdeResult.md) (`y_final`, `steps`, `function_evaluations`, `rejected_steps`, `converged`). `triggered` says whether an event was found; `t_final` is the time of the event, or `t1` if none occurred; `y_final` is the state there; `event_value` is the event function's value at that point (near zero for a located event); `event_evaluations` counts the event calls made during refinement.
+
+## Fields
+
+### `triggered`
+
+`bool`, default `false`.
+
+True when the event function changed sign in an accepted direction before `t1`. When false the solve ran to `t1` and the other fields describe that final state.
+
+
+### `t_final`
+
+`double`, default `0`.
+
+The time of the event when `triggered`, otherwise `t1`. It is located by bisection to within the event options' `time_tolerance`, subject to the accuracy of the integration.
+
+
+### `event_value`
+
+`pluss::Series`, default `undefined`.
+
+The event function at `t_final`: close to zero for a located event, and the value at `t1` otherwise. Inspect it to judge how sharp the localisation was.
+
+
+### `event_evaluations`
+
+`std::int64_t`, default `0`.
+
+How many times the event function was evaluated, including during bisection; the cost of location on top of the integration.
+
+## Guidance
+
+Returned by `fluxa_until`.
+
+## Practical Examples
+
+### Example 1
+
+A located event.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const ode::OdeFn ball = [](double, const Series &y, const Series &) { return y.select(0, 1).reshape({1}).unite({(y.select(0, 1) * 0.0 - 9.81).reshape({1})}, 0); };
+  const ode::OdeEventFn hit = [](double, const Series &y, const Series &) { return y.select(0, 0); };
+  const ode::OdeEventResult r = ode::fluxa_until(ball, hit, pluss::make_series({10.0, 0.0}), 0.0, 5.0);
+  out.writeln("triggered =", r.triggered, ", t =", r.t_final, ", y =", r.y_final.items<double>(), ", event value =", r.event_value.item<double>());
+}
+```
+
+Output
+
+```text
+triggered = true , t = 1.427843 , y = [-0.000000, -14.007141] , event value = -0.000000
+```
+
+### Example 2
+
+The base-class fields. The step count and the event evaluations are separate counters.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ode::OdeFn ball = [](double, const Series &y, const Series &) { return y.select(0, 1).reshape({1}).unite({(y.select(0, 1) * 0.0 - 9.81).reshape({1})}, 0); };
+  const ode::OdeEventFn hit = [](double, const Series &y, const Series &) { return y.select(0, 0); };
+  const ode::OdeEventResult r = ode::fluxa_until(ball, hit, pluss::make_series({10.0, 0.0}), 0.0, 5.0);
+  out.writeln("steps =", r.steps, ", evaluations =", r.function_evaluations, ", event evaluations =", r.event_evaluations, ", converged =", r.converged);
+}
+```
+
+Output
+
+```text
+steps = 29 , evaluations = 220 , event evaluations = 56 , converged = true
+```
+
+### Example 3
+
+No event. `triggered` is false and the time is the end of the window.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &) { return y * -1.0; };
+  const ode::OdeEventFn never = [](double, const Series &y, const Series &) { return y.select(0, 0) + 5.0; };
+  const ode::OdeEventResult r = ode::fluxa_until(decay, never, pluss::make_series({1.0}), 0.0, 2.0);
+  out.writeln("triggered =", r.triggered, ", t =", r.t_final);
+}
+```
+
+Output
+
+```text
+triggered = false , t = 2.0000
+```
+
+## See Also
+
+- [`fluxa_until`](fluxa_until.md): produces it
+- [`OdeResult`](OdeResult.md): the base fields
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OdeEventOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">OdeEventOptions</span>
+  </a>
+  <a class="next-link" href="OdeMethod.html">
+    <span class="label">Next</span>
+    <span class="title">OdeMethod</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

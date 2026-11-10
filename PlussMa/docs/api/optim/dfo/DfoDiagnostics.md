@@ -1,0 +1,197 @@
+<!-- generated from DfoDiagnostics.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::DfoDiagnostics`
+
+Counters and last-state values of a derivative-free run.
+
+Held in `DfoResult::diagnostics`. `iterations` and `evaluations` are reported by every method; `total_evaluations` equals `evaluations` except for MADS, where it also counts cache hits. The pattern-search members (`outer_iterations`, `nups_updates`, `search_trials`, `search_successes`, `penalty`, `max_constraint_violation`) are zero for the other methods, `cache_hits` is nonzero for pattern search and MADS, and `mesh_size` is the final mesh size of those methods. `last_phase` names the last step the method took.
+
+## Fields
+
+### `iterations`
+
+`std::int64_t`, default `0`.
+
+Iterations (generations) performed.
+
+### `evaluations`
+
+`std::int64_t`, default `0`.
+
+Objective evaluations performed.
+
+### `total_evaluations`
+
+`std::int64_t`, default `0`.
+
+Evaluations including cache hits where the method counts them.
+
+### `cache_hits`
+
+`std::int64_t`, default `0`.
+
+Evaluations answered from the cache.
+
+### `outer_iterations`
+
+`std::int64_t`, default `0`.
+
+Augmented-Lagrangian outer iterations (pattern search).
+
+### `nups_updates`
+
+`std::int64_t`, default `0`.
+
+Dynamic mesh-scale updates (pattern search).
+
+### `search_trials`
+
+`std::int64_t`, default `0`.
+
+Search-step trial points (pattern search).
+
+### `search_successes`
+
+`std::int64_t`, default `0`.
+
+Search-step trials that improved the point.
+
+### `mesh_size`
+
+`double`, default `0`.
+
+Final mesh size (pattern search and MADS).
+
+### `penalty`
+
+`double`, default `0`.
+
+Final penalty or augmented-Lagrangian weight.
+
+### `max_constraint_violation`
+
+`double`, default `0`.
+
+Largest constraint violation at the answer (pattern search).
+
+### `last_phase`
+
+`std::string`, default `empty`.
+
+The last step the method took.
+
+## Guidance
+
+Read from `DfoResult::diagnostics`.
+
+## Practical Examples
+
+### Example 1
+
+The counters of a Nelder-Mead run.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::solve_dfo(f, pluss::series::make({0.0, 0.0}));
+  const dfo::DfoDiagnostics &d = r.diagnostics;
+  out.writeln("iterations =", d.iterations, ", evaluations =", d.evaluations, ", last phase =", d.last_phase);
+}
+```
+
+Output
+
+```text
+iterations = 49 , evaluations = 82 , last phase = adjust_inner
+```
+
+### Example 2
+
+Pattern search adds mesh, search and constraint information.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoOptions options;
+  options.solver = dfo::DfoSolverKind::PatternSearch;
+  const dfo::DfoResult r = dfo::solve_dfo(f, pluss::series::make({0.0, 0.0}), options);
+  const dfo::DfoDiagnostics &d = r.diagnostics;
+  out.writeln("iterations =", d.iterations, ", evaluations =", d.evaluations, ", cache hits =", d.cache_hits);
+  out.writeln("search trials =", d.search_trials, ", search successes =", d.search_successes, ", mesh size =", d.mesh_size);
+}
+```
+
+Output
+
+```text
+iterations = 62 , evaluations = 230 , cache hits = 0
+search trials = 21 , search successes = 0 , mesh size = 0.000001
+```
+
+### Example 3
+
+A constrained run reports the violation at the answer.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_constraints([](const Series &x) { return x.sum() - 2.0; }).solve();
+  out.writeln("max violation =", r.diagnostics.max_constraint_violation, ", penalty =", r.diagnostics.penalty, ", outer iterations =", r.diagnostics.outer_iterations);
+}
+```
+
+Output
+
+```text
+max violation = 0.000002 , penalty = 156250.000000 , outer iterations = 12
+```
+
+## See Also
+
+- [`DfoResult`](DfoResult.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DfoConstraintValues.html">
+    <span class="label">Previous</span>
+    <span class="title">DfoConstraintValues</span>
+  </a>
+  <a class="next-link" href="DfoOptions.html">
+    <span class="label">Next</span>
+    <span class="title">DfoOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

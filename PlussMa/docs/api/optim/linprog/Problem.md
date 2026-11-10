@@ -1,0 +1,236 @@
+<!-- generated from Problem.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `linprog::Problem`
+
+The data of a linear program: cost, equality and inequality rows, bounds, and an optional simplex warm start.
+
+`Problem` is the argument of [`linprog::solve`](solve.md). Only `c` is required. The rows `a_eq`/`b_eq` and `a_ub`/`b_ub` and the bounds are `std::optional`, so an absent member means "none". The constraint matrices are shared by all lanes; the vectors `c`, `b_eq`, `b_ub` and the bound values may have leading axes, one lane per index.
+
+## Fields
+
+### `c`
+
+`pluss::Series`, default `undefined`.
+
+The cost vector, shape `[..., n]`. Leading axes are lanes. Required.
+
+### `a_eq`
+
+`std::optional<pluss::Series>`, default `none`.
+
+The equality matrix, `[m_eq, n]`, shared by all lanes. Rows may be linearly dependent.
+
+### `b_eq`
+
+`std::optional<pluss::Series>`, default `none`.
+
+The equality right-hand side, `[..., m_eq]`; may vary per lane.
+
+### `a_ub`
+
+`std::optional<pluss::Series>`, default `none`.
+
+The inequality matrix, `[m_ub, n]`, shared by all lanes.
+
+### `b_ub`
+
+`std::optional<pluss::Series>`, default `none`.
+
+The inequality right-hand side, `[..., m_ub]`; may vary per lane.
+
+### `lower`
+
+`std::optional<pluss::Series>`, default `none`.
+
+Lower bounds, `[n]` or `[..., n]`; `-inf` for none. Absent means no lower bounds.
+
+### `upper`
+
+`std::optional<pluss::Series>`, default `none`.
+
+Upper bounds, `[n]` or `[..., n]`; `+inf` for none. The pattern of finite entries must be the same in every lane.
+
+### `warm_basis`
+
+`std::optional<std::vector<std::int64_t>>`, default `none`.
+
+A starting basis for the simplex (standard-form column indices, one per row), shared by all lanes, taken from a previous `Result::basis`. Ignored by the interior-point method; an unusable basis silently falls back to a cold start.
+
+### `warm_at_upper`
+
+`std::optional<std::vector<char>>`, default `none`.
+
+The at-upper flags of the non-basic columns that go with `warm_basis`, from `Result::at_upper`.
+
+## Guidance
+
+Only `c` is required. The pattern of finite bounds must match across lanes.
+
+## Practical Examples
+
+### Example 1
+
+Building a problem field by field. `c` and the inequality rows are enough for `min cᵀx, A x ≤ b`; here `x` is free (no bounds), so the solve is the bounded-below minimum of a cost over a polytope.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  linprog::Problem problem;
+  problem.c = pluss::series::make({1.0, 1.0});
+  problem.a_ub = pluss::series::make({{-1.0, 0.0}, {0.0, -1.0}, {-1.0, -1.0}});
+  problem.b_ub = pluss::series::make({0.0, 0.0, -2.0});   // x0 >= 0, x1 >= 0, x0 + x1 >= 2
+  const linprog::Result result = linprog::solve(problem);
+  out.writeln("objective =", result.objective.item<double>(), "(any point with x0 + x1 = 2)");
+}
+```
+
+Output
+
+```text
+objective = 2.000000 (any point with x0 + x1 = 2)
+```
+
+### Example 2
+
+Bounds. Infinite entries mean no bound: a free variable has `-inf` and `+inf`; a variable bounded only above uses `-inf` below. Minimising `x₀` over `−3 ≤ x₀ ≤ 5` gives `−3`; with the lower bound removed the problem is unbounded.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double inf = std::numeric_limits<double>::infinity();
+  linprog::Problem boxed;
+  boxed.c = pluss::series::make({1.0});
+  boxed.lower = pluss::series::make({-3.0});
+  boxed.upper = pluss::series::make({5.0});
+  linprog::Problem unbounded_below = boxed;
+  unbounded_below.lower = pluss::series::make({-inf});
+  out.writeln("boxed          : x0 =", linprog::solve(boxed).x.items<double>()[0]);
+  out.writeln("no lower bound :", linprog::to_string(static_cast<linprog::Status>(static_cast<int>(linprog::solve(unbounded_below).status.item<double>()))));
+}
+```
+
+Output
+
+```text
+boxed          : x0 = -3.000000
+no lower bound : Unbounded
+```
+
+### Example 3
+
+The simplex warm start. `warm_basis` and `warm_at_upper` come from a previous simplex `Result` (`basis[lane]`, `at_upper[lane]`); the next simplex solve skips phase I. Bound changes are repaired by dual pivots and cost changes by primal pivots; a basis that does not fit is ignored and the lane starts cold, which `warm_started` reports.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  // minimise -x0 - 2 x1   subject to   x0 + x1 <= 4,  x0 + 3 x1 <= 6,  x >= 0
+  linprog::Problem problem;
+  problem.c = pluss::series::make({-1.0, -2.0});
+  problem.a_ub = pluss::series::make({{1.0, 1.0}, {1.0, 3.0}});
+  problem.b_ub = pluss::series::make({4.0, 6.0});
+  problem.lower = pluss::series::make({0.0, 0.0});
+
+  linprog::Options simplex;
+  simplex.method = linprog::Method::Simplex;
+  const linprog::Result first = linprog::solve(problem, simplex);
+
+  linprog::Problem next = problem;
+  next.b_ub = pluss::series::make({4.5, 6.0});
+  next.warm_basis = first.basis[0];
+  next.warm_at_upper = first.at_upper[0];
+  const linprog::Result second = linprog::solve(next, simplex);
+  out.writeln("cold : iterations =", first.iterations);
+  out.writeln("warm : iterations =", second.iterations, ", warm_started =", static_cast<int>(second.warm_started[0]), ", x =", second.x.items<double>());
+}
+```
+
+Output
+
+```text
+cold : iterations = 4
+warm : iterations = 0 , warm_started = 1 , x = [3.75000, 0.75000]
+```
+
+### Example 4
+
+Batched members. A `c` of shape `[B, n]` makes `B` lanes; the matrices stay shared.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // minimise -x0 - 2 x1   subject to   x0 + x1 <= 4,  x0 + 3 x1 <= 6,  x >= 0
+  linprog::Problem problem;
+  problem.c = pluss::series::make({-1.0, -2.0});
+  problem.a_ub = pluss::series::make({{1.0, 1.0}, {1.0, 3.0}});
+  problem.b_ub = pluss::series::make({4.0, 6.0});
+  problem.lower = pluss::series::make({0.0, 0.0});
+
+  problem.c = pluss::series::make({{-1.0, -2.0}, {-2.0, -1.0}});
+  const linprog::Result result = linprog::solve(problem);
+  out.writeln("lanes     =", result.objective.numel());
+  out.writeln("objective =", result.objective.items<double>());
+}
+```
+
+Output
+
+```text
+lanes     = 2
+objective = [-5.000000, -8.000000]
+```
+
+## See Also
+
+- [`solve`](solve.md): consumes a Problem
+- [`Result`](Result.md): the outputs and bases
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Options.html">
+    <span class="label">Previous</span>
+    <span class="title">Options</span>
+  </a>
+  <a class="next-link" href="Result.html">
+    <span class="label">Next</span>
+    <span class="title">Result</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

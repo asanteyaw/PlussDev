@@ -1,0 +1,63 @@
+# `lti::to_sos`
+
+## Signature
+
+```cpp
+pluss::Series lti::to_sos(const lti::PoleZero& system);
+```
+
+## What It Does
+
+Pairs poles and zeros into numerically ordered biquadratic sections. The first section absorbs system gain, producing rows directly consumable by `signal::sos`.
+
+## Parameters
+
+`system`
+: Discrete pole-zero system carrying one explicit zero per pole. Conjugate-paired real systems produce real coefficients.
+
+## Returns
+
+A matrix with shape `[sections, 6]`; each row is `[b0,b1,b2,a0,a1,a2]`.
+
+## Errors
+
+Rejects continuous systems, unequal zero/pole counts, or root configurations that cannot be paired into a valid realization.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Inspect stability, response, and second-order-section realization.
+
+@@example Eng/api/lti_pole_zero.cpp@@
+
+### Example 2
+
+Compare frequency response across equivalent system representations.
+
+@@example Eng/api/lti_response.cpp@@
+
+### Example 3
+
+Exercise frequency-grid and realization validation.
+
+@@example Eng/api/lti_response_errors.cpp@@
+
+## See Also
+
+See [Pole-zero and response](../response.md) for timebase, stability, and angular-frequency conventions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="zpk.html">
+    <span class="label">Previous</span>
+    <span class="title">zpk</span>
+  </a>
+  <a class="next-link" href="freqresp.html">
+    <span class="label">Next</span>
+    <span class="title">freqresp</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

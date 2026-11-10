@@ -1,0 +1,148 @@
+<!-- generated from imag.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: de113e6ad893 -->
+
+# `math::Function::imag`
+
+[Back to `math::Function`](../Function.md)
+
+The imaginary part of a function.
+
+## Signature
+
+```cpp
+math::Function math::Function::imag() const;
+```
+
+## What It Does
+
+`f.imag()` builds `x ↦ Im f(x)`, a real-valued function. For a real `f` it is identically zero. Together with [`real`](real.md) it splits a complex function into two real ones, which is how a complex quantity is handed to code that works on real numbers (a plot, a real optimizer, a real-valued constraint).
+
+`Im z = (z − z̄)/(2i)`. Its Wirtinger derivatives are `∂/∂z Im z = 1/(2i) = −i/2` and `∂/∂z̄ Im z = i/2`.
+
+## Returns
+
+A new real-valued `Function`.
+
+## Errors
+
+- The function must be defined.
+
+## Practical Examples
+
+### Example 1
+
+The imaginary parts of a few complex numbers; a real number has imaginary part 0.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"z"}, [](math::Function z) { return z.imag(); });
+  const auto z = pluss::make_series({std::complex<double>{3.0, 4.0}, std::complex<double>{-1.5, -2.0}, std::complex<double>{2.0, 0.0}});
+  out.writeln("Im z:", f({z}).items<double>());
+}
+```
+
+Output
+
+```text
+Im z: [4.0000, -2.0000, 0.0000]
+```
+
+### Example 2
+
+`Im(z²) = 2xy` for `z = x + iy`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"z"}, [](math::Function z) { return (z * z).imag(); });
+  const auto z = pluss::make_series({std::complex<double>{1.0, 2.0}, std::complex<double>{3.0, -1.0}, std::complex<double>{0.5, 0.5}});
+  out.writeln("Im(z^2): ", f({z}).items<double>());
+  out.writeln("2 x y:   ", pluss::make_series({2.0 * 1.0 * 2.0, 2.0 * 3.0 * -1.0, 2.0 * 0.5 * 0.5}).items<double>());
+}
+```
+
+Output
+
+```text
+Im(z^2):  [4.0000, -6.0000, 0.5000]
+2 x y:    [4.0000, -6.0000, 0.5000]
+```
+
+### Example 3
+
+The imaginary part of `e^{it}` is `sin t`, and its derivative with respect to `t` is `cos t`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::complex<double> i{0.0, 1.0};
+  const math::Function phasor = math::function({"t"}, [&](math::Function t) { return (i * t).exp().imag(); });
+  const math::Function slope = operators::differential("t")(phasor);
+  const auto t = pluss::make_series({0.0, 1.0, 2.0});
+  out.writeln("Im e^{it}:     ", phasor({t}).items<double>());
+  out.writeln("sin t:         ", t.sin().items<double>());
+  out.writeln("d/dt Im e^{it}:", slope({t}).items<double>());
+  out.writeln("cos t:         ", t.cos().items<double>());
+}
+```
+
+Output
+
+```text
+Im e^{it}:      [0.0000, 0.8415, 0.9093]
+sin t:          [0.0000, 0.8415, 0.9093]
+d/dt Im e^{it}: [1.0000, 0.5403, -0.4161]
+cos t:          [1.0000, 0.5403, -0.4161]
+```
+
+## See Also
+
+- [`real`](real.md): the real part
+- [`conj`](conj.md): the conjugate
+- [`angle`](angle.md): the argument
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="expm1.html">
+    <span class="label">Previous</span>
+    <span class="title">expm1</span>
+  </a>
+  <a class="next-link" href="inverse.html">
+    <span class="label">Next</span>
+    <span class="title">inverse</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,131 @@
+# `optim::reports::detailed_summary`
+
+Writes a multi-line summary of a result, one `name=value` per line.
+
+## Signature
+
+```cpp
+std::ostream &optim::reports::detailed_summary(std::ostream &os, const optim::OptimaState &result);
+```
+
+## What It Does
+
+Writes every field of `result.output` one per line: algorithm, exit flag, iterations, evaluations, constraint violation, first-order optimality, step size, backend parameter, complementarity, Krylov iterations, best-feasible bookkeeping, the stall category with its measure and reference, and the message.
+
+## Parameters
+
+`os`
+: The stream.
+
+`result`
+: The state.
+
+## Returns
+
+`os`.
+
+## Practical Examples
+
+### Example 1
+
+A full summary.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), {}, disc);
+  optim::reports::detailed_summary(std::cout, result) << "\n";
+}
+```
+
+### Example 2
+
+The interior algorithm: `complementarity` and `backend_parameter` carry the barrier information.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::InternalProtocol;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  optim::reports::detailed_summary(std::cout, result) << "\n";
+}
+```
+
+### Example 3
+
+A run cut short shows the stall diagnosis.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.max_iterations = 1;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  optim::reports::detailed_summary(std::cout, result) << "\n";
+}
+```
+
+## See Also
+
+- [`print_summary`](print_summary.md): one line
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="reports_compact_summary.html">
+    <span class="label">Previous</span>
+    <span class="title">compact_summary</span>
+  </a>
+  <a class="next-link" href="reports_iter.html">
+    <span class="label">Next</span>
+    <span class="title">iter</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

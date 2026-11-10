@@ -1,0 +1,244 @@
+<!-- generated from aggregate_moments.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `actuarial::losses::aggregate_moments`
+
+Mean and variance of aggregate losses from frequency and severity moments.
+
+## Signature
+
+```cpp
+actuarial::losses::AggregateMoments aggregate_moments(const pluss::Series &frequency_mean, const pluss::Series &frequency_variance, const pluss::Series &severity_mean, const pluss::Series &severity_variance);
+```
+
+## What It Does
+
+For a random number `N` of independent, identically distributed claims `X`, the aggregate {math}`S=X_1+\cdots+X_N` has {math}`E[S]=E[N]\,E[X]` and {math}`\mathrm{Var}[S]=E[N]\,\mathrm{Var}[X]+\mathrm{Var}[N]\,E[X]^2`: the first term is the variability of the claim sizes, the second that of the count. The four inputs come from the moment functions ([`poisson_moments`](poisson_moments.md), [`lognormal_moments`](lognormal_moments.md), and the others) or from data. They are series, so one call combines many portfolio segments, and they broadcast against each other: a single severity can be paired with a vector of frequencies. [`compound_poisson`](compound_poisson.md) and [`compound_negbin`](compound_negbin.md) take scalars and are the shortcut for one segment.
+
+## Parameters
+
+`frequency_mean`, `frequency_variance`
+: Mean and variance of the claim count; finite, defined and 0 or more.
+
+`severity_mean`, `severity_variance`
+: Mean and variance of a single claim; finite, defined and 0 or more.
+
+## Returns
+
+An [`AggregateMoments`](AggregateMoments.md) whose series have the broadcast shape of the inputs.
+
+## Errors
+
+Throws `aggregate_moments: <argument> must be defined`, `must be finite` or `must be >= 0` for each argument by name, and `broadcast: incompatible shapes` when the shapes do not broadcast.
+
+## Practical Examples
+
+### Example 1: one portfolio
+
+Poisson frequency of 2 and a severity of mean 100 and variance 10,000.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto n = actuarial::losses::poisson_moments(2.0);
+  const auto m = actuarial::losses::aggregate_moments(n.mean, n.variance, pluss::make_series(100.0), pluss::make_series(10000.0));
+  out.writeln("mean =", m.mean.item<double>(), " variance =", m.variance.item<double>());
+}
+```
+
+Output
+
+```text
+mean = 200.000000  variance = 40000.000000
+```
+
+### Example 2: by hand
+
+Variance = E[N] Var[X] + Var[N] E[X]^2.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto m = actuarial::losses::aggregate_moments(pluss::make_series(3.0), pluss::make_series(5.0), pluss::make_series(200.0), pluss::make_series(9000.0));
+  out.writeln(m.variance.item<double>(), 3.0 * 9000.0 + 5.0 * 200.0 * 200.0);
+}
+```
+
+Output
+
+```text
+227000.0 227000.0
+```
+
+### Example 3: several segments
+
+Two segments with different frequencies and severities.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto m = actuarial::losses::aggregate_moments(pluss::make_series({2.0, 5.0}), pluss::make_series({2.0, 8.0}), pluss::make_series({100.0, 50.0}), pluss::make_series({10000.0, 2500.0}));
+  out.writeln("mean     =", m.mean.items<double>());
+  out.writeln("variance =", m.variance.items<double>());
+}
+```
+
+Output
+
+```text
+mean     = [200.000000, 250.000000]
+variance = [40000.000000, 32500.000000]
+```
+
+### Example 4: one severity, many frequencies
+
+A single severity broadcasts across a vector of frequencies.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto m = actuarial::losses::aggregate_moments(pluss::make_series({2.0, 5.0}), pluss::make_series({2.0, 8.0}), pluss::make_series({100.0}), pluss::make_series({10000.0}));
+  out.writeln(m.mean.items<double>(), m.variance.items<double>());
+}
+```
+
+Output
+
+```text
+[200.000000, 500.000000] [40000.000000, 130000.000000]
+```
+
+### Example 5: the contributions of frequency and severity
+
+With a deterministic count the variance comes from severity alone; with a deterministic severity, from the count alone.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto fixed_count = actuarial::losses::aggregate_moments(pluss::make_series(4.0), pluss::make_series(0.0), pluss::make_series(100.0), pluss::make_series(2500.0));
+  const auto fixed_size = actuarial::losses::aggregate_moments(pluss::make_series(4.0), pluss::make_series(4.0), pluss::make_series(100.0), pluss::make_series(0.0));
+  out.writeln("fixed count variance =", fixed_count.variance.item<double>(), " (4 x 2500)");
+  out.writeln("fixed size variance  =", fixed_size.variance.item<double>(), " (4 x 100^2)");
+}
+```
+
+Output
+
+```text
+fixed count variance = 10000.0  (4 x 2500)
+fixed size variance  = 40000.0  (4 x 100^2)
+```
+
+### Example 6: the errors
+
+Negative moments, undefined input and shapes that do not broadcast are refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::losses::aggregate_moments(pluss::make_series({-2.0}), pluss::make_series({2.0}), pluss::make_series({1.0}), pluss::make_series({1.0})); });
+  report([&] { (void)actuarial::losses::aggregate_moments(pluss::series::undefined(), pluss::make_series({2.0}), pluss::make_series({1.0}), pluss::make_series({1.0})); });
+  report([&] { (void)actuarial::losses::aggregate_moments(pluss::make_series({2.0, 5.0}), pluss::make_series({2.0, 8.0, 1.0}), pluss::make_series({100.0}), pluss::make_series({10000.0})); });
+}
+```
+
+Output
+
+```text
+aggregate_moments: frequency_mean must be >= 0
+aggregate_moments: frequency_mean must be defined
+broadcast: incompatible shapes
+```
+
+## See Also
+
+- [`AggregateMoments`](AggregateMoments.md): the result type
+- [`aggregate_moments`](aggregate_moments.md): combine a frequency and a severity
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="gamma_moments.html">
+    <span class="label">Previous</span>
+    <span class="title">gamma_moments</span>
+  </a>
+  <a class="next-link" href="compound_poisson.html">
+    <span class="label">Next</span>
+    <span class="title">compound_poisson</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

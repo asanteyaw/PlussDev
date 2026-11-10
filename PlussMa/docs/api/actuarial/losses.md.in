@@ -1,0 +1,127 @@
+# Frequency, severity and layers
+
+The loss functions describe insurance losses in the way actuaries build them: a **frequency** (how many claims), a **severity** (how large each is), the **aggregate** that combines them, and the **layers** of coverage that cut the severity. They take scalar parameters or plain `Series` and return an [`AggregateMoments`](losses/AggregateMoments.md) (a mean and a variance) or a `Series`. The functions that work on a sample of losses ([`excess_loss`](losses/excess_loss.md), [`loss_layer`](losses/loss_layer.md), [`layer_premium`](losses/layer_premium.md), [`stoploss`](losses/stoploss.md)) are the free-function forms of the contract operators in [Loss contracts](loss.md); the parametric functions integrate a severity distribution instead of averaging a sample.
+
+## What This Family Owns
+
+| You want | Use |
+|---|---|
+| The mean and variance of a claim count | [`poisson_moments`](losses/poisson_moments.md), [`negbin_moments`](losses/negbin_moments.md) |
+| The probabilities of 0, 1, 2, ... claims | [`poisson_pmf`](losses/poisson_pmf.md), [`negbin_pmf`](losses/negbin_pmf.md) |
+| The mean and variance of a claim size | [`lognormal_moments`](losses/lognormal_moments.md), [`gamma_moments`](losses/gamma_moments.md) |
+| The mean and variance of the total loss | [`aggregate_moments`](losses/aggregate_moments.md); for one portfolio [`compound_poisson`](losses/compound_poisson.md), [`compound_negbin`](losses/compound_negbin.md) |
+| The result type | [`AggregateMoments`](losses/AggregateMoments.md) |
+| What a cover pays on each loss of a sample | [`excess_loss`](losses/excess_loss.md), [`loss_layer`](losses/loss_layer.md) |
+| The expected cost of a cover from a sample | [`layer_premium`](losses/layer_premium.md), [`stoploss`](losses/stoploss.md) |
+| The expected payment per claim from a distribution | [`lognormal_lev`](losses/lognormal_lev.md), [`gamma_lev`](losses/gamma_lev.md) |
+| The expected loss to a layer from a distribution | [`lognormal_layer`](losses/lognormal_layer.md), [`gamma_layer`](losses/gamma_layer.md) |
+
+The moment functions take an optional platform and return Float64 results on it. The parametric limited-value and layer functions integrate the survival function with the midpoint rule; the optional `quadrature_steps` trades speed for accuracy.
+
+## Practical Examples
+
+### Example 1: from frequency and severity to the total loss
+
+A negative binomial count and a lognormal severity combined.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto n = actuarial::losses::negbin_moments(3.0, 0.4);
+  const auto x = actuarial::losses::lognormal_moments(5.0, 0.8);
+  const auto s = actuarial::losses::aggregate_moments(n.mean, n.variance, x.mean, x.variance);
+  out.writeln("expected claims =", n.mean.item<double>(), " expected claim =", x.mean.item<double>());
+  out.writeln("total: mean =", s.mean.item<double>(), " standard deviation =", std::sqrt(s.variance.item<double>()));
+}
+```
+
+### Example 2: the cost of a layer from a distribution
+
+A 500 xs 250 layer on a gamma severity, scaled by the expected number of claims.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const double per_claim = actuarial::losses::gamma_layer(2.0, 300.0, 0.0, 250.0, 500.0).item<double>();
+  out.writeln("per claim =", per_claim, " for 40 claims =", 40.0 * per_claim);
+}
+```
+
+### Example 3: the same layer from a sample
+
+The sample-based counterpart on six observed losses.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  out.writeln("layer premium =", actuarial::losses::layer_premium(x, 250.0, 500.0).item<double>());
+  out.writeln("stop-loss at 250 =", actuarial::losses::stoploss(x, 250.0).item<double>());
+}
+```
+
+## Related Pages
+
+Use the persistent sidebar to open each function. The {guide}`actuarial guide <actuarial>` develops frequency, severity and layers with longer workflows.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+losses/AggregateMoments
+losses/poisson_moments
+losses/negbin_moments
+losses/lognormal_moments
+losses/gamma_moments
+losses/aggregate_moments
+losses/compound_poisson
+losses/compound_negbin
+losses/poisson_pmf
+losses/negbin_pmf
+losses/excess_loss
+losses/loss_layer
+losses/layer_premium
+losses/stoploss
+losses/lognormal_lev
+losses/gamma_lev
+losses/lognormal_layer
+losses/gamma_layer
+```
+<!-- apiref:toctree:end -->

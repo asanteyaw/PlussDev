@@ -1,0 +1,271 @@
+# `regression::OLSOptions`
+
+Everything `ols_fit` can be told besides the data: the confidence level, how the intercept and missing rows are treated, the conditioning cutoff, the case weights, the labels and the covariance estimator.
+
+## Signature
+
+```cpp
+regression::OLSOptions options;
+regression::OLSFitResult regression::ols_fit(const Series &y, const Series &x, const regression::OLSOptions &options = {}, Config cfg = {});
+```
+
+A default `OLSOptions` fits with an intercept at the 95% level, drops rows with missing values and weights every row equally. Examples below use eight points close to a line.
+
+## Fields
+
+### `alpha`
+
+`double`, default `0.05`.
+
+The significance level of the confidence intervals, so the intervals have coverage 1 − alpha, built from the Student t quantile on the residual degrees of freedom. A larger alpha gives narrower intervals and changes nothing else. The program prints the slope interval at 0.05 and at 0.10.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  for (const double alpha : {0.05, 0.10}) {
+    reg::OLSOptions options;
+    options.alpha = alpha;
+    const auto fit = reg::ols_fit(y, x, options);
+    const auto ci = fit.conf_int.reshape({4}).items<double>();   // [lower0, upper0, lower1, upper1]
+    out.writeln("alpha", alpha, " slope", fit.coefficients.items<double>()[1], " interval", ci[2], ci[3]);
+  }
+}
+```
+
+### `add_intercept`
+
+`bool`, default `true`.
+
+Whether a constant column is added to the design. With the default `true` the first coefficient is the intercept, named `const`, and R² and the F test are measured about the mean of the response. With `false` the line is forced through the origin, those measures are taken about zero, and the result carries a warning that says so. The program fits both ways; the larger R² of the no-intercept fit (0.9997 against 0.9990) is not a better fit, because it is measured about zero instead of about the mean.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  reg::OLSOptions options;
+  const auto with = reg::ols_fit(y, x, options);
+  options.add_intercept = false;
+  const auto without = reg::ols_fit(y, x, options);
+  out.writeln("with intercept   ", with.coefficient_names, with.coefficients.items<double>(), " R^2", with.rsquared);
+  out.writeln("without intercept", without.coefficient_names, without.coefficients.items<double>(), " R^2", without.rsquared);
+  out.writeln(without.warnings);
+}
+```
+
+### `drop_missing`
+
+`bool`, default `true`.
+
+What to do with rows that hold NaN or infinite values. With the default `true` they are left out and counted in `dropped_observations`; with `false` any non-finite value is an error.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  auto values = std::vector<double>{1, 2, std::nan(""), 4, 5, 6, 7, 8};
+  const auto holey = pluss::make_series(values, {8}, as_f64());
+  reg::OLSOptions options;
+  const auto fit = reg::ols_fit(y, holey, options);
+  out.writeln("drop_missing=true : nobs", fit.nobs, " dropped", fit.dropped_observations);
+  options.drop_missing = false;
+  try {
+    reg::ols_fit(y, holey, options);
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln("drop_missing=false:", text.substr(0, text.find("Triggered")));
+  }
+}
+```
+
+### `rcond`
+
+`double`, default `1e-12`.
+
+The reciprocal-condition cutoff below which a direction of the design is treated as numerically absent, so nearly collinear predictors are declared redundant and the result's `rank` falls. The program fits a design whose second column is the first plus a tiny perturbation, at the default and at a coarse cutoff.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  std::vector<double> flat;
+  for (int i = 0; i < 8; ++i) flat.push_back(1.0 * (i + 1));
+  for (int i = 0; i < 8; ++i) flat.push_back(1.0 * (i + 1) + 1e-5 * ((i % 3) - 1));
+  const auto x2 = pluss::make_series(flat, {2, 8}, as_f64()).transpose(0, 1);
+  reg::OLSOptions options;
+  const auto fine = reg::ols_fit(y, x2, options);
+  options.rcond = 1e-3;
+  const auto coarse = reg::ols_fit(y, x2, options);
+  out.writeln("rcond 1e-12: rank", fine.rank, " of", fine.k_params, " condition number", fine.condition_number);
+  out.writeln("rcond 1e-3 : rank", coarse.rank, " of", coarse.k_params, " coefficients", coarse.coefficients.items<double>());
+}
+```
+
+### `weights`
+
+`Series`, default `undefined`.
+
+Case weights, one non-negative value per row. Row i counts weights[i] times in the sums of squares, as if it were repeated, so a weight of two is the same as listing the row twice, and a weight of zero removes the row (counted in `dropped_observations`). The program checks the first by fitting with the last row weighted two and with the last row duplicated.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  reg::OLSOptions options;
+  options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 1, 2}, {8}, as_f64());
+  const auto weighted = reg::ols_fit(y, x, options);
+  const auto xd = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 8}, {9}, as_f64());
+  const auto yd = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2, 16.2}, {9}, as_f64());
+  const auto duplicated = reg::ols_fit(yd, xd);
+  out.writeln("weight two     ", weighted.coefficients.items<double>());
+  out.writeln("row duplicated ", duplicated.coefficients.items<double>());
+}
+```
+
+### `response_name`
+
+`std::string`, default `"y"`.
+
+The label of the response, carried to the result and printed by the summary. It does not affect the fit. The default is `y`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  reg::OLSOptions options;
+  options.response_name = "load";
+  const auto fit = reg::ols_fit(y, x, options);
+  out.writeln("response_name", fit.response_name);
+}
+```
+
+### `predictor_names`
+
+`std::vector<std::string>`, default `empty`.
+
+Labels for the predictors, one per column of `x`, used for `coefficient_names` and in the summary. The intercept is always named `const`. Without names the predictors are called `x1`, `x2`, and so on; a list of the wrong length is an error.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  reg::OLSOptions options;
+  const auto unnamed = reg::ols_fit(y, x, options);
+  options.predictor_names = {"hours"};
+  const auto named = reg::ols_fit(y, x, options);
+  out.writeln("default names", unnamed.coefficient_names);
+  out.writeln("given names  ", named.coefficient_names);
+  options.predictor_names = {"hours", "extra"};
+  try {
+    reg::ols_fit(y, x, options);
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find("Triggered")));
+  }
+}
+```
+
+### `covariance`
+
+`regression::OLSCovarianceType`, default `Nonrobust`.
+
+The covariance estimator; see [`OLSCovarianceType`](OLSCovarianceType.md). `Nonrobust` is the default and the only choice.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  reg::OLSOptions options;
+  options.covariance = reg::OLSCovarianceType::Nonrobust;
+  const auto fit = reg::ols_fit(y, x, options);
+  out.writeln("std_errors", fit.std_errors.items<double>());
+}
+```
+
+## See Also
+
+[`ols_fit`](ols_fit.md) consumes the options, [`OLSCovarianceType`](OLSCovarianceType.md) defines the estimator choice, and [`OLSFitResult`](OLSFitResult.md) records the resolved values and the outcome.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OLSCovarianceType.html">
+    <span class="label">Previous</span>
+    <span class="title">OLSCovarianceType</span>
+  </a>
+  <a class="next-link" href="OLSFitResult.html">
+    <span class="label">Next</span>
+    <span class="title">OLSFitResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

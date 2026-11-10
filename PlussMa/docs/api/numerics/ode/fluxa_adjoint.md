@@ -1,0 +1,205 @@
+<!-- generated from fluxa_adjoint.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `ode::fluxa_adjoint`
+
+Solves an initial-value problem and returns the gradients of a loss with respect to the initial state and the parameters, by the adjoint method.
+
+## Signature
+
+```cpp
+ode::OdeAdjointResult ode::fluxa_adjoint(const ode::OdeFn &f, const pluss::Series &y0, double t0, double t1, const pluss::Series &theta, const pluss::Series &grad_y_final, const ode::OdeOptions &options = {});
+```
+
+## What It Does
+
+Given a loss `L(y(t1))` whose gradient with respect to the final state is `grad_y_final = ∂L/∂y(t1)`, the adjoint method returns `∂L/∂y₀` and `∂L/∂θ` without keeping one enormous autodiff graph over the whole trajectory. It solves forward with fixed RK4 steps, storing the state at each step boundary (a **checkpointed discrete adjoint**: memory grows with the number of steps, but only the trajectory is stored, not every intermediate of every step), then walks the steps **backward**, computing each step's local vector-Jacobian product by an ordinary reverse pass through `f` and accumulating the gradients. The gradients are the exact gradients of the RK4 discretization, not an approximation to the continuous adjoint ODE.
+
+The result holds the final state, `grad_y0`, and `grad_theta` (undefined when `theta` is undefined). Only fixed-step `RK4` is defined for it; adaptive stepping would require differentiating the step-acceptance decisions, which is a different design. `grad_y_final` need not be a gradient of a scalar: it is any vector `v` with the result `vᵀ ∂y(t1)/∂(y₀, θ)`, so one call gives a vector-Jacobian product.
+
+**The idea.** To differentiate a scalar loss `L = wᵀ y(t1)` with respect to many inputs (`y₀` and every parameter) one backward sweep is enough, however many inputs there are, whereas forward sensitivities cost one extra solve per input. The adjoint `λ(t)` satisfies a linear equation integrated backwards from `λ(t1) = w`, and the gradients are accumulated along it. Here the sweep is the *discrete* adjoint of the RK4 map: states are checkpointed in the forward pass and each step's vector-Jacobian product is pushed back through the step, so the gradients are the exact derivatives of the numerical solution, not an approximation of the continuous problem's.
+
+**When it is the right tool.** Fitting parameters of an ODE model, sensitivity of a final state to the initial condition, and training with a differential equation inside a model. The cost is about the cost of two solves, independent of the number of parameters.
+
+## Parameters
+
+`const ode::OdeFn &f`
+: The derivative.
+
+`const pluss::Series &y0`
+: The initial state.
+
+`double t0, double t1`
+: The time window.
+
+`const pluss::Series &theta`
+: The parameters, or undefined.
+
+`const pluss::Series &grad_y_final`
+: `∂L/∂y(t1)`, shaped like `y0`.
+
+`const ode::OdeOptions &options`
+: RK4 with `steps` steps.
+
+## Returns
+
+An [`OdeAdjointResult`](OdeAdjointResult.md).
+
+## Errors
+
+- A missing callback, an undefined `y0` or seed, `steps ≤ 0`, or a method other than `RK4` throws.
+
+## Practical Examples
+
+### Example 1
+
+A decay rate. For `y' = −θ y` the final state is `y₀ e^{−θ}`; with the loss `L = y(1)` (seed 1) the gradients are `∂L/∂y₀ = e^{−θ}` and `∂L/∂θ = −y₀ e^{−θ}`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &theta) { return y * theta * -1.0; };
+  const ode::OdeAdjointResult r = ode::fluxa_adjoint(decay, pluss::make_series({1.0}), 0.0, 1.0, pluss::make_series({1.0}), pluss::make_series({1.0}));
+  out.writeln("y(1) =", r.y_final.items<double>(), ", exact =", std::exp(-1.0));
+  out.writeln("dL/dy0 =", r.grad_y0.items<double>(), ", exact =", std::exp(-1.0));
+  out.writeln("dL/dtheta =", r.grad_theta.items<double>(), ", exact =", -std::exp(-1.0));
+}
+```
+
+Output
+
+```text
+y(1) = [0.36787944] , exact = 0.36787944
+dL/dy0 = [0.36787944] , exact = 0.36787944
+dL/dtheta = [-0.36787944] , exact = -0.36787944
+```
+
+### Example 2
+
+Checked against a finite difference. Perturbing `θ` and re-solving with `fluxa` gives the same slope.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &theta) { return y * theta * -1.0; };
+  const Series y0 = pluss::make_series({2.0});
+  const double theta = 0.7, h = 1e-6;
+  const double up = ode::fluxa(decay, y0, 0.0, 1.5, pluss::make_series({theta + h})).y_final.items<double>()[0];
+  const double down = ode::fluxa(decay, y0, 0.0, 1.5, pluss::make_series({theta - h})).y_final.items<double>()[0];
+  const ode::OdeAdjointResult r = ode::fluxa_adjoint(decay, y0, 0.0, 1.5, pluss::make_series({theta}), pluss::make_series({1.0}));
+  out.writeln("adjoint        :", r.grad_theta.items<double>()[0]);
+  out.writeln("finite difference:", (up - down) / (2.0 * h));
+}
+```
+
+Output
+
+```text
+adjoint        : -1.04981325
+finite difference: -1.04981325
+```
+
+### Example 3
+
+A system and a seed. For the oscillator `x'' = −θ x` the seed `[1, 0]` asks for the gradient of the final position; the gradient with respect to the stiffness `θ` is returned along with the initial-state gradient.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const ode::OdeFn spring = [](double, const Series &y, const Series &theta) {
+    return y.select(0, 1).reshape({1}).unite({(y.select(0, 0) * theta.select(0, 0) * -1.0).reshape({1})}, 0);
+  };
+  ode::OdeOptions options;
+  options.steps = 400;
+  const ode::OdeAdjointResult r = ode::fluxa_adjoint(spring, pluss::make_series({1.0, 0.0}), 0.0, 1.0, pluss::make_series({1.0}), pluss::make_series({1.0, 0.0}), options);
+  out.writeln("x(1) =", r.y_final.items<double>()[0], ", cos(1) =", std::cos(1.0));
+  out.writeln("dx/dy0 =", r.grad_y0.items<double>());
+  out.writeln("dx/dtheta =", r.grad_theta.items<double>(), ", analytic = -0.5 sin(1) =", -0.5 * std::sin(1.0));
+}
+```
+
+Output
+
+```text
+x(1) = 0.540302 , cos(1) = 0.540302
+dx/dy0 = [0.540302, 0.841471]
+dx/dtheta = [-0.420735] , analytic = -0.5 sin(1) = -0.420735
+```
+
+### Example 4
+
+No parameters. With `theta` undefined only the initial-state gradient is returned, and `grad_theta` stays undefined.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace ode = pluss::subsp::math::ode;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const ode::OdeFn decay = [](double, const Series &y, const Series &) { return y * -2.0; };
+  const ode::OdeAdjointResult r = ode::fluxa_adjoint(decay, pluss::make_series({1.0}), 0.0, 1.0, pluss::series::undefined(), pluss::make_series({1.0}));
+  out.writeln("dL/dy0 =", r.grad_y0.items<double>(), ", exact =", std::exp(-2.0), ", theta gradient defined =", r.grad_theta.defined());
+}
+```
+
+Output
+
+```text
+dL/dy0 = [0.13533528] , exact = 0.13533528 , theta gradient defined = false
+```
+
+## See Also
+
+- [`OdeAdjointResult`](OdeAdjointResult.md): what it returns
+- [`fluxa`](fluxa.md): the forward solver
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fluxa.html">
+    <span class="label">Previous</span>
+    <span class="title">fluxa</span>
+  </a>
+  <a class="next-link" href="fluxa_linear.html">
+    <span class="label">Next</span>
+    <span class="title">fluxa_linear</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

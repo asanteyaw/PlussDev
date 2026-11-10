@@ -1,0 +1,87 @@
+# `lti::StateSpace`
+
+## Signature
+
+```cpp
+const pluss::Series& lti::StateSpace::a() const noexcept;
+const pluss::Series& lti::StateSpace::b() const noexcept;
+const pluss::Series& lti::StateSpace::c() const noexcept;
+const pluss::Series& lti::StateSpace::d() const noexcept;
+
+double lti::StateSpace::sample_time() const noexcept;
+bool lti::StateSpace::is_cont() const noexcept;
+bool lti::StateSpace::is_disc() const noexcept;
+
+std::int64_t lti::StateSpace::states() const;
+std::int64_t lti::StateSpace::inputs() const;
+std::int64_t lti::StateSpace::outputs() const;
+```
+
+## What It Represents
+
+An immutable, validated realization of `x' = A x + B u` and `y = C x + D u`. Accessors expose the promoted, batch-broadcast matrices without copying. A zero sample time means continuous dynamics; a positive sample time means discrete dynamics.
+
+## Methods
+
+`a()`, `b()`, `c()`, `d()`
+: Return const references to the system matrices. Their trailing dimensions follow the state-space shape contract; leading dimensions are broadcast batch axes.
+
+`sample_time()`
+: Returns zero for continuous time or the positive discrete sampling interval.
+
+`is_cont()`, `is_disc()`
+: Mutually exclusive timebase predicates.
+
+`states()`, `inputs()`, `outputs()`
+: Return the structural dimensions derived from the matrix tails.
+
+## Returns
+
+Accessors return matrix references, scalar metadata, or dimension counts. Construct the object through `lti::state`.
+
+## Errors
+
+The object is already valid after construction; its accessors do not perform new validation.
+
+## Changelog
+
+- **0.1** — Initial immutable batched state-space contract.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Construct and inspect a second-order continuous state-space model.
+
+@@example Eng/api/lti_state.cpp@@
+
+### Example 2
+
+Compare energy Gramians across continuous and discrete timebases.
+
+@@example Eng/api/lti_gram.cpp@@
+
+### Example 3
+
+Exercise matrix-shape and sample-time validation.
+
+@@example Eng/api/lti_state_errors.cpp@@
+
+## See Also
+
+See the [State space](../state.md) family page for matrix shapes, batching, and analysis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Gram.html">
+    <span class="label">Next</span>
+    <span class="title">Gram</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

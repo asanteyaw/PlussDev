@@ -1,0 +1,124 @@
+# Foundation
+
+The foundation family is the one type the rest of the actuarial surface is built on: [`Operator`](foundation/Operator.md), a named callable whose argument and result types are fixed at compile time. Every reusable calculation in the library (a valuation, a loss transform, a pricing run, a reserve) is an `Operator` with a domain alias, so they share one lifecycle: build once with the assumptions bound, call many times with the data.
+
+## What This Family Owns
+
+| You want | Use |
+|---|---|
+| To know what a library operator is | [`Operator`](foundation/Operator.md) |
+| A calculation of your own with the same contract | [`make_operator`](foundation/make_operator.md) |
+| To test whether an operator is usable | [`defined`](foundation/Operator/defined.md), [`operator bool`](foundation/Operator/operator_bool.md) |
+| To label or log an operator | [`key`](foundation/Operator/key.md) |
+| To run it | [`operator()`](foundation/Operator/operator_call.md) |
+
+Use the domain alias when one exists: `Valuation`, `LossTransform`, `LossMeasure`, `Pricing`, `Credibility` and `Reserving` say more than `Operator<...>`. Reach for `make_operator` only for a rule the library does not ship; the result plugs in wherever the alias is expected. The numerical work is not done by the operator but by the `Series` kernels the callable uses.
+
+## Practical Examples
+
+### Example 1: a rule of your own
+
+`make_operator` wraps a lambda; the operator reports its key and is called like the lambda.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto square = actuarial::make_operator<double(double)>("square", [](double x) { return x * x; });
+  out.writeln(square.key(), square(4.0));
+}
+```
+
+### Example 2: the same contract on a Series
+
+A rule on whole vectors, and a library operator beside it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto cap = actuarial::make_operator<pluss::Series(const pluss::Series &)>("cap_500", [](const pluss::Series &x) { return x.clamp_max(500.0); });
+  const pluss::Series losses = pluss::make_series({100.0, 700.0, 450.0, 2000.0});
+  out.writeln(cap.key(), cap(losses).items<double>());
+  out.writeln(actuarial::operators::limit(500.0).key(), actuarial::operators::limit(500.0)(losses).items<double>());
+}
+```
+
+### Example 3: an empty operator
+
+An operator that was never set is reported by `defined` and refuses to run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const actuarial::Operator<double(double)> none;
+  out.writeln("defined:", none.defined());
+  report([&] { (void)none(1.0); });
+}
+```
+
+## Related Pages
+
+Use the persistent sidebar to open each type or factory. The {guide}`actuarial guide <actuarial>` develops longer workflows and mathematical background.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+foundation/Operator
+foundation/make_operator
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+foundation/Operator
+foundation/make_operator
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,146 @@
+# `dfo::differential_evolution_prmm_minimizer`
+
+Minimises an objective with differential evolution that adapts its own parameters and shrinks its population.
+
+## Signature
+
+```cpp
+dfo::PopulationSolverOutcome dfo::differential_evolution_prmm_minimizer(const std::function<pluss::Series(const pluss::Series &)> &objective, const pluss::Series &initial, const dfo::DifferentialEvolutionPrmmConfig &config = {});
+template <class Fn> dfo::PopulationSolverOutcome dfo::differential_evolution_prmm_minimizer(Fn &&objective, const pluss::Series &initial, const dfo::DifferentialEvolutionPrmmConfig &config = {});
+```
+
+## What It Does
+
+A differential-evolution variant that does not need `F` and `CR` chosen in advance. Each member carries its own mutation factor and crossover rate, which are occasionally re-drawn at random (with probabilities `tau_mutation` and `tau_crossover`) from a range, so successful settings survive. Mutants are built from a mix of strategies, including ones that use the `elite_count` best members. After a set number of generations the population is **reduced**: the worse half of each pair is discarded and the budget of generations doubles, so the search gradually turns from exploration into refinement (`reduction_passes` times). The generation budget is derived from `max_evaluations` unless `max_generations` is set.
+
+Choose it for unconstrained problems of medium dimension, where [`Auto`](DfoSolverKind.md) uses it, or whenever the right settings of plain differential evolution are not known.
+
+## Parameters
+
+`Fn &&objective`
+: A callable `Series -> Series` (real scalar) or `Series -> number`.
+
+`const pluss::Series &initial`
+: The starting point.
+
+`const dfo::DifferentialEvolutionPrmmConfig &config`
+: Population, adaptation, reduction, budgets and bounds.
+
+## Returns
+
+A [`PopulationSolverOutcome`](PopulationSolverOutcome.md).
+
+## Errors
+
+- An objective that is not a real scalar throws.
+
+## Practical Examples
+
+### Example 1
+
+A multimodal function. The Rastrigin function in a box, with an evaluation budget.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rastrigin = [](const Series &x) {
+    const double pi = 3.14159265358979323846;
+    return (x.square() - (x * (2.0 * pi)).cos() * 10.0 + 10.0).sum();   // minimum 0 at the origin, many local minima
+  };
+
+  dfo::DifferentialEvolutionPrmmConfig config;
+  config.lower_bounds = pluss::series::make({-5.12, -5.12, -5.12});
+  config.upper_bounds = pluss::series::make({5.12, 5.12, 5.12});
+  config.max_evaluations = 20000;
+  const dfo::PopulationSolverOutcome o = dfo::differential_evolution_prmm_minimizer(rastrigin, pluss::series::make({3.0, 3.0, 3.0}), config);
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", minimum =", o.minimum);
+  out.writeln("status =", dfo::to_string(o.status), ", evaluations =", o.diagnostics.evaluations);
+}
+```
+
+### Example 2
+
+Medium dimension, no bounds. Ten variables, sampled around the start.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f = [](const Series &x) { return (x - 1.0).square().sum(); };
+  dfo::DifferentialEvolutionPrmmConfig config;
+  config.initial_radius = 4.0;
+  config.max_evaluations = 40000;
+  const dfo::PopulationSolverOutcome o = dfo::differential_evolution_prmm_minimizer(f, pluss::series::make(std::vector<double>(10, 0.0)), config);
+  out.writeln("minimum =", o.minimum, ", evaluations =", o.diagnostics.evaluations);
+}
+```
+
+### Example 3
+
+The Rosenbrock valley in a box.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  dfo::DifferentialEvolutionPrmmConfig config;
+  config.lower_bounds = pluss::series::make({-3.0, -3.0});
+  config.upper_bounds = pluss::series::make({3.0, 3.0});
+  config.max_evaluations = 20000;
+  const dfo::PopulationSolverOutcome o = dfo::differential_evolution_prmm_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config);
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", minimum =", o.minimum);
+}
+```
+
+## See Also
+
+- [`DifferentialEvolutionPrmmConfig`](DifferentialEvolutionPrmmConfig.md): the settings
+- [`differential_evolution_minimizer`](differential_evolution_minimizer.md): the classic variant
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="differential_evolution_minimizer.html">
+    <span class="label">Previous</span>
+    <span class="title">differential_evolution_minimizer</span>
+  </a>
+  <a class="next-link" href="discomads_blackbox_minimizer.html">
+    <span class="label">Next</span>
+    <span class="title">discomads_blackbox_minimizer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

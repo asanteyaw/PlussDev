@@ -1,0 +1,126 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 13dd9290fa59 -->
+
+# `actuarial::Cashflow::horizon`
+
+[Back to `actuarial::Cashflow`](../Cashflow.md)
+
+The number of years the cashflow spans.
+
+## Signature
+
+```cpp
+std::int64_t actuarial::Cashflow::horizon() const noexcept;
+```
+
+## What It Does
+
+The number of years `n`: the death payments have `n` entries and the survival payments `n + 1`. A valuation requires the horizon not to exceed the mortality horizon of its basis, and values a shorter cashflow over its own years. An undefined cashflow has horizon 0.
+
+## Returns
+
+The horizon in years, 0 for an undefined or zero-year cashflow.
+
+## Practical Examples
+
+### Example 1: the horizon of each factory
+
+The horizon is the `years` argument, or one less than the length of the survival schedule for `make`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("annuity(5):", actuarial::cashflow::annuity(5).horizon(), " death(3):", actuarial::cashflow::death(3).horizon(), " endowment(7):", actuarial::cashflow::endowment(7).horizon());
+  out.writeln("make with 4 survival and 3 death payments:", actuarial::cashflow::make(pluss::make_series({0.0, 0.0, 0.0, 1.0}), pluss::make_series({1.0, 1.0, 1.0})).horizon());
+}
+```
+
+### Example 2: against the mortality horizon
+
+A cashflow longer than the mortality of the basis is refused; a shorter one is valued over its own years.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  out.writeln("mortality horizon", mortality.horizon(), " cashflow horizon", actuarial::cashflow::annuity(3).horizon(), " value", value(actuarial::cashflow::annuity(3)).item<double>());
+  report([&] { (void)value(actuarial::cashflow::annuity(8)); });
+}
+```
+
+### Example 3: empty cashflows
+
+An undefined cashflow and a zero-year cashflow both have horizon 0.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("undefined:", actuarial::Cashflow{}.horizon(), " annuity(0):", actuarial::cashflow::annuity(0).horizon());
+}
+```
+
+## See Also
+
+- [`Cashflow`](../Cashflow.md): the type
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="defined.html">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="survival_payments.html">
+    <span class="label">Next</span>
+    <span class="title">survival_payments</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,174 @@
+# `optim::SeptimaConstraints`
+
+The constraints of a `septima` run: residual functions for equalities and inequalities, and bounds.
+
+`equalities` returns a vector of residuals `h(x)` that must be zero; `inequalities` returns residuals `g(x)` that must be at most zero; both receive the list of parameter blocks and return a `std::vector<Series>` (one `Series` per group of constraints, scalar or vector). `lbs` and `ubs` are the lower and upper bounds, one `Series` per parameter block in the same order and shape (use `-inf` and `+inf` for no bound). All four are optional. Constraints are enforced by an augmented Lagrangian, so they hold to the tolerance `constraint_tolerance` rather than exactly; bounds are projected. The residual functions must be written with differentiable `Series` operations so that their derivatives are available. Box constraints need an ordering, so bounds are rejected for complex parameters; inequality residuals must be real; equality residuals must be real when `enable_constraint_autodiff` is on.
+
+## Fields
+
+### `equalities`
+
+`std::function<std::vector<pluss::Series>(const std::vector<pluss::Series> &)>`, default `empty`.
+
+Residuals `h(x)` that must be zero.
+
+### `inequalities`
+
+`std::function<std::vector<pluss::Series>(const std::vector<pluss::Series> &)>`, default `empty`.
+
+Residuals `g(x)` that must be at most zero.
+
+### `lbs`
+
+`std::vector<pluss::Series>`, default `empty`.
+
+Lower bounds, one per parameter block.
+
+### `ubs`
+
+`std::vector<pluss::Series>`, default `empty`.
+
+Upper bounds, one per parameter block.
+
+## Guidance
+
+Passed as the fourth argument of `septima`.
+
+## Practical Examples
+
+### Example 1
+
+Bounds. Minimise the distance to `(3, −1)` inside `[0, 2] × [0, 2]`: the nearest corner is `(2, 0)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series target = pluss::series::make({3.0, -1.0});
+  optim::SeptimaConstraints constraints;
+  constraints.lbs = {pluss::series::make({0.0, 0.0})};
+  constraints.ubs = {pluss::series::make({2.0, 2.0})};
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima([&](const Series &x) { return (x - target).square().sum(); }, pluss::series::make({0.0, 0.0}), options, constraints);
+  out.writeln("x =", result.params[0].items<double>());
+}
+```
+
+### Example 2
+
+An equality, with a vector of residuals. Two equations in one function: `x₀ + x₁ = 2` and `x₀ − x₁ = 0.5`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  optim::SeptimaConstraints constraints;
+  constraints.equalities = [](const std::vector<Series> &x) {
+    return std::vector<Series>{x[0].sum() - 2.0, x[0].select(0, 0) - x[0].select(0, 1) - 0.5};
+  };
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima([](const Series &x) { return x.square().sum(); }, pluss::series::make({0.0, 0.0}), options, constraints);
+  out.writeln("x =", result.params[0].items<double>());
+  out.writeln("violation =", result.constraint_violation);
+}
+```
+
+### Example 3
+
+An inequality: `g(x) ≤ 0`. Stay inside the disc `|x|² ≤ 1` while approaching `(1, 2)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series target = pluss::series::make({1.0, 2.0});
+  optim::SeptimaConstraints constraints;
+  constraints.inequalities = [](const std::vector<Series> &x) { return std::vector<Series>{x[0].square().sum() - 1.0}; };
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima([&](const Series &x) { return (x - target).square().sum(); }, pluss::series::make({0.0, 0.0}), options, constraints);
+  out.writeln("x =", result.params[0].items<double>());
+  out.writeln("multiplier =", result.state.lambda_inequalities[0].item<double>());
+}
+```
+
+### Example 4
+
+Several blocks, with bounds per block. The block order of `lbs` and `ubs` is the order of the initial blocks.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  optim::SeptimaConstraints constraints;
+  constraints.lbs = {pluss::series::make({0.5}), pluss::series::make({-10.0})};
+  constraints.ubs = {pluss::series::make({10.0}), pluss::series::make({10.0})};
+  const std::function<Series(const std::vector<Series> &)> objective = [](const std::vector<Series> &p) { return (p[0] - 0.0).square().sum() + (p[1] - 1.0).square().sum(); };
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptimizer::Lbfgs;
+  const optim::SeptimaResult result = optim::septima(objective, std::vector<Series>{pluss::series::make({2.0}), pluss::series::make({2.0})}, options, constraints);
+  out.writeln("first =", result.params[0].items<double>(), " second =", result.params[1].items<double>());
+}
+```
+
+## See Also
+
+- [`septima`](septima.md): consumes it
+- [`SeptimaOptions`](SeptimaOptions.md): the penalty schedule
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Lsr1State.html">
+    <span class="label">Previous</span>
+    <span class="title">Lsr1State</span>
+  </a>
+  <a class="next-link" href="SeptimaExitFlag.html">
+    <span class="label">Next</span>
+    <span class="title">SeptimaExitFlag</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,215 @@
+<!-- generated from ratio_curve.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `actuarial::models::ratio_curve`
+
+The loss ratio of each cell.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::models::ratio_curve(const pluss::Series &incurred_losses, const pluss::Series &earned_premium);
+```
+
+## What It Does
+
+Returns the loss ratio of each cell, {math}`L_i/P_i`, one value per cell. A cell whose denominator is zero gets zero rather than an error, so a rating grid with empty cells stays usable; [`loss_ratio`](loss_ratio.md) is the aggregate over the whole book and is the figure to use for an overall rate. This is the first step of [`operators::price`](../pricing/price.md).
+
+## Parameters
+
+`incurred_losses`
+: One-dimensional, finite series of losses, 0 or more.
+
+`earned_premium`
+: Series of the same length, finite and 0 or more.
+
+## Returns
+
+A series of the same length as the inputs.
+
+## Errors
+
+Throws `ratio_curve: numerator must be >= 0` (and `must be defined`, `must be finite`) and the same for `earned_premium`, and `ratio_curve: numerator and earned_premium must have same length`.
+
+## Practical Examples
+
+### Example 1: four cells
+
+The figure for each cell.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700000.0, 820000.0, 1000000.0, 1230000.0});
+  out.writeln(actuarial::models::ratio_curve(losses, premium).items<double>());
+}
+```
+
+Output
+
+```text
+[0.742857, 0.841463, 0.810000, 0.894309]
+```
+
+### Example 2: an empty cell
+
+A zero denominator gives zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(actuarial::models::ratio_curve(pluss::make_series({100.0, 50.0, 80.0}), pluss::make_series({10.0, 0.0, 16.0})).items<double>());
+}
+```
+
+Output
+
+```text
+[10.000000, 0.000000, 5.000000]
+```
+
+### Example 3: against the aggregate
+
+The cells straddle the aggregate figure.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series premium = pluss::make_series({700000.0, 820000.0, 1000000.0, 1230000.0});
+  out.writeln("cells:", actuarial::models::ratio_curve(losses, premium).items<double>());
+  out.writeln("book: ", actuarial::models::loss_ratio(losses, premium).item<double>());
+}
+```
+
+Output
+
+```text
+cells: [0.742857, 0.841463, 0.810000, 0.894309]
+book:  0.832000
+```
+
+### Example 4: a grid of cells
+
+Unlike the aggregate, the per-cell figure accepts any shape, so a two-dimensional grid of cells works; the two inputs must have the same number of cells.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series l = pluss::make_series({100.0, 50.0, 80.0, 30.0}, {2, 2});
+  const pluss::Series d = pluss::make_series({10.0, 0.0, 16.0, 5.0}, {2, 2});
+  out.writeln(actuarial::models::ratio_curve(l, d).reshape({4}).items<double>());
+}
+```
+
+Output
+
+```text
+[10.000000, 0.000000, 5.000000, 6.000000]
+```
+
+### Example 5: the errors
+
+A length mismatch and invalid values are refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::models::ratio_curve(pluss::make_series({1.0, 2.0}), pluss::make_series({1.0, 2.0, 3.0})); });
+  report([&] { (void)actuarial::models::ratio_curve(pluss::make_series({-1.0, 2.0}), pluss::make_series({1.0, 2.0})); });
+  report([&] { (void)actuarial::models::ratio_curve(pluss::make_series({1.0, 2.0}), pluss::make_series({std::nan(""), 2.0})); });
+}
+```
+
+Output
+
+```text
+ratio_curve: numerator and earned_premium must have same length
+ratio_curve: numerator must be >= 0
+ratio_curve: earned_premium must be finite
+```
+
+## See Also
+
+- [`loss_ratio`](loss_ratio.md): the aggregate over the book
+- [`operators::price`](../pricing/price.md): the operator that runs these steps together
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="premium_curve.html">
+    <span class="label">Previous</span>
+    <span class="title">premium_curve</span>
+  </a>
+  <a class="next-link" href="credibility_weight.html">
+    <span class="label">Next</span>
+    <span class="title">credibility_weight</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,174 @@
+<!-- generated from Options.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `roots::Options`
+
+Iteration limit, stopping tolerances and checking cadence shared by every root finder.
+
+`Options` is the last argument of `bisect`, `illinois`, `newton`, `secant` and `householder`. By default a solver ignores the tolerances and simply runs `max_iterations` iterations; that costs nothing extra and avoids any host synchronisation, which is the right choice on a GPU or for a fixed budget. Setting a tolerance turns on an early exit that is checked only every `check_every` iterations, so the cost of looking at the data is paid rarely. The early exit fires only when *every* lane meets the tolerance.
+
+## Fields
+
+### `max_iterations`
+
+`std::int64_t`, default `100`.
+
+The number of iterations a solver performs at most. With no tolerance set it is exactly the number performed. For `bisect` it halves the bracket that many times; for the others it bounds the work. `householder` requires it to be positive.
+
+### `x_tolerance`
+
+`double`, default `0.0`.
+
+Stop when every lane's bracket width (bracketed solvers) or step size (the others) is below this value. 0 turns this exit off. Negative values are refused by `householder`.
+
+### `f_tolerance`
+
+`double`, default `0.0`.
+
+Stop when every lane's `|f|` is below this value. 0 turns this exit off. When both tolerances are positive, either one is enough to stop.
+
+### `check_every`
+
+`std::int64_t`, default `8`.
+
+How often, in iterations, the early exits are examined. The test needs the data on the host, so a larger value costs less; the reported `iterations` is therefore a multiple of it when an early exit fires. `householder` requires it to be positive.
+
+### `derivative_step`
+
+`double`, default `1e-6`.
+
+The relative step `h = max(|x|, 1) · derivative_step` of the central difference that `newton` uses when no derivative is given. Ignored by every other solver.
+
+## Guidance
+
+Leave `max_iterations` at 100 unless the problem is unusually hard or the budget unusually tight; set one tolerance when a sweep is large enough that iterating past convergence is wasteful; keep `check_every` at its default unless each check is cheap compared with an iteration.
+
+## Practical Examples
+
+### Example 1
+
+Fixed iteration count against an early exit. The default runs all 100 iterations of `illinois`; setting `f_tolerance` stops at the first check where every residual is below it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  const Series lo = pluss::make_series({1.0, 0.0}), hi = pluss::make_series({2.0, 3.0});
+  roots::Options fixed_budget;
+  roots::Options early;
+  early.f_tolerance = 1e-12;
+
+  out.writeln("default       : iterations =", roots::illinois(f, lo, hi, fixed_budget).iterations);
+  out.writeln("f_tolerance   : iterations =", roots::illinois(f, lo, hi, early).iterations);
+}
+```
+
+Output
+
+```text
+default       : iterations = 100
+f_tolerance   : iterations = 8
+```
+
+### Example 2
+
+Checking cadence. A check every iteration (`check_every = 1`) stops at the exact iteration the tolerance is met; the default of 8 rounds the stop up to a multiple of 8.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  const Series start = pluss::make_series(3.0);
+  const roots::Fn df = [](const Series &x) { return x * 2.0; };
+  roots::Options every_step;
+  every_step.x_tolerance = 1e-12;
+  every_step.check_every = 1;
+  roots::Options every_eighth;
+  every_eighth.x_tolerance = 1e-12;
+
+  out.writeln("check_every = 1 : iterations =", roots::newton(f, start, df, every_step).iterations);
+  out.writeln("check_every = 8 : iterations =", roots::newton(f, start, df, every_eighth).iterations);
+}
+```
+
+Output
+
+```text
+check_every = 1 : iterations = 6
+check_every = 8 : iterations = 8
+```
+
+### Example 3
+
+`derivative_step`. It sets the relative step of the central-difference slope used by `newton` when no derivative is given. The step only changes the slope estimate, so it changes how fast the iteration converges, not where it converges to. For `eˣ − 3` (root `ln 3`), whose central difference is not exact, the residual after a fixed 3 iterations is smallest for a small step and visibly larger for a coarse one.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const roots::Fn f = [](const Series &x) { return x.exp() - 3.0; };
+  const Series start = pluss::make_series(3.0);
+  for (const double step : {1e-6, 1e-2, 1.0}) {
+    roots::Options options;
+    options.max_iterations = 3;
+    options.derivative_step = step;
+    out.writeln("derivative_step =", step, ": |f(x)| after 3 iterations =", std::abs(roots::newton(f, start, {}, options).residual.item<double>()));
+  }
+}
+```
+
+Output
+
+```text
+derivative_step = 0.0000010000 : |f(x)| after 3 iterations = 0.2190053256
+derivative_step = 0.0100000000 : |f(x)| after 3 iterations = 0.2191864684
+derivative_step = 1.0000000000 : |f(x)| after 3 iterations = 5.5371004551
+```
+
+## See Also
+
+- [`Result`](Result.md): what a solver returns
+- [`bisect`](bisect.md): a consumer
+- [`newton`](newton.md): the only consumer of `derivative_step`
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Derivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">Derivatives</span>
+  </a>
+  <a class="next-link" href="Result.html">
+    <span class="label">Next</span>
+    <span class="title">Result</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

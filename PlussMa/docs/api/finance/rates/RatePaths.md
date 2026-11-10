@@ -1,0 +1,128 @@
+<!-- generated from RatePaths.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `rates::RatePaths`
+
+Simulated short-rate paths and the normals that drove them.
+
+`rate` has shape `[steps + 1, paths]` (the rate at every date, starting from `r0`), or `[paths, steps + 1]` with `paths_first`. `innovation` holds the standard normals of each step, `[steps, paths]`, kept to audit or reuse a run.
+
+## Fields
+
+### `rate`
+
+`pluss::Series`, default `undefined`.
+
+`[steps + 1, paths]` (or transposed with `paths_first`).
+
+### `innovation`
+
+`pluss::Series`, default `undefined`.
+
+`[steps, paths]`: the normals that drove the steps.
+
+## Guidance
+
+Returned by the short-rate path functions.
+
+## Practical Examples
+
+### Example 1
+
+The shapes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const rt::RatePaths sim = rt::vasicek_paths(12, 5, 0.1, rt::VasicekParams{});
+  out.writeln("rate", sim.rate.sizes(), " innovation", sim.innovation.sizes());
+}
+```
+
+Output
+
+```text
+rate [13, 5]  innovation [12, 5]
+```
+
+### Example 2
+
+The first row is the initial rate of every path.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const rt::RatePaths sim = rt::vasicek_paths(12, 5, 0.1, rt::VasicekParams{.kappa = 0.7, .theta = 0.03, .sigma = 0.01, .r0 = 0.045});
+  out.writeln(sim.rate.select(0, 0).items<double>());
+}
+```
+
+Output
+
+```text
+[0.0450, 0.0450, 0.0450, 0.0450, 0.0450]
+```
+
+### Example 3
+
+The innovations are standard normals.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace rt = fin::rates;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const rt::RatePaths sim = rt::vasicek_paths(50, 2000, 0.1, rt::VasicekParams{});
+  out.writeln("mean", sim.innovation.mean().item<double>(), "sd", sim.innovation.std().item<double>());
+}
+```
+
+Output
+
+```text
+mean -0.001 sd 1.005
+```
+
+## See Also
+
+- [`vasicek_paths`](vasicek_paths.md): produces it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="HullWhiteParams.html">
+    <span class="label">Previous</span>
+    <span class="title">HullWhiteParams</span>
+  </a>
+  <a class="next-link" href="Scheme.html">
+    <span class="label">Next</span>
+    <span class="title">Scheme</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

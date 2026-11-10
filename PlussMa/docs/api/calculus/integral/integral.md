@@ -1,0 +1,342 @@
+<!-- generated from integral.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::integral`
+
+The integral of a function over a range: anchored at a lower limit (a function of the upper limit) or definite (a number, or a function of the other variables).
+
+## Signature
+
+```cpp
+operators::Operator operators::integral(std::string_view variable, double lower);
+operators::Operator operators::integral(std::string_view variable, double lower, double upper);
+```
+
+## What It Does
+
+`integral` has two forms.
+
+**Anchored**, `integral("x", a)`: the function `F(x) = ∫ₐˣ f(t) dt`. The result is still a function of `x` (the upper limit) and of the other variables. This is an antiderivative with the constant fixed by `F(a) = 0`, so unlike [`antiderivative`](antiderivative.md) the answer is unambiguous.
+
+**Definite**, `integral("x", a, b)`: the value `∫ₐᵇ f(x) dx`. The integration variable is *bound*: the result no longer depends on `x`, only on the other variables. A function of `x` alone becomes a constant (arity 0, called with `()`); a function of `x` and `y` becomes a function of `y`. Reversed limits change the sign, and equal limits give zero.
+
+Both forms use the closed form when the integrand matches the library's table of exact primitives, and otherwise evaluate a numerical integral when values arrive (check [`provenance()`](../functions/Function/provenance.md): `Structural` or `Quadrature`). The definite form accepts infinite limits, `-inf` and `+inf` in either position, for the whole line or a half line; an infinite range is always numerical. The anchored form needs a finite lower limit. An odd integrand over a symmetric interval `[-a, a]` is recognised and gives exactly zero. A vector- or matrix-valued integrand is integrated component by component and keeps its shape.
+
+## Parameters
+
+`std::string_view variable`
+: The integration variable, a variable of the function the operator is applied to.
+
+`double lower`
+: The lower limit (anchored form: the point where the integral is zero). May be `-inf` in the definite form.
+
+`double upper`
+: The upper limit of the definite form. May be `+inf`; reversed limits change the sign.
+
+## Returns
+
+An `Operator`. The anchored form returns a function of the same variables; the definite form returns a function of the remaining variables.
+
+## Errors
+
+- An empty variable name is refused when the operator is built.
+- An unknown variable raises `unknown variable '<name>'`.
+- A lower limit that is `+inf` or NaN, or an upper limit that is `-inf` or NaN, is refused.
+- An infinite limit needs both limits (the definite form).
+- A numerical integral that does not converge raises `unresolved integral quadrature did not converge`.
+
+## Practical Examples
+
+### Example 1
+
+Anchored: `F(x) = ∫₁ˣ 3t² dt = x³ − 1`. It is zero at the lower limit and its derivative is the integrand.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return 3.0 * x.pow(2); });
+  const math::Function F = operators::integral("x", 1.0)(f);
+  const auto x = pluss::make_series({1.0, 2.0, 3.0});
+  out.writeln("F(x):    ", F({x}).items<double>(), "  (x^3 - 1 = 0, 7, 26)");
+  out.writeln("F'(x):   ", operators::differential("x")(F)({x}).items<double>(), "  (3 x^2)");
+}
+```
+
+Output
+
+```text
+F(x):     [0.0000, 7.0000, 26.0000]   (x^3 - 1 = 0, 7, 26)
+F'(x):    [3.0000, 12.0000, 27.0000]   (3 x^2)
+```
+
+### Example 2
+
+Definite: the variable is bound and the others remain. `∫₀² x y² dx = 2 y²`, a function of `y` alone; integrating `y` too leaves a constant.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y * y; });
+  const math::Function over_x = operators::integral("x", 0.0, 2.0)(f);
+  out.writeln("variables left:", over_x.arity(), "  value at y = 3:", over_x(3.0).item<double>(), "  (2 * 9 = 18)");
+  const math::Function constant = operators::integral("y", 0.0, 1.0)(over_x);
+  out.writeln("then over y:   arity", constant.arity(), " value", constant().item<double>(), "  (2/3)");
+}
+```
+
+Output
+
+```text
+variables left: 1   value at y = 3: 18.0000   (2 * 9 = 18)
+then over y:   arity 0  value 0.6667   (2/3)
+```
+
+### Example 3
+
+Reversed limits change the sign, equal limits give zero, and an odd function over a symmetric interval is exactly zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return 3.0 * x.pow(2) + x; });
+  out.writeln("1 to 2: ", operators::integral("x", 1.0, 2.0)(f)().item<double>());
+  out.writeln("2 to 1: ", operators::integral("x", 2.0, 1.0)(f)().item<double>());
+  out.writeln("1 to 1: ", operators::integral("x", 1.0, 1.0)(f)().item<double>());
+  const math::Function odd = math::function({"x"}, [](math::Function x) { return x.sin() * x.cosh(); });
+  out.writeln("odd over [-3, 3]:", operators::integral("x", -3.0, 3.0)(odd)().item<double>());
+}
+```
+
+Output
+
+```text
+1 to 2:  8.5000
+2 to 1:  -8.5000
+1 to 1:  0.0000
+odd over [-3, 3]: 0.0000
+```
+
+### Example 4
+
+Infinite limits. The Gaussian integral `∫ exp(−x²) dx` over the whole line is `√π`; `∫₀^∞ exp(−x) dx = 1` over a half line. These are evaluated numerically (`Quadrature`).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+static const char *name(math::Provenance p) {
+  switch (p) {
+  case math::Provenance::Structural: return "Structural";
+  case math::Provenance::Opaque: return "Opaque";
+  case math::Provenance::Quadrature: return "Quadrature";
+  case math::Provenance::Autodiff: return "Autodiff";
+  }
+  return "?";
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double inf = std::numeric_limits<double>::infinity();
+  const math::Function gauss = math::function({"x"}, [](math::Function x) { return (-(x * x)).exp(); });
+  const math::Function decay = math::function({"x"}, [](math::Function x) { return (-x).exp(); });
+  const math::Function whole = operators::integral("x", -inf, inf)(gauss);
+  const math::Function half = operators::integral("x", 0.0, inf)(decay);
+  out.writeln("whole line:", whole().item<double>(), "  sqrt(pi) =", std::sqrt(std::acos(-1.0)), "  ", name(whole.provenance()));
+  out.writeln("half line: ", half().item<double>(), "  ", name(half.provenance()));
+}
+```
+
+Output
+
+```text
+whole line: 1.7725   sqrt(pi) = 1.7725    Quadrature
+half line:  1.0000    Quadrature
+```
+
+### Example 5
+
+A function of a parameter, integrated over a range, is a function of that parameter: here the Laplace-type integral `∫₀^∞ exp(−s x) dx = 1/s`, evaluated on several `s` at once.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <limits>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double inf = std::numeric_limits<double>::infinity();
+  const math::Function f = math::function({"x", "s"}, [](math::Function x, math::Function s) { return (-(s * x)).exp(); });
+  const math::Function F = operators::integral("x", 0.0, inf)(f);
+  const auto s = pluss::make_series({0.5, 1.0, 2.0, 4.0});
+  out.writeln("s:        ", s.items<double>());
+  out.writeln("integral: ", F({s}).items<double>());
+  out.writeln("1/s:      ", (1.0 / s).items<double>());
+}
+```
+
+Output
+
+```text
+s:         [0.5000, 1.0000, 2.0000, 4.0000]
+integral:  [2.0000, 1.0000, 0.5000, 0.2500]
+1/s:       [2.0000, 1.0000, 0.5000, 0.2500]
+```
+
+### Example 6
+
+A vector-valued integrand is integrated component by component. The curve `(x, x², eˣ)` over `[0, 1]`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function curve = math::function({"x"}, [](math::Function x) { return math::stack({x, x * x, x.exp()}); });
+  const math::Function area = operators::integral("x", 0.0, 1.0)(curve);
+  out.writeln("shape:", area.shape(), "  values", area().items<double>(), " (1/2, 1/3, e - 1 =", std::exp(1.0) - 1.0, ")");
+}
+```
+
+Output
+
+```text
+shape: [3]   values [0.5000, 0.3333, 1.7183]  (1/2, 1/3, e - 1 = 1.7183 )
+```
+
+### Example 7
+
+End points where the integrand is undefined. The rule never evaluates the integrand at an end point, so `sin(x)/x` (which is `0/0` at 0) can be integrated from 0: `Si(1) = 0.94608`. Integrable singularities such as `1/√x` at 0 are not resolved to the tolerance and are reported, not guessed.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function sinc = math::function({"x"}, [](math::Function x) { return x.sin() / x; });
+  out.writeln("int_0^1 sin(x)/x =", operators::integral("x", 0.0, 1.0)(sinc)().item<double>(), "  Si(1) = 0.94608307");
+  const math::Function singular = math::function({"x"}, [](math::Function x) { return 1.0 / x.sqrt(); });
+  try { (void)operators::integral("x", 0.0, 1.0)(singular)(); } catch (const pluss::Error &e) { out.writeln("int_0^1 1/sqrt(x):", first_line(e)); }
+}
+```
+
+Output
+
+```text
+int_0^1 sin(x)/x = 0.94608307   Si(1) = 0.94608307
+int_0^1 1/sqrt(x): math::Function: unresolved integral quadrature did not converge; error estimate=0.000362
+```
+
+### Example 8
+
+What is refused: an unknown variable, a lower limit that is `+inf` or not a number, and an anchored integral with an infinite limit (an infinite range needs both limits, so use the definite form).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const double inf = std::numeric_limits<double>::infinity();
+  const math::Function f = math::function({"x"}, [](math::Function x) { return (-x).exp(); });
+  try { (void)operators::integral("z", 0.0, 1.0)(f); } catch (const pluss::Error &e) { out.writeln("unknown variable:", first_line(e)); }
+  try { (void)operators::integral("x", inf, 1.0)(f); } catch (const pluss::Error &e) { out.writeln("lower = +inf:    ", first_line(e)); }
+  try { (void)operators::integral("x", std::nan(""), 1.0)(f); } catch (const pluss::Error &e) { out.writeln("lower = NaN:     ", first_line(e)); }
+  try { (void)operators::integral("x", -inf)(f); } catch (const pluss::Error &e) { out.writeln("anchored at -inf:", first_line(e)); }
+}
+```
+
+Output
+
+```text
+unknown variable: operators::integral: unknown variable 'z'
+lower = +inf:     operators::integral: lower bound must be a number below +infinity
+lower = NaN:      operators::integral: lower bound must be a number below +infinity
+anchored at -inf: operators::integral: an infinite bound needs both limits
+```
+
+## See Also
+
+- [`antiderivative`](antiderivative.md): an indefinite integral
+- [`measure::lebesgue`](../measure/lebesgue.md): integration with null points declared
+- [`provenance`](../functions/Function/provenance.md): exact or numerical
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="convolution.html">
+    <span class="label">Previous</span>
+    <span class="title">convolution</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,122 @@
+# `optim::presets::robust_internal_protocol`
+
+The interior preset with larger budgets for difficult problems.
+
+## Signature
+
+```cpp
+optim::OptimaOptions optim::presets::robust_internal_protocol();
+```
+
+## What It Does
+
+Starts from [`presets::internal_protocol`](presets_internal_protocol.md) and raises the budgets: 160 iterations, longer line searches, more restoration and stall allowances, a larger nonmonotone window and trust-region cap, and two second-order-correction attempts. Use it when the plain interior preset runs out of iterations or stalls.
+
+## Returns
+
+An `OptimaOptions` ready to pass to `optima`.
+
+## Practical Examples
+
+### Example 1
+
+Using the preset. It returns an ordinary `OptimaOptions`; the algorithm is `InternalProtocol`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  const optim::OptimaOptions options = optim::presets::robust_internal_protocol();
+  out.writeln("algorithm =", optim::optima_algorithm_name(options.algorithm));
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("x =", result.params.at("x").items<double>());
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+### Example 2
+
+Adjusting a preset. A preset is a starting point: change any field afterwards.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options = optim::presets::robust_internal_protocol();
+  options.internal_protocol.max_iterations = 3;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("exit =", optim::optima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", evaluations =", result.function_evaluations);
+}
+```
+
+### Example 3
+
+What the preset changes: its values next to the defaults of the same algorithm.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const optim::OptimaOptions preset = optim::presets::robust_internal_protocol();
+  optim::OptimaOptions plain;
+  plain.algorithm = preset.algorithm;
+  std::cout << "max_iterations = preset " << preset.internal_protocol.max_iterations << ", default " << plain.internal_protocol.max_iterations << "\n";
+  std::cout << "max_line_search_iterations = preset " << preset.internal_protocol.max_line_search_iterations << ", default " << plain.internal_protocol.max_line_search_iterations << "\n";
+  std::cout << "soc_correction_attempts = preset " << preset.internal_protocol.soc_correction_attempts << ", default " << plain.internal_protocol.soc_correction_attempts << "\n";
+}
+```
+
+## See Also
+
+- [`OptimaOptions`](OptimaOptions.md): the returned type
+- [`optima`](optima.md): consumes it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="presets_internal_protocol.html">
+    <span class="label">Previous</span>
+    <span class="title">internal_protocol</span>
+  </a>
+  <a class="next-link" href="presets_sequential_qp.html">
+    <span class="label">Next</span>
+    <span class="title">sequential_qp</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

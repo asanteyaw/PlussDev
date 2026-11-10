@@ -1,0 +1,176 @@
+# `actuarial::life_contingencies::dx_lx`
+
+Deaths between consecutive ages of a life table.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::life_contingencies::dx_lx(const pluss::Series &lx);
+```
+
+## What It Does
+
+Returns {math}`d_k=l_k-l_{k+1}`: the expected number of deaths in each year, one fewer value than `lx`. The sum of the deaths is the total decrement, {math}`l_0-l_n`. The first value must be positive, later values non-negative and the table non-increasing.
+
+## Parameters
+
+`lx`
+: One-dimensional series of lives, non-increasing, with a positive first value.
+
+## Returns
+
+A series of `lx.numel() − 1` non-negative values.
+
+## Errors
+
+Throws `dx_lx: lx[0] must be > 0`, `dx_lx: lx must be non-increasing` and `dx_lx: lx must be >= 0`.
+
+## Practical Examples
+
+### Example 1: deaths per year
+
+A cohort of 1,000 lives over four years.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(life::dx_lx(pluss::make_series({1000.0, 990.0, 978.0, 963.0, 945.0})).items<double>());
+}
+```
+
+### Example 2: deaths add to the decrement
+
+Their sum is the lives lost over the horizon.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series lx = pluss::make_series({1000.0, 990.0, 978.0, 963.0, 945.0});
+  out.writeln("sum of deaths =", life::dx_lx(lx).sum().item<double>(), " l0 - ln =", 1000.0 - 945.0);
+}
+```
+
+### Example 3: deaths as a share
+
+Divide by the starting cohort to get the distribution of death by year.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const pluss::Series lx = life::lx_qx(qx, 1.0);
+  out.writeln(life::dx_lx(lx).items<double>());
+  out.writeln(actuarial::mortality::from_qx(qx).lifetime_pmf().items<double>());
+}
+```
+
+### Example 4: a single age
+
+One value has no deaths.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(life::dx_lx(pluss::make_series({100.0})).numel());
+}
+```
+
+### Example 5: the errors
+
+A rising table, a negative life and a zero start.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)life::dx_lx(pluss::make_series({10.0, 12.0})); });
+  report([&] { (void)life::dx_lx(pluss::make_series({10.0, -1.0})); });
+  report([&] { (void)life::dx_lx(pluss::make_series({0.0, 0.0})); });
+}
+```
+
+## See Also
+
+- [`lx_qx`](lx_qx.md): builds the table- [`Mortality`](../mortality/Mortality.md): the same conversions as accessors
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="curtate_mean.html">
+    <span class="label">Previous</span>
+    <span class="title">curtate_mean</span>
+  </a>
+  <a class="next-link" href="force_qx.html">
+    <span class="label">Next</span>
+    <span class="title">force_qx</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

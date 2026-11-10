@@ -1,0 +1,86 @@
+# `control::place`
+
+Assigns state-feedback poles.
+
+## Signature
+
+```cpp
+control::PlaceResult control::place(
+    const pluss::Series& a,
+    const pluss::Series& b,
+    const pluss::Series& poles,
+    control::PlaceOptions options = {});
+
+control::PlaceResult control::place(
+    const lti::StateSpace& system,
+    const pluss::Series& poles,
+    control::PlaceOptions options = {});
+```
+
+## What It Does
+
+`place` assigns the spectrum of `A - B K`. The state-space overload is a convenience coordinator over the same matrix kernel; it does not duplicate the placement algorithm.
+
+## Parameters
+
+`a`
+: Square state matrix `A`.
+
+`b`
+: Input matrix `B`.
+
+`system`
+: State-space model whose `A` and `B` matrices are used.
+
+`poles`
+: Desired closed-loop poles. Real systems require conjugate-paired complex poles.
+
+`options`
+: Refinement, residual, and conditioning controls.
+
+## Returns
+
+A `PlaceResult` containing the gain, closed-loop matrix, and assignment diagnostics.
+
+## Errors
+
+Throws for uncontrollable systems, invalid pole counts or conjugacy, incompatible shapes, ill-conditioned bases, or residuals above tolerance.
+
+## Interpretation and Use
+
+Use matrix overloads in synthesis code that already owns `A` and `B`; use the state-space overload to preserve model provenance and avoid extraction boilerplate. Desired poles are shared across leading batches and real matrices require conjugate pairs.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Assign two real poles through the matrix overload.
+
+@@example Eng/api/control_place.cpp@@
+
+### Example 2
+
+Reject an uncontrollable input matrix.
+
+@@example Eng/api/control_controller_errors.cpp@@
+
+### Example 3
+
+Contrast prescribed poles with LQR-selected poles.
+
+@@example Eng/api/control_optimal.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PidController.html">
+    <span class="label">Previous</span>
+    <span class="title">Pid</span>
+  </a>
+  <a class="next-link" href="pid.html">
+    <span class="label">Next</span>
+    <span class="title">pid</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

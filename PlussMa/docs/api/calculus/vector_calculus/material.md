@@ -1,0 +1,174 @@
+<!-- generated from material.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::material`
+
+The material (convective) derivative of a scalar function in a flow: `∂f/∂t + v · ∇f`.
+
+## Signature
+
+```cpp
+operators::Operator operators::material(math::Function velocity, std::string_view time, pluss::StackArray<std::string_view> variables, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+`material(v, "t", {"x"})` is the operator `f ↦ ∂f/∂t + v · ∇f`: the rate of change of `f` felt by an observer who is carried along by the flow with velocity `v`. It adds the local change `∂f/∂t` (what a fixed instrument records) to the change due to being moved through a varying field (`v·∇f`). A quantity is *conserved along the flow* exactly when its material derivative is zero: `Df/Dt = 0`.
+
+`time` names the time variable; `variables` names the space coordinates; `velocity` is a rank-1 function with one component per coordinate (it may depend on time too). The input must be scalar-valued.
+
+## Parameters
+
+`math::Function velocity`
+: The velocity field: a rank-1 function with one component per space coordinate; it may depend on time.
+
+`std::string_view time`
+: The time variable.
+
+`pluss::StackArray<std::string_view> variables`
+: The space coordinates, in the order of the velocity's components.
+
+`operators::DiffOptions options`
+: Non-smooth policy, fallback and size limit.
+
+## Returns
+
+An `Operator` whose application returns `∂f/∂t + v · ∇f` as a scalar `Function`.
+
+## Errors
+
+- The function must be scalar-valued.
+- The velocity must have one component per coordinate.
+
+## Practical Examples
+
+### Example 1
+
+Local plus convective. For `f = x t` carried by `v = x + t` in one dimension: `f_t + v f_x = x + (x + t) t`, which is `17` at `x = 2, t = 3`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x", "t"}, [](math::Function x, math::Function t) { return x * t; });
+  const math::Function v = math::function({"x", "t"}, [](math::Function x, math::Function t) { return math::stack({x + t}); });
+  const math::Function D = operators::material(v, "t", {"x"})(f);
+  out.writeln("Df/Dt at x = 2, t = 3:", D({pluss::make_series(2.0), pluss::make_series(3.0)}).item<double>(), "  (2 + 5·3)");
+}
+```
+
+Output
+
+```text
+Df/Dt at x = 2, t = 3: 17.0000   (2 + 5·3)
+```
+
+### Example 2
+
+A conserved quantity. A profile translated at speed 1, `f = exp(−(x − t)²)`, is constant along the flow `v = 1`: its material derivative is zero everywhere, while its local derivative `f_t` is not.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const math::Function f = math::function({"x", "t"}, [](math::Function x, math::Function t) { return (-((x - t) * (x - t))).exp(); });
+  const math::Function v = math::function({"x", "t"}, [](math::Function x, math::Function t) { return math::stack({x * 0.0 + 1.0}); });
+  const auto point = {pluss::make_series(0.7), pluss::make_series(0.2)};
+  out.writeln("Df/Dt =", operators::material(v, "t", {"x"})(f)(point).item<double>());
+  out.writeln("f_t   =", operators::differential("t")(f)(point).item<double>(), "  (not zero)");
+}
+```
+
+Output
+
+```text
+Df/Dt = 0.0000000000
+f_t   = 0.7788007831   (not zero)
+```
+
+### Example 3
+
+The inviscid Burgers equation. The velocity field `u = x/(1 + t)` transports itself: `u_t + u u_x = 0`, so the material derivative of `u` along `v = u` is zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const math::Function u = math::function({"x", "t"}, [](math::Function x, math::Function t) { return x / (1.0 + t); });
+  const math::Function v = math::function({"x", "t"}, [](math::Function x, math::Function t) { return math::stack({x / (1.0 + t)}); });
+  const math::Function D = operators::material(v, "t", {"x"})(u);
+  out.writeln("Du/Dt at (2, 3), (-1, 0.5):", D({pluss::make_series({2.0, -1.0}), pluss::make_series({3.0, 0.5})}).items<double>());
+}
+```
+
+Output
+
+```text
+Du/Dt at (2, 3), (-1, 0.5): [0.0000000000, 0.0000000000]
+```
+
+### Example 4
+
+In two dimensions the velocity has two components. Advection by the rotation `v = (−y, x)` of a field that is a function of the radius only gives zero; of `x` it does not.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const math::Function v = math::function({"x", "y", "t"}, [](math::Function x, math::Function y, math::Function) { return math::stack({-y, x}); });
+  const auto D = operators::material(v, "t", {"x", "y"});
+  const math::Function radial = math::function({"x", "y", "t"}, [](math::Function x, math::Function y, math::Function) { return x * x + y * y; });
+  const math::Function plain = math::function({"x", "y", "t"}, [](math::Function x, math::Function, math::Function) { return x; });
+  const auto point = {pluss::make_series(0.6), pluss::make_series(1.4), pluss::make_series(0.0)};
+  out.writeln("D(x^2 + y^2)/Dt:", D(radial)(point).item<double>(), "  (constant along circles)");
+  out.writeln("D(x)/Dt:        ", D(plain)(point).item<double>(), "  (= -y)");
+}
+```
+
+Output
+
+```text
+D(x^2 + y^2)/Dt: 0.0000000000   (constant along circles)
+D(x)/Dt:         -1.4000000000   (= -y)
+```
+
+## See Also
+
+- [`directional`](directional.md): the convective part alone
+- [`differential`](../differential/differential.md): the local time derivative
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="laplacian.html">
+    <span class="label">Previous</span>
+    <span class="title">laplacian</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

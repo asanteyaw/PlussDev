@@ -1,0 +1,127 @@
+<!-- generated from name.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 84e4eb92ef6e -->
+
+# `module::Model::name`
+
+[Back to `module::Model`](../Model.md)
+
+The name of the held model family as text.
+
+## Signature
+
+```cpp
+[[nodiscard]] std::string module::Model::name() const;
+```
+
+## What It Does
+
+Returns `"BlackScholes"`, `"Sabr"`, `"Heston"`, `"Bates"`, `"RoughHeston"` or `"RoughBergomi"`. [`Field::model_name`](../../field/Field/model_name.md) returns the same text for the field's model; use it for labels and messages.
+
+## Returns
+
+The family name.
+
+## Practical Examples
+
+### Example 1
+
+Names of two models.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln(fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}).name(), fin::model::make(fin::model::Kind::Bates, {1.5, 0.04, 0.3, -0.7, 0.04, 0.5, -0.1, 0.2}).name());
+}
+```
+
+Output
+
+```text
+Heston Bates
+```
+
+### Example 2
+
+A default model is Black-Scholes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln(mod::Model{}.name());
+}
+```
+
+Output
+
+```text
+BlackScholes
+```
+
+### Example 3
+
+The name in a printed result.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  out.writeln(field.model.name(), "price:", field.price().price.items<double>());
+}
+```
+
+Output
+
+```text
+Heston price: [8.62811]
+```
+
+## See Also
+
+- [`Model`](../Model.md): the class
+- [`kind`](kind.md): as a Kind
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="make.html">
+    <span class="label">Previous</span>
+    <span class="title">make</span>
+  </a>
+  <a class="next-link" href="parameters.html">
+    <span class="label">Next</span>
+    <span class="title">parameters</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

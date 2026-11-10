@@ -1,0 +1,168 @@
+<!-- generated from pcg.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `krylov::pcg`
+
+Solves `A x = b` by preconditioned conjugate gradients, for a symmetric positive-definite operator and a preconditioner.
+
+## Signature
+
+```cpp
+template <typename Apply, typename Precondition> krylov::CgResult krylov::pcg(Apply &&apply, Precondition &&precondition, const pluss::Series &rhs, const std::vector<std::int64_t> &solve_dims, const krylov::CgOptions &options = {}, const pluss::Series &initial = pluss::series::undefined());
+```
+
+## What It Does
+
+The same method as [`cg`](cg.md) with a preconditioner `M ≈ A⁻¹`: `precondition(r)` maps a residual to an approximate correction (a diagonal scaling, an incomplete factorisation, a coarse-grid solve). A good preconditioner clusters the eigenvalues of `MA` and cuts the iteration count sharply, which pays off when `A` is badly conditioned. `M` must be symmetric positive definite too. `cg` is `pcg` with the identity preconditioner. Everything else (lanes, tolerances, the result) is as for `cg`.
+
+**The method.** Preconditioned CG is ordinary conjugate gradients applied to the transformed system `M^{1/2} A M^{1/2} y = M^{1/2} b`, written so that `M^{1/2}` is never formed: only the action `r ↦ M r` is needed. The convergence rate then depends on the condition number of `M A` rather than `A`, so a preconditioner that is cheap to apply and makes `M A` close to the identity trades one extra function call per iteration for far fewer iterations.
+
+**Choosing a preconditioner.** Diagonal (Jacobi) scaling `M = diag(A)⁻¹` is free and helps when the diagonal varies widely, as in the examples. Stronger choices are an incomplete factorisation or a few sweeps of a smoother; for grid problems a multigrid cycle is close to ideal. A preconditioner must be symmetric positive definite; an indefinite one breaks the method silently, with a stalling residual as the symptom.
+
+## Parameters
+
+`Apply &&apply`
+: `Series -> Series`: `A x`.
+
+`Precondition &&precondition`
+: `Series -> Series`: the preconditioner applied to a residual.
+
+`const pluss::Series &rhs`
+: The right-hand side.
+
+`const std::vector<std::int64_t> &solve_dims`
+: The trailing axes of one system.
+
+`const krylov::CgOptions &options`
+: Iteration limit, tolerances.
+
+`const pluss::Series &initial`
+: A starting guess.
+
+## Returns
+
+A [`CgResult`](CgResult.md).
+
+## Errors
+
+- As for `cg`.
+
+## Practical Examples
+
+### Example 1
+
+A badly scaled operator. A diagonal `A` with entries from 1 to 1000 takes one iteration per distinct eigenvalue; preconditioning by the inverse diagonal makes `MA` the identity, which is solved in one.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const Series d = pluss::make_series({1.0, 10.0, 100.0, 1000.0});
+  const auto apply = [&](const Series &x) { return x * d; };
+  const Series b = pluss::make_series({1.0, 1.0, 1.0, 1.0});
+  krylov::CgOptions options;
+  options.check_interval = 1;
+  const krylov::CgResult plain = krylov::cg(apply, b, {-1}, options);
+  const krylov::CgResult preconditioned = krylov::pcg(apply, [&](const Series &r) { return r / d; }, b, {-1}, options);
+  out.writeln("plain CG        : iterations =", plain.iterations, ", solution =", plain.solution.items<double>());
+  out.writeln("preconditioned  : iterations =", preconditioned.iterations, ", solution =", preconditioned.solution.items<double>());
+}
+```
+
+Output
+
+```text
+plain CG        : iterations = 4 , solution = [1.000000, 0.100000, 0.010000, 0.001000]
+preconditioned  : iterations = 1 , solution = [1.000000, 0.100000, 0.010000, 0.001000]
+```
+
+### Example 2
+
+Jacobi preconditioning. The Laplacian plus a diagonal that varies from 0 to 1000 is dominated by the diagonal, and dividing by it (the Jacobi preconditioner) cuts the iteration count.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::int64_t n = 100;
+  const Series d = pluss::series::linspace(0.0, 1000.0, n, pluss::ScalarType::Float64);
+  const auto apply = [&](const Series &x) {
+    const Series zero = pluss::make_series({0.0});
+    return x * (d + 2.0) - zero.unite({x.slice(0, 0, n - 1, 1)}, 0) - x.slice(0, 1, n, 1).unite({zero}, 0);
+  };
+  const Series b = pluss::series::ones({n}, pluss::ScalarType::Float64);
+  krylov::CgOptions options;
+  options.check_interval = 1;
+  options.max_iterations = 300;
+  const krylov::CgResult plain = krylov::cg(apply, b, {-1}, options);
+  const krylov::CgResult jacobi = krylov::pcg(apply, [&](const Series &r) { return r / (d + 2.0); }, b, {-1}, options);
+  out.writeln("plain iterations =", plain.iterations, ", Jacobi iterations =", jacobi.iterations);
+}
+```
+
+Output
+
+```text
+plain iterations = 68 , Jacobi iterations = 8
+```
+
+### Example 3
+
+The identity preconditioner is plain CG. The two solves agree to the last digit.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const Series A = pluss::make_series({4.0, 1.0, 1.0, 3.0}, {2, 2});
+  const auto apply = [&](const Series &x) { return A.matmul(x.unsqueeze(-1)).squeeze(-1); };
+  const Series b = pluss::make_series({1.0, 2.0});
+  const krylov::CgResult a = krylov::cg(apply, b, {-1});
+  const krylov::CgResult c = krylov::pcg(apply, [](const Series &r) { return r; }, b, {-1});
+  out.writeln("cg  =", a.solution.items<double>());
+  out.writeln("pcg =", c.solution.items<double>());
+}
+```
+
+Output
+
+```text
+cg  = [0.090909090909, 0.636363636364]
+pcg = [0.090909090909, 0.636363636364]
+```
+
+## See Also
+
+- [`cg`](cg.md): without a preconditioner
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="gmres.html">
+    <span class="label">Previous</span>
+    <span class="title">gmres</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

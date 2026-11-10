@@ -1,0 +1,68 @@
+# `lti::freqresp`
+
+## Signature
+
+```cpp
+pluss::Series lti::freqresp(
+    const lti::StateSpace& system,
+    const pluss::Series& omega);
+
+pluss::Series lti::freqresp(
+    const lti::PoleZero& system,
+    const pluss::Series& omega);
+```
+
+## What It Does
+
+Evaluates complex frequency response without forcing representation conversion. State-space evaluation solves the resolvent; pole-zero evaluation forms root products. Both follow the same angular-frequency and timebase convention.
+
+## Parameters
+
+`system`
+: State-space or pole-zero model. Continuous systems evaluate at `jω`; discrete systems evaluate at `exp(jωT)`.
+
+`omega`
+: Nonempty rank-one real floating angular-frequency grid on the same platform as the system.
+
+## Returns
+
+For pole-zero input, a complex vector over frequency. For state-space input, complex output/input response matrices with frequency on the final axis and batch axes preserved.
+
+## Errors
+
+Rejects undefined, empty, scalar, integer, complex, or cross-platform frequency grids. Singular state-space resolvents may fail at poles.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Inspect stability, response, and second-order-section realization.
+
+@@example Eng/api/lti_pole_zero.cpp@@
+
+### Example 2
+
+Compare frequency response across equivalent system representations.
+
+@@example Eng/api/lti_response.cpp@@
+
+### Example 3
+
+Exercise frequency-grid and realization validation.
+
+@@example Eng/api/lti_response_errors.cpp@@
+
+## See Also
+
+See [Pole-zero and response](../response.md) for timebase, stability, and angular-frequency conventions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="to_sos.html">
+    <span class="label">Previous</span>
+    <span class="title">to_sos</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

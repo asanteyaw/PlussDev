@@ -1,0 +1,76 @@
+# `structure::HarmonicResult`
+
+The steady response at each frequency.
+
+## Signature
+
+```cpp
+structure::HarmonicResult
+```
+
+## What It Does
+
+The result of `harmonic`. Displacements, velocities, accelerations and reactions are complex amplitudes: the size is the amplitude and the angle is the phase relative to the load.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `omega` | The angular frequencies, `[frequency]`. |  |
+| `displacement` | Complex displacement amplitude, `[..., frequency, node, 3]`. |  |
+| `velocity` | `i omega` times the displacement. |  |
+| `acceleration` | `-omega^2` times the displacement. |  |
+| `reaction` | Complex support force and moment, zero at free degrees of freedom. |  |
+| `residual_norm` | Out-of-balance force at each frequency. |  |
+| `relative_residual` | The residual as a fraction of the load. |  |
+| `converged` | One where the solve at that frequency converged. |  |
+| `iterations` | GMRES iterations. |  |
+| `operator_evaluations` | Applications of the dynamic stiffness. |  |
+| `restarts` | GMRES restarts. |  |
+
+## Returns
+
+Returned by `harmonic`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+The physical motion at one frequency is the real part of the amplitude times `e^{i omega t}`; the phase lag behind the load is the negative of the angle of the amplitude.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Amplitudes, shapes and diagnostics over four frequencies.
+
+@@example Eng/api/structure_harmonic.cpp@@
+
+### Example 2
+
+Complex amplitudes against a mode sum.
+
+@@example Eng/api/structure_harmonic_modal.cpp@@
+
+### Example 3
+
+An undamped resonance.
+
+@@example Eng/api/structure_harmonic.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="NonlinearMotionResult.html">
+    <span class="label">Previous</span>
+    <span class="title">NonlinearMotionResult</span>
+  </a>
+  <a class="next-link" href="motion.html">
+    <span class="label">Next</span>
+    <span class="title">motion</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

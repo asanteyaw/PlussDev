@@ -1,0 +1,103 @@
+# `control::kalman`
+
+Runs a discrete linear Kalman filter.
+
+## Signature
+
+```cpp
+control::KalmanResult control::kalman(
+    const lti::StateSpace& system,
+    const pluss::Series& observations,
+    const pluss::Series& process_cov,
+    const pluss::Series& noise_cov,
+    const pluss::Series& initial_mean,
+    const pluss::Series& initial_cov,
+    control::KalmanOptions options = {});
+
+control::KalmanResult control::kalman(
+    const lti::StateSpace& system,
+    const pluss::Series& observations,
+    const pluss::Series& input,
+    const pluss::Series& process_cov,
+    const pluss::Series& noise_cov,
+    const pluss::Series& initial_mean,
+    const pluss::Series& initial_cov,
+    control::KalmanOptions options = {});
+```
+
+## What It Does
+
+The no-input overload supplies a zero input trajectory. The explicit-input overload includes known controls through both state and observation equations. Missing observations are handled through the shared information-mask machinery.
+
+## Parameters
+
+`system`
+: A discrete state-space model. Filtering advances one model step per observation.
+
+`observations`
+: Observation trajectory with time on its penultimate structural axis.
+
+`input`
+: Optional known input trajectory aligned to the observations.
+
+`process_cov`
+: Process-noise covariance `Q`.
+
+`noise_cov`
+: Measurement-noise covariance `R`.
+
+`initial_mean`
+: Prior state mean before the first prediction/update.
+
+`initial_cov`
+: Prior state covariance.
+
+`options`
+: Information threshold and covariance jitter controls.
+
+## Returns
+
+A `KalmanResult` containing the complete forward trajectory and likelihood diagnostics.
+
+## Errors
+
+Throws when the model is continuous, dimensions do not align, covariance inputs are invalid, or numerical innovation solves fail.
+
+## Interpretation and Use
+
+The no-input overload is for autonomous or already-detrended systems. Use the explicit-input overload whenever known controls affect state or output equations; omitting them biases innovations and likelihood. Filtering is discrete even when the physical source model began in continuous time.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Run the no-input overload and inspect its likelihood.
+
+@@example Eng/api/control_estimation.cpp@@
+
+### Example 2
+
+Use the same forward model as the first stage of smoothing.
+
+@@example Eng/api/control_smooth.cpp@@
+
+### Example 3
+
+Reject a continuous model and invalid covariance data.
+
+@@example Eng/api/control_estimation_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lqe.html">
+    <span class="label">Previous</span>
+    <span class="title">lqe</span>
+  </a>
+  <a class="next-link" href="smooth.html">
+    <span class="label">Next</span>
+    <span class="title">smooth</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

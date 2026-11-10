@@ -1,0 +1,64 @@
+# `structure::frame`
+
+Validates and compiles a plane frame.
+
+## Signature
+
+```cpp
+structure::Frame structure::frame(const structure::Mesh& mesh, const structure::Sections& sections);
+```
+
+## What It Does
+
+Checks that the mesh and section properties describe a plane frame and compiles them into an immutable `Frame`: member lengths and directions, axial and bending stiffnesses and, if a density is given, the data for the consistent mass. Use it once per structure.
+
+## Parameters
+
+`mesh`
+: Node coordinates with exactly two axes, and the `from` and `to` node of every member.
+
+`sections`
+: Area, inertia and modulus of every member, and optionally density, each ending in the member count.
+
+## Returns
+
+An immutable `structure::Frame`.
+
+## Errors
+
+Throws `std::invalid_argument` when the coordinates do not have exactly two axes, the frame has fewer than two nodes, a node index is out of range, a member joins a node to itself or has zero length, a section value is not positive and finite, a density present is not positive, a per-member list does not end in the member count, or the batch axes cannot broadcast.
+
+## Interpretation and Use
+
+The inertia is for the axis the frame bends about. A frame without a density can be solved statically; `mass`, `modes`, `motion` and `harmonic` need one. A leading axis on any section value is a batch of designs.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Build a portal frame with and without density.
+
+@@example Eng/api/structure_frame_build.cpp@@
+
+### Example 2
+
+Every validation error `frame` raises.
+
+@@example Eng/api/structure_frame_errors.cpp@@
+
+### Example 3
+
+Solve the compiled frame.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="truss.html">
+    <span class="label">Previous</span>
+    <span class="title">truss</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

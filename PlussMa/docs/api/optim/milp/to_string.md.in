@@ -1,0 +1,126 @@
+# `milp::to_string`
+
+The name of a mixed-integer `Status` as text.
+
+## Signature
+
+```cpp
+const char *milp::to_string(milp::Status value);
+```
+
+## What It Does
+
+`Result::status` is a `milp::Status`, an enumerator; `to_string` returns its name for reports and logs: `Optimal`, `Infeasible`, `Unbounded` or `NodeLimit`.
+
+## Parameters
+
+`milp::Status value`
+: The status to name.
+
+## Returns
+
+A static name; `"Unknown"` for an invalid value.
+
+## Practical Examples
+
+### Example 1
+
+All four names.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace milp = pluss::subsp::math::milp;
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  for (const milp::Status status : {milp::Status::Optimal, milp::Status::Infeasible, milp::Status::Unbounded, milp::Status::NodeLimit}) {
+    out.writeln(static_cast<int>(status), "->", milp::to_string(status));
+  }
+}
+```
+
+### Example 2
+
+Naming the verdict of a solve.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace milp = pluss::subsp::math::milp;
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // maximise 10a + 13b + 7c + 8d   subject to   3a + 4b + 2c + 3d <= 7,  each item taken or not
+  milp::Problem problem;
+  problem.lp.c = pluss::series::make({-10.0, -13.0, -7.0, -8.0});
+  problem.lp.a_ub = pluss::series::make({{3.0, 4.0, 2.0, 3.0}});
+  problem.lp.b_ub = pluss::series::make({7.0});
+  problem.lp.lower = pluss::series::make({0.0, 0.0, 0.0, 0.0});
+  problem.lp.upper = pluss::series::make({1.0, 1.0, 1.0, 1.0});
+  problem.integer = pluss::series::make({1.0, 1.0, 1.0, 1.0});
+
+  out.writeln("verdict =", milp::to_string(milp::solve(problem).status));
+}
+```
+
+### Example 3
+
+In a report line together with the bound.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace milp = pluss::subsp::math::milp;
+namespace linprog = pluss::subsp::math::linprog;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // maximise 10a + 13b + 7c + 8d   subject to   3a + 4b + 2c + 3d <= 7,  each item taken or not
+  milp::Problem problem;
+  problem.lp.c = pluss::series::make({-10.0, -13.0, -7.0, -8.0});
+  problem.lp.a_ub = pluss::series::make({{3.0, 4.0, 2.0, 3.0}});
+  problem.lp.b_ub = pluss::series::make({7.0});
+  problem.lp.lower = pluss::series::make({0.0, 0.0, 0.0, 0.0});
+  problem.lp.upper = pluss::series::make({1.0, 1.0, 1.0, 1.0});
+  problem.integer = pluss::series::make({1.0, 1.0, 1.0, 1.0});
+
+  milp::Options options;
+  options.max_nodes = 1;
+  const milp::Result result = milp::solve(problem, options);
+  out.writeln("[", milp::to_string(result.status), "] bound =", result.best_bound);
+}
+```
+
+## See Also
+
+- [`Status`](Status.md): the meaning of each
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="solve.html">
+    <span class="label">Previous</span>
+    <span class="title">solve</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,174 @@
+<!-- generated from as.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 8d614619d5d1 -->
+
+# `module::Model::as`
+
+[Back to `module::Model`](../Model.md)
+
+The held struct of a given family, for reading or editing; throws if the family is different.
+
+## Signature
+
+```cpp
+template <SupportedModel M> M &module::Model::as();
+template <SupportedModel M> const M &module::Model::as() const;
+```
+
+## What It Does
+
+Returns a reference to the held `model::Heston` (or whichever `M` you name) so you can read a parameter, change one in place, or copy the struct. The non-const form allows editing, and the edit is seen by the next price. Asking for the wrong family throws and names the family held. Use [`holds`](holds.md) to test first, or [`visit`](visit.md) to handle every family.
+
+## Returns
+
+A reference to the held struct.
+
+## Errors
+
+- The wrong family throws (`pluss::Error`) naming the held family.
+
+## Practical Examples
+
+### Example 1
+
+Editing one parameter in place.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  m.as<fin::model::Heston>().rho = pluss::make_series({-0.3});
+  out.writeln(m.parameters().items<double>());
+}
+```
+
+Output
+
+```text
+[1.500, 0.040, 0.300, -0.300, 0.040]
+```
+
+### Example 2
+
+Reading through a const reference.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  const fin::model::Heston &h = m.as<fin::model::Heston>();
+  out.writeln("kappa", h.kappa.items<double>(), "v0", h.v0.items<double>());
+}
+```
+
+Output
+
+```text
+kappa [1.500] v0 [0.040]
+```
+
+### Example 3
+
+The wrong family throws, naming what is held.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mod::Model m = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  try {
+    (void)(m.as<fin::model::Bates>());
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+subsp::math::finance::module::Model::as: the model holds Heston, not Bates
+```
+
+### Example 4
+
+A candidate from a copy: edit the copy, price it, leave the original.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  fin::model::Heston copy = field.model.as<fin::model::Heston>();
+  copy.v0 = pluss::make_series({0.09});
+  out.writeln("original:", field.price().price.items<double>()[0], ", higher v0:", field.price(copy).price.items<double>()[0]);
+}
+```
+
+Output
+
+```text
+original: 8.62811 , higher v0: 10.81270
+```
+
+## See Also
+
+- [`Model`](../Model.md): the class
+- [`holds`](holds.md): test first
+- [`visit`](visit.md): handle every family
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="holds.html">
+    <span class="label">Next</span>
+    <span class="title">holds</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

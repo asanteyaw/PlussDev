@@ -1,0 +1,76 @@
+# `structure::MotionResult`
+
+The time history of a linear integration.
+
+## Signature
+
+```cpp
+structure::MotionResult
+```
+
+## What It Does
+
+The result of the linear `motion`. Every array has the leading batch axes of the frame and load, then the time axis.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `time` | The sample times, `[time]`. |  |
+| `displacement` | Node displacements, `[..., time, node, 3]`. |  |
+| `velocity` | Node velocities, `[..., time, node, 3]`. |  |
+| `acceleration` | Node accelerations, `[..., time, node, 3]`. |  |
+| `reaction` | Support force and moment, zero at free degrees of freedom, `[..., time, node, 3]`. |  |
+| `kinetic` | Kinetic energy at each time, `[..., time]`. |  |
+| `strain_energy` | Strain energy at each time, `[..., time]`. |  |
+| `residual_norm` | Out-of-balance force of each step. |  |
+| `converged` | One where the step converged. |  |
+| `breakdown` | One where the step met a mechanism. |  |
+| `iterations` | The largest iteration count among the structures at each step, `[time]`. |  |
+
+## Returns
+
+Returned by the linear `motion`.
+
+## Errors
+
+Reading a field does not integrate again.
+
+## Interpretation and Use
+
+For an undamped linear run with `spectral_radius` one, `kinetic + strain_energy - (work of the load)` is conserved.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of a sudden-load integration.
+
+@@example Eng/api/structure_motion.cpp@@
+
+### Example 2
+
+A damped free vibration and its energies.
+
+@@example Eng/api/structure_motion.cpp@@
+
+### Example 3
+
+Rejected load histories.
+
+@@example Eng/api/structure_dynamics_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="HarmonicOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">HarmonicOptions</span>
+  </a>
+  <a class="next-link" href="NonlinearMotionResult.html">
+    <span class="label">Next</span>
+    <span class="title">NonlinearMotionResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

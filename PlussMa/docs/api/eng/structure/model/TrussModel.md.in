@@ -1,0 +1,81 @@
+# `structure::Truss`
+
+An immutable compiled truss of pin-jointed bars.
+
+## Signature
+
+```cpp
+std::int64_t structure::Truss::nodes() const noexcept;
+std::int64_t structure::Truss::bars() const noexcept;
+std::int64_t structure::Truss::dim() const noexcept;
+```
+
+## What It Does
+
+A `Truss` is what `structure::truss` returns: the geometry, bar lengths, directions, areas, moduli and stiffnesses of a validated truss, held immutably so that one model can be solved repeatedly under many loads and supports. Its only public members are three counts; the rest is for the solvers.
+
+## Methods
+
+`nodes()`
+: The number of nodes.
+
+`bars()`
+: The number of bars.
+
+`dim()`
+: The number of spatial axes, `2` for a plane truss and `3` for a space truss.
+
+## Returns
+
+Accessors return counts.
+
+## Errors
+
+Accessors do not fail. Invalid descriptions are rejected by `structure::truss` before a `Truss` exists.
+
+## Changelog
+
+- **0.1** — Initial public contract.
+
+## Interpretation and Use
+
+A `Truss` cannot be default-constructed; build it with `truss`. It is cheap to copy. Solve it with `solve(truss, load, fix, options)`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Counts and dimension of a plane and a space truss.
+
+@@example Eng/api/structure_truss_build.cpp@@
+
+### Example 2
+
+Solving a compiled truss.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+### Example 3
+
+The same truss under a different support arrangement.
+
+@@example Eng/api/structure_fix.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Fix.html">
+    <span class="label">Previous</span>
+    <span class="title">Fix</span>
+  </a>
+  <a class="next-link" href="FrameModel.html">
+    <span class="label">Next</span>
+    <span class="title">Frame</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

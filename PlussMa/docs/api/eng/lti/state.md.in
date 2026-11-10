@@ -1,0 +1,69 @@
+# State space
+
+State-space models describe internal dynamics with four matrices:
+
+```text
+x' = A x + B u,   y = C x + D u
+```
+
+For discrete systems, `x'` means the next sample rather than a time derivative. `StateSpace` keeps this distinction explicit through `sample_time`: zero denotes continuous time and a positive value denotes discrete time.
+
+## Shape Contract
+
+The matrix tails are `A [states, states]`, `B [states, inputs]`, `C [outputs, states]`, and `D [outputs, inputs]`. Any leading dimensions are batch dimensions and follow normal broadcast rules. Construction promotes the four matrices to one dtype and requires one platform, avoiding mixed execution inside later analysis.
+
+## Structural Analysis
+
+`ctrb` and `obsv` expose the classical controllability and observability matrices. Their ranks answer whether every internal mode can be driven or reconstructed. `gram` solves the corresponding continuous or discrete Lyapunov equation; it therefore requires stable dynamics for the usual finite energy interpretation.
+
+## Practical Examples
+
+These examples construct and inspect a second-order system, compare continuous and discrete Gramians, and demonstrate shape and timebase validation.
+
+### Example 1
+
+Construct a continuous oscillator and print dimensions, timebase, controllability, and observability matrices.
+
+@@example Eng/api/lti_state.cpp@@
+
+### Example 2
+
+Compute reachability and observability Gramians for stable continuous and discrete scalar systems.
+
+@@example Eng/api/lti_gram.cpp@@
+
+### Example 3
+
+Show immediate rejection of an incompatible feedthrough matrix and an invalid negative sample time.
+
+@@example Eng/api/lti_state_errors.cpp@@
+
+## Related Pages
+
+Use [Pole-zero and response](response.md) for root-form models and frequency analysis, or [Simulation](simulation.md) to propagate a state-space system through an input history.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+state/StateSpace
+state/Gram
+state/state
+state/ctrb
+state/obsv
+state/gramian
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+state/StateSpace
+state/Gram
+state/state
+state/ctrb
+state/obsv
+state/gramian
+```
+<!-- apiref:toctree:end -->

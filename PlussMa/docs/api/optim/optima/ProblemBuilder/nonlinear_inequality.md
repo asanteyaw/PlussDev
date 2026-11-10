@@ -1,0 +1,143 @@
+<!-- generated from nonlinear_inequality.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d827d3e319f9 -->
+
+# `ProblemBuilder::nonlinear_inequality`
+
+[Back to `optim::ProblemBuilder`](../ProblemBuilder.md)
+
+Adds the constraint `g(x) ≤ 0`, differentiated automatically.
+
+## Signature
+
+```cpp
+template <typename Fn> optim::ProblemBuilder &optim::ProblemBuilder::nonlinear_inequality(Fn &&fn);
+```
+
+## What It Does
+
+`fn` returns the left-hand side `g(x)` of a constraint written as `g(x) ≤ 0`, as a scalar or a vector of residuals (one row per entry). To require `x₀ + x₁ ≤ 1.5` return `x₀ + x₁ − 1.5`; the other way round constrains the wrong side. A constraint is *active* at the answer when it holds with equality and the objective wants to cross it; its multiplier is then positive (see [`OptimaState`](../OptimaState.md)). [`nl_ineq`](nl_ineq.md) is the short name.
+
+## Parameters
+
+`Fn &&fn`
+: Returns `g(x)` as a scalar or vector `Series`.
+
+## Returns
+
+The same builder, for chaining.
+
+## Practical Examples
+
+### Example 1
+
+The nearest point to `(1,2)` inside the unit disc.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+
+  const optim::OptimaState result = optim::optima(optim::problem().objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); }).nonlinear_inequality([](const Pack &p) { return p.at("x").square().sum() - 1.0; }), pluss::series::make({0.0, 0.0}));
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+x = [0.4472, 0.8944]
+```
+
+### Example 2
+
+A vector of residuals: two constraints in one callback, `x₀ ≤ 0.5` and `x₁ ≤ 1`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+
+  const optim::OptimaState result = optim::optima(optim::problem().objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); }).nonlinear_inequality([](const Pack &p) {
+    const pluss::Series rows = pluss::series::make({{1.0, 0.0}, {0.0, 1.0}});
+    return rows.matmul(p.at("x").reshape({2, 1})).reshape({2}) - pluss::series::make({0.5, 1.0});
+  }), pluss::series::make({0.0, 0.0}));
+  out.writeln("x =", result.params.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+x = [0.5000, 1.0000]
+```
+
+### Example 3
+
+An inactive constraint changes nothing. The unconstrained minimum `(1,2)` already satisfies `|x|² ≤ 100`, so the answer is the minimum and the multiplier is zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+
+  const optim::OptimaState result = optim::optima(optim::problem().objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); }).nonlinear_inequality([](const Pack &p) { return p.at("x").square().sum() - 100.0; }), pluss::series::make({0.0, 0.0}));
+  out.writeln("x =", result.params.at("x").items<double>());
+  out.writeln("multiplier =", result.multipliers.nonlinear_inequalities.items<double>());
+}
+```
+
+Output
+
+```text
+x = [1.0000, 2.0000]
+multiplier = [0.0000]
+```
+
+## See Also
+
+- [`nl_ineq`](nl_ineq.md): short name
+- [`nonlinear_equality`](nonlinear_equality.md): `h(x) = 0`
+- [`ProblemBuilder`](Introduction.md): the builder
+- [`optima`](../optima.md): solves the problem
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="nonlinear_equality.html">
+    <span class="label">Previous</span>
+    <span class="title">nonlinear_equality</span>
+  </a>
+  <a class="next-link" href="objective.html">
+    <span class="label">Next</span>
+    <span class="title">objective</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

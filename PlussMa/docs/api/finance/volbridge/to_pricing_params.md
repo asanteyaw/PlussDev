@@ -1,0 +1,196 @@
+<!-- generated from to_pricing_params.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `volatility::to_pricing_params`
+
+Converts a fitted GARCH model into NGARCH pricing parameters, adding the risk-free rate and the premium.
+
+## Signature
+
+```cpp
+volatility::Ngarch11Params volatility::to_pricing_params(const stats::ts::GarchFit &fit, double r = 0.0, double lambda = 0.0);
+volatility::Ngarch11Params volatility::to_pricing_params(const stats::ts::Garch11Fit &fit, double r = 0.0, double lambda = 0.0);
+```
+
+## What It Does
+
+Copies `ω`, `α` and `β` from the fit (the first ARCH and GARCH lags of a `GarchFit`), sets the leverage `γ` to 0 (a GARCH has none), and takes the risk-free rate `r` and the premium `λ` that you give it. Mind the units: the fit is in the unit of the returns it was fitted to (daily per cent, say), and `r` must be a rate per period in the same unit, as `r` enters the conditional mean beside returns in that unit. The risk premium cannot be learned from returns alone: it is the quantity an option-price fit identifies.
+
+## Parameters
+
+`const stats::ts::GarchFit &fit / const stats::ts::Garch11Fit &fit`
+: A fitted GARCH model.
+
+`double r`
+: Risk-free rate per period, in the returns' unit.
+
+`double lambda`
+: Risk premium per unit of volatility.
+
+## Returns
+
+An `Ngarch11Params`.
+
+## Errors
+
+- A fit that is not stationary throws when used.
+
+## Practical Examples
+
+### Example 1
+
+From a fitted GARCH: the pricing parameters carry its recursion.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const auto garch = ts::Garch::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+
+  const auto p = fin::volatility::to_pricing_params(garch, 0.0, 0.0);
+  out.writeln("omega", p.omega, "alpha", p.alpha, "beta", p.beta, "gamma", p.gamma, "(fit:", garch.omega, garch.arch[0], garch.garch[0], ")");
+}
+```
+
+Output
+
+```text
+omega 0.03103 alpha 0.10888 beta 0.83413 gamma 0.00000 (fit: 0.03103 0.10888 0.83413 )
+```
+
+### Example 2
+
+The risk-free rate and the premium are the caller's.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const auto garch = ts::Garch::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+
+  const auto p = fin::volatility::to_pricing_params(garch, 0.0002, 0.03);
+  out.writeln("r", p.r, "lambda", p.lambda);
+}
+```
+
+Output
+
+```text
+r 0.0002 lambda 0.0300
+```
+
+### Example 3
+
+The long-run variance is carried over exactly. The variance *path* under the pricing dynamics differs from the fitted one, because the pricing recursion standardises each return with the pricing-measure mean `r + λ√h − h/2` rather than the fitted mean, so the shock it feeds back differs.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+  const auto garch = ts::Garch::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto p = fin::volatility::to_pricing_params(garch);
+  out.writeln("long-run variance: pricing", fin::volatility::unconditional_variance(p), ", fit", garch.unconditional_var());
+  const auto pricing = fin::pricing::pricing_metrics(returns, p, cfg);
+  const auto real_world = fin::bridge::returns_metrics(returns, garch, cfg);
+  out.writeln("mean variance along the sample: pricing", pricing.variance.mean().item<double>(), ", fit", real_world.variance.mean().item<double>());
+}
+```
+
+Output
+
+```text
+long-run variance: pricing 0.54454 , fit 0.54454
+mean variance along the sample: pricing 0.64554 , fit 0.54355
+```
+
+### Example 4
+
+From the dedicated GARCH(1,1) fit (second overload): the same conversion, and the same long-run variance as the fit.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  ts::GjrFit truth;
+  truth.mean = 0.04; truth.omega = 0.03; truth.arch = {0.03}; truth.asym = {0.12}; truth.garch = {0.88};
+  const Series returns = truth.simulate(1500, pluss::Config{}.with_dtype(pluss::ScalarType::Float64), 11);
+
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto fit = ts::Garch11::fit_mle(returns, {}, cfg);
+  const auto p = fin::volatility::to_pricing_params(fit, 0.0, 0.0);
+  out.writeln("omega", p.omega, "alpha", p.alpha, "beta", p.beta, "; long-run variance: pricing", fin::volatility::unconditional_variance(p), ", fit", fit.unconditional_var());
+}
+```
+
+Output
+
+```text
+omega 0.03103 alpha 0.10888 beta 0.83413 ; long-run variance: pricing 0.54454 , fit 0.54454
+```
+
+## See Also
+
+- [`Ngarch11Params`](Ngarch11Params.md): what it builds
+- [`pricing_metrics`](pricing_metrics.md): evaluates it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="returns_metrics.html">
+    <span class="label">Previous</span>
+    <span class="title">returns_metrics</span>
+  </a>
+  <a class="next-link" href="unconditional_variance.html">
+    <span class="label">Next</span>
+    <span class="title">unconditional_variance</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

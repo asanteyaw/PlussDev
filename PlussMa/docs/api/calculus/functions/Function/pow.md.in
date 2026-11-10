@@ -1,0 +1,143 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: abe34c830421 -->
+
+# `math::Function::pow`
+
+[Back to `math::Function`](../Function.md)
+
+Raises a function to a power, where the power is a number or another function.
+
+## Signature
+
+```cpp
+math::Function math::Function::pow(const math::Function &rhs) const;
+math::Function math::Function::pow(double rhs) const;
+```
+
+## What It Does
+
+`f.pow(p)` builds `x ↦ f(x)^p`. With a number it is the ordinary power: `pow(2.0)` squares, `pow(0.5)` takes the square root, `pow(-1.0)` is the reciprocal. With a function exponent it is the general power `f(x)^g(x)`, which is how `x^x` and `(1 + x)^(1/x)` are written. Both forms differentiate exactly.
+
+The power is real-valued, so it has a domain. A negative base with a non-integer exponent has no real value and is refused at evaluation, naming the operation; integer exponents work for any base. For complex-valued functions fractional powers use the principal branch.
+
+## Parameters
+
+`const math::Function &rhs`
+: The exponent as a function. Both operands must come from the same variable trace (built inside one `math::function(...)` callable, or derived from one another), or one of them must be a constant. Functions from unrelated `function(...)` calls cannot be combined directly; use [`compose`](compose.md) to substitute one into the other.
+
+`double rhs`
+: The exponent as a number.
+
+## Returns
+
+A new `Function` whose value is the power.
+
+## Errors
+
+- A negative base with a non-integer exponent raises a domain error at evaluation.
+- Functions from different traces are refused.
+
+## Practical Examples
+
+### Example 1
+
+Integer and fractional numeric exponents, with the derivative rule `(xᵖ)′ = p xᵖ⁻¹`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function cube = math::function({"x"}, [](math::Function x) { return x.pow(3.0); });
+  const math::Function root = math::function({"x"}, [](math::Function x) { return x.pow(0.5); });
+  const math::Function inverse = math::function({"x"}, [](math::Function x) { return x.pow(-1.0); });
+  const auto x = pluss::make_series({1.0, 4.0, 9.0});
+  out.writeln("x^3:   ", cube({x}).items<double>());
+  out.writeln("x^0.5: ", root({x}).items<double>());
+  out.writeln("x^-1:  ", inverse({x}).items<double>());
+  out.writeln("(x^3)' at 2 =", operators::differential("x")(cube)(2.0).item<double>(), " (3 x^2 = 12)");
+}
+```
+
+### Example 2
+
+A function exponent. `x^x` has the derivative `x^x (ln x + 1)`, which the operator produces exactly.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function xx = math::function({"x"}, [](math::Function x) { return x.pow(x); });
+  const math::Function d = operators::differential("x")(xx);
+  const double x = 2.0;
+  out.writeln("x^x at 2     =", xx(x).item<double>());
+  out.writeln("(x^x)' at 2  =", d(x).item<double>());
+  out.writeln("x^x (ln x+1) =", std::pow(x, x) * (std::log(x) + 1.0));
+}
+```
+
+### Example 3
+
+Domain: a negative base with a fractional exponent has no real value and is refused at evaluation, while integer exponents of a negative base are fine.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function half = math::function({"x"}, [](math::Function x) { return x.pow(0.5); });
+  const math::Function square = math::function({"x"}, [](math::Function x) { return x.pow(2.0); });
+  out.writeln("(-3)^2:", square(-3.0).item<double>());
+  try {
+    (void)half(-3.0);
+  } catch (const pluss::Error &e) {
+    const std::string text(e.what());
+    out.writeln("(-3)^0.5:", text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`sqrt`](sqrt.md): the square root, the exponent one half
+- [`exp`](exp.md): the exponential
+- [`log`](log.md): the inverse of the exponential
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="negate.html">
+    <span class="label">Previous</span>
+    <span class="title">negate</span>
+  </a>
+  <a class="next-link" href="provenance.html">
+    <span class="label">Next</span>
+    <span class="title">provenance</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

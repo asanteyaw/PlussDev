@@ -1,0 +1,150 @@
+<!-- generated from ConstrainedProblem.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::ConstrainedProblem`
+
+An optimization problem as a plain value: objective, nonlinear constraints, linear constraints and bounds.
+
+`ConstrainedProblem` is what [`problem()`](problem.md) builds. Its members are `objective` (an `ObjectiveDefinition` with an `autodiff` function, an `analytic` function that returns the value and gradient, or both), `nonlinear` (equality and inequality functions, or one `analytic` function returning residuals and Jacobians), `linear` (`Aeq`, `beq`, `Aineq`, `bineq`) and `bounds` (`lower`, `upper` packs). It can be filled in directly when the pieces already exist as data, instead of through the builder. Each part is optional except the objective.
+
+## Fields
+
+### `objective`
+
+`optim::ObjectiveDefinition`, default `undefined`.
+
+`autodiff` and/or `analytic` objective.
+
+### `nonlinear`
+
+`optim::NonlinearConstraints`, default `empty`.
+
+`equality`, `inequality` or `analytic` nonlinear constraints.
+
+### `linear`
+
+`optim::LinearConstraints`, default `empty`.
+
+`Aeq`, `beq`, `Aineq`, `bineq`.
+
+### `bounds`
+
+`optim::Bounds`, default `empty`.
+
+`lower` and `upper` packs.
+
+## Guidance
+
+Passed to `optima`.
+
+## Practical Examples
+
+### Example 1
+
+Filling a problem directly.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  optim::ConstrainedProblem problem;
+  problem.objective.autodiff = [](const Pack &p) { return (p.at("x") - 3.0).square().sum(); };
+  problem.bounds.upper = optim::pack_series(pluss::series::make({2.0}));
+  out.writeln("x =", optim::optima(problem, pluss::series::make({0.0})).params.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+x = [2.0000]
+```
+
+### Example 2
+
+Inspecting what a builder produced.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const optim::ConstrainedProblem problem =
+      optim::problem()
+          .objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); })
+          .nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  out.writeln("has objective =", problem.objective.defined(), ", nonlinear constraints =", !problem.nonlinear.empty(), ", linear =", !problem.linear.empty(), ", bounds =", !problem.bounds.empty());
+}
+```
+
+Output
+
+```text
+has objective = true , nonlinear constraints = true , linear = false , bounds = false
+```
+
+### Example 3
+
+Replacing one part of an existing problem: the same objective with the constraint removed.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const optim::ConstrainedProblem problem =
+      optim::problem()
+          .objective([&](const Pack &p) { return (p.at("x") - target).square().sum(); })
+          .nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::ConstrainedProblem relaxed = problem;
+  relaxed.nonlinear = {};
+  out.writeln("constrained  :", optim::optima(problem, pluss::series::make({0.0, 0.0})).params.at("x").items<double>());
+  out.writeln("unconstrained:", optim::optima(relaxed, pluss::series::make({0.0, 0.0})).params.at("x").items<double>());
+}
+```
+
+Output
+
+```text
+constrained  : [0.4472, 0.8944]
+unconstrained: [1.0000, 2.0000]
+```
+
+## See Also
+
+- [`problem`](problem.md): the builder
+- [`optima`](optima.md): solves it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ConstraintMultipliers.html">
+    <span class="label">Next</span>
+    <span class="title">ConstraintMultipliers</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

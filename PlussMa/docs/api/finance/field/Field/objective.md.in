@@ -1,0 +1,146 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 9d322ba43f9d -->
+
+# `module::Field::objective`
+
+[Back to `module::Field`](../Field.md)
+
+The loss as the number a minimiser should reduce: the same value as `loss_value`.
+
+## Signature
+
+```cpp
+double module::Field::objective(const pluss::Series &target_prices, pluss::Config cfg = {}) const;
+```
+
+## What It Does
+
+A synonym of [`loss_value`](loss_value.md): the code is shared. It exists so that a fitting program reads naturally, `objective(quotes)` being what a minimiser drives to zero; to feed a minimiser a function of the parameters, use [`bind_objective`](bind_objective.md), which freezes the field and the quotes.
+
+## Parameters
+
+`const pluss::Series &target_prices`
+: One quote per option.
+
+`pluss::Config cfg`
+: Device.
+
+## Returns
+
+The loss.
+
+## Errors
+
+- As for `loss`.
+
+## Practical Examples
+
+### Example 1
+
+The objective equals the loss value.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  const Series prices = field.price().price;
+  const Series quotes = prices + pluss::make_series({0.30, -0.20, 0.10, -0.40, 0.25});
+
+  out.writeln("objective =", field.objective(quotes), ", loss_value =", field.loss_value(quotes));
+}
+```
+
+### Example 2
+
+A scan of the objective over one parameter shows its shape: a minimum at the parameter that made the quotes.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  const Series quotes = field.price().price;
+  for (const double rho : {-0.9, -0.8, -0.7, -0.6, -0.5}) {
+    field.model.as<fin::model::Heston>().rho = pluss::make_series({rho});
+    out.writeln("rho", rho, ": objective =", field.objective(quotes));
+  }
+}
+```
+
+### Example 3
+
+The Huber loss caps the influence of one wild quote. With a single quote 5.0 away, MSE explodes while Huber grows linearly.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.02}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  Series quotes = field.price().price;
+  quotes = quotes + pluss::make_series({0.0, 0.0, 5.0, 0.0, 0.0});
+  field.controls.loss = mod::Loss::MSE;
+  const double mse = field.objective(quotes);
+  field.controls.loss = mod::Loss::Huber;
+  out.writeln("MSE =", mse, ", Huber(0.05) =", field.objective(quotes));
+}
+```
+
+## See Also
+
+- [`Field`](../Field.md): the class
+- [`bind_objective`](bind_objective.md): a function of the model
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="model_name.html">
+    <span class="label">Previous</span>
+    <span class="title">model_name</span>
+  </a>
+  <a class="next-link" href="price.html">
+    <span class="label">Next</span>
+    <span class="title">price</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

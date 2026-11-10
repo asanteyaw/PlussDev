@@ -1,0 +1,56 @@
+<!-- generated from DFO.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::DFO`
+
+The derivative-free front door: holds a set of options and solves problems with them.
+
+## Signature
+
+```cpp
+explicit dfo::DFO::DFO(dfo::DfoOptions options = {});
+dfo::DfoResult dfo::DFO::run(const dfo::DfoProblem &problem) const;
+static dfo::DfoResult dfo::DFO::solve(const dfo::DfoProblem &problem, const dfo::DfoOptions &options = {});
+static dfo::DfoBuilder dfo::DFO::build();
+static dfo::DfoBuilder dfo::DFO::build(const pluss::Series &initial);
+```
+
+## Construction
+
+`dfo::DFO solver(options);` stores the options; `DFO::solve(problem, options)` builds a temporary one. The object holds nothing else, so it can be copied and reused.
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`build`](DFO/build.md) | Starts a builder, optionally with the starting point already set. |
+| [`run`](DFO/run.md) | Solves a problem with the options the object holds. |
+| [`solve`](DFO/solve.md) | Solves a problem in one call, without keeping an object. |
+
+## Changelog
+
+- **0.1**: initial documented surface.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+DFO/Introduction
+DFO/build
+DFO/run
+DFO/solve
+```
+<!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="CoopMadsConfig.html">
+    <span class="label">Previous</span>
+    <span class="title">CoopMadsConfig</span>
+  </a>
+  <a class="next-link" href="DfoAutoPolicy.html">
+    <span class="label">Next</span>
+    <span class="title">DfoAutoPolicy</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

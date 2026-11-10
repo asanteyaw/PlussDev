@@ -1,0 +1,209 @@
+<!-- generated from px_qx.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `actuarial::life_contingencies::px_qx`
+
+Converts death probabilities to survival probabilities.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::life_contingencies::px_qx(const pluss::Series &qx);
+```
+
+## What It Does
+
+Returns {math}`p_{x+k}=1-q_{x+k}` elementwise: the probability of surviving each year given alive at its start. The result has the length of `qx`. Call it when a table holds death probabilities and a calculation needs survival ones; [`qx_px`](qx_px.md) is the inverse. The cumulative product of the result is the survival curve.
+
+## Parameters
+
+`qx`
+: One-dimensional, finite series of probabilities in {math}`[0,1]`.
+
+## Returns
+
+A series of the same length as `qx`.
+
+## Errors
+
+Throws `survival_curve: qx must be 1D`, `survival_curve: qx must be finite` and `survival_curve: qx values must lie in [0, 1]`.
+
+## Practical Examples
+
+### Example 1: survival probabilities
+
+Five years of death probabilities and their complements.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln("qx =", qx.items<double>());
+  out.writeln("px =", life::px_qx(qx).items<double>());
+}
+```
+
+Output
+
+```text
+qx = [0.010000, 0.012000, 0.015000, 0.019000, 0.024000]
+px = [0.990000, 0.988000, 0.985000, 0.981000, 0.976000]
+```
+
+### Example 2: the two sum to one
+
+`px_qx` and the input add to exactly one in every year.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln(qx.add(life::px_qx(qx)).items<double>());
+}
+```
+
+Output
+
+```text
+[1.000000, 1.000000, 1.000000, 1.000000, 1.000000]
+```
+
+### Example 3: the survival probability over k years
+
+The product of the first `k` values.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const auto p = life::px_qx(qx).items<double>();
+  out.writeln("3-year survival =", p[0] * p[1] * p[2]);
+  out.writeln("survival curve  =", life::px_qx(qx).cumprod(0).items<double>());
+}
+```
+
+Output
+
+```text
+3-year survival = 0.963448
+survival curve  = [0.990000, 0.978120, 0.963448, 0.945143, 0.922459]
+```
+
+### Example 4: the boundary values
+
+A certain death gives a zero survival probability and a certain survival gives one.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(life::px_qx(pluss::make_series({0.0, 0.5, 1.0})).items<double>());
+}
+```
+
+Output
+
+```text
+[1.000000, 0.500000, 0.000000]
+```
+
+### Example 5: the errors
+
+Values outside [0,1], NaN and matrices are refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)life::px_qx(pluss::make_series({0.1, 1.2})); });
+  report([&] { (void)life::px_qx(pluss::make_series({0.1, std::nan("")})); });
+  report([&] { (void)life::px_qx(pluss::make_series({0.1, 0.2}).reshape({1, 2})); });
+}
+```
+
+Output
+
+```text
+survival_curve: qx values must lie in [0, 1]
+survival_curve: qx must be finite
+survival_curve: qx must be 1D
+```
+
+## See Also
+
+- [`qx_px`](qx_px.md): the inverse- [`Mortality`](../mortality/Mortality.md): the same conversions as accessors
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="px_lx.html">
+    <span class="label">Previous</span>
+    <span class="title">px_lx</span>
+  </a>
+  <a class="next-link" href="qx_force.html">
+    <span class="label">Next</span>
+    <span class="title">qx_force</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

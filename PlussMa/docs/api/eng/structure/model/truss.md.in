@@ -1,0 +1,68 @@
+# `structure::truss`
+
+Validates and compiles a pin-jointed truss.
+
+## Signature
+
+```cpp
+structure::Truss structure::truss(const structure::Mesh& mesh, const structure::Bars& bars);
+```
+
+## What It Does
+
+Checks that the mesh and bar properties describe a real truss and compiles them into an immutable `Truss`: it computes every bar's length, direction and axial stiffness `E A / L`, and keeps the connectivity for assembly. Use it once per structure, then solve the result as often as needed.
+
+## Parameters
+
+`mesh`
+: Node coordinates and the `from` and `to` node of every bar. Two coordinates per node make a plane truss, three a space truss.
+
+`bars`
+: Area and modulus of every bar, each ending in the bar count.
+
+## Returns
+
+An immutable `structure::Truss`.
+
+## Errors
+
+Throws `std::invalid_argument` when coordinates are not real floating-point `[..., node, axis]` with two or three axes, a node index is out of range, a bar joins a node to itself, a bar has zero length, an area or modulus is not positive and finite, the per-bar lists do not end in the bar count, or the batch axes cannot broadcast.
+
+## Interpretation and Use
+
+Compilation does the validation once, so solving is free of it. A node that no bar touches is accepted here and rejected by `solve`, which finds a degree of freedom with no stiffness. Leading axes on the coordinates, areas or moduli build a batch of trusses with the same connectivity.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Build a plane and a space truss and a batch of apex heights.
+
+@@example Eng/api/structure_truss_build.cpp@@
+
+### Example 2
+
+Every validation error `truss` raises.
+
+@@example Eng/api/structure_truss_errors.cpp@@
+
+### Example 3
+
+Solve the compiled truss.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="FrameModel.html">
+    <span class="label">Previous</span>
+    <span class="title">Frame</span>
+  </a>
+  <a class="next-link" href="frame.html">
+    <span class="label">Next</span>
+    <span class="title">frame</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

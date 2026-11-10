@@ -1,0 +1,73 @@
+# `power::Lines`
+
+The lines and transformers of a network.
+
+## Signature
+
+```cpp
+power::Lines
+```
+
+## What It Does
+
+Each line joins two buses with a series impedance and, optionally, line charging, an off-nominal tap and a phase shift, which together describe a line or a transformer.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `from` | The bus at the sending end of each line. | required |
+| `to` | The bus at the receiving end of each line. | required |
+| `r` | Series resistance, per unit. | required |
+| `x` | Series reactance, per unit. | required |
+| `charge` | Total line-charging susceptance, per unit, half at each end. | undefined (zero) |
+| `tap` | Off-nominal transformer tap ratio (magnitude); `1` is a plain line. | undefined (1) |
+| `shift` | Transformer phase shift, radians. | undefined (zero) |
+| `active` | In-service status of each line. | empty (all in service) |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+A line from a bus to itself or to a bus outside the network, a zero series impedance, an `active` list of the wrong length, or lines that leave a bus disconnected from the slack are rejected.
+
+## Interpretation and Use
+
+A line out of service is a line with `active` false; the network without it must still connect every bus to the slack. Leading axes on `r`, `x`, `charge`, `tap` or `shift` describe scenarios.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Tap, charging and shunt effects on a load-bus voltage.
+
+@@example Eng/api/power_elements.cpp@@
+
+### Example 2
+
+A line taken out of service.
+
+@@example Eng/api/power_scenarios.cpp@@
+
+### Example 3
+
+Validation of lines.
+
+@@example Eng/api/power_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Gens.html">
+    <span class="label">Previous</span>
+    <span class="title">Gens</span>
+  </a>
+  <a class="next-link" href="Net.html">
+    <span class="label">Next</span>
+    <span class="title">Net</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

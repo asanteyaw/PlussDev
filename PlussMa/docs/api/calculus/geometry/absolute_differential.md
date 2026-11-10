@@ -1,0 +1,229 @@
+<!-- generated from absolute_differential.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::geometry::absolute_differential`
+
+The absolute (intrinsic) derivative of a tensor along a curve: how fast it changes relative to parallel transport.
+
+## Signature
+
+```cpp
+operators::Operator operators::geometry::absolute_differential(math::Function curve, math::Function connection, std::string_view parameter, operators::geometry::TensorSignature signature = {1, 0}, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+Given a curve `x^k(t)` and a tensor `V(t)` defined along it, the absolute differential is
+
+`DV/dt = dV/dt + Σ_upper Γⁱ_mk Vᵐ dx^k/dt − Σ_lower Γᵐ_jk V_m dx^k/dt`.
+
+It measures the change of `V` relative to parallel transport along the curve: `DV/dt = 0` means `V` is carried along without being turned or stretched, as a straight-line direction is on a plane. A curve whose own tangent has `DV/dt = 0` is a *geodesic*.
+
+`absolute_differential(curve, connection, "t")` is the operator that takes a tensor-valued function of `t` (with the stated signature) and returns `DV/dt`. The curve is a rank-1 function of the parameter with one component per coordinate; the connection is from [`levi_civita`](levi_civita.md); the default signature `{1, 0}` is a vector. The operator holds the curve and the connection and cannot be saved.
+
+## Parameters
+
+`math::Function curve`
+: The curve `x^k(t)`: a rank-1 function of `parameter` with one component per coordinate.
+
+`math::Function connection`
+: The connection `Γ[i][j][k]` of shape `[n, n, n]`, usually from `levi_civita`.
+
+`std::string_view parameter`
+: The curve's parameter, the variable `t` of the tensor field along the curve.
+
+`operators::geometry::TensorSignature signature`
+: Index counts of the tensor along the curve. Default `{1, 0}`, a vector.
+
+`operators::DiffOptions options`
+: Options for the derivative.
+
+## Returns
+
+An `Operator` whose application returns `DV/dt` as a function of the parameter with the tensor's shape.
+
+## Errors
+
+- An unknown parameter raises `unknown variable '<name>'`.
+- The tensor's output rank must equal its signature.
+
+## Practical Examples
+
+### Example 1
+
+Parallel transport along the equator. On the unit sphere the equator `θ = π/2, φ = t` is a geodesic, and a vector with constant components `(0, 1)` along it is its own tangent: `DV/dt = 0`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace geometry = pluss::operators::geometry;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const math::Function metric = math::function({"theta", "phi"}, [](math::Function theta, math::Function) {
+    const math::Function one = theta * 0.0 + 1.0, zero = theta * 0.0, s = theta.sin() * theta.sin();
+    return math::stack({math::stack({one, zero}), math::stack({zero, s})});   // diag(1, sin^2 theta)
+  });
+  const math::Function gamma = operators::geometry::levi_civita(metric);
+  const auto point = {pluss::make_series(1.0), pluss::make_series(0.3)};   // theta = 1, phi = 0.3
+
+  const math::Function equator = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0 + std::acos(-1.0) / 2.0, t}); });
+  const math::Function V = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0, t * 0.0 + 1.0}); });
+  const math::Function D = operators::geometry::absolute_differential(equator, gamma, "t")(V);
+  out.writeln("DV/dt on the equator: max |component| =", D(0.7).abs().max().item<double>());
+}
+```
+
+Output
+
+```text
+DV/dt on the equator: max |component| = 0.0000000000
+```
+
+### Example 2
+
+A circle of latitude `θ = 1` is not a geodesic. The same constant vector `(0, 1)` picks up the connection term `Γ^θ_φφ = −sin θ cos θ` in its `θ` component: it is being turned relative to parallel transport.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace geometry = pluss::operators::geometry;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function metric = math::function({"theta", "phi"}, [](math::Function theta, math::Function) {
+    const math::Function one = theta * 0.0 + 1.0, zero = theta * 0.0, s = theta.sin() * theta.sin();
+    return math::stack({math::stack({one, zero}), math::stack({zero, s})});   // diag(1, sin^2 theta)
+  });
+  const math::Function gamma = operators::geometry::levi_civita(metric);
+  const auto point = {pluss::make_series(1.0), pluss::make_series(0.3)};   // theta = 1, phi = 0.3
+
+  const math::Function latitude = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0 + 1.0, t}); });
+  const math::Function V = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0, t * 0.0 + 1.0}); });
+  const math::Function D = operators::geometry::absolute_differential(latitude, gamma, "t")(V);
+  out.writeln("DV/dt on theta = 1:", D(0.7).items<double>(), "  (-sin 1 cos 1 =", -std::sin(1.0) * std::cos(1.0), ", 0)");
+}
+```
+
+Output
+
+```text
+DV/dt on theta = 1: [-0.45465, 0.00000]   (-sin 1 cos 1 = -0.45465 , 0)
+```
+
+### Example 3
+
+Covectors and scalars. With signature `{0, 1}` the connection term has the opposite sign and index structure: along the same latitude the covector `(0, 1)` changes by `−Γ^φ_θφ = −cot θ` in its `θ` component. With `{0, 0}` the absolute differential is the ordinary derivative along the curve.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace geometry = pluss::operators::geometry;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function metric = math::function({"theta", "phi"}, [](math::Function theta, math::Function) {
+    const math::Function one = theta * 0.0 + 1.0, zero = theta * 0.0, s = theta.sin() * theta.sin();
+    return math::stack({math::stack({one, zero}), math::stack({zero, s})});   // diag(1, sin^2 theta)
+  });
+  const math::Function gamma = operators::geometry::levi_civita(metric);
+  const auto point = {pluss::make_series(1.0), pluss::make_series(0.3)};   // theta = 1, phi = 0.3
+
+  const math::Function latitude = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0 + 1.0, t}); });
+  const math::Function omega = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0, t * 0.0 + 1.0}); });
+  out.writeln("covector, {0, 1}:", operators::geometry::absolute_differential(latitude, gamma, "t", {0, 1})(omega)(0.7).items<double>(), "  (-cot 1 =", -1.0 / std::tan(1.0), ", 0)");
+  const math::Function scalar = math::function({"t"}, [](math::Function t) { return t * t; });
+  out.writeln("scalar, {0, 0}:  ", operators::geometry::absolute_differential(latitude, gamma, "t", {0, 0})(scalar)(0.7).item<double>(), "  (d/dt t^2 = 1.4)");
+}
+```
+
+Output
+
+```text
+covector, {0, 1}: [-0.64209, 0.00000]   (-cot 1 = -0.64209 , 0)
+scalar, {0, 0}:   1.40000   (d/dt t^2 = 1.4)
+```
+
+### Example 4
+
+The parameter must be a variable of the curve; naming another one is refused.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace geometry = pluss::operators::geometry;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function metric = math::function({"theta", "phi"}, [](math::Function theta, math::Function) {
+    const math::Function one = theta * 0.0 + 1.0, zero = theta * 0.0, s = theta.sin() * theta.sin();
+    return math::stack({math::stack({one, zero}), math::stack({zero, s})});   // diag(1, sin^2 theta)
+  });
+  const math::Function gamma = operators::geometry::levi_civita(metric);
+  const auto point = {pluss::make_series(1.0), pluss::make_series(0.3)};   // theta = 1, phi = 0.3
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function latitude = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0 + 1.0, t}); });
+  const math::Function V = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0, t * 0.0 + 1.0}); });
+  try { (void)operators::geometry::absolute_differential(latitude, gamma, "s")(V); } catch (const pluss::Error &e) { out.writeln(first_line(e)); }
+}
+```
+
+Output
+
+```text
+operators::differential: unknown variable 's'
+```
+
+## See Also
+
+- [`levi_civita`](levi_civita.md): builds the connection
+- [`covariant`](covariant.md): the derivative of a field in a coordinate direction
+- [`TensorSignature`](TensorSignature.md): index counts
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="TensorSignature.html">
+    <span class="label">Previous</span>
+    <span class="title">TensorSignature</span>
+  </a>
+  <a class="next-link" href="covariant.html">
+    <span class="label">Next</span>
+    <span class="title">covariant</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

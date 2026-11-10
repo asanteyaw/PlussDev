@@ -1,0 +1,95 @@
+# `control::mpc::solve`
+
+Solves a compiled or one-shot finite-horizon regulation problem.
+
+## Signature
+
+```cpp
+control::mpc::Result control::mpc::solve(
+    const control::mpc::Plan& plan,
+    const pluss::Series& initial_state,
+    const pluss::Series& reference,
+    pluss::math::qp::WarmStart warm = {});
+
+control::mpc::Result control::mpc::solve(
+    const lti::StateSpace& system,
+    const pluss::Series& initial_state,
+    const pluss::Series& reference,
+    const control::mpc::Weights& weights,
+    const control::mpc::Bounds& bounds,
+    control::mpc::Options options = {},
+    pluss::math::qp::WarmStart warm = {});
+```
+
+## What It Does
+
+The plan overload reuses compiled matrices and factorization. The one-shot overload coordinates `build` followed by the same solve kernel, making it convenient for isolated calculations but less efficient for repeated control updates.
+
+## Parameters
+
+`plan`
+: A compiled problem from `control::mpc::build`.
+
+`system`
+: Discrete model used by the one-shot overload.
+
+`initial_state`
+: Current state vector.
+
+`reference`
+: A constant state target or a horizon-by-state reference trajectory.
+
+`weights`
+: Quadratic penalties for the one-shot overload.
+
+`bounds`
+: Input and optional state bounds for the one-shot overload.
+
+`options`
+: Horizon and QP settings for the one-shot overload.
+
+`warm`
+: Optional previous primal/dual QP state for faster repeated solves.
+
+## Returns
+
+An `mpc::Result`; `control` is the receding-horizon action while `controls` and `states` expose the full plan.
+
+## Errors
+
+Throws for shape or platform mismatches, invalid references, failed constraints, or QP non-convergence. The one-shot overload also performs all `build` validation.
+
+## Interpretation and Use
+
+Use the plan overload for repeated control updates; it avoids rebuilding invariant matrices. Use the one-shot overload for isolated analyses or prototyping. A warm start should come from a compatible previous QP result and improves speed without changing the mathematical problem.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Run the complete one-shot solve.
+
+@@example Eng/api/control_mpc.cpp@@
+
+### Example 2
+
+Reuse a plan and feed the previous optimizer state back as a warm start.
+
+@@example Eng/api/control_mpc_plan.cpp@@
+
+### Example 3
+
+Solve with non-default bounds, horizon, and tolerances.
+
+@@example Eng/api/control_mpc_options.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="build.html">
+    <span class="label">Previous</span>
+    <span class="title">build</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

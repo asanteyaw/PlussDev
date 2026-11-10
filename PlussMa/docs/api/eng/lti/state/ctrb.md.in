@@ -1,0 +1,63 @@
+# `lti::ctrb`
+
+## Signature
+
+```cpp
+pluss::Series lti::ctrb(const lti::StateSpace& system);
+```
+
+## What It Does
+
+Builds `[B, AB, A²B, ...]` through power `states - 1`. Full row rank means every state direction is reachable from an input over a finite horizon.
+
+## Parameters
+
+`system`
+: Valid state-space system. Continuous and discrete systems use the same algebraic controllability matrix.
+
+## Returns
+
+A `Series` with matrix tail `[states, states * inputs]` and the system batch axes.
+
+## Errors
+
+Construction-time validation protects matrix compatibility. Rank or conditioning interpretation remains the caller's numerical decision.
+
+## Practical Examples
+
+These verified programs cover the normal contract, a materially different mode or analysis, and validation behavior.
+
+### Example 1
+
+Construct and inspect a second-order continuous state-space model.
+
+@@example Eng/api/lti_state.cpp@@
+
+### Example 2
+
+Compare energy Gramians across continuous and discrete timebases.
+
+@@example Eng/api/lti_gram.cpp@@
+
+### Example 3
+
+Exercise matrix-shape and sample-time validation.
+
+@@example Eng/api/lti_state_errors.cpp@@
+
+## See Also
+
+See the [State space](../state.md) family page for matrix shapes, batching, and analysis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="state.html">
+    <span class="label">Previous</span>
+    <span class="title">state</span>
+  </a>
+  <a class="next-link" href="obsv.html">
+    <span class="label">Next</span>
+    <span class="title">obsv</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

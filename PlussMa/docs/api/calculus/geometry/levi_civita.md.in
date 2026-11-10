@@ -1,0 +1,188 @@
+# `operators::geometry::levi_civita`
+
+The Levi-Civita connection (Christoffel symbols) of a metric, as a function of the coordinates.
+
+## Signature
+
+```cpp
+math::Function operators::geometry::levi_civita(const math::Function &metric, pluss::StackArray<std::string_view> coordinates = {}, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+A *metric* `g_ij(x)` says how to measure lengths and angles at each point of a space with coordinates `x¹…xⁿ`. The *Levi-Civita connection* is the rule, derived from the metric alone, for comparing vectors at neighbouring points without twisting them: its components are the Christoffel symbols
+
+`Γⁱ_jk = ½ gⁱˡ (∂_j g_lk + ∂_k g_lj − ∂_l g_jk)`.
+
+`levi_civita(metric)` computes them and returns a `Function` of the coordinates with output shape `[n, n, n]`, indexed `Γ[i][j][k] = Γⁱ_jk` (symmetric in `j` and `k`). It is a *function*, not an operator: build it once and pass it to [`covariant`](covariant.md) and [`absolute_differential`](absolute_differential.md).
+
+The metric is a rank-2 `Function` (an `n × n` symmetric matrix) whose variables are the coordinates. If it has more variables than coordinates (a parameter, say) name the coordinates in `coordinates`, in order; the others stay as free variables of the connection. The metric must be invertible where the connection is evaluated: a singular metric is refused at evaluation.
+
+## Parameters
+
+`const math::Function &metric`
+: The metric: a rank-2 `Function` of the coordinates with square output `[n, n]`.
+
+`pluss::StackArray<std::string_view> coordinates`
+: The coordinate variables in order, when the metric has other variables too. Empty (the default) means all of the metric's variables, one per dimension.
+
+`operators::DiffOptions options`
+: Options for the metric's derivatives.
+
+## Returns
+
+A `Function` of the coordinates with output shape `[n, n, n]`, `Γ[i][j][k] = Γⁱ_jk`.
+
+## Errors
+
+- `the metric must be a square matrix Function`.
+- `one coordinate per metric dimension is required` when the variables do not match the dimension.
+- A singular metric at evaluation raises `inverse domain excludes singular matrices`.
+
+## Practical Examples
+
+### Example 1
+
+The unit sphere, `g = diag(1, sin²θ)`. The non-zero symbols are `Γ^θ_φφ = −sin θ cos θ` and `Γ^φ_θφ = Γ^φ_φθ = cot θ`. At `θ = 1` they are `−0.45465` and `0.64209`; they sit at flattened positions 3, 5 and 6.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace geometry = pluss::operators::geometry;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function metric = math::function({"theta", "phi"}, [](math::Function theta, math::Function) {
+    const math::Function one = theta * 0.0 + 1.0, zero = theta * 0.0, s = theta.sin() * theta.sin();
+    return math::stack({math::stack({one, zero}), math::stack({zero, s})});   // diag(1, sin^2 theta)
+  });
+  const math::Function gamma = operators::geometry::levi_civita(metric);
+  const auto point = {pluss::make_series(1.0), pluss::make_series(0.3)};   // theta = 1, phi = 0.3
+
+  out.writeln("shape:", gamma.shape());
+  out.writeln("Gamma[i][j][k] flattened:", gamma(point).reshape({8}).items<double>());
+  out.writeln("-sin cos =", -std::sin(1.0) * std::cos(1.0), "  cot =", 1.0 / std::tan(1.0));
+}
+```
+
+### Example 2
+
+Flat space in polar coordinates, `g = diag(1, r²)`: `Γ^r_θθ = −r` and `Γ^θ_rθ = 1/r`. The plane is flat, so these are not curvature; they are the price of using a rotating frame.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace geometry = pluss::operators::geometry;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function metric = math::function({"r", "t"}, [](math::Function r, math::Function) {
+    const math::Function one = r * 0.0 + 1.0, zero = r * 0.0;
+    return math::stack({math::stack({one, zero}), math::stack({zero, r * r})});
+  });
+  const math::Function gamma = operators::geometry::levi_civita(metric);
+  out.writeln("at r = 2:", gamma({pluss::make_series(2.0), pluss::make_series(0.3)}).reshape({8}).items<double>());
+  out.writeln("Gamma^r_tt = -r = -2 at position 3,  Gamma^t_rt = 1/r = 0.5 at positions 5 and 6");
+}
+```
+
+### Example 3
+
+A metric with a parameter. The coordinates are named; the parameter `a` stays a free variable. A constant conformal factor cancels in the Christoffel symbols, so the connection of `a·diag(1, r²)` is the polar one for every `a`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace geometry = pluss::operators::geometry;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const math::Function metric = math::function({"r", "t", "a"}, [](math::Function r, math::Function, math::Function a) {
+    const math::Function zero = r * 0.0;
+    return math::stack({math::stack({a, zero}), math::stack({zero, r * r * a})});
+  });
+  const math::Function gamma = operators::geometry::levi_civita(metric, {"r", "t"});
+  out.writeln("variables of the connection:", gamma.arity(), " shape", gamma.shape());
+  for (const double a : {1.0, 5.0}) {
+    out.writeln("a =", a, ":", gamma({pluss::make_series(2.0), pluss::make_series(0.3), pluss::make_series(a)}).reshape({8}).items<double>());
+  }
+}
+```
+
+### Example 4
+
+The checks: one coordinate per metric dimension, a square metric, and an invertible one (the last is detected when the connection is evaluated).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace geometry = pluss::operators::geometry;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+
+  const math::Function three = math::function({"r", "t", "a"}, [](math::Function r, math::Function t, math::Function a) {
+    return math::stack({math::stack({a, r * 0.0}), math::stack({r * 0.0, a})});
+  });
+  try { (void)operators::geometry::levi_civita(three); } catch (const pluss::Error &e) { out.writeln("too many variables: ", first_line(e)); }
+  const math::Function column = math::function({"x"}, [](math::Function x) { return math::stack({x, x, x}); });
+  try { (void)operators::geometry::levi_civita(column); } catch (const pluss::Error &e) { out.writeln("not a square matrix:", first_line(e)); }
+  const math::Function singular = math::function({"x", "y"}, [](math::Function x, math::Function y) {
+    const math::Function zero = x * 0.0;
+    return math::stack({math::stack({x, zero}), math::stack({zero, zero})});
+  });
+  const math::Function gamma = operators::geometry::levi_civita(singular);
+  try { (void)gamma({pluss::make_series(1.0), pluss::make_series(1.0)}); } catch (const pluss::Error &e) { out.writeln("singular metric:    ", first_line(e)); }
+}
+```
+
+## See Also
+
+- [`covariant`](covariant.md): uses the connection to differentiate tensor fields
+- [`absolute_differential`](absolute_differential.md): differentiates along a curve
+- [`TensorSignature`](TensorSignature.md): the index convention
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="covariant.html">
+    <span class="label">Previous</span>
+    <span class="title">covariant</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

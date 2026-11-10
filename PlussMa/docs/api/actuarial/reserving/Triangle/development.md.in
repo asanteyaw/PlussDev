@@ -1,0 +1,161 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 19d1fb9d3058 -->
+
+# `actuarial::Triangle::development`
+
+[Back to `actuarial::Triangle`](../Triangle.md)
+
+The column labels.
+
+## Signature
+
+```cpp
+const std::vector<std::string> &actuarial::Triangle::development() const noexcept;
+```
+
+## What It Does
+
+Returns the labels of the development ages in column order (for example the months since the start of the origin period), or an empty vector when none were given. They must match the number of columns when supplied and have no effect on the estimates.
+
+## Returns
+
+A const reference to a vector of `ndevelopment` strings, or an empty vector.
+
+## Practical Examples
+
+### Example 1: labelled columns
+
+The ages given at construction.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative, pluss::series::undefined(), {"2021", "2022", "2023", "2024"}, {"12", "24", "36", "48"});
+  for (const auto &d : triangle.development()) out.write(d, " ");
+  out.writeln();
+}
+```
+
+### Example 2: no labels
+
+An unlabelled triangle returns an empty vector.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative);
+  out.writeln("labels:", triangle.development().size());
+}
+```
+
+### Example 3: labelling the factors
+
+The age-to-age factor `j` takes the triangle from age `j` to age `j + 1`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series cumulative = pluss::make_series({100.0, 180.0, 220.0, 240.0,
+                                                       110.0, 200.0, 250.0, 0.0,
+                                                       120.0, 215.0, 0.0, 0.0,
+                                                       130.0, 0.0, 0.0, 0.0}, {4, 4});
+  const actuarial::Triangle triangle = actuarial::triangle::cumulative(cumulative, pluss::series::undefined(), {"2021", "2022", "2023", "2024"}, {"12", "24", "36", "48"});
+  const auto f = actuarial::operators::chain_ladder()(triangle).age_to_age.items<double>();
+  for (std::size_t j = 0; j < f.size(); ++j) out.writeln(triangle.development()[j], "->", triangle.development()[j+1], f[j]);
+}
+```
+
+### Example 4: a wrong count
+
+The number of labels must equal the number of columns.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::triangle::cumulative(pluss::make_series({1.0, 2.0, 0.0, 0.0}, {2, 2}), pluss::series::undefined(), {}, {"12"}); });
+}
+```
+
+## See Also
+
+- [`Triangle`](../Triangle.md): the type
+- [`cumulative`](../cumulative.md): builds one
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="defined.html">
+    <span class="label">Previous</span>
+    <span class="title">defined</span>
+  </a>
+  <a class="next-link" href="ndevelopment.html">
+    <span class="label">Next</span>
+    <span class="title">ndevelopment</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,34 @@
+<!-- generated from linprog.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Linear programming
+
+Batched linear programming by a homogeneous self-dual interior-point method with implicit bounds, with an exact simplex alternative. A solve returns certificates, not only a point: dual values, a Farkas proof of infeasibility, or a recession ray for unboundedness.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`Method`](linprog/Method.md) | The algorithm of the linear-programming solver: interior point or simplex. |
+| [`Options`](linprog/Options.md) | Method, iteration limit, tolerances, polishing and chunking of the linear-programming solver. |
+| [`Problem`](linprog/Problem.md) | The data of a linear program: cost, equality and inequality rows, bounds, and an optional simplex warm start. |
+| [`Result`](linprog/Result.md) | What `linprog::solve` returns: solutions, objective values, duals, certificates, and (for the simplex) the optimal bases. |
+| [`Status`](linprog/Status.md) | The verdict of a lane of a linear-programming solve. |
+| [`solve`](linprog/solve.md) | Solves a linear program `minimise cᵀx` subject to equality rows, inequality rows and bounds, for one problem or a batch, and returns the solution with its certificates. |
+| [`success`](linprog/success.md) | Whether a status counts as a usable solution: `Optimal` or `NearOptimal`. |
+| [`to_string`](linprog/to_string.md) | The name of a linear-programming `Status` as text. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog/Method
+linprog/Options
+linprog/Problem
+linprog/Result
+linprog/Status
+linprog/solve
+linprog/success
+linprog/to_string
+```
+<!-- apiref:toctree:end -->

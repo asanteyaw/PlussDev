@@ -1,0 +1,160 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 02b37d7cddd6 -->
+
+# `math::Function::log`
+
+[Back to `math::Function`](../Function.md)
+
+The natural logarithm of a function, as a new function.
+
+## Signature
+
+```cpp
+math::Function math::Function::log() const;
+```
+
+## What It Does
+
+`f.log()` builds `x ↦ ln f(x)`. For a real function the logarithm is defined only for positive values, and the function checks this on the values that arrive: a zero or negative input raises `log domain excludes zero and requires positive real values` instead of returning `-inf` or `NaN`. For a complex function it is the principal branch, with imaginary part in `(−π, π]`.
+
+The logarithm turns products into sums and powers into multiples, `ln(ab) = ln a + ln b`, which is why log-likelihoods and log-prices are built with it. Its derivative is `(ln u)′ = u′ / u`. The library simplifies `log(exp(f))` to `f` unconditionally, and does not simplify `exp(log(f))`, which equals `f` only where `f` is positive.
+
+## Returns
+
+A new `Function` whose value is `log` of the receiver's value, with the same variables and output shape.
+
+## Errors
+
+- The function must be defined.
+
+## Practical Examples
+
+### Example 1
+
+`log` evaluated on a small grid, next to the standard-library value. Each element is computed independently, so the result has the shape of the input.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.log(); });
+  const auto x = pluss::make_series({0.5, 1.0, 2.0, 10.0});
+  out.writeln("x:           ", x.items<double>());
+  out.writeln("f(x):        ", f({x}).items<double>());
+  out.writeln("std::log(x):", pluss::make_series({std::log((0.5)), std::log((1.0)), std::log((2.0)), std::log((10.0))}).items<double>());
+}
+```
+
+The two rows agree to the printed digits.
+
+### Example 2
+
+The derivative rule. Differentiating `log` with `operators::differential` gives the exact formula, `(ln x)′ = 1/x`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.log(); });
+  const math::Function df = operators::differential("x")(f);
+  const auto x = pluss::make_series({0.5, 1.0, 2.0, 10.0});
+  const auto exact = [](double v) { return 1.0 / v; };
+  out.writeln("f'(x):        ", df({x}).items<double>());
+  out.writeln("closed form:  ", pluss::make_series({exact(0.5), exact(1.0), exact(2.0), exact(10.0)}).items<double>());
+}
+```
+
+### Example 3
+
+The domain check. Zero and negative inputs are refused with a message that names the operation; a complex input takes the principal branch instead.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.log(); });
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+  try { (void)f(0.0); } catch (const pluss::Error &e) { out.writeln("log(0):  ", first_line(e)); }
+  try { (void)f(-1.0); } catch (const pluss::Error &e) { out.writeln("log(-1): ", first_line(e)); }
+  const std::complex<double> w = f(std::complex<double>{-1.0, 0.0}).item<std::complex<double>>();
+  out.writeln("log(-1 + 0i) =", w.real(), "+", w.imag(), "i  (pi =", std::acos(-1.0), ")");
+}
+```
+
+### Example 4
+
+Products become sums: `ln(x · y) = ln x + ln y`, built two ways in one callable; and the logarithmic derivative `(ln f)′ = f′/f`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function g = math::function({"x", "y"}, [](math::Function x, math::Function y) { return (x * y).log() - (x.log() + y.log()); });
+  out.writeln("ln(xy) - ln x - ln y at (2, 5):", g({pluss::make_series(2.0), pluss::make_series(5.0)}).item<double>());
+
+  const math::Function f = math::function({"x"}, [](math::Function x) { return (x * x + 1.0).log(); });
+  const math::Function d = operators::differential("x")(f);
+  out.writeln("(ln(x^2+1))' at 2 =", d(2.0).item<double>(), "   2x/(x^2+1) =", 4.0 / 5.0);
+}
+```
+
+## See Also
+
+- [`exp`](exp.md): the inverse
+- [`log1p`](log1p.md): accurate near 1
+- [`pow`](pow.md): powers
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="inverse.html">
+    <span class="label">Previous</span>
+    <span class="title">inverse</span>
+  </a>
+  <a class="next-link" href="log1p.html">
+    <span class="label">Next</span>
+    <span class="title">log1p</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

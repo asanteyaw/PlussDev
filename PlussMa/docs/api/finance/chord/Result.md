@@ -1,0 +1,224 @@
+<!-- generated from Result.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `module::Chord::Result`
+
+The result of pricing a Chord: a `Field::Result` per asset and every price laid end to end.
+
+## Signature
+
+```cpp
+module::Chord::Result module::Chord::price(Config cfg = {}) const;
+const module::Field::Result &module::Chord::Result::operator[](const std::string &name) const;
+```
+
+A `Chord::Result` is returned by value from [`Chord::price`](Chord/price.md) and is read-only data. `names` and `results` are parallel, in the order the assets were added. `price` is every asset's prices concatenated, and asset *i* owns `price[offsets[i], offsets[i + 1])`, so a strip of ten options on three assets gives thirty prices and `offsets` of length four. [`operator[]`](Result/operator_index.md) returns one asset's [`Result`](../field/Result.md) by name. Every example below prices the same three assets: a Black-Scholes call, a Heston strip of three strikes and a second Black-Scholes call.
+
+## Fields
+
+### `names`
+
+`std::vector<std::string>`, default `empty`.
+
+The asset names in the order they were added, one per asset. It is the same list as [`Chord::names`](Chord/names.md), and the key of `operator[]`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20)).add("b", heston(100.0, {90.0, 100.0, 110.0})).add("c", bs(90.0, 95.0, 0.30));
+  const auto result = chord.price();
+  out.writeln(result.names, " same as the chord:", result.names == chord.names());
+}
+```
+
+Output
+
+```text
+[a, b, c]  same as the chord: true
+```
+
+### `results`
+
+`std::vector<module::Field::Result>`, default `empty`.
+
+One [`Result`](../field/Result.md) per asset, parallel to `names`: that asset's prices and, when its `controls.risk` is `All`, its Greeks. Index it by position, or by name through `operator[]`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20)).add("b", heston(100.0, {90.0, 100.0, 110.0})).add("c", bs(90.0, 95.0, 0.30));
+  const auto result = chord.price();
+  for (std::size_t i = 0; i < result.results.size(); ++i) out.writeln(result.names[i], "prices", result.results[i].price.numel(), " delta defined", result.results[i].greeks.delta.defined());
+}
+```
+
+Output
+
+```text
+a prices 1  delta defined true
+b prices 3  delta defined false
+c prices 1  delta defined true
+```
+
+### `price`
+
+`Series`, default `undefined`.
+
+Every asset's prices concatenated into one `Series`, in the order of adding: the first asset's strip, then the second's, and so on. It is empty for an empty Chord. Use it when one array is wanted, for example to compare against a vector of quotes; use `offsets` to find an asset's part.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20)).add("b", heston(100.0, {90.0, 100.0, 110.0})).add("c", bs(90.0, 95.0, 0.30));
+  const auto result = chord.price();
+  out.writeln("all prices", result.price.items<double>());
+  out.writeln("count", result.price.numel(), " = 1 + 3 + 1");
+}
+```
+
+Output
+
+```text
+all prices [8.34941, 15.11367, 8.62811, 4.05957, 8.97264]
+count 5  = 1 + 3 + 1
+```
+
+### `offsets`
+
+`std::vector<std::int64_t>`, default `empty`.
+
+Where each asset's prices start in `price`: asset *i* owns `price[offsets[i], offsets[i + 1])`, and the last entry is the total number of prices, so `offsets` has one more entry than there are assets.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+static mod::Field heston(double spot, std::vector<double> strikes, mod::Engine engine = mod::Engine::Cos) {
+  return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20)).add("b", heston(100.0, {90.0, 100.0, 110.0})).add("c", bs(90.0, 95.0, 0.30));
+  const auto result = chord.price();
+  out.writeln("offsets", result.offsets);
+  const auto all = result.price.items<double>();
+  for (std::size_t i = 0; i < result.names.size(); ++i) {
+    const auto first = static_cast<std::size_t>(result.offsets[i]), last = static_cast<std::size_t>(result.offsets[i + 1]);
+    out.writeln(result.names[i], std::vector<double>(all.begin() + first, all.begin() + last));
+  }
+}
+```
+
+Output
+
+```text
+offsets [0, 1, 4, 5]
+a [8.34941]
+b [15.11367, 8.62811, 4.05957]
+c [8.97264]
+```
+
+## Methods
+
+| Method | What it does |
+|---|---|
+| [`operator[]`](Result/operator_index.md) | The result of one asset, by name. |
+
+## Changelog
+
+- **0.1**: initial documented surface.
+
+## See Also
+
+[`Chord::price`](Chord/price.md) produces it, [`Result`](../field/Result.md) is the per-asset result, and [`Chord::Paths`](Paths.md) is the result of a simulation.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Chord.html">
+    <span class="label">Previous</span>
+    <span class="title">Chord</span>
+  </a>
+  <a class="next-link" href="Parameters.html">
+    <span class="label">Next</span>
+    <span class="title">Parameters</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+Result/operator_index
+```
+<!-- apiref:toctree:end -->

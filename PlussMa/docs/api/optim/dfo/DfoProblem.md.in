@@ -1,0 +1,163 @@
+# `dfo::DfoProblem`
+
+The data of a derivative-free problem: start, objective or black box, constraints and bounds.
+
+Fill in `initial` and exactly one of `objective` or `blackbox`. `constraints` returns inequality values `g(x) ≤ 0`; `constraints_values` returns both kinds through [`DfoConstraintValues`](DfoConstraintValues.md); give at most one of the two. `lower_bounds` and `upper_bounds` come together and have one element per variable. The problem is checked when it is solved, with an error that names the missing or conflicting part.
+
+Which methods honour what: Nelder-Mead supports bounds (by projection) but no nonlinear constraints; pattern search and the MADS kinds support bounds and nonlinear constraints; the evolutionary and swarm methods support bounds and use them as the sampling box, and reject nonlinear constraints rather than ignore them.
+
+## Fields
+
+### `initial`
+
+`pluss::Series`, default `undefined`.
+
+The starting point; fixes the number of variables.
+
+### `objective`
+
+`std::function<pluss::Series(const pluss::Series &)>`, default `empty`.
+
+The scalar objective.
+
+### `constraints`
+
+`std::function<pluss::Series(const pluss::Series &)>`, default `empty`.
+
+Inequality values `g(x) ≤ 0`.
+
+### `constraints_values`
+
+`std::function<dfo::DfoConstraintValues(const pluss::Series &)>`, default `empty`.
+
+Inequality and equality values.
+
+### `blackbox`
+
+`std::function<dfo::BlackboxEvaluation(const pluss::Series &)>`, default `empty`.
+
+An evaluation that returns objectives, constraints and a success flag.
+
+### `lower_bounds`
+
+`pluss::Series`, default `undefined`.
+
+Lower bound per variable; set together with `upper_bounds`.
+
+### `upper_bounds`
+
+`pluss::Series`, default `undefined`.
+
+Upper bound per variable.
+
+## Guidance
+
+Passed to `DFO::solve` or `DFO::run`.
+
+## Practical Examples
+
+### Example 1
+
+An objective with bounds. The unconstrained minimum `(3, 3)` is outside the box `[0, 2]²`, so the answer is the corner `(2, 2)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoProblem problem;
+  problem.initial = pluss::series::make({0.0, 0.0});
+  problem.objective = f;
+  problem.lower_bounds = pluss::series::make({0.0, 0.0});
+  problem.upper_bounds = pluss::series::make({2.0, 2.0});
+  const dfo::DfoResult result = dfo::DFO::solve(problem);
+  out.writeln("minimizer =", result.minimizer.items<double>(), ", solver =", dfo::to_string(result.selected_solver));
+}
+```
+
+### Example 2
+
+A constrained problem. The constraint `x₀ + x₁ ≤ 2` moves the answer from `(3, 3)` to `(1, 1)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoProblem problem;
+  problem.initial = pluss::series::make({0.0, 0.0});
+  problem.objective = f;
+  problem.constraints = [](const Series &x) { return x.sum() - 2.0; };
+  const dfo::DfoResult result = dfo::DFO::solve(problem);
+  out.writeln("minimizer =", result.minimizer.items<double>(), ", solver =", dfo::to_string(result.selected_solver));
+}
+```
+
+### Example 3
+
+A black box instead of an objective. The callback returns a number; a `BlackboxEvaluation` can also carry constraints and flag a failed evaluation.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoProblem problem;
+  problem.initial = pluss::series::make({0.0, 0.0});
+  problem.blackbox = [&](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = f(x);
+    return e;
+  };
+  const dfo::DfoResult result = dfo::DFO::solve(problem);
+  out.writeln("minimizer =", result.minimizer.items<double>(), ", solver =", dfo::to_string(result.selected_solver));
+}
+```
+
+## See Also
+
+- [`DFO`](DFO.md): solves it
+- [`DfoConstraintValues`](DfoConstraintValues.md): constraint values
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DfoOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">DfoOptions</span>
+  </a>
+  <a class="next-link" href="DfoResult.html">
+    <span class="label">Next</span>
+    <span class="title">DfoResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

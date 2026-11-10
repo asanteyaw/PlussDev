@@ -1,0 +1,168 @@
+<!-- generated from nonlinear_analytic.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d502bc906738 -->
+
+# `ProblemBuilder::nonlinear_analytic`
+
+[Back to `optim::ProblemBuilder`](../ProblemBuilder.md)
+
+Supplies nonlinear constraints together with their Jacobians, instead of differentiating them.
+
+## Signature
+
+```cpp
+optim::ProblemBuilder &optim::ProblemBuilder::nonlinear_analytic(std::function<optim::NonlinearConstraintEvaluation(const optim::ParameterPack<pluss::Series> &)> fn);
+```
+
+## What It Does
+
+`fn` returns a `NonlinearConstraintEvaluation`: the equality residuals `equality` and inequality residuals `inequality` (vectors), and for each a Jacobian pack `equality_jacobian`, `inequality_jacobian` with one block per parameter block, of shape `[rows, block size]`. Build the Jacobian pack with `Pack(std::vector<Pack::Block>{{"x", block}, ...})` rather than `pack_scalars`, which would flatten each block to a vector. Use it when the Jacobian is cheap in closed form, or when a constraint is a black box with a known derivative. The traced forms ([`nl_eq`](nl_eq.md), [`nl_ineq`](nl_ineq.md)) are not required but, if both are given for the same problem, [`audit_optima_derivatives`](../audit_optima_derivatives.md) compares them, which is the best way to check a hand-written Jacobian.
+
+## Parameters
+
+`fn`
+: Returns the residuals and Jacobian packs for a parameter pack.
+
+## Returns
+
+The same builder, for chaining.
+
+## Practical Examples
+
+### Example 1
+
+`4 − xy ≤ 0` with its Jacobian `(−y, −x)`. Minimise `x² + y²`: `x = y = 2`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack start = optim::pack_scalars({{"x", pluss::make_series(1.0)}, {"y", pluss::make_series(3.0)}});
+  const optim::OptimaState result = optim::optima(
+      optim::problem()
+          .objective([](const Pack &p) { return p.at("x").square() + p.at("y").square(); })
+          .nonlinear_analytic([](const Pack &p) {
+            const double x = p.at("x").items<double>()[0], y = p.at("y").items<double>()[0];
+            optim::NonlinearConstraintEvaluation e;
+            e.inequality = pluss::make_series(4.0 - x * y).reshape({1});
+            e.inequality_jacobian = Pack(std::vector<Pack::Block>{{"x", pluss::make_series(-y).reshape({1, 1})}, {"y", pluss::make_series(-x).reshape({1, 1})}});
+            return e;
+          })
+          .lbs(optim::pack_scalars({{"x", pluss::make_series(0.1)}, {"y", pluss::make_series(0.1)}})),
+      start);
+  out.writeln("x =", result.params.at("x").items<double>(), " y =", result.params.at("y").items<double>());
+}
+```
+
+Output
+
+```text
+x = [2.0000]  y = [2.0000]
+```
+
+### Example 2
+
+An equality with its Jacobian. Keep `a + 2b = 2`, minimise `a² + b²`: the Jacobian row is the constant `(1, 2)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack start = optim::pack_scalars({{"a", pluss::make_series(0.0)}, {"b", pluss::make_series(0.0)}});
+  const optim::OptimaState result = optim::optima(
+      optim::problem()
+          .objective([](const Pack &p) { return p.at("a").square() + p.at("b").square(); })
+          .nonlinear_analytic([](const Pack &p) {
+            optim::NonlinearConstraintEvaluation e;
+            e.equality = (p.at("a") + 2.0 * p.at("b") - 2.0).reshape({1});
+            e.equality_jacobian = Pack(std::vector<Pack::Block>{{"a", pluss::make_series(1.0).reshape({1, 1})}, {"b", pluss::make_series(2.0).reshape({1, 1})}});
+            return e;
+          }),
+      start);
+  out.writeln("a =", result.params.at("a").items<double>(), " b =", result.params.at("b").items<double>());
+}
+```
+
+Output
+
+```text
+a = [0.4000]  b = [0.8000]
+```
+
+### Example 3
+
+Auditing the Jacobian against the traced constraint. Both forms of the same constraint are given; the audit reports whether they agree.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Pack at = optim::pack_scalars({{"x", pluss::make_series(1.5)}, {"y", pluss::make_series(2.5)}});
+  const auto build = [](double scale) {
+    optim::ConstrainedProblem problem;
+    problem.objective.autodiff = [](const Pack &p) { return p.at("x").square() + p.at("y").square(); };
+    problem.nonlinear.inequality = [](const Pack &p) { return 4.0 - p.at("x") * p.at("y"); };
+    problem.nonlinear.analytic = [scale](const Pack &p) {
+      const double x = p.at("x").items<double>()[0], y = p.at("y").items<double>()[0];
+      optim::NonlinearConstraintEvaluation e;
+      e.inequality = pluss::make_series(4.0 - x * y).reshape({1});
+      e.inequality_jacobian = Pack(std::vector<Pack::Block>{{"x", pluss::make_series(-y * scale).reshape({1, 1})}, {"y", pluss::make_series(-x).reshape({1, 1})}});
+      return e;
+    };
+    return problem;
+  };
+  out.writeln("correct Jacobian passes:", optim::audit_optima_derivatives(build(1.0), at).nonlinear_inequalities.passed);
+  out.writeln("doubled entry passes   :", optim::audit_optima_derivatives(build(2.0), at).nonlinear_inequalities.passed);
+}
+```
+
+Output
+
+```text
+correct Jacobian passes: true
+doubled entry passes   : false
+```
+
+## See Also
+
+- [`nl_ineq`](nl_ineq.md): automatic differentiation
+- [`ProblemBuilder`](Introduction.md): the builder
+- [`optima`](../optima.md): solves the problem
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="nl_ineq.html">
+    <span class="label">Previous</span>
+    <span class="title">nl_ineq</span>
+  </a>
+  <a class="next-link" href="nonlinear_equality.html">
+    <span class="label">Next</span>
+    <span class="title">nonlinear_equality</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

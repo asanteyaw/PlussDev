@@ -1,0 +1,76 @@
+# `structure::NonlinearOptions`
+
+Controls of the large-displacement static solve.
+
+## Signature
+
+```cpp
+structure::NonlinearOptions
+```
+
+## What It Does
+
+The corotational static solve applies the load in steps and solves each with Newton's method and a line search. `NonlinearOptions` sets the steps, the iteration limits and tolerances.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `load_steps` | The number of equal load increments to aim for. A step that fails is halved and retried; after a success the increment grows again. | `4` |
+| `max_iterations` | Newton iterations allowed per load step. | `24` |
+| `max_line_search` | Step reductions allowed in the line search of one iteration. | `10` |
+| `max_cutbacks` | Consecutive halvings of the load step allowed before the continuation gives up. | `8` |
+| `relative_tolerance` | Out-of-balance force as a fraction of the load at which a step is accepted. | `1e-8` |
+| `absolute_tolerance` | Out-of-balance force below which a step is accepted. A tolerance below the rounding floor of the internal forces is raised to that floor. | `1e-10` |
+| `line_search_shrink` | Factor by which a rejected Newton step is shortened, in `(0, 1)`. | `0.5` |
+| `armijo` | Fraction of the predicted decrease that a Newton step must achieve, in `(0, 1)`. | `1e-4` |
+| `min_load_step` | Smallest load increment, as a fraction of the load; a continuation that needs a smaller one stops. | `1e-6` |
+| `solve` | Conjugate-gradient controls of the inner linear solves (`max_iterations`, tolerances, `check_interval`). A tangent that is not positive definite is solved by restarted GMRES instead. | budget 8192 |
+| `fail_on_nonconvergence` | When true a continuation that does not reach the full load throws; when false it returns the last equilibrium with `load_factor` below one. | `true` |
+
+## Returns
+
+A value; validated by the solver.
+
+## Errors
+
+A non-positive `load_steps`, `max_iterations` or `max_line_search`, negative tolerances, a shrink or `armijo` outside `(0, 1)`, or a `min_load_step` outside `(0, 1]` is rejected before solving.
+
+## Interpretation and Use
+
+More requested steps usually cost fewer Newton iterations in total, since each starts nearer its answer. With `fail_on_nonconvergence` false, check `load_factor` and `converged`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Steps, tolerance, an iteration cap and the failure switch on a cantilever bent through a large angle.
+
+@@example Eng/api/structure_nonlinear_solve.cpp@@
+
+### Example 2
+
+The linear solve for comparison.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 3
+
+Validation raised by the frame.
+
+@@example Eng/api/structure_frame_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MemberLoad.html">
+    <span class="label">Previous</span>
+    <span class="title">MemberLoad</span>
+  </a>
+  <a class="next-link" href="NonlinearResult.html">
+    <span class="label">Next</span>
+    <span class="title">NonlinearResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,130 @@
+# `integ::IntegraOptions`
+
+The strategy of `integra` and the settings of its two engines.
+
+`strategy` chooses the engine; `quadrature` and `monte_carlo` are the full option structs of the two engines, used when that engine runs. In `Auto`, the quadrature tolerance and refinement budget decide when quadrature has failed, so tightening them sends more integrals to Monte Carlo.
+
+## Fields
+
+### `strategy`
+
+`integ::IntegraStrategy`, default `Auto`.
+
+The engine.
+
+### `quadrature`
+
+`integ::QuadraOptions`, default `{}`.
+
+Settings of the quadrature engine.
+
+### `monte_carlo`
+
+`integ::AleatoriaOptions`, default `{}`.
+
+Settings of the Monte Carlo engine.
+
+## Guidance
+
+Passed to `integra`.
+
+## Practical Examples
+
+### Example 1
+
+Settings of each engine.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  integ::IntegraOptions options;
+  options.quadrature.rule = integ::QuadraRule::GaussLegendre;
+  options.quadrature.tolerance = 1e-12;
+  options.monte_carlo.samples = 100000;
+  const integ::IntegraResult r = integ::integra([](const Series &t) { return t.sin(); }, 0.0, 3.14159265358979323846, options);
+  out.writeln("value =", r.value.item<double>(), ", evaluations =", r.evaluations);
+}
+```
+
+### Example 2
+
+A tight tolerance sends the integral to Monte Carlo when quadrature cannot reach it in its budget.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  integ::IntegraOptions options;
+  options.quadrature.tolerance = 1e-15;
+  options.quadrature.max_refinements = 0;
+  options.quadrature.nodes = 5;
+  options.monte_carlo.samples = 50000;
+  options.monte_carlo.seed = 2;
+  const integ::IntegraResult r = integ::integra([](const Series &t) { return t.exp(); }, 0.0, 1.0, options);
+  out.writeln("strategy used =", static_cast<int>(r.strategy_used), ", converged =", r.converged, ", error estimate =", r.error_estimate);
+}
+```
+
+### Example 3
+
+Monte Carlo only, with a seed.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  integ::IntegraOptions options;
+  options.strategy = integ::IntegraStrategy::MonteCarlo;
+  options.monte_carlo.samples = 30000;
+  options.monte_carlo.seed = 10;
+  const integ::IntegraResult r = integ::integra([](const Series &t) { return t; }, 0.0, 2.0, options);
+  out.writeln("value =", r.value.item<double>(), ", exact = 2, error estimate =", r.error_estimate);
+}
+```
+
+## See Also
+
+- [`integra`](integra.md): uses it
+- [`QuadraOptions`](QuadraOptions.md): the quadrature settings
+- [`AleatoriaOptions`](AleatoriaOptions.md): the Monte Carlo settings
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="AleatoriaResult.html">
+    <span class="label">Previous</span>
+    <span class="title">AleatoriaResult</span>
+  </a>
+  <a class="next-link" href="IntegraResult.html">
+    <span class="label">Next</span>
+    <span class="title">IntegraResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

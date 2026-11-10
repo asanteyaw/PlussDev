@@ -1,0 +1,173 @@
+# `actuarial::life_contingencies::qx_lx`
+
+Recovers death probabilities from the lives of a table.
+
+## Signature
+
+```cpp
+pluss::Series actuarial::life_contingencies::qx_lx(const pluss::Series &lx);
+```
+
+## What It Does
+
+Returns {math}`q_k=1-l_{k+1}/l_k`: the complement of [`px_lx`](px_lx.md), with the same requirements on the table. It is what you apply to a published life table to get the probabilities a [`Mortality`](../mortality/Mortality.md) stores; [`from_lx`](../mortality/from_lx.md) does it in one step.
+
+## Parameters
+
+`lx`
+: One-dimensional series of lives, non-increasing, with a positive first value.
+
+## Returns
+
+A series of `lx.numel() − 1` probabilities.
+
+## Errors
+
+Throws the same errors as [`px_lx`](px_lx.md), prefixed `qx_lx:`.
+
+## Practical Examples
+
+### Example 1: probabilities from a table
+
+Lives at five ages.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(life::qx_lx(pluss::make_series({100000.0, 99000.0, 97812.0, 96347.0, 94516.0})).items<double>());
+}
+```
+
+### Example 2: a table that dies out
+
+The final year has probability one.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(life::qx_lx(pluss::make_series({100.0, 50.0, 0.0})).items<double>());
+}
+```
+
+### Example 3: the round trip
+
+`lx_qx` and `qx_lx` are inverses.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln(life::qx_lx(life::lx_qx(qx)).items<double>());
+}
+```
+
+### Example 4: one age is no years
+
+A table with a single value has no probabilities.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln(life::qx_lx(pluss::make_series({100.0})).numel());
+}
+```
+
+### Example 5: the errors
+
+A negative life and a table that dies out early.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)life::qx_lx(pluss::make_series({100.0, -5.0})); });
+  report([&] { (void)life::qx_lx(pluss::make_series({100.0, 0.0, 0.0})); });
+}
+```
+
+## See Also
+
+- [`px_lx`](px_lx.md): the survival probabilities
+- [`from_lx`](../mortality/from_lx.md): builds a `Mortality`- [`Mortality`](../mortality/Mortality.md): the same conversions as accessors
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="qx_force.html">
+    <span class="label">Previous</span>
+    <span class="title">qx_force</span>
+  </a>
+  <a class="next-link" href="qx_px.html">
+    <span class="label">Next</span>
+    <span class="title">qx_px</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

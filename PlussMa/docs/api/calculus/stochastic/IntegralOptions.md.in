@@ -1,0 +1,133 @@
+# `operators::stochastic::IntegralOptions`
+
+Options of the stochastic integral: the convention, `θ`, whether to keep the running integral, and the path axis.
+
+`IntegralOptions` is the argument of [`stochastic_integral`](stochastic_integral.md). It adds the integration convention to the two path fields of [`PathOptions`](PathOptions.md).
+
+## Fields
+
+| Field | Type | Default | Meaning |
+|---|---|---|---|
+| `convention` | `Convention` | `Ito` | Where the integrand is read in each step: `Ito` (left end, `θ = 0`), `Stratonovich` (`θ = ½`), `Klimontovich` (right end, `θ = 1`), or `Theta` (use the `theta` field). |
+| `theta` | `double` | `0.0` | The `θ` in `[0, 1]`, read only when `convention` is `Theta`. |
+| `cumulative` | `bool` | `false` | Return the running integral at every sample (starting at 0) instead of the terminal value. |
+| `path_axis` | `std::int64_t` | `-1` | The axis of the arguments that indexes the samples of one path. |
+
+## Guidance
+
+The defaults give the Itô integral up to the final time on the last axis. Change `convention` deliberately: the choice is part of the model, not a numerical option.
+
+## Practical Examples
+
+### Example 1
+
+`convention`. The default is `Ito`; naming `Stratonovich` or `Klimontovich` changes where the integrand is read and so the value, by half the quadratic variation per unit of `θ`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::int64_t steps = 2000;
+  const sde::WienerPath path = sde::simulate_wiener_path(pluss::make_series(0.0), 0.0, 1.0, steps, 7);
+  const pluss::Series times = pluss::make_series(path.times, {steps + 1});
+  const math::Function integrand = math::function({"t", "W"}, [](math::Function, math::Function w) { return w; });
+  const double w_final = path.w.select(0, steps).item<double>();
+  const double qv = stochastic::quadratic_variation()(integrand)({times, path.w}).item<double>();
+
+  for (const auto &[label, convention] : {std::pair<const char *, stochastic::Convention>{"Ito         ", stochastic::Convention::Ito}, {"Stratonovich", stochastic::Convention::Stratonovich}, {"Klimontovich", stochastic::Convention::Klimontovich}}) {
+    out.writeln(label, stochastic::stochastic_integral("W", {.convention = convention})(integrand)({times, path.w}).item<double>());
+  }
+}
+```
+
+### Example 2
+
+`theta`. It is read only with `Convention::Theta`; with any named convention it is ignored. Here `θ = 0.5` under `Theta` reproduces Stratonovich, and under `Ito` the same `θ` changes nothing.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::int64_t steps = 2000;
+  const sde::WienerPath path = sde::simulate_wiener_path(pluss::make_series(0.0), 0.0, 1.0, steps, 7);
+  const pluss::Series times = pluss::make_series(path.times, {steps + 1});
+  const math::Function integrand = math::function({"t", "W"}, [](math::Function, math::Function w) { return w; });
+  const double w_final = path.w.select(0, steps).item<double>();
+  const double qv = stochastic::quadratic_variation()(integrand)({times, path.w}).item<double>();
+
+  const auto value = [&](stochastic::IntegralOptions o) { return stochastic::stochastic_integral("W", o)(integrand)({times, path.w}).item<double>(); };
+  out.writeln("Theta, 0.5:        ", value({.convention = stochastic::Convention::Theta, .theta = 0.5}));
+  out.writeln("Stratonovich:      ", value({.convention = stochastic::Convention::Stratonovich}));
+  out.writeln("Ito with theta .5: ", value({.convention = stochastic::Convention::Ito, .theta = 0.5}), "  (ignored)");
+}
+```
+
+### Example 3
+
+`cumulative` and `path_axis`, as for the path variations: a running integral keeps the path axis, and the axis can be named when the samples are not on the last one.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace stochastic = pluss::operators::stochastic;
+namespace sde = pluss::subsp::math::sde;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::int64_t steps = 2000;
+  const sde::WienerPath path = sde::simulate_wiener_path(pluss::make_series(0.0), 0.0, 1.0, steps, 7);
+  const pluss::Series times = pluss::make_series(path.times, {steps + 1});
+  const math::Function integrand = math::function({"t", "W"}, [](math::Function, math::Function w) { return w; });
+  const double w_final = path.w.select(0, steps).item<double>();
+  const double qv = stochastic::quadratic_variation()(integrand)({times, path.w}).item<double>();
+
+  const pluss::Series t3t = times.unsqueeze(1).repeat({1, 2}), w3t = path.w.unsqueeze(1).repeat({1, 2});
+  const pluss::Series running = stochastic::stochastic_integral("W", {.cumulative = true, .path_axis = 0})(integrand)({t3t, w3t});
+  out.writeln("running integral of two paths stored along axis 0: shape", running.sizes());
+  out.writeln("last sample of each:", running.select(0, steps).items<double>());
+}
+```
+
+## See Also
+
+- [`stochastic_integral`](stochastic_integral.md): uses these options
+- [`PathOptions`](PathOptions.md): the path fields
+- [`theta_of`](theta_of.md): the θ of each convention
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="PathOptions.html">
+    <span class="label">Next</span>
+    <span class="title">PathOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,201 @@
+<!-- generated from illinois.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `roots::illinois`
+
+Finds a root in a bracket by regula falsi with the Illinois modification: bracketed like bisection, but superlinear.
+
+## Signature
+
+```cpp
+roots::Result roots::illinois(const roots::Fn &f, pluss::Series a, pluss::Series b, const roots::Options &options = {});
+```
+
+## What It Does
+
+`illinois` also needs a bracket on which `f` changes sign, and it keeps the root inside it. Instead of the midpoint it uses the *secant point*, where the straight line through `(a, f(a))` and `(b, f(b))` crosses zero. Plain regula falsi can stall because one end of the bracket never moves; the Illinois modification halves the retained end's function value whenever the new point falls on the same side twice, which restores superlinear convergence. In practice it reaches full double precision in a handful of iterations on smooth functions and is the bracketed workhorse: nearly as safe as [`bisect`](bisect.md) and much faster.
+
+`f` maps a `Series` of any shape to a `Series` of the same shape; each element is a separate *lane* with its own bracket or starting value, and all lanes advance together, so one call solves a whole parameter sweep with no host loop. The latest iterate is always one end of the bracket and is returned as the root; `residual` is `f` there.
+
+`bracketed` is false in the [`Result`](Result.md) when some lane's starting points do not straddle a root; the solver does not throw, and from such a start the iteration extrapolates like a secant method, so it may still reach a root but the guarantee is gone. By default (`x_tolerance = f_tolerance = 0`) it runs all `max_iterations`; set a tolerance to stop early. Prefer `f_tolerance` here: one end of the bracket may stay where it is, so the width `|b − a|` that `x_tolerance` tests need not shrink, and that exit can fail to fire.
+
+## Parameters
+
+`const roots::Fn &f`
+: The function whose root is wanted; maps a `Series` to a `Series` of the same shape.
+
+`pluss::Series a`
+: One end of each lane's bracket.
+
+`pluss::Series b`
+: The other end, the same shape as `a`. The order of the two ends does not matter.
+
+`const roots::Options &options`
+: Iteration limit, tolerances and cadence. See `Options`.
+
+## Returns
+
+A `roots::Result`: `root` (the latest iterate), `residual`, `iterations` and `bracketed`.
+
+## Errors
+
+- `roots::illinois: lo and hi must have the same shape`.
+
+## Practical Examples
+
+### Example 1
+
+Three lanes of `x² − 2`, with a tolerance on `|f|`. The bracketed iteration lands on `√2` to rounding within a few iterations; the exit is checked every `check_every = 8` iterations, so the reported count is a multiple of 8.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(14));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  roots::Options options;
+  options.f_tolerance = 1e-14;
+  const roots::Result result = roots::illinois(f, pluss::make_series({1.0, 0.0, 1.4}), pluss::make_series({2.0, 3.0, 3.0}), options);
+
+  out.writeln("root       =", result.root.items<double>());
+  out.writeln("residual   =", result.residual.items<double>());
+  out.writeln("iterations =", result.iterations, ", bracketed =", result.bracketed);
+}
+```
+
+Output
+
+```text
+root       = [1.41421356237309, 1.41421356237309, 1.41421356237310]
+residual   = [-0.00000000000000, -0.00000000000000, 0.00000000000000]
+iterations = 16 , bracketed = true
+```
+
+### Example 2
+
+Speed against bisection. For `cos x − x` on `[0, 1]` (root `0.7390851332…`) the same residual tolerance takes `bisect` a few dozen iterations and `illinois` a handful.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const pluss::subsp::math::roots::Fn f = [](const Series &x) { return x.cos() - x; };
+  pluss::subsp::math::roots::Options options;
+  options.f_tolerance = 1e-12;
+  options.check_every = 1;
+  const Series lo = pluss::make_series(0.0), hi = pluss::make_series(1.0);
+
+  const auto slow = pluss::subsp::math::roots::bisect(f, lo, hi, options);
+  const auto fast = pluss::subsp::math::roots::illinois(f, lo, hi, options);
+  out.writeln("bisect   : iterations =", slow.iterations, ", root =", slow.root.item<double>());
+  out.writeln("illinois : iterations =", fast.iterations, ", root =", fast.root.item<double>());
+}
+```
+
+Output
+
+```text
+bisect   : iterations = 38 , root = 0.739085133215
+illinois : iterations = 7 , root = 0.739085133215
+```
+
+### Example 3
+
+A large sweep in one call. The roots of `eˣ − c` are `ln c`; 10 000 lanes with `c` from 1 to 10 000 share the bracket `[0, 10]` (`e¹⁰ = 22026` exceeds every `c`) and are solved together, and the worst error against `ln c` is reported.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const Series c = pluss::series::linspace(1.0, 10000.0, 10000, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const roots::Fn f = [&](const Series &x) { return x.exp() - c; };
+  roots::Options options;
+  options.max_iterations = 200;
+  options.f_tolerance = 1e-9;
+  const roots::Result result = roots::illinois(f, c * 0.0, c * 0.0 + 10.0, options);
+
+  out.writeln("lanes             =", result.root.numel());
+  out.writeln("largest |root - ln c| =", (result.root - c.log()).abs().max().item<double>());
+  out.writeln("iterations        =", result.iterations);
+}
+```
+
+Output
+
+```text
+lanes             = 10000
+largest |root - ln c| = 0.000000000000
+iterations        = 24
+```
+
+### Example 4
+
+No sign change in a lane is reported, not thrown. On `[2, 3]` the function is positive at both ends; `bracketed` is false, and the iteration, now extrapolating, still happens to reach the root, so the residual is the evidence to read.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace roots = pluss::subsp::math::roots;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const roots::Fn f = [](const Series &x) { return x * x - 2.0; };   // root at sqrt(2)
+
+  const roots::Result result = roots::illinois(f, pluss::make_series(2.0), pluss::make_series(3.0));
+  out.writeln("bracketed =", result.bracketed);
+  out.writeln("root      =", result.root.item<double>(), ", residual =", result.residual.item<double>());
+}
+```
+
+Output
+
+```text
+bracketed = false
+root      = 1.414214 , residual = 0.000000
+```
+
+## See Also
+
+- [`bisect`](bisect.md): the safest, slowest bracketed method
+- [`newton`](newton.md): uses a derivative
+- [`Options`](Options.md): iteration limit and tolerances
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="householder.html">
+    <span class="label">Previous</span>
+    <span class="title">householder</span>
+  </a>
+  <a class="next-link" href="newton.html">
+    <span class="label">Next</span>
+    <span class="title">newton</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

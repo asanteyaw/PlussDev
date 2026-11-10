@@ -1,0 +1,68 @@
+# `structure::mass`
+
+Applies the consistent mass of a frame to an acceleration.
+
+## Signature
+
+```cpp
+pluss::Series structure::mass(const structure::Frame& frame, const pluss::Series& acceleration);
+```
+
+## What It Does
+
+Returns the inertial force that the frame's consistent mass matrix produces for a given acceleration of every node, without forming the matrix. A uniform acceleration along one axis, with no rotation, gives forces whose sum is the total mass. The same operation turns an acceleration of gravity into the consistent nodal weight to use as a load.
+
+## Parameters
+
+`frame`
+: A frame whose sections define a density.
+
+`acceleration`
+: Node accelerations `(ax, ay, alpha)`, `[..., node, 3]`.
+
+## Returns
+
+Inertial forces and moments, `[..., node, 3]`, the same shape as `acceleration`.
+
+## Errors
+
+Throws `std::invalid_argument` when the frame's sections have no density or the acceleration has the wrong shape, dtype or platform.
+
+## Interpretation and Use
+
+The operation is linear, so a batch of accelerations is a batch of results. Use `mass(frame, g)` with `g` the acceleration of gravity, negated into the load direction, to obtain the nodal weight.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Total mass from a unit acceleration.
+
+@@example Eng/api/structure_frame_build.cpp@@
+
+### Example 2
+
+Mass-normalisation checks of the mode shapes.
+
+@@example Eng/api/structure_mass_modes.cpp@@
+
+### Example 3
+
+A frame without density is refused.
+
+@@example Eng/api/structure_spectral_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="BuckResult.html">
+    <span class="label">Previous</span>
+    <span class="title">BuckResult</span>
+  </a>
+  <a class="next-link" href="modes.html">
+    <span class="label">Next</span>
+    <span class="title">modes</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,309 @@
+# `filtering::KalmanResult`
+
+What the Kalman, extended and unscented filters return: the filtered and predicted states, the innovations, which data were used, and the log-likelihood.
+
+For `T` dates, `n` state and `m` observed channels. The **filtered** quantities use the observation of the date; the **predicted** ones are before it (so they are what the filter believed in advance). The innovation `eₜ = yₜ − H x̂_{t|t−1}` is the surprise, `Sₜ` its covariance; the log-likelihood `Σ −½(ln|2πSₜ| + eₜᵀSₜ⁻¹eₜ)` is the basis of parameter estimation.
+
+## Fields
+
+### `filtered_mean`
+
+`pluss::Series`, default `undefined`.
+
+`[T, n]`: the posterior mean after each observation.
+
+### `filtered_cov`
+
+`pluss::Series`, default `undefined`.
+
+`[T, n, n]`: its covariance.
+
+### `predicted_mean`
+
+`pluss::Series`, default `undefined`.
+
+`[T, n]`: the prior mean before each observation.
+
+### `predicted_cov`
+
+`pluss::Series`, default `undefined`.
+
+`[T, n, n]`.
+
+### `innovation`
+
+`pluss::Series`, default `undefined`.
+
+`[T, m]`: observation minus prediction.
+
+### `innovation_cov`
+
+`pluss::Series`, default `undefined`.
+
+`[T, m, m]`: `S`.
+
+### `data_used`
+
+`pluss::Series`, default `undefined`.
+
+`[T, m]`: 1 where the channel entered the update, 0 where it was missing or ignored.
+
+### `loglik`
+
+`double`, default `0.0`.
+
+The Gaussian log-likelihood of the used observations.
+
+## Guidance
+
+Returned by `kalman_filter`, `ekf_filter` and `ukf_filter`.
+
+## Practical Examples
+
+### Example 1
+
+Shapes for a one-dimensional local level and 50 dates.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 50;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::full({1}, 0.0, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+
+  const auto res = flt::kalman_filter(y, km, cfg);
+  out.writeln("filtered_mean", res.filtered_mean.sizes(), " filtered_cov", res.filtered_cov.sizes(), " predicted_mean", res.predicted_mean.sizes());
+  out.writeln("innovation", res.innovation.sizes(), " innovation_cov", res.innovation_cov.sizes(), " data_used", res.data_used.sizes());
+}
+```
+
+### Example 2
+
+Predicted against filtered: the observation reduces the variance. At every date the filtered variance is below the predicted.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 50;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::full({1}, 0.0, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+
+  const auto res = flt::kalman_filter(y, km, cfg);
+  out.writeln("all filtered variances below predicted:", (res.filtered_cov < res.predicted_cov).all().item<bool>());
+  out.writeln("variances at the last date: predicted", res.predicted_cov.select(0, 49).sum().item<double>(), "filtered", res.filtered_cov.select(0, 49).sum().item<double>());
+}
+```
+
+### Example 3
+
+Innovations are the observation minus the prediction, and are uncorrelated over time when the model is right; their standardised mean square is near 1.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+static double bs(fin::pricing::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price.items<double>()[0];
+}
+static pluss::Series bsv(fin::pricing::OptionType type, const pluss::Series &spots, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static pluss::Series bst(fin::pricing::OptionType type, const pluss::Series &spots, const pluss::Series &tau, double K, double r, double q, double vol) {
+  fin::module::Field f{.instrument = {.type = type, .strike = pluss::make_series({K}), .maturity = tau}, .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.price().price;
+}
+static fin::hedging::DeltaHedgeResult hedge(const pluss::Series &path, fin::pricing::OptionType type, double K, double r, double q, double T, double vol) {
+  fin::module::Field f{.instrument = fin::instrument::make(type, K, T), .market = fin::market::make(100.0, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                       .controls = {.engine = fin::module::Engine::Analytic}};
+  return fin::hedging::delta_hedge(f, path);
+}
+static double iv(double price, double S, double K, double r, double q, double T, const fin::pricing::ImpliedVolOptions &o = {}) {
+  fin::module::Field f{.instrument = fin::instrument::make(fin::pricing::Call, K, T), .market = fin::market::make(S, r, q),
+                       .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})},
+                       .controls = {.engine = fin::module::Engine::Analytic, .risk = fin::module::Risk::PriceOnly}};
+  return f.implied_vol(pluss::make_series({price}), o).items<double>()[0];
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 400;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::full({1}, 0.0, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+
+  const auto res = flt::kalman_filter(y, km, cfg);
+  const Series z = res.innovation.reshape({T}) / res.innovation_cov.reshape({T}).sqrt();
+  out.writeln("mean of z^2:", z.square().mean().sum().item<double>(), " (about 1)");
+  out.writeln("check innovation = y - predicted mean:", (res.innovation.reshape({T}) - (y - res.predicted_mean.reshape({T}))).abs().max().sum().item<double>());
+}
+```
+
+### Example 4
+
+`data_used` marks missing values: three observations are NaN and are not used; the log-likelihood covers only the used ones.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+#include <vector>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 10;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::full({1}, 0.0, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+
+  std::vector<double> values = y.items<double>();
+  values[2] = values[5] = values[6] = std::numeric_limits<double>::quiet_NaN();
+  const auto res = flt::kalman_filter(pluss::make_series(values), km, cfg);
+  out.writeln("data_used:", res.data_used.reshape({10}).items<double>(), ", loglik finite:", std::isfinite(res.loglik));
+}
+```
+
+### Example 5
+
+The log-likelihood as a function of a parameter: it peaks near the true observation variance 0.04.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 400;
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+
+  for (const double noise : {0.01, 0.02, 0.04, 0.08, 0.16}) {
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, noise, cfg);
+  km.initial_mean = pluss::series::full({1}, 0.0, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+
+    out.writeln("R =", noise, ": loglik =", flt::kalman_filter(y, km, cfg).loglik);
+  }
+}
+```
+
+## See Also
+
+- [`kalman_filter`](kalman_filter.md): produces it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="KalmanModel.html">
+    <span class="label">Previous</span>
+    <span class="title">KalmanModel</span>
+  </a>
+  <a class="next-link" href="ParticleFilterModel.html">
+    <span class="label">Next</span>
+    <span class="title">ParticleFilterModel</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

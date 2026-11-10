@@ -1,0 +1,137 @@
+<!-- generated from JumpPath.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `sde::JumpPath`
+
+A path with jumps together with the mask of the steps that contain one.
+
+`path` is an ordinary [`WienerPath`](WienerPath.md) holding the samples of `X` (so every integral function accepts it). `jump_mask` has shape `[steps] + like.shape` and is 1 on a step that contains a jump and 0 elsewhere. Pass the mask to [`marcus_integral`](marcus_integral.md) when you know where the jumps are; the other form of that function finds them from the size of the increments.
+
+## Fields
+
+### `path`
+
+`sde::WienerPath`, default `{}`.
+
+The samples of `X` on the time grid.
+
+### `jump_mask`
+
+`pluss::Series`, default `undefined`.
+
+`[steps] + like.shape`; 1 on a step containing a jump.
+
+## Guidance
+
+Returned by `simulate_jump_diffusion_path`.
+
+## Practical Examples
+
+### Example 1
+
+The two fields.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 1000, 11, 0.0, 0.2, 6.0, 0.0, 0.5);
+  out.writeln("path shape =", jp.path.w.sizes(), ", mask shape =", jp.jump_mask.sizes());
+  out.writeln("jump steps =", jp.jump_mask.sum().sum().item<double>());
+}
+```
+
+Output
+
+```text
+path shape = [1001, 1] , mask shape = [1000, 1]
+jump steps = 4
+```
+
+### Example 2
+
+The mask locates the jumps: the largest increments occur on masked steps.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 1000, 11, 0.0, 0.1, 6.0, 0.0, 1.0);
+  const Series increments = jp.path.w.diff(1, 0).abs();
+  const std::int64_t biggest = increments.reshape({1000}).argmax().item<std::int64_t>();
+  out.writeln("largest increment at step", biggest, ", mask there =", jp.jump_mask.reshape({1000}).select(0, biggest).sum().item<double>());
+}
+```
+
+Output
+
+```text
+largest increment at step 139 , mask there = 1
+```
+
+### Example 3
+
+A jump path is a path. It can be integrated like any other, and when the jumps are large the integral reports that its quadratic variation is far above the elapsed time. (Small jumps can leave the ratio close enough to 1 that nothing is flagged.)
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 2000, 11, 0.0, 0.2, 6.0, 0.0, 1.5);
+  const auto r = sde::ito_integral([](double, const Series &w) { return w; }, jp.path);
+  out.writeln("quadratic variation ratio =", r.quadratic_variation_ratio, ", warnings =", r.warnings.size());
+}
+```
+
+Output
+
+```text
+quadratic variation ratio = 7.083 , warnings = 1
+```
+
+## See Also
+
+- [`simulate_jump_diffusion_path`](simulate_jump_diffusion_path.md): produces it
+- [`marcus_integral`](marcus_integral.md): uses the mask
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="AdaptednessOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">AdaptednessOptions</span>
+  </a>
+  <a class="next-link" href="StochasticIntegralResult.html">
+    <span class="label">Next</span>
+    <span class="title">StochasticIntegralResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

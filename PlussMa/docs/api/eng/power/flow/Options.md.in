@@ -1,0 +1,63 @@
+# `power::Options`
+
+Controls of the AC Newton iteration.
+
+## Signature
+
+```cpp
+power::Options
+```
+
+## What It Does
+
+Controls for `ac`: how exactly the power balance must be met and how many Newton iterations are allowed.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `tolerance` | The largest power mismatch, per unit, at which the iteration stops. | 1e-10 |
+| `max_iterations` | The Newton iteration budget. | 20 |
+
+## Returns
+
+A value; validated by `ac`.
+
+## Errors
+
+A non-positive or non-finite tolerance, or a budget below one, is rejected.
+
+## Interpretation and Use
+
+Newton's method converges quadratically, so a tighter tolerance costs about one iteration per further digit. Check `converged` whenever the budget is cut.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Default, loose and tight tolerances and a short budget.
+
+@@example Eng/api/power_ac_options.cpp@@
+
+### Example 2
+
+The bisection of the loadability limit with a larger budget.
+
+@@example Eng/api/power_ac_limit.cpp@@
+
+### Example 3
+
+An unconverged run.
+
+@@example Eng/api/power_ac_unconverged.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="DcResult.html">
+    <span class="label">Next</span>
+    <span class="title">DcResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

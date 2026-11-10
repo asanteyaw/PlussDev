@@ -1,0 +1,443 @@
+# `module::Controls`
+
+The engine, whether Greeks are wanted, the loss, and the settings of every engine side by side.
+
+`engine` and `risk` decide how a [`Field`](Field.md) is priced; `loss` and `huber_delta` decide how a fit is scored; and the seven engine members (`fft`, `cos`, `mc`, `analytic`, `lattice`, `spectral`, `pde`) hold each engine's own settings. They exist side by side, so switching `engine` never loses the settings of another and one `Controls` can be reused across engines. The defaults are chosen so that an unconfigured field prices: `Analytic` engine, `All` Greeks, `MSE` loss.
+
+## Fields
+
+### `engine`
+
+`module::Engine`, default `Analytic`.
+
+How to price. The default prices Black-Scholes and SABR only; set it for any other model.
+
+### `risk`
+
+`module::Risk`, default `All`.
+
+`All` returns the Greeks with the price; `PriceOnly` does not. Use `PriceOnly` in loops.
+
+### `loss`
+
+`module::Loss`, default `MSE`.
+
+How residuals are reduced to a number by `loss`, `objective` and friends.
+
+### `huber_delta`
+
+`double`, default `0.05`.
+
+The threshold of the `Huber` loss; must be positive.
+
+### `fft`
+
+`pricer::Fft`, default `{}`.
+
+Settings of the FFT engine (Heston, Bates).
+
+### `cos`
+
+`pricer::COS`, default `{}`.
+
+Settings of the cosine-expansion engine, including early exercise.
+
+### `mc`
+
+`pricer::MonteCarlo`, default `{}`.
+
+Settings of the simulation engine: paths, steps, scheme, random numbers, variance reduction, seed.
+
+### `analytic`
+
+`pricer::Analytic`, default `{}`.
+
+Settings of the closed-form engines.
+
+### `lattice`
+
+`pricer::Lattice`, default `{}`.
+
+Settings of the binomial tree: steps.
+
+### `spectral`
+
+`pricer::Spectral`, default `{}`.
+
+Settings of the collocation engine.
+
+### `pde`
+
+`pricer::Pde`, default `{}`.
+
+Settings of the Heston finite-difference engine.
+
+## Guidance
+
+Member `Field::controls`.
+
+## Practical Examples
+
+### Example 1
+
+The engine. The default is Analytic, which prices only Black-Scholes and SABR; naming another engine is how a Heston field is priced.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  mod::Controls defaults;
+  out.writeln("default engine:", defaults.engine == mod::Engine::Analytic, "; this field uses", field.engine_name());
+}
+```
+
+### Example 2
+
+The risk switch. The default asks for the Greeks.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Controls defaults;
+  out.writeln("default risk is All:", defaults.risk == mod::Risk::All, ", default loss is MSE:", defaults.loss == mod::Loss::MSE);
+}
+```
+
+### Example 3
+
+The loss. Switching the loss changes the score of the same residuals.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.05}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+
+  const Series quotes = field.price().price + pluss::make_series({0.1, -0.1, 0.1, -0.1, 0.4});
+  field.controls.loss = mod::Loss::MSE;
+  const double mse = field.loss_value(quotes);
+  field.controls.loss = mod::Loss::MAE;
+  out.writeln("MSE =", mse, ", MAE =", field.loss_value(quotes));
+}
+```
+
+### Example 4
+
+The Huber threshold: a larger `huber_delta` extends the quadratic region, so the loss moves toward half the MSE.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, pluss::ScalarType::Float64), .maturity = pluss::make_series({1.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({0.05}), .dividend_yield = pluss::make_series({0.0})},
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+
+  const Series quotes = field.price().price + pluss::make_series({0.1, -0.1, 0.1, -0.1, 0.4});
+  field.controls.loss = mod::Loss::Huber;
+  for (const double delta : {0.05, 0.2, 1.0}) {
+    field.controls.huber_delta = delta;
+    out.writeln("huber_delta", delta, ": loss =", field.loss_value(quotes));
+  }
+}
+```
+
+### Example 5
+
+The engine settings live side by side. Raising the Monte Carlo path count does not touch the COS term count, and switching engines keeps both.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  field.controls.cos.num_terms = 256;
+  field.controls.mc.paths = 5000;
+  field.controls.engine = mod::Engine::MonteCarlo;
+  field.controls.engine = mod::Engine::Cos;
+  out.writeln("cos terms still", field.controls.cos.num_terms, ", mc paths still", field.controls.mc.paths);
+}
+```
+
+### Example 6
+
+Each engine's settings change that engine's price. The COS term count: a coarse expansion is visibly worse than the default.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+
+  for (const std::int64_t terms : {16, 64, 1024}) {
+    field.controls.cos.num_terms = terms;
+    out.writeln("num_terms", terms, ": price =", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+### Example 7
+
+The FFT settings: the number of transform points.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Fft, .risk = mod::Risk::PriceOnly}};
+
+  for (const std::int64_t points : {512, 4096, 16384}) {
+    field.controls.fft.num_fft = points;
+    out.writeln("num_fft", points, ": price =", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+### Example 8
+
+The Monte Carlo settings. More paths shrink the sampling error, but the time-discretisation bias of the Euler scheme stays: the estimates scatter about, and settle slightly below, the transform price 8.628.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+
+  for (const std::int64_t paths : {1000, 10000, 100000}) {
+    field.controls.mc.paths = paths;
+    field.controls.mc.seed = 5;
+    out.writeln("paths", paths, ": price =", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+### Example 9
+
+The lattice settings: the tree depth for Black-Scholes. More steps converge to the closed form.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.05, 0.02),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Lattice, .risk = mod::Risk::PriceOnly}};
+
+  for (const std::int64_t steps : {50, 500, 5000}) {
+    field.controls.lattice.steps = steps;
+    out.writeln("steps", steps, ": price =", field.price().price.items<double>()[0]);
+  }
+  field.controls.engine = mod::Engine::Analytic;
+  out.writeln("closed form (Analytic engine):", field.price().price.items<double>()[0]);
+}
+```
+
+### Example 10
+
+The PDE settings: the grid of the Heston finite-difference solver.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Pde, .risk = mod::Risk::PriceOnly}};
+
+  for (const std::int64_t nodes : {60, 120, 240}) {
+    field.controls.pde.spot_nodes = nodes;
+    out.writeln("spot_nodes", nodes, ": price =", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+### Example 11
+
+The spectral settings: collocation nodes of the American-boundary solver (Black-Scholes). An American put is priced; the answer is already stable at 8 nodes, so more nodes change it only in the eighth decimal.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.05, 0.0),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Spectral, .risk = mod::Risk::PriceOnly}};
+  for (const std::int64_t nodes : {8, 24, 48}) {
+    field.controls.spectral.nodes = nodes;
+    out.writeln("nodes", nodes, ": price =", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+### Example 12
+
+The analytic setting `with_greeks` is on by default.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Controls c;
+  out.writeln("analytic.with_greeks =", c.analytic.with_greeks);
+}
+```
+
+## See Also
+
+- [`Field`](Field.md): holds it
+- [`Engine`](Engine.md): the engines
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Engine.html">
+    <span class="label">Next</span>
+    <span class="title">Engine</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

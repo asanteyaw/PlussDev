@@ -1,0 +1,121 @@
+# `optim::optima_stall_category_name`
+
+The name of an `OptimaStallCategory` as text.
+
+## Signature
+
+```cpp
+std::string_view optim::optima_stall_category_name(optim::OptimaStallCategory category);
+```
+
+## What It Does
+
+Returns a lower-case hyphenated name such as `none`, `iteration-limit` or `nonfinite-callback-region`.
+
+## Parameters
+
+`category`
+: The category.
+
+## Returns
+
+A static name.
+
+## Practical Examples
+
+### Example 1
+
+All eleven.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (int i = 0; i <= 10; ++i)
+    out.writeln(i, "->", optim::optima_stall_category_name(static_cast<optim::OptimaStallCategory>(i)));
+}
+```
+
+### Example 2
+
+Naming the stall of a cut-short run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.max_iterations = 1;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("stall =", optim::optima_stall_category_name(result.output.stall_category));
+}
+```
+
+### Example 3
+
+From inside a progress hook, where every snapshot carries a category.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.progress_hook = [&out](const optim::OptimaProgressSnapshot &s) {
+    if (s.stage == optim::OptimaProgressStage::Iteration) out.writeln("iteration", s.iteration, "stall:", optim::optima_stall_category_name(s.stall_category));
+    return false;
+  };
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+}
+```
+
+## See Also
+
+- [`OptimaStallCategory`](OptimaStallCategory.md): the enumeration
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="optima_progress_stage_name.html">
+    <span class="label">Previous</span>
+    <span class="title">optima_progress_stage_name</span>
+  </a>
+  <a class="next-link" href="pack_scalars.html">
+    <span class="label">Next</span>
+    <span class="title">pack_scalars</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

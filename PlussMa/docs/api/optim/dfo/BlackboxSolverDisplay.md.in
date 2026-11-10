@@ -1,0 +1,122 @@
+# `dfo::BlackboxSolverDisplay`
+
+Whether a mesh-adaptive run prints its progress.
+
+`None` is silent; `Iter` prints one line per iteration (iteration, evaluations, best value, the kind of iteration, mesh and frame sizes) to the standard output. Set as the `display` member of the MADS configurations; through the front door use `DfoOptions::display_iter`.
+
+## Fields
+
+### `None`
+
+`enumerator`, default `0`.
+
+No output.
+
+### `Iter`
+
+`enumerator`, default `1`.
+
+One line per iteration.
+
+## Guidance
+
+Set as `display` in a MADS configuration.
+
+## Practical Examples
+
+### Example 1
+
+Printing a short run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  dfo::MadsBlackboxConfig config;
+  config.display = dfo::BlackboxSolverDisplay::Iter;
+  config.max_iterations = 4;
+  dfo::orthomads_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config);
+}
+```
+
+### Example 2
+
+The black-box form.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});   // minimum 0 at (3, 3)
+    return e;
+  };
+
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.display = dfo::BlackboxSolverDisplay::Iter;
+  config.max_iterations = 3;
+  dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), config);
+}
+```
+
+### Example 3
+
+The default is silent.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("default is None =", dfo::MadsBlackboxConfig{}.display == dfo::BlackboxSolverDisplay::None);
+}
+```
+
+## See Also
+
+- [`MadsBlackboxConfig`](MadsBlackboxConfig.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="BlackboxSolverDiagnostics.html">
+    <span class="label">Previous</span>
+    <span class="title">BlackboxSolverDiagnostics</span>
+  </a>
+  <a class="next-link" href="BlackboxSolverOutcome.html">
+    <span class="label">Next</span>
+    <span class="title">BlackboxSolverOutcome</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

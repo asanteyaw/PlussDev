@@ -1,0 +1,223 @@
+# `filtering::ParticleResampleMethod`
+
+How a particle filter redraws the cloud when the weights have concentrated.
+
+After resampling the cloud has equal weights again. `Multinomial` draws each new particle independently from the weighted cloud (the simplest, and the noisiest). `Stratified` draws one particle from each of `N` equal strata of the cumulative weights. `Systematic` uses a single random offset for all `N` points (the cheapest and usually the lowest variance, and the default). `Residual` first keeps `⌊N wᵢ⌋` copies of each particle deterministically and resamples only the remainder. All are unbiased; they differ in the Monte Carlo noise they add.
+
+## Fields
+
+### `Systematic`
+
+`enumerator`, default `0`.
+
+One random offset for all points; the default.
+
+### `Multinomial`
+
+`enumerator`, default `1`.
+
+Independent draws; the noisiest.
+
+### `Stratified`
+
+`enumerator`, default `2`.
+
+One draw per stratum.
+
+### `Residual`
+
+`enumerator`, default `3`.
+
+Deterministic copies plus a resample of the remainder.
+
+## Guidance
+
+Set as `ParticleFilterOptions::resample_method`.
+
+## Practical Examples
+
+### Example 1
+
+The four methods on the same problem: each estimates the log-likelihood, to be compared with the exact Kalman value.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  for (const auto method : {flt::ParticleResampleMethod::Systematic, flt::ParticleResampleMethod::Multinomial, flt::ParticleResampleMethod::Stratified, flt::ParticleResampleMethod::Residual}) {
+    flt::ParticleFilterOptions options;
+    options.resample_method = method;
+    options.resample_seed = 3;
+    out.writeln(static_cast<int>(method), ": loglik", flt::particle_filter(y, make_model(options), cfg).loglik, " exact", exact.loglik);
+  }
+}
+```
+
+### Example 2
+
+The spread of the log-likelihood over 10 seeds for each method. At 2000 particles the spreads agree to two digits: the noise is dominated by the number of particles, and the choice of resampling scheme matters little here.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  for (const auto method : {flt::ParticleResampleMethod::Multinomial, flt::ParticleResampleMethod::Systematic}) {
+    double sum = 0.0, sum2 = 0.0;
+    for (std::uint64_t seed = 1; seed <= 10; ++seed) {
+      flt::ParticleFilterOptions options;
+      options.resample_method = method;
+      options.resample_seed = seed;
+      const double l = flt::particle_filter(y, make_model(options), cfg).loglik;
+      sum += l; sum2 += l * l;
+    }
+    const double mean = sum / 10.0;
+    out.writeln(static_cast<int>(method), ": mean", mean, ", spread", std::sqrt((sum2 - 10.0 * mean * mean) / 9.0));
+  }
+}
+```
+
+### Example 3
+
+The filtered mean from each method against the exact Kalman mean: the root-mean-square gap.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 2000;
+  const Series x = (pluss::series::randn({T}, cfg, 1) * std::sqrt(q)).cumsum(0, false);
+  const Series y = x + pluss::series::randn({T}, cfg, 2) * std::sqrt(r);
+  flt::KalmanModel km;
+  km.transition = pluss::series::full({1, 1}, 1.0, cfg);
+  km.observation = pluss::series::full({1, 1}, 1.0, cfg);
+  km.process_cov = pluss::series::full({1, 1}, q, cfg);
+  km.observation_cov = pluss::series::full({1, 1}, r, cfg);
+  km.initial_mean = pluss::series::zeros({1}, cfg);
+  km.initial_cov = pluss::series::full({1, 1}, 1.0, cfg);
+  const auto exact = flt::kalman_filter(y, km, cfg);
+  auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, cfg, 5);
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, cfg, 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const Series residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+
+  for (const auto method : {flt::ParticleResampleMethod::Systematic, flt::ParticleResampleMethod::Stratified, flt::ParticleResampleMethod::Residual}) {
+    flt::ParticleFilterOptions options;
+    options.resample_method = method;
+    options.resample_seed = 3;
+    const auto res = flt::particle_filter(y, make_model(options), cfg);
+    out.writeln(static_cast<int>(method), ": rms gap to Kalman", (res.filtered_mean.reshape({T}) - exact.filtered_mean.reshape({T})).square().mean().sqrt().item<double>());
+  }
+}
+```
+
+## See Also
+
+- [`ParticleFilterOptions`](ParticleFilterOptions.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ParticleFilterResult.html">
+    <span class="label">Previous</span>
+    <span class="title">ParticleFilterResult</span>
+  </a>
+  <a class="next-link" href="ParticleResampleTrigger.html">
+    <span class="label">Next</span>
+    <span class="title">ParticleResampleTrigger</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,153 @@
+# Life-table functions
+
+Elementwise functions on one-dimensional `Series` of mortality quantities: they convert between the annual mortality probability `qx`, the survival probability `px`, the force of mortality `μ`, and the table survivors `lx`, and build survival paths, lifetime distributions and tables from them. They are the building blocks beneath the operator layer, usable on their own when the data is already a vector.
+
+| You have | You want | Use |
+|---|---|---|
+| `qx` | `px` | [`px_qx`](life_contingencies/px_qx.md) |
+| `px` | `qx` | [`qx_px`](life_contingencies/qx_px.md) |
+| `qx` | the force | [`force_qx`](life_contingencies/force_qx.md) |
+| the force | `qx` | [`qx_force`](life_contingencies/qx_force.md) |
+| `qx` | cumulative hazard, survival path | [`hazard_qx`](life_contingencies/hazard_qx.md), [`survival_force`](life_contingencies/survival_force.md) |
+| `qx` | the lifetime distribution, expected curtate life | [`lifetime_pmf`](life_contingencies/lifetime_pmf.md), [`curtate_mean`](life_contingencies/curtate_mean.md), [`curtate_curve`](life_contingencies/curtate_curve.md) |
+| `qx` or `px` | a table of survivors | [`lx_qx`](life_contingencies/lx_qx.md), [`lx_px`](life_contingencies/lx_px.md) |
+| survivors `lx` | decrements, `px`, `qx` | [`dx_lx`](life_contingencies/dx_lx.md), [`px_lx`](life_contingencies/px_lx.md), [`qx_lx`](life_contingencies/qx_lx.md) |
+| a select and an ultimate table | one `qx` path | [`select_qx`](life_contingencies/select_qx.md) |
+| a Gompertz or Makeham law | force or `qx` at ages | [`gompertz_force`](life_contingencies/gompertz_force.md), [`gompertz_qx`](life_contingencies/gompertz_qx.md), [`makeham_force`](life_contingencies/makeham_force.md), [`makeham_qx`](life_contingencies/makeham_qx.md) |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`curtate_curve`](life_contingencies/curtate_curve.md) | The expected remaining curtate lifetime at every duration of the horizon. |
+| [`curtate_mean`](life_contingencies/curtate_mean.md) | The expected curtate lifetime over the supplied horizon. |
+| [`dx_lx`](life_contingencies/dx_lx.md) | The deaths in each year of a life table. |
+| [`force_qx`](life_contingencies/force_qx.md) | The one-year force of mortality implied by one-year mortality probabilities. |
+| [`gompertz_force`](life_contingencies/gompertz_force.md) | The Gompertz force of mortality at attained ages. |
+| [`gompertz_qx`](life_contingencies/gompertz_qx.md) | The Gompertz one-year mortality probability at attained ages. |
+| [`hazard_qx`](life_contingencies/hazard_qx.md) | The cumulative hazard over successive years from one-year mortality probabilities. |
+| [`lifetime_pmf`](life_contingencies/lifetime_pmf.md) | The distribution of the curtate future lifetime over the supplied horizon. |
+| [`lx_px`](life_contingencies/lx_px.md) | A life table of survivors from one-year survival probabilities and a starting number of lives. |
+| [`lx_qx`](life_contingencies/lx_qx.md) | A life table of survivors from one-year mortality probabilities and a starting number of lives. |
+| [`makeham_force`](life_contingencies/makeham_force.md) | The Makeham force of mortality at attained ages. |
+| [`makeham_qx`](life_contingencies/makeham_qx.md) | The Makeham one-year mortality probability at attained ages. |
+| [`px_lx`](life_contingencies/px_lx.md) | One-year survival probabilities from a life table of survivors. |
+| [`px_qx`](life_contingencies/px_qx.md) | One-year survival probabilities from one-year mortality probabilities. |
+| [`qx_force`](life_contingencies/qx_force.md) | One-year mortality probabilities from a force of mortality. |
+| [`qx_lx`](life_contingencies/qx_lx.md) | One-year mortality probabilities from a life table of survivors. |
+| [`qx_px`](life_contingencies/qx_px.md) | One-year mortality probabilities from one-year survival probabilities. |
+| [`select_qx`](life_contingencies/select_qx.md) | One mortality path made of a select period followed by an ultimate table. |
+| [`survival_force`](life_contingencies/survival_force.md) | A survival path from a vector of one-year forces. |
+
+## Practical Examples
+
+### Example 1: converting between representations
+
+One table in all of its forms.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  out.writeln("px     =", life::px_qx(qx).items<double>());
+  out.writeln("force  =", life::force_qx(qx).items<double>());
+  out.writeln("hazard =", life::hazard_qx(qx).items<double>());
+  out.writeln("lx     =", life::lx_qx(qx, 1000.0).items<double>());
+  out.writeln("dx     =", life::dx_lx(life::lx_qx(qx, 1000.0)).items<double>());
+}
+```
+
+### Example 2: from a parametric law to a lifetime
+
+Makeham probabilities from age 60, the distribution of the curtate lifetime and its expectation.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> a;
+  for (int x = 60; x < 70; ++x) a.push_back(x);
+  const pluss::Series qx = life::makeham_qx(pluss::make_series(a), 0.0005, 0.0001, 1.08);
+  out.writeln("pmf  =", life::lifetime_pmf(qx).items<double>());
+  out.writeln("mean =", life::curtate_mean(qx).item<double>());
+  out.writeln("curve =", life::curtate_curve(qx).items<double>());
+}
+```
+
+### Example 3: the functions and the Mortality value agree
+
+Each free function has a counterpart on `Mortality`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality m = actuarial::mortality::from_qx(qx);
+  out.writeln(life::lx_qx(qx).items<double>());
+  out.writeln(m.life_table().items<double>());
+  out.writeln(life::lifetime_pmf(qx).items<double>());
+  out.writeln(m.lifetime_pmf().items<double>());
+}
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+life_contingencies/curtate_curve
+life_contingencies/curtate_mean
+life_contingencies/dx_lx
+life_contingencies/force_qx
+life_contingencies/gompertz_force
+life_contingencies/gompertz_qx
+life_contingencies/hazard_qx
+life_contingencies/lifetime_pmf
+life_contingencies/lx_px
+life_contingencies/lx_qx
+life_contingencies/makeham_force
+life_contingencies/makeham_qx
+life_contingencies/px_lx
+life_contingencies/px_qx
+life_contingencies/qx_force
+life_contingencies/qx_lx
+life_contingencies/qx_px
+life_contingencies/select_qx
+life_contingencies/survival_force
+```
+<!-- apiref:toctree:end -->

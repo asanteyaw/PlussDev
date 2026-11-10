@@ -1,0 +1,172 @@
+<!-- generated from sine_series.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::fourier::sine_series`
+
+The truncated half-range sine series of a function, as a function of the original variable.
+
+## Signature
+
+```cpp
+operators::Operator operators::fourier::sine_series(std::string_view variable, double lower, double upper, std::int64_t terms);
+```
+
+## What It Does
+
+`sine_series("x", a, b, n)` applied to `f` returns `x ↦ Σₖ₌₁^{n} Bₖ sin(uₖ (x − a))`, with the coefficients of [`sine_coefficients`](sine_coefficients.md). It is an ordinary function of `x`: it can be evaluated, differentiated, integrated and composed. Outside `[a, b]` it repeats as the odd, periodic extension of `f`.
+
+Half-range expansions on `[lower, upper]` use `uₖ = kπ / (upper − lower)`:
+
+- cosine: `f ≈ A₀/2 + Σₖ₌₁ Aₖ cos(uₖ (x − lower))`, with `Aₖ = 2/(b − a) ∫ f cos(uₖ (x − lower)) dx`,
+- sine: `f ≈ Σₖ₌₁ Bₖ sin(uₖ (x − lower))`, with `Bₖ = 2/(b − a) ∫ f sin(uₖ (x − lower)) dx`.
+
+Every term vanishes at both ends, so the series is zero at `a` and `b` whatever `f` is there. If `f` is not zero at an end, the series converges to `f` in the interior but not at that end, and the convergence is slow (like `1/k`, with Gibbs overshoot near the end). For functions that vanish at the ends it converges fast.
+
+## Parameters
+
+`std::string_view variable`
+: The variable to expand in.
+
+`double lower`
+: The left end of the interval.
+
+`double upper`
+: The right end.
+
+`std::int64_t terms`
+: The number of terms, between 1 and 4096.
+
+## Returns
+
+An `Operator` whose application returns the series as a `Function`.
+
+## Errors
+
+- `terms must lie in [1, 4096]`.
+- `the interval must be finite with lower < upper`.
+
+## Practical Examples
+
+### Example 1
+
+A function that vanishes at both ends is represented well: `x(π − x)` on `[0, π]` with 5 terms is already accurate to three decimals.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double pi = std::acos(-1.0);
+
+  const math::Function f = math::function({"x"}, [&](math::Function x) { return x * (pi - x); });
+  const math::Function approx = fourier::sine_series("x", 0.0, pi, 5)(f);
+  const auto x = pluss::series::linspace(0.0, pi, 9, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  out.writeln("x(pi - x):", f({x}).items<double>());
+  out.writeln("5 terms:  ", approx({x}).items<double>());
+}
+```
+
+Output
+
+```text
+x(pi - x): [0.0000, 1.0795, 1.8506, 2.3132, 2.4674, 2.3132, 1.8506, 1.0795, 0.0000]
+5 terms:   [0.0000, 1.0805, 1.8529, 2.3088, 2.4725, 2.3088, 1.8529, 1.0805, 0.0000]
+```
+
+### Example 2
+
+A function that does not vanish at the end converges slowly and not at that end. The 40-term sine series of `x` on `[0, π]` follows `x` inside the interval but is exactly 0 at `π`, since every term vanishes there.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double pi = std::acos(-1.0);
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+
+  const math::Function approx = fourier::sine_series("x", 0.0, pi, 40)(f);
+  const auto x = pluss::make_series({0.5, 1.5, 2.5, 3.0, pi});
+  out.writeln("x:      ", x.items<double>());
+  out.writeln("series: ", approx({x}).items<double>());
+}
+```
+
+Output
+
+```text
+x:       [0.5000, 1.5000, 2.5000, 3.0000, 3.1416]
+series:  [0.4749, 1.5296, 2.4464, 2.7441, 0.0000]
+```
+
+### Example 3
+
+The odd extension: the series is an odd function about `lower`, so the value at `−x` is the negative of the value at `x`, and it repeats with period `2(upper − lower)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace fourier = pluss::operators::fourier;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double pi = std::acos(-1.0);
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x; });
+
+  const math::Function approx = fourier::sine_series("x", 0.0, pi, 60)(f);
+  out.writeln("value at 1, -1:      ", approx(1.0).item<double>(), approx(-1.0).item<double>());
+  out.writeln("value at 1, 1 + 2 pi:", approx(1.0).item<double>(), approx(1.0 + 2.0 * pi).item<double>());
+}
+```
+
+Output
+
+```text
+value at 1, -1:       1.0137 -1.0137
+value at 1, 1 + 2 pi: 1.0137 1.0137
+```
+
+## See Also
+
+- [`sine_coefficients`](sine_coefficients.md): the coefficients
+- [`cosine_series`](cosine_series.md): the even counterpart
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sine_coefficients.html">
+    <span class="label">Previous</span>
+    <span class="title">sine_coefficients</span>
+  </a>
+  <a class="next-link" href="sine_transform.html">
+    <span class="label">Next</span>
+    <span class="title">sine_transform</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

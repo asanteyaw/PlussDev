@@ -1,0 +1,80 @@
+# `control::mpc::Result`
+
+The selected action, complete plan, state trajectory, and optimizer diagnostics.
+
+## Signature
+
+```cpp
+control::mpc::Result
+```
+
+## What It Does
+
+This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+
+
+
+## Fields
+
+### `control`
+
+The first control action, ready to apply in receding-horizon operation.
+
+### `controls`
+
+The full optimized control sequence over the horizon.
+
+### `states`
+
+The predicted state sequence after applying the optimized controls.
+
+### `optimization`
+
+The underlying `pluss::math::qp::Result`, including convergence and residual diagnostics.
+
+## Returns
+
+This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+
+## Errors
+
+The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+
+## Interpretation and Use
+
+Apply only `control`, the first action, in receding-horizon operation. `controls` and `states` are predictions used for inspection and warm-start planning, not commitments. Always check `optimization.converged` and residual diagnostics before applying the action.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Inspect the first action, full input plan, states, and convergence.
+
+@@example Eng/api/control_mpc.cpp@@
+
+### Example 2
+
+Observe saturation and optimizer iterations under tighter bounds.
+
+@@example Eng/api/control_mpc_options.cpp@@
+
+### Example 3
+
+Compare cold and warm-started result diagnostics.
+
+@@example Eng/api/control_mpc_plan.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Options.html">
+    <span class="label">Previous</span>
+    <span class="title">Options</span>
+  </a>
+  <a class="next-link" href="Plan.html">
+    <span class="label">Next</span>
+    <span class="title">Plan</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

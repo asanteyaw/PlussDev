@@ -1,0 +1,179 @@
+# `krylov::gmres`
+
+Solves `A x = b` for a general, possibly non-symmetric or complex operator by restarted GMRES.
+
+## Signature
+
+```cpp
+template <typename Apply> krylov::GmresResult krylov::gmres(Apply &&apply, const pluss::Series &rhs, const std::vector<std::int64_t> &solve_dims, const krylov::GmresOptions &options = {}, const pluss::Series &initial = pluss::series::undefined());
+```
+
+## What It Does
+
+GMRES finds, among the vectors reachable by repeated application of `A` to the residual, the one that minimises the residual norm: it works for any invertible operator, symmetric or not, real or complex (conjugate gradients needs symmetry and positive definiteness). `apply(x)` returns `A x`; `rhs` may be real or complex; `solve_dims` names the trailing state axes, and every leading axis is an independent lane whose Arnoldi coefficients are carried batched.
+
+The method stores one basis vector per iteration, so it is **restarted** every `restart` iterations to bound memory, at the cost of possibly slower convergence; `max_iterations` caps the total. Work is done in whole cycles of `restart` iterations (the last one shortened to fit the cap), and convergence is checked only between cycles, so `iterations` is a multiple of `restart` even for a system that a few iterations would solve. The result reports the iterations, the number of operator applications, the restarts and, per lane, the final residual and a convergence flag. A good preconditioner is applied inside `apply` by composing it with the operator.
+
+**The method.** GMRES builds an orthonormal basis `v_1, …, v_k` of the Krylov subspace `span{r, Ar, …, A^{k−1} r}` by the Arnoldi process, which also yields a small upper-Hessenberg matrix `H_k` with `A V_k = V_{k+1} H_k`. The iterate `x_k = x_0 + V_k y` with `y` chosen to minimise `‖β e_1 − H_k y‖` has the smallest residual of any vector in the subspace, so the residual norm never increases. Because the basis grows with every iteration, the method is **restarted** every `restart` iterations, discarding the basis and starting from the current iterate; that bounds memory at the price of losing the optimality across cycles, so restarted GMRES can stall on hard operators where the full method would converge.
+
+**Choosing it.** Use GMRES whenever the operator is not symmetric positive definite: non-symmetric (convection), indefinite, or complex. When the operator is symmetric positive definite, [`cg`](cg.md) is cheaper (short recurrences, no growing basis). The convergence depends on the spread of the eigenvalues and, for non-normal operators, on the departure from normality; a preconditioner, composed into `apply`, is the standard remedy.
+
+## Parameters
+
+`Apply &&apply`
+: `Series -> Series`: the product `A x`.
+
+`const pluss::Series &rhs`
+: Real or complex right-hand side; leading axes are lanes.
+
+`const std::vector<std::int64_t> &solve_dims`
+: The trailing state axes.
+
+`const krylov::GmresOptions &options`
+: Iteration limit, restart, tolerances.
+
+`const pluss::Series &initial`
+: A starting guess.
+
+## Returns
+
+A [`GmresResult`](GmresResult.md).
+
+## Errors
+
+- An undefined, empty or non-finite `rhs`, an `initial` of the wrong shape, or invalid options throws (`std::invalid_argument`).
+
+## Practical Examples
+
+### Example 1
+
+A non-symmetric system. `[[3, 1], [−1, 2]] x = [1, 2]` has `x = [0, 1]`, which conjugate gradients could not solve.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const Series A = pluss::make_series({3.0, 1.0, -1.0, 2.0}, {2, 2});
+  const auto apply = [&](const Series &x) { return A.matmul(x.unsqueeze(-1)).squeeze(-1); };
+  const krylov::GmresResult r = krylov::gmres(apply, pluss::make_series({1.0, 2.0}), {-1});
+  out.writeln("x =", r.solution.items<double>(), ", exact = 0, 1");
+  out.writeln("iterations =", r.iterations, ", operator applications =", r.operator_evaluations, ", converged =", r.converged.all().item<bool>());
+}
+```
+
+### Example 2
+
+A convection-diffusion operator that is never formed. The tridiagonal `[−1.5, 3, −0.5]` of size 40 is not symmetric; GMRES solves `A x = 1`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const std::int64_t n = 40;
+  const auto apply = [n](const Series &x) {
+    const Series zero = pluss::make_series({0.0});
+    return x * 3.0 - zero.unite({x.slice(0, 0, n - 1, 1)}, 0) * 1.5 - x.slice(0, 1, n, 1).unite({zero}, 0) * 0.5;
+  };
+  const Series b = pluss::series::ones({n}, pluss::ScalarType::Float64);
+  const krylov::GmresResult r = krylov::gmres(apply, b, {-1});
+  out.writeln("residual =", r.residual_norm.reshape({r.residual_norm.numel()}).items<double>(), ", iterations =", r.iterations, ", converged =", r.converged.all().item<bool>());
+  out.writeln("check ||b - A x|| =", (b - apply(r.solution)).square().sum().sqrt().item<double>());
+}
+```
+
+### Example 3
+
+A complex system. `[[1+i, 0], [0, 2]] x = [1+i, 4]` has `x = [1, 2]`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const Series A = pluss::make_series(std::vector<std::complex<double>>{{1.0, 1.0}, {0.0, 0.0}, {0.0, 0.0}, {2.0, 0.0}}, {2, 2}).to(pluss::ScalarType::Complex128);
+  const Series b = pluss::make_series(std::vector<std::complex<double>>{{1.0, 1.0}, {4.0, 0.0}}, {2}).to(pluss::ScalarType::Complex128);
+  const auto apply = [&](const Series &x) { return A.matmul(x.unsqueeze(-1)).squeeze(-1); };
+  const krylov::GmresResult r = krylov::gmres(apply, b, {-1});
+  const auto x = r.solution.host<std::complex<double>>();
+  out.writeln("x =", x[0].real(), x[0].imag(), x[1].real(), x[1].imag(), ", converged =", r.converged.all().item<bool>());
+}
+```
+
+### Example 4
+
+The restart length. A short restart uses less memory per cycle and may need more restarts.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::int64_t n = 40;
+  const auto apply = [n](const Series &x) {
+    const Series zero = pluss::make_series({0.0});
+    return x * 3.0 - zero.unite({x.slice(0, 0, n - 1, 1)}, 0) * 1.5 - x.slice(0, 1, n, 1).unite({zero}, 0) * 0.5;
+  };
+  const Series b = pluss::series::ones({n}, pluss::ScalarType::Float64);
+  for (const std::int64_t restart : {5, 40}) {
+    krylov::GmresOptions options;
+    options.restart = restart;
+    options.max_iterations = 400;
+    const krylov::GmresResult r = krylov::gmres(apply, b, {-1}, options);
+    out.writeln("restart", restart, ": iterations =", r.iterations, ", restarts =", r.restarts);
+  }
+}
+```
+
+## See Also
+
+- [`GmresOptions`](GmresOptions.md): the settings
+- [`cg`](cg.md): for symmetric positive-definite operators
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="exp_action.html">
+    <span class="label">Previous</span>
+    <span class="title">exp_action</span>
+  </a>
+  <a class="next-link" href="pcg.html">
+    <span class="label">Next</span>
+    <span class="title">pcg</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

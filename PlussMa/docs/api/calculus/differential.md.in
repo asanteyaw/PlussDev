@@ -1,0 +1,32 @@
+# Derivatives
+
+The operators that differentiate: partial derivatives of any order, derivatives with respect to a complex variable, the gradient, Jacobian and Hessian, and the covariant derivative of a scalar field. Every derivative is exact: the rules are applied to the recorded formula.
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`conjugate_wirtinger`](differential/conjugate_wirtinger.md) | The conjugate Wirtinger derivative `∂/∂z̄`; it vanishes exactly where a function is holomorphic. |
+| [`covariant`](differential/covariant.md) | The covariant derivative of a scalar field along one variable: `∂f/∂x + Γ f`. |
+| [`differential`](differential/differential.md) | The partial derivative of a function with respect to one variable, to any order. |
+| [`gradient`](differential/gradient.md) | The vector of first partial derivatives of a scalar function. |
+| [`hessian`](differential/hessian.md) | The matrix of second partial derivatives of a scalar function. |
+| [`jacobian`](differential/jacobian.md) | The matrix of first partial derivatives of a vector-valued function. |
+| [`magnitude_differential`](differential/magnitude_differential.md) | The absolute value of a derivative: `|f⁽ⁿ⁾|`. |
+| [`wirtinger`](differential/wirtinger.md) | The Wirtinger derivative `∂/∂z` of a function of a complex variable. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+differential/conjugate_wirtinger
+differential/covariant
+differential/differential
+differential/gradient
+differential/hessian
+differential/jacobian
+differential/magnitude_differential
+differential/wirtinger
+```
+<!-- apiref:toctree:end -->

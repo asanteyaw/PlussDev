@@ -1,0 +1,57 @@
+# Static analysis
+
+This branch solves steady-load equilibrium. `solve` has four forms: a truss, a frame, a frame with uniform member loads, and a frame under large displacements.
+
+## Choosing A Surface
+
+Use the linear forms while displacements are small, and the nonlinear form when the load turns the structure through more than a few degrees.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Solve a truss and read every result.
+
+@@example Eng/api/structure_truss_solve.cpp@@
+
+### Example 2
+
+Solve a cantilever frame.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 3
+
+Bend a cantilever through a large angle.
+
+@@example Eng/api/structure_nonlinear_solve.cpp@@
+
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+statics/SolveOptions
+statics/StaticResult
+statics/FrameResult
+statics/MemberLoad
+statics/NonlinearOptions
+statics/NonlinearResult
+statics/solve
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+statics/SolveOptions
+statics/StaticResult
+statics/FrameResult
+statics/MemberLoad
+statics/NonlinearOptions
+statics/NonlinearResult
+statics/solve
+```
+<!-- apiref:toctree:end -->

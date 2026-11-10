@@ -1,0 +1,143 @@
+<!-- generated from SeptimaOptimizer.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::SeptimaOptimizer`
+
+The two optimizers of `septima`: Adam and limited-memory BFGS.
+
+`Adam` keeps running averages of the gradient and its square and moves each coordinate by the ratio, scaled by the learning rate. It needs a learning rate suited to the problem and many iterations, but each is cheap and it tolerates noisy or badly scaled gradients. `Lbfgs` builds a curvature estimate from the last `history_size` steps and takes quasi-Newton steps, usually converging in tens of iterations on smooth problems; it can use a line search ([`SeptimaLbfgsLineSearch`](SeptimaLbfgsLineSearch.md)). Both are exposed through the alias names `SeptimaOptimizer::Adam` and `SeptimaOptimizer::Lbfgs`.
+
+## Fields
+
+### `Adam`
+
+`enumerator`, default `0`.
+
+Adaptive moment estimation.
+
+### `Lbfgs`
+
+`enumerator`, default `1`.
+
+Limited-memory BFGS.
+
+## Guidance
+
+Set as `SeptimaOptions::optimizer`.
+
+## Practical Examples
+
+### Example 1
+
+Both on the Rosenbrock valley from `(−1.2, 1)`. L-BFGS reaches the minimum at `(1, 1)`; Adam at a modest learning rate is still crawling when the budget ends.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (1.0 - a).square() + 100.0 * (b - a.square()).square();
+  };
+
+  for (const optim::SeptimaOptimizer optimizer : {optim::SeptimaOptimizer::Adam, optim::SeptimaOptimizer::Lbfgs}) {
+    optim::SeptimaSolveOptions options;
+    options.step.optimizer = optimizer;
+    options.step.adam.learning_rate = 0.01;
+    options.max_iterations = 1000;
+    const optim::SeptimaResult result = optim::septima(rosenbrock, pluss::series::make({-1.2, 1.0}), options);
+    out.writeln(optimizer == optim::SeptimaOptimizer::Adam ? "Adam " : "Lbfgs", ": exit =", optim::septima_exit_flag_name(result.exit_flag), ", iterations =", result.iteration, ", x =", result.params[0].items<double>());
+  }
+}
+```
+
+Output
+
+```text
+Adam  : exit = MaxIterations , iterations = 1000 , x = [-0.1202, 0.0155]
+Lbfgs : exit = Converged , iterations = 81 , x = [1.0000, 1.0000]
+```
+
+### Example 2
+
+The default is Adam.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const optim::SeptimaOptions options;
+  out.writeln("default is Adam:", options.optimizer == optim::SeptimaOptimizer::Adam);
+}
+```
+
+Output
+
+```text
+default is Adam: true
+```
+
+### Example 3
+
+Using the nested names. `SeptimaOptions::Optimizer` is the same type.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto objective = [](const Series &x) { return (x - 3.0).square().sum(); };
+
+  optim::SeptimaSolveOptions options;
+  options.step.optimizer = optim::SeptimaOptions::Optimizer::Lbfgs;
+  out.writeln("exit =", optim::septima_exit_flag_name(optim::septima(objective, pluss::series::make({0.0, 0.0}), options).exit_flag));
+}
+```
+
+Output
+
+```text
+exit = Converged
+```
+
+## See Also
+
+- [`SeptimaOptions`](SeptimaOptions.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SeptimaLbfgsLineSearch.html">
+    <span class="label">Previous</span>
+    <span class="title">SeptimaLbfgsLineSearch</span>
+  </a>
+  <a class="next-link" href="SeptimaOptions.html">
+    <span class="label">Next</span>
+    <span class="title">SeptimaOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

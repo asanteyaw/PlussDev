@@ -1,0 +1,67 @@
+# Signal windows
+
+Window functions shape a finite observation before spectral estimation, FIR construction, or overlap processing. This family produces `Series` directly, so coefficients retain an explicit floating dtype and execution platform and can flow into the rest of Pluss without conversion.
+
+## Choosing A Window
+
+`boxcar` leaves every sample unchanged and therefore has the narrowest main lobe but the strongest spectral leakage. `bartlett` introduces a linear triangular taper. `hann` and `hamming` use raised cosines; Hann reaches zero at symmetric endpoints, while Hamming keeps small nonzero endpoints. `blackman` uses an additional cosine term for stronger sidelobe suppression at the cost of a wider main lobe.
+
+The best window depends on the measurement goal. A stronger taper is not universally better: it trades frequency resolution for reduced leakage. Compare windows under the same length and endpoint convention rather than treating their coefficients as interchangeable decoration.
+
+## Endpoint Convention
+
+`WindowMode::Symmetric` creates a window symmetric over all returned coefficients and is the usual choice for finite impulse response design. `WindowMode::Periodic` creates the first `size` samples of a window whose next sample would close the period; it is usually the right choice before an `size`-point DFT.
+
+## Practical Examples
+
+The examples compare all supplied windows, demonstrate endpoint, dtype, empty, and singleton behavior, and show the validation failures that reject impossible requests.
+
+### Example 1
+
+Generate every built-in window at the same odd length so their taper shapes can be compared directly.
+
+@@example Eng/api/signal_windows.cpp@@
+
+### Example 2
+
+Contrast symmetric and periodic Hann coefficients while selecting a `Float32` output and inspecting edge sizes.
+
+@@example Eng/api/signal_window_options.cpp@@
+
+### Example 3
+
+Exercise the two central construction guards: non-negative length and floating output dtype.
+
+@@example Eng/api/signal_window_errors.cpp@@
+
+## Related Pages
+
+Use [Filtering and response](filtering.md) to apply coefficients or inspect their frequency response, and [IIR design](design.md) when a recursive pole-zero design is required instead of an explicit windowed kernel.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+windows/WindowMode
+windows/WindowOptions
+windows/boxcar
+windows/bartlett
+windows/blackman
+windows/hamming
+windows/hann
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+windows/WindowMode
+windows/WindowOptions
+windows/boxcar
+windows/bartlett
+windows/blackman
+windows/hamming
+windows/hann
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,137 @@
+# `dfo::PSBasisFamily`
+
+The set of directions the poll is built on.
+
+`Canonical` uses the coordinate axes at every iteration, so the same points recur after each mesh refinement (the cache then answers them). `RandomOrtho` (the default) draws a random orthonormal basis, refreshed every `basis_refresh_interval` iterations, so the poll can follow a diagonal or curved boundary and never revisits a point. With constraints a coordinate poll cannot move along a diagonal boundary and can stop at a feasible point that is not optimal.
+
+## Fields
+
+### `Canonical`
+
+`enumerator`, default `0`.
+
+The coordinate axes.
+
+### `RandomOrtho`
+
+`enumerator`, default `1`.
+
+A random orthonormal basis, refreshed periodically.
+
+## Guidance
+
+Set as `PSConfig::basis_family`.
+
+## Practical Examples
+
+### Example 1
+
+A diagonal constraint. The coordinate basis stops short of the optimum `(1, 1)` of `Σ (xᵢ − 3)²` on `x₀ + x₁ ≤ 2`; the random basis finds it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  for (const auto family : {dfo::PSBasisFamily::Canonical, dfo::PSBasisFamily::RandomOrtho}) {
+    dfo::PSConfig config;
+    config.basis_family = family;
+    config.nonlinear_constraints = [](const Series &x) {
+      dfo::PSConstraintValues v;
+      v.inequality = (x.sum() - 2.0).reshape({1});
+      return v;
+    };
+    const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0}), config);
+    out.writeln(static_cast<int>(family), ": minimizer =", o.minimizer.items<double>(), ", minimum =", o.minimum);
+  }
+}
+```
+
+### Example 2
+
+The cache. The coordinate basis revisits points after each mesh refinement; the random basis does not.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const auto family : {dfo::PSBasisFamily::Canonical, dfo::PSBasisFamily::RandomOrtho}) {
+    dfo::PSConfig config;
+    config.basis_family = family;
+    config.search_strategy = dfo::PSSearchStrategy::Off;
+    const dfo::PSOutcome o = dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config);
+    out.writeln(static_cast<int>(family), ": evaluations =", o.diagnostics.evaluations, ", cache hits =", o.diagnostics.cache_hits);
+  }
+}
+```
+
+### Example 3
+
+Refreshing the random basis less often.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto rosenbrock = [](const Series &x) {
+    const Series a = x.select(0, 0), b = x.select(0, 1);
+    return (b - a * a).square() * 100.0 + (1.0 - a).square();
+  };
+
+  for (const std::int64_t interval : {1, 10}) {
+    dfo::PSConfig config;
+    config.basis_refresh_interval = interval;
+    out.writeln("refresh every", interval, ": evaluations =", dfo::pattern_search_minimizer(rosenbrock, pluss::series::make({-1.2, 1.0}), config).diagnostics.evaluations);
+  }
+}
+```
+
+## See Also
+
+- [`PSConfig`](PSConfig.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="NelderMeadOutcome.html">
+    <span class="label">Previous</span>
+    <span class="title">NelderMeadOutcome</span>
+  </a>
+  <a class="next-link" href="PSConfig.html">
+    <span class="label">Next</span>
+    <span class="title">PSConfig</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

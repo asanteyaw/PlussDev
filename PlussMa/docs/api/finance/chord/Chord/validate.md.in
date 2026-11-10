@@ -1,0 +1,206 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: a2942e93478a -->
+
+# `module::Chord::validate`
+
+[Back to `module::Chord`](../Chord.md)
+
+Validates every asset and reports all problems together, each naming its asset.
+
+## Signature
+
+```cpp
+void module::Chord::validate() const;
+```
+
+## What It Does
+
+Runs the validation of [`Field::validate`](../../field/Field/validate.md) on every asset and throws one error that lists the problems of all the failing assets, each starting `asset 'name'`. Assets that are fine are not mentioned, so a book can be corrected in one pass instead of one error at a time. [`price`](price.md), [`implied_vol`](implied_vol.md) and `simulate_paths` validate first, so a book that passes `validate` can be priced.
+
+Call it after assembling or editing a book, before a long calculation, or to give a user every mistake at once. An empty Chord has nothing to validate and passes.
+
+## Returns
+
+Nothing.
+
+## Errors
+
+Throws `subsp::math::finance::module::Chord:` followed by one line per failing asset, `asset '<name>': ...`, with the Field's own message; an asset with several problems lists each on its own indented line, headed `(<n> problems)`.
+
+## Practical Examples
+
+### Example 1: a valid chord passes silently
+
+No output and no exception.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20)).add("b", bs(90.0, 95.0, 0.30));
+  chord.validate();
+  out.writeln("valid");
+}
+```
+
+### Example 2: one bad asset among good ones
+
+Only the failing asset is named.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  mod::Chord chord;
+  chord.add("fine", bs(100.0, 100.0, 0.20)).add("negative spot", bs(-1.0, 100.0, 0.20));
+  report([&] { chord.validate(); });
+}
+```
+
+### Example 3: every failing asset in one message
+
+Two failing assets are reported together, the second with both of its problems.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  mod::Chord chord;
+  chord.add("fine", bs(100.0, 100.0, 0.20)).add("negative spot", bs(-1.0, 100.0, 0.20)).add("zero strike and vol", bs(100.0, 0.0, 0.0));
+  report([&] { chord.validate(); });
+}
+```
+
+### Example 4: an empty chord
+
+There is nothing to check, so it passes.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.validate();
+  out.writeln("an empty chord is valid");
+}
+```
+
+### Example 5: price validates first
+
+`price` throws the same report instead of pricing the assets that are fine.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  mod::Chord chord;
+  chord.add("fine", bs(100.0, 100.0, 0.20)).add("negative spot", bs(-1.0, 100.0, 0.20));
+  report([&] { (void)chord.price(); });
+}
+```
+
+## See Also
+
+- [`Chord`](../Chord.md): the class
+- [`price`](price.md): validates first
+- [`Field::validate`](../../field/Field/validate.md): the single-asset check
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="size.html">
+    <span class="label">Previous</span>
+    <span class="title">size</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

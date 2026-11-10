@@ -1,0 +1,52 @@
+<!-- generated from engines.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Pricing engines
+
+The seven engines behind `controls.engine`, each a small struct of settings with a `price` method that works on its own, without a [`Field`](field/Field.md): `engine.price(instrument, model, market, risk, cfg)`. A `Field` holds one of each in `Controls`, so the settings listed here are the ones you set as `field.controls.cos.num_terms`, `field.controls.mc.paths` and so on. Each page documents every setting with an example of its effect.
+
+| Engine | Models | Method |
+|---|---|---|
+| [`Analytic`](engines/Analytic.md) | Black-Scholes, SABR | closed form |
+| [`Fft`](engines/Fft.md) | Heston, Bates | Carr-Madan Fourier inversion, all strikes at once |
+| [`COS`](engines/COS.md) | Black-Scholes, Heston, Bates | Fourier-cosine expansion; early exercise |
+| [`MonteCarlo`](engines/MonteCarlo.md) | all six | simulation; variance reduction; least-squares early exercise |
+| [`Lattice`](engines/Lattice.md) | Black-Scholes | binomial tree; early exercise |
+| [`Spectral`](engines/Spectral.md) | Black-Scholes | Chebyshev collocation of the exercise boundary |
+| [`Pde`](engines/Pde.md) | Heston | two-dimensional finite differences with ADI; early exercise |
+
+## The Surface
+
+| Symbol | What it is |
+|---|---|
+| [`Analytic`](engines/Analytic.md) | The closed-form engine: the Black-Scholes formula, or the SABR expansion priced through Black or Bachelier. |
+| [`COS`](engines/COS.md) | The Fourier-cosine engine: Black-Scholes, Heston and Bates by expanding the density in cosines, with Bermudan and American exercise. |
+| [`Fft`](engines/Fft.md) | The Carr-Madan FFT engine for Heston and Bates: one transform prices every strike on a grid. |
+| [`HestonCfMode`](engines/HestonCfMode.md) | Which algebraic form of the Heston characteristic function the Fourier engines evaluate. |
+| [`HestonFftQuadrature`](engines/HestonFftQuadrature.md) | The weights of the integral inside the FFT pricing: Simpson or trapezoidal. |
+| [`Lattice`](engines/Lattice.md) | The binomial-tree engine for Black-Scholes, with European, Bermudan and American exercise. |
+| [`MonteCarlo`](engines/MonteCarlo.md) | The simulation engine: prices every model by averaging discounted payoffs over simulated paths, with variance reduction and least-squares early exercise. |
+| [`Pde`](engines/Pde.md) | The two-dimensional finite-difference engine for Heston, with European, Bermudan and American exercise. |
+| [`RandMethod`](engines/RandMethod.md) | The source of the random numbers of a simulation: pseudo-random or a quasi-random sequence. |
+| [`RiskSpec`](engines/RiskSpec.md) | Whether an engine's `price` method also computes the Greeks (the engine-level twin of `module::Risk`). |
+| [`SimScheme`](engines/SimScheme.md) | The time-stepping scheme for the variance in simulated stochastic-volatility paths. |
+| [`Spectral`](engines/Spectral.md) | The collocation engine for American options under Black-Scholes: the exercise boundary by Chebyshev collocation. |
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+engines/Analytic
+engines/COS
+engines/Fft
+engines/HestonCfMode
+engines/HestonFftQuadrature
+engines/Lattice
+engines/MonteCarlo
+engines/Pde
+engines/RandMethod
+engines/RiskSpec
+engines/SimScheme
+engines/Spectral
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,66 @@
+# `signal::WindowOptions`
+
+## Signature
+
+```cpp
+signal::WindowOptions options{};
+```
+
+## What It Does
+
+Carries the common construction policy for every signal window. Defaults produce a symmetric `Float64` CPU `Series`, making an omitted options object deterministic.
+
+## Fields
+
+| Field | Default | Meaning |
+|---|---:|---|
+| `mode` | `WindowMode::Symmetric` | Selects symmetric finite endpoints or periodic DFT-oriented sampling. |
+| `dtype` | `ScalarType::Float64` | Selects `Float32` or `Float64` coefficients. |
+| `platform` | `Platform::CPU` | Selects the execution and storage platform of the returned `Series`. |
+
+## Returns
+
+Pass the object by const reference to any window factory. The returned `Series` reflects its dtype and platform.
+
+## Errors
+
+Window construction rejects non-floating dtypes and unavailable or unsupported platform configurations.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Generate and compare every built-in window at a common length.
+
+@@example Eng/api/signal_windows.cpp@@
+
+### Example 2
+
+Switch endpoint convention and dtype, then inspect zero-length and singleton behavior.
+
+@@example Eng/api/signal_window_options.cpp@@
+
+### Example 3
+
+Observe the validation errors for invalid size and dtype requests.
+
+@@example Eng/api/signal_window_errors.cpp@@
+
+## See Also
+
+See the [Signal windows](../windows.md) family page for selection guidance and endpoint semantics.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="WindowMode.html">
+    <span class="label">Previous</span>
+    <span class="title">WindowMode</span>
+  </a>
+  <a class="next-link" href="boxcar.html">
+    <span class="label">Next</span>
+    <span class="title">boxcar</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,204 @@
+<!-- generated from ols_summary.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `regression::ols_summary`
+
+Returns the report of a fitted least-squares model as text.
+
+## Signature
+
+```cpp
+std::string regression::ols_summary(const regression::OLSFitResult &fit);
+```
+
+## What It Does
+
+Formats the response, model, method, observation counts, degrees of freedom, R², adjusted R², F statistic, log-likelihood, AIC and BIC, followed by a table of the coefficients with their standard errors, t statistics, p-values and confidence intervals, then the residual diagnostics (omnibus, Durbin-Watson, Jarque-Bera, skewness, kurtosis, condition number) and any warnings. It is the same text `print_ols_summary` writes to a stream; use this function when you want to keep or post-process it.
+
+## Parameters
+
+`fit`
+: A completed result from `ols_fit`.
+
+## Returns
+
+A `std::string` holding the report, with line breaks.
+
+## Errors
+
+Throws `subsp::stats::regression::print_ols_summary: fit.coefficients is undefined` for a default-constructed result, which has nothing to report.
+
+## Practical Examples
+
+### Example 1: a one-predictor report
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  reg::OLSOptions options;
+  options.response_name = "load";
+  options.predictor_names = {"hours"};
+  out.writeln(reg::ols_summary(reg::ols_fit(y, x, options)));
+}
+```
+
+Output
+
+```text
+                            OLS Regression Results
+==============================================================================
+Dep. Variable:                      load   R-squared:                         0.999
+Model:                               OLS   Adj. R-squared:                   0.9988
+Method:                    Least Squares   F-statistic:                        5735
+Rank:                                  2   Prob (F-statistic):             3.569e-10
+Alpha:                              0.05   Log-Likelihood:                    4.026
+No. Observations:                      8   AIC:                              -4.052
+Df Residuals:                          6   BIC:                              -3.893
+Df Model:                              1   Covariance Type:               nonrobust
+==============================================================================
+                        coef     std err           t       P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const                 0.2179      0.1316      1.6552      0.1490     -0.1042      0.5399
+hours                 1.9738      0.0261     75.7296  3.5688e-10      1.9100      2.0376
+==============================================================================
+Omnibus:                            1.16   Durbin-Watson:                      2.86
+Prob(Omnibus):                    0.5598   Jarque-Bera (JB):                 0.7909
+Skew:                            -0.5117   Prob(JB):                         0.6734
+Kurtosis:                          1.849   Cond. No.                          11.48
+==============================================================================
+```
+
+### Example 2: a report with a warning
+
+Moving the predictor far from zero makes the design nearly collinear with the intercept, and the report ends with the warning.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  reg::OLSOptions options;
+  options.predictor_names = {"hours"};
+  out.writeln(reg::ols_summary(reg::ols_fit(y, x.add(1000.0), options)));
+}
+```
+
+Output
+
+```text
+                            OLS Regression Results
+==============================================================================
+Dep. Variable:                         y   R-squared:                         0.999
+Model:                               OLS   Adj. R-squared:                   0.9988
+Method:                    Least Squares   F-statistic:                        5735
+Rank:                                  2   Prob (F-statistic):             3.569e-10
+Alpha:                              0.05   Log-Likelihood:                    4.026
+No. Observations:                      8   AIC:                              -4.052
+Df Residuals:                          6   BIC:                              -3.893
+Df Model:                              1   Covariance Type:               nonrobust
+==============================================================================
+                        coef     std err           t       P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const             -1973.5917     26.1813    -75.3818  3.6686e-10  -2037.6549  -1909.5284
+hours                 1.9738      0.0261     75.7296  3.5688e-10      1.9100      2.0376
+==============================================================================
+Omnibus:                            1.16   Durbin-Watson:                      2.86
+Prob(Omnibus):                    0.5598   Jarque-Bera (JB):                 0.7909
+Skew:                            -0.5117   Prob(JB):                         0.6734
+Kurtosis:                          1.849   Cond. No.                      4.404e+05
+==============================================================================
+Warnings:
+[1] The condition number is large, 4.404e+05. This might indicate strong multicollinearity or other numerical problems.
+```
+
+### Example 3: keeping the text
+
+The summary is an ordinary string, so it can be measured, searched or saved.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{2.3, 4.1, 6.2, 7.9, 10.2, 12.1, 13.8, 16.2}, {8}, as_f64());
+  const auto text = reg::ols_summary(reg::ols_fit(y, x));
+  out.writeln("characters", text.size(), " mentions R-squared:", text.find("R-squared") != std::string::npos);
+}
+```
+
+Output
+
+```text
+characters 1750  mentions R-squared: true
+```
+
+### Example 4: the errors
+
+A default-constructed result has nothing to report, and the call says so.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      const std::string text(e.what());
+      out.writeln(text.substr(0, text.find('\n')));
+    }
+  };
+  const reg::OLSFitResult fit;
+  report([&] { (void)reg::ols_summary(fit); });
+}
+```
+
+Output
+
+```text
+subsp::stats::regression::print_ols_summary: fit.coefficients is undefined
+```
+
+## See Also
+
+[`print_ols_summary`](print_ols_summary.md) writes the same text to a stream, and [`OLSFitResult`](OLSFitResult.md) holds every number the report shows.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ols_predict.html">
+    <span class="label">Previous</span>
+    <span class="title">ols_predict</span>
+  </a>
+  <a class="next-link" href="print_ols_summary.html">
+    <span class="label">Next</span>
+    <span class="title">print_ols_summary</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

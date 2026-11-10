@@ -1,0 +1,75 @@
+# `structure::NonlinearMotionResult`
+
+The time history of a large-displacement integration.
+
+## Signature
+
+```cpp
+structure::NonlinearMotionResult
+```
+
+## What It Does
+
+The result of the nonlinear `motion`. Arrays have the leading batch axes, then the time axis.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `time` | The sample times, `[time]`. |  |
+| `displacement` | Node displacements from the original positions, `[..., time, node, 3]`. |  |
+| `velocity` | Node velocities, `[..., time, node, 3]`. |  |
+| `acceleration` | Node accelerations, `[..., time, node, 3]`. |  |
+| `reaction` | Support force and moment in global axes, `[..., time, node, 3]`. |  |
+| `kinetic` | Kinetic energy, `[..., time]`. |  |
+| `strain_energy` | Strain energy, `[..., time]`. |  |
+| `residual_norm` | Out-of-balance force of each step. |  |
+| `converged` | One where the step converged. |  |
+| `iterations` | The largest Newton iteration count at each step, `[time]`. |  |
+
+## Returns
+
+Returned by the nonlinear `motion`.
+
+## Errors
+
+Reading a field does not integrate again.
+
+## Interpretation and Use
+
+Check `converged` when `fail_on_nonconvergence` is false.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field on a swinging rod.
+
+@@example Eng/api/structure_motion_nonlinear.cpp@@
+
+### Example 2
+
+The linear history for comparison.
+
+@@example Eng/api/structure_motion.cpp@@
+
+### Example 3
+
+Rejected inputs.
+
+@@example Eng/api/structure_dynamics_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MotionResult.html">
+    <span class="label">Previous</span>
+    <span class="title">MotionResult</span>
+  </a>
+  <a class="next-link" href="HarmonicResult.html">
+    <span class="label">Next</span>
+    <span class="title">HarmonicResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

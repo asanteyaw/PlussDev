@@ -1,0 +1,146 @@
+<!-- generated from PSDirectionFamily.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `dfo::PSDirectionFamily`
+
+How poll directions are adapted to active constraints.
+
+Near a constraint boundary the plain basis directions may all point out of the feasible region. `ProjectedTangent` projects them onto the tangent space of the active constraints. `GSSAugmented` (the default) adds extra feasible directions generated from the active constraints, in the generating-set-search style, so there is always a feasible descent direction when one exists.
+
+## Fields
+
+### `ProjectedTangent`
+
+`enumerator`, default `0`.
+
+Project the basis onto the active-constraint tangent space.
+
+### `GSSAugmented`
+
+`enumerator`, default `1`.
+
+Add feasible directions generated from the active constraints.
+
+## Guidance
+
+Set as `PSConfig::direction_family`.
+
+## Practical Examples
+
+### Example 1
+
+The unit-disc problem with each family. The two give the same result here.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f = [](const Series &x) { return (x - 2.0).square().sum(); };   // exact constrained optimum 3.3431 at (0.7071, 0.7071)
+
+  for (const auto family : {dfo::PSDirectionFamily::ProjectedTangent, dfo::PSDirectionFamily::GSSAugmented}) {
+    dfo::PSConfig config;
+    config.direction_family = family;
+    config.nonlinear_constraints = [](const Series &x) {
+      dfo::PSConstraintValues v;
+      v.inequality = (x.square().sum() - 1.0).reshape({1});
+      return v;
+    };
+    const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0}), config);
+    out.writeln(static_cast<int>(family), ": objective =", o.minimum, ", evaluations =", o.diagnostics.evaluations);
+  }
+}
+```
+
+Output
+
+```text
+0 : objective = 3.34316 , evaluations = 814
+1 : objective = 3.34316 , evaluations = 814
+```
+
+### Example 2
+
+Linear rows with a start on a vertex, the hard case for a poll. Both families reach the same value here.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 2.0).square().sum(); };
+  for (const auto family : {dfo::PSDirectionFamily::ProjectedTangent, dfo::PSDirectionFamily::GSSAugmented}) {
+    dfo::PSConfig config;
+    config.direction_family = family;
+    config.lower_bounds = pluss::series::make({0.0, 0.0, 0.0});
+    config.upper_bounds = pluss::series::make({5.0, 5.0, 5.0});
+    config.linear_ineq_matrix = pluss::series::make({1.0, 1.0, 1.0}).reshape({1, 3});
+    config.linear_ineq_rhs = pluss::series::make({3.0});
+    const dfo::PSOutcome o = dfo::pattern_search_minimizer(f, pluss::series::make({0.0, 0.0, 0.0}), config);
+    out.writeln(static_cast<int>(family), ": minimum =", o.minimum);
+  }
+}
+```
+
+Output
+
+```text
+0 : minimum = 3.0000
+1 : minimum = 3.0000
+```
+
+### Example 3
+
+The default.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("default is GSSAugmented =", dfo::PSConfig{}.direction_family == dfo::PSDirectionFamily::GSSAugmented);
+}
+```
+
+Output
+
+```text
+default is GSSAugmented = true
+```
+
+## See Also
+
+- [`PSConfig`](PSConfig.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PSDiagnostics.html">
+    <span class="label">Previous</span>
+    <span class="title">PSDiagnostics</span>
+  </a>
+  <a class="next-link" href="PSDisplay.html">
+    <span class="label">Next</span>
+    <span class="title">PSDisplay</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,389 @@
+<!-- generated from Sabr.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `model::Sabr`
+
+The SABR stochastic alpha-beta-rho model: four parameters, plus drift, floor and the volatility convention.
+
+SABR models a forward `F` with a stochastic volatility: `dF = α F^β dW¹`, `dα = ν α dW²`, `d⟨W¹, W²⟩ = ρ dt`. `α₀` is the initial volatility level, `β ∈ [0, 1]` the CEV exponent (1 lognormal, 0 normal), `ν` the volatility of volatility and `ρ` the correlation. Hagan's asymptotic formula turns the parameters into an implied volatility, which is priced through Black's formula by the Analytic engine; Monte Carlo simulates it. The vector form is `alpha0, beta, nu, rho`.
+
+## Fields
+
+### `alpha0`
+
+`pluss::Series`, default `undefined`.
+
+Initial volatility level `α₀`, positive. For `β = 1` it is approximately the at-the-money lognormal volatility.
+
+### `beta`
+
+`pluss::Series`, default `undefined`.
+
+CEV exponent in [0, 1]. Between normal (0) and lognormal (1) backbone; usually fixed rather than fitted. The scale of `alpha0` depends on it: the local volatility is `α F^{β−1}`, so `α₀` must be rescaled by `F^{1−β}` when `β` changes, or the level of volatility changes with it.
+
+### `nu`
+
+`pluss::Series`, default `undefined`.
+
+Volatility of volatility, non-negative. Raises the wings of the smile.
+
+### `rho`
+
+`pluss::Series`, default `undefined`.
+
+Correlation in (−1, 1); sets the skew.
+
+### `mu`
+
+`pluss::Series`, default `undefined`.
+
+Drift for the standalone simulators; ignored inside a `Field`.
+
+### `alpha_floor`
+
+`pluss::Series`, default `undefined`.
+
+Lower bound on the simulated volatility (default `1e-12`); Monte Carlo only.
+
+### `vol_type`
+
+`pricing::SabrVolType`, default `Lognormal`.
+
+Which implied volatility the Analytic engine prices through: `Lognormal` (Black's formula) or `Normal` (Bachelier). Prices differ slightly because the two expansions are different approximations.
+
+### `approx`
+
+`pricing::SabrApproxOptions`, default `{}`.
+
+Which asymptotic formula (`Hagan2002` or `Obloj2008`) and an optional `shift` for the expansion.
+
+## Guidance
+
+Held by `Model` when its kind is `Sabr`; accepted by `Field::price`.
+
+## Practical Examples
+
+### Example 1
+
+Price against the volatility level.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  for (const double v : {0.1, 0.2, 0.3, 0.4}) {
+    fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+    m.alpha0 = pluss::make_series({v});
+    out.writeln("alpha0", v, ": price =", field.price(m).price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+alpha0 0.10000 : price = 5.10029
+alpha0 0.20000 : price = 9.00828
+alpha0 0.30000 : price = 12.89926
+alpha0 0.40000 : price = 16.74446
+```
+
+### Example 2
+
+Changing `β` alone changes the volatility level, because `α₀` is held at 0.2: at `β = 0.5` the local volatility is only 0.2/√102, about 2%. Rescaling `α₀ = 0.2·F^{1−β}` keeps the at-the-money volatility near 20% and leaves the skew as the visible difference.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 110.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+
+  const double forward = 100.0 * std::exp(0.02);
+  for (const double beta : {0.0, 0.5, 1.0}) {
+    fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+    m.beta = pluss::make_series({beta});
+    const double alone = field.price(m).price.items<double>()[0];
+    m.alpha0 = pluss::make_series({0.2 * std::pow(forward, 1.0 - beta)});
+    out.writeln("beta", beta, ": alpha0 held at 0.2 ->", alone, ", alpha0 rescaled ->", field.price(m).price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+beta 0.00000 : alpha0 held at 0.2 -> 0.00000 , alpha0 rescaled -> 4.60822
+beta 0.50000 : alpha0 held at 0.2 -> 0.00016 , alpha0 rescaled -> 4.72058
+beta 1.00000 : alpha0 held at 0.2 -> 4.83862 , alpha0 rescaled -> 4.83862
+```
+
+### Example 3
+
+Price of a wing call (strike 130) against `ν`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 130.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  for (const double v : {0.0, 0.4, 0.8, 1.2}) {
+    fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+    m.nu = pluss::make_series({v});
+    out.writeln("nu", v, ": price =", field.price(m).price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+nu 0.00000 : price = 1.23203
+nu 0.40000 : price = 1.10992
+nu 0.80000 : price = 1.41064
+nu 1.20000 : price = 2.12793
+```
+
+### Example 4
+
+Price of an out-of-the-money call (strike 110) against `ρ`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 110.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  for (const double v : {-0.7, -0.3, 0.0, 0.5}) {
+    fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+    m.rho = pluss::make_series({v});
+    out.writeln("rho", v, ": price =", field.price(m).price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+rho -0.70000 : price = 4.47427
+rho -0.30000 : price = 4.83862
+rho 0.00000 : price = 5.07564
+rho 0.50000 : price = 5.39739
+```
+
+### Example 5
+
+Ignored: the price does not move with `mu`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  for (const double v : {0.0, 0.3}) {
+    fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+    m.mu = pluss::make_series({v});
+    out.writeln("mu", v, ": price =", field.price(m).price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+mu 0.00000000 : price = 9.00828292
+mu 0.30000000 : price = 9.00828292
+```
+
+### Example 6
+
+A floor of 0.2 bounds the simulated volatility below (the volatility path is `vol`).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 20000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 7;
+
+  fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+  m.alpha_floor = pluss::make_series({0.2});
+  out.writeln("smallest simulated volatility =", field.simulate_paths(m).vol.amin().item<double>());
+}
+```
+
+Output
+
+```text
+smallest simulated volatility = 0.200000
+```
+
+### Example 7
+
+The same SABR option priced through the lognormal and the normal expansion.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 110.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+
+  for (const fin::pricing::SabrVolType type : {fin::pricing::SabrVolType::Lognormal, fin::pricing::SabrVolType::Normal}) {
+    fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+    m.vol_type = type;
+    out.writeln(type == fin::pricing::SabrVolType::Lognormal ? "Lognormal" : "Normal   ", ":", field.price(m).price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+Lognormal : 4.838623
+Normal    : 4.838329
+```
+
+### Example 8
+
+The two formulas for a wing strike agree to six decimals on this parameter set (they differ for long maturities and extreme parameters); the `shift` displaces the forward and the strike before the expansion, which moves the price.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 130.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+
+  for (const fin::pricing::SabrApproxModel model : {fin::pricing::SabrApproxModel::Hagan2002, fin::pricing::SabrApproxModel::Obloj2008}) {
+    fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+    m.approx.model = model;
+    out.writeln(model == fin::pricing::SabrApproxModel::Hagan2002 ? "Hagan2002" : "Obloj2008", ":", field.price(m).price.items<double>()[0]);
+  }
+  for (const double shift : {0.0, 0.05, 0.5}) {
+    fin::model::Sabr m = field.model.as<fin::model::Sabr>();
+    m.approx.shift = shift;
+    out.writeln("shift", shift, ":", field.price(m).price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+Hagan2002 : 1.109915
+Obloj2008 : 1.109915
+shift 0.000000 : 1.109915
+shift 0.050000 : 1.109905
+shift 0.500000 : 1.109811
+```
+
+## See Also
+
+- [`Model`](Model.md): holds one
+- [`Kind`](Kind.md): the parameter order
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="RoughHeston.html">
+    <span class="label">Previous</span>
+    <span class="title">RoughHeston</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

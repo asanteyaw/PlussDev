@@ -1,0 +1,59 @@
+# Pole-zero and response
+
+`PoleZero` stores transfer behavior as zeros, poles, gain, and a timebase. This form makes stability and modal structure explicit, while `freqresp` evaluates either pole-zero or state-space models without requiring users to convert representation first.
+
+## Timebase And Frequency
+
+Continuous systems use `sample_time == 0` and evaluate at `s = j omega`. Discrete systems use positive sample time and evaluate on the unit circle at `z = exp(j omega T)`. In both cases `omega` is angular frequency per time unit, not ordinary cycles per unit.
+
+## Stability And Realization
+
+A continuous pole-zero system is stable when every pole has negative real part. A discrete system is stable when every pole lies strictly inside the unit circle. `to_sos` converts a discrete, proper root representation into `[b0,b1,b2,a0,a1,a2]` rows and pairs roots to reduce numerical sensitivity.
+
+## Practical Examples
+
+These examples inspect a discrete pole-zero system, compare equivalent state-space and root responses, and show frequency-grid and realization errors.
+
+### Example 1
+
+Construct a stable discrete system, evaluate two frequencies, and convert it to one second-order section.
+
+@@example Eng/api/lti_pole_zero.cpp@@
+
+### Example 2
+
+Evaluate equivalent continuous state-space and pole-zero systems on the same angular-frequency grid.
+
+@@example Eng/api/lti_response.cpp@@
+
+### Example 3
+
+Demonstrate rejection of an integer frequency grid and an attempt to realize a continuous system as delay-form SOS coefficients.
+
+@@example Eng/api/lti_response_errors.cpp@@
+
+## Related Pages
+
+Use [State space](state.md) for internal-state analysis and [Simulation](simulation.md) for time-domain trajectories.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+response/PoleZero
+response/zpk
+response/to_sos
+response/freqresp
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+response/PoleZero
+response/zpk
+response/to_sos
+response/freqresp
+```
+<!-- apiref:toctree:end -->

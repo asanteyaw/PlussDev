@@ -1,0 +1,199 @@
+<!-- generated from operator_index.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 2008a282c6b3 -->
+
+# `module::Chord::operator[]`
+
+[Back to `module::Chord`](../Chord.md)
+
+Returns the Field of one asset by name, written as an index.
+
+## Signature
+
+```cpp
+module::Field &module::Chord::operator[](const std::string &name);
+const module::Field &module::Chord::operator[](const std::string &name) const;
+```
+
+## What It Does
+
+The same call as [`at`](at.md), written `chord["name"]`: it returns a reference to the stored `Field`, which can be read or edited in place, and the const overload reads from a const Chord. An unknown name throws, so unlike `std::map::operator[]` it never creates an asset.
+
+Use the index form for short edits in a line (`chord["spx"].market.spot = ...`) and `at` when the name is a variable you want to name in the error. They behave identically.
+
+## Parameters
+
+`const std::string &name`
+: The asset's name.
+
+## Returns
+
+A reference to the asset's Field, const when the Chord is const.
+
+## Errors
+
+Throws `subsp::math::finance::module::Chord::at: no asset named '<name>'` for an unknown name: the index calls `at`, so the message names `at`.
+
+## Practical Examples
+
+### Example 1: editing through the index
+
+Set the strike of one asset in one line and reprice.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20));
+  chord["a"].instrument.strike = pluss::make_series({110.0});
+  out.writeln("strike", chord["a"].instrument.strike.items<double>(), " price", chord.price()["a"].price.items<double>());
+}
+```
+
+Output
+
+```text
+strike [110.00000]  price [4.56424]
+```
+
+### Example 2: the same object as at
+
+The index and `at` return the same stored Field.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20));
+  out.writeln("same object:", &chord["a"] == &chord.at("a"));
+}
+```
+
+Output
+
+```text
+same object: true
+```
+
+### Example 3: a const chord
+
+A const Chord can be read through the index.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.25));
+  const mod::Chord &view = chord;
+  out.writeln("volatility", view["a"].model.parameters().items<double>());
+}
+```
+
+Output
+
+```text
+volatility [0.25000]
+```
+
+### Example 4: it never creates an asset
+
+An unknown name throws instead of inserting, and the Chord is unchanged.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  mod::Chord chord;
+  chord.add("a", bs(100.0, 100.0, 0.20));
+  report([&] { (void)chord["missing"]; });
+  out.writeln("size", chord.size(), " contains missing:", chord.contains("missing"));
+}
+```
+
+Output
+
+```text
+subsp::math::finance::module::Chord::at: no asset named 'missing'
+size 1  contains missing: false
+```
+
+## See Also
+
+- [`at`](at.md): the named form
+- [`Chord`](../Chord.md): the class
+- [`contains`](contains.md): checks a name first
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="names.html">
+    <span class="label">Previous</span>
+    <span class="title">names</span>
+  </a>
+  <a class="next-link" href="price.html">
+    <span class="label">Next</span>
+    <span class="title">price</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

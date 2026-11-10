@@ -1,0 +1,126 @@
+# `integ::quadra_scalar`
+
+Integrates an ordinary `double(double)` function over an interval by composite Simpson.
+
+## Signature
+
+```cpp
+integ::QuadraScalarResult integ::quadra_scalar(const integ::ScalarIntegrandFn &fn, double a, double b, const integ::QuadraScalarOptions &options = {});
+```
+
+## What It Does
+
+For a function that is plain number-in, number-out arithmetic and has nothing to do with `Series`, such as a density evaluated by a library routine. It evaluates `fn` at `nodes + 1` equally spaced points and applies composite Simpson's rule; with `adaptive` on it doubles the nodes until the change between two levels is within `tolerance` (relative for a large value), up to `max_refinements` times. `b ≤ a` returns zero. Because it calls `fn` one point at a time it is slower than [`quadra`](quadra.md) when the integrand can be written on a `Series`; use it only when it cannot.
+
+## Parameters
+
+`const integ::ScalarIntegrandFn &fn`
+: `double -> double`.
+
+`double a, double b`
+: The interval; `b ≤ a` returns zero.
+
+`const integ::QuadraScalarOptions &options`
+: Node count and adaptivity.
+
+## Returns
+
+A [`QuadraScalarResult`](QuadraScalarResult.md).
+
+## Errors
+
+- A missing function, or fewer than two nodes, throws.
+
+## Practical Examples
+
+### Example 1
+
+A plain function. `∫₀^π sin x dx = 2`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  const integ::QuadraScalarResult r = integ::quadra_scalar([](double t) { return std::sin(t); }, 0.0, 3.14159265358979323846);
+  out.writeln("value =", r.value, ", evaluations =", r.evaluations, ", converged =", r.converged);
+}
+```
+
+### Example 2
+
+Adaptive refinement. A function with a sharp feature, `1/(1 + 400 (x − 0.3)²)`, needs more nodes than the default 256; the adaptive run adds them until the estimate settles.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  integ::QuadraScalarOptions options;
+  options.adaptive = true;
+  options.nodes = 64;
+  const integ::QuadraScalarResult r = integ::quadra_scalar([](double t) { return 1.0 / (1.0 + 400.0 * (t - 0.3) * (t - 0.3)); }, 0.0, 1.0, options);
+  out.writeln("value =", r.value, ", error estimate =", r.error_estimate, ", evaluations =", r.evaluations, ", converged =", r.converged);
+}
+```
+
+### Example 3
+
+A function that wraps library code. The normal distribution function from its density: the probability below 1.96 starting from −8 is `0.975`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto density = [](double t) { return std::exp(-0.5 * t * t) / std::sqrt(2.0 * 3.14159265358979323846); };
+  const integ::QuadraScalarResult r = integ::quadra_scalar(density, -8.0, 1.96);
+  out.writeln("P(Z < 1.96) =", r.value);
+}
+```
+
+## See Also
+
+- [`quadra`](quadra.md): the batched Series engine
+- [`QuadraScalarOptions`](QuadraScalarOptions.md): the settings
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="quadra.html">
+    <span class="label">Previous</span>
+    <span class="title">quadra</span>
+  </a>
+  <a class="next-link" href="trapezoid.html">
+    <span class="label">Next</span>
+    <span class="title">trapezoid</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

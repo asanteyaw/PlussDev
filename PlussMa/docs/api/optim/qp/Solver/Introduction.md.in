@@ -1,0 +1,14 @@
+# `qp::Solver` Introduction
+
+Solving a QP spends most of its setup time on the parts that depend only on the quadratic matrix `P` and the constraint matrix `A`: checking that `P` is positive semidefinite and factorising the system the iteration solves at every step. A `Solver` is the result of doing that once. It keeps the matrices, the factorisation and the options, and each call to its [`solve`](solve.md) then needs only the parts that change between problems: the linear term `q` and the bounds.
+
+Use a `Solver` whenever you solve the same constraint structure repeatedly: a model-predictive controller re-solving every step with a new state, a sweep over many `q`, a portfolio problem re-solved as expected returns change. For a single problem, [`qp::solve`](../solve.md) is simpler. A `Solver` cannot be built directly; [`qp::prepare`](../prepare.md) returns it. It reports the problem size and the dtype and platform it works in.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="constraints.html">
+    <span class="label">Next</span>
+    <span class="title">constraints</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

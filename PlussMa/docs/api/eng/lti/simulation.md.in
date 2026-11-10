@@ -1,0 +1,59 @@
+# Simulation
+
+Simulation propagates a validated `StateSpace` system over an explicit time vector and returns both observable outputs and complete state history. The API supports leading batch dimensions, continuous and discrete systems, real or complex dynamics, and reverse sensitivity through the underlying `Series` operations.
+
+## Input And Output Shapes
+
+Input has shape `[..., time, inputs]`. Output values have shape `[..., time, outputs]`, and states have shape `[..., time, states]`. Optional initial state has shape `[..., states]`; omitted initial state is zero. System and signal batch axes broadcast when compatible.
+
+## Hold Policy
+
+Continuous simulation must specify how input changes between timestamps. Zero-order hold keeps each sample constant until the next time. Linear hold interpolates between neighboring samples. `Auto` selects the appropriate default. A discrete system already defines sample-to-sample behavior, so its time spacing must equal `sample_time` and linear interpolation is invalid.
+
+## Practical Examples
+
+These examples simulate an irregular continuous-time step response, compare hold policies with a nonzero initial state, and demonstrate time and shape validation.
+
+### Example 1
+
+Run a stable first-order system under constant input on an irregular time grid.
+
+@@example Eng/api/lti_sim.cpp@@
+
+### Example 2
+
+Compare zero-order and linearly interpolated ramp inputs while starting from the same nonzero state.
+
+@@example Eng/api/lti_sim_modes.cpp@@
+
+### Example 3
+
+Show rejection of repeated timestamps and an input missing its required trailing input axis.
+
+@@example Eng/api/lti_sim_errors.cpp@@
+
+## Related Pages
+
+Use [State space](state.md) to construct and analyze the system, and [Pole-zero and response](response.md) to inspect frequency-domain behavior.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+simulation/Hold
+simulation/SimOptions
+simulation/SimRun
+simulation/sim
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+simulation/Hold
+simulation/SimOptions
+simulation/SimRun
+simulation/sim
+```
+<!-- apiref:toctree:end -->

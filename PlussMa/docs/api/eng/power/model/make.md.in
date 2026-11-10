@@ -1,0 +1,65 @@
+# `power::make`
+
+Validates a network and compiles it into a grid.
+
+## Signature
+
+```cpp
+power::Grid power::make(const power::Net& net);
+```
+
+## What It Does
+
+Checks that the description is a network a power flow can solve and compiles it: it builds the bus admittance matrix, the line admittances, the incidence maps and the batch layout. Call it once per network.
+
+## Parameters
+
+`net`
+: The complete description of the network.
+
+## Returns
+
+An immutable `power::Grid`.
+
+## Errors
+
+Throws `std::invalid_argument` when the base is not positive and finite, there are fewer than two buses or no lines, there is not exactly one slack bus, a line joins a bus to itself or leaves the network, a line has zero impedance, a generator lies outside the network, a status list has the wrong length, a bus is not connected to the slack through lines in service, or the arrays differ in length, dtype, platform or batch axes.
+
+## Interpretation and Use
+
+The validation is done once, so analyses are free of it. Scenarios belong in leading axes and in the `active` flags, not in a loop around `make`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Compile a two-bus network.
+
+@@example Eng/api/power_build.cpp@@
+
+### Example 2
+
+Every structural validation error.
+
+@@example Eng/api/power_net_errors.cpp@@
+
+### Example 3
+
+A network with generators and a batch of scenarios.
+
+@@example Eng/api/power_scenarios.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Grid.html">
+    <span class="label">Previous</span>
+    <span class="title">Grid</span>
+  </a>
+  <a class="next-link" href="zbase.html">
+    <span class="label">Next</span>
+    <span class="title">zbase</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

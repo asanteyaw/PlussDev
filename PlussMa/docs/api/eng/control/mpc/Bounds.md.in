@@ -1,0 +1,80 @@
+# `control::mpc::Bounds`
+
+Input and optional state bounds over the prediction horizon.
+
+## Signature
+
+```cpp
+control::mpc::Bounds
+```
+
+## What It Does
+
+This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+
+
+
+## Fields
+
+### `input_lower`
+
+Required lower input limits, broadcast across or specified over the horizon.
+
+### `input_upper`
+
+Required upper input limits matching `input_lower`.
+
+### `state_lower`
+
+Optional lower state limits; leave undefined with `state_upper` to disable state constraints.
+
+### `state_upper`
+
+Optional upper state limits paired with `state_lower`.
+
+## Returns
+
+This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+
+## Errors
+
+The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+
+## Interpretation and Use
+
+Input bounds are mandatory and may be constant or horizon-shaped. State bounds are optional but must be supplied as a lower/upper pair. Tight bounds can make the QP infeasible; inspect optimizer convergence rather than assuming a returned trajectory is usable.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Apply only input bounds and observe saturation.
+
+@@example Eng/api/control_mpc_options.cpp@@
+
+### Example 2
+
+Add state bounds to the same regulation problem.
+
+@@example Eng/api/control_mpc.cpp@@
+
+### Example 3
+
+Review plan validation before constrained solving.
+
+@@example Eng/api/control_mpc_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Weights.html">
+    <span class="label">Previous</span>
+    <span class="title">Weights</span>
+  </a>
+  <a class="next-link" href="Options.html">
+    <span class="label">Next</span>
+    <span class="title">Options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,143 @@
+# `optim::OptimaAlgorithm`
+
+The four algorithms of `optima`.
+
+`MeritMethod` minimises the objective plus a penalty for constraint violation, with the weight raised until the constraints hold; it is simple and robust but slow to reach tight accuracy. `SequentialQP` solves a quadratic model of the problem at each step and is the best general choice. `WorkingSet` is the same sequential approach that keeps and reuses a set of active constraints between steps, which pays off when few constraints are active. `InternalProtocol` is an interior (barrier) method: inequalities are kept strictly satisfied and a barrier parameter is driven to zero, which suits many inequalities and problems whose objective is undefined outside the feasible region.
+
+## Fields
+
+### `MeritMethod`
+
+`enumerator`, default `0`.
+
+Penalty method.
+
+### `SequentialQP`
+
+`enumerator`, default `1`.
+
+Sequential quadratic programming (the default).
+
+### `WorkingSet`
+
+`enumerator`, default `2`.
+
+SQP with a persistent working set.
+
+### `InternalProtocol`
+
+`enumerator`, default `3`.
+
+Interior (barrier) method.
+
+## Guidance
+
+Set as `OptimaOptions::algorithm`.
+
+## Practical Examples
+
+### Example 1
+
+All four on one problem; they agree on the answer.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  for (const optim::OptimaAlgorithm algorithm : {optim::OptimaAlgorithm::MeritMethod, optim::OptimaAlgorithm::SequentialQP, optim::OptimaAlgorithm::WorkingSet, optim::OptimaAlgorithm::InternalProtocol}) {
+    optim::OptimaOptions options;
+    options.algorithm = algorithm;
+    const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+    out.writeln(optim::optima_algorithm_name(algorithm), ": x =", result.params.at("x").items<double>());
+  }
+}
+```
+
+### Example 2
+
+The algorithm that ran is recorded in the state and the output record.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.algorithm = optim::OptimaAlgorithm::WorkingSet;
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  out.writeln("state.algorithm =", optim::optima_algorithm_name(result.algorithm), ", output.algorithm =", result.output.algorithm);
+}
+```
+
+### Example 3
+
+Cost in objective evaluations. The counts differ widely on the same problem.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  for (const optim::OptimaAlgorithm algorithm : {optim::OptimaAlgorithm::MeritMethod, optim::OptimaAlgorithm::SequentialQP, optim::OptimaAlgorithm::WorkingSet, optim::OptimaAlgorithm::InternalProtocol}) {
+    optim::OptimaOptions options;
+    options.algorithm = algorithm;
+    const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+    out.writeln(optim::optima_algorithm_name(algorithm), ": evaluations =", result.function_evaluations);
+  }
+}
+```
+
+## See Also
+
+- [`optima_algorithm_name`](optima_algorithm_name.md): names a value
+- [`OptimaOptions`](OptimaOptions.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="InternalProtocolOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">InternalProtocolOptions</span>
+  </a>
+  <a class="next-link" href="OptimaExitFlag.html">
+    <span class="label">Next</span>
+    <span class="title">OptimaExitFlag</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

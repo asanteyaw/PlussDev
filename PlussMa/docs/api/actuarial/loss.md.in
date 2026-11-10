@@ -1,0 +1,132 @@
+# Loss contracts
+
+The loss-contract family models policy and reinsurance terms as transformations of a loss sample. A [`LossTransform`](loss/LossTransform.md) maps each loss to what a contract pays on it, one output per input; a [`LossMeasure`](loss/LossMeasure.md) reduces a sample to a statistic. Composing the two gives the expected payment of a contract, which is the pure premium per claim.
+
+## What This Family Owns
+
+| You want | Use |
+|---|---|
+| The part of a loss above a deductible | [`deductible`](loss/deductible.md) |
+| A loss capped at a policy limit | [`limit`](loss/limit.md) |
+| A proportional share of the payments | [`coinsurance`](loss/coinsurance.md) |
+| An excess-of-loss layer with a share | [`layer`](loss/layer.md) |
+| The expected payment of a contract | [`mean`](loss/mean.md) applied to a transform's output |
+| The types behind them | [`LossTransform`](loss/LossTransform.md), [`LossMeasure`](loss/LossMeasure.md) |
+
+Build a contract once and apply it to any sample: the operators are vectorized and keep the platform of the data, and they are distribution-neutral, so simulated, historical and drawn losses use the same contract. Order matters when transforms are composed: apply them in the order the contract applies them.
+
+## Practical Examples
+
+### Example 1: one sample, four contracts
+
+The payments of a deductible, a limit, a share and a layer on the same six losses.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  out.writeln("loss        =", x.items<double>());
+  out.writeln("deductible  =", actuarial::operators::deductible(100.0)(x).items<double>());
+  out.writeln("limit       =", actuarial::operators::limit(500.0)(x).items<double>());
+  out.writeln("coinsurance =", actuarial::operators::coinsurance(0.8)(x).items<double>());
+  out.writeln("layer       =", actuarial::operators::layer(100.0, 500.0)(x).items<double>());
+}
+```
+
+### Example 2: the expected payment of each contract
+
+Applying the mean to each contract's payments.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  const actuarial::LossMeasure mean = actuarial::operators::mean();
+  out.writeln("ground up  =", mean(x).item<double>());
+  out.writeln("deductible =", mean(actuarial::operators::deductible(100.0)(x)).item<double>());
+  out.writeln("limit      =", mean(actuarial::operators::limit(500.0)(x)).item<double>());
+  out.writeln("layer      =", mean(actuarial::operators::layer(100.0, 500.0)(x)).item<double>());
+}
+```
+
+### Example 3: layers that split a loss
+
+Three layers that meet end to end add back to the loss.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series x = pluss::make_series({80.0, 150.0, 300.0, 700.0, 1200.0, 4000.0});
+  const pluss::Series total = actuarial::operators::limit(500.0)(x).add(actuarial::operators::layer(500.0, 1500.0)(x)).add(actuarial::operators::deductible(2000.0)(x));
+  out.writeln(total.items<double>());
+  out.writeln(x.items<double>());
+}
+```
+
+## Related Pages
+
+Use the persistent sidebar to open each type or factory. The {guide}`actuarial guide <actuarial>` develops longer workflows and mathematical background.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+loss/LossTransform
+loss/LossMeasure
+loss/deductible
+loss/limit
+loss/coinsurance
+loss/layer
+loss/mean
+```
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+loss/LossTransform
+loss/LossMeasure
+loss/deductible
+loss/limit
+loss/coinsurance
+loss/layer
+loss/mean
+```
+<!-- apiref:toctree:end -->

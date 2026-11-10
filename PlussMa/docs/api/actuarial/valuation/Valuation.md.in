@@ -1,0 +1,191 @@
+# `actuarial::Valuation`
+
+An operator bound to one basis that values any cashflow: the expected present value of its payments.
+
+## Signature
+
+```cpp
+using actuarial::Valuation = actuarial::Operator<pluss::Series(const actuarial::Cashflow &)>;
+actuarial::Valuation actuarial::operators::value(actuarial::Basis basis);
+pluss::Series actuarial::Valuation::operator()(const actuarial::Cashflow &cashflow) const;
+```
+
+## Construction
+
+A `Valuation` is created once by [`operators::value`](value.md) from a [`Basis`](Basis.md) and then applied to cashflows with the call operator, `value(cashflow)`. It is a copyable value; the basis is bound inside it and cannot be changed, so a different basis is a different valuation. The type is an alias of the general [`Operator`](../foundation/Operator.md), so it also has `defined()`, `key()` and the call syntax.
+
+Applying it computes
+
+```{math}
+\mathrm{EPV}=\sum_{t=0}^{n} s_t\,v_t\,{}_tp_x\;+\;\sum_{k=1}^{n} d_k\,v_k\,{}_{k-1}p_x\,q_{x+k-1}
+```
+
+for the cashflow's survival payments {math}`s_t` and death payments {math}`d_k`, and returns it as a rank-zero `Series`. The cashflow's horizon must not exceed the mortality horizon of the basis; a shorter cashflow is valued over its own years. The result is linear in the payments: scaling every payment scales the value, and the value of a sum of cashflows is the sum of the values.
+
+## Methods
+
+An operator is called like a function and has the four members of [`Operator`](../foundation/Operator.md): [`defined`](../foundation/Operator/defined.md), [`key`](../foundation/Operator/key.md), [`operator bool`](../foundation/Operator/operator_bool.md) and [`operator()`](../foundation/Operator/operator_call.md), which does the work described here.
+
+## Practical Examples
+
+### Example 1: one valuation, many benefits
+
+The valuation is built once and applied to four benefits.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  out.writeln("annuity-due   =", value(actuarial::cashflow::annuity(5)).item<double>());
+  out.writeln("term          =", value(actuarial::cashflow::death(5)).item<double>());
+  out.writeln("pure endowment=", value(actuarial::cashflow::survival(5)).item<double>());
+  out.writeln("endowment     =", value(actuarial::cashflow::endowment(5)).item<double>());
+}
+```
+
+### Example 2: linearity
+
+The value of a sum is the sum of the values, and scaling the payments scales the value. A premium of 0.03 a year netted against a death benefit is the difference of two valuations.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  const double benefits = value(actuarial::cashflow::death(5)).item<double>();
+  const double premiums = value(actuarial::cashflow::annuity(5, 0.03)).item<double>();
+  const actuarial::Cashflow net = actuarial::cashflow::make(pluss::make_series({-0.03, -0.03, -0.03, -0.03, -0.03, 0.0}), pluss::make_series({1.0, 1.0, 1.0, 1.0, 1.0}));
+  out.writeln("benefits - premiums =", benefits - premiums, " the single net cashflow =", value(net).item<double>());
+}
+```
+
+### Example 3: a shorter cashflow
+
+A cashflow shorter than the basis's mortality is valued over its own years; a longer one is refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  out.writeln("3-year annuity =", value(actuarial::cashflow::annuity(3)).item<double>(), " 5-year annuity =", value(actuarial::cashflow::annuity(5)).item<double>());
+  report([&] { (void)value(actuarial::cashflow::annuity(6)); });
+}
+```
+
+### Example 4: the key and an undefined valuation
+
+The operator carries a key naming it, and an operator that was never built is refused when called.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series qx = pluss::make_series({0.010, 0.012, 0.015, 0.019, 0.024});
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Basis basis{mortality, actuarial::discount::flat(0.04)};
+  const actuarial::Valuation value = actuarial::operators::value(basis);
+  out.writeln("key:", std::string(value.key()), " defined:", value.defined());
+  const actuarial::Valuation none;
+  report([&] { (void)none(actuarial::cashflow::annuity(3)); });
+}
+```
+
+## Changelog
+
+- **0.1**: initial operator-first actuarial surface.
+
+## See Also
+
+[`operators::value`](value.md) creates it, [`Cashflow`](Cashflow.md) is what it values, and [`Operator`](../foundation/Operator.md) is the general type.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PaymentTiming.html">
+    <span class="label">Previous</span>
+    <span class="title">PaymentTiming</span>
+  </a>
+  <a class="next-link" href="flat.html">
+    <span class="label">Next</span>
+    <span class="title">flat</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

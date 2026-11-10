@@ -1,0 +1,159 @@
+# `multigrid::Edge`
+
+The condition at one end of an axis: periodic, Dirichlet or Neumann.
+
+Each axis of a grid has a low end and a high end, and each end takes one of three homogeneous conditions. The grid is cell-centred, so a wall lies on the face between the end cell and the outside, and the condition fixes the value of the missing neighbour beyond the wall in terms of the end cell:
+
+- `Periodic`: the axis wraps around, and the neighbour beyond one end is the cell at the other end. Both ends of an axis must be periodic together.
+- `Dirichlet`: the field is zero on the wall, so the neighbour beyond is `−u` (the wall value is the average of the two, zero).
+- `Neumann`: the normal derivative is zero on the wall, so the neighbour beyond is `+u`.
+
+The operator is symmetric positive semi-definite. It is singular exactly when no end is Dirichlet and there is no [mass term](Problem.md): then constants are in its null space, and the equation `A u = f` is solvable only when `f` has zero mean.
+
+## Fields
+
+### `Periodic`
+
+`enumerator`, default `0`.
+
+The axis wraps; both ends must be periodic.
+
+### `Dirichlet`
+
+`enumerator`, default `1`.
+
+Zero on the wall: the neighbour beyond is `−u`.
+
+### `Neumann`
+
+`enumerator`, default `2`.
+
+Zero normal derivative: the neighbour beyond is `+u`.
+
+## Guidance
+
+Set as `Axis::low` and `Axis::high`.
+
+## Practical Examples
+
+### Example 1
+
+The three conditions on a constant field. On a periodic axis a constant is untouched; with Neumann ends too; with Dirichlet ends the wall forces it to zero, so only the two end cells see a nonzero residual (`2` each on a unit grid).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::series::ones({8}, pluss::ScalarType::Float64);
+  for (const mg::Edge edge : {mg::Edge::Periodic, mg::Edge::Neumann, mg::Edge::Dirichlet}) {
+    const mg::Hierarchy h({.axes = {{8, 1.0, edge, edge}}}, u);
+    out.writeln(static_cast<int>(edge), ":", h.apply(u).items<double>());
+  }
+}
+```
+
+### Example 2
+
+Different conditions at the two ends. Dirichlet at the low end and Neumann at the high end: only the low end cell sees the wall.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::series::ones({8}, pluss::ScalarType::Float64);
+  const mg::Hierarchy h({.axes = {{8, 1.0, mg::Edge::Dirichlet, mg::Edge::Neumann}}}, u);
+  out.writeln("A u =", h.apply(u).items<double>());
+}
+```
+
+### Example 3
+
+Which conditions make the operator singular. A Dirichlet end anywhere removes the null space; periodic or Neumann everywhere leaves the constants in it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <utility>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series u = pluss::series::ones({8}, pluss::ScalarType::Float64);
+  const std::vector<std::pair<mg::Edge, mg::Edge>> cases = {{mg::Edge::Periodic, mg::Edge::Periodic}, {mg::Edge::Neumann, mg::Edge::Neumann}, {mg::Edge::Dirichlet, mg::Edge::Neumann}, {mg::Edge::Dirichlet, mg::Edge::Dirichlet}};
+  for (const auto &[lo, hi] : cases)
+    out.writeln(static_cast<int>(lo), static_cast<int>(hi), ": singular =", mg::Hierarchy({.axes = {{8, 1.0, lo, hi}}}, u).singular());
+}
+```
+
+### Example 4
+
+A periodic axis must be periodic at both ends: mixing is rejected.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series u = pluss::series::ones({8}, pluss::ScalarType::Float64);
+  try {
+    const mg::Hierarchy h({.axes = {{8, 1.0, mg::Edge::Periodic, mg::Edge::Dirichlet}}}, u);
+  } catch (const std::exception &e) {
+    out.writeln(e.what());
+  }
+}
+```
+
+## See Also
+
+- [`Axis`](Axis.md): uses it
+- [`Hierarchy`](Hierarchy.md): builds the grids
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Axis.html">
+    <span class="label">Previous</span>
+    <span class="title">Axis</span>
+  </a>
+  <a class="next-link" href="Hierarchy.html">
+    <span class="label">Next</span>
+    <span class="title">Hierarchy</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

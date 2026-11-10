@@ -1,0 +1,52 @@
+# Polynomial Regression
+
+Polynomial regression fits a curve by adding powers of the predictors, and optionally their products, as extra columns and fitting those by least squares. The model is nonlinear in the predictors and linear in the coefficients, so every property of least squares carries over: standard errors, t tests, intervals and R² are those of the expanded design. The family has one function that builds the expansion, one that fits, one that predicts and two for the report, plus the options and the result they use.
+
+## Statistical Contract
+
+`poly_expand` returns each predictor's powers one to the degree, grouped by predictor, and with `include_cross` the mixed monomials up to the degree. It adds no constant column; `poly_fit` adds the intercept. The nested `ols` result of the fit is an ordinary [`OLSFitResult`](least_squares/OLSFitResult.md) for the expanded columns, named `x1`, `x1^2`, `x1*x2` and so on.
+
+Powers of a predictor that stays far from zero are nearly collinear, so a high degree on uncentred data loses rank; centre the predictor first, and compare degrees by adjusted R² or AIC rather than by R², which never falls as terms are added.
+
+## Practical Examples
+
+The program fits a quadratic to eight points on a curve and predicts one point inside the data and one beyond it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8}, {8}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{3.1, 4.9, 8.2, 12.8, 19.1, 26.8, 36.2, 46.9}, {8}, as_f64());
+  const auto fit = reg::poly_fit(y, x);
+  const auto at = pluss::make_series(std::vector<double>{4.5, 9.0}, {2}, as_f64());
+  out.writeln(fit.ols.coefficient_names, fit.ols.coefficients.items<double>(), " R^2", fit.ols.rsquared);
+  out.writeln("fitted at 4.5 and 9", reg::poly_predict(fit, at).items<double>());
+}
+```
+
+## Related Pages
+
+The {guide}`regression guide <regress>` develops polynomial regression, degree selection and worked problems in longer form.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+polynomial/PolyOptions
+polynomial/PolyFitResult
+polynomial/poly_expand
+polynomial/poly_fit
+polynomial/poly_predict
+polynomial/poly_summary
+polynomial/print_poly_summary
+```
+<!-- apiref:toctree:end -->

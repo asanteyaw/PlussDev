@@ -1,0 +1,141 @@
+<!-- generated from with_options.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: d1784fd2a783 -->
+
+# `DfoBuilder::with_options`
+
+[Back to `dfo::DfoBuilder`](../DfoBuilder.md)
+
+Replaces all options.
+
+## Signature
+
+```cpp
+dfo::DfoBuilder dfo::DfoBuilder::with_options(const dfo::DfoOptions &options) const;
+```
+
+## What It Does
+
+Swaps in a complete [`DfoOptions`](../DfoOptions.md), keeping the problem collected so far. Any setting made earlier with `with_seed`, `with_solver` or the like is replaced.
+
+## Parameters
+
+`const dfo::DfoOptions &options`
+: The options to use.
+
+## Returns
+
+A new builder with the change; the original is untouched.
+
+## Practical Examples
+
+### Example 1
+
+An options value.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoOptions options;
+  options.solver = dfo::DfoSolverKind::OrthoMads;
+  options.max_evaluations = 60;
+  const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_options(options).solve();
+  out.writeln(dfo::to_string(r.selected_solver), ", evaluations =", r.diagnostics.evaluations);
+}
+```
+
+Output
+
+```text
+OrthoMads , evaluations = 60
+```
+
+### Example 2
+
+A shared options value across problems.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  dfo::DfoOptions options;
+  options.solver = dfo::DfoSolverKind::NelderMead;
+  for (const double c : {1.0, 4.0}) {
+    const dfo::DfoResult r = dfo::DFO::build(pluss::series::make({0.0})).with_objective([c](const Series &x) { return (x - c).square().sum(); }).with_options(options).solve();
+    out.writeln("c =", c, ": minimizer =", r.minimizer.items<double>());
+  }
+}
+```
+
+Output
+
+```text
+c = 1.0000 : minimizer = [1.0000]
+c = 4.0000 : minimizer = [4.0000]
+```
+
+### Example 3
+
+Replacing earlier settings. The budget set before `with_options` is overwritten by the new options.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - 3.0).square().sum(); };   // minimum 0 at (3, 3)
+
+  dfo::DfoBuilder b = dfo::DFO::build(pluss::series::make({0.0, 0.0})).with_objective(f).with_max_evaluations(10);
+  out.writeln("before =", b.options().max_evaluations, ", after =", b.with_options(dfo::DfoOptions{}).options().max_evaluations);
+}
+```
+
+Output
+
+```text
+before = 10 , after = 0
+```
+
+## See Also
+
+- [`DfoBuilder`](../DfoBuilder.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="with_objective.html">
+    <span class="label">Previous</span>
+    <span class="title">with_objective</span>
+  </a>
+  <a class="next-link" href="with_problem.html">
+    <span class="label">Next</span>
+    <span class="title">with_problem</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

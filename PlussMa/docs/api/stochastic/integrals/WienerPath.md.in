@@ -1,0 +1,151 @@
+# `sde::WienerPath`
+
+A sampled path with its time grid: the data that the stochastic integrals integrate against.
+
+A `WienerPath` is a plain value with four fields you can also fill yourself, for example from market data or from another simulator: the samples `w` (the time axis first), the grid `times`, the end points and the step count. Any path whose grid is strictly increasing and whose samples are finite can be integrated against; if it is not a standard Wiener path the integral calls still run and report, in their warnings, that the Itô and Stratonovich values are not the standard ones.
+
+## Fields
+
+### `w`
+
+`pluss::Series`, default `undefined`.
+
+Samples, shape `[steps + 1] + like.shape`; `w[0] = 0` for a simulated path.
+
+### `times`
+
+`std::vector<double>`, default `{}`.
+
+The `steps + 1` grid times; finite and strictly increasing.
+
+### `t0`
+
+`double`, default `0.0`.
+
+Start time.
+
+### `t1`
+
+`double`, default `0.0`.
+
+End time; the integral calls compare the quadratic variation with `t1 − t0`.
+
+### `steps`
+
+`std::int64_t`, default `0`.
+
+Number of steps; the samples and the grid must each have `steps + 1` entries.
+
+## Guidance
+
+Returned by `simulate_wiener_path` and accepted by the integral functions.
+
+## Practical Examples
+
+### Example 1
+
+The fields of a simulated path.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  const sde::WienerPath path = sde::simulate_wiener_path(like, 0.5, 1.5, 4, 2);
+  out.writeln("t0 =", path.t0, ", t1 =", path.t1, ", steps =", path.steps);
+  out.writeln("times =", path.times);
+  out.writeln("w shape =", path.w.sizes());
+}
+```
+
+### Example 2
+
+A hand-made path. Any `Series` of samples with a matching grid is a path. A straight line from 0 to 1 is smooth, with a quadratic variation of `1/steps`, far below the elapsed time, and the result says so; for a smooth path the Itô and Stratonovich integrals coincide at `½`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::int64_t n = 400;
+  sde::WienerPath path;
+  path.w = (pluss::series::arange(0.0, static_cast<double>(n + 1), 1.0, pluss::ScalarType::Float64) / static_cast<double>(n)).reshape({n + 1, 1});
+  for (std::int64_t i = 0; i <= n; ++i) path.times.push_back(static_cast<double>(i) / static_cast<double>(n));
+  path.t0 = 0.0;
+  path.t1 = 1.0;
+  path.steps = n;
+  const auto r = sde::ito_integral([](double, const Series &w) { return w; }, path);
+  out.writeln("integral of W dW =", r.value.items<double>(), ", quadratic variation ratio =", r.quadratic_variation_ratio);
+  out.writeln("warnings =", r.warnings.size());
+}
+```
+
+### Example 3
+
+An inconsistent path is refused. Here the grid has the wrong length for the samples.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  sde::WienerPath path;
+  path.w = pluss::make_series({0.0, 0.5, 1.0}, {3, 1});
+  path.times = {0.0, 1.0};
+  path.t0 = 0.0;
+  path.t1 = 1.0;
+  path.steps = 2;
+  try {
+    (void)sde::ito_integral([](double, const Series &w) { return w; }, path);
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`simulate_wiener_path`](simulate_wiener_path.md): makes one
+- [`ito_integral`](ito_integral.md): integrates along it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="StochasticIntegralResult.html">
+    <span class="label">Previous</span>
+    <span class="title">StochasticIntegralResult</span>
+  </a>
+  <a class="next-link" href="ito_integral.html">
+    <span class="label">Next</span>
+    <span class="title">ito_integral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

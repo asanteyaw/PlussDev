@@ -1,0 +1,119 @@
+# `dfo::PopulationSolverDisplay`
+
+Whether a differential-evolution or swarm run prints its progress.
+
+`None` is silent; `Iter` prints one line per generation to the standard output. Set as the `display` member of the four population configurations; through the front door use `DfoOptions::display_iter`.
+
+## Fields
+
+### `None`
+
+`enumerator`, default `0`.
+
+No output.
+
+### `Iter`
+
+`enumerator`, default `1`.
+
+One line per generation.
+
+## Guidance
+
+Set as `display` in a population configuration.
+
+## Practical Examples
+
+### Example 1
+
+Printing a short run.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::DifferentialEvolutionConfig config;
+  config.display = dfo::PopulationSolverDisplay::Iter;
+  config.max_generations = 3;
+  config.population_size = 20;
+  config.initial_radius = 5.0;
+  dfo::differential_evolution_minimizer(f, pluss::series::make({0.0, 0.0, 0.0, 0.0}), config);
+}
+```
+
+### Example 2
+
+A swarm.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f = [](const Series &x) { return (x - pluss::series::make({1.0, -2.0, 0.5, 3.0})).square().sum(); };   // minimum 0 at (1, -2, 0.5, 3)
+
+  dfo::ParticleSwarmConfig config;
+  config.display = dfo::PopulationSolverDisplay::Iter;
+  config.max_generations = 3;
+  config.population_size = 20;
+  config.initial_radius = 5.0;
+  dfo::particle_swarm_minimizer(f, pluss::series::make({0.0, 0.0, 0.0, 0.0}), config);
+}
+```
+
+### Example 3
+
+The default is silent.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("default is None =", dfo::DifferentialEvolutionConfig{}.display == dfo::PopulationSolverDisplay::None);
+}
+```
+
+## See Also
+
+- [`DifferentialEvolutionConfig`](DifferentialEvolutionConfig.md): holds it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PopulationSolverDiagnostics.html">
+    <span class="label">Previous</span>
+    <span class="title">PopulationSolverDiagnostics</span>
+  </a>
+  <a class="next-link" href="PopulationSolverExecutionMode.html">
+    <span class="label">Next</span>
+    <span class="title">PopulationSolverExecutionMode</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

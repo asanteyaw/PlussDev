@@ -1,0 +1,129 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: dd521e2383aa -->
+
+# `multigrid::Hierarchy::restrict_to_coarse`
+
+[Back to `multigrid::Hierarchy`](../Hierarchy.md)
+
+Transfers a field from level `l` to the next coarser level `l + 1`.
+
+## Signature
+
+```cpp
+[[nodiscard]] pluss::Series multigrid::Hierarchy::restrict_to_coarse(std::size_t l, pluss::Series f) const;
+```
+
+## What It Does
+
+The restriction is the adjoint of the linear [prolongation](prolong_from_coarse.md) divided by `2ᵈ`, a weighted average of the fine cells that sit under each coarse cell, with wall-reflected ghosts at the ends. It is the residual transfer of the V-cycle. Level 0 is the finest; `l` must be less than `levels() − 1`.
+
+## Parameters
+
+`std::size_t l`
+: The fine level, `0 ≤ l < levels() − 1`.
+
+`pluss::Series f`
+: A field on level `l`.
+
+## Returns
+
+The field on level `l + 1`.
+
+## Errors
+
+- A level out of range, or a field of the wrong shape, throws.
+
+## Practical Examples
+
+### Example 1
+
+Shape and averaging. A constant field on 8 cells restricts to a constant on 4 cells.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const mg::Hierarchy h({.axes = {{8, 1.0, mg::Edge::Periodic, mg::Edge::Periodic}}}, pluss::series::ones({8}, pluss::ScalarType::Float64), [] { mg::Options o; o.coarsest_cells = 2; return o; }());
+  out.writeln(h.restrict_to_coarse(0, pluss::series::ones({8}, pluss::ScalarType::Float64)).items<double>());
+}
+```
+
+### Example 2
+
+Two dimensions. A 8×8 field restricts to 4×4.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  mg::Options o;
+  o.coarsest_cells = 4;
+  const mg::Hierarchy h({.axes = {{8, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}, {8, 1.0, mg::Edge::Dirichlet, mg::Edge::Dirichlet}}}, pluss::series::ones({8, 8}, pluss::ScalarType::Float64), o);
+  out.writeln("coarse shape =", h.restrict_to_coarse(0, pluss::series::ones({8, 8}, pluss::ScalarType::Float64)).sizes());
+}
+```
+
+### Example 3
+
+Adjointness. `⟨R f, c⟩ = 2⁻ᵈ ⟨f, P c⟩`: restriction is the transpose of prolongation up to the factor `2ᵈ` (here `d = 1`).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(10));
+  mg::Options o;
+  o.coarsest_cells = 2;
+  const Series f = (pluss::series::arange(0.0, 16.0, 1.0, pluss::ScalarType::Float64) * 0.5).sin();
+  const Series c = (pluss::series::arange(0.0, 8.0, 1.0, pluss::ScalarType::Float64) * 0.8).cos();
+  const mg::Hierarchy h({.axes = {{16, 1.0, mg::Edge::Dirichlet, mg::Edge::Neumann}}}, f, o);
+  out.writeln("<Rf,c> =", (h.restrict_to_coarse(0, f) * c).sum().item<double>(), ", <f,Pc>/2 =", (f * h.prolong_from_coarse(0, c)).sum().item<double>() / 2.0);
+}
+```
+
+## See Also
+
+- [`Hierarchy`](../Hierarchy.md): the class
+- [`prolong_from_coarse`](prolong_from_coarse.md): the opposite transfer
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="prolong_from_coarse.html">
+    <span class="label">Previous</span>
+    <span class="title">prolong_from_coarse</span>
+  </a>
+  <a class="next-link" href="singular.html">
+    <span class="label">Next</span>
+    <span class="title">singular</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

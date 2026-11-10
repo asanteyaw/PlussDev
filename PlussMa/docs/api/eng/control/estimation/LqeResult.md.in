@@ -1,0 +1,72 @@
+# `control::LqeResult`
+
+The complete steady-state linear-estimator design.
+
+## Signature
+
+```cpp
+control::LqeResult
+```
+
+## What It Does
+
+This value object groups artifacts that belong to one control calculation so callers can preserve both the primary answer and the diagnostics needed to interpret it. Its `Series` members retain the computation's dtype, platform, and leading batch dimensions.
+
+
+
+## Fields
+
+### `covariance`
+
+The stabilizing estimator error covariance.
+
+### `gain`
+
+The steady-state estimator gain mapping innovations into state corrections.
+
+### `closed_loop`
+
+The estimator error dynamics after applying the gain.
+
+## Returns
+
+This type is returned by, or supplied to, the functions described in this branch. Reading its fields does not trigger another solve.
+
+## Errors
+
+The value object performs no deferred validation. Invalid dimensions, domains, or numerical conditions are rejected by the function that creates or consumes it.
+
+## Interpretation and Use
+
+The covariance quantifies steady-state uncertainty, the gain determines innovation correction, and `closed_loop` records estimator error dynamics. Treat the three as one design artifact: gain magnitude alone does not establish a stable or well-conditioned estimator.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Inspect covariance, gain, and estimator pole from a successful design.
+
+@@example Eng/api/control_lqe.cpp@@
+
+### Example 2
+
+Reject an invalid measurement-noise covariance.
+
+@@example Eng/api/control_estimation_errors.cpp@@
+
+### Example 3
+
+Contrast steady-state design with a time-varying forward filter.
+
+@@example Eng/api/control_estimation.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="KalmanOptions.html">
+    <span class="label">Next</span>
+    <span class="title">KalmanOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

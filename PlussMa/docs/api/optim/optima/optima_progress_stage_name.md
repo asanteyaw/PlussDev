@@ -1,0 +1,143 @@
+<!-- generated from optima_progress_stage_name.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `optim::optima_progress_stage_name`
+
+The name of an `OptimaProgressStage` as text: `start`, `iter` or `done`.
+
+## Signature
+
+```cpp
+std::string_view optim::optima_progress_stage_name(optim::OptimaProgressStage stage);
+```
+
+## What It Does
+
+Returns `start`, `iter` or `done`, the labels used by the trace printers.
+
+## Parameters
+
+`stage`
+: The stage.
+
+## Returns
+
+A static name.
+
+## Practical Examples
+
+### Example 1
+
+All three.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (const optim::OptimaProgressStage s : {optim::OptimaProgressStage::Start, optim::OptimaProgressStage::Iteration, optim::OptimaProgressStage::Done})
+    out.writeln(static_cast<int>(s), "->", optim::optima_progress_stage_name(s));
+}
+```
+
+Output
+
+```text
+0 -> start
+1 -> iter
+2 -> done
+```
+
+### Example 2
+
+Counting the snapshots of each stage in a run.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  int counts[3] = {0, 0, 0};
+  optim::OptimaOptions options;
+  options.sequential_qp.progress_hook = [&counts](const optim::OptimaProgressSnapshot &s) { ++counts[static_cast<int>(s.stage)]; return false; };
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+  for (int i = 0; i < 3; ++i) out.writeln(optim::optima_progress_stage_name(static_cast<optim::OptimaProgressStage>(i)), ":", counts[i]);
+}
+```
+
+Output
+
+```text
+start : 1
+iter : 5
+done : 1
+```
+
+### Example 3
+
+Filtering a hook to the final snapshot.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace optim = pluss::subsp::math::optim;
+using Pack = optim::ParameterPack<pluss::Series>;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const pluss::Series target = pluss::series::make({1.0, 2.0});
+  const auto objective = [&](const pluss::Series &x) { return (x - target).square().sum(); };
+  const auto disc = optim::constraints().nl_ineq([](const Pack &p) { return p.at("x").square().sum() - 1.0; });
+
+  optim::OptimaOptions options;
+  options.sequential_qp.progress_hook = [&out](const optim::OptimaProgressSnapshot &s) {
+    if (s.stage == optim::OptimaProgressStage::Done) out.writeln(optim::optima_progress_stage_name(s.stage), "after", s.iteration, "iterations");
+    return false;
+  };
+  const optim::OptimaState result = optim::optima(objective, pluss::series::make({0.0, 0.0}), options, disc);
+}
+```
+
+Output
+
+```text
+done after 4 iterations
+```
+
+## See Also
+
+- [`OptimaProgressSnapshot`](OptimaProgressSnapshot.md): carries the stage
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="optima_problem_scaling_name.html">
+    <span class="label">Previous</span>
+    <span class="title">optima_problem_scaling_name</span>
+  </a>
+  <a class="next-link" href="optima_stall_category_name.html">
+    <span class="label">Next</span>
+    <span class="title">optima_stall_category_name</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

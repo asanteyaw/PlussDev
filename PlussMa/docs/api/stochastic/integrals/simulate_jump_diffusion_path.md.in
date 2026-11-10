@@ -1,0 +1,200 @@
+# `sde::simulate_jump_diffusion_path`
+
+Simulates a path with Brownian increments and compound-Poisson jumps, the driver of a jump-diffusion.
+
+## Signature
+
+```cpp
+sde::JumpPath sde::simulate_jump_diffusion_path(const pluss::Series &like, double t0, double t1, std::int64_t steps, std::uint64_t seed, double drift, double volatility, double jump_rate, double jump_mean, double jump_stddev);
+```
+
+## What It Does
+
+Simulates `X(t) = drift·t + volatility·W(t) + Σ jumps`, Merton's jump-diffusion driver. In each step the path moves by `drift·h + volatility·√h·Z` and, with probability `jump_rate·h`, also by a jump drawn from `N(jump_mean, jump_stddev²)`. At most one jump per step is simulated, which is accurate when `jump_rate·h` is small, so the call **requires** `jump_rate · h < 0.2` and throws otherwise, telling you to use more steps. `like` fixes the batch shape, dtype and device as in [`simulate_wiener_path`](simulate_wiener_path.md).
+
+The result carries the path and a mask marking the steps that contain a jump, which is what [`marcus_integral`](marcus_integral.md) needs. A path with jumps has a quadratic variation above `volatility²·T` (each jump adds its square), so the integral functions flag it as not a standard Wiener path when that quadratic variation departs from the elapsed time by more than sampling error.
+
+## Parameters
+
+`const pluss::Series &like`
+: Template for the batch shape, dtype, device.
+
+`double t0, double t1`
+: Start and end times.
+
+`std::int64_t steps`
+: Equal steps; must be positive, and `jump_rate·h < 0.2`.
+
+`std::uint64_t seed`
+: Seed.
+
+`double drift`
+: Constant drift of `X`.
+
+`double volatility`
+: Brownian volatility; non-negative.
+
+`double jump_rate`
+: Poisson jump intensity per unit time; non-negative.
+
+`double jump_mean, double jump_stddev`
+: Mean and standard deviation of the normal jump size.
+
+## Returns
+
+A [`JumpPath`](JumpPath.md).
+
+## Errors
+
+- `steps <= 0`, a negative rate, volatility or jump deviation, or `jump_rate · h >= 0.2` throws (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+A jump path and its jumps. Rate 6 over a year gives about 6 steps with a jump; the mask counts them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 4000, 11, 0.0, 0.2, 6.0, 0.0, 0.5);
+  out.writeln("steps with a jump =", jp.jump_mask.sum().sum().item<double>(), "of", jp.path.steps);
+  out.writeln("path shape =", jp.path.w.sizes());
+}
+```
+
+### Example 2
+
+The jump rate. The expected number of jumps is `rate · T`; averaged over many paths the count follows it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const Series like = Series::zeros({2000}, pluss::ScalarType::Float64);
+
+  for (const double rate : {1.0, 5.0, 20.0}) {
+    const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 2000, 5, 0.0, 0.2, rate, 0.0, 0.5);
+    out.writeln("rate", rate, ": mean jumps per path =", jp.jump_mask.sum(0).mean().sum().item<double>());
+  }
+}
+```
+
+### Example 3
+
+The jump size. The jumps are `N(jump_mean, jump_stddev²)`: a positive mean shifts the path upward on average. With no drift or volatility, `E[X(T)] = rate · T · jump_mean`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const Series like = Series::zeros({4000}, pluss::ScalarType::Float64);
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 1000, 8, 0.0, 0.0, 4.0, 0.3, 0.1);
+  out.writeln("mean X(T) =", jp.path.w.select(0, 1000).mean().sum().item<double>(), ", exact =", 4.0 * 0.3);
+}
+```
+
+### Example 4
+
+Drift and volatility. Without jumps the path is `drift·t + volatility·W`: mean `drift·T` and variance `volatility²·T`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const Series like = Series::zeros({40000}, pluss::ScalarType::Float64);
+
+  const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 200, 3, 0.4, 0.5, 0.0, 0.0, 0.0);
+  const Series end = jp.path.w.select(0, 200);
+  const double mean = end.mean().sum().item<double>();
+  out.writeln("mean =", mean, " (0.4), variance =", (end - mean).square().mean().sum().item<double>(), " (0.25)");
+}
+```
+
+### Example 5
+
+Too few steps for the jump rate is refused: at most one jump per step is simulated, so `rate · h` must be below 0.2.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace sde = pluss::subsp::math::sde;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series like = pluss::make_series(0.0).to(pluss::ScalarType::Float64).reshape({1});
+
+  try {
+    (void)sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 10, 1, 0.0, 0.2, 5.0, 0.0, 0.5);
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`JumpPath`](JumpPath.md): what it returns
+- [`marcus_integral`](marcus_integral.md): integrate along it
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="marcus_integral.html">
+    <span class="label">Previous</span>
+    <span class="title">marcus_integral</span>
+  </a>
+  <a class="next-link" href="simulate_wiener_path.html">
+    <span class="label">Next</span>
+    <span class="title">simulate_wiener_path</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

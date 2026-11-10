@@ -1,0 +1,88 @@
+# `control::lqe`
+
+Designs a steady-state linear quadratic estimator.
+
+## Signature
+
+```cpp
+control::LqeResult control::lqe(
+    const lti::StateSpace& system,
+    const pluss::Series& process_cov,
+    const pluss::Series& noise_cov,
+    pluss::ma::linearalg::MatrixEqOptions options = {});
+
+control::LqeResult control::lqe(
+    const lti::StateSpace& system,
+    const pluss::Series& process_cov,
+    const pluss::Series& noise_cov,
+    const pluss::Series& cross,
+    pluss::ma::linearalg::MatrixEqOptions options = {});
+```
+
+## What It Does
+
+`lqe` applies Riccati duality to estimator design. The model timebase selects continuous or discrete equations while preserving the state-space batch contract.
+
+## Parameters
+
+`system`
+: The continuous or discrete plant whose state is estimated.
+
+`process_cov`
+: Process-noise covariance in state coordinates.
+
+`noise_cov`
+: Measurement-noise covariance in output coordinates.
+
+`cross`
+: Optional process/measurement cross covariance.
+
+`options`
+: Matrix-equation numerical controls.
+
+## Returns
+
+An `LqeResult` with covariance, gain, and estimator error dynamics.
+
+## Errors
+
+Throws for incompatible dimensions, invalid covariance matrices, or a failed stabilizing Riccati solve.
+
+## Interpretation and Use
+
+`lqe` is a design calculation, not a trajectory filter. It produces a steady-state gain from a model and noise covariances. Use `kalman` when actual observations must be processed, and use `smooth` when future observations may refine earlier states.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Design a continuous steady-state estimator.
+
+@@example Eng/api/control_lqe.cpp@@
+
+### Example 2
+
+Reject a singular measurement covariance.
+
+@@example Eng/api/control_estimation_errors.cpp@@
+
+### Example 3
+
+Contrast the design result with finite-trajectory filtering.
+
+@@example Eng/api/control_estimation.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SmoothResult.html">
+    <span class="label">Previous</span>
+    <span class="title">SmoothResult</span>
+  </a>
+  <a class="next-link" href="kalman.html">
+    <span class="label">Next</span>
+    <span class="title">kalman</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

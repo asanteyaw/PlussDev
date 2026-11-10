@@ -1,0 +1,164 @@
+# `dfo::BlackboxAdvancedOutcome`
+
+The result of a black-box mesh-adaptive run.
+
+`minimizer` is the best point; `objective_vector` holds its objective values (several for a multi-objective problem) and `scalarized_minimum` the single value that was minimised. `status` is a [`BlackboxSolverStatus`](BlackboxSolverStatus.md), `diagnostics` a [`BlackboxAdvancedDiagnostics`](BlackboxAdvancedDiagnostics.md), and `pareto_points` / `pareto_objectives` hold the archive of non-dominated points, one per row.
+
+## Fields
+
+### `minimizer`
+
+`pluss::Series`, default `undefined`.
+
+The best point.
+
+### `objective_vector`
+
+`pluss::Series`, default `undefined`.
+
+Objective values at the best point.
+
+### `scalarized_minimum`
+
+`double`, default `0`.
+
+The single value minimised.
+
+### `status`
+
+`dfo::BlackboxSolverStatus`, default `ReachedIterationBudget`.
+
+Why the run stopped.
+
+### `diagnostics`
+
+`dfo::BlackboxAdvancedDiagnostics`, default `{}`.
+
+Counters.
+
+### `pareto_points`
+
+`pluss::Series`, default `undefined`.
+
+Non-dominated points, one per row.
+
+### `pareto_objectives`
+
+`pluss::Series`, default `undefined`.
+
+Their objective vectors, one per row.
+
+## Guidance
+
+Returned by the black-box mesh-adaptive minimizers.
+
+## Practical Examples
+
+### Example 1
+
+A single objective.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    e.objectives = (x - 3.0).square().sum().reshape({1});   // minimum 0 at (3, 3)
+    return e;
+  };
+
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({0.0, 0.0}), dfo::MadsBlackboxAdvancedConfig{});
+  out.writeln("minimizer =", o.minimizer.items<double>(), ", minimum =", o.scalarized_minimum, ", status =", dfo::to_string(o.status));
+}
+```
+
+### Example 2
+
+Two objectives. The objective vector holds both values at the minimizer, and the archive holds the trade-offs found.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    const Series a = x.select(0, 0);
+    e.objectives = a.square().reshape({1}).unite({(a - 2.0).square().reshape({1})}, 0);
+    return e;
+  };
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.objective_weights = pluss::series::make({0.5, 0.5});
+  config.max_evaluations = 600;
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({5.0}), config);
+  out.writeln("x =", o.minimizer.items<double>(), ", objectives =", o.objective_vector.items<double>(), ", archive size =", o.pareto_points.size(0));
+}
+```
+
+### Example 3
+
+The archive. Every archived point is non-dominated: improving one objective costs the other.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace dfo = pluss::subsp::math::optimization;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto black_box = [](const Series &x) {
+    dfo::BlackboxEvaluation e;
+    const Series a = x.select(0, 0);
+    e.objectives = a.square().reshape({1}).unite({(a - 2.0).square().reshape({1})}, 0);
+    return e;
+  };
+  dfo::MadsBlackboxAdvancedConfig config;
+  config.pareto_archive_limit = 5;
+  config.objective_weights = pluss::series::make({0.5, 0.5});
+  config.max_evaluations = 600;
+  const dfo::BlackboxAdvancedOutcome o = dfo::mads_blackbox_minimizer(black_box, pluss::series::make({5.0}), config);
+  out.writeln("points  =", o.pareto_points.reshape({o.pareto_points.numel()}).items<double>());
+}
+```
+
+## See Also
+
+- [`mads_blackbox_minimizer`](mads_blackbox_minimizer.md): produces it
+- [`BlackboxAdvancedDiagnostics`](BlackboxAdvancedDiagnostics.md): the counters
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="BlackboxAdvancedDiagnostics.html">
+    <span class="label">Previous</span>
+    <span class="title">BlackboxAdvancedDiagnostics</span>
+  </a>
+  <a class="next-link" href="BlackboxEvaluation.html">
+    <span class="label">Next</span>
+    <span class="title">BlackboxEvaluation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

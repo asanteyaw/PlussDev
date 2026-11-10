@@ -1,0 +1,230 @@
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: cf292a09bd8e -->
+
+# `operators::expansion::Taylor::coefficients`
+
+[Back to `operators::expansion::Taylor`](../Taylor.md)
+
+The Taylor coefficients `f⁽ᵏ⁾(a)/k!` as a vector function, rather than as a polynomial.
+
+## Signature
+
+```cpp
+operators::Operator operators::expansion::Taylor::coefficients(std::string_view variable, double center, std::int64_t order, operators::DiffOptions options = {}, operators::expansion::Engine engine = operators::expansion::Engine::Auto) const;
+```
+
+## What It Does
+
+`taylor().coefficients("x", a, n)` is the operator that returns, instead of the polynomial, its coefficient vector `[f(a), f′(a), f″(a)/2!, …, f⁽ⁿ⁾(a)/n!]` as a rank-1 `Function` of shape `[n + 1]`. Other variables of `f` stay free, so the coefficients are functions of them.
+
+Coefficients are the right form when you want to *compute with* a series rather than evaluate it: differentiate, integrate or multiply it termwise ([`Power`](../Power.md)), compare two expansions, read off a derivative at the centre (`f⁽ᵏ⁾(a) = k! cₖ`), or hand the numbers to another routine. The polynomial is rebuilt from the vector by [`power`](../power_operator.md). `Engine` is as for [`taylor`](../taylor_operator.md). The order must lie in `[0, 64]`.
+
+## Parameters
+
+`std::string_view variable`
+: The variable to expand in.
+
+`double center`
+: The expansion point `a`.
+
+`std::int64_t order`
+: The truncation order `n`, in `[0, 64]`; the result has `n + 1` entries.
+
+`operators::DiffOptions options`
+: Options for the derivatives.
+
+`operators::expansion::Engine engine`
+: `Auto` (default), `Structural` or `Jet`.
+
+## Returns
+
+An `Operator` whose application returns the coefficient vector as a rank-1 `Function` of shape `[order + 1]`.
+
+## Errors
+
+- `order must lie in [0, 64]`.
+- An unknown variable raises `unknown variable '<name>'`.
+
+## Practical Examples
+
+### Example 1
+
+The coefficients of `exp` about 0 are `1/k!`: `1, 1, ½, 1/6, 1/24`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+
+  const math::Function c = operators::expansion::taylor().coefficients("x", 0.0, 4)(f);
+  out.writeln("shape:", c.shape(), "  coefficients:", c().items<double>());
+  out.writeln("1/k!:  ", pluss::make_series({1.0, 1.0, 0.5, 1.0 / 6.0, 1.0 / 24.0}).items<double>());
+}
+```
+
+### Example 2
+
+A centre other than 0, and reading derivatives from the coefficients. About `a = 1`, `exp` has `cₖ = e/k!`; the `k`-th derivative at 1 is `k! cₖ`, which is `e` for every `k`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+
+  const math::Function c = operators::expansion::taylor().coefficients("x", 1.0, 3)(f);
+  const auto coefficients = c().items<double>();
+  out.writeln("coefficients about 1:", coefficients, "  (e / k!)");
+  const double factorials[] = {1.0, 1.0, 2.0, 6.0};
+  for (int k = 0; k <= 3; ++k) out.writeln("f^(", k, ")(1) = k! c_k =", factorials[k] * coefficients[static_cast<std::size_t>(k)]);
+}
+```
+
+### Example 3
+
+A polynomial has finitely many non-zero coefficients: `1 + 2x + 3x²` gives `1, 2, 3, 0, 0` however far the order is pushed.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function p = math::function({"x"}, [](math::Function x) { return 1.0 + 2.0 * x + 3.0 * x * x; });
+  out.writeln("order 4:", operators::expansion::taylor().coefficients("x", 0.0, 4)(p)().items<double>());
+}
+```
+
+### Example 4
+
+Coefficients that depend on a parameter. For `exp(a x)` they are `aᵏ/k!`: a vector function of `a`. At `a = 2`: `1, 2, 2, 4/3`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const math::Function f = math::function({"x", "a"}, [](math::Function x, math::Function a) { return (a * x).exp(); });
+  const math::Function c = operators::expansion::taylor().coefficients("x", 0.0, 3)(f);
+  out.writeln("variables left:", c.arity(), "  c(a = 2) =", c(2.0).items<double>());
+}
+```
+
+### Example 5
+
+The engines give the same vector. The `Jet` engine reaches high orders cheaply: the order-10 coefficients of `exp` by `Structural` and by `Jet` agree.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(12));
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+
+  const auto structural = operators::expansion::taylor().coefficients("x", 0.0, 10, {}, expansion::Engine::Structural)(f)().items<double>();
+  const auto jet = operators::expansion::taylor().coefficients("x", 0.0, 10, {}, expansion::Engine::Jet)(f)().items<double>();
+  double worst = 0.0;
+  for (std::size_t k = 0; k < structural.size(); ++k) worst = std::max(worst, std::abs(structural[k] - jet[k]));
+  out.writeln("largest difference over 11 coefficients:", worst);
+}
+```
+
+### Example 6
+
+The order range is checked.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+namespace expansion = pluss::operators::expansion;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto first_line = [](const pluss::Error &e) {
+    const std::string text(e.what());
+    return text.substr(0, text.find('\n'));
+  };
+  const math::Function f = math::function({"x"}, [](math::Function x) { return x.exp(); });
+
+  try { (void)operators::expansion::taylor().coefficients("x", 0.0, 65); } catch (const pluss::Error &e) { out.writeln(first_line(e)); }
+}
+```
+
+## See Also
+
+- [`taylor`](../taylor_operator.md): the polynomial
+- [`remainder`](remainder.md): the truncation error
+- [`power`](../power_operator.md): rebuilds the polynomial
+- [`Power`](../Power.md): termwise calculus on the vector
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Introduction.html">
+    <span class="label">Previous</span>
+    <span class="title">Introduction</span>
+  </a>
+  <a class="next-link" href="remainder.html">
+    <span class="label">Next</span>
+    <span class="title">remainder</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,985 @@
+# `regression::GLMFitResult`
+
+Everything `glm_fit` learned: the coefficients and their uncertainty, the fitted values and residuals, the deviance-based measures of fit, the iteration outcome and the labels.
+
+## Signature
+
+```cpp
+regression::GLMFitResult regression::glm_fit(const Series &y, const Series &x, const regression::GLMOptions &options = {}, Config cfg = {});
+```
+
+A result is returned by value from `glm_fit` and is read-only data: nothing on it recomputes. Every example below fits the same ten counts with a Poisson family, so the numbers can be compared across fields; where a field needs another setting the program says so.
+
+## Fields
+
+### `coefficients`
+
+`Series` of shape `[k]`.
+
+The estimated coefficients on the link scale, `[k]`, in the order of `coefficient_names`: the intercept first when there is one, then one per predictor. They maximise the likelihood, so for a canonical link the score equations hold: the residuals sum to zero and are orthogonal to every predictor. The program prints them and checks both.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("coefficients", fit.coefficients.items<double>(), fit.coefficient_names);
+  out.writeln("sum(y - mu)", y.sub(fit.fitted_values).sum().item<double>(), " sum(x (y - mu))", x.mul(y.sub(fit.fitted_values)).sum().item<double>());
+}
+```
+
+
+### `std_errors`
+
+`Series` of shape `[k]`.
+
+The standard error of each coefficient, `[k]`: the square root of the diagonal of `covariance`. The program computes them from the covariance matrix.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const std::vector<std::vector<double>> cov = fit.covariance.host<double>();
+  out.writeln("std_errors", fit.std_errors.items<double>());
+  out.writeln("from covariance", std::sqrt(cov[0][0]), std::sqrt(cov[1][1]));
+}
+```
+
+
+### `z_values`
+
+`Series` of shape `[k]`.
+
+The Wald statistic of each coefficient, `[k]`: the coefficient over its standard error, to be compared with a standard normal. The program recomputes them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("z_values", fit.z_values.items<double>());
+  out.writeln("coefficient / std_error", fit.coefficients.div(fit.std_errors).items<double>());
+}
+```
+
+
+### `p_values`
+
+`Series` of shape `[k]`.
+
+The two-sided p-value of each Wald statistic against the standard normal distribution, `[k]`. A small value says the coefficient is unlikely to be zero given the standard error. The program recomputes them from the normal distribution.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const pluss::subsp::stats::distr::Normal standard(0.0, 1.0);
+  out.writeln("p_values", fit.p_values.items<double>());
+  out.writeln("2 (1 - Phi(|z|))", standard.cdf(fit.z_values.abs()).neg().add(1.0).mul(2.0).items<double>());
+}
+```
+
+
+### `conf_int`
+
+`Series` of shape `[k,2]`.
+
+The confidence interval of each coefficient, `[k, 2]` with the lower bound in the first column and the upper in the second: the coefficient plus and minus the normal quantile of 1 − alpha/2 times its standard error. The program rebuilds the slope interval at the 95% level, where that quantile is 1.95996.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const std::vector<std::vector<double>> ci = fit.conf_int.host<double>();
+  const auto b = fit.coefficients.items<double>();
+  const auto se = fit.std_errors.items<double>();
+  out.writeln("conf_int rows", ci[0], ci[1]);
+  out.writeln("slope +- 1.959964 se", b[1] - 1.959964 * se[1], b[1] + 1.959964 * se[1]);
+}
+```
+
+
+### `covariance`
+
+`Series` of shape `[k,k]`.
+
+The covariance matrix of the coefficients, `[k, k]`: the inverse of the weighted normal-equation matrix times the dispersion. It is symmetric, its diagonal is the squared standard errors, and its off-diagonal entries are what you need to put an interval on any combination of coefficients.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const std::vector<std::vector<double>> cov = fit.covariance.host<double>();
+  out.writeln("covariance", cov[0], cov[1]);
+  out.writeln("symmetric", cov[0][1] == cov[1][0], " diagonal is std_errors squared", fit.std_errors.square().items<double>());
+}
+```
+
+
+### `fitted_values`
+
+`Series` of shape `[n]`.
+
+The fitted mean of every observation, `[n]`, on the scale of the response: the inverse link of the linear predictor. For this log link that is the exponential of `linear_predictor`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("fitted_values", fit.fitted_values.items<double>());
+  out.writeln("exp(linear_predictor)", fit.linear_predictor.exp().items<double>());
+}
+```
+
+
+### `linear_predictor`
+
+`Series` of shape `[n]`.
+
+The linear predictor of every observation, `[n]`, on the scale of the link: the design times the coefficients plus any offset. The program rebuilds it from the coefficients.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto b = fit.coefficients.items<double>();
+  out.writeln("linear_predictor", fit.linear_predictor.items<double>());
+  out.writeln("b0 + b1 x       ", x.mul(b[1]).add(b[0]).items<double>());
+}
+```
+
+
+### `residuals`
+
+`Series` of shape `[n]`.
+
+The response residuals, `[n]`: the observation minus its fitted mean, y − mu, on the scale of the response. For a canonical link they sum to zero. They are not variance-stabilised, so for an unusual-observation check divide by the square root of the variance function, as the program does for the Poisson family.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("residuals", fit.residuals.items<double>());
+  out.writeln("y - fitted", y.sub(fit.fitted_values).items<double>());
+  out.writeln("Pearson residuals", fit.residuals.div(fit.fitted_values.sqrt()).items<double>());
+}
+```
+
+
+### `nobs`
+
+`std::int64_t`.
+
+The number of observations used in the fit, after dropped rows are removed. The program fits with one missing predictor and prints the count.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("nobs", fit.nobs);
+  auto values = std::vector<double>{0.5, 1.0, std::nan(""), 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0};
+  const auto holey = reg::glm_fit(y, pluss::make_series(values, {10}, as_f64()), options);
+  out.writeln("with a missing value", holey.nobs);
+}
+```
+
+
+### `rank`
+
+`std::int64_t`.
+
+The numerical rank of the design, the number of coefficients that the data identify. It equals `k_params` for a well-conditioned design and falls below it when predictors are nearly or exactly collinear. The program fits a design whose second predictor is exactly twice the first.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("rank", fit.rank, " of", fit.k_params);
+  std::vector<double> flat;
+  for (int i = 0; i < 10; ++i) flat.push_back(0.5 * (i + 1));
+  for (int i = 0; i < 10; ++i) flat.push_back(1.0 * (i + 1));
+  const auto twice = pluss::make_series(flat, {2, 10}, as_f64()).transpose(0, 1);
+  const auto deficient = reg::glm_fit(y, twice, options);
+  out.writeln("exactly collinear: rank", deficient.rank, " of", deficient.k_params);
+  out.writeln(deficient.warnings);
+}
+```
+
+
+### `k_params`
+
+`std::int64_t`.
+
+The number of coefficients, including the intercept: the width of the design. It is the length of `coefficients` and `coefficient_names`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("k_params", fit.k_params, " coefficients", fit.coefficients.size(0));
+  options.add_intercept = false;
+  out.writeln("without intercept", reg::glm_fit(y, x, options).k_params);
+}
+```
+
+
+### `num_predictors`
+
+`std::int64_t`.
+
+The number of predictor columns supplied, not counting the intercept. It is the width `glm_predict` expects of new rows.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("num_predictors", fit.num_predictors, " k_params", fit.k_params);
+}
+```
+
+
+### `dropped_observations`
+
+`std::int64_t`.
+
+The number of rows left out of the fit: rows with a non-finite value when `drop_missing` is true, and rows of weight zero. The program counts both kinds.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  auto values = std::vector<double>{0.5, 1.0, std::nan(""), 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0};
+  const auto holey = pluss::make_series(values, {10}, as_f64());
+  out.writeln("complete data", fit.dropped_observations);
+  out.writeln("one missing value", reg::glm_fit(y, holey, options).dropped_observations);
+  options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 1, 0, 0, 1}, {10}, as_f64());
+  out.writeln("two rows of weight zero", reg::glm_fit(y, x, options).dropped_observations);
+}
+```
+
+
+### `df_model`
+
+`std::int64_t`.
+
+The degrees of freedom of the model: the rank less one when there is an intercept, the rank itself when there is none. It counts the coefficients beyond the constant.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("df_model", fit.df_model, " rank", fit.rank);
+}
+```
+
+
+### `df_resid`
+
+`std::int64_t`.
+
+The residual degrees of freedom: the observations minus the rank. For the Normal family the dispersion is the deviance divided by this number.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("df_resid", fit.df_resid, " nobs - rank", fit.nobs - fit.rank);
+}
+```
+
+
+### `iterations`
+
+`std::int64_t`.
+
+The number of iteratively reweighted least-squares steps taken. A canonical link usually converges in a handful; reaching `max_iter` means the fit did not converge.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("iterations", fit.iterations, " converged", fit.converged);
+}
+```
+
+
+### `alpha`
+
+`double`.
+
+The significance level that the intervals in `conf_int` were built with, echoed from the options.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("alpha", fit.alpha);
+  options.alpha = 0.10;
+  out.writeln("with alpha 0.10", reg::glm_fit(y, x, options).alpha);
+}
+```
+
+
+### `dispersion`
+
+`double`.
+
+The dispersion parameter that scales the covariance. It is fixed at one for the Binomial and Poisson families and estimated as the deviance over the residual degrees of freedom for the Normal family. The program prints it for a Poisson and a Normal fit.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("Poisson dispersion", fit.dispersion);
+  options.family = reg::GLMFamily::Normal;
+  const auto normal = reg::glm_fit(y, x, options);
+  out.writeln("Normal dispersion", normal.dispersion, " deviance / df_resid", normal.deviance / static_cast<double>(normal.df_resid));
+}
+```
+
+
+### `deviance`
+
+`double`.
+
+Twice the log-likelihood ratio between the saturated model, which fits every observation exactly, and the fitted model. For the Poisson family it is 2 Σ [y ln(y/μ) − (y − μ)], with y ln y read as zero when y = 0. Smaller is a closer fit. The program recomputes it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto yv = y.items<double>();
+  const auto mu = fit.fitted_values.items<double>();
+  double by_hand = 0.0;
+  for (std::size_t i = 0; i < yv.size(); ++i) by_hand += 2.0 * ((yv[i] > 0 ? yv[i] * std::log(yv[i] / mu[i]) : 0.0) - (yv[i] - mu[i]));
+  out.writeln("deviance", fit.deviance, " by hand", by_hand);
+}
+```
+
+
+### `null_deviance`
+
+`double`.
+
+The deviance of the model with only a constant, which fits every observation with the sample mean. It is the benchmark that `deviance` is compared with; the gap between the two is what the predictors explain.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto yv = y.items<double>();
+  const double mean = y.mean().item<double>();
+  double by_hand = 0.0;
+  for (const double v : yv) by_hand += 2.0 * ((v > 0 ? v * std::log(v / mean) : 0.0) - (v - mean));
+  out.writeln("null_deviance", fit.null_deviance, " by hand", by_hand, " deviance", fit.deviance);
+}
+```
+
+
+### `log_likelihood`
+
+`double`.
+
+The maximised log-likelihood of the fitted model. For the Poisson family it is Σ [y ln μ − μ − ln y!]. The program recomputes it with the log-factorial.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  const auto yv = y.items<double>();
+  const auto mu = fit.fitted_values.items<double>();
+  double by_hand = 0.0;
+  for (std::size_t i = 0; i < yv.size(); ++i) by_hand += yv[i] * std::log(mu[i]) - mu[i] - std::lgamma(yv[i] + 1.0);
+  out.writeln("log_likelihood", fit.log_likelihood, " by hand", by_hand);
+}
+```
+
+
+### `aic`
+
+`double`.
+
+Akaike's information criterion, −2 × log-likelihood + 2 × rank. It trades fit against the number of coefficients; between models of the same family fitted to the same data the smaller value is preferred. The program recomputes it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("aic", fit.aic, " by hand", -2.0 * fit.log_likelihood + 2.0 * static_cast<double>(fit.rank));
+}
+```
+
+
+### `bic`
+
+`double`.
+
+The Bayesian information criterion, −2 × log-likelihood + ln(n) × rank. It penalises coefficients more heavily than the AIC once n exceeds seven. The program recomputes it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("bic", fit.bic, " by hand", -2.0 * fit.log_likelihood + std::log(static_cast<double>(fit.nobs)) * static_cast<double>(fit.rank));
+}
+```
+
+
+### `pseudo_rsquared`
+
+`double`.
+
+The proportion of the null deviance that the model removes, 1 − deviance / null_deviance. It is zero for a model no better than a constant and approaches one as the fit becomes exact; it is not an R² of the response and should not be read as one. The program recomputes it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("pseudo_rsquared", fit.pseudo_rsquared, " by hand", 1.0 - fit.deviance / fit.null_deviance);
+}
+```
+
+
+### `condition_number`
+
+`double`.
+
+The ratio of the largest to the smallest singular value of the weighted design, a measure of how close the predictors are to collinear. Large values (above about 30 for a standardised design, far more for a raw one) warn that coefficients are poorly determined. Centring a predictor removes the collinearity between it and the intercept; the program shows the number falling.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("condition_number", fit.condition_number);
+  const auto centred = x.sub(x.mean().item<double>());
+  out.writeln("with the predictor centred", reg::glm_fit(y, centred, options).condition_number);
+}
+```
+
+
+### `converged`
+
+`bool`.
+
+Whether the iteration reached the tolerance before `max_iter`. Check it before using a fit made with a non-canonical link. The program forces a failure with two iterations.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("converged", fit.converged);
+  options.max_iter = 2;
+  out.writeln("with max_iter 2", reg::glm_fit(y, x, options).converged);
+}
+```
+
+
+### `has_intercept`
+
+`bool`.
+
+Whether the design included a constant column, copied from `add_intercept`. `glm_predict` uses it to decide how to read new rows.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("has_intercept", fit.has_intercept);
+  options.add_intercept = false;
+  out.writeln("add_intercept=false", reg::glm_fit(y, x, options).has_intercept);
+}
+```
+
+
+### `family`
+
+`regression::GLMFamily`.
+
+The family the fit used, copied from the options.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("Poisson fit records Poisson:", fit.family == reg::GLMFamily::Poisson);
+  out.writeln("and not Normal:", fit.family == reg::GLMFamily::Normal);
+}
+```
+
+
+### `link`
+
+`regression::GLMLink`.
+
+The link that the fit used. It is the resolved link, never `Canonical`: a Poisson fit with the default link reports the log link.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("default link resolves to Log:", fit.link == reg::GLMLink::Log, " is Canonical:", fit.link == reg::GLMLink::Canonical);
+}
+```
+
+
+### `response_name`
+
+`std::string`.
+
+The label of the response, copied from the options and printed by the summary.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("default", fit.response_name);
+  options.response_name = "events";
+  out.writeln("named", reg::glm_fit(y, x, options).response_name);
+}
+```
+
+
+### `coefficient_names`
+
+`std::vector<std::string>`.
+
+The label of each coefficient, in the order of `coefficients`: `const` for the intercept, then the names from `predictor_names` or `x1`, `x2` and so on.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln(fit.coefficient_names);
+  options.predictor_names = {"dose"};
+  out.writeln(reg::glm_fit(y, x, options).coefficient_names);
+}
+```
+
+
+### `warnings`
+
+`std::vector<std::string>`.
+
+Notes that the fit attaches when something needs attention, as text: an iteration that did not converge, or a rank-deficient design solved with a pseudoinverse. The list is empty for a clean fit. The program provokes the first.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace reg = pluss::subsp::stats::regression;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const auto x = pluss::make_series(std::vector<double>{0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0}, {10}, as_f64());
+  const auto y = pluss::make_series(std::vector<double>{1, 0, 2, 3, 2, 5, 4, 8, 9, 14}, {10}, as_f64());
+  reg::GLMOptions options;
+  options.family = reg::GLMFamily::Poisson;
+  const auto fit = reg::glm_fit(y, x, options);
+  out.writeln("clean fit:", fit.warnings.size(), "warnings");
+  options.max_iter = 2;
+  out.writeln(reg::glm_fit(y, x, options).warnings);
+}
+```
+
+
+## See Also
+
+[`glm_fit`](glm_fit.md) produces the result, [`glm_predict`](glm_predict.md) applies its coefficients to new rows, [`glm_summary`](glm_summary.md) prints it as a report, and [`GLMOptions`](GLMOptions.md) holds the settings it records.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GLMOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">GLMOptions</span>
+  </a>
+  <a class="next-link" href="glm_fit.html">
+    <span class="label">Next</span>
+    <span class="title">glm_fit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

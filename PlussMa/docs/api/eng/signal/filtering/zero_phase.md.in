@@ -1,0 +1,81 @@
+# `signal::zero_phase`
+
+## Signature
+
+```cpp
+pluss::Series signal::zero_phase(
+    const pluss::Series& input,
+    const pluss::Series& numerator,
+    const pluss::Series& denominator,
+    const signal::PhaseOpts& options = {});
+
+pluss::Series signal::zero_phase(
+    const pluss::Series& input,
+    const pluss::Series& sections,
+    const signal::PhaseOpts& options = {});
+```
+
+## What It Does
+
+Filters forward and backward so phase delay cancels. This is an offline smoothing operation: because the backward pass depends on future samples, it is not suitable for causal real-time output.
+
+## Parameters
+
+`input`
+: Complete sample block to smooth.
+
+`numerator`, `denominator`
+: Direct-form coefficients for the first overload.
+
+`sections`
+: Second-order-section matrix for the second overload.
+
+`options`
+: Axis, extension length, and endpoint padding policy.
+
+## Returns
+
+A `Series` with the same shape as `input`; effective magnitude response is applied twice while net phase is zero.
+
+## Errors
+
+Rejects too-short inputs for the requested edge extension, invalid coefficients, malformed sections, axes, dtypes, or platforms.
+
+## Practical Examples
+
+These verified programs show the normal contract, an important alternative or stateful workflow, and validation behavior.
+
+### Example 1
+
+Compare convolution, correlation, FIR filtering, and frequency response.
+
+@@example Eng/api/signal_filtering.cpp@@
+
+### Example 2
+
+Continue a recursive filter across blocks and apply forward-backward filtering.
+
+@@example Eng/api/signal_filter_state.cpp@@
+
+### Example 3
+
+Observe validation of signal dtype and recurrence coefficients.
+
+@@example Eng/api/signal_filter_errors.cpp@@
+
+## See Also
+
+See [Filtering and response](../filtering.md) for alignment, streaming-state, and axis guidance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sos.html">
+    <span class="label">Previous</span>
+    <span class="title">sos</span>
+  </a>
+  <a class="next-link" href="freqz.html">
+    <span class="label">Next</span>
+    <span class="title">freqz</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

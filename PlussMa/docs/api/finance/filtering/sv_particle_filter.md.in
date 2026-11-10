@@ -1,0 +1,279 @@
+# `filtering::sv_particle_filter`
+
+A ready particle filter for the log-variance of a stochastic-volatility model, from a series of log returns.
+
+## Signature
+
+```cpp
+filtering::ParticleFilterResult filtering::sv_particle_filter(const pluss::Series &log_returns, const volatility::SvParams &params, std::int64_t num_particles = 4000, double dt = 1.0, double ess_threshold = 0.5, pluss::Config cfg = {}, std::uint64_t seed = 0);
+```
+
+## What It Does
+
+The model: the log-variance `h` follows `h_{t+1} = m(1 − φ) + φ h_t + σ_h √dt (ρ z_t + √(1 − ρ²) ε)`, where `z_t` is the standardised return of the period, and the return of period `t` is `μ dt − v/2 + √v z_t` with `v = e^{h_t} dt`. The parameters (`logvar_mean`, `phi`, `vol_of_logvar`, `rho`, `mu`, `logvar0`, `variance_floor`) come from `volatility::SvParams`; note that `φ` is per step while `σ_h` is per square-root year. The filtered mean is the posterior mean of the log-variance that drove each return; the log-likelihood estimate lets you estimate the parameters by maximising it with a fixed seed. The leverage correlation `rho` is used.
+
+## Parameters
+
+`const pluss::Series &log_returns`
+: Log returns, `[T]` or `[T, 1]`.
+
+`const volatility::SvParams &params`
+: The stochastic-volatility parameters.
+
+`std::int64_t num_particles`
+: Particles, at least 2.
+
+`double dt`
+: Length of a return period in years.
+
+`double ess_threshold`
+: Resample when the ESS falls below this fraction of the particles.
+
+`pluss::Config cfg`
+: Device.
+
+`std::uint64_t seed`
+: Seed of the draws; 0 uses a default.
+
+## Returns
+
+A [`ParticleFilterResult`](ParticleFilterResult.md) whose `filtered_mean` is the log-variance.
+
+## Errors
+
+- Fewer than two particles, a non-positive `dt` or multivariate returns throw (`pluss::Error`).
+
+## Practical Examples
+
+### Example 1
+
+Filtering simulated returns: the filtered log-variance correlates with the true one.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+static pluss::Series sv_returns(const fin::volatility::SvParams &p, std::int64_t T, double dt, std::uint64_t seed, pluss::Series *variance = nullptr) {
+  std::mt19937_64 rng(seed);
+  std::normal_distribution<double> normal;
+  std::vector<double> r(T), v(T);
+  double h = p.logvar0;
+  for (std::int64_t t = 0; t < T; ++t) {
+    const double var = std::exp(h), z = normal(rng), e = normal(rng);
+    r[t] = (p.mu - 0.5 * var) * dt + std::sqrt(var * dt) * z;
+    v[t] = var;
+    h = p.phi * h + (1.0 - p.phi) * p.logvar_mean + p.vol_of_logvar * std::sqrt(dt) * (p.rho * z + std::sqrt(1.0 - p.rho * p.rho) * e);
+  }
+  if (variance) *variance = pluss::make_series(v, {T}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  return pluss::make_series(r, {T}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  fin::volatility::SvParams params;
+  params.mu = 0.05; params.logvar_mean = -3.5; params.phi = 0.98; params.vol_of_logvar = 2.0; params.rho = 0.0; params.logvar0 = -3.5;
+  const std::int64_t T = 750;
+  const double dt = 1.0 / 252.0;
+  Series variance = pluss::series::undefined();
+  const Series returns = sv_returns(params, T, dt, 5, &variance);
+  const Series truth = variance.log();
+  const auto res = flt::sv_particle_filter(returns, params, 4000, dt, 0.5, cfg, 7);
+  const Series est = res.filtered_mean.reshape({T});
+  out.writeln("correlation of the filtered and true log-variance:", ((est - est.mean()) * (truth - truth.mean())).mean().item<double>() / (est.std().item<double>() * truth.std().item<double>()), ", loglik", res.loglik);
+}
+```
+
+### Example 2
+
+Parameter profile: the log-likelihood peaks near the true persistence 0.98.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+static pluss::Series sv_returns(const fin::volatility::SvParams &p, std::int64_t T, double dt, std::uint64_t seed, pluss::Series *variance = nullptr) {
+  std::mt19937_64 rng(seed);
+  std::normal_distribution<double> normal;
+  std::vector<double> r(T), v(T);
+  double h = p.logvar0;
+  for (std::int64_t t = 0; t < T; ++t) {
+    const double var = std::exp(h), z = normal(rng), e = normal(rng);
+    r[t] = (p.mu - 0.5 * var) * dt + std::sqrt(var * dt) * z;
+    v[t] = var;
+    h = p.phi * h + (1.0 - p.phi) * p.logvar_mean + p.vol_of_logvar * std::sqrt(dt) * (p.rho * z + std::sqrt(1.0 - p.rho * p.rho) * e);
+  }
+  if (variance) *variance = pluss::make_series(v, {T}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  return pluss::make_series(r, {T}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  fin::volatility::SvParams params;
+  params.mu = 0.05; params.logvar_mean = -3.5; params.phi = 0.98; params.vol_of_logvar = 2.0; params.rho = 0.0; params.logvar0 = -3.5;
+  const std::int64_t T = 750;
+  const double dt = 1.0 / 252.0;
+  const Series returns = sv_returns(params, T, dt, 5);
+  for (const double phi : {0.5, 0.9, 0.98, 0.995}) {
+    params.phi = phi;
+    out.writeln("phi", phi, ": loglik", flt::sv_particle_filter(returns, params, 2000, dt, 0.5, cfg, 7).loglik);
+  }
+}
+```
+
+### Example 3
+
+Leverage: simulated with `rho = −0.9`, the filter that knows it fits better than one that sets it to zero.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+static pluss::Series sv_returns(const fin::volatility::SvParams &p, std::int64_t T, double dt, std::uint64_t seed, pluss::Series *variance = nullptr) {
+  std::mt19937_64 rng(seed);
+  std::normal_distribution<double> normal;
+  std::vector<double> r(T), v(T);
+  double h = p.logvar0;
+  for (std::int64_t t = 0; t < T; ++t) {
+    const double var = std::exp(h), z = normal(rng), e = normal(rng);
+    r[t] = (p.mu - 0.5 * var) * dt + std::sqrt(var * dt) * z;
+    v[t] = var;
+    h = p.phi * h + (1.0 - p.phi) * p.logvar_mean + p.vol_of_logvar * std::sqrt(dt) * (p.rho * z + std::sqrt(1.0 - p.rho * p.rho) * e);
+  }
+  if (variance) *variance = pluss::make_series(v, {T}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  return pluss::make_series(r, {T}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  fin::volatility::SvParams truth;
+  truth.logvar_mean = -3.0; truth.phi = 0.9; truth.vol_of_logvar = 6.0; truth.rho = -0.9; truth.logvar0 = -3.0;
+  const double dt = 1.0 / 252.0;
+  const Series returns = sv_returns(truth, 1500, dt, 11);
+  fin::volatility::SvParams blind = truth;
+  blind.rho = 0.0;
+  out.writeln("loglik with rho = -0.9:", flt::sv_particle_filter(returns, truth, 600, dt, 0.5, cfg, 1).loglik, ", with rho = 0:", flt::sv_particle_filter(returns, blind, 600, dt, 0.5, cfg, 1).loglik);
+}
+```
+
+### Example 4
+
+The number of particles and the resampling threshold: the effective sample size.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+static pluss::Series sv_returns(const fin::volatility::SvParams &p, std::int64_t T, double dt, std::uint64_t seed, pluss::Series *variance = nullptr) {
+  std::mt19937_64 rng(seed);
+  std::normal_distribution<double> normal;
+  std::vector<double> r(T), v(T);
+  double h = p.logvar0;
+  for (std::int64_t t = 0; t < T; ++t) {
+    const double var = std::exp(h), z = normal(rng), e = normal(rng);
+    r[t] = (p.mu - 0.5 * var) * dt + std::sqrt(var * dt) * z;
+    v[t] = var;
+    h = p.phi * h + (1.0 - p.phi) * p.logvar_mean + p.vol_of_logvar * std::sqrt(dt) * (p.rho * z + std::sqrt(1.0 - p.rho * p.rho) * e);
+  }
+  if (variance) *variance = pluss::make_series(v, {T}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  return pluss::make_series(r, {T}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  fin::volatility::SvParams params;
+  params.logvar_mean = -3.5; params.phi = 0.98; params.vol_of_logvar = 2.0; params.rho = 0.0; params.logvar0 = -3.5;
+  const double dt = 1.0 / 252.0;
+  const Series returns = sv_returns(params, 300, dt, 5);
+  for (const std::int64_t n : {500, 4000}) {
+    const auto res = flt::sv_particle_filter(returns, params, n, dt, 0.5, cfg, 3);
+    out.writeln("particles", n, ": minimum ESS", res.ess.amin().item<double>(), ", mean ESS", res.ess.mean().item<double>());
+  }
+}
+```
+
+### Example 5
+
+Invalid input: a step `dt <= 0`, and returns that are not univariate.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <string>
+
+using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto cfg = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const fin::volatility::SvParams params;
+  const Series returns = pluss::series::randn({20}, cfg, 1) * 0.01;
+  try {
+    (void)(flt::sv_particle_filter(returns, params, 100, 0.0));
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find('\n')));
+  }
+}
+```
+
+## See Also
+
+- [`particle_filter`](particle_filter.md): the general filter
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="particle_filter.html">
+    <span class="label">Previous</span>
+    <span class="title">particle_filter</span>
+  </a>
+  <a class="next-link" href="ukf_filter.html">
+    <span class="label">Next</span>
+    <span class="title">ukf_filter</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

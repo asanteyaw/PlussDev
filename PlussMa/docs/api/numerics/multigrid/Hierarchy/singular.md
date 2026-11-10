@@ -1,0 +1,145 @@
+<!-- generated from singular.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+<!-- pluss-hand-authored -->
+<!-- pluss-signature-hash: 7cb153c2b502 -->
+
+# `multigrid::Hierarchy::singular`
+
+[Back to `multigrid::Hierarchy`](../Hierarchy.md)
+
+Whether the operator is singular, that is, whether constants are in its null space.
+
+## Signature
+
+```cpp
+[[nodiscard]] bool multigrid::Hierarchy::singular() const noexcept;
+```
+
+## What It Does
+
+True when no end of any axis is Dirichlet and the problem has no mass term. A singular problem `A u = f` has a solution only when `f` has zero mean, and the solution is determined up to an additive constant; the V-cycle handles it by using a pseudo-inverse on the coarsest level. A positive-definite problem has `singular() == false`.
+
+## Returns
+
+`true` for a singular problem.
+
+## Practical Examples
+
+### Example 1
+
+The three ways a problem becomes non-singular, or not.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const Series u = pluss::series::ones({8}, pluss::ScalarType::Float64);
+  const Series m = u * 0.1;
+  out.writeln("periodic          :", mg::Hierarchy({.axes = {{8}}}, u).singular());
+  out.writeln("Dirichlet end     :", mg::Hierarchy({.axes = {{8, 1.0, mg::Edge::Dirichlet, mg::Edge::Neumann}}}, u).singular());
+  out.writeln("periodic + mass   :", mg::Hierarchy({.axes = {{8}}, .mass = m}, u).singular());
+}
+```
+
+Output
+
+```text
+periodic          : true
+Dirichlet end     : false
+periodic + mass   : false
+```
+
+### Example 2
+
+Consequence: a constant is a null vector of a singular operator and not of a regular one.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const Series u = pluss::series::ones({8}, pluss::ScalarType::Float64);
+  for (const mg::Edge edge : {mg::Edge::Neumann, mg::Edge::Dirichlet}) {
+    const mg::Hierarchy h({.axes = {{8, 1.0, edge, edge}}}, u);
+    out.writeln("singular =", h.singular(), ", max |A 1| =", h.apply(u).abs().max().item<double>());
+  }
+}
+```
+
+Output
+
+```text
+singular = true , max |A 1| = 0.00
+singular = false , max |A 1| = 2.00
+```
+
+### Example 3
+
+A solvable singular system. The right-hand side has zero mean; the solution is found up to a constant, and the residual vanishes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace mg = pluss::subsp::math::multigrid;
+namespace krylov = pluss::subsp::math::krylov;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  const std::int64_t n = 64;
+  const Series x = (pluss::series::arange(0.0, 64.0, 1.0, pluss::ScalarType::Float64) + 0.5) / 64.0;
+  const Series rhs = (x * (2.0 * M_PI)).sin();
+  const mg::Hierarchy h({.axes = {{n, 1.0 / n}}}, rhs);
+  krylov::CgOptions o;
+  o.check_interval = 1;
+  o.max_iterations = 200;
+  const krylov::CgResult r = krylov::pcg([&](const Series &u) { return h.apply(u); }, [&](const Series &z) { return h.vcycle(z); }, rhs, {-1}, o);
+  out.writeln("singular =", h.singular(), ", converged =", r.converged.all().item<bool>(), ", iterations =", r.iterations);
+}
+```
+
+Output
+
+```text
+singular = true , converged = true , iterations = 1
+```
+
+## See Also
+
+- [`Hierarchy`](../Hierarchy.md): the class
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="restrict_to_coarse.html">
+    <span class="label">Previous</span>
+    <span class="title">restrict_to_coarse</span>
+  </a>
+  <a class="next-link" href="vcycle.html">
+    <span class="label">Next</span>
+    <span class="title">vcycle</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,184 @@
+<!-- generated from jacobian.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `operators::jacobian`
+
+The matrix of first partial derivatives of a vector-valued function.
+
+## Signature
+
+```cpp
+operators::Operator operators::jacobian(pluss::StackArray<std::string_view> variables = {}, operators::DiffOptions options = {});
+```
+
+## What It Does
+
+`jacobian()` is the operator `F ↦ J` where `J[i][j] = ∂Fᵢ/∂xⱼ`. For a function with `m` components and `n` variables the result has shape `[m, n]`: one row per output, one column per variable. With no arguments all variables are used, in declaration order; naming variables restricts the columns to those, in that order.
+
+The Jacobian is the best linear approximation of a vector function, `F(x + h) ≈ F(x) + J h`. It is what Newton's method for a system of equations needs, what the change-of-variables formula uses (the absolute determinant of the Jacobian is the volume scaling), and what propagates uncertainty through a transformation. For a scalar-valued function it is the gradient, with shape `[n]`. Evaluated on arrays of points, batch axes lead.
+
+## Parameters
+
+`pluss::StackArray<std::string_view> variables`
+: The variables for the columns, in order. Empty (the default) means all variables in declaration order.
+
+`operators::DiffOptions options`
+: Non-smooth policy, fallback and size limit.
+
+## Returns
+
+An `Operator` whose application returns the Jacobian: a rank-2 `Function` of shape `[outputs, variables]`.
+
+## Errors
+
+- An unknown variable raises `unknown variable '<name>'`.
+
+## Practical Examples
+
+### Example 1
+
+The Jacobian of a map from two variables to three outputs. For `F = (xy, x + y, x²)` at `(2, 3)`: rows `(y, x) = (3, 2)`, `(1, 1)`, `(2x, 0) = (4, 0)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function F = math::function({"x", "y"}, [](math::Function x, math::Function y) { return math::stack({x * y, x + y, x * x}); });
+  const math::Function J = operators::jacobian()(F);
+  out.writeln("shape:", J.shape());
+  out.writeln("J at (2, 3), row by row:", J({pluss::make_series(2.0), pluss::make_series(3.0)}).reshape({6}).items<double>());
+}
+```
+
+Output
+
+```text
+shape: [3, 2]
+J at (2, 3), row by row: [3.0000, 2.0000, 1.0000, 1.0000, 4.0000, 0.0000]
+```
+
+### Example 2
+
+A subset of the variables gives a thinner matrix: the derivative of each output with respect to `y` alone is a `[3, 1]` matrix. A scalar function's Jacobian is its gradient.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function F = math::function({"x", "y"}, [](math::Function x, math::Function y) { return math::stack({x * y, x + y, x * x}); });
+  const math::Function wrt_y = operators::jacobian({"y"})(F);
+  out.writeln("wrt y: shape", wrt_y.shape(), wrt_y({pluss::make_series(2.0), pluss::make_series(3.0)}).reshape({3}).items<double>());
+  const math::Function scalar = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y; });
+  out.writeln("scalar function: shape", operators::jacobian()(scalar).shape(), " (the gradient)");
+}
+```
+
+Output
+
+```text
+wrt y: shape [3, 1] [2.0000, 1.0000, 0.0000]
+scalar function: shape [2]  (the gradient)
+```
+
+### Example 3
+
+Newton's method for a nonlinear system. Solve `x² + y² = 4`, `x = y` by repeating `p ← p − J⁻¹ F`; the solution is `(√2, √2)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const math::Function F = math::function({"x", "y"}, [](math::Function x, math::Function y) { return math::stack({x * x + y * y - 4.0, x - y}); });
+  const math::Function step = operators::jacobian()(F).inverse().matmul(F);
+  double x = 3.0, y = 1.0;
+  for (int i = 0; i < 6; ++i) {
+    const auto d = step({pluss::make_series(x), pluss::make_series(y)}).items<double>();
+    x -= d[0];
+    y -= d[1];
+    out.writeln("iteration", i + 1, ": (x, y) =", x, y);
+  }
+  out.writeln("sqrt(2) =", std::sqrt(2.0));
+}
+```
+
+Output
+
+```text
+iteration 1 : (x, y) = 1.75000000 1.75000000
+iteration 2 : (x, y) = 1.44642857 1.44642857
+iteration 3 : (x, y) = 1.41457231 1.41457231
+iteration 4 : (x, y) = 1.41421361 1.41421361
+iteration 5 : (x, y) = 1.41421356 1.41421356
+iteration 6 : (x, y) = 1.41421356 1.41421356
+sqrt(2) = 1.41421356
+```
+
+### Example 4
+
+A batch of points gives one matrix per point: `[points, outputs, variables]`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace math = pluss::math;
+namespace operators = pluss::operators;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const math::Function F = math::function({"x", "y"}, [](math::Function x, math::Function y) { return math::stack({x * y, x + y, x * x}); });
+  const auto x = pluss::make_series({1.0, 2.0, 3.0, 4.0});
+  const pluss::Series J = operators::jacobian()(F)({x, x});
+  out.writeln("shape:", J.sizes());
+}
+```
+
+Output
+
+```text
+shape: [4, 3, 2]
+```
+
+## See Also
+
+- [`gradient`](gradient.md): the scalar case
+- [`hessian`](hessian.md): second derivatives
+- [`math::Function::det`](../functions/Function/det.md): the Jacobian determinant
+- [`math::Function::inverse`](../functions/Function/inverse.md): for Newton steps
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="hessian.html">
+    <span class="label">Previous</span>
+    <span class="title">hessian</span>
+  </a>
+  <a class="next-link" href="magnitude_differential.html">
+    <span class="label">Next</span>
+    <span class="title">magnitude_differential</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

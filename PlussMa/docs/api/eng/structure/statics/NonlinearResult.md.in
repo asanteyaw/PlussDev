@@ -1,0 +1,75 @@
+# `structure::NonlinearResult`
+
+Displacements, reactions and end actions of a large-displacement solve.
+
+## Signature
+
+```cpp
+structure::NonlinearResult
+```
+
+## What It Does
+
+The result of `solve(frame, load, fix, NonlinearOptions)`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `displacement` | Node displacements `(ux, uy, rz)` from the original positions, `[..., node, 3]`. |  |
+| `reaction` | Support force and moment in the fixed global axes, `[..., node, 3]`. |  |
+| `end_force` | End actions `(Ni, Vi, Mi, Nj, Vj, Mj)` of each member in its current, turned local axes, `[..., member, 6]`. |  |
+| `energy` | Strain energy, `[...]`. |  |
+| `residual_norm` | Out-of-balance force at the end, `[...]`. |  |
+| `converged` | One where the final residual is within tolerance. |  |
+| `load_factor` | The fraction of the load reached, `1` for a complete solve. |  |
+| `iterations` | Newton iterations in all. |  |
+| `steps` | Load steps taken. |  |
+| `cutbacks` | Step halvings forced. |  |
+
+## Returns
+
+Returned by the nonlinear overload of `solve`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+A `load_factor` below one means the continuation stopped short, and `converged` is then false. End actions refer to each member's current axes, reactions to the global axes.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field on a cantilever bent through a large angle.
+
+@@example Eng/api/structure_nonlinear_solve.cpp@@
+
+### Example 2
+
+The linear result of the same frame.
+
+@@example Eng/api/structure_frame_solve.cpp@@
+
+### Example 3
+
+Member loads on the linear solve.
+
+@@example Eng/api/structure_member_load.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="NonlinearOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">NonlinearOptions</span>
+  </a>
+  <a class="next-link" href="solve.html">
+    <span class="label">Next</span>
+    <span class="title">solve</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

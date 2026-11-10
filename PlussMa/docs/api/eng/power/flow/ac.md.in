@@ -1,0 +1,70 @@
+# `power::ac`
+
+Solves the AC power flow by Newton's method.
+
+## Signature
+
+```cpp
+power::AcResult power::ac(const power::Grid& grid, const power::Options& options = {});
+```
+
+## What It Does
+
+Finds the complex bus voltages that satisfy `S = V conj(Y V)` at every bus, starting from the voltages of the network description and applying Newton's method with the exact Jacobian until the largest power mismatch is below the tolerance. Every scenario of a batch is solved at once, each with its own `converged`.
+
+## Parameters
+
+`grid`
+: The compiled network.
+
+`options`
+: The tolerance and iteration budget.
+
+## Returns
+
+An `AcResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for a non-positive tolerance or a budget below one. A network with no solution, or one beyond the loadability limit, does not throw: it returns with `converged` false and the last iterate.
+
+## Interpretation and Use
+
+Check `converged` before using a result. Newton converges up to the nose point of the load curve and fails beyond it, so a failure on a network that should be solvable usually means a data error, for example in the per-unit conversion.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A three-bus network checked against its defining equation.
+
+@@example Eng/api/power_ac_solve.cpp@@
+
+### Example 2
+
+Tolerance and iteration budget.
+
+@@example Eng/api/power_ac_options.cpp@@
+
+### Example 3
+
+The loadability limit of a line, against its closed form.
+
+@@example Eng/api/power_ac_limit.cpp@@
+
+### Example 4
+
+A scenario beyond the limit.
+
+@@example Eng/api/power_ac_unconverged.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="dc.html">
+    <span class="label">Previous</span>
+    <span class="title">dc</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

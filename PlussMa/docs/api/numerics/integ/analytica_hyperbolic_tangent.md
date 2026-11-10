@@ -1,0 +1,126 @@
+<!-- generated from analytica_hyperbolic_tangent.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# `integ::analytica::hyperbolic_tangent`
+
+The integral of `tanh x` from `a` to `b`.
+
+## Signature
+
+```cpp
+double integ::analytica::hyperbolic_tangent(double a, double b);
+```
+
+## What It Does
+
+`ln cosh(b) − ln cosh(a)`. The antiderivative of `tanh` is `ln cosh`, which grows like `|x| − ln 2` for large `|x|`.
+
+## Parameters
+
+`double a, double b`
+: The limits.
+
+## Returns
+
+The exact value of the integral, a `double`.
+
+## Practical Examples
+
+### Example 1
+
+From zero. `∫₀¹ tanh x dx = ln cosh 1 = 0.43378083`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::hyperbolic_tangent(0.0, 1.0));
+}
+```
+
+Output
+
+```text
+0.43378083
+```
+
+### Example 2
+
+An odd function over a symmetric interval is zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::hyperbolic_tangent(-2.0, 2.0));
+}
+```
+
+Output
+
+```text
+0.00000000
+```
+
+### Example 3
+
+Large arguments do not overflow in the result. The value grows like `b − ln 2`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+
+namespace integ = pluss::subsp::math::integ;
+namespace analytica = integ::analytica;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  out.writeln(analytica::hyperbolic_tangent(0.0, 20.0), ", 20 - ln 2 =", 20.0 - std::log(2.0));
+}
+```
+
+Output
+
+```text
+19.30685282 , 20 - ln 2 = 19.30685282
+```
+
+## See Also
+
+- [`quadra`](quadra.md): numerical quadrature of any integrand
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="analytica_hyperbolic_sine.html">
+    <span class="label">Previous</span>
+    <span class="title">hyperbolic_sine</span>
+  </a>
+  <a class="next-link" href="analytica_lorentzian.html">
+    <span class="label">Next</span>
+    <span class="title">lorentzian</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
