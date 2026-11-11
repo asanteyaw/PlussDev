@@ -286,6 +286,19 @@ void collect_plain_text(const window::HtmlNode& node, std::string& out);
   return count;
 }
 
+[[nodiscard]] bool atlas_show_all_active(const window::HtmlNode& node) {
+  const auto* id = attribute_value(node, "id");
+  if (id != nullptr && *id == "atlas-show-all") {
+    return has_class(node, "active");
+  }
+  for (const auto& child : node.children) {
+    if (atlas_show_all_active(child)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 [[nodiscard]] std::string atlas_frame_label(const window::HtmlNode& node, const int frame) {
   if (has_class(node, "atlas-panel")) {
     const auto* index = attribute_value(node, "data-frame-index");
@@ -338,9 +351,14 @@ void set_atlas_frame_visibility(window::HtmlNode& node, const std::optional<int>
     const int frame = index != nullptr ? std::atoi(index->c_str()) : -1;
     set_class(node, "active", !active_frame.has_value() || frame == *active_frame);
   } else if (has_class(node, "atlas-tab")) {
-    const auto* index = attribute_value(node, "data-frame-index");
-    const int frame = index != nullptr ? std::atoi(index->c_str()) : -1;
-    set_class(node, "active", active_frame.has_value() && frame == *active_frame);
+    const auto* id = attribute_value(node, "id");
+    if (id != nullptr && *id == "atlas-show-all") {
+      set_class(node, "active", !active_frame.has_value());
+    } else {
+      const auto* index = attribute_value(node, "data-frame-index");
+      const int frame = index != nullptr ? std::atoi(index->c_str()) : -1;
+      set_class(node, "active", active_frame.has_value() && frame == *active_frame);
+    }
   }
   for (auto& child : node.children) {
     set_atlas_frame_visibility(child, active_frame);
@@ -349,14 +367,17 @@ void set_atlas_frame_visibility(window::HtmlNode& node, const std::optional<int>
 
 void update_atlas_status(window::HtmlNode& root, const std::optional<int> active_frame) {
   if (!active_frame.has_value()) {
-    (void)set_element_text(root, "atlas-current-frame", "All frames");
+    (void)set_element_text(root, "atlas-current-frame",
+                           "All " + std::to_string(atlas_frame_count(root)) + " frames");
     return;
   }
   const std::string label = atlas_frame_label(root, *active_frame);
   (void)set_element_text(
       root,
       "atlas-current-frame",
-      label.empty() ? "Frame " + std::to_string(*active_frame) : label);
+      (label.empty() ? "Frame " + std::to_string(*active_frame) : label) +
+          " (" + std::to_string(*active_frame + 1) + " of " +
+          std::to_string(atlas_frame_count(root)) + ")");
 }
 
 bool toggle_body_class(window::HtmlNode& node, const std::string_view class_name) {
@@ -1042,17 +1063,30 @@ bool show_inhouse_html_window(const std::string& title,
               update_atlas_status(document.root, std::nullopt);
               scroll_model.reset();
               needs_render = true;
-            } else if (hit.target == "atlas-previous" || hit.target == "atlas-next") {
+            } else if (hit.target == "atlas-first" || hit.target == "atlas-last" ||
+                       hit.target == "atlas-previous" || hit.target == "atlas-next" ||
+                       std::string_view(hit.target).starts_with("atlas-tab-")) {
               const int count = atlas_frame_count(document.root);
               if (count > 0) {
-                const int current = active_atlas_frame(document.root).value_or(
-                    hit.target == "atlas-previous" ? 0 : -1);
-                const int delta = hit.target == "atlas-previous" ? -1 : 1;
-                const int next = ((current + delta) % count + count) % count;
-                set_atlas_frame_visibility(document.root, next);
-                update_atlas_status(document.root, next);
-                scroll_model.reset();
-                needs_render = true;
+                int next = hit.value;
+                if (hit.target == "atlas-first") {
+                  next = 0;
+                } else if (hit.target == "atlas-last") {
+                  next = count - 1;
+                } else if (hit.target == "atlas-previous" || hit.target == "atlas-next") {
+                  const bool all = atlas_show_all_active(document.root);
+                  const int current = all ? (hit.target == "atlas-previous" ? 0 : -1) :
+                      active_atlas_frame(document.root).value_or(
+                          hit.target == "atlas-previous" ? 0 : -1);
+                  const int delta = hit.target == "atlas-previous" ? -1 : 1;
+                  next = ((current + delta) % count + count) % count;
+                }
+                if (next >= 0 && next < count) {
+                  set_atlas_frame_visibility(document.root, next);
+                  update_atlas_status(document.root, next);
+                  scroll_model.reset();
+                  needs_render = true;
+                }
               }
             }
           } else if (hit.action == "input.focus") {

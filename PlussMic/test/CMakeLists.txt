@@ -6,6 +6,9 @@ get_filename_component(PLUSSMIC_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLU
 add_executable(plussmic_table_csv_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/table_csv_parser_tests.cpp
 )
+add_executable(plussmic_atlas_view_smoke
+  ${CMAKE_CURRENT_SOURCE_DIR}/atlas_view_smoke.cpp
+)
 add_executable(plussmic_kindle_catalog_tests
   ${CMAKE_CURRENT_SOURCE_DIR}/kindle_catalog_tests.cpp
 )
@@ -50,6 +53,7 @@ add_executable(plussmic_scribble_gap_benchmark
 )
 
 target_link_libraries(plussmic_table_csv_tests PRIVATE PlussMic)
+target_link_libraries(plussmic_atlas_view_smoke PRIVATE PlussMic)
 target_link_libraries(plussmic_kindle_catalog_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_bundle_locus_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_scribble_model_tests PRIVATE PlussMic)

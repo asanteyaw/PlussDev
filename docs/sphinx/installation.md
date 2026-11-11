@@ -6,9 +6,9 @@ extract it, and point your C++ project at the extracted folder.
 
 ## Requirements
 
-You need a C++20 compiler and CMake 3.28 or newer. The only published binary
-is for macOS Apple Silicon (arm64). For Intel Macs, Linux, and Windows, use
-the source-build steps below.
+You need a C++20 compiler and CMake 3.28 or newer. The download page shows
+the available macOS, Linux, and Windows archives by architecture. For a
+platform or configuration without an archive, use the source-build steps below.
 
 Some builds enable optional features that need external dependencies such as
 LibTorch or Arrow/Parquet. Make those dependencies visible to CMake when
@@ -16,21 +16,12 @@ required; the package configuration reports a missing dependency.
 
 ## Download a release
 
-The current published binary is for macOS Apple Silicon (arm64) only. Click
-[Download PlussII ZIP](https://plussible.org/downloads/plussii-cpp-0.1.0-Darwin-arm64.zip) or use the
-terminal from the folder where you want the distribution:
-
-```bash
-curl -fL -O https://plussible.org/downloads/plussii-cpp-0.1.0-Darwin-arm64.zip
-curl -fL -O https://plussible.org/downloads/SHA256SUMS.txt
-shasum -a 256 -c SHA256SUMS.txt
-unzip plussii-cpp-0.1.0-Darwin-arm64.zip
-```
-
-The extracted `plussii-cpp-0.1.0-Darwin-arm64/` folder contains `include/`,
-`lib/`, and `lib/cmake/Pluss/`. Keep that folder in any stable location and use
-its path as `CMAKE_PREFIX_PATH`. For Intel Macs, Linux, or custom configurations,
-see the source-build steps below.
+Choose your operating system and architecture on the
+[PlussII download page](https://plussible.org/download), then download the
+matching ZIP. The page gives the checksum and extraction commands for your
+selection. The extracted folder contains `include/`, `lib/`, and
+`lib/cmake/Pluss/`. Keep that folder in any stable location and use its path
+as `CMAKE_PREFIX_PATH`.
 
 ## Consume PlussII from another project
 
@@ -62,11 +53,10 @@ int main() {
 }
 ```
 
-Set `PLUSSII_DIR` to the extracted distribution folder, then configure. This
-example assumes the archive was extracted in your Downloads folder:
+Set `PLUSSII_DIR` to the extracted distribution folder, then configure:
 
 ```bash
-PLUSSII_DIR="$HOME/Downloads/plussii-cpp-0.1.0-Darwin-arm64"
+PLUSSII_DIR="/absolute/path/to/extracted/plussii-cpp-folder"
 cmake -S . -B build -DCMAKE_PREFIX_PATH="$PLUSSII_DIR"
 cmake --build build --config Release
 ./build/pluss_consumer
@@ -86,7 +76,7 @@ For a source build you need:
 - Optional Arrow/Parquet dependencies if you build Parquet support.
 
 Fetch the public source, configure it, and stage a local distribution folder.
-Run these commands in a terminal or PowerShell:
+On macOS and Linux, run:
 
 ```bash
 git clone https://github.com/asanteyaw/PlussDev.git
@@ -96,7 +86,11 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
 cmake --build build --config Release --target plussii_distribution_stage --parallel 4
 ```
 
-The result is `build/plussii-cpp/plussii-cpp-0.1.0-<system>-<architecture>/`. That
+On Windows, select Windows and “Build from source” on the
+[download page](https://plussible.org/download) for the ClangCL and vcpkg
+commands.
+
+The result is `build/plussii-cpp/plussii-cpp-<version>-<system>-<architecture>/`. That
 folder has the same layout as the extracted binary archive and can be passed
 to another project's `CMAKE_PREFIX_PATH`.
 

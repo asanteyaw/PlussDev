@@ -50,7 +50,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(inputs.platform == 'windows' && '["windows-2022"]' || '["ubuntu-24.04","windows-2022"]') }}
+        os: ${{ fromJSON((inputs.platform == 'windows' || startsWith(github.ref, 'refs/heads/renderer-parity-')) && '["windows-2022"]' || '["ubuntu-24.04","windows-2022","macos-15"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
@@ -108,6 +108,31 @@ jobs:
       - name: Build built-in table and plot renderer smoke
         run: cmake --build build --config Release --target plusstils_view_platform_show_smoke --parallel 2
 
+      - name: Build Atlas view check
+        if: runner.os != 'Windows'
+        run: cmake --build build --config Release --target plussmic_atlas_view_smoke --parallel 2
+
+      - name: Build Atlas view check on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake --build build --config Release --target plussmic_atlas_view_smoke --parallel 2 *> atlas-build.log
+          $buildResult = $LASTEXITCODE
+          Get-Content atlas-build.log | Select-Object -Last 80
+          if ($buildResult -ne 0) {
+            Get-Content atlas-build.log | Select-String -Pattern 'error|fatal|LNK[0-9]+' | Select-Object -Last 20 | ForEach-Object { Write-Host "::error::$($_.Line)" }
+          }
+          exit $buildResult
+
+      - name: Verify Atlas controls on Linux and macOS
+        if: runner.os != 'Windows'
+        run: build/PlussMic/test/plussmic_atlas_view_smoke
+
+      - name: Verify Atlas controls on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& "build/PlussMic/test/Release/plussmic_atlas_view_smoke.exe"'
+
       - name: Verify Linux table and plot windows
         if: runner.os == 'Linux'
         run: xvfb-run -a build/PlussTils/view/plusstils_view_platform_show_smoke build/renderer-show-smoke --window
@@ -116,6 +141,10 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: '& "build/PlussTils/view/Release/plusstils_view_platform_show_smoke.exe" "build/renderer-show-smoke" --window'
+
+      - name: Verify macOS table and plot rendering
+        if: runner.os == 'macOS'
+        run: build/PlussTils/view/plusstils_view_platform_show_smoke build/renderer-show-smoke
 
       - name: Upload renderer snapshots
         uses: actions/upload-artifact@v4
