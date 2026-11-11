@@ -198,7 +198,13 @@ std::string native_window_title_(std::string_view fallback) {
 pluss::view::BackendPreference plot_backend_preference_() {
   const char* raw = std::getenv("PLUSSTILS_VIEW_PLOT_BACKEND");
   if (raw == nullptr) {
+#if defined(_WIN32) || defined(__linux__)
+    // Tables and plots use the same built-in window renderer by default on
+    // these platforms; an explicit preference can still select a native webview.
+    return pluss::view::BackendPreference::Auto;
+#else
     return pluss::view::BackendPreference::NativeWebView;
+#endif
   }
 
   std::string token(raw);

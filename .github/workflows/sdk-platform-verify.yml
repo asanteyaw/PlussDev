@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - renderer-parity-*
     paths:
       - .github/workflows/sdk-platform-verify.yml
       - CMakeLists.txt
@@ -86,6 +87,12 @@ jobs:
         if: runner.os == 'Windows'
         run: vcpkg install sqlite3:x64-windows-static
 
+      - name: Install Linux window test dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libx11-dev libxi-dev libfreetype-dev xvfb
+
       - name: Configure Windows
         if: runner.os == 'Windows'
         shell: pwsh
@@ -97,6 +104,25 @@ jobs:
 
       - name: Stage distribution
         run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2
+
+      - name: Build built-in table and plot renderer smoke
+        run: cmake --build build --config Release --target plusstils_view_platform_show_smoke --parallel 2
+
+      - name: Verify Linux table and plot windows
+        if: runner.os == 'Linux'
+        run: xvfb-run -a build/PlussTils/view/plusstils_view_platform_show_smoke build/renderer-show-smoke --window
+
+      - name: Verify Windows table and plot windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '& "build/PlussTils/view/Release/plusstils_view_platform_show_smoke.exe" "build/renderer-show-smoke" --window'
+
+      - name: Upload renderer snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: plussii-renderer-${{ matrix.os }}-verify
+          path: build/renderer-show-smoke/*.png
+          if-no-files-found: error
 
       - name: Package and validate downloadable ZIP
         run: cmake "-DDISTRIBUTION_BUILD_DIR=${{ github.workspace }}/build" "-DDISTRIBUTION_SOURCE_DIR=${{ github.workspace }}" -P cmake/VerifyStagedDistribution.cmake
