@@ -1,6 +1,7 @@
 #include "CodeH/core/Duration.h"
 
 #include "pluss/codeh/internal/timeline_factory_detail.h"
+#include "CodeH/core/detail/WideDivide.h"
 
 #include <limits>
 #include <cstring>
@@ -115,7 +116,8 @@ Duration Duration::range(const Duration& start, const Duration& end, const Durat
                                   : static_cast<__int128>(s) - e;
     const auto stride = inc > 0 ? static_cast<__int128>(inc)
                                 : -static_cast<__int128>(inc);
-    count_wide = distance / stride + 1;
+    count_wide = detail::divide_bounded_wide_by_u64(
+                     distance, static_cast<std::uint64_t>(stride)) + 1;
   }
   CODEM_CHECK(count_wide <= (std::numeric_limits<std::int64_t>::max)(),
               "Duration::range element count overflows int64");

@@ -2,18 +2,16 @@
 
 [Back to Polynomial Regression](../regression_04_polynomial_regression.md)
 
-```cpp
-struct reg::PolyOptions {
-  std::int64_t degree = 2;
-  bool add_intercept = true;
-  bool include_cross = false;
-  bool drop_missing = true;
-  double rcond = 1e-12;
-  double alpha = 0.05;
-  std::string response_name = "y";
-  std::vector<std::string> predictor_names{};
-};
-```
+| Option | Default | Effect |
+|---|---|---|
+| `degree` | 2 | Highest polynomial degree. |
+| `include_cross` | false | Add cross terms between predictors. |
+| `add_intercept` | true | Include a constant term. |
+| `drop_missing` | true | Remove incomplete rows; `false` makes them an error. |
+| `rcond` | 1e-12 | Rank cutoff. |
+| `alpha` | 0.05 | Interval tail probability. |
+| `response_name` | `"y"` | Response label in the summary. |
+| `predictor_names` | empty | Original predictor labels. |
 
 `degree` and `include_cross` define the design ([The expanded design](the_expanded_design.md)). The other options are passed to the underlying least-squares fit and behave as there: `alpha` sets the interval coverage, `add_intercept` adds the constant, `drop_missing` removes incomplete rows or makes them an error, `rcond` is the rank cutoff, and the names label the output. `predictor_names` gives the names of the *original* predictors, one per column of `x`; the names of the expanded terms are built from them.
 
@@ -42,18 +40,18 @@ int main() {
   const auto y = pluss::make_series(ys, {24}, as_f64());
   const auto new_x = pluss::make_series(std::vector<double>{0.5, 3.0, 5.0, 7.0, 10.0}, {5}, as_f64());
 
-  out.writeln("data cover x from 0 to 5.75; new x    ", new_x.pull<double>());
-  out.writeln("true curve                           ", new_x.pow(2.0).mul(0.5).sub(new_x.mul(2.0)).add(1.0).pull<double>());
+  out.writeln("data cover x from 0 to 5.75; new x    ", new_x.items<double>());
+  out.writeln("true curve                           ", new_x.pow(2.0).mul(0.5).sub(new_x.mul(2.0)).add(1.0).items<double>());
   for (std::int64_t degree : {2, 3, 6}) {
     reg::PolyOptions options;
     options.degree = degree;
     const auto fit = reg::poly_fit(y, x, options);
-    out.writeln("degree", degree, " prediction                   ", reg::poly_predict(fit, new_x).pull<double>());
+    out.writeln("degree", degree, " prediction                   ", reg::poly_predict(fit, new_x).items<double>());
   }
 
   reg::PolyOptions options;
   const auto fit = reg::poly_fit(y, x, options);
-  const auto b = fit.ols.coefficients.pull<double>();
+  const auto b = fit.ols.coefficients.items<double>();
   out.writeln("by hand at x = 3 (degree 2)           ", b[0] + b[1] * 3.0 + b[2] * 9.0);
   out.writeln("in-sample predictions equal the fitted values:", reg::poly_predict(fit, x).sub(fit.ols.fitted_values).abs().max().item<double>());
 }
@@ -123,7 +121,7 @@ int main() {
   reg::PolyOptions origin;
   origin.add_intercept = false;
   const auto through_origin = reg::poly_fit(y, x, origin);
-  out.writeln("through the origin: names", through_origin.ols.coefficient_names, " coefficients", through_origin.ols.coefficients.pull<double>(), " k_params", through_origin.ols.k_params);
+  out.writeln("through the origin: names", through_origin.ols.coefficient_names, " coefficients", through_origin.ols.coefficients.items<double>(), " k_params", through_origin.ols.k_params);
 
   auto with_gaps = ys;
   with_gaps[4] = nan;
@@ -179,3 +177,12 @@ int main() {
 ```
 
 A degree below 1 is rejected by both `poly_fit` and `poly_expand`. A degree of 8 on 8 rows needs 9 parameters and is rejected by the underlying fit. The two prediction failures name the number of columns and the empty result.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="choosing_the_degree.html">
+    <span class="label">Previous</span>
+    <span class="title">Choosing the degree</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -143,14 +143,12 @@ operation throws when you call the accessor method.
 | `resample(axis, freq, op, step)` | `TimeSeriesResample` | Resample one value stream against a time axis. |
 
 The return type is important. `Slate::ts()` methods return `Slate`, except
-for `resample`, which returns:
+for `resample`, which returns a `TimeSeriesResample` with two fields:
 
-```cpp
-struct TimeSeriesResample {
-  Slate labels;
-  Slate values;
-};
-```
+| Field | Meaning |
+|---|---|
+| `labels` | The resampled time labels as a `Slate`. |
+| `values` | The resampled values as a `Slate`. |
 
 Use this form when you do not need a full DataFrame:
 

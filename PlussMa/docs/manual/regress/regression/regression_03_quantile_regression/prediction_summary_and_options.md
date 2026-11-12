@@ -4,21 +4,19 @@
 
 [Back to Quantile Regression](../regression_03_quantile_regression.md)
 
-```cpp
-struct reg::QuantileOptions {
-  double tau = 0.5;
-  reg::QuantileCovariance covariance = reg::QuantileCovariance::Robust;
-  double alpha = 0.05;
-  bool add_intercept = true;
-  bool drop_missing = true;
-  double rcond = 1e-12;
-  std::int64_t max_iter = 500;
-  double tol = 1e-7;
-  double eps = 1e-6;
-  std::string response_name = "y";
-  std::vector<std::string> predictor_names{};
-};
-```
+| Option | Default | Effect |
+|---|---|---|
+| `tau` | 0.5 | Quantile to fit. |
+| `covariance` | `Robust` | Standard error estimator. |
+| `alpha` | 0.05 | Interval tail probability. |
+| `add_intercept` | true | Include a constant term. |
+| `drop_missing` | true | Remove incomplete rows; `false` makes them an error. |
+| `rcond` | 1e-12 | Rank cutoff. |
+| `max_iter` | 500 | Iteration limit. |
+| `tol` | 1e-7 | Convergence tolerance. |
+| `eps` | 1e-6 | Floor on absolute residuals in the fitting weights. |
+| `response_name` | `"y"` | Response label in the summary. |
+| `predictor_names` | empty | Predictor labels in the summary. |
 
 `tau`, `covariance`, `max_iter`, `tol` and `eps` are covered in the previous pages. The rest behave as in least squares: `alpha` sets the coverage of the *t*-based intervals, `add_intercept` adds the constant column (named `const`), `drop_missing` removes incomplete rows or turns them into errors, `rcond` is the rank cutoff, and the two names label the output ([Options](../regression_01_least_squares/options.md), [Missing data](../regression_01_least_squares/missing_data.md), [Collinear predictors](../regression_01_least_squares/collinear_predictors.md)). The result carries the same counts as the least-squares result (`nobs`, `rank`, `k_params`, `num_predictors`, `df_model`, `df_resid`, `dropped_observations`) and the quantile-specific `tau`, `objective`, `objective_null`, `pseudo_rsquared`, `residual_density0`, `iterations` and `converged`.
 
@@ -51,9 +49,9 @@ int main() {
 
   const auto new_x = pluss::make_series(std::vector<double>{4.0, 10.0}, {2, 1}, as_f64());
   const auto with_ones = pluss::make_series(std::vector<double>{1.0, 4.0, 1.0, 10.0}, {2, 2}, as_f64());
-  const auto b = fit.coefficients.pull<double>();
-  out.writeln("predictors only         ", reg::quantile_predict(fit, new_x).pull<double>());
-  out.writeln("with the column of ones ", reg::quantile_predict(fit, with_ones).pull<double>());
+  const auto b = fit.coefficients.items<double>();
+  out.writeln("predictors only         ", reg::quantile_predict(fit, new_x).items<double>());
+  out.writeln("with the column of ones ", reg::quantile_predict(fit, with_ones).items<double>());
   out.writeln("by hand                 ", std::vector<double>{b[0] + 4.0 * b[1], b[0] + 10.0 * b[1]});
   out.writeln("in-sample predictions equal the fitted values:", reg::quantile_predict(fit, x).sub(fit.fitted_values).abs().max().item<double>());
   out.writeln("share of responses at or below the 0.9 line:", y.le(fit.fitted_values.add(1e-6)).to(pluss::ScalarType::Float64).mean().item<double>());
@@ -155,7 +153,7 @@ int main() {
   reg::QuantileOptions origin;
   origin.add_intercept = false;
   const auto through_origin = reg::quantile_fit(y, x, origin);
-  out.writeln("through the origin: names", through_origin.coefficient_names, " coefficient", through_origin.coefficients.pull<double>(), " k_params", through_origin.k_params);
+  out.writeln("through the origin: names", through_origin.coefficient_names, " coefficient", through_origin.coefficients.items<double>(), " k_params", through_origin.k_params);
 
   auto with_gaps = ys;
   with_gaps[3] = nan;
@@ -176,9 +174,9 @@ int main() {
     reg::QuantileOptions options;
     options.tau = tau;
     const auto constant = reg::quantile_fit(y, pluss::series::zeros({10, 0}, as_f64()), options);
-    out.writeln("no predictors, tau", tau, " coefficient", constant.coefficients.pull<double>(), " converged", constant.converged);
+    out.writeln("no predictors, tau", tau, " coefficient", constant.coefficients.items<double>(), " converged", constant.converged);
   }
-  out.writeln("sorted responses", y.sort(0, false, false).pull<double>());
+  out.writeln("sorted responses", y.sort(0, false, false).items<double>());
 }
 ```
 
@@ -197,3 +195,12 @@ sorted responses [2.2000, 4.1000, 5.8000, 8.3000, 9.9000, 12.4000, 13.7000, 16.2
 The line through the origin has slope 2.025 and no `const`. The two incomplete rows leave 8 observations, and `drop_missing = false` makes them an error. The fits with no predictors return the sample quantiles of the ten responses: 5.8 (the third order statistic) at τ = 0.25 and 16.2 (the eighth) at τ = 0.75. At τ = 0.5 the product n·τ is a whole number, so every value between the fifth and sixth order statistics (9.9 and 12.4) minimises the loss equally, and the fit returns one of them, 11.08.
 
 Shape and row errors, a misnamed predictor list, an empty model, too few rows, and `quantile_predict` with the wrong number of columns or on an empty result are rejected exactly as for the other families ([Errors](../regression_01_least_squares/errors.md)), under the name of the quantile function.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="case_weights.html">
+    <span class="label">Previous</span>
+    <span class="title">Case weights</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

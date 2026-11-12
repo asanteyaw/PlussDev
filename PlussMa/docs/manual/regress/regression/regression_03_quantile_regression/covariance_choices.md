@@ -6,10 +6,6 @@
 
 The sampling variability of a quantile-regression coefficient depends on how densely the observations lie around the fitted quantile line: where the data are sparse the line is poorly determined. The standard errors therefore rest on an estimate f₀ of the density of the residuals at zero, reported as `residual_density0`. It is computed by an Epanechnikov kernel with the Hall–Sheather bandwidth scaled by the smaller of the standard deviation of `y` and the interquartile range of the residuals divided by 1.34, so a few outliers do not inflate it.
 
-```cpp
-enum class reg::QuantileCovariance { Robust, Iid };
-```
-
 | Choice | Covariance of the coefficients |
 |---|---|
 | `Iid` | τ(1 − τ) (X′X)⁻¹ / f₀², which assumes the density of the errors near the line is the same at every x |
@@ -49,7 +45,7 @@ int main() {
     iid.covariance = reg::QuantileCovariance::Iid;
     const auto a = reg::quantile_fit(y, x, robust);
     const auto b = reg::quantile_fit(y, x, iid);
-    out.writeln(tau, a.residual_density0, a.std_errors.pull<double>(), b.std_errors.pull<double>(), " same coefficients:", a.coefficients.sub(b.coefficients).abs().max().item<double>());
+    out.writeln(tau, a.residual_density0, a.std_errors.items<double>(), b.std_errors.items<double>(), " same coefficients:", a.coefficients.sub(b.coefficients).abs().max().item<double>());
   }
 }
 ```
@@ -111,7 +107,7 @@ int main() {
   out.writeln("std errors are the square roots of the diagonals:     ", a.std_errors.sub(a.covariance.diagonal().sqrt()).abs().max().item<double>());
 
   const distr::StudentT t(static_cast<double>(a.df_resid), 0.0, 1.0);
-  out.writeln("df_resid", a.df_resid, " p values", a.p_values.pull<double>(), " by hand", t.cdf(a.t_values.abs()).neg().add(1.0).mul(2.0).pull<double>());
+  out.writeln("df_resid", a.df_resid, " p values", a.p_values.items<double>(), " by hand", t.cdf(a.t_values.abs()).neg().add(1.0).mul(2.0).items<double>());
   out.writeln("t values are coefficients over standard errors:", a.t_values.sub(a.coefficients.div(a.std_errors)).abs().max().item<double>());
 }
 ```
@@ -158,9 +154,9 @@ int main() {
     const auto base = reg::quantile_fit(y, x, options);
     const auto doubled = reg::quantile_fit(y.mul(2.0), x, options);
     out.writeln(covariance == reg::QuantileCovariance::Iid ? "Iid:   " : "Robust:");
-    out.writeln("  coefficients ratio ", doubled.coefficients.div(base.coefficients).pull<double>());
+    out.writeln("  coefficients ratio ", doubled.coefficients.div(base.coefficients).items<double>());
     out.writeln("  f0 ratio           ", doubled.residual_density0 / base.residual_density0);
-    out.writeln("  std errors ratio   ", doubled.std_errors.div(base.std_errors).pull<double>());
+    out.writeln("  std errors ratio   ", doubled.std_errors.div(base.std_errors).items<double>());
     out.writeln("  largest change in a t value", doubled.t_values.sub(base.t_values).abs().max().item<double>());
   }
 }
@@ -182,3 +178,16 @@ Robust:
 ```
 
 Doubling the response doubles the coefficients (to the tolerance of the iteration), halves f₀ exactly, and doubles the standard errors, so every *t* statistic is unchanged. This holds for both estimators.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="several_quantiles.html">
+    <span class="label">Previous</span>
+    <span class="title">Several quantiles</span>
+  </a>
+  <a class="next-link" href="optimiser_controls.html">
+    <span class="label">Next</span>
+    <span class="title">Optimiser controls</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

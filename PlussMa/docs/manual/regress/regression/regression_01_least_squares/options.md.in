@@ -2,18 +2,6 @@
 
 [Back to Least Squares](../regression_01_least_squares.md)
 
-```cpp
-struct reg::OLSOptions {
-  double alpha = 0.05;
-  bool add_intercept = true;
-  bool drop_missing = true;
-  double rcond = 1e-12;
-  std::string response_name = "y";
-  std::vector<std::string> predictor_names{};
-  reg::OLSCovarianceType covariance = reg::OLSCovarianceType::Nonrobust;
-};
-```
-
 | Option | Effect | Default |
 |---|---|---|
 | `alpha` | the intervals have coverage `1 − alpha`; must lie strictly between 0 and 1 | 0.05 |
@@ -49,7 +37,7 @@ int main() {
     options.alpha = alpha;
     const auto fit = reg::ols_fit(y, x, options);
     const auto ci = fit.conf_int.host<double>().array().data;
-    out.writeln(alpha, " ", 1.0 - alpha, "   [", ci[2], ",", ci[3], "]", fit.std_errors.pull<double>()[1], fit.p_values.pull<double>()[1], " alpha stored:", fit.alpha);
+    out.writeln(alpha, " ", 1.0 - alpha, "   [", ci[2], ",", ci[3], "]", fit.std_errors.items<double>()[1], fit.p_values.items<double>()[1], " alpha stored:", fit.alpha);
   }
 }
 ```
@@ -81,8 +69,8 @@ int main() {
     const auto &y = pass == 0 ? offset : proportional;
     const auto with = reg::ols_fit(y, x);
     const auto without = reg::ols_fit(y, x, origin);
-    out.writeln(pass == 0 ? "response 3 + 2x:" : "response 2x    :", "with intercept", with.coefficients.pull<double>(), " rmse", with.rmse);
-    out.writeln("                through origin", without.coefficients.pull<double>(), " rmse", without.rmse, " names", without.coefficient_names);
+    out.writeln(pass == 0 ? "response 3 + 2x:" : "response 2x    :", "with intercept", with.coefficients.items<double>(), " rmse", with.rmse);
+    out.writeln("                through origin", without.coefficients.items<double>(), " rmse", without.rmse, " names", without.coefficient_names);
     out.writeln("                residual mean (zero when an intercept is fitted):", with.residuals.mean().item<double>(), "vs", without.residuals.mean().item<double>());
   }
 }
@@ -115,3 +103,16 @@ int main() {
 ```
 
 The result records the estimator; the standard errors are the square roots of the diagonal of s²(X′X)⁻¹, scaled by the residual standard deviation, 0.1802 here.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="prediction_and_intervals.html">
+    <span class="label">Previous</span>
+    <span class="title">Prediction and intervals</span>
+  </a>
+  <a class="next-link" href="case_weights.html">
+    <span class="label">Next</span>
+    <span class="title">Case weights</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -22,6 +22,7 @@
 #include "CodeH/core/Offsets.h"
 #include "CodeH/core/TimeZone.h"
 #include "CodeH/core/detail/Int64ScalarOp.h"
+#include "CodeH/core/detail/WideDivide.h"
 #include "CodeM/core/ScalarType.h"
 #include "CodeM/core/SeriesIterator.h"
 #include "pluss/coden/note_factory.h"
@@ -1585,7 +1586,8 @@ std::int64_t elapsed_between_(
     std::string_view where) {
   const auto [start, end] = between_ticks_(self, other, where);
   const __int128 delta = static_cast<__int128>(end) - start;
-  const __int128 result = delta / nanos_per_unit;
+  const __int128 result = detail::divide_bounded_wide_by_u64(
+      delta, static_cast<std::uint64_t>(nanos_per_unit));
   CODEM_CHECK(result >= std::numeric_limits<std::int64_t>::min() &&
                   result <= std::numeric_limits<std::int64_t>::max(),
               std::string(where) + ": result is outside the int64 range");
@@ -1758,8 +1760,9 @@ std::int64_t local_epoch_day_(std::int64_t ns_utc, const TimeZone& tz) {
   constexpr __int128 kNanosPerDay = 86'400LL * 1'000'000'000LL;
   const __int128 local_ns = static_cast<__int128>(ns_utc) +
       static_cast<__int128>(off) * 60LL * 1'000'000'000LL;
-  __int128 day = local_ns / kNanosPerDay;
-  if (local_ns < 0 && local_ns % kNanosPerDay != 0) {
+  __int128 day = detail::divide_bounded_wide_by_u64(
+      local_ns, static_cast<std::uint64_t>(kNanosPerDay));
+  if (local_ns < 0 && local_ns - day * kNanosPerDay != 0) {
     --day;
   }
   CODEM_CHECK(day >= std::numeric_limits<std::int64_t>::min() &&
@@ -1886,7 +1889,8 @@ std::int64_t timeline_span_one_(
   constexpr std::int64_t kWeeks = 7LL * kDays;
 
   const auto fixed_span = [&](std::int64_t denom) {
-    __int128 out = (static_cast<__int128>(end_ns) - start_ns) / denom;
+    __int128 out = detail::divide_bounded_wide_by_u64(
+        static_cast<__int128>(end_ns) - start_ns, static_cast<std::uint64_t>(denom));
     if (!options.signed_result && out < 0) {
       out = -out;
     }

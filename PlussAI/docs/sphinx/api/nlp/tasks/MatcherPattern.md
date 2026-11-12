@@ -14,9 +14,7 @@ whose label is the pattern's label. A pattern is deterministic: the same
 document and the same pattern always give the same matches, and no training
 is involved.
 
-## Declaration
-
-### `pluss::ai::nlp::MatcherPattern` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

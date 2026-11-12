@@ -1,0 +1,67 @@
+PAGE = dict(
+    slug="PdfEngine",
+    summary="Which writer produces a PDF file.",
+    title="PdfEngine",
+    signature="enum class PdfEngine : std::uint8_t { Auto, Internal, SvgConvert };",
+    intro="""`PdfEngine` chooses how [`Studio::save_pdf`](../studio/save_pdf.md) produces a PDF. There are two writers. The **internal** writer draws the figure straight into a PDF with the library's own code, so it needs nothing installed; its output is a compact PDF 1.4 file in which text is real text. The **converter** route first writes the figure as SVG and then asks an external tool to turn it into a PDF; it needs one of `rsvg-convert`, `inkscape` or ImageMagick (`magick` or `convert`) on the machine, and its output is whatever that tool writes.
+
+`Auto`, the default, uses the internal writer, so a plain `save_pdf(path)` always works. Ask for `SvgConvert` only when you want the converter's rendering, for example to get exactly the picture the SVG shows. If no converter is available it throws `std::runtime_error` and writes nothing, so the choice is also a way to test whether the machine has one.""",
+    table="""| Value | Writer | Needs | Output |
+|---|---|---|---|
+| `Auto` | The internal writer. This is the default. | Nothing. | PDF 1.4, the same bytes as `Internal`. |
+| `Internal` | The internal writer. | Nothing. | PDF 1.4. |
+| `SvgConvert` | Writes an SVG, then runs `rsvg-convert`, `inkscape` or `magick`/`convert`. | One of those tools. | Whatever the tool writes. |""",
+    examples=[
+        dict(id="auto_internal", text="`Auto` and `Internal` write the same file. The two PDFs are read back and compared byte for byte, and both start with the PDF 1.4 header of the internal writer.",
+             code="""auto fig = studio("pdf_engine");
+fig.pane2("PDF").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
+const std::string dir = std::filesystem::temp_directory_path().string() + "/pdf_engine_";
+auto read = [](const std::string& path) { std::ifstream in(path, std::ios::binary); return std::string(std::istreambuf_iterator<char>(in), {}); };
+fig.save_pdf(dir + "auto.pdf", PdfEngine::Auto);
+fig.save_pdf(dir + "internal.pdf", PdfEngine::Internal);
+fig.save_pdf(dir + "default.pdf");
+const std::string a = read(dir + "auto.pdf"), b = read(dir + "internal.pdf"), c = read(dir + "default.pdf");
+std::cout << "starts with " << a.substr(0, 8) << "\\n";
+std::cout << "Auto == Internal: " << (a == b) << ", default argument == Auto: " << (a == c) << "\\n";
+fig.save_svg("figure.svg");"""),
+        dict(id="to_pdf", text="`Studio::to_pdf()` returns the internal writer's PDF as a string instead of writing a file, so it is the same bytes as `save_pdf` with `Auto` or `Internal`, with no file involved.",
+             code="""auto fig = studio("pdf_engine_string");
+fig.pane2("PDF").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
+const std::string pdf = fig.to_pdf();
+const std::string path = std::filesystem::temp_directory_path().string() + "/pdf_engine_string.pdf";
+fig.save_pdf(path, PdfEngine::Internal);
+std::ifstream in(path, std::ios::binary);
+const std::string file(std::istreambuf_iterator<char>(in), {});
+std::cout << "to_pdf() starts with " << pdf.substr(0, 8) << ", equals the saved file: " << (pdf == file) << "\\n";
+fig.save_svg("figure.svg");"""),
+        dict(id="svg_convert", text="`SvgConvert` depends on the machine. The call either writes a PDF (printed here as the header of the file it wrote, which differs from the internal writer's) or, on a machine with none of the converters installed, throws and says which tools it looked for. Either outcome is reported, so the example is correct on both kinds of machine.",
+             code="""auto fig = studio("pdf_engine_convert");
+fig.pane2("PDF").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
+const std::string path = std::filesystem::temp_directory_path().string() + "/pdf_engine_convert.pdf";
+try {
+  fig.save_pdf(path, PdfEngine::SvgConvert);
+  std::ifstream in(path, std::ios::binary);
+  std::string head(8, ' ');
+  in.read(head.data(), 8);
+  std::cout << "a converter was found; the file starts with " << head.substr(0, 5) << ", and it is not the internal writer's: " << (head != "%PDF-1.4") << "\\n";
+} catch (const pluss::Error& e) {
+  std::cout << "no converter: " << e.message() << "\\n";
+}
+fig.save_svg("figure.svg");"""),
+        dict(id="extension", text="The path must end in `.pdf`; a path with another extension is refused before anything is written, whichever engine is asked for.",
+             code="""auto fig = studio("pdf_engine_extension");
+fig.pane2("PDF").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+for (PdfEngine engine : {PdfEngine::Internal, PdfEngine::SvgConvert}) {
+  try {
+    fig.save_pdf(std::filesystem::temp_directory_path().string() + "/figure.svg", engine);
+  } catch (const pluss::Error& e) {
+    const std::string message = e.message();
+    std::cout << message.substr(0, message.find('\\n')) << "\\n";
+  }
+}
+fig.save_svg("figure.svg");"""),
+    ],
+    notes="""- `to_pdf()` and `save_pdf(path)` need no external tool; `save_png` always rasterises through a converter and throws if there is none (it is not governed by `PdfEngine`).
+- The converter route writes a temporary SVG next to the system's temporary files and removes it again.""",
+    see=["[`Studio::save_pdf`](../studio/save_pdf.md), [`Studio::to_pdf`](../studio/to_pdf.md): the calls that take the engine.", "[`Studio::save_svg`](../studio/save_svg.md), [`Studio::save_png`](../studio/save_png.md): the other file formats."],
+)

@@ -15,9 +15,7 @@ claims its tokens first, and a learned or heuristic entity cannot take them
 when overlap is off. That priority is the main reason to write a rule instead
 of relying on training.
 
-## Declaration
-
-### `pluss::ai::nlp::EntityPattern` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

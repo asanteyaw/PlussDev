@@ -640,11 +640,19 @@ void test_atlas_html_display_renderer() {
   const auto html = pluss::table::display::render_html(atlas, opts);
 
   expect(html.find("Frames") != std::string::npos, "atlas html should include frame navigation label");
+  expect(html.find("atlas-first") != std::string::npos, "atlas html should offer first-frame navigation");
   expect(html.find("atlas-previous") != std::string::npos, "atlas html should include previous-frame navigation");
   expect(html.find("atlas-next") != std::string::npos, "atlas html should include next-frame navigation");
-  expect(html.find("atlas-show-all") == std::string::npos, "atlas html should not include the all-frames button");
-  expect(html.find("atlas-current-frame") == std::string::npos,
-         "atlas html should not duplicate the current frame label in the navigation");
+  expect(html.find("atlas-last") != std::string::npos, "atlas html should offer last-frame navigation");
+  expect(html.find("id=\"atlas-show-all\"") != std::string::npos,
+         "atlas html should offer an all-frames view");
+  expect(html.find("id=\"atlas-current-frame\"") != std::string::npos,
+         "atlas html should show the selected frame and its position");
+  expect(html.find("weekdays (1 of 2)") != std::string::npos,
+         "atlas html should name the initially selected frame");
+  expect(html.find("id=\"atlas-tab-0\"") != std::string::npos &&
+             html.find("id=\"atlas-tab-1\"") != std::string::npos,
+         "atlas html should offer direct selection of each frame");
   expect(html.find("weekdays") != std::string::npos, "atlas html should surface depth labels");
   expect(html.find("weekends") != std::string::npos, "atlas html should include all frame contents");
   expect(html.find("atlas-panel active") != std::string::npos, "atlas html should include a visible frame panel");

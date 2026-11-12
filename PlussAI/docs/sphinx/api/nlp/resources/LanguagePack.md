@@ -4,9 +4,7 @@
 
 The complete data set for one language: its identity, abbreviations, titles, lemma rules, and token merges.
 
-## Declaration
-
-### `pluss::ai::nlp::resources::LanguagePack` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

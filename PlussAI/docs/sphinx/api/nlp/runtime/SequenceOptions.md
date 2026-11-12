@@ -5,9 +5,7 @@ It decides which tokens become sequence elements, how their text is normalized, 
 tokens frame the sequence. [`Indexer`](Indexer.md) reads it at construction, and the same options must
 be used for the training and the inference sequences, or the ids will not line up.
 
-## Declaration
-
-### `pluss::ai::nlp::runtime::SequenceOptions` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

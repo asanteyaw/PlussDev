@@ -4,9 +4,7 @@ The configuration of an [`EmbeddingTable`](EmbeddingTable.md): how wide each vec
 are added to the token vectors, how the position vectors are produced, and the numeric type and seed the
 table is initialized with. The struct is plain data built with designated initializers.
 
-## Declaration
-
-### `pluss::ai::nlp::runtime::EmbeddingOptions` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

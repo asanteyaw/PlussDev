@@ -20,16 +20,14 @@ display as `NA`.
 
 ## Payload families
 
-The public kind enum is:
+`SlateKind` identifies the payload held by a `Slate`:
 
-```cpp
-enum class SlateKind {
-  Series,
-  Note,
-  Timeline,
-  TimeIndex,
-};
-```
+| Kind | Payload | Accessor |
+|---|---|---|
+| `Series` | Numeric values | `as_series()` |
+| `Note` | Text values | `as_note()` |
+| `Timeline` | Timestamps | `as_timeline()` |
+| `Duration` | Time intervals | `as_duration()` |
 
 Use the family-specific accessors only after you know the kind:
 

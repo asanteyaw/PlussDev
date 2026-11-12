@@ -4,9 +4,7 @@
 
 One exact surface-to-lemma pair in a language's lemma table.
 
-## Declaration
-
-### `pluss::ai::nlp::resources::LemmaRule` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

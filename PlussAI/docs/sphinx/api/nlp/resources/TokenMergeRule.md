@@ -4,9 +4,7 @@
 
 One pair of adjacent tokens that forms a single unit in a language.
 
-## Declaration
-
-### `pluss::ai::nlp::resources::TokenMergeRule` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

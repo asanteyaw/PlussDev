@@ -5,9 +5,7 @@ layers consume it. It carries the token ids, the positions, the masks that say w
 and the length of each sequence. It is a value: the indexer builds it, and callers read its fields or use
 its three methods.
 
-## Declaration
-
-### `pluss::ai::nlp::runtime::SequenceBatch` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

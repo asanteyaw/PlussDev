@@ -6,9 +6,7 @@ appears in, and carries per-document counts as series so they can be inspected o
 Every count follows the [`DocMapOptions`](DocMapOptions.md) it was described with, so the
 summary matches what a mapper would count.
 
-## Declaration
-
-### `pluss::ai::nlp::vectorize::CorpusStats` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

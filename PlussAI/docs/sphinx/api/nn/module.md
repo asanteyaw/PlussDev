@@ -24,11 +24,8 @@ Every concrete layer type you see elsewhere in this reference — `Fusion`,
 `Module` subclass directly. Each is a small value-type wrapper
 (`ModuleHolder<Impl>`, via the `PLUSS_MODULE_IMPL` macro) around a
 `shared_ptr` to the real implementation class (`FusionImpl`, `Conv1dImpl`,
-...), which *is* the `Module` subclass:
-
-```cpp
-class Fusion : public pluss::ai::nn::ModuleHolder<FusionImpl> { ... };
-```
+...), which *is* the `Module` subclass. For example, `Fusion` is the value
+wrapper around `FusionImpl`.
 
 `ModuleHolder` forwards every `Module` operation you need
 (`train`/`eval`/`to`/`parameters`/`forward`/`operator()`/`snapshot`/`restore`)

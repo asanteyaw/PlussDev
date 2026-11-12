@@ -5,9 +5,7 @@ vectorizer in the family takes one of these, and so does [`describe`](describe.m
 the same corpus described and then vectorized produces matching counts. The struct is
 plain data built with designated initializers.
 
-## Declaration
-
-### `pluss::ai::nlp::vectorize::DocMapOptions` fields
+## Fields at a glance
 
 | Field | Type | Default |
 |---|---|---|

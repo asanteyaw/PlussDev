@@ -1235,10 +1235,26 @@ std::string html_shell_(std::string_view title,
     }}
     .atlas-nav {{
       display: flex;
+      flex-wrap: wrap;
       gap: 7px;
       overflow: auto;
       padding: 10px 6px 6px;
       margin-bottom: 8px;
+    }}
+    .atlas-frame-tabs {{
+      border-bottom: 1px solid #d8e1e8;
+      padding-bottom: 12px;
+    }}
+    .atlas-current-frame {{
+      min-width: 150px;
+      padding: 8px 12px;
+      border: 1px solid #9eb2c3;
+      border-radius: 7px;
+      background: #edf6f7;
+      color: #163b47;
+      text-align: center;
+      font-weight: 700;
+      white-space: nowrap;
     }}
     .atlas-tab {{
       padding: 7px 10px;
@@ -1313,7 +1329,7 @@ std::string html_shell_(std::string_view title,
     }}
 
     function filterTables(query) {{
-      const needle = query.strip().toLowerCase();
+      const needle = query.trim().toLowerCase();
       detailTables.forEach((tbl) => {{
         if (tbl.offsetParent === null) return;
         Array.from(tbl.tBodies).forEach((tbody) => {{
@@ -1377,18 +1393,48 @@ std::string html_shell_(std::string_view title,
       }});
     }});
     const atlasPanels = Array.from(document.querySelectorAll('.atlas-panel'));
+    const atlasTabs = Array.from(document.querySelectorAll('.atlas-frame-tabs .atlas-tab'));
+    const atlasAll = document.getElementById('atlas-show-all');
+    const atlasStatus = document.getElementById('atlas-current-frame');
     function showAtlasFrame(index) {{
       if (atlasPanels.length === 0) return;
       const wrapped = ((index % atlasPanels.length) + atlasPanels.length) % atlasPanels.length;
       atlasPanels.forEach((panel, panelIndex) => panel.classList.toggle('active', panelIndex === wrapped));
+      atlasTabs.forEach((tab, tabIndex) => {{
+        const selected = tabIndex === wrapped;
+        tab.classList.toggle('active', selected);
+        tab.setAttribute('aria-pressed', String(selected));
+      }});
+      atlasAll?.classList.remove('active');
+      atlasAll?.setAttribute('aria-pressed', 'false');
+      if (atlasStatus) atlasStatus.textContent =
+        atlasTabs[wrapped].textContent + ' (' + (wrapped + 1) + ' of ' + atlasPanels.length + ')';
       if (enableSearch) filterTables(searchInput.value || '');
     }}
+    function showAllAtlasFrames() {{
+      atlasPanels.forEach((panel) => panel.classList.add('active'));
+      atlasTabs.forEach((tab) => {{
+        tab.classList.remove('active');
+        tab.setAttribute('aria-pressed', 'false');
+      }});
+      atlasAll?.classList.add('active');
+      atlasAll?.setAttribute('aria-pressed', 'true');
+      if (atlasStatus) atlasStatus.textContent = 'All ' + atlasPanels.length + ' frames';
+      if (enableSearch) filterTables(searchInput.value || '');
+    }}
+    atlasTabs.forEach((tab, index) =>
+      tab.addEventListener('click', () => showAtlasFrame(index)));
+    atlasAll?.addEventListener('click', showAllAtlasFrames);
+    document.getElementById('atlas-first')?.addEventListener('click', () => showAtlasFrame(0));
+    document.getElementById('atlas-last')?.addEventListener('click', () => showAtlasFrame(atlasPanels.length - 1));
     document.getElementById('atlas-previous')?.addEventListener('click', () => {{
-      const active = atlasPanels.findIndex((panel) => panel.classList.contains('active'));
+      const active = atlasAll?.classList.contains('active') ? 0 :
+        atlasPanels.findIndex((panel) => panel.classList.contains('active'));
       showAtlasFrame((active < 0 ? 0 : active) - 1);
     }});
     document.getElementById('atlas-next')?.addEventListener('click', () => {{
-      const active = atlasPanels.findIndex((panel) => panel.classList.contains('active'));
+      const active = atlasAll?.classList.contains('active') ? -1 :
+        atlasPanels.findIndex((panel) => panel.classList.contains('active'));
       showAtlasFrame((active < 0 ? -1 : active) + 1);
     }});
   </script>
@@ -1679,9 +1725,30 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 
   body += "<div class=\"section-label\">Frames</div>";
   body += "<div class=\"atlas-nav\">";
-  const bool show_all_frames = false;
+  body += "<button id=\"atlas-first\" type=\"button\" class=\"atlas-tab\">First</button>";
   body += "<button id=\"atlas-previous\" type=\"button\" class=\"atlas-tab\">Previous</button>";
+  std::string first_label = "Frame 0";
+  if (display_axis0.has_value()) {
+    first_label = slate_value_at(*display_axis0, 0);
+  }
+  body += fmt::format(
+      "<span id=\"atlas-current-frame\" class=\"atlas-current-frame\" role=\"status\">{} (1 of {})</span>",
+      escape_html_(first_label), atlas.depth());
   body += "<button id=\"atlas-next\" type=\"button\" class=\"atlas-tab\">Next</button>";
+  body += "<button id=\"atlas-last\" type=\"button\" class=\"atlas-tab\">Last</button>";
+  body += "<button id=\"atlas-show-all\" type=\"button\" class=\"atlas-tab\" aria-pressed=\"false\">All frames</button>";
+  body += "</div>";
+  body += "<div class=\"atlas-nav atlas-frame-tabs\" role=\"group\" aria-label=\"Select a frame\">";
+
+  for (std::int64_t i = 0; i < atlas.depth(); ++i) {
+    std::string label = fmt::format("Frame {}", i);
+    if (display_axis0.has_value()) {
+      label = slate_value_at(*display_axis0, i);
+    }
+    body += fmt::format(
+        "<button id=\"atlas-tab-{}\" type=\"button\" class=\"atlas-tab{}\" data-frame-index=\"{}\" aria-pressed=\"{}\">{}</button>",
+        i, i == 0 ? " active" : "", i, i == 0 ? "true" : "false", escape_html_(label));
+  }
   body += "</div>";
 
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
@@ -1691,7 +1758,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
     }
     const auto frame = atlas.frame(i);
     body += fmt::format("<section class=\"atlas-panel{}\" data-frame-index=\"{}\">",
-                        (show_all_frames || i == 0) ? " active" : "",
+                        i == 0 ? " active" : "",
                         i);
     body += "<div class=\"atlas-frame-head\">";
     body += fmt::format("<h2 class=\"atlas-frame-title\">{}</h2>", escape_html_(label));

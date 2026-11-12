@@ -4,11 +4,6 @@
 
 [Back to Generalised Linear Models](../regression_02_generalised_linear_models.md)
 
-```cpp
-enum class reg::GLMFamily { Normal, Binomial, Poisson };
-enum class reg::GLMLink   { Canonical, Identity, Log, Logit };
-```
-
 The *family* fixes the variance of the response as a function of its mean and the likelihood that is maximised. The *link* g connects the mean to the linear predictor, g(μ) = η.
 
 | Family | Response | Variance | Likelihood |
@@ -55,7 +50,7 @@ int main() {
       options.link = link;
       try {
         const auto fit = reg::glm_fit(family == reg::GLMFamily::Binomial ? passed : counts, hours, options);
-        out.writeln(family_name, link_name, "-> used", name(fit.link), " converged", fit.converged, " iterations", fit.iterations, " coefficients", fit.coefficients.pull<double>(), " deviance", fit.deviance);
+        out.writeln(family_name, link_name, "-> used", name(fit.link), " converged", fit.converged, " iterations", fit.iterations, " coefficients", fit.coefficients.items<double>(), " deviance", fit.deviance);
       } catch (const std::exception &e) {
         const std::string message = e.what();
         out.writeln(family_name, link_name, "->", message.substr(message.find("glm_fit: ") + 9, message.find('\n') - message.find("glm_fit: ") - 9));
@@ -102,14 +97,14 @@ int main() {
   const auto passed = pluss::make_series(std::vector<double>{0, 0, 0, 1, 0, 1, 0, 1, 1, 1}, {10}, as_f64());
   const auto grid = pluss::make_series(std::vector<double>{-2, 0, 1, 3, 5, 7, 10}, {7, 1}, as_f64());
 
-  out.writeln("hours          ", grid.reshape({7}).pull<double>());
+  out.writeln("hours          ", grid.reshape({7}).items<double>());
   const std::vector<std::pair<const char *, reg::GLMLink>> links{{"identity link", reg::GLMLink::Identity}, {"log link     ", reg::GLMLink::Log}, {"logit link   ", reg::GLMLink::Logit}};
   for (const auto &[label, link] : links) {
     reg::GLMOptions options;
     options.family = reg::GLMFamily::Binomial;
     options.link = link;
     const auto fit = reg::glm_fit(passed, hours, options);
-    out.writeln(label, " P(pass)", reg::glm_predict(fit, grid).pull<double>(), " linear predictor", reg::glm_predict(fit, grid, reg::GLMPredictionType::Linear).pull<double>());
+    out.writeln(label, " P(pass)", reg::glm_predict(fit, grid).items<double>(), " linear predictor", reg::glm_predict(fit, grid, reg::GLMPredictionType::Linear).items<double>());
   }
 }
 ```
@@ -159,8 +154,8 @@ int main() {
   options.family = reg::GLMFamily::Normal;
   options.link = reg::GLMLink::Logit;
   const auto fit = reg::glm_fit(share, hours, options);
-  out.writeln("Normal family, logit link, proportions -> coefficients", fit.coefficients.pull<double>(), " converged", fit.converged, " iterations", fit.iterations);
-  out.writeln("fitted proportions", fit.fitted_values.pull<double>());
+  out.writeln("Normal family, logit link, proportions -> coefficients", fit.coefficients.items<double>(), " converged", fit.converged, " iterations", fit.iterations);
+  out.writeln("fitted proportions", fit.fitted_values.items<double>());
 }
 ```
 
@@ -174,3 +169,16 @@ fitted proportions [0.0495, 0.0809, 0.1295, 0.2011, 0.2986, 0.4186, 0.5490, 0.67
 ```
 
 Both counts are refused with the message shown, whichever family is asked for. The normal family with the logit link is accepted for proportions, converges in 7 iterations, and returns fitted proportions between 0.05 and 0.85 that follow the data.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="poisson_regression.html">
+    <span class="label">Previous</span>
+    <span class="title">Poisson regression</span>
+  </a>
+  <a class="next-link" href="the_normal_family_and_least_squares.html">
+    <span class="label">Next</span>
+    <span class="title">The normal family and least squares</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -70,7 +70,7 @@ int main() {
 Set `PLUSSII_DIR` to the extracted distribution folder, then configure and run:
 
 ```bash
-PLUSSII_DIR="/absolute/path/to/plussii-cpp-0.1.0-Darwin-arm64"
+PLUSSII_DIR="/absolute/path/to/extracted/plussii-cpp-folder"
 cmake -S . -B build -DCMAKE_PREFIX_PATH="$PLUSSII_DIR"
 
 cmake --build build
