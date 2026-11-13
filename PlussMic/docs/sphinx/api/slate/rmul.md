@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::rmul(double other) const -> Slate
-Slate::rmul(const Slate& other) const -> Slate
+Slate Slate::rmul(double other) const
+Slate Slate::rmul(const Slate& other) const
 ```
 
 ## What It Does

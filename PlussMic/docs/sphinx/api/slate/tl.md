@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::tl() const -> SlateTimelineAccessor
+SlateTimelineAccessor Slate::tl() const
 ```
 
 ## What It Does

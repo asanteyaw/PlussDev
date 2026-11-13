@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Nexus::select(std::initializer_list<std::string_view> keys) const -> Nexus
-Nexus::select(pluss::msharp::RangeView::Of<std::string_view> keys) const -> Nexus
+Nexus Nexus::select(std::initializer_list<std::string_view> keys) const
+Nexus Nexus::select(pluss::msharp::RangeView::Of<std::string_view> keys) const
 template <detail::StringViewNameRange NameRange>
-Nexus::select(const NameRange& keys) const -> Nexus
+Nexus Nexus::select(const NameRange& keys) const
 ```
 
 ## What It Does

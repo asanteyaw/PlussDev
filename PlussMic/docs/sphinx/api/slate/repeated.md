@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::repeated() const -> Slate
+Slate Slate::repeated() const
 ```
 
 ## What It Does

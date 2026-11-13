@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-SlateNoteAccessor::replace(std::string_view from, std::string_view to) const -> Slate
-SlateNoteAccessor::replace(std::string_view from,
-                            std::string_view to,
-                            const TextOptions& options) const -> Slate
+Slate SlateNoteAccessor::replace(std::string_view from, std::string_view to) const
+Slate SlateNoteAccessor::replace(std::string_view from,
+                                  std::string_view to,
+                                  const TextOptions& options) const
 ```
 
 ## What It Does

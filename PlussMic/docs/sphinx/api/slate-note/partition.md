@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::partition(std::string_view separator,
-                              std::string prefix = "part") const -> DataFrame
+DataFrame SlateNoteAccessor::partition(std::string_view separator,
+                                        std::string prefix = "part") const
 ```
 
 ## What It Does

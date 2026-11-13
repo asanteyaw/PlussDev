@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::kind() const -> StreamKind
+StreamKind Stream::kind() const
 ```
 
 ## What It Does

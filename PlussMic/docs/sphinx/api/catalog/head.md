@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::head(std::int64_t n) const -> Catalog
+Catalog Catalog::head(std::int64_t n) const
 ```
 
 ## What It Does

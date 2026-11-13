@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::take(std::span<const std::int64_t> indices) const -> Catalog
+Catalog Catalog::take(std::span<const std::int64_t> indices) const
 ```
 
 ## What It Does

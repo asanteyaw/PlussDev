@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::size() const -> std::int64_t
+std::int64_t Archive::size() const
 ```
 
 ## What It Does

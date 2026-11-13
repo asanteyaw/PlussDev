@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::tfidf(std::string_view field) const -> Catalog
+Catalog Catalog::tfidf(std::string_view field) const
 ```
 
 ## What It Does

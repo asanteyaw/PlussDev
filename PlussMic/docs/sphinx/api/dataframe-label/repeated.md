@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::repeated() const -> Slate
-DataFrameLabelAccessor::repeated(pluss::msharp::RangeView::Of<std::string_view> names) const -> Slate
-DataFrameLabelAccessor::repeated(std::initializer_list<std::string_view> names) const -> Slate
+Slate DataFrameLabelAccessor::repeated() const
+Slate DataFrameLabelAccessor::repeated(pluss::msharp::RangeView::Of<std::string_view> names) const
+Slate DataFrameLabelAccessor::repeated(std::initializer_list<std::string_view> names) const
 ```
 
 ## What It Does

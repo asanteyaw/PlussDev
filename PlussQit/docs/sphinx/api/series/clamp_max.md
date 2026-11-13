@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::clamp_max(double max) const -> Series
+Series Series::clamp_max(double max) const
 Series& Series::clamp_max_(double max)
-Series::clamp_max(const Series& max) const -> Series
+Series Series::clamp_max(const Series& max) const
 Series& Series::clamp_max_(const Series& max)
 ```
 

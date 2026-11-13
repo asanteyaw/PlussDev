@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::bitwise_right_shift(const Series& rhs) const -> Series
+Series Series::bitwise_right_shift(const Series& rhs) const
 Series& Series::bitwise_right_shift_(const Series& rhs) const
 ```
 

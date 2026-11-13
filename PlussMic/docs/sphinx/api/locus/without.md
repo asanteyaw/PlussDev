@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::without(std::string_view name) const -> Locus
+Locus Locus::without(std::string_view name) const
 Locus& Locus::without_(std::string_view name)
 ```
 

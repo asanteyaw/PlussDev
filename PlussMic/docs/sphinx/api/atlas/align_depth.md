@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::align_depth(const Slate& labels) const -> Atlas
+Atlas Atlas::align_depth(const Slate& labels) const
 ```
 
 ## What It Does

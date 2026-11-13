@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::astype(pluss::codem::ScalarType dtype) const -> Archive
+Archive Archive::astype(pluss::codem::ScalarType dtype) const
 ```
 
 ## What It Does

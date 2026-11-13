@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrame::sub(double other) const -> DataFrame
-DataFrame::sub(const DataFrame& other) const -> DataFrame
-DataFrame::sub(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::sub(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::sub(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::sub(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame DataFrame::sub(double other) const
+DataFrame DataFrame::sub(const DataFrame& other) const
+DataFrame DataFrame::sub(const DataFrame& other, const AlignOptions& options) const
+DataFrame DataFrame::sub(const Slate& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::sub(const Slate& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::sub(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does

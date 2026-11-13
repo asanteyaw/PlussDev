@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-ContingencyTable::dims() const -> std::vector<std::string>
+std::vector<std::string> ContingencyTable::dims() const
 ```
 
 ## What It Does

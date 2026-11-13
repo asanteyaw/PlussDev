@@ -7,13 +7,13 @@
 ## Signature
 
 ```cpp
-Nexus::pull(std::string_view root) const -> NexusPull
-Nexus::pull(std::string_view root, std::initializer_list<std::string_view> fields) const -> DataFrame
-Nexus::pull(std::string_view root, pluss::msharp::RangeView::Of<std::string_view> fields) const -> DataFrame
+NexusPull Nexus::pull(std::string_view root) const
+DataFrame Nexus::pull(std::string_view root, std::initializer_list<std::string_view> fields) const
+DataFrame Nexus::pull(std::string_view root, pluss::msharp::RangeView::Of<std::string_view> fields) const
 template <detail::StringViewNameRange NameRange>
-Nexus::pull(std::string_view root, const NameRange& fields) const -> DataFrame
-Nexus::pull(std::string_view root, std::initializer_list<PullSpec> fields) const -> DataFrame
-Nexus::pull(std::string_view root, const std::vector<PullSpec>& fields) const -> DataFrame
+DataFrame Nexus::pull(std::string_view root, const NameRange& fields) const
+DataFrame Nexus::pull(std::string_view root, std::initializer_list<PullSpec> fields) const
+DataFrame Nexus::pull(std::string_view root, const std::vector<PullSpec>& fields) const
 ```
 
 ## What It Does

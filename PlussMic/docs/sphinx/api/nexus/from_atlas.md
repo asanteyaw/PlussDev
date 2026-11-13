@@ -7,9 +7,9 @@
 ## Signatures
 
 ```cpp
-static Nexus::from_atlas(const Atlas& atlas) -> Nexus
+static Nexus Nexus::from_atlas(const Atlas& atlas)
 
-static Nexus::from_atlas(const Atlas& atlas, const Slate& labels) -> Nexus
+static Nexus Nexus::from_atlas(const Atlas& atlas, const Slate& labels)
 ```
 
 ## What It Does

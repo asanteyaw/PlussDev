@@ -7,11 +7,9 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::clustermap(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::clustermap(Pane& pane, Series x, Series y, Series z)
 
-template <class X, class Y, class Z>
-Trace& flash::clustermap(Pane& pane, X&& x, Y&& y, Z&& z, const ClusterMapOptions& options)
+Trace& flash::clustermap(Pane& pane, Series x, Series y, Series z, const ClusterMapOptions& options)
 ```
 
 ## What It Does
@@ -20,14 +18,13 @@ Reorders a grid's rows and/or columns, then draws it via [`flash::heatmap`](heat
 Two overloads: default options, or explicit `ClusterMapOptions`.
 
 ```{important} Not hierarchical clustering -- rows/columns are sorted by mean, no dendrogram
-The name might suggest clustermap() performs genuine
-hierarchical agglomerative clustering (computing a linkage tree and drawing
+The name might suggest clustermap() performs hierarchical agglomerative clustering (computing a linkage tree and drawing
 dendrograms alongside the heatmap). It does not -- the reordering algorithm
 is a single, simple pass: compute each row's (and each column's) mean value
 across all finite cells, then sort rows/columns in ASCENDING order of that
 mean. There is no dendrogram, no linkage matrix, no distance metric choice,
 and no hierarchical structure of any kind -- just an ascending-mean sort.
-Directly verified: reordering a grid whose row means were arranged in
+Reordering a grid whose row means were arranged in
 descending order (row 0 highest, row 2 lowest) produces different output
 with cluster_rows=true than with it false, confirming the reordering is
 real, but it is a simple sort, not a clustering algorithm.
@@ -53,9 +50,9 @@ real, but it is a simple sort, not a clustering algorithm.
 **z** (series-convertible, must be rank-2)
     The field values to reorder and plot. `x`'s length must equal `z`'s column count,
     `y`'s length must equal `z`'s row count — a mismatch throws
-    `std::invalid_argument("flash::clustermap x/y extents must match z cols/rows")`. `z`
+    `pluss::Error("flash::clustermap x/y extents must match z cols/rows")`. `z`
     itself must be rank-2 — a flat input throws
-    `std::invalid_argument("flash::clustermap requires rank-2 z")`.
+    `pluss::Error("flash::clustermap requires rank-2 z")`.
 
 **options** (`const ClusterMapOptions&`, optional)
     See the field table above.
@@ -124,8 +121,8 @@ fig.show();
 
 ![Output of Example 3](img/flash-clustermap-3-annotate.svg)
 
-Example 4 (verification, not a distinct rendering). A grid with descending row means —
-confirming the ascending-mean sort genuinely reorders rows, verified via a direct SVG
+Example 4 (a comparison, not a new picture). A grid with descending row means —
+confirming the ascending-mean sort reorders rows, verified via a direct SVG
 diff against the unclustered version.
 
 ```cpp
@@ -170,8 +167,8 @@ std::vector<double> y{0.0, 1.0, 2.0};
 std::vector<double> flat_z{1.0, 2.0, 3.0};
 try {
   flash::clustermap(pane, x, y, flat_z);
-} catch (const std::invalid_argument& e) {
-  std::cout << "threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "threw: " << e.message() << "\n";
 }
 ```
 

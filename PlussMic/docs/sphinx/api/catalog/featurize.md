@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::featurize(std::string_view field) -> Catalog
+Catalog Catalog::featurize(std::string_view field)
 ```
 
 ## What It Does

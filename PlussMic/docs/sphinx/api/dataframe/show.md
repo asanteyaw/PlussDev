@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::show(const display::DisplayOptions& options = {}) const -> void
-DataFrame::show(std::ostream& os, const display::DisplayOptions& options = {}) const -> void
+void DataFrame::show(const display::DisplayOptions& options = {}) const
+void DataFrame::show(std::ostream& os, const display::DisplayOptions& options = {}) const
 ```
 
 ## What It Does

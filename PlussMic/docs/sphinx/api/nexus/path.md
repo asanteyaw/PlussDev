@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::path(std::string_view from, std::string_view to) const -> JoinPath
+JoinPath Nexus::path(std::string_view from, std::string_view to) const
 ```
 
 ## What It Does

@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::union1d(const Series& other) const -> Series
-Series::union1d(const Series& other, bool sorted) const -> Series
+Series Series::union1d(const Series& other) const
+Series Series::union1d(const Series& other, bool sorted) const
 ```
 
 ## What It Does

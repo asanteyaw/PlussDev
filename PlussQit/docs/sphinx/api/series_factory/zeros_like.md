@@ -7,14 +7,14 @@
 ## Signature
 
 ```cpp
-pluss::series::zeros_like(const Series& like,
-                          ScalarType dtype) -> Series
+Series pluss::series::zeros_like(const Series& like,
+                                 ScalarType dtype)
 
-pluss::series::zeros_like(const Series& like,
-                          Config cfg = {}) -> Series
+Series pluss::series::zeros_like(const Series& like,
+                                 Config cfg = {})
 
-pluss::series::zeros_like(const Series& like,
-                          opts...) -> Series
+Series pluss::series::zeros_like(const Series& like,
+                                 opts...)
 ```
 
 ## What It Builds

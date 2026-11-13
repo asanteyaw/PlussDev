@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Slate::sort(bool ascending = true, bool nulls_last = true) -> SlateSortBuilder
+SlateSortBuilder Slate::sort(bool ascending = true, bool nulls_last = true)
 ```
 
 ## What It Does

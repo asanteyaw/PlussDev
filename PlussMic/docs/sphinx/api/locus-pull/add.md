@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-LocusPull::add(const PullSpec& spec) -> LocusPull&
-LocusPull::add(std::initializer_list<PullSpec> specs) -> LocusPull&
+LocusPull& LocusPull::add(const PullSpec& spec)
+LocusPull& LocusPull::add(std::initializer_list<PullSpec> specs)
 ```
 
 ## What It Does

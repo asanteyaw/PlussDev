@@ -8,9 +8,9 @@
 ## Signature
 
 ```cpp
-Slate::chars(std::int64_t start,
-              std::optional<std::int64_t> stop = std::nullopt,
-              std::int64_t step = 1) const -> Slate
+Slate Slate::chars(std::int64_t start,
+                    std::optional<std::int64_t> stop = std::nullopt,
+                    std::int64_t step = 1) const
 ```
 
 ## What It Does

@@ -4,196 +4,245 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-// Core overload
-Pane& x_ticks(Series positions, pluss::msharp::RangeView::Of<std::string_view> labels)
-
-// Convenience overloads (all ultimately call the core overload above)
-Pane& x_ticks(Series positions, std::initializer_list<std::string_view> labels)
-
-template <class Positions>
-Pane& x_ticks(Positions&& positions, pluss::msharp::RangeView::Of<std::string_view> labels)
-  requires(!std::same_as<std::remove_cvref_t<Positions>, Series>)
-
-template <class Positions>
-Pane& x_ticks(Positions&& positions, std::initializer_list<std::string_view> labels)
-  requires(!std::same_as<std::remove_cvref_t<Positions>, Series>)
-
-// Clears back to automatic tick placement
-Pane& clear_x_ticks() noexcept
+Pane& Pane::x_ticks(Series positions, RangeView::Of<std::string_view> labels)
+Pane& Pane::x_ticks(Series positions, std::initializer_list<std::string_view> labels)
+Pane& Pane::clear_x_ticks() noexcept
 ```
 
 ## What It Does
 
-Places explicit, hand-chosen tick marks on the x-axis at specific positions, each with its
-own label — overriding the renderer's default automatic tick placement entirely.
-`clear_x_ticks()` removes the override.
+Replaces the automatic ticks of the x axis with ticks you choose: a position for each tick and the text drawn beside it. Positions are in the data units of the axis and need not be sorted; labels are drawn as written, so they can be words, dates or formatted numbers. The ticks are stored in `x_axis().ticks`, and the format of the numbers ([`x_tick_format`](x_tick_format.md), [`x_auto_tick_decimals`](x_auto_tick_decimals.md)) does not apply to them. A tick whose position lies outside the displayed range is not drawn, so a manual range ([`x_limits`](x_limits.md)) decides which of the ticks appear.
 
-Four overloads exist purely to make `positions` and `labels` accept convenient argument
-types without the caller needing to construct a `Series` or `RangeView` by hand:
-
-- **`positions`** accepts either a `Series` directly, or anything series-convertible (a
-  `std::vector<double>`, for instance) via the templated overloads.
-- **`labels`** accepts either a `pluss::msharp::RangeView::Of<std::string_view>` or a
-  plain `std::initializer_list<std::string_view>` — in practice, `{"a", "b", "c"}` braces
-  are almost always what's written at the call site.
-
-All four resolve to the same underlying behavior; which one gets selected is purely a
-matter of what argument types were passed, invisible to the caller in practice.
-
-```{important} positions and labels must have matching, non-empty length
-Two independent checks: `positions` must be a non-empty, vector-shaped series — an empty
-`positions` throws `std::invalid_argument("x_ticks: tick positions must be a non-empty
-vector")`. And `labels.size()` must exactly equal `positions`'s element count, or this
-throws `std::invalid_argument("x_ticks: tick labels must match the tick positions")`. See
-Example 3.
-```
+There are three call forms: a braced list of labels, a range of string views, and a `Series` of positions; positions given as a plain numeric vector are converted. `clear_x_ticks()` removes the explicit ticks and restores the automatic ones, exactly. A call is refused with `pluss::Error`, leaving the previous ticks as they were, when the positions are empty or are not a vector, or when the number of labels differs from the number of positions.
 
 ## Parameters
 
-**positions** (`Series` or series-convertible)
-    The tick positions, in data coordinates. Must be non-empty.
+**positions** (`Series` or numeric vector)
+    Where the ticks go, in data units. A non-empty vector.
 
-**labels** (`RangeView::Of<std::string_view>` or `std::initializer_list<std::string_view>`)
-    The label text for each position, in the same order. Must have the same count as
-    `positions`.
+**labels** (`RangeView::Of<std::string_view>` or braced list)
+    The text of each tick; as many as there are positions.
 
 ## Returns
 
 `Pane&`
-    A reference to the same pane, for chaining (both the setter overloads and
-    `clear_x_ticks()`).
+    The same pane, for chaining.
 
 ## Examples
 
-Example 1. The default: no explicit ticks, the renderer picks tick positions
-automatically.
+Example 1. Explicit labels at chosen positions. Three ticks are placed at 1, 2 and 3 with words for labels; the automatic ticks of this axis are replaced by them.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("ticks_default_auto");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
-
-std::cout << pane.x_axis().ticks.has_value() << "\n";
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+auto fig = studio("x_ticks_labels");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_tick_labels(false);
+pane.z_tick_labels(false);
+std::cout << "automatic: " << texts(fig.to_svg()) << "\n";
+pane.x_ticks(std::vector<double>{1, 2, 3}, {"low", "mid", "high"});
+std::cout << "explicit:  " << texts(fig.to_svg()) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0
+automatic: p 1.0 1.5 2.0 2.5 3.0 3.5 4.0 
+explicit:  p low mid high 
 ```
 
-![Output of Example 1](img/ticks-1-default-auto.svg)
+![Output of Example 1](img/x_ticks-1-labels.svg)
 
-Example 2. Explicit ticks at three hand-picked positions, using a `std::vector<double>`
-for positions (resolving to the templated overload) and a braced `initializer_list` for
-labels.
+Example 2. Labels from a list of strings. A `std::vector<std::string_view>` of labels works as well as the braced list, and the positions can be any numeric vector.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("ticks_explicit");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-pane.x_ticks(std::vector<double>{1.0, 3.0, 5.0}, std::initializer_list<std::string_view>{"start", "mid", "end"});
-fig.show();
-
-std::cout << pane.x_axis().ticks->labels.size() << "\n";
-std::cout << pane.x_axis().ticks->labels[0] << "\n";
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+auto fig = studio("x_ticks_strings");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_tick_labels(false);
+pane.z_tick_labels(false);
+const std::vector<std::string_view> names = {"Q1", "Q2", "Q3", "Q4"};
+std::vector<double> positions;
+for (std::size_t i = 0; i < names.size(); ++i) positions.push_back(1.0 + static_cast<double>(i));
+pane.x_ticks(positions, pluss::msharp::RangeView::Of<std::string_view>(names));
+std::cout << texts(fig.to_svg()) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-3
-start
+p Q1 Q2 Q3 Q4 
 ```
 
-![Output of Example 2](img/ticks-2-explicit.svg)
+![Output of Example 2](img/x_ticks-2-labels_from_strings.svg)
 
-Example 3. Both validation failures: a labels/positions count mismatch, and an empty
-`positions`.
+Example 3. Positions as a `Series`. The positions can be passed as a Series, which is what the library's numeric results are; the labels are drawn in order of the positions given.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("ticks_mismatch");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0}, std::vector<double>{1.0, 2.0});
-
-try {
-  pane.x_ticks(std::vector<double>{1.0, 2.0, 3.0}, std::initializer_list<std::string_view>{"only one"});
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
-}
-
-try {
-  pane.x_ticks(std::vector<double>{}, std::initializer_list<std::string_view>{});
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
-}
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+auto fig = studio("x_ticks_series");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_tick_labels(false);
+pane.z_tick_labels(false);
+auto positions = pluss::make_series(std::vector<double>{1.0, 4.0}, {2});
+pane.x_ticks(positions, std::vector<std::string_view>{"first", "last"});
+std::cout << texts(fig.to_svg()) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-x_ticks: tick labels must match the tick positions
-x_ticks: tick positions must be a non-empty vector
+p first last 
 ```
 
-Example 4. `clear_x_ticks()` removes the override, returning to automatic placement.
+![Output of Example 3](img/x_ticks-3-series.svg)
+
+Example 4. Only ticks inside the range are drawn. The tick at 10 lies outside the axis range and the tick at 0 is below it, so only the middle one is shown; widening the range with `limits` brings them in.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("ticks_cleared");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-pane.x_ticks(std::vector<double>{1.0, 3.0, 5.0}, std::initializer_list<std::string_view>{"start", "mid", "end"});
-pane.clear_x_ticks();
-
-std::cout << pane.x_axis().ticks.has_value() << "\n";
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+auto build = [&](bool wide) {
+  auto fig = studio("x_ticks_outside");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  pane.y_tick_labels(false);
+  pane.z_tick_labels(false);
+  pane.x_ticks(std::vector<double>{0, 2, 10}, {"zero", "two", "ten"});
+  if (wide) pane.x_limits(Range1d{0.0, 10.0});
+  return fig.to_svg();
+};
+std::cout << "automatic range: " << texts(build(false)) << "\n";
+std::cout << "range 0 to 10:   " << texts(build(true)) << "\n";
+auto fig = studio("x_ticks_outside_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.x_ticks(std::vector<double>{0, 2, 10}, {"zero", "two", "ten"});
+pane.x_limits(Range1d{0.0, 10.0});
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0
+automatic range: p two 
+range 0 to 10:   p zero two ten 
 ```
+
+![Output of Example 4](img/x_ticks-4-outside.svg)
+
+Example 5. Clearing. `clear_x_ticks()` removes the explicit ticks and the automatic ones come back; the figure equals the one that never set any.
+
+```cpp
+auto build = [&](bool set_then_clear) {
+  auto fig = studio("x_ticks_clear");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  if (set_then_clear) pane.x_ticks(std::vector<double>{1, 2}, {"a", "b"}).clear_x_ticks();
+  return fig.to_svg();
+};
+std::cout << "equal: " << (build(true) == build(false)) << "\n";
+auto fig = studio("x_ticks_clear_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+equal: 1
+```
+
+![Output of Example 5](img/x_ticks-5-clear.svg)
+
+Example 6. Invalid specifications are refused and the previous ticks are kept. Empty positions, positions and labels of different lengths, and positions that are not a vector each throw `pluss::Error`.
+
+```cpp
+auto fig = studio("x_ticks_invalid");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.x_ticks(std::vector<double>{1, 2}, {"a", "b"});
+auto attempt = [&](const char* label, auto call) {
+  try {
+    call();
+  } catch (const pluss::Error& e) {
+    std::cout << label << ": " << e.message() << "\n";
+  }
+};
+attempt("no positions", [&] { pane.x_ticks(std::vector<double>{}, {}); });
+attempt("length mismatch", [&] { pane.x_ticks(std::vector<double>{1, 2}, {"only one"}); });
+attempt("not a vector", [&] { pane.x_ticks(pluss::make_series(std::vector<double>{1, 2, 3, 4}, {2, 2}), {"a", "b"}); });
+std::cout << "kept: " << pane.x_axis().ticks->labels.size() << " labels\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+no positions: x_ticks: tick positions must be a non-empty vector
+length mismatch: x_ticks: tick labels must match the tick positions
+not a vector: x_ticks: tick positions must be a non-empty vector
+kept: 2 labels
+```
+
+![Output of Example 6](img/x_ticks-6-invalid.svg)
 
 ## Notes
 
-- The setter overloads are not `noexcept` (validate the position/label relationship);
-  `clear_x_ticks()` is `noexcept`.
-- Four overloads collapse to one behavior — see "What It Does" above.
-- [`x_categories()`](x_categories.md) is a convenience layer built directly on top of
-  `x_ticks()` — it auto-generates evenly (or arithmetically) spaced positions from a
-  `first`/`step` pair and calls `x_ticks()` internally, for the common case of plotting
-  categorical data at regular intervals.
-- Explicit ticks replace automatic placement outright — there's no way to add hand-picked
-  ticks *alongside* automatically-computed ones.
+- `x_ticks` throws, so it is not `noexcept`; `clear_x_ticks` never throws.
+- For labels at the integers 1, 2, 3, ... use [`x_categories`](x_categories.md), which builds the positions for you.
 
 ## See Also
 
-- [`Pane::y_ticks`](y_ticks.md) / [`Pane::z_ticks`](z_ticks.md): the y- and z-axis
-  equivalents.
-- [`Pane::x_categories`](x_categories.md): a convenience wrapper for evenly-spaced
-  categorical ticks, built on top of this method.
-- [`Pane::x_axis`](axis_accessors.md): where the current `ticks` (a `std::optional<AxisTicks>`)
-  is read back from.
+- [`Pane::x_categories`](x_categories.md): labels at evenly spaced positions.
+- [`Pane::x_tick_labels`](x_tick_labels.md): hide the tick labels.
+- [`Pane::x_limits`](x_limits.md): the range that decides which ticks show.
+- [`Pane::y_ticks`](y_ticks.md): the same setting for the y axis.
+- [`Pane::z_ticks`](z_ticks.md): the same setting for the z axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="y_label_centered.html">
+  <a class="prev-link" href="x_tick_rotation.html">
     <span class="label">Previous</span>
-    <span class="title">y_label_centered</span>
+    <span class="title">x_tick_rotation</span>
   </a>
-  <a class="next-link" href="y_ticks.html">
+  <a class="next-link" href="y_auto_tick_decimals.html">
     <span class="label">Next</span>
-    <span class="title">y_ticks</span>
+    <span class="title">y_auto_tick_decimals</span>
   </a>
 </div>

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::range() const -> Slate
+Slate SlateLabelAccessor::range() const
 ```
 
 ## What It Does

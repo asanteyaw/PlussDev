@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::shuffle(std::optional<std::uint64_t> random_state = std::nullopt) const -> Slate
+Slate Slate::shuffle(std::optional<std::uint64_t> random_state = std::nullopt) const
 ```
 
 ## What It Does

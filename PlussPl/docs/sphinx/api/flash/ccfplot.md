@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class X, class Y>
-Studio& flash::ccfplot(Studio& studio, X&& x, Y&& y, const CcfPlotOptions& options = {})
+Studio& flash::ccfplot(Studio& studio, Series x, Series y, const CcfPlotOptions& options = {})
 ```
 
 ## What It Does
@@ -28,7 +27,7 @@ symmetric around lag `0`, plotting `2 * max_lag + 1` spikes total.
 
 **x**, **y** (series-convertible)
     The two sequences to cross-correlate. Must have identical lengths and at least three
-    points, or `ccfplot` throws `std::invalid_argument("flash::ccfplot requires aligned
+    points, or `ccfplot` throws `pluss::Error("flash::ccfplot requires aligned
     x/y with at least three points")` — a single check covering both conditions.
 
 **options** (`const CcfPlotOptions&`, optional)
@@ -38,9 +37,9 @@ symmetric around lag `0`, plotting `2 * max_lag + 1` spikes total.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `max_lag` | `std::int64_t`, default `40` | The largest **magnitude** lag shown in either direction. Clamped to `[1, n - 1]`. The plotted lag range is always `[-max_lag, +max_lag]`. |
+| `max_lag` | `std::int64_t`, default `40` | The largest **magnitude** lag shown in either direction. At least `1` (fewer throws `pluss::Error`); a value above `n - 1` is reduced to `n - 1`, since a series has no longer lags. The plotted lag range is always `[-max_lag, +max_lag]`. |
 | `show_confidence_band` | `bool`, default `true` | Whether the `+CI`/`-CI` reference lines are drawn — same constant-width normal-approximation mechanics as [`flash::acfplot`](acfplot.md). |
-| `confidence_level` | `double`, default `0.95` | Same discrete-bucket z-score lookup as [`flash::acfplot`](acfplot.md). |
+| `confidence_level` | `double`, default `0.95` | As for [`flash::acfplot`](acfplot.md): strictly between 0 and 1, with the band at the exact normal quantile of the level. |
 | `trace_width` | `float`, default `1.2F` | Stroke width for the correlogram's spikes. |
 | `marker_area` | `double`, default `14.0` | Declared, but never read anywhere in `ccfplot`'s implementation — same inert field as [`AcfPlotOptions::marker_area`](acfplot.md). |
 
@@ -83,8 +82,8 @@ for (int i = 0; i < 40; ++i) {
 std::vector<double> short_y{1.0, 2.0};
 try {
   flash::ccfplot(fig, x, short_y);
-} catch (const std::invalid_argument& e) {
-  std::cout << "ccfplot(mismatched) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "ccfplot(mismatched) threw: " << e.message() << "\n";
 }
 ```
 

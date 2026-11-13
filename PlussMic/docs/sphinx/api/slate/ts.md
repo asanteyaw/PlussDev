@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::ts() const -> TimeSeriesAccessor
+TimeSeriesAccessor Slate::ts() const
 ```
 
 ## What It Does

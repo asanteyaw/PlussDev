@@ -124,7 +124,7 @@ GROUPS = [
     ("Colour and themes", ["Rgba", "PaletteRamp", "Theme"]),
     ("Annotations and geometry", ["Cues", "Geometry"]),
     ("Trace types and their options", ["TraceKind", "ViolinOptions"]),
-    ("Layout and export", ["MosaicLayout", "PdfEngine"]),
+    ("Layout, style and export", ["StyleOptions", "MosaicLayout", "PdfEngine"]),
 ]
 
 

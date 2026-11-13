@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Archive::drop(std::span<const std::string_view> keys) const -> Archive
-Archive::drop(std::initializer_list<std::string_view> keys) const -> Archive
-Archive::drop(const std::vector<std::string>& keys) const -> Archive
+Archive Archive::drop(std::span<const std::string_view> keys) const
+Archive Archive::drop(std::initializer_list<std::string_view> keys) const
+Archive Archive::drop(const std::vector<std::string>& keys) const
 ```
 
 ## What It Does

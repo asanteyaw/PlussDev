@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::insert(std::int64_t feature_index, std::string name, const Slate& feature_value) const -> DataFrame
+DataFrame DataFrame::insert(std::int64_t feature_index, std::string name, const Slate& feature_value) const
 ```
 
 ## What It Does

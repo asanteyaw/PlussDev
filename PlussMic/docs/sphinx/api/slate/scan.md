@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::scan(ScanStatistic statistic, bool skip_nulls = true) const -> Slate
+Slate Slate::scan(ScanStatistic statistic, bool skip_nulls = true) const
 ```
 
 ## What It Does

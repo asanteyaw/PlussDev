@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::take(std::span<const std::int64_t> indices) const -> Slate
+Slate Slate::take(std::span<const std::int64_t> indices) const
 ```
 
 ## What It Does

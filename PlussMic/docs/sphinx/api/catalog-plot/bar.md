@@ -8,26 +8,26 @@
 ## Signatures
 
 ```cpp
-CatalogPlotAccessor::bar(std::string_view y_key,
-                          std::optional<std::string_view> x_key = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key,
+                                            std::optional<std::string_view> x_key = std::nullopt) const
 
-CatalogPlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
-                          std::optional<std::string_view> x_key = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+                                            std::optional<std::string_view> x_key = std::nullopt) const
 
-CatalogPlotAccessor::bar(std::initializer_list<std::string_view> y_keys,
-                          std::optional<std::string_view> x_key = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::bar(std::initializer_list<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key = std::nullopt) const
 
-CatalogPlotAccessor::bar(std::string_view y_key,
-                          std::optional<std::string_view> x_key,
-                          const BarPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::bar(std::string_view y_key,
+                                            std::optional<std::string_view> x_key,
+                                            const BarPlotOptions& options) const
 
-CatalogPlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_keys,
-                          std::optional<std::string_view> x_key,
-                          const BarPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key,
+                                            const BarPlotOptions& options) const
 
-CatalogPlotAccessor::bar(std::initializer_list<std::string_view> y_keys,
-                          std::optional<std::string_view> x_key,
-                          const BarPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::bar(std::initializer_list<std::string_view> y_keys,
+                                            std::optional<std::string_view> x_key,
+                                            const BarPlotOptions& options) const
 ```
 
 ## What It Does

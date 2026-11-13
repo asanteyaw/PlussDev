@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::defined() const noexcept -> bool
+bool DataFrame::defined() const noexcept
 ```
 
 ## What It Does

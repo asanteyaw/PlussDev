@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::height() const -> std::int64_t
+std::int64_t DataFrame::height() const
 ```
 
 ## What It Does

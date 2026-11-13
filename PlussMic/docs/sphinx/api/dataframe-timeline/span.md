@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrameTimelineAccessor::span(const DataFrame& other, const TimelineSpanOptions& options = {}) const -> DataFrame
-DataFrameTimelineAccessor::span(const DataFrame& other, TimeUnit unit) const -> DataFrame
-DataFrameTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const -> DataFrame
-DataFrameTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const -> DataFrame
-DataFrameTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const -> DataFrame
-DataFrameTimelineAccessor::span(const Slate& other, TimeUnit unit) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::span(const DataFrame& other, const TimelineSpanOptions& options = {}) const
+DataFrame DataFrameTimelineAccessor::span(const DataFrame& other, TimeUnit unit) const
+DataFrame DataFrameTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const
+DataFrame DataFrameTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const
+DataFrame DataFrameTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const
+DataFrame DataFrameTimelineAccessor::span(const Slate& other, TimeUnit unit) const
 ```
 
 ## What It Does

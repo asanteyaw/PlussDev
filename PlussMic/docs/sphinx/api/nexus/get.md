@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::get(std::string_view key) const -> std::optional<DataFrame>
+std::optional<DataFrame> Nexus::get(std::string_view key) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::moveaxis(std::int64_t source, std::int64_t destination) const -> Series
+Series Series::moveaxis(std::int64_t source, std::int64_t destination) const
 ```
 
 [`movedim()`](movedim.md) is an exact alias.

@@ -7,27 +7,27 @@
 ## Signature
 
 ```cpp
-pluss::series::randint_like(const Series& like,
-                            std::int64_t hi,
-                            ScalarType dtype = ScalarType::Int64,
-                            std::uint64_t seed = 0) -> Series
+Series pluss::series::randint_like(const Series& like,
+                                   std::int64_t hi,
+                                   ScalarType dtype = ScalarType::Int64,
+                                   std::uint64_t seed = 0)
 
-pluss::series::randint_like(const Series& like,
-                            std::int64_t lo,
-                            std::int64_t hi,
-                            ScalarType dtype = ScalarType::Int64,
-                            std::uint64_t seed = 0) -> Series
+Series pluss::series::randint_like(const Series& like,
+                                   std::int64_t lo,
+                                   std::int64_t hi,
+                                   ScalarType dtype = ScalarType::Int64,
+                                   std::uint64_t seed = 0)
 
-pluss::series::randint_like(const Series& like,
-                            std::int64_t hi,
-                            Config cfg,
-                            std::uint64_t seed = 0) -> Series
+Series pluss::series::randint_like(const Series& like,
+                                   std::int64_t hi,
+                                   Config cfg,
+                                   std::uint64_t seed = 0)
 
-pluss::series::randint_like(const Series& like,
-                            std::int64_t lo,
-                            std::int64_t hi,
-                            Config cfg,
-                            std::uint64_t seed = 0) -> Series
+Series pluss::series::randint_like(const Series& like,
+                                   std::int64_t lo,
+                                   std::int64_t hi,
+                                   Config cfg,
+                                   std::uint64_t seed = 0)
 ```
 
 ## What It Builds

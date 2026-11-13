@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::join(std::string_view left, std::string_view right, const JoinSpec& spec) const -> DataFrame
+DataFrame Nexus::join(std::string_view left, std::string_view right, const JoinSpec& spec) const
 ```
 
 ## What It Does

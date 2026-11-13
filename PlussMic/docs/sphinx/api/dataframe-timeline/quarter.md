@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::quarter() const -> DataFrame
+DataFrame DataFrameTimelineAccessor::quarter() const
 ```
 
 ## What It Does

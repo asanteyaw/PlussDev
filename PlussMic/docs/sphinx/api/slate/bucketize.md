@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::bucketize(pluss::RangeView<double> bins, pluss::RangeView<std::int64_t> labels = {}, bool right = true, bool include_lowest = true) const -> Slate
+Slate Slate::bucketize(pluss::RangeView<double> bins, pluss::RangeView<std::int64_t> labels = {}, bool right = true, bool include_lowest = true) const
 ```
 
 ## What It Does

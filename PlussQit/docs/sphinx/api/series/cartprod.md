@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::cartprod(const Series& other) const -> Series
-Series::cartprod(pluss::RangeView<Series> others) const -> Series
+Series Series::cartprod(const Series& other) const
+Series Series::cartprod(pluss::RangeView<Series> others) const
 ```
 
 ## What It Does

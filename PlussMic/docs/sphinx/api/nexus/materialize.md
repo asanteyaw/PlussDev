@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::materialize(const JoinPlan& plan) const -> DataFrame
+DataFrame Nexus::materialize(const JoinPlan& plan) const
 ```
 
 ## What It Does

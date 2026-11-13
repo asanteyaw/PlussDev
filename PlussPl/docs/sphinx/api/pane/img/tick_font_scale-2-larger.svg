@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280.0000" height="820.0000" viewBox="0 0 1280.0000 820.0000">
+<rect x="0" y="0" width="1280.0000" height="820.0000" fill="rgb(255,252,248)" fill-opacity="1.0000"/>
+<path d="M 0.0000 0.0000 L 1280.0000 0.0000 L 1280.0000 820.0000 L 0.0000 820.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 28.0000 28.0000 L 1252.0000 28.0000 L 1252.0000 792.0000 L 28.0000 792.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="640.0000" y="50.0000" font-family="Helvetica, Arial, sans-serif" font-size="14.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">scaled</text>
+<path d="M 104.8000 736.0000 L 1224.0000 736.0000 " stroke="rgb(25,24,23)" stroke-opacity="1.0000" stroke-width="1.0000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 104.8000 86.0000 L 104.8000 736.0000 " stroke="rgb(25,24,23)" stroke-opacity="1.0000" stroke-width="1.0000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 104.8000 736.0000 L 104.8000 742.7500 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="104.8000" y="759.1000" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">0.0</text>
+<path d="M 384.6000 736.0000 L 384.6000 742.7500 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="384.6000" y="759.1000" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">0.5</text>
+<path d="M 664.4000 736.0000 L 664.4000 742.7500 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="664.4000" y="759.1000" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">1.0</text>
+<path d="M 944.2000 736.0000 L 944.2000 742.7500 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="944.2000" y="759.1000" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">1.5</text>
+<path d="M 1224.0000 736.0000 L 1224.0000 742.7500 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1224.0000" y="759.1000" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">2.0</text>
+<path d="M 98.0500 736.0000 L 104.8000 736.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="89.6500" y="741.2500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">0.0</text>
+<path d="M 98.0500 606.0000 L 104.8000 606.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="89.6500" y="611.2500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">0.2</text>
+<path d="M 98.0500 476.0000 L 104.8000 476.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="89.6500" y="481.2500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">0.4</text>
+<path d="M 98.0500 346.0000 L 104.8000 346.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="89.6500" y="351.2500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">0.6</text>
+<path d="M 98.0500 216.0000 L 104.8000 216.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="89.6500" y="221.2500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">0.8</text>
+<path d="M 98.0500 86.0000 L 104.8000 86.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="89.6500" y="91.2500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">1.0</text>
+<text x="664.4000" y="782.3000" font-family="Helvetica, Arial, sans-serif" font-size="11.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">time</text>
+<clipPath id="clip1"><rect x="103.3000" y="84.5000" width="1122.2000" height="653.0000"/></clipPath>
+<g clip-path="url(#clip1)">
+<path d="M 104.8000 736.0000 L 664.4000 86.0000 L 1224.0000 736.0000 " stroke="rgb(28,87,141)" stroke-opacity="1.0000" stroke-width="1.5000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+</g>
+</svg>

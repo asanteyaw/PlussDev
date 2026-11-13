@@ -7,14 +7,14 @@
 ## Signature
 
 ```cpp
-pluss::series::eye_like(const Series& like,
-                        ScalarType dtype = ScalarType::Float32) -> Series
+Series pluss::series::eye_like(const Series& like,
+                               ScalarType dtype = ScalarType::Float32)
 
-pluss::series::eye_like(const Series& like,
-                        Config cfg) -> Series
+Series pluss::series::eye_like(const Series& like,
+                               Config cfg)
 
-pluss::series::eye_like(const Series& like,
-                        opts...) -> Series
+Series pluss::series::eye_like(const Series& like,
+                               opts...)
 ```
 
 ## What It Builds

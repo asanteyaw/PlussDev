@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::casefold() const -> Slate
+Slate Slate::casefold() const
 ```
 
 ## What It Does

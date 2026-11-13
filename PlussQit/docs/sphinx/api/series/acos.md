@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::acos() const -> Series
+Series Series::acos() const
 Series& Series::acos_()
 ```
 

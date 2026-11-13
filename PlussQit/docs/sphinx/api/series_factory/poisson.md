@@ -7,15 +7,15 @@
 ## Signature
 
 ```cpp
-pluss::series::poisson(sizes,
-                       double lambda,
-                       ScalarType dtype = ScalarType::Int64,
-                       std::uint64_t seed = 0) -> Series
+Series pluss::series::poisson(sizes,
+                              double lambda,
+                              ScalarType dtype = ScalarType::Int64,
+                              std::uint64_t seed = 0)
 
-pluss::series::poisson(sizes,
-                       double lambda,
-                       Config cfg,
-                       std::uint64_t seed = 0) -> Series
+Series pluss::series::poisson(sizes,
+                              double lambda,
+                              Config cfg,
+                              std::uint64_t seed = 0)
 ```
 
 ## What It Builds

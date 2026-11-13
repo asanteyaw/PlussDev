@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::shape() const -> std::tuple<std::int64_t, std::int64_t, std::int64_t>
+std::tuple<std::int64_t, std::int64_t, std::int64_t> Archive::shape() const
 ```
 
 ## What It Does

@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-NexusTraverse::join(std::string_view right) const -> NexusTraverse
-NexusTraverse::join(std::string_view right, const JoinSpec& spec) const -> NexusTraverse
+NexusTraverse NexusTraverse::join(std::string_view right) const
+NexusTraverse NexusTraverse::join(std::string_view right, const JoinSpec& spec) const
 ```
 
 ## What It Does

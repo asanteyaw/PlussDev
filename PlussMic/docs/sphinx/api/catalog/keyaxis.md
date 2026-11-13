@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::keyaxis() const -> CatalogKeyAxisAccessor
+CatalogKeyAxisAccessor Catalog::keyaxis() const
 ```
 
 ## What It Does

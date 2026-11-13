@@ -4,97 +4,167 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-template <class Y>
-Trace& Pane::spike(Y&& y, double base = 0.0)
-
-template <class X, class Y>
-Trace& Pane::spike(X&& x, Y&& y, double base = 0.0)
+Trace& Pane::spike(Series y, double base = 0.0)
+Trace& Pane::spike(Series x, Series y, double base = 0.0)
 ```
 
 ## What It Does
 
-Adds a discrete stem/spike trace — one vertical line per point, running from `base` up (or
-down) to `y[i]` at position `x[i]`. Structurally identical to [`ribbon()`](ribbon.md) —
-same two overloads, same `base` default of `0.0` — but rendered as individual disconnected
-stems instead of one continuous filled band:
+Adds **stems**: one vertical line for each value, from a baseline to the value, with nothing joining them. It is the trace of a discrete signal, a stem plot or a lollipop chart. The baseline is `base`, 0 by default.
 
-- **`spike(y, base = 0.0)`** — `x` is auto-assigned as `0, 1, 2, …`.
-- **`spike(x, y, base = 0.0)`** — `x` is supplied explicitly.
+| Call | Meaning |
+|---|---|
+| `spike(y, base = 0)` | Values at the positions 1, 2, 3, ... |
+| `spike(x, y, base = 0)` | Values at the positions `x`. |
+
+`x` and `y` have the same length, or one has length 1. For the same data as a filled region use [`ribbon`](ribbon.md).
 
 ## Parameters
 
-**y** (series-convertible)
-    The tip value of each stem.
+**x** (`Series`-convertible, second call)
+    The positions.
 
-**x** (series-convertible, two-argument overload only)
-    The explicit horizontal position of each stem. When omitted (one-argument overload),
-    positions are auto-assigned as `0, 1, 2, …`.
+**y** (`Series`-convertible)
+    The values.
 
-**base** (`double`, default `0.0`)
-    The value each stem starts from. `0.0` starts every stem at the y-axis origin,
-    correctly showing negative `y` values as downward-pointing stems (see Example 1).
+**base** (`double`, default 0)
+    The baseline the stems starts from.
 
 ## Returns
 
 `Trace&`
-    A reference to the newly created trace, for chaining.
+    The new trace.
 
 ## Examples
 
-Example 1. Mixed positive/negative values, `base = 0.0` (default) — positive values spike
-upward from zero, negative values spike downward, `x` auto-assigned.
+Example 1. Values only: the positions are the indices 1, 2, 3, ... A stem rises from the base (0) to each value.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("spike_y_only");
-auto& pane = fig.pane2();
-pane.spike(std::vector<double>{2.0, -1.0, 3.0, -2.0, 1.5});
-fig.show();
+auto fig = studio("spike_y");
+auto& pane = fig.pane2("p");
+pane.spike(std::vector<double>{2, 4, 3, 5, 4, 6});
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/spike-1-y-only.svg)
+![Output of Example 1](img/spike-1-y.svg)
 
-Example 2. The same values, `x` given explicitly instead of auto-assigned. Verified via
-direct SVG diff to render genuinely different from Example 1.
+Example 2. Positions and values. The positions need not be evenly spaced.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("spike_xy");
-auto& pane = fig.pane2();
-pane.spike(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}, std::vector<double>{2.0, -1.0, 3.0, -2.0, 1.5});
-fig.show();
+auto& pane = fig.pane2("p");
+pane.spike(std::vector<double>{0, 1, 3, 4, 8, 9}, std::vector<double>{2, 4, 3, 5, 4, 6});
+fig.save_svg("figure.svg");
 ```
 
 ![Output of Example 2](img/spike-2-xy.svg)
 
+Example 3. The base moves the baseline. With base 3 the stems are drawn between 3 and each value, so values below 3 give stems that hang down.
+
+```cpp
+auto fig = studio("spike_base");
+auto& pane = fig.pane2("p");
+pane.spike(std::vector<double>{2, 4, 3, 5, 4, 6}, 3.0);
+pane.rule_y(3.0, "base");
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 3](img/spike-3-base.svg)
+
+Example 4. The base with positions: the second overload takes it after the data.
+
+```cpp
+auto fig = studio("spike_base_xy");
+auto& pane = fig.pane2("p");
+pane.spike(std::vector<double>{0, 1, 3, 4, 8, 9}, std::vector<double>{2, 4, 3, 5, 4, 6}, 1.0);
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 4](img/spike-4-base_xy.svg)
+
+Example 5. Negative values lie below the base, which is zero by default.
+
+```cpp
+auto fig = studio("spike_negative");
+auto& pane = fig.pane2("p");
+pane.spike(std::vector<double>{2, -1, 3, -2, 4});
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 5](img/spike-5-negative.svg)
+
+Example 6. Inputs that cannot be drawn are refused when the trace is added, and the message names the method and the problem. The pane keeps the traces it had.
+
+```cpp
+auto report = [](const char* what, auto&& call) {
+  auto fig = studio("spike_errors");
+  auto& pane = fig.pane2("p");
+  try {
+    call(pane);
+    std::cout << what << ": accepted\n";
+  } catch (const pluss::Error& e) {
+    std::cout << what << ": " << e.message() << "\n";
+  }
+};
+report("x and y differ", [](Pane& pane) { pane.spike(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2}); });
+auto fig = studio("spike_errors_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+x and y differ: spike: series lengths must match or broadcast from scalar
+```
+
+![Output of Example 6](img/spike-6-errors.svg)
+
+Example 7. `spike` needs a planar pane. On a volumetric pane it throws at once, naming the kind it needs, and nothing is added.
+
+```cpp
+auto fig = studio("spike_wrong_pane");
+auto& pane = fig.pane3("p");
+try {
+  pane.spike(std::vector<double>{1, 2});
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
+}
+std::cout << "traces: " << pane.trace_count() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+spike requires a planar pane
+traces: 0
+```
+
+![Output of Example 7](img/spike-7-wrong_pane.svg)
+
 ## Notes
 
-- Not `noexcept`.
-- Sharing its exact two-overload, `(x?, y, base=0.0)` shape with [`ribbon()`](ribbon.md),
-  `spike()` is best understood as `ribbon()`'s discrete-stem rendering sibling rather than
-  a fully independent trace kind — everything documented above about `ribbon()`'s `base`
-  parameter (shifts the *starting* end of each element, not the tip) applies identically
-  here.
-- `flash::stemplot` (if present) is a convenience wrapper around this exact method.
+- Returns the new [`Trace&`](../trace/label.md); the reference stays valid for the life of the pane, and the style calls of the trace ([`label`](../trace/label.md), [`stroke`](../trace/stroke.md), [`width`](../trace/width.md), ...) chain off it.
+- The data is copied into the trace when it is added, so changing the vector afterwards does not change the figure.
 
 ## See Also
 
-- [`Pane::ribbon`](ribbon.md): the continuous filled-band sibling of this method.
-- [`Pane::columns`](columns.md): a related discrete-per-category trace kind, rendered as
-  wider bars rather than thin stems.
+- [`Pane::ribbon`](ribbon.md): the filled band.
+- [`Pane::trend`](trend.md): the line.
+- [`Pane::columns`](columns.md): bars.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ribbon.html">
+  <a class="prev-link" href="sheet.html">
     <span class="label">Previous</span>
-    <span class="title">ribbon</span>
+    <span class="title">sheet</span>
   </a>
-  <a class="next-link" href="contour.html">
+  <a class="next-link" href="spire3.html">
     <span class="label">Next</span>
-    <span class="title">contour</span>
+    <span class="title">spire3</span>
   </a>
 </div>

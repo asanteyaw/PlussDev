@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Stream::tabelize() -> pluss::table::Slate
+pluss::table::Slate Stream::tabelize()
 ```
 
 ## What It Does

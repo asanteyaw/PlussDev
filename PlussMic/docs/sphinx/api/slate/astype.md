@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::astype(pluss::codem::ScalarType dtype) const -> Slate
+Slate Slate::astype(pluss::codem::ScalarType dtype) const
 ```
 
 ## What It Does

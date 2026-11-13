@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::unique() const -> Series
-Series::unique(bool sorted) const -> Series
+Series Series::unique() const
+Series Series::unique(bool sorted) const
 ```
 
 ## What It Does

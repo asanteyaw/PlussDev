@@ -9,27 +9,27 @@
 
 ```cpp
 // Text substring/regex replace (Note payload only)
-Slate::replace(std::string_view from, std::string_view to) const -> Slate
-Slate::replace(std::string_view from,
-                std::string_view to,
-                const TextOptions& options) const -> Slate
+Slate Slate::replace(std::string_view from, std::string_view to) const
+Slate Slate::replace(std::string_view from,
+                      std::string_view to,
+                      const TextOptions& options) const
 
 // Whole-value replace, by payload kind
-Slate::replace(double from, double to) const -> Slate
-Slate::replace(double from, pluss::null_t to) const -> Slate
-Slate::replace(pluss::null_t from, double to) const -> Slate
-Slate::replace(const pluss::Series& from, const pluss::Series& to) const -> Slate
-Slate::replace(const pluss::Series& from, pluss::null_t to) const -> Slate
-Slate::replace(pluss::null_t from, const pluss::Series& to) const -> Slate
-Slate::replace(const pluss::Note& from, const pluss::Note& to) const -> Slate
-Slate::replace(const pluss::Note& from, pluss::null_t to) const -> Slate
-Slate::replace(pluss::null_t from, const pluss::Note& to) const -> Slate
-Slate::replace(const pluss::Timeline& from, const pluss::Timeline& to) const -> Slate
-Slate::replace(const pluss::Timeline& from, pluss::null_t to) const -> Slate
-Slate::replace(pluss::null_t from, const pluss::Timeline& to) const -> Slate
-Slate::replace(const pluss::Duration& from, const pluss::Duration& to) const -> Slate
-Slate::replace(const pluss::Duration& from, pluss::null_t to) const -> Slate
-Slate::replace(pluss::null_t from, const pluss::Duration& to) const -> Slate
+Slate Slate::replace(double from, double to) const
+Slate Slate::replace(double from, pluss::null_t to) const
+Slate Slate::replace(pluss::null_t from, double to) const
+Slate Slate::replace(const pluss::Series& from, const pluss::Series& to) const
+Slate Slate::replace(const pluss::Series& from, pluss::null_t to) const
+Slate Slate::replace(pluss::null_t from, const pluss::Series& to) const
+Slate Slate::replace(const pluss::Note& from, const pluss::Note& to) const
+Slate Slate::replace(const pluss::Note& from, pluss::null_t to) const
+Slate Slate::replace(pluss::null_t from, const pluss::Note& to) const
+Slate Slate::replace(const pluss::Timeline& from, const pluss::Timeline& to) const
+Slate Slate::replace(const pluss::Timeline& from, pluss::null_t to) const
+Slate Slate::replace(pluss::null_t from, const pluss::Timeline& to) const
+Slate Slate::replace(const pluss::Duration& from, const pluss::Duration& to) const
+Slate Slate::replace(const pluss::Duration& from, pluss::null_t to) const
+Slate Slate::replace(pluss::null_t from, const pluss::Duration& to) const
 ```
 
 ## What It Does

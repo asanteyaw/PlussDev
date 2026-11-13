@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameGrouped::min() const -> DataFrame
-DataFrameGrouped::min(std::string_view feature) const -> DataFrame
-DataFrameGrouped::min(std::initializer_list<std::string_view> features) const -> DataFrame
-DataFrameGrouped::min(pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrameGrouped::min() const
+DataFrame DataFrameGrouped::min(std::string_view feature) const
+DataFrame DataFrameGrouped::min(std::initializer_list<std::string_view> features) const
+DataFrame DataFrameGrouped::min(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does

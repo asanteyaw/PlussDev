@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::lower() const -> Slate
+Slate Slate::lower() const
 ```
 
 ## What It Does

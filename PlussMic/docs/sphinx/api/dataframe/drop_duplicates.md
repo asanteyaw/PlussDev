@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::drop_duplicates(bool keep_first = true, bool keep_last = false) const -> DataFrame
-DataFrame::drop_duplicates(pluss::RangeView<std::string_view> features, bool keep_first = true, bool keep_last = false) const -> DataFrame
+DataFrame DataFrame::drop_duplicates(bool keep_first = true, bool keep_last = false) const
+DataFrame DataFrame::drop_duplicates(pluss::RangeView<std::string_view> features, bool keep_first = true, bool keep_last = false) const
 ```
 
 ## What It Does

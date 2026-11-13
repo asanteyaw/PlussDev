@@ -5,9 +5,9 @@
 ## Signatures
 
 ```cpp
-Axel::tabelize() -> pluss::table::Atlas
+pluss::table::Atlas Axel::tabelize()
 
-Axel::tabelize(const pluss::kindle::TabelizePolicy& policy) -> pluss::table::Atlas
+pluss::table::Atlas Axel::tabelize(const pluss::kindle::TabelizePolicy& policy)
 ```
 
 ## What It Does

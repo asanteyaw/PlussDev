@@ -7,11 +7,11 @@
 ## Signature
 
 ```cpp
-Series::nanvar() const -> Series
-Series::nanvar(std::int64_t dim) const -> Series
-Series::nanvar(std::int64_t dim, bool keepdim) const -> Series
-Series::stat.nanvar(...) -> Series
-Series::stat().nanvar(...) -> Series
+Series Series::nanvar() const
+Series Series::nanvar(std::int64_t dim) const
+Series Series::nanvar(std::int64_t dim, bool keepdim) const
+Series Series::stat.nanvar(...)
+Series Series::stat().nanvar(...)
 ```
 
 ## What It Does

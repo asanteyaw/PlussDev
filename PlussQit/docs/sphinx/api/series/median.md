@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::median() const -> Series
-Series::median(std::int64_t dim) const -> Series
+Series Series::median() const
+Series Series::median(std::int64_t dim) const
 ```
 
 ## What It Does

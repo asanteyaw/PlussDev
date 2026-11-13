@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::mean() const -> Series
-Series::mean(std::int64_t dim) const -> Series
-Series::mean(std::int64_t dim, bool keepdim) const -> Series
+Series Series::mean() const
+Series Series::mean(std::int64_t dim) const
+Series Series::mean(std::int64_t dim, bool keepdim) const
 ```
 
 ## What It Does

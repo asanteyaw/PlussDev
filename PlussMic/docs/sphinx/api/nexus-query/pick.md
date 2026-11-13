@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-NexusTraverse::pick(std::initializer_list<std::string_view> features) const -> NexusTraverse
-NexusTraverse::pick(pluss::msharp::RangeView::Of<std::string_view> features) const -> NexusTraverse
+NexusTraverse NexusTraverse::pick(std::initializer_list<std::string_view> features) const
+NexusTraverse NexusTraverse::pick(pluss::msharp::RangeView::Of<std::string_view> features) const
 template <detail::StringViewNameRange NameRange>
-NexusTraverse::pick(const NameRange& features) const -> NexusTraverse
+NexusTraverse NexusTraverse::pick(const NameRange& features) const
 ```
 
 ## What It Does

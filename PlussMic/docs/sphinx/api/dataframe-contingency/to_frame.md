@@ -8,18 +8,18 @@
 ## Signatures
 
 ```cpp
-ContingencyTable::to_frame() const -> DataFrame
-ContingencyTable::to_frame(const DataFrame::ContingencyOptions& options) const -> DataFrame
-ContingencyTable::to_frame(std::initializer_list<std::string_view> row_dims,
-                           std::initializer_list<std::string_view> column_dims) const -> DataFrame
-ContingencyTable::to_frame(std::initializer_list<std::string_view> row_dims,
-                           std::initializer_list<std::string_view> column_dims,
-                           const DataFrame::ContingencyOptions& options) const -> DataFrame
-ContingencyTable::to_frame(pluss::msharp::RangeView::Of<std::string_view> row_dims,
-                           pluss::msharp::RangeView::Of<std::string_view> column_dims) const -> DataFrame
-ContingencyTable::to_frame(pluss::msharp::RangeView::Of<std::string_view> row_dims,
-                           pluss::msharp::RangeView::Of<std::string_view> column_dims,
-                           const DataFrame::ContingencyOptions& options) const -> DataFrame
+DataFrame ContingencyTable::to_frame() const
+DataFrame ContingencyTable::to_frame(const DataFrame::ContingencyOptions& options) const
+DataFrame ContingencyTable::to_frame(std::initializer_list<std::string_view> row_dims,
+                                     std::initializer_list<std::string_view> column_dims) const
+DataFrame ContingencyTable::to_frame(std::initializer_list<std::string_view> row_dims,
+                                     std::initializer_list<std::string_view> column_dims,
+                                     const DataFrame::ContingencyOptions& options) const
+DataFrame ContingencyTable::to_frame(pluss::msharp::RangeView::Of<std::string_view> row_dims,
+                                     pluss::msharp::RangeView::Of<std::string_view> column_dims) const
+DataFrame ContingencyTable::to_frame(pluss::msharp::RangeView::Of<std::string_view> row_dims,
+                                     pluss::msharp::RangeView::Of<std::string_view> column_dims,
+                                     const DataFrame::ContingencyOptions& options) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::ndistinct(std::string_view source, std::string_view alias = {}) -> LocusPull&
+LocusPull& LocusPull::ndistinct(std::string_view source, std::string_view alias = {})
 ```
 
 ## What It Does

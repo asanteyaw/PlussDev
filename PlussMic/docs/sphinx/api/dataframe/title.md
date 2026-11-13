@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::title() const -> std::string
-DataFrame::title(std::string title) const -> DataFrame
+std::string DataFrame::title() const
+DataFrame DataFrame::title(std::string title) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::log() const -> Stream
+Stream Stream::log() const
 ```
 
 ## What It Does

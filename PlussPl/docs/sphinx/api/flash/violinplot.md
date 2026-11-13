@@ -7,22 +7,18 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::violinplot(Pane& pane, Values&& values)
+Trace& flash::violinplot(Pane& pane, Series values)
 
-template <class Values>
-Trace& flash::violinplot(Pane& pane, Values&& values, const ViolinOptions& options)
+Trace& flash::violinplot(Pane& pane, Series values, const ViolinOptions& options)
 
 Trace& flash::violinplot(Pane& pane, const Note& categories, const Series& values)
 
 Trace& flash::violinplot(Pane& pane, const Note& categories, const Series& values,
                           const ViolinOptions& options)
 
-template <class Group, class Values>
-Trace& flash::violinplot(Pane& pane, Group&& group, Values&& values)
+Trace& flash::violinplot(Pane& pane, Series group, Series values)
 
-template <class Group, class Values>
-Trace& flash::violinplot(Pane& pane, Group&& group, Values&& values,
+Trace& flash::violinplot(Pane& pane, Series group, Series values,
                           const ViolinOptions& options)
 ```
 
@@ -71,25 +67,10 @@ numeric-group), each available both with and without a trailing `const ViolinOpt
     symmetric violin shape), `Left`, or `Right` (a single half only — useful for
     side-by-side split-violin comparisons between two groups sharing an x position).
 
-```{important} Fixed: violinplot(values, options) previously failed to compile
-Earlier, the two-argument-after-pane form violinplot(pane, values, options) was
-unreachable: overload resolution incorrectly preferred the unconstrained
-template<Group, Values> violinplot(Pane&, Group&&, Values&&) overload, because
-nothing excluded ViolinOptions from binding to that overload's Values slot
-(only Note was excluded from its Group slot). Passing a ViolinOptions as the
-third positional argument to that overload, then trying to use it as a
-values series, failed to compile. This has been fixed at the source in
-flash.h by adding an explicit
-!std::same_as<std::remove_cvref_t<Values>, ViolinOptions> exclusion to that
-overload's requires clause -- verified via a regression check exercising all
-six overload shapes, including this exact previously-broken call.
-```
-
 ```{important} Same Note-vs-numeric-group category-labeling split as boxplot()/stripplot()
 Only the Note overloads call Pane::x_categories() to set real text tick
 labels. The numeric-group overloads skip that step entirely -- see
-flash::boxplot's page for a directly-verified genuine-rendering-difference
-example of the same split.
+flash::boxplot's page for an example of the same split.
 ```
 
 ## Parameters
@@ -224,7 +205,7 @@ fig.show();
 - Not `noexcept`.
 - [`flash::boxplot`](boxplot.md) shares this exact three-grouping-shape structure (values-only,
   `Note`, numeric-group) but summarizes with quartiles/whiskers instead of a KDE density
-  curve, and has no options-struct overloads.
+  curve, and has no options-value overloads.
 - `ViolinSide::Left`/`ViolinSide::Right` are most useful in combination with a second
   `violinplot()` call at the same category position using the opposite side, to build a
   split-violin comparison — `flash::violinplot()` itself does not automate pairing two

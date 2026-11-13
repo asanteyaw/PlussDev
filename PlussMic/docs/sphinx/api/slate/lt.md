@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Slate::lt(double other) const -> Slate
-Slate::lt(std::string_view other) const -> Slate
-Slate::lt(const char* other) const -> Slate
-Slate::lt(const Slate& other) const -> Slate
+Slate Slate::lt(double other) const
+Slate Slate::lt(std::string_view other) const
+Slate Slate::lt(const char* other) const
+Slate Slate::lt(const Slate& other) const
 ```
 
 ## What It Does

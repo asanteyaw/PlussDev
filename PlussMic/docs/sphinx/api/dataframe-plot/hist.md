@@ -8,21 +8,21 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::hist(std::int64_t bins = 20) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::hist(std::int64_t bins = 20) const
 
-DataFramePlotAccessor::hist(const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::hist(const HistPlotOptions& options) const
 
-DataFramePlotAccessor::hist(std::string_view feature, std::int64_t bins = 20) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, std::int64_t bins = 20) const
 
-DataFramePlotAccessor::hist(std::string_view feature, const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::hist(std::string_view feature, const HistPlotOptions& options) const
 
-DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t bins = 20) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t bins = 20) const
 
-DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> features, const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> features, const HistPlotOptions& options) const
 
-DataFramePlotAccessor::hist(std::initializer_list<std::string_view> features, std::int64_t bins = 20) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::hist(std::initializer_list<std::string_view> features, std::int64_t bins = 20) const
 
-DataFramePlotAccessor::hist(std::initializer_list<std::string_view> features, const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::hist(std::initializer_list<std::string_view> features, const HistPlotOptions& options) const
 ```
 
 ## What It Does

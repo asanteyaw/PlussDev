@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::slice(std::int64_t start, std::int64_t stop) const -> Slate
-DataFrameLabelAccessor::slice(std::string_view start, std::string_view stop) const -> Slate
+Slate DataFrameLabelAccessor::slice(std::int64_t start, std::int64_t stop) const
+Slate DataFrameLabelAccessor::slice(std::string_view start, std::string_view stop) const
 ```
 
 ## What It Does

@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::nanmean() const -> Series
-Series::nanmean(std::int64_t dim) const -> Series
-Series::nanmean(std::int64_t dim, bool keepdim) const -> Series
+Series Series::nanmean() const
+Series Series::nanmean(std::int64_t dim) const
+Series Series::nanmean(std::int64_t dim, bool keepdim) const
 ```
 
 ## What It Does

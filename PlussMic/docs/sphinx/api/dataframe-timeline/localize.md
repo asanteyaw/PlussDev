@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::localize(const TimelineLocalizeOptions& options = {}) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::localize(const TimelineLocalizeOptions& options = {}) const
 ```
 
 ## What It Does

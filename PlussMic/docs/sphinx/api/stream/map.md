@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::map(const std::function<Stream(const Stream&)>& fn) const -> Stream
+Stream Stream::map(const std::function<Stream(const Stream&)>& fn) const
 ```
 
 ## What It Does

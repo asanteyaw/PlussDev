@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::lengthen(pluss::RangeView<std::string_view> id_features = {}, pluss::RangeView<std::string_view> value_features = {}, std::string feature_name = "feature", std::string value_name = "value", bool fresh_cases = true) const -> DataFrame
+DataFrame DataFrame::lengthen(pluss::RangeView<std::string_view> id_features = {}, pluss::RangeView<std::string_view> value_features = {}, std::string feature_name = "feature", std::string value_name = "value", bool fresh_cases = true) const
 ```
 
 ## What It Does

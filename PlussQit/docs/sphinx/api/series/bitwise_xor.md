@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::bitwise_xor(const Series& rhs) const -> Series
+Series Series::bitwise_xor(const Series& rhs) const
 Series& Series::bitwise_xor_(const Series& rhs) const
 ```
 

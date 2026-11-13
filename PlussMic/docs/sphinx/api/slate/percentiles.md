@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::percentiles(pluss::RangeView<double> points = {0.25, 0.5, 0.75}, std::int64_t min_count = 1) const -> Slate
+Slate Slate::percentiles(pluss::RangeView<double> points = {0.25, 0.5, 0.75}, std::int64_t min_count = 1) const
 ```
 
 ## What It Does

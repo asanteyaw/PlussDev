@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-SlatePlotAccessor::lag(const LagPlotOptions& options = {}) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::lag(const LagPlotOptions& options = {}) const
 ```
 
 ## What It Does

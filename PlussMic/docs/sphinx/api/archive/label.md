@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::label() const -> ArchiveLabelAccessor
+ArchiveLabelAccessor Archive::label() const
 ```
 
 ## What It Does

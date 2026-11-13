@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::encode(std::string_view encoding = "base64") const -> DataFrame
+DataFrame DataFrameNoteAccessor::encode(std::string_view encoding = "base64") const
 ```
 
 ## What It Does

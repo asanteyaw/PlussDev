@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::encode(std::string_view encoding = "base64") const -> Slate
+Slate Slate::encode(std::string_view encoding = "base64") const
 ```
 
 ## What It Does

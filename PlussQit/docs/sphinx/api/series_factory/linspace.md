@@ -7,15 +7,15 @@
 ## Signature
 
 ```cpp
-pluss::series::linspace(double start,
-                        double end,
-                        std::int64_t steps,
-                        ScalarType dtype = ScalarType::Float32) -> Series
+Series pluss::series::linspace(double start,
+                               double end,
+                               std::int64_t steps,
+                               ScalarType dtype = ScalarType::Float32)
 
-pluss::series::linspace(double start,
-                        double end,
-                        std::int64_t steps,
-                        Config config) -> Series
+Series pluss::series::linspace(double start,
+                               double end,
+                               std::int64_t steps,
+                               Config config)
 ```
 
 ## What It Builds

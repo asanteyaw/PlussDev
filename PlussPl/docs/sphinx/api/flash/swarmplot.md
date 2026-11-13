@@ -7,15 +7,13 @@
 ## Signatures
 
 ```cpp
-template <class Group, class Values>
-Trace& flash::swarmplot(Pane& pane, Group&& group, Values&& values)
+Trace& flash::swarmplot(Pane& pane, Series group, Series values)
 ```
 
 ## What It Does
 
 A pure alias for [`flash::stripplot`](stripplot.md)'s second (numeric-group) overload —
-the implementation is literally `stripplot(pane, group, values)`, nothing more. Directly
-verified: identical arguments to both functions produce **byte-for-byte identical** SVG
+the implementation is literally `stripplot(pane, group, values)`, nothing more. Identical arguments to both functions produce **identical** SVG
 output.
 
 ```{important} No swarm/point-avoidance layout, despite the name
@@ -59,8 +57,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-swarmplot-1-default.svg)
 
-Example 2 (verification, not a distinct rendering). `swarmplot(group, values)` and
-`stripplot(group, values)` on identical data, confirmed to produce **byte-for-byte
+Example 2 (a comparison, not a new picture). `swarmplot(group, values)` and
+`stripplot(group, values)` on identical data, produces **byte-for-byte
 identical** output.
 
 ```cpp

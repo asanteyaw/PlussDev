@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::unite(pluss::RangeView<Series> others,
-              std::int64_t dim = 0,
-              bool strict_dtype = true) const -> Series
+Series Series::unite(pluss::RangeView<Series> others,
+                     std::int64_t dim = 0,
+                     bool strict_dtype = true) const
 ```
 
 ## What It Does

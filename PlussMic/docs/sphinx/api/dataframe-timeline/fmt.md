@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::fmt(std::string_view pattern) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::fmt(std::string_view pattern) const
 ```
 
 ## What It Does

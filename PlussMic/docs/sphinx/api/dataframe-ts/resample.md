@@ -8,14 +8,14 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::resample(std::string_view freq, std::int64_t step = 1) const -> DataFrameTsResampler
-DataFrameTsAccessor::resample(const pluss::Timeline::ResampleOptions& options) const -> DataFrameTsResampler
-DataFrameTsAccessor::resample(std::string_view freq, pluss::subsp::stats::ts::ResampleOp op, std::int64_t step = 1) const -> DataFrame
-DataFrameTsAccessor::resample(const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::ResampleOp op) const -> DataFrame
-DataFrameTsAccessor::resample(std::string_view time_feature, std::string_view freq, std::int64_t step = 1) const -> DataFrameTsResampler
-DataFrameTsAccessor::resample(std::string_view time_feature, const pluss::Timeline::ResampleOptions& options) const -> DataFrameTsResampler
-DataFrameTsAccessor::resample(std::string_view time_feature, std::string_view freq, pluss::subsp::stats::ts::ResampleOp op, std::int64_t step = 1) const -> DataFrame
-DataFrameTsAccessor::resample(std::string_view time_feature, const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::ResampleOp op) const -> DataFrame
+DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view freq, std::int64_t step = 1) const
+DataFrameTsResampler DataFrameTsAccessor::resample(const pluss::Timeline::ResampleOptions& options) const
+DataFrame DataFrameTsAccessor::resample(std::string_view freq, pluss::subsp::stats::ts::ResampleOp op, std::int64_t step = 1) const
+DataFrame DataFrameTsAccessor::resample(const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::ResampleOp op) const
+DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view time_feature, std::string_view freq, std::int64_t step = 1) const
+DataFrameTsResampler DataFrameTsAccessor::resample(std::string_view time_feature, const pluss::Timeline::ResampleOptions& options) const
+DataFrame DataFrameTsAccessor::resample(std::string_view time_feature, std::string_view freq, pluss::subsp::stats::ts::ResampleOp op, std::int64_t step = 1) const
+DataFrame DataFrameTsAccessor::resample(std::string_view time_feature, const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::ResampleOp op) const
 ```
 
 ## What It Does

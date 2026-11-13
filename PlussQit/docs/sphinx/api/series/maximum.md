@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::maximum(const Series& rhs) const -> Series
-Series::maximum(double rhs) const -> Series
+Series Series::maximum(const Series& rhs) const
+Series Series::maximum(double rhs) const
 Series& Series::maximum_(double rhs)
 ```
 

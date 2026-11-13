@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::brief(const BriefPlotOptions& options = {}) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::brief(const BriefPlotOptions& options = {}) const
 
 pluss::pl::Studio& SlatePlotAccessor::brief(
     pluss::pl::Studio& figure,

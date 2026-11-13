@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::to_json() const -> std::string
+std::string Catalog::to_json() const
 ```
 
 ## What It Does

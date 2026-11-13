@@ -8,27 +8,27 @@
 ## Signatures
 
 ```cpp
-DataFrame::save_csv(std::string_view filepath) const -> void
+void DataFrame::save_csv(std::string_view filepath) const
 
-DataFrame::save_csv(std::string_view filepath,
-                     bool add_cases,
-                     bool header = true,
-                     char sep = ',',
-                     std::string null_rep = "",
-                     std::optional<std::string> case_label = std::nullopt,
-                     std::optional<std::string> float_format = std::nullopt,
-                     char quotechar = '"',
-                     bool doublequote = true,
-                     std::string line_terminator = "\n",
-                     char decimal = '.',
-                     std::string encoding = "utf-8") const -> void
+void DataFrame::save_csv(std::string_view filepath,
+                          bool add_cases,
+                          bool header = true,
+                          char sep = ',',
+                          std::string null_rep = "",
+                          std::optional<std::string> case_label = std::nullopt,
+                          std::optional<std::string> float_format = std::nullopt,
+                          char quotechar = '"',
+                          bool doublequote = true,
+                          std::string line_terminator = "\n",
+                          char decimal = '.',
+                          std::string encoding = "utf-8") const
 
-DataFrame::save_csv(std::string_view filepath, const pluss::loader::Config& config) const -> void
+void DataFrame::save_csv(std::string_view filepath, const pluss::loader::Config& config) const
 
-DataFrame::save_csv(std::string_view filepath, const pluss::loader::WriteCsvOptions& options) const -> void
+void DataFrame::save_csv(std::string_view filepath, const pluss::loader::WriteCsvOptions& options) const
 
-DataFrame::save_csv(std::string_view filepath,
-                     std::initializer_list<pluss::loader::ConfigEntry> config_entries) const -> void
+void DataFrame::save_csv(std::string_view filepath,
+                          std::initializer_list<pluss::loader::ConfigEntry> config_entries) const
 ```
 
 ## What It Does

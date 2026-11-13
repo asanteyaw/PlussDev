@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::brief(
+pluss::pl::Studio DataFramePlotAccessor::brief(
     pluss::msharp::RangeView::Of<std::string_view> features = {},
-    const BriefPlotOptions& options = {}) const -> pluss::pl::Studio
+    const BriefPlotOptions& options = {}) const
 
 pluss::pl::Studio& DataFramePlotAccessor::brief(
     pluss::pl::Studio& figure,

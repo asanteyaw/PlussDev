@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::save_parquet(std::string_view filepath) const -> void
-DataFrame::save_parquet(std::string_view filepath, const pluss::loader::Config& config) const -> void
-DataFrame::save_parquet(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) const -> void
+void DataFrame::save_parquet(std::string_view filepath) const
+void DataFrame::save_parquet(std::string_view filepath, const pluss::loader::Config& config) const
+void DataFrame::save_parquet(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) const
 ```
 
 ## What It Does

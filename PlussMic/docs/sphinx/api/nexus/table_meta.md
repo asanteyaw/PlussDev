@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::table_meta(std::string_view key) const -> std::optional<TableMeta>
+std::optional<TableMeta> Nexus::table_meta(std::string_view key) const
 ```
 
 ## What It Does

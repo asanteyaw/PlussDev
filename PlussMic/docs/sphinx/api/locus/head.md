@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::head(std::int64_t n = 5) const -> Locus
-Locus::tail(std::int64_t n = 5) const -> Locus
+Locus Locus::head(std::int64_t n = 5) const
+Locus Locus::tail(std::int64_t n = 5) const
 ```
 
 ## What It Does

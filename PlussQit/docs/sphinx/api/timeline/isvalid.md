@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::isvalid() -> Series
+Series Timeline::isvalid()
 ```
 
 Returns a boolean mask that marks the timestamps that are actually defined.

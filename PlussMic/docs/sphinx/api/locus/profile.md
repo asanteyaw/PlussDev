@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::profile() const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::profile() const
 ```
 
 ## What It Does

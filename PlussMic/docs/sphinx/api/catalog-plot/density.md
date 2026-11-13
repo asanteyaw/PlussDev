@@ -8,21 +8,21 @@
 ## Signatures
 
 ```cpp
-CatalogPlotAccessor::density(std::string_view key, std::int64_t points = 128) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key, std::int64_t points = 128) const
 
-CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys = {},
-                              std::int64_t points = 128) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys = {},
+                                                std::int64_t points = 128) const
 
-CatalogPlotAccessor::density(std::initializer_list<std::string_view> keys,
-                              std::int64_t points = 128) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::density(std::initializer_list<std::string_view> keys,
+                                                std::int64_t points = 128) const
 
-CatalogPlotAccessor::density(std::string_view key, const DensityPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::density(std::string_view key, const DensityPlotOptions& options) const
 
-CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys,
-                              const DensityPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                const DensityPlotOptions& options) const
 
-CatalogPlotAccessor::density(std::initializer_list<std::string_view> keys,
-                              const DensityPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::density(std::initializer_list<std::string_view> keys,
+                                                const DensityPlotOptions& options) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusPull::std(std::string_view source, std::string_view alias = {}) -> NexusPull&
+NexusPull& NexusPull::std(std::string_view source, std::string_view alias = {})
 ```
 
 ## What It Does

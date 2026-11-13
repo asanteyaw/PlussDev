@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::shownull(Axis axis = Axis::Case, bool all = false) const -> DataFrame
+DataFrame DataFrame::shownull(Axis axis = Axis::Case, bool all = false) const
 ```
 
 ## What It Does

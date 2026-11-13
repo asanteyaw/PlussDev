@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::catalogs() const -> const std::vector<Catalog>&
+const std::vector<Catalog>& Archive::catalogs() const
 ```
 
 ## What It Does

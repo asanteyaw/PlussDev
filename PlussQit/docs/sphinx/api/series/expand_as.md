@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::expand_as(const Series& other) const -> Series
+Series Series::expand_as(const Series& other) const
 ```
 
 ## What It Does

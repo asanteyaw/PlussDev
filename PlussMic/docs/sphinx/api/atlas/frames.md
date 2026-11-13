@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::frames() const -> const std::vector<DataFrame>&
+const std::vector<DataFrame>& Atlas::frames() const
 ```
 
 ## What It Does

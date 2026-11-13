@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::astype(pluss::ScalarType dtype) -> DataFrame
-DataFrame::astype(pluss::RangeView<std::pair<std::string_view, pluss::ScalarType>> feature_dtypes) -> DataFrame
-DataFrame::astype(std::initializer_list<std::pair<std::string_view, pluss::ScalarType>> feature_dtypes) -> DataFrame
+DataFrame DataFrame::astype(pluss::ScalarType dtype)
+DataFrame DataFrame::astype(pluss::RangeView<std::pair<std::string_view, pluss::ScalarType>> feature_dtypes)
+DataFrame DataFrame::astype(std::initializer_list<std::pair<std::string_view, pluss::ScalarType>> feature_dtypes)
 ```
 
 ## What It Does

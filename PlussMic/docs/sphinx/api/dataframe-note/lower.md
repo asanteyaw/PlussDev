@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::lower() const -> DataFrame
+DataFrame DataFrameNoteAccessor::lower() const
 ```
 
 ## What It Does

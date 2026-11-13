@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::abs() const -> DataFrame
+DataFrame DataFrame::abs() const
 ```
 
 ## What It Does

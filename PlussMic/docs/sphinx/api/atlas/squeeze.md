@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::squeeze() const -> DataFrame
+DataFrame Atlas::squeeze() const
 ```
 
 ## What It Does

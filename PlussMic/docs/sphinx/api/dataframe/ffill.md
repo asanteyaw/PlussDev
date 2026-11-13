@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::ffill(std::int64_t limit = -1) const -> DataFrame
+DataFrame DataFrame::ffill(std::int64_t limit = -1) const
 
-DataFrame::ffill(const FillOptions& options) const -> DataFrame
+DataFrame DataFrame::ffill(const FillOptions& options) const
 ```
 
 ## What It Does

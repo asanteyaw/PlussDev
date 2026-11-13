@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::deg2rad() const -> Series
+Series Series::deg2rad() const
 Series& Series::deg2rad_()
 Series& Series::deg2rad_() const
 ```

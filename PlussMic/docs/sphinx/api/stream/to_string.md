@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::to_string() const -> std::string
+std::string Stream::to_string() const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-ContingencyTable::to_array() const -> pluss::Series
+pluss::Series ContingencyTable::to_array() const
 ```
 
 ## What It Does

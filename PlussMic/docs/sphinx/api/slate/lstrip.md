@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::lstrip() const -> Slate
-Slate::lstrip(std::string_view chars) const -> Slate
+Slate Slate::lstrip() const
+Slate Slate::lstrip(std::string_view chars) const
 ```
 
 ## What It Does

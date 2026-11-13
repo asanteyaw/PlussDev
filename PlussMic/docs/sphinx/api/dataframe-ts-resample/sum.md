@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::sum() const -> DataFrame
+DataFrame DataFrameTsResampler::sum() const
 ```
 
 ## What It Does

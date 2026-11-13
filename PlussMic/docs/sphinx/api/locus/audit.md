@@ -7,17 +7,17 @@
 ## Signature
 
 ```cpp
-Locus::audit(const JoinOptions& options = {}) const -> std::vector<LinkAudit>
-Locus::audit(std::string_view relationship, const JoinOptions& options = {}) const -> LinkAudit
-Locus::validate(const JoinOptions& options = {}) const -> void
-Locus::validate_keys(std::string_view table) const -> bool
-Locus::validate_keys(std::string_view table, std::initializer_list<std::string_view> keys) const -> bool
-Locus::duplicates(std::string_view table) const -> Catalog
-Locus::duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const -> Catalog
-Locus::validate_relationship(std::string_view name) const -> bool
-Locus::check(std::string_view name) const -> bool                           // alias
-Locus::detect_orphans(std::string_view relationship_name,
-                       RelationshipSide side = RelationshipSide::Left) const -> Catalog
+std::vector<LinkAudit> Locus::audit(const JoinOptions& options = {}) const
+LinkAudit Locus::audit(std::string_view relationship, const JoinOptions& options = {}) const
+void Locus::validate(const JoinOptions& options = {}) const
+bool Locus::validate_keys(std::string_view table) const
+bool Locus::validate_keys(std::string_view table, std::initializer_list<std::string_view> keys) const
+Catalog Locus::duplicates(std::string_view table) const
+Catalog Locus::duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const
+bool Locus::validate_relationship(std::string_view name) const
+bool Locus::check(std::string_view name) const  // alias
+Catalog Locus::detect_orphans(std::string_view relationship_name,
+                               RelationshipSide side = RelationshipSide::Left) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::dloc(std::int64_t i) const -> Catalog
+Catalog Archive::dloc(std::int64_t i) const
 ```
 
 ## What It Does

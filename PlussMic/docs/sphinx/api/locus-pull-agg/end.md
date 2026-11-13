@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPullAgg::end() const -> LocusPull&
+LocusPull& LocusPullAgg::end() const
 ```
 
 ## What It Does

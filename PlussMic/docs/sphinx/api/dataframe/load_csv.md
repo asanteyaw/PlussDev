@@ -8,36 +8,36 @@
 ## Signatures
 
 ```cpp
-static DataFrame load_csv(std::string_view filepath) -> DataFrame
+static DataFrame load_csv(std::string_view filepath)
 
 static DataFrame load_csv(std::string_view filepath,
                            char sep,
                            std::optional<std::size_t> ncases = std::nullopt,
                            std::vector<std::string> usefeats = {},
                            std::optional<std::string> case_col = std::nullopt,
-                           pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error) -> DataFrame
+                           pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 
 static DataFrame load_csv(std::string_view filepath,
                            char sep,
                            std::optional<std::size_t> ncases,
                            pluss::RangeView<std::string_view> usefeats,
                            std::optional<std::string> case_col = std::nullopt,
-                           pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error) -> DataFrame
+                           pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 
-static DataFrame load_csv(std::string_view filepath, const pluss::loader::Config& config) -> DataFrame
+static DataFrame load_csv(std::string_view filepath, const pluss::loader::Config& config)
 
-static DataFrame load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options) -> DataFrame
+static DataFrame load_csv(std::string_view filepath, const pluss::loader::ReadCsvOptions& options)
 
 static DataFrame load_csv(std::string_view filepath,
-                           std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
+                           std::initializer_list<pluss::loader::ConfigEntry> config_entries)
 
-static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases) -> DataFrame
+static DataFrame load_csv(std::string_view filepath, std::string_view header, std::size_t ncases)
 
 static DataFrame load_csv(std::string_view filepath,
                            std::string_view header,
                            std::string_view case_feature = "none",
                            std::string_view engine = "auto",
-                           std::optional<std::size_t> ncases = std::nullopt) -> DataFrame
+                           std::optional<std::size_t> ncases = std::nullopt)
 ```
 
 ## What It Does

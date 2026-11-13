@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::axis0_labels() const -> const std::optional<Slate>&
+const std::optional<Slate>& Atlas::axis0_labels() const
 ```
 
 ## What It Does

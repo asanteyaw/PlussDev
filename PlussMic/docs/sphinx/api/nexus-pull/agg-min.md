@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-NexusPullAgg::min(std::string_view feature, std::string_view alias = {}) -> NexusPullAgg&
-NexusPullAgg::min(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) -> NexusPullAgg&
-NexusPullAgg::min(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) -> NexusPullAgg&
+NexusPullAgg& NexusPullAgg::min(std::string_view feature, std::string_view alias = {})
+NexusPullAgg& NexusPullAgg::min(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+NexusPullAgg& NexusPullAgg::min(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 
 ## What It Does

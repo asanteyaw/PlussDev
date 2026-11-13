@@ -8,22 +8,22 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::violin(pluss::msharp::RangeView::Of<std::string_view> features = {}) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::violin(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 
-DataFramePlotAccessor::violin(pluss::msharp::RangeView::Of<std::string_view> features,
-                               const ViolinPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::violin(pluss::msharp::RangeView::Of<std::string_view> features,
+                                                 const ViolinPlotOptions& options) const
 
-DataFramePlotAccessor::violin(std::initializer_list<std::string_view> features) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::violin(std::initializer_list<std::string_view> features) const
 
-DataFramePlotAccessor::violin(std::initializer_list<std::string_view> features,
-                               const ViolinPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::violin(std::initializer_list<std::string_view> features,
+                                                 const ViolinPlotOptions& options) const
 
-DataFramePlotAccessor::violin(std::string_view value_feature,
-                               std::string_view group_feature) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
+                                                 std::string_view group_feature) const
 
-DataFramePlotAccessor::violin(std::string_view value_feature,
-                               std::string_view group_feature,
-                               const ViolinPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::violin(std::string_view value_feature,
+                                                 std::string_view group_feature,
+                                                 const ViolinPlotOptions& options) const
 ```
 
 ## What It Does

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::audit_keys(const Catalog& other, const std::vector<std::string>& left_keys, const std::vector<std::string>& right_keys, const RaggedPolicy& ragged = RaggedPolicy::defaults(OpClass::Relational)) -> CatalogKeyAudit
+CatalogKeyAudit Catalog::audit_keys(const Catalog& other, const std::vector<std::string>& left_keys, const std::vector<std::string>& right_keys, const RaggedPolicy& ragged = RaggedPolicy::defaults(OpClass::Relational))
 ```
 
 ## What It Does

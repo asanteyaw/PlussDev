@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::storage_version() const -> std::int64_t
+std::int64_t Series::storage_version() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::graph() const -> DataFrame
+DataFrame Nexus::graph() const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt) const -> Atlas
+Atlas AtlasTsAccessor::fill_gaps(pluss::subsp::stats::ts::GapFillMode mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt) const
 ```
 
 ## What It Does

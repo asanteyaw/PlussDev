@@ -8,21 +8,21 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::heatmap(pluss::msharp::RangeView::Of<std::string_view> features) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::heatmap(pluss::msharp::RangeView::Of<std::string_view> features) const
 
-DataFramePlotAccessor::heatmap(pluss::msharp::RangeView::Of<std::string_view> features,
-                                const HeatmapPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::heatmap(pluss::msharp::RangeView::Of<std::string_view> features,
+                                                  const HeatmapPlotOptions& options) const
 
-DataFramePlotAccessor::heatmap(std::string_view case_feature,
-                                std::string_view feature_feature,
-                                std::string_view value_feature,
-                                DataFrame::GroupOp op = DataFrame::GroupOp::Mean) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::heatmap(std::string_view case_feature,
+                                                  std::string_view feature_feature,
+                                                  std::string_view value_feature,
+                                                  DataFrame::GroupOp op = DataFrame::GroupOp::Mean) const
 
-DataFramePlotAccessor::heatmap(std::string_view case_feature,
-                                std::string_view feature_feature,
-                                std::string_view value_feature,
-                                DataFrame::GroupOp op,
-                                const HeatmapPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::heatmap(std::string_view case_feature,
+                                                  std::string_view feature_feature,
+                                                  std::string_view value_feature,
+                                                  DataFrame::GroupOp op,
+                                                  const HeatmapPlotOptions& options) const
 ```
 
 ## What It Does

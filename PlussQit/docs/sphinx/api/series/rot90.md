@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::rot90() const -> Series
-Series::rot90(std::int64_t k) const -> Series
-Series::rot90(std::int64_t k, std::int64_t dim1, std::int64_t dim2) const -> Series
+Series Series::rot90() const
+Series Series::rot90(std::int64_t k) const
+Series Series::rot90(std::int64_t k, std::int64_t dim1, std::int64_t dim2) const
 ```
 
 ## What It Does

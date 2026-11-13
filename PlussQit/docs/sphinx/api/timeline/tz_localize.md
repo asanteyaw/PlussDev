@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::tz_localize(std::string_view tz_name, int fold = 0, std::string_view nonexistent = "raise") -> Timeline
+Timeline Timeline::tz_localize(std::string_view tz_name, int fold = 0, std::string_view nonexistent = "raise")
 ```
 
 ## What It Does

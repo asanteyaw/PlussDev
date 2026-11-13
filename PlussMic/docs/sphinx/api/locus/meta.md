@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::meta(std::string_view name) const -> std::optional<TableMeta>
-Locus::meta(std::string_view name, const TableMeta& value) const -> Locus
+std::optional<TableMeta> Locus::meta(std::string_view name) const
+Locus Locus::meta(std::string_view name, const TableMeta& value) const
 Locus& Locus::meta_(std::string_view name, const TableMeta& value)
 ```
 

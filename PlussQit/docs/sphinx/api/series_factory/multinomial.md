@@ -7,16 +7,16 @@
 ## Signature
 
 ```cpp
-pluss::series::multinomial(std::span<const double> probs,
-                           std::int64_t num_samples,
-                           bool replacement = true,
-                           std::uint64_t seed = 0) -> Series
+Series pluss::series::multinomial(std::span<const double> probs,
+                                  std::int64_t num_samples,
+                                  bool replacement = true,
+                                  std::uint64_t seed = 0)
 
-pluss::series::multinomial(std::span<const double> probs,
-                           std::int64_t num_samples,
-                           bool replacement,
-                           Config cfg,
-                           std::uint64_t seed = 0) -> Series
+Series pluss::series::multinomial(std::span<const double> probs,
+                                  std::int64_t num_samples,
+                                  bool replacement,
+                                  Config cfg,
+                                  std::uint64_t seed = 0)
 ```
 
 ## What It Builds

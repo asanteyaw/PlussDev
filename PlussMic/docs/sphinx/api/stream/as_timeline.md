@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::as_timeline() const -> const pluss::Timeline&
+const pluss::Timeline& Stream::as_timeline() const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::part(std::string_view name) const -> Slate
-DataFrameLabelAccessor::part(std::int64_t position) const -> Slate
+Slate DataFrameLabelAccessor::part(std::string_view name) const
+Slate DataFrameLabelAccessor::part(std::int64_t position) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::specs() const noexcept -> const std::vector<PullSpec>&
+const std::vector<PullSpec>& LocusPull::specs() const noexcept
 ```
 
 ## What It Does

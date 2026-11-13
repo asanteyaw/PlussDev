@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::rename(std::string_view from, std::string_view to) const -> Nexus
+Nexus Nexus::rename(std::string_view from, std::string_view to) const
 ```
 
 ## What It Does

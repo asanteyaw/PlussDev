@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::matmul(const Slate& other) const -> SlateValue
+SlateValue Slate::matmul(const Slate& other) const
 ```
 
 ## What It Does

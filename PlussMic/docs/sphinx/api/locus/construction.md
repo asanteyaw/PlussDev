@@ -7,11 +7,11 @@
 ## Signature
 
 ```cpp
-Locus(Catalogs catalogs) -> Locus
-Locus(std::initializer_list<std::pair<std::string, Catalog>> catalogs) -> Locus
+Locus Locus(Catalogs catalogs)
+Locus Locus(std::initializer_list<std::pair<std::string, Catalog>> catalogs)
 
-static Locus::from_archive(const Archive& archive) -> Locus
-static Locus::from_nexus(const Nexus& nexus) -> Locus
+static Locus Locus::from_archive(const Archive& archive)
+static Locus Locus::from_nexus(const Nexus& nexus)
 ```
 
 ## What It Does

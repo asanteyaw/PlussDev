@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::set_table_meta(std::string_view name, const TableMeta& value) const -> Locus
+Locus Locus::set_table_meta(std::string_view name, const TableMeta& value) const
 Locus& Locus::set_table_meta_(std::string_view name, const TableMeta& value)
 ```
 

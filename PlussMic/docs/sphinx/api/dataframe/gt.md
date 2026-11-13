@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-DataFrame::gt(double other, bool strict = true) const -> DataFrame
-DataFrame::gt(std::string_view other, bool strict = true) const -> DataFrame
-DataFrame::gt(const DataFrame& other, bool strict = true) const -> DataFrame
-DataFrame::gt(const DataFrame& other, const AlignOptions& options, bool strict = true) const -> DataFrame
-DataFrame::gt(const Slate& other, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
-DataFrame::gt(const Slate& other, Axis axis, const AlignOptions& options, bool strict = true) const -> DataFrame
-DataFrame::gt(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const -> DataFrame
+DataFrame DataFrame::gt(double other, bool strict = true) const
+DataFrame DataFrame::gt(std::string_view other, bool strict = true) const
+DataFrame DataFrame::gt(const DataFrame& other, bool strict = true) const
+DataFrame DataFrame::gt(const DataFrame& other, const AlignOptions& options, bool strict = true) const
+DataFrame DataFrame::gt(const Slate& other, Axis axis = Axis::Feature, bool strict = true) const
+DataFrame DataFrame::gt(const Slate& other, Axis axis, const AlignOptions& options, bool strict = true) const
+DataFrame DataFrame::gt(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature, bool strict = true) const
 ```
 
 ## What It Does

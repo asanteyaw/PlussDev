@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::materialize(const JoinPlan& plan, const JoinOptions& options = {}) const -> Catalog
+Catalog Locus::materialize(const JoinPlan& plan, const JoinOptions& options = {}) const
 ```
 
 ## What It Does

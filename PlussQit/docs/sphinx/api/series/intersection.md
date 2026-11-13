@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::intersection(pluss::RangeView<Series> others,
-                     bool sorted = true,
-                     bool assume_unique = false) const -> Series
+Series Series::intersection(pluss::RangeView<Series> others,
+                            bool sorted = true,
+                            bool assume_unique = false) const
 ```
 
 ## What It Does

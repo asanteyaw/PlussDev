@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::cumprod(bool skip_nulls = true) const -> DataFrame
-DataFrame::cumprod(Axis axis, bool skip_nulls = true) const -> DataFrame
+DataFrame DataFrame::cumprod(bool skip_nulls = true) const
+DataFrame DataFrame::cumprod(Axis axis, bool skip_nulls = true) const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::cummax(bool skip_nulls = true) const -> DataFrame
-DataFrame::cummax(Axis axis, bool skip_nulls = true) const -> DataFrame
+DataFrame DataFrame::cummax(bool skip_nulls = true) const
+DataFrame DataFrame::cummax(Axis axis, bool skip_nulls = true) const
 ```
 
 ## What It Does

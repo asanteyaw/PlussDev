@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::unbind(std::int64_t dim = 0) const -> std::vector<Series>
+std::vector<Series> Series::unbind(std::int64_t dim = 0) const
 ```
 
 ## What It Does

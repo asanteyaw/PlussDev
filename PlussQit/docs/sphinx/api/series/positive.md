@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::positive() const -> Series
+Series Series::positive() const
 Series& Series::positive_() const
 ```
 

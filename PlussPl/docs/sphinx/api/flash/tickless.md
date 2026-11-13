@@ -49,8 +49,8 @@ fig1.show();
 
 ![Output of Example 1](img/flash-tickless-off-default.svg)
 
-Example 2. `tickless(pane)` — axes frame hidden, tick labels retained — confirmed to
-render genuinely differently from Example 1 via direct SVG comparison.
+Example 2. `tickless(pane)` — axes frame hidden, tick labels retained, which renders differently
+from Example 1.
 
 ```cpp
 using namespace pluss::pl;
@@ -75,8 +75,8 @@ tickless(default true) differs from default: 1
 
 ![Output of Example 2](img/flash-tickless-on.svg)
 
-Example 3 (edge case). `tickless(pane, false)` is byte-identical to the untouched
-default — confirming the `false` branch is a genuine restore, not a distinct third
+Example 3 (edge case). `tickless(pane, false)` is identical to the untouched
+default — confirming the `false` branch is a restore, not a distinct third
 look.
 
 ```cpp
@@ -102,8 +102,8 @@ tickless(false) vs default: 1
 ## Notes
 
 - Not `noexcept`.
-- Unlike [`flash::despine`](despine.md), this function genuinely does something —
-  it is a real, verified wrapper around `Pane::axes_visible` and the three
+- Unlike [`flash::despine`](despine.md), this function does something —
+  it is a wrapper around `Pane::axes_visible` and the three
   `*_tick_labels` setters.
 - Both branches always end with tick labels visible; there is no argument combination
   through this function alone that hides tick labels.

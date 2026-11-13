@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::neighbors(std::string_view table) const -> DataFrame
+DataFrame Nexus::neighbors(std::string_view table) const
 ```
 
 ## What It Does

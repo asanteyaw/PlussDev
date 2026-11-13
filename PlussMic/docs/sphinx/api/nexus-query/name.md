@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusTraverse::name(std::string_view value) const -> NexusTraverse
+NexusTraverse NexusTraverse::name(std::string_view value) const
 ```
 
 ## What It Does

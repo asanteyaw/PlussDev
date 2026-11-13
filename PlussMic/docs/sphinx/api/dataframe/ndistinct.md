@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::ndistinct(bool dropnull = true) const -> Slate
+Slate DataFrame::ndistinct(bool dropnull = true) const
 ```
 
 ## What It Does

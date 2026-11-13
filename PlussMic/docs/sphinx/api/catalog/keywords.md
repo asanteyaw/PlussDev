@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::keywords(std::string_view field, int top_n = 10) -> Catalog
+Catalog Catalog::keywords(std::string_view field, int top_n = 10)
 ```
 
 ## What It Does

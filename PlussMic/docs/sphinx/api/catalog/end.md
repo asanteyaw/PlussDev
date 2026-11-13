@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::end() const -> const_iterator
+const_iterator Catalog::end() const
 ```
 
 ## What It Does

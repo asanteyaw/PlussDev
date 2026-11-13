@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::nanquantile() const -> Series
-Series::nanquantile(double q) const -> Series
+Series Series::nanquantile() const
+Series Series::nanquantile(double q) const
 ```
 
 ## What It Does

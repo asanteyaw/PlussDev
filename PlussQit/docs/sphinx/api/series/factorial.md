@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::factorial() const -> Series
+Series Series::factorial() const
 ```
 
 ## What It Does

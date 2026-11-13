@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::take(pluss::msharp::RangeView::Int indices) const -> Slate
+Slate SlateLabelAccessor::take(pluss::msharp::RangeView::Int indices) const
 ```
 
 ## What It Does

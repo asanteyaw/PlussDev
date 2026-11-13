@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::grep(std::string_view field, std::string_view pattern) -> Catalog
+Catalog Catalog::grep(std::string_view field, std::string_view pattern)
 ```
 
 ## What It Does

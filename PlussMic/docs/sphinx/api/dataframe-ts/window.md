@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::window(pluss::RangeView<DataFrame::WindowSpec> specs, bool keep_input = true) const -> DataFrame
-DataFrameTsAccessor::window(std::string_view duration, WindowClosure closure = WindowClosure::Right) const -> DataFrameTsWindowAccessor
+DataFrame DataFrameTsAccessor::window(pluss::RangeView<DataFrame::WindowSpec> specs, bool keep_input = true) const
+DataFrameTsWindowAccessor DataFrameTsAccessor::window(std::string_view duration, WindowClosure closure = WindowClosure::Right) const
 ```
 
 ## What It Does

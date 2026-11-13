@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods = 1, double epsilon = 1e-12) const -> DataFrame
+DataFrame DataFrameTsAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods = 1, double epsilon = 1e-12) const
 ```
 
 ## What It Does

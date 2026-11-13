@@ -8,11 +8,11 @@
 ## Signatures
 
 ```cpp
-DataFrame::fillnull_(double value) -> DataFrame&
-DataFrame::fillnull_(std::string_view value) -> DataFrame&
-DataFrame::fillnull_(const char* value) -> DataFrame&
-DataFrame::fillnull_(const pluss::Timeline& value) -> DataFrame&
-DataFrame::fillnull_(const pluss::Duration& value) -> DataFrame&
+DataFrame& DataFrame::fillnull_(double value)
+DataFrame& DataFrame::fillnull_(std::string_view value)
+DataFrame& DataFrame::fillnull_(const char* value)
+DataFrame& DataFrame::fillnull_(const pluss::Timeline& value)
+DataFrame& DataFrame::fillnull_(const pluss::Duration& value)
 ```
 
 ## What It Does

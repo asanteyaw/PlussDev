@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::fillnull(double value) const -> Slate
-DataFrameLabelAccessor::fillnull(std::string_view value) const -> Slate
-DataFrameLabelAccessor::fillnull(const char* value) const -> Slate
-DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const -> Slate
+Slate DataFrameLabelAccessor::fillnull(double value) const
+Slate DataFrameLabelAccessor::fillnull(std::string_view value) const
+Slate DataFrameLabelAccessor::fillnull(const char* value) const
+Slate DataFrameLabelAccessor::fillnull(const pluss::Timeline& value) const
 ```
 
 ## What It Does

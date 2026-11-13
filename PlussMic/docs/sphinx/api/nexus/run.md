@@ -7,9 +7,9 @@
 ## Signatures
 
 ```cpp
-Nexus::run(std::string_view name) const -> DataFrame
+DataFrame Nexus::run(std::string_view name) const
 
-Nexus::run(std::string_view name, const JoinPlan& plan) const -> DataFrame
+DataFrame Nexus::run(std::string_view name, const JoinPlan& plan) const
 ```
 
 ## What It Does

@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::contour3D(Pane& pane, X&& x, Y&& y, Z&& z, int level_count = 8)
+Trace& flash::contour3D(Pane& pane, Series x, Series y, Series z, int level_count = 8)
 ```
 
 ## What It Does
@@ -18,7 +17,7 @@ A pure, one-line rename of [`flash::ridge3`](ridge3.md)'s `level_count`-taking o
 nothing more, with `level_count` additionally defaulted to `8` here (matching
 `ridge3`'s own default when its `level_count` argument is omitted). Exists purely to
 offer a shorter, more familiar name some callers already expect. Directly
-verified byte-identical. Note only the `level_count`-taking overload is aliased —
+identical. Note only the `level_count`-taking overload is aliased —
 [`flash::ridge3`](ridge3.md)'s explicit-`levels` overload has no `contour3D` equivalent.
 
 ## Parameters
@@ -76,8 +75,8 @@ fig.show();
 
 ![Output of Example 2](img/flash-contour3D-2-level-count-3.svg)
 
-Example 3 (verification, not a distinct rendering). `flash::contour3D`'s default
-(`level_count = 8`) renders byte-identical to `flash::ridge3(pane, x, y, z, 8)`.
+Example 3 (a comparison, not a new picture). `flash::contour3D`'s default
+(`level_count = 8`) renders identical to `flash::ridge3(pane, x, y, z, 8)`.
 
 ```cpp
 using namespace pluss::pl;

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::leap() const -> Slate
+Slate SlateTimelineAccessor::leap() const
 ```
 
 ## What It Does

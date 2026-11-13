@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Archive::plot() const -> ArchivePlotAccessor
-Archive::plot(const pluss::table::AtlasPlotOptions& options) const -> ArchivePlotAccessor
+ArchivePlotAccessor Archive::plot() const
+ArchivePlotAccessor Archive::plot(const pluss::table::AtlasPlotOptions& options) const
 ```
 
 ## What It Does

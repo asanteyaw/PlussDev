@@ -1,0 +1,20 @@
+PAGE = dict(
+    slug='align_group_accessors',
+    title='Pane::x_align_group, y_align_group, z_align_group',
+    signature='const std::string& Pane::x_align_group() const noexcept\nconst std::string& Pane::y_align_group() const noexcept\nconst std::string& Pane::z_align_group() const noexcept',
+    intro="Read the alignment group of one axis of the pane: the name set by [`align_x`](align_x.md), [`align_y`](align_y.md), [`align_z`](align_z.md), [`align_xy`](align_xy.md) or [`align_xyz`](align_xyz.md). The string is empty when the axis is in no group, which is the state of a new pane and the state after a `clear_*_align` call.\n\nCall them to check which panes share a range (a mistyped group name shows up here as a group of one), to find the panes of a group in code that builds figures from a list, and to copy one pane's grouping onto another. They report the name only; the shared range is worked out when the figure is drawn.",
+    parameters='*(none)*',
+    returns="`const std::string&`\n    The group name of that axis, empty for none. The reference is to the pane's own string and follows later calls; copy it to keep the value.",
+    examples=[
+        dict(id='defaults', text='A new pane is in no group on any axis.',
+             code='auto fig = studio("accessors_new");\nauto& pane = fig.pane2("p");\npane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\nstd::cout << "x \'" << pane.x_align_group() << "\', y \'" << pane.y_align_group() << "\', z \'" << pane.z_align_group() << "\'\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='per_axis', text="Each axis has its own name. The three setters put the axes in three groups, and each accessor returns its own axis's name.",
+             code='auto fig = studio("accessors_axes");\nauto& pane = fig.pane3("p");\npane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});\npane.align_x("columns").align_y("rows").align_z("depth");\nstd::cout << pane.x_align_group() << " " << pane.y_align_group() << " " << pane.z_align_group() << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='members', text='Finding the members of a group. Panes are listed by `Studio::panes()`, so the panes of a group are found by comparing names; this is also the quickest check that two panes really share one.',
+             code='auto fig = studio("accessors_members");\nfig.mosaic(2, 2);\nconst char* groups[] = {"a", "b", "a", ""};\nfor (int i = 0; i < 4; ++i) {\n  auto& pane = fig.pane2("pane " + std::to_string(i));\n  pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\n  pane.align_x(groups[i]);\n}\nfor (const auto& pane : fig.panes()) {\n  std::cout << pane.title_text() << ": \'" << pane.x_align_group() << "\'\\n";\n}\nfig.save_svg("figure.svg");'),
+        dict(id='copy', text='Copying a grouping. The names read from one pane are given to another, which then shares the range. The accessors return references, so the values are copied into strings first.',
+             code='auto fig = studio("accessors_copy");\nfig.mosaic(1, 2);\nauto& first = fig.pane2("first");\nfirst.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\nfirst.align_xy("shared");\nauto& second = fig.pane2("second");\nsecond.trend(std::vector<double>{0, 10, 20}, std::vector<double>{0, 10, 0});\nsecond.align_x(std::string(first.x_align_group())).align_y(std::string(first.y_align_group()));\nstd::cout << "second: \'" << second.x_align_group() << "\' \'" << second.y_align_group() << "\'\\n";\nfig.save_svg("figure.svg");'),
+    ],
+    notes='- All three are `noexcept` and do not change the pane.\n- An unset group is the empty string, never an error.',
+    see=['[`Pane::align_x`](align_x.md), [`align_y`](align_y.md), [`align_z`](align_z.md): set a group.', '[`Pane::clear_align`](clear_align.md): leave all groups.'],
+)

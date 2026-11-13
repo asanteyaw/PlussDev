@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::intersect(const Slate& other) const -> Slate
+Slate SlateLabelAccessor::intersect(const Slate& other) const
 ```
 
 ## What It Does

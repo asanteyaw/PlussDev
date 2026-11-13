@@ -8,8 +8,8 @@
 ## Signature
 
 ```cpp
-Slate::extract(std::string_view pattern,
-                pluss::RangeView<std::string_view> names = {}) const -> DataFrame
+DataFrame Slate::extract(std::string_view pattern,
+                          pluss::RangeView<std::string_view> names = {}) const
 ```
 
 ## What It Does

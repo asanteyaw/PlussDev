@@ -8,11 +8,11 @@
 ## Signatures
 
 ```cpp
-DataFrame::dropnull(const DropOptions& options) const -> DataFrame
-DataFrame::dropnull(pluss::RangeView<std::string_view> features = {}, bool all = false) const -> DataFrame
+DataFrame DataFrame::dropnull(const DropOptions& options) const
+DataFrame DataFrame::dropnull(pluss::RangeView<std::string_view> features = {}, bool all = false) const
 
 template <detail::StringViewNameRange NameRange>
-DataFrame::dropnull(const NameRange& features, bool all = false) const -> DataFrame
+DataFrame DataFrame::dropnull(const NameRange& features, bool all = false) const
 ```
 
 ## What It Does

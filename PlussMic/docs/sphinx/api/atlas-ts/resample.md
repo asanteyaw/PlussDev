@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsAccessor::resample(std::string_view freq, std::int64_t step = 1) const -> AtlasTsResampler
+AtlasTsResampler AtlasTsAccessor::resample(std::string_view freq, std::int64_t step = 1) const
 ```
 
 ## What It Does

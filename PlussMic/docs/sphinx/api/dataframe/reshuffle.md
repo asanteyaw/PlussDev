@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::reshuffle(Axis axis = Axis::Case, std::optional<std::uint64_t> random_state = std::nullopt) const -> DataFrame
+DataFrame DataFrame::reshuffle(Axis axis = Axis::Case, std::optional<std::uint64_t> random_state = std::nullopt) const
 ```
 
 ## What It Does

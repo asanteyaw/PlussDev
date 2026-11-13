@@ -7,14 +7,14 @@
 ## Signature
 
 ```cpp
-pluss::series::empty_like(const Series& like,
-                          ScalarType dtype) -> Series
+Series pluss::series::empty_like(const Series& like,
+                                 ScalarType dtype)
 
-pluss::series::empty_like(const Series& like,
-                          Config cfg = {}) -> Series
+Series pluss::series::empty_like(const Series& like,
+                                 Config cfg = {})
 
-pluss::series::empty_like(const Series& like,
-                          opts...) -> Series
+Series pluss::series::empty_like(const Series& like,
+                                 opts...)
 ```
 
 ## What It Builds

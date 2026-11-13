@@ -7,25 +7,11 @@
 ## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-bool flash::animate3(X&& x, Y&& y, Z&& z, const Animation3Options& options = {})
+bool flash::animate3(Series x, Series y, Series z, const Animation3Options& options = {})
 ```
 
-```{important} This page's verification is deliberately incomplete -- window-launching was never actually invoked
-Every other function documented across this session was verified by actually calling
-it and comparing/inspecting its real output. animate3 is different: it builds a
-self-contained, JavaScript-driven HTML animation page (rotating point/path rendering,
-play/pause, speed control, PNG snapshot export -- all client-side canvas code) and
-hands it to `pluss::view::show_html_window`, which attempts to open a REAL native
-window on the host machine. Actually invoking that call from an unattended
-documentation-generation script risks popping up a visible GUI window as an
-unintended side effect, so it was deliberately never triggered while writing this
-page. What WAS directly verified: every one of animate3's own pre-flight
-PLUSS_CHECK validation guards (all seven of them), each triggered with a
-deliberately invalid options value, confirming they throw BEFORE the window-launch
-call is ever reached -- see the edge-case example below. The generated HTML markup,
-its embedded JavaScript rotation/projection math, and the window itself were read
-from source and described below, but not independently executed or screenshotted.
+```{important} Opens a window: the examples that launch it are not run when the documentation is built
+`animate3` builds a self-contained, JavaScript-driven HTML animation page (rotating point and path rendering, play and pause, speed control, PNG snapshot export, all drawn client-side) and hands it to `pluss::view::show_html_window`, which opens a native window on the machine that runs it. Because a documentation build runs unattended, the examples that call it are shown with the value they return and are not executed there; the companion block after each of them draws the same geometry and camera to a file, and that file is the figure shown. The options are checked before any window is opened: an invalid value throws `pluss::Error` at once, as the edge-case example shows.
 ```
 
 ## What It Does
@@ -42,7 +28,7 @@ slider. That HTML is opened in a real window via `pluss::view::show_html_window`
 ## Parameters
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3 and identical lengths)
-    The 3D point/path data. Unequal lengths throw `std::invalid_argument("flash::animate3:
+    The 3D point/path data. Unequal lengths throw `pluss::Error("flash::animate3:
     x, y, z must have identical lengths")`.
 
 **options** (`const Animation3Options&`, optional)
@@ -53,18 +39,18 @@ slider. That HTML is opened in a real window via `pluss::view::show_html_window`
 | Field | Type and default | Description |
 |---|---|---|
 | `title` | `std::string`, default `"PlussPl 3D Animation"` | The HTML page's `<title>` and on-page heading, and the window title passed to `pluss::view::HtmlWindowOptions`. |
-| `width`, `height` | `std::int64_t`, default `1280`, `820` | The window/canvas size. Both must be at least `640`×`420`, or `animate3` throws `std::invalid_argument("flash::animate3: window size too small")` — verified below. |
+| `width`, `height` | `std::int64_t`, default `1280`, `820` | The window/canvas size. Both must be at least `640`×`420`, or `animate3` throws `pluss::Error("flash::animate3: window size too small")` — verified below. |
 | `sweep_plane` | `Anim3SweepPlane`, default `YZ` | Which of the three rotation planes is continuously swept over time by the animation loop: `XY`, `XZ`, or `YZ`. |
 | `base_rot_xy_deg`, `base_rot_xz_deg`, `base_rot_yz_deg` | `double`, default `0.0`, `12.0`, `24.0` | Fixed starting rotation offsets in each plane, applied before the `sweep_plane`'s continuous sweep animates on top. |
 | `sweep_speed_deg_per_sec` | `double`, default `18.0` | Base angular sweep speed (degrees per second), before the in-page speed slider's multiplier (`0.2×`–`3.0×`) is applied. |
-| `camera_distance`, `camera_yaw_deg`, `camera_pitch_deg` | `double`, default `5.4`, `30.0`, `-14.0` | The fixed 3D→2D projection camera used to render the rotated points onto the canvas. `camera_distance` must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: camera_distance must be positive")`. |
-| `min_perspective_denom` | `double`, default `0.15` | A floor on the perspective-divide denominator, preventing points very close to the camera from scaling toward infinity. Must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: min_perspective_denom must be positive")`. |
-| `plot_padding_fraction` | `double`, default `0.08` | Fraction of the canvas reserved as border padding. Must be in `[0.0, 0.45)`, or `animate3` throws `std::invalid_argument("flash::animate3: invalid plot_padding_fraction")`. |
+| `camera_distance`, `camera_yaw_deg`, `camera_pitch_deg` | `double`, default `5.4`, `30.0`, `-14.0` | The fixed 3D→2D projection camera used to render the rotated points onto the canvas. `camera_distance` must be positive, or `animate3` throws `pluss::Error("flash::animate3: camera_distance must be positive")`. |
+| `min_perspective_denom` | `double`, default `0.15` | A floor on the perspective-divide denominator, preventing points very close to the camera from scaling toward infinity. Must be positive, or `animate3` throws `pluss::Error("flash::animate3: min_perspective_denom must be positive")`. |
+| `plot_padding_fraction` | `double`, default `0.08` | Fraction of the canvas reserved as border padding. Must be in `[0.0, 0.45)`, or `animate3` throws `pluss::Error("flash::animate3: invalid plot_padding_fraction")`. |
 | `progressive_reveal` | `bool`, default `true` | Whether points appear gradually over time (`true`, paced by `reveal_points_per_sec`) or are all visible from the first frame (`false`). |
-| `reveal_points_per_sec` | `double`, default `96.0` | How many points become visible per second when `progressive_reveal` is `true`. Must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: reveal_points_per_sec must be positive")`. |
+| `reveal_points_per_sec` | `double`, default `96.0` | How many points become visible per second when `progressive_reveal` is `true`. Must be positive, or `animate3` throws `pluss::Error("flash::animate3: reveal_points_per_sec must be positive")`. |
 | `connect_path` | `bool`, default `true` | Whether currently-visible points are joined by a line (`true`) or shown as unconnected markers (`false`). |
-| `line_width` | `double`, default `1.5` | Stroke width for the connecting line when `connect_path` is `true`. Must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: line_width must be positive")`. |
-| `point_radius` | `double`, default `2.4` | Base marker radius (in canvas pixels), scaled per-point by projected depth. Must be positive, or `animate3` throws `std::invalid_argument("flash::animate3: point_radius must be positive")`. |
+| `line_width` | `double`, default `1.5` | Stroke width for the connecting line when `connect_path` is `true`. Must be positive, or `animate3` throws `pluss::Error("flash::animate3: line_width must be positive")`. |
+| `point_radius` | `double`, default `2.4` | Base marker radius (in canvas pixels), scaled per-point by projected depth. Must be positive, or `animate3` throws `pluss::Error("flash::animate3: point_radius must be positive")`. |
 | `enable_snapshot` | `bool`, default `true` | Whether a "Save PNG" button (and the `S` keyboard shortcut) is included in the page, letting the viewer export the current canvas frame as a PNG download. |
 | `snapshot_prefix` | `std::string`, default `"plusspl_3d_frame"` | Filename prefix used for exported PNG snapshots (`{prefix}_{timestamp}.png`). |
 
@@ -219,7 +205,7 @@ opts.width = 100;
 try {
   flash::animate3(x, y, z, opts);
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << "animate3(width too small) threw: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

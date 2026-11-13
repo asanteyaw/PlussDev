@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::extend(const DataFrame& other, FrameMatchRule features = FrameMatchRule::Unite, bool fresh_cases = false, bool reject_repeated_cases = false) const -> DataFrame
+DataFrame DataFrame::extend(const DataFrame& other, FrameMatchRule features = FrameMatchRule::Unite, bool fresh_cases = false, bool reject_repeated_cases = false) const
 ```
 
 ## What It Does

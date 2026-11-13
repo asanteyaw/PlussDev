@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::standardize() const -> Series
-Series::standardize(std::int64_t dim) const -> Series
-Series::stat.standardize(...) -> Series
-Series::stat().standardize(...) -> Series
+Series Series::standardize() const
+Series Series::standardize(std::int64_t dim) const
+Series Series::stat.standardize(...)
+Series Series::stat().standardize(...)
 ```
 
 ## What It Does

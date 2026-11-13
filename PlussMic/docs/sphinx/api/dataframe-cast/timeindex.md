@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-DataFrameCastAccessor::timeindex() const -> DataFrame
+DataFrame DataFrameCastAccessor::timeindex() const
 ```
 
 ## What It Does

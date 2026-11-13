@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::rpow(double other) const -> Slate
-Slate::rpow(const Slate& other) const -> Slate
+Slate Slate::rpow(double other) const
+Slate Slate::rpow(const Slate& other) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::head(std::int64_t n = 5) const -> Nexus
+Nexus Nexus::head(std::int64_t n = 5) const
 ```
 
 ## What It Does

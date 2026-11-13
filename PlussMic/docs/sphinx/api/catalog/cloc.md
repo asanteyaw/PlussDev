@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Catalog::cloc(std::int64_t row) const -> Catalog
-Catalog::cloc(std::int64_t start, std::int64_t stop) const -> Catalog
+Catalog Catalog::cloc(std::int64_t row) const
+Catalog Catalog::cloc(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does

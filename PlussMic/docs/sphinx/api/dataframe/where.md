@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::where(const pluss::Series& bool_mask) const -> DataFrame
-DataFrame::where(const Slate& bool_mask) const -> DataFrame
-DataFrame::where(const Slate& bool_mask, const AlignOptions& options) const -> DataFrame
+DataFrame DataFrame::where(const pluss::Series& bool_mask) const
+DataFrame DataFrame::where(const Slate& bool_mask) const
+DataFrame DataFrame::where(const Slate& bool_mask, const AlignOptions& options) const
 ```
 
 ## What It Does

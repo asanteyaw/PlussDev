@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::as_series() const -> const pluss::Series&
+const pluss::Series& Slate::as_series() const
 ```
 
 ## What It Does

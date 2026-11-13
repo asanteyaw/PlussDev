@@ -7,13 +7,13 @@
 ## Signatures
 
 ```cpp
-Nexus::inject(std::string_view key, const DataFrame& frame) const -> Nexus
+Nexus Nexus::inject(std::string_view key, const DataFrame& frame) const
 
-Nexus::inject(std::initializer_list<std::pair<std::string_view, DataFrame>> tables) const -> Nexus
+Nexus Nexus::inject(std::initializer_list<std::pair<std::string_view, DataFrame>> tables) const
 
-Nexus::inject(const DataFrame& frame) const -> Nexus
+Nexus Nexus::inject(const DataFrame& frame) const
 
-Nexus::inject(std::initializer_list<DataFrame> tables) const -> Nexus
+Nexus Nexus::inject(std::initializer_list<DataFrame> tables) const
 ```
 
 ## What It Does

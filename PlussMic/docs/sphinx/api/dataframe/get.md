@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::get(std::string_view feature_name) const -> std::optional<Slate>
+std::optional<Slate> DataFrame::get(std::string_view feature_name) const
 ```
 
 ## What It Does

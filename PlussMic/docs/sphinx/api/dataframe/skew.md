@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::skew(Axis axis = Axis::Case, std::int64_t min_count = 3) const -> Slate
+Slate DataFrame::skew(Axis axis = Axis::Case, std::int64_t min_count = 3) const
 ```
 
 ## What It Does

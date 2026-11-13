@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::unname() const -> Slate
+Slate Slate::unname() const
 ```
 
 ## What It Does

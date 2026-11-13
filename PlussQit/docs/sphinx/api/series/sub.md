@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::sub(const Series& rhs) const -> Series
-Series::sub(const Series& rhs, double alpha) const -> Series
+Series Series::sub(const Series& rhs) const
+Series Series::sub(const Series& rhs, double alpha) const
 Series& Series::sub_(const Series& rhs)
 ```
 

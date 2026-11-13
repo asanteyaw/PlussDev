@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::rolling(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
-DataFrameTsAccessor::rolling(std::string_view duration, WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> DataFrame
-DataFrameTsAccessor::rolling(pluss::RangeView<DataFrame::WindowSpec> specs, bool keep_input = true) const -> DataFrame
+DataFrame DataFrameTsAccessor::rolling(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const
+DataFrame DataFrameTsAccessor::rolling(std::string_view duration, WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
+DataFrame DataFrameTsAccessor::rolling(pluss::RangeView<DataFrame::WindowSpec> specs, bool keep_input = true) const
 ```
 
 ## What It Does

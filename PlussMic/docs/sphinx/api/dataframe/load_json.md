@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-static DataFrame load_json(std::string_view filepath) -> DataFrame
-static DataFrame load_json(std::string_view filepath, const pluss::loader::Config& config) -> DataFrame
-static DataFrame load_json(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
+static DataFrame load_json(std::string_view filepath)
+static DataFrame load_json(std::string_view filepath, const pluss::loader::Config& config)
+static DataFrame load_json(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)
 ```
 
 ## What It Does

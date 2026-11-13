@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::all() const -> Series
-Series::all(std::int64_t dim) const -> Series
-Series::all(std::int64_t dim, bool keepdim) const -> Series
+Series Series::all() const
+Series Series::all(std::int64_t dim) const
+Series Series::all(std::int64_t dim, bool keepdim) const
 ```
 
 ## What It Does

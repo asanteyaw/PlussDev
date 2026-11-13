@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::unsqueeze() const -> Atlas
-DataFrame::unsqueeze(const Slate& depth_labels) const -> Atlas
+Atlas DataFrame::unsqueeze() const
+Atlas DataFrame::unsqueeze(const Slate& depth_labels) const
 ```
 
 ## What It Does

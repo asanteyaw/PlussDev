@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::logical_xor(const Series& rhs) const -> Series
+Series Series::logical_xor(const Series& rhs) const
 Series& Series::logical_xor_(const Series& rhs) const
 ```
 

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::dropnull() const -> Archive
+Archive Archive::dropnull() const
 ```
 
 ## What It Does

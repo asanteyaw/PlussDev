@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::stat.skewness() -> Series
-Series::stat.skewness(std::int64_t dim) -> Series
-Series::stat().skewness() -> Series
-Series::stat().skewness(std::int64_t dim) -> Series
+Series Series::stat.skewness()
+Series Series::stat.skewness(std::int64_t dim)
+Series Series::stat().skewness()
+Series Series::stat().skewness(std::int64_t dim)
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::sql() const -> DataFrameSqlAccessor
-DataFrame::sql(SqlOptions options) const -> DataFrameSqlAccessor
+DataFrameSqlAccessor DataFrame::sql() const
+DataFrameSqlAccessor DataFrame::sql(SqlOptions options) const
 ```
 
 ## What It Does

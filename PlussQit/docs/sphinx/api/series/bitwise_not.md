@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::bitwise_not() const -> Series
+Series Series::bitwise_not() const
 Series& Series::bitwise_not_() const
 ```
 

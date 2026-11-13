@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::distinct(bool dropnull = true) const -> Slate
+Slate SlateLabelAccessor::distinct(bool dropnull = true) const
 ```
 
 ## What It Does

@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::argmax() const -> Series
-Series::argmax(std::int64_t dim) const -> Series
-Series::argmax(std::int64_t dim, bool keepdim) const -> Series
+Series Series::argmax() const
+Series Series::argmax(std::int64_t dim) const
+Series Series::argmax(std::int64_t dim, bool keepdim) const
 ```
 
 ## What It Does

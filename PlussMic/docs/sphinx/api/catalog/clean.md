@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::clean(std::string_view field) -> Catalog
+Catalog Catalog::clean(std::string_view field)
 ```
 
 ## What It Does

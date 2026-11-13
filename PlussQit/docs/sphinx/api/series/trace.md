@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::trace() const -> Series
-Series::trace(std::int64_t offset) const -> Series
-Series::trace(std::int64_t offset, std::int64_t dim1, std::int64_t dim2) const -> Series
+Series Series::trace() const
+Series Series::trace(std::int64_t offset) const
+Series Series::trace(std::int64_t offset, std::int64_t dim1, std::int64_t dim2) const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameGrouped::filter(const pluss::Series& keep) const -> DataFrame
-DataFrameGrouped::filter(const Slate& keep) const -> DataFrame
+DataFrame DataFrameGrouped::filter(const pluss::Series& keep) const
+DataFrame DataFrameGrouped::filter(const Slate& keep) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::conj_physical() const -> Series
+Series Series::conj_physical() const
 Series& Series::conj_physical_() const
 ```
 

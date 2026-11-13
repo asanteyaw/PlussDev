@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::clamp(double min_v, double max_v) const -> Series
+Series Series::clamp(double min_v, double max_v) const
 Series& Series::clamp_(double min_v, double max_v)
 ```
 

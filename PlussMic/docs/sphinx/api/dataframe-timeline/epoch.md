@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::epoch(TimeUnit unit = TimeUnit::Nanos) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::epoch(TimeUnit unit = TimeUnit::Nanos) const
 ```
 
 ## What It Does

@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Slate::fillnull(double value) const -> Slate
-Slate::fillnull(std::string_view value) const -> Slate
-Slate::fillnull(const pluss::Timeline& value) const -> Slate
-Slate::fillnull(const pluss::Duration& value) const -> Slate
+Slate Slate::fillnull(double value) const
+Slate Slate::fillnull(std::string_view value) const
+Slate Slate::fillnull(const pluss::Timeline& value) const
+Slate Slate::fillnull(const pluss::Duration& value) const
 ```
 
 ## What It Does

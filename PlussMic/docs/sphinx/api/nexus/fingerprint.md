@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::fingerprint() const -> std::string
+std::string Nexus::fingerprint() const
 ```
 
 ## What It Does

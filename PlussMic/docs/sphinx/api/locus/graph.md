@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::graph() const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::graph() const
 ```
 
 ## What It Does

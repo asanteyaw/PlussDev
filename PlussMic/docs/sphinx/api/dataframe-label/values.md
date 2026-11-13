@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::values() const -> Slate
+Slate DataFrameLabelAccessor::values() const
 ```
 
 ## What It Does

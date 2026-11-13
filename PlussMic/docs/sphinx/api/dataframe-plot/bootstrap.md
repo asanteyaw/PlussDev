@@ -8,9 +8,9 @@
 ## Signature
 
 ```cpp
-DataFramePlotAccessor::bootstrap(
+pluss::pl::Studio DataFramePlotAccessor::bootstrap(
     std::string_view feature,
-    const BootstrapPlotOptions& options = {}) const -> pluss::pl::Studio
+    const BootstrapPlotOptions& options = {}) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::scan() const -> DataFrame
+DataFrame Nexus::scan() const
 ```
 
 ## What It Does

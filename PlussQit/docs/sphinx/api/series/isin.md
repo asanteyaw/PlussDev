@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::isin(const Series& test_elements) const -> Series
-Series::isin(const Series& test_elements, bool assume_unique) const -> Series
-Series::isin(const Series& test_elements, bool assume_unique, bool invert) const -> Series
+Series Series::isin(const Series& test_elements) const
+Series Series::isin(const Series& test_elements, bool assume_unique) const
+Series Series::isin(const Series& test_elements, bool assume_unique, bool invert) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::count(Axis axis = Axis::Case) const -> Slate
+Slate DataFrame::count(Axis axis = Axis::Case) const
 ```
 
 ## What It Does

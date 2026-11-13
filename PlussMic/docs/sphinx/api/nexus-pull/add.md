@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-NexusPull::add(const nexus::PullSpec& spec) -> NexusPull&
-NexusPull::add(std::initializer_list<nexus::PullSpec> specs) -> NexusPull&
+NexusPull& NexusPull::add(const nexus::PullSpec& spec)
+NexusPull& NexusPull::add(std::initializer_list<nexus::PullSpec> specs)
 ```
 
 ## What It Does

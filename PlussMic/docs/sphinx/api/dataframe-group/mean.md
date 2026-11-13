@@ -8,10 +8,10 @@
 ## Signature
 
 ```cpp
-DataFrameGrouped::mean() const -> DataFrame
-DataFrameGrouped::mean(std::string_view feature) const -> DataFrame
-DataFrameGrouped::mean(std::initializer_list<std::string_view> features) const -> DataFrame
-DataFrameGrouped::mean(pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrameGrouped::mean() const
+DataFrame DataFrameGrouped::mean(std::string_view feature) const
+DataFrame DataFrameGrouped::mean(std::initializer_list<std::string_view> features) const
+DataFrame DataFrameGrouped::mean(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does

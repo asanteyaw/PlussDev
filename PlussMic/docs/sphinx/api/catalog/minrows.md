@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::minrows() -> std::int64_t
+std::int64_t Catalog::minrows()
 ```
 
 ## What It Does

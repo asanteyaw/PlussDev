@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::symdiff(const Slate& other) const -> Slate
+Slate SlateLabelAccessor::symdiff(const Slate& other) const
 ```
 
 ## What It Does

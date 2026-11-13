@@ -7,24 +7,14 @@
 ## Signature
 
 ```cpp
-[[nodiscard]] const std::vector<Pane>& Studio::panes() const noexcept
+const std::deque<Pane>& Studio::panes() const noexcept
 ```
 
 ## What It Does
 
-Returns the figure's full list of panes, in creation order — every pane created via
-[`pane2()`](pane2.md), [`pane3()`](pane3.md), [`subpane2()`](subpane2.md), or
-[`subpane3()`](subpane3.md), including subpanes (they're appended to the same list as
-top-level panes; only their [`PanePlacement`](studio.md) distinguishes them). This is a
-**read-only** view — there is no mutable overload, and no public API to remove a pane from
-this list once created.
+Returns the figure's panes in creation order, as a read-only sequence. It supports indexing, `size()` and range-for, and every element is the `Pane` that [`pane2`](pane2.md), [`pane3`](pane3.md), [`subpane2`](subpane2.md) or [`subpane3`](subpane3.md) returned, so reading a setting back (`title_text()`, `legend_place()`, `traces()`) is how a figure is inspected after it is built. Panes are stored so that adding more never moves the ones already there: a reference to a pane, and the references into it, stay valid for the life of the figure, and an element of `panes()` is at the same address as the `Pane&` the creation call returned.
 
-Combined with [`pane_index()`](pane_index.md), this is how index-based code (like
-`subpane2()`'s `parent_index`) can be cross-checked, or how a figure's structure can be
-inspected after the fact without holding onto individual `Pane&` references (which, per
-[`pane2()`](pane2.md)'s important callout, become invalid after later pane-creation calls
-— `panes()[i]` is always safe to re-fetch, since it looks up fresh from current storage
-each time it's called).
+The sequence is const: panes are added through the creation calls and configured through the `Pane&` they return, and there is no way to remove one. Hidden panes are in the sequence too (their [`visible`](../pane/visible.md) is false). Index `i` is the value [`pane_index`](pane_index.md) returns for that pane, and `panes().size()` equals [`pane_count`](pane_count.md).
 
 ## Parameters
 
@@ -32,100 +22,121 @@ each time it's called).
 
 ## Returns
 
-`const std::vector<Pane>&`
-    A reference to the figure's own pane storage, in creation order. Read-only.
+`const std::deque<Pane>&`
+    The panes, oldest first.
 
 ## Examples
 
-Example 1. Empty on a fresh figure; growing as panes are added, including a mix of 2D and
-3D panes.
+Example 1. Inspecting a built figure. Range-for visits the panes in creation order, and each shows its title, kind and number of traces.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("panes_check");
-std::cout << fig.panes().empty() << "\n";
-
-auto& first = fig.pane2("first");
-first.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-auto& second = fig.pane3("second");
-second.path3(std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
-
-std::cout << fig.panes().size() << "\n";
-std::cout << fig.panes()[0].title_text() << "\n";
-std::cout << (fig.panes()[1].kind() == PaneKind::Volumetric) << "\n";
-
-fig.mosaic(1, 2);
-fig.show();
-```
-
-### Output
-
-```text
-1
-2
-first
-1
-```
-
-![Output of Example 1](img/panes-1-check.svg)
-
-Example 2. Iterating with a range-`for` loop — the common way to inspect every pane
-without tracking indices by hand.
-
-```cpp
-using namespace pluss::pl;
-
-auto fig = studio("panes_iterate");
-fig.pane2("alpha");
-fig.pane2("beta");
-fig.pane2("gamma");
-
-int count = 0;
-for (const auto& pane : fig.panes()) {
-  ++count;
-  std::cout << pane.title_text() << "\n";
+auto fig = studio("panes_inspect");
+fig.mosaic(1, 3);
+fig.pane2("lines").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+auto& second = fig.pane2("two traces");
+second.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 3, 2});
+second.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+fig.pane3("volume").path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
+for (const Pane& pane : fig.panes()) {
+  std::cout << pane.title_text() << ": " << (pane.kind() == PaneKind::Planar ? "planar" : "volumetric") << ", traces " << pane.traces().size() << "\n";
 }
-std::cout << "count: " << count << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-alpha
-beta
-gamma
-count: 3
+lines: planar, traces 1
+two traces: planar, traces 2
+volume: volumetric, traces 1
 ```
+
+![Output of Example 1](img/panes-1-inspect.svg)
+
+Example 2. The same objects. An element of `panes()` is the pane the creation call returned, at the same address, and it stays so after many more panes are added.
+
+```cpp
+auto fig = studio("panes_same");
+Pane& first = fig.pane2("first");
+for (int i = 0; i < 20; ++i) fig.pane2("later " + std::to_string(i));
+std::cout << "same address: " << (&fig.panes()[0] == &first) << "\n";
+first.title("renamed through the reference");
+std::cout << "seen through panes(): " << fig.panes()[0].title_text() << "\n";
+fig.mosaic(3, 7);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+same address: 1
+seen through panes(): renamed through the reference
+```
+
+![Output of Example 2](img/panes-2-same_object.svg)
+
+Example 3. Creation order, and sub-panes included. `pane_index` of each pane is its position, and a sub-pane follows the panes created before it.
+
+```cpp
+auto fig = studio("panes_order");
+auto& parent = fig.pane2("parent");
+const std::size_t parent_index = fig.pane_index(parent);
+fig.subpane2(parent_index, 1, 2, 0, 0, 1, 1, "left").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.subpane2(parent_index, 1, 2, 0, 1, 1, 1, "right").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+for (std::size_t i = 0; i < fig.panes().size(); ++i) std::cout << i << ": " << fig.panes()[i].title_text() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+0: parent
+1: left
+2: right
+```
+
+![Output of Example 3](img/panes-3-order.svg)
+
+Example 4. Read-only and including hidden panes. A hidden pane is still listed, with `visible()` false, and the sequence offers no way to change or remove a pane.
+
+```cpp
+auto fig = studio("panes_hidden");
+fig.mosaic(1, 2);
+fig.pane2("shown").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+auto& other = fig.pane2("hidden");
+other.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+other.hide();
+for (const Pane& pane : fig.panes()) std::cout << pane.title_text() << ": visible " << pane.visible() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+shown: visible 1
+hidden: visible 0
+```
+
+![Output of Example 4](img/panes-4-read_only.svg)
 
 ## Notes
 
-- `noexcept`, `const` — read-only, no allocation.
-- Returns a reference into the `Studio`'s own storage; valid as long as the `Studio` is
-  alive. Unlike a `Pane&` returned from `pane2()`/`pane3()`, re-calling `panes()` always
-  reflects the current, live pane list — but iterating and then triggering a
-  `pane2()`/`pane3()`/`subpane2()`/`subpane3()` call *during* that iteration is still
-  unsafe, for the same underlying `std::vector` reallocation reason.
-- Subpanes (created via `subpane2()`/`subpane3()`) appear in this same flat list alongside
-  top-level panes, in creation order — nothing distinguishes them here except their
-  `PanePlacement`.
-- There is no way to remove an entry from this list once created.
+- `noexcept`. The type is a standard container, so the usual algorithms and iterators work; pane objects are not copied by reading them through a reference.
+- Add panes with [`pane2`](pane2.md) and [`pane3`](pane3.md) and configure them through the reference those return.
 
 ## See Also
 
-- [`Studio::pane_count`](pane_count.md): just the `size()` of this list, without the
-  elements themselves.
-- [`Studio::pane_index`](pane_index.md): finds a specific pane's position in this list by
-  address.
-- [`Studio::pane2`](pane2.md) / [`pane3`](pane3.md): what populates this list.
+- [`Studio::pane_count`](pane_count.md): the number of panes.
+- [`Studio::pane_index`](pane_index.md): the position of a pane.
+- [`Studio::pane2`](pane2.md), [`pane3`](pane3.md): add panes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="show.html">
+  <a class="prev-link" href="pane_style_defaults.html">
     <span class="label">Previous</span>
-    <span class="title">show</span>
+    <span class="title">pane_style_defaults</span>
   </a>
-  <a class="next-link" href="pane_count.html">
+  <a class="next-link" href="rename.html">
     <span class="label">Next</span>
-    <span class="title">pane_count</span>
+    <span class="title">rename</span>
   </a>
 </div>

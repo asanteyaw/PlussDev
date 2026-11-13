@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::min(Axis axis = Axis::Case, bool skipnull = true) const -> Slate
+Slate DataFrame::min(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does

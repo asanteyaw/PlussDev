@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::rank(RankTieRule ties = RankTieRule::Average, RankNullRule nulls = RankNullRule::Keep, bool ascending = true, bool percentage = false) const -> Slate
+Slate Slate::rank(RankTieRule ties = RankTieRule::Average, RankNullRule nulls = RankNullRule::Keep, bool ascending = true, bool percentage = false) const
 ```
 
 ## What It Does

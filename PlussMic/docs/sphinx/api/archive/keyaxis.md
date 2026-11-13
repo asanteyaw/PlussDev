@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::keyaxis() const -> ArchiveKeyAxisAccessor
+ArchiveKeyAxisAccessor Archive::keyaxis() const
 ```
 
 ## What It Does

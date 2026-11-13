@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::has(std::string_view needle, const TextOptions& options = {}) const -> Slate
+Slate SlateNoteAccessor::has(std::string_view needle, const TextOptions& options = {}) const
 ```
 
 ## What It Does

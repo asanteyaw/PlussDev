@@ -7,18 +7,18 @@
 ## Signature
 
 ```cpp
-Series::scatter_reduce_amax(
+Series Series::scatter_reduce_amax(
     std::int64_t dim,
     const Series& index,
     const Series& src,
-    bool include_self) const -> Series
+    bool include_self) const
 
-Series::scatter_reduce_amax(
+Series Series::scatter_reduce_amax(
     std::int64_t dim,
     const Series& index,
     const Series& src,
     bool include_self,
-    double initial_scalar) const -> Series
+    double initial_scalar) const
 ```
 
 ## What It Does

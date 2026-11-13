@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusPull::root() const noexcept -> const std::string&
+const std::string& NexusPull::root() const noexcept
 ```
 
 ## What It Does

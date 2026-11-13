@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::join_cache_stats() -> std::pair<std::int64_t, std::int64_t>
+std::pair<std::int64_t, std::int64_t> Catalog::join_cache_stats()
 ```
 
 ## What It Does

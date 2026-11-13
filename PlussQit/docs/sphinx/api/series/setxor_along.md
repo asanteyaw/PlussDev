@@ -7,12 +7,12 @@
 ## Signature
 
 ```cpp
-Series::setxor_along(const Series& other, std::int64_t dim) const -> Series
-Series::setxor_along(const Series& other, std::int64_t dim, bool sorted) const -> Series
-Series::setxor_along(const Series& other,
-                     std::int64_t dim,
-                     bool sorted,
-                     bool assume_unique) const -> Series
+Series Series::setxor_along(const Series& other, std::int64_t dim) const
+Series Series::setxor_along(const Series& other, std::int64_t dim, bool sorted) const
+Series Series::setxor_along(const Series& other,
+                            std::int64_t dim,
+                            bool sorted,
+                            bool assume_unique) const
 ```
 
 ## What It Does

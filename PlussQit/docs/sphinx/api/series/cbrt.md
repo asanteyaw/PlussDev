@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::cbrt() const -> Series
+Series Series::cbrt() const
 Series& Series::cbrt_()
 ```
 

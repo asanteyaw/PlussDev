@@ -5,9 +5,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::scribbelize() -> pluss::scribble::Registry
+pluss::scribble::Registry DataFrame::scribbelize()
 
-DataFrame::scribbelize(const pluss::kindle::KindelizePolicy& policy) -> pluss::scribble::Registry
+pluss::scribble::Registry DataFrame::scribbelize(const pluss::kindle::KindelizePolicy& policy)
 ```
 
 ## What It Does

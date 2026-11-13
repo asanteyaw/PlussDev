@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Catalog::sum() const -> Catalog
-Catalog::sum(pluss::kindle::ReduceAxis axis) const -> Catalog
-Catalog::sum(const pluss::kindle::CatalogReduceOptions& options) const -> Catalog
+Catalog Catalog::sum() const
+Catalog Catalog::sum(pluss::kindle::ReduceAxis axis) const
+Catalog Catalog::sum(const pluss::kindle::CatalogReduceOptions& options) const
 ```
 
 ## What It Does

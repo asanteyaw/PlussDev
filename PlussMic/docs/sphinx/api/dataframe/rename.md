@@ -8,15 +8,15 @@
 ## Signatures
 
 ```cpp
-DataFrame::rename(std::string_view old_name, std::string new_name) const -> DataFrame
-DataFrame::rename(pluss::RangeView<std::pair<std::string_view, std::string_view>> renames) const -> DataFrame
-DataFrame::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> renames) const -> DataFrame
-DataFrame::rename(pluss::RangeView<std::string_view> feature_names) const -> DataFrame
+DataFrame DataFrame::rename(std::string_view old_name, std::string new_name) const
+DataFrame DataFrame::rename(pluss::RangeView<std::pair<std::string_view, std::string_view>> renames) const
+DataFrame DataFrame::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> renames) const
+DataFrame DataFrame::rename(pluss::RangeView<std::string_view> feature_names) const
 
 template <detail::StringViewNameRange NameRange>
-DataFrame::rename(const NameRange& feature_names) const -> DataFrame
+DataFrame DataFrame::rename(const NameRange& feature_names) const
 
-DataFrame::rename(std::initializer_list<const char*> feature_names) const -> DataFrame
+DataFrame DataFrame::rename(std::initializer_list<const char*> feature_names) const
 ```
 
 ## What It Does

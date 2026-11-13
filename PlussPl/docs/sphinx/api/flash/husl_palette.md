@@ -18,7 +18,7 @@ A simplified wrapper: `return hls_palette(n, 0.74,
 `hls_palette`'s own `0.68`/`0.52` defaults), no way to override either.
 
 ```{important} Not an actual HUSL colorspace implementation
-Despite the name (evoking the genuine HUSL perceptually-uniform color space), this
+Despite the name (evoking the HUSL perceptually-uniform color space), this
 function is a plain HLS hue sweep with different fixed parameters -- the same
 detail::hsl_to_rgb conversion hls_palette itself uses, not a distinct HUSL algorithm.
 The name is a naming convenience, not a claim of colorspace equivalence.
@@ -28,7 +28,7 @@ The name is a naming convenience, not a claim of colorspace equivalence.
 
 **n** (`std::int64_t`, default `6`)
     Forwarded to [`flash::hls_palette`](hls_palette.md) — see that page for the
-    clamping behavior (`n < 2` silently becomes `2`).
+    minimum.
 
 ## Returns
 
@@ -37,7 +37,7 @@ The name is a naming convenience, not a claim of colorspace equivalence.
 
 ## Examples
 
-Example 1 (verification, not a distinct rendering). Genuinely different stops from
+Example 1 (a comparison, not a new picture). Different stops from
 `hls_palette`'s own default output, confirming the fixed saturation/lightness override
 takes effect.
 

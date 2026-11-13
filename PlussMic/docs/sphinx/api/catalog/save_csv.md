@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Catalog::save_csv(std::string_view filename) const -> void
-Catalog::save_csv(std::string_view filename, const pluss::loader::Config& config) const -> void
+void Catalog::save_csv(std::string_view filename) const
+void Catalog::save_csv(std::string_view filename, const pluss::loader::Config& config) const
 ```
 
 ## What It Does

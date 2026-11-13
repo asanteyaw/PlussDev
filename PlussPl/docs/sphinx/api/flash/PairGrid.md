@@ -22,8 +22,7 @@ panes of its own.
 ```{important} Different default gutter than FacetGrid/Studio::mosaic
 PairGrid's gx/gy default to 14.0, not the 18.0 that FacetGrid and
 Studio::mosaic itself default to -- a deliberately tighter gutter, suited to
-a same-size square grid of many small comparison panels. Directly verified
-with actual pane content in every cell: a PairGrid(studio, 2) figure and a
+a same-size square grid of many small comparison panels. With actual pane content in every cell, a PairGrid(studio, 2) figure and a
 FacetGrid(studio, 2, 2) figure -- otherwise built identically -- render with
 visibly different spacing. (Comparing two EMPTY grids with no panes added
 shows no difference at all, since there is no pane geometry for the gutter to
@@ -70,8 +69,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-pairgrid-1-default.svg)
 
-Example 2 (verification, not a distinct rendering). `PairGrid`'s tighter default gutter
-genuinely renders differently from `FacetGrid`'s, once panes are actually placed in every
+Example 2 (a comparison, not a new picture). `PairGrid`'s tighter default gutter
+renders differently from `FacetGrid`'s, once panes are actually placed in every
 cell.
 
 ```cpp

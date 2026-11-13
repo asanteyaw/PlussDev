@@ -8,26 +8,26 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::line(std::string_view y_feature,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view y_feature,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::line(std::string_view y_feature,
-                             std::optional<std::string_view> x_feature,
-                             const LinePlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::line(std::string_view y_feature,
+                                               std::optional<std::string_view> x_feature,
+                                               const LinePlotOptions& options) const
 
-DataFramePlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature,
-                             const LinePlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::line(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature,
+                                               const LinePlotOptions& options) const
 
-DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature,
-                             const LinePlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::line(std::initializer_list<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature,
+                                               const LinePlotOptions& options) const
 ```
 
 ## What It Does

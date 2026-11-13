@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::bfill() const -> Archive
+Archive Archive::bfill() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::fliplr() const -> Series
+Series Series::fliplr() const
 ```
 
 ## What It Does

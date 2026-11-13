@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::slice(std::int64_t start, std::int64_t stop) const -> Slate
+Slate Slate::slice(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does

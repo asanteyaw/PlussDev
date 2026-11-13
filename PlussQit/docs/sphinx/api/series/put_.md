@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::put_(const Series& index, const Series& source, bool accumulate = false) const -> Series&
+Series& Series::put_(const Series& index, const Series& source, bool accumulate = false) const
 ```
 
 ## What It Does

@@ -7,11 +7,9 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::qqplot(Pane& pane, Values&& values, const QqPlotOptions& options = {})
+Trace& flash::qqplot(Pane& pane, Series values, const QqPlotOptions& options = {})
 
-template <class Values>
-Trace& flash::qqplot(Studio& studio, Values&& values, const QqPlotOptions& options = {},
+Trace& flash::qqplot(Studio& studio, Series values, const QqPlotOptions& options = {},
                       std::string title = {})
 ```
 
@@ -30,21 +28,7 @@ The theoretical quantiles are computed via a rational-function approximation to 
 inverse normal CDF (Acklam's algorithm), evaluated at `(i + 0.5) / n` for each of the `n`
 sorted sample points (the standard "plotting position" convention).
 
-```{important} Fixed: qqplot's returned trace could dangle when show_reference_line was true
-Previously, qqplot drew the main qq scatter trace FIRST, captured a Trace&
-to it, THEN drew the optional reference-line trend trace afterward (when
-show_reference_line was true -- the default), THEN returned through the
-earlier-captured reference. Pane::add_trace_ appends to a std::vector<Trace>,
-which can reallocate its backing storage on any push -- so drawing the
-reference line after capturing the scatter reference risked invalidating it.
-Directly verified: calling qqplot(pane, values) with the default
-show_reference_line = true returned a Trace& whose label_text() came back
-empty and whose kind() reported Wedge instead of the expected Cloud -- a
-real, reproducible case of undefined behavior, present in the DEFAULT call
-shape. Fixed at the source: the reference line is now drawn FIRST, before
-the qq scatter, so the returned scatter trace is always the last one pushed
-and never dangles.
-```
+The returned `Trace&` is always the qq scatter, with or without the reference line (which is drawn first, behind it), and it stays valid for the life of the pane.
 
 ## `QqPlotOptions` fields
 
@@ -63,7 +47,7 @@ and never dangles.
 
 **values** (series-convertible)
     The sample to check for normality. Non-finite entries are dropped before sorting; at
-    least two finite values are required — fewer throws `std::invalid_argument
+    least two finite values are required — fewer throws `pluss::Error
     ("flash::qqplot requires at least two finite values")`.
 
 **options** (`const QqPlotOptions&`, optional)
@@ -111,8 +95,7 @@ fig.show();
 
 ![Output of Example 2](img/flash-qqplot-2-not-standardized.svg)
 
-Example 3. `show_reference_line = false`. Confirms the fix above: the returned trace is
-genuinely the qq scatter, not a dangling reference.
+Example 3. `show_reference_line = false`. The returned trace is the qq scatter.
 
 ```cpp
 using namespace pluss::pl;

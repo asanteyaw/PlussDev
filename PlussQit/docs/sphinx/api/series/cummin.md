@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::cummin() const -> Series
-Series::cummin(std::int64_t dim) const -> Series
+Series Series::cummin() const
+Series Series::cummin(std::int64_t dim) const
 ```
 
 ## What It Does

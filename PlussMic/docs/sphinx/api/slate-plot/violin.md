@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::violin(const ViolinPlotOptions& options = {}) const -> pluss::pl::Studio
-SlatePlotAccessor::violin(const Slate& group) const -> pluss::pl::Studio
-SlatePlotAccessor::violin(const Slate& group, const ViolinPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::violin(const ViolinPlotOptions& options = {}) const
+pluss::pl::Studio SlatePlotAccessor::violin(const Slate& group) const
+pluss::pl::Studio SlatePlotAccessor::violin(const Slate& group, const ViolinPlotOptions& options) const
 ```
 
 ## What It Does

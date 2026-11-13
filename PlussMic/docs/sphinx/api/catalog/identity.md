@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::identity() -> const void*
+const void* Catalog::identity()
 ```
 
 ## What It Does

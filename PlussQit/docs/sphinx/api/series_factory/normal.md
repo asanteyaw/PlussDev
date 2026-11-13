@@ -7,17 +7,17 @@
 ## Signature
 
 ```cpp
-pluss::series::normal(double mean,
-                      double std,
-                      sizes,
-                      ScalarType dtype = ScalarType::Float32,
-                      std::uint64_t seed = 0) -> Series
+Series pluss::series::normal(double mean,
+                             double std,
+                             sizes,
+                             ScalarType dtype = ScalarType::Float32,
+                             std::uint64_t seed = 0)
 
-pluss::series::normal(double mean,
-                      double std,
-                      sizes,
-                      Config config,
-                      std::uint64_t seed = 0) -> Series
+Series pluss::series::normal(double mean,
+                             double std,
+                             sizes,
+                             Config config,
+                             std::uint64_t seed = 0)
 ```
 
 ## What It Builds

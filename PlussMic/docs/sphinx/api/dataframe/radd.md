@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::radd(double other) const -> DataFrame
+DataFrame DataFrame::radd(double other) const
 ```
 
 ## What It Does

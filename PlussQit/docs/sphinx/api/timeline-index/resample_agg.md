@@ -5,10 +5,10 @@
 ## Signature
 
 ```cpp
-Timeline::TimelineIndexAccessor::resample_agg(
+pluss::Series Timeline::TimelineIndexAccessor::resample_agg(
     const pluss::Series& values,
     const ResampleOptions& options,
-    std::string_view op) const -> pluss::Series
+    std::string_view op) const
 ```
 
 ## What It Does

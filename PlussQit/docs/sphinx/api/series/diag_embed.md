@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::diag_embed() const -> Series
-Series::diag_embed(std::int64_t diagonal) const -> Series
-Series::diag_embed(std::int64_t diagonal, std::int64_t dim1, std::int64_t dim2) const -> Series
+Series Series::diag_embed() const
+Series Series::diag_embed(std::int64_t diagonal) const
+Series Series::diag_embed(std::int64_t diagonal, std::int64_t dim1, std::int64_t dim2) const
 ```
 
 ## What It Does

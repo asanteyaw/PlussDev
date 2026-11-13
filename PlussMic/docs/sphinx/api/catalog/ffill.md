@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::ffill() const -> Catalog
+Catalog Catalog::ffill() const
 ```
 
 ## What It Does

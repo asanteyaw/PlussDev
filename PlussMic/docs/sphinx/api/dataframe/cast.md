@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::cast() const -> DataFrameCastAccessor
-DataFrame::cast(const SlateCastOptions& options) const -> DataFrameCastAccessor
+DataFrameCastAccessor DataFrame::cast() const
+DataFrameCastAccessor DataFrame::cast(const SlateCastOptions& options) const
 ```
 
 ## What It Does

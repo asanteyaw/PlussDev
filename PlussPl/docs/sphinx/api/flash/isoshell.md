@@ -7,23 +7,19 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::isoshell(Pane& pane, Values&& values, int level_count = 4)
+Trace& flash::isoshell(Pane& pane, Series values, int level_count = 4)
 
-template <class X, class Y, class Z, class Values>
-Trace& flash::isoshell(Pane& pane, X&& x, Y&& y, Z&& z, Values&& values, int level_count = 4)
+Trace& flash::isoshell(Pane& pane, Series x, Series y, Series z, Series values, int level_count = 4)
 
-template <class X, class Y, class Z, class Values, class Levels>
-  requires (!std::integral<std::remove_cvref_t<Levels>>)
-Trace& flash::isoshell(Pane& pane, X&& x, Y&& y, Z&& z, Values&& values, Levels&& levels)
+Trace& flash::isoshell(Pane& pane, Series x, Series y, Series z, Series values, Series levels)
 ```
 
 ## What It Does
 
 A thin wrapper around [`Pane::isoshell`](../pane/isoshell.md): converts every argument to
 `Series`, validates each is rank ≤ 3, then delegates to the identically-shaped native
-`Pane::isoshell` overload. Every delegation is byte-identical to calling
-`Pane::isoshell` directly — directly verified via SVG comparison. Three overloads,
+`Pane::isoshell` overload. Every delegation is identical to calling
+`Pane::isoshell` directly. Three overloads,
 mirroring [`Pane::isoshell`](../pane/isoshell.md)'s own: `(values, level_count = 4)`
 (all axes auto-indexed from `values`' own three dimensions), `(x, y, z, values,
 level_count = 4)` (explicit axes), and `(x, y, z, values, levels)` (explicit axes and
@@ -34,11 +30,10 @@ flash::isoshell's own validation only checks values (and x/y/z/levels, where pre
 are rank <= 3 -- a loose upper bound, throwing pluss::Error via the shared
 require_rank_at_most helper (message: "flash::isoshell: expected input rank <= 3").
 Pane::isoshell then separately, more strictly, requires values to be rank-3 EXACTLY,
-throwing a plain std::invalid_argument ("isoshell: values must be a rank-3 field") --
+throwing a plain pluss::Error ("isoshell: values must be a rank-3 field") --
 a completely different exception type. A rank-1 or rank-2 values passes flash's own
-check (both are <= 3) but still fails Pane::isoshell's stricter exact-rank-3 check --
-directly verified below with a 3-element flat vector, which throws the
-std::invalid_argument, not the pluss::Error.
+check (both are <= 3) but still fails Pane::isoshell's stricter exact-rank-3 check, for example with a 3-element flat vector, which throws the
+pluss::Error, not the pluss::Error.
 ```
 
 ## Parameters
@@ -122,8 +117,8 @@ fig.show();
 
 ![Output of Example 3](img/flash-isoshell-3-explicit-levels.svg)
 
-Example 4 (verification, not a distinct rendering). `flash::isoshell(pane, values)`
-renders byte-identical to `pane.isoshell(values)` called directly.
+Example 4 (a comparison, not a new picture). `flash::isoshell(pane, values)`
+renders identical to `pane.isoshell(values)` called directly.
 
 ```cpp
 using namespace pluss::pl;
@@ -148,7 +143,7 @@ flash::isoshell(pane,values) == pane.isoshell(values): 1
 ```
 
 Example 5 (edge case). A rank-1 `values` passes `flash::isoshell`'s own rank-≤3 check but
-fails `Pane::isoshell`'s stricter rank-3-exact check — thrown as `std::invalid_argument`,
+fails `Pane::isoshell`'s stricter rank-3-exact check — thrown as `pluss::Error`,
 not `pluss::Error`, per the important callout above.
 
 ```cpp
@@ -159,8 +154,8 @@ auto& pane = fig.pane3();
 std::vector<double> flat_values{1.0, 2.0, 3.0};
 try {
   flash::isoshell(pane, flat_values);
-} catch (const std::invalid_argument& e) {
-  std::cout << "isoshell(rank-1 values) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "isoshell(rank-1 values) threw: " << e.message() << "\n";
 }
 ```
 
@@ -175,7 +170,7 @@ isoshell(rank-1 values) threw: isoshell: values must be a rank-3 field
 - Not `noexcept`.
 - See the important callout above: this function's own validation is looser (rank ≤ 3)
   than [`Pane::isoshell`](../pane/isoshell.md)'s (rank-3 exact for `values`), and the two
-  layers throw genuinely different exception types.
+  layers throw different exception types.
 - No `Studio` convenience overload, same as [`flash::spire3`](spire3.md) and
   [`flash::ridge3`](ridge3.md).
 

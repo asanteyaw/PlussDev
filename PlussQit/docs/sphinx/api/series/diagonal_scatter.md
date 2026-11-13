@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::diagonal_scatter(const Series& src) const -> Series
-Series::diagonal_scatter(const Series& src, std::int64_t diagonal) const -> Series
+Series Series::diagonal_scatter(const Series& src) const
+Series Series::diagonal_scatter(const Series& src, std::int64_t diagonal) const
 ```
 
 ## What It Does

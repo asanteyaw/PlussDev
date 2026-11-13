@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::nonzero() const -> Series
+Series Series::nonzero() const
 ```
 
 ## What It Does

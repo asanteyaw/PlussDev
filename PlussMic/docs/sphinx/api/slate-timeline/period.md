@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::period(std::string_view freq) const -> Slate
+Slate SlateTimelineAccessor::period(std::string_view freq) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::mean(Axis axis = Axis::Case, bool skipnull = true) const -> Slate
+Slate DataFrame::mean(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does

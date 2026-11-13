@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::sort_depth(bool ascending = true, bool nulls_last = true) const -> Atlas
+Atlas Atlas::sort_depth(bool ascending = true, bool nulls_last = true) const
 ```
 
 ## What It Does

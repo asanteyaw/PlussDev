@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::mean() const -> Stream
+Stream Stream::mean() const
 ```
 
 ## What It Does

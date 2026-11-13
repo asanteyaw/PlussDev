@@ -8,19 +8,19 @@
 ## Signatures
 
 ```cpp
-static DataFrame load_excel(std::string_view filepath) -> DataFrame
-static DataFrame load_excel(std::string_view filepath, const pluss::loader::Config& config) -> DataFrame
-static DataFrame load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options) -> DataFrame
-static DataFrame load_excel(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
-static DataFrame load_excel(std::string_view filepath, std::string_view sheet_name, bool header = true) -> DataFrame
-static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true) -> DataFrame
-static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true) -> pluss::loader::LoadResult
-static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true) -> pluss::loader::LoadResult
-static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true) -> pluss::loader::LoadResult
-static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::RangeView<std::string_view> sheet_names, bool header = true) -> pluss::loader::LoadResult
-static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true) -> pluss::loader::LoadResult
-static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true) -> pluss::loader::LoadResult
-static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::RangeView<std::int64_t> sheet_indices, bool header = true) -> pluss::loader::LoadResult
+static DataFrame load_excel(std::string_view filepath)
+static DataFrame load_excel(std::string_view filepath, const pluss::loader::Config& config)
+static DataFrame load_excel(std::string_view filepath, const pluss::loader::ReadExcelOptions& options)
+static DataFrame load_excel(std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)
+static DataFrame load_excel(std::string_view filepath, std::string_view sheet_name, bool header = true)
+static DataFrame load_excel(std::string_view filepath, std::int64_t sheet_index, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, std::nullptr_t, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::string>& sheet_names, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::string_view> sheet_names, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::RangeView<std::string_view> sheet_names, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, const std::vector<std::int64_t>& sheet_indices, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, std::initializer_list<std::int64_t> sheet_indices, bool header = true)
+static pluss::loader::LoadResult load_excel(std::string_view filepath, pluss::RangeView<std::int64_t> sheet_indices, bool header = true)
 ```
 
 ## What It Does

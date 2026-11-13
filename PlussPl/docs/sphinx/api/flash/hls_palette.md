@@ -23,9 +23,7 @@ pages.
 ## Parameters
 
 **n** (`std::int64_t`, default `6`)
-    Number of evenly-spaced hues to generate. Clamped to at least `2`
-    (`std::max<std::int64_t>(n, 2)`) — passing `0`, `1`, or a negative value silently
-    produces `2` stops rather than throwing.
+    Number of evenly-spaced hues to generate, at least `1`; `0` or a negative value throws `pluss::Error`.
 
 **saturation** (`double`, default `0.68`)
     HSL saturation, shared by every generated stop.
@@ -60,8 +58,8 @@ hls_palette() default stops=6 name=hls
 hls_palette(10) stops=10
 ```
 
-Example 2 (verification, not a distinct rendering). `husl_palette`/`cubehelix_palette`
-both genuinely differ from `hls_palette`'s own default output, and from each other —
+Example 2 (a comparison, not a new picture). `husl_palette`/`cubehelix_palette`
+both differ from `hls_palette`'s own default output, and from each other —
 confirming their fixed `saturation`/`lightness` overrides take effect.
 
 ```cpp

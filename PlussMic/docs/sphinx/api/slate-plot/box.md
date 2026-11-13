@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-SlatePlotAccessor::box(const BoxPlotOptions& options = {}) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::box(const BoxPlotOptions& options = {}) const
 ```
 
 ## What It Does

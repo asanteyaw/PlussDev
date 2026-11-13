@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::notnull() const -> Slate
+Slate Slate::notnull() const
 ```
 
 ## What It Does

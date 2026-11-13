@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::norm(double p) const -> Series
-Series::norm(double p, std::int64_t dim, bool keepdim=false) const -> Series
+Series Series::norm(double p) const
+Series Series::norm(double p, std::int64_t dim, bool keepdim=false) const
 ```
 
 ## What It Does

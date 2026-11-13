@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::upper() const -> Slate
+Slate Slate::upper() const
 ```
 
 ## What It Does

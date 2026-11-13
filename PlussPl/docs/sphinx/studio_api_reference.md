@@ -56,6 +56,8 @@ api/studio/save_svg
 api/studio/show
 api/studio/size
 api/studio/studio
+api/studio/style
+api/studio/style_options
 api/studio/subpane2
 api/studio/subpane3
 api/studio/theme

@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::unify(std::string_view left_on, const DataFrame& right, std::string_view right_on = "", std::string_view how = "common", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const -> DataFrame
-DataFrame::unify(pluss::RangeView<std::string_view> left_on, const DataFrame& right, pluss::RangeView<std::string_view> right_on = {}, std::string_view how = "common", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const -> DataFrame
-DataFrame::unify(std::initializer_list<std::string_view> left_on, const DataFrame& right, std::initializer_list<std::string_view> right_on = {}, std::string_view how = "common", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const -> DataFrame
+DataFrame DataFrame::unify(std::string_view left_on, const DataFrame& right, std::string_view right_on = "", std::string_view how = "common", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const
+DataFrame DataFrame::unify(pluss::RangeView<std::string_view> left_on, const DataFrame& right, pluss::RangeView<std::string_view> right_on = {}, std::string_view how = "common", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const
+DataFrame DataFrame::unify(std::initializer_list<std::string_view> left_on, const DataFrame& right, std::initializer_list<std::string_view> right_on = {}, std::string_view how = "common", std::string right_suffix = "_right", std::string_view validate = "many_to_many") const
 ```
 
 ## What It Does

@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-CatalogPlot3DAccessor::hist(std::string_view x_key,
-                             std::string_view y_key,
-                             const pluss::table::Hist3DPlotOptions& options = {}) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlot3DAccessor::hist(std::string_view x_key,
+                                               std::string_view y_key,
+                                               const pluss::table::Hist3DPlotOptions& options = {}) const
 
-CatalogPlot3DAccessor::hist(std::string_view x_key,
-                             std::string_view y_key,
-                             const CatalogHist3DPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlot3DAccessor::hist(std::string_view x_key,
+                                               std::string_view y_key,
+                                               const CatalogHist3DPlotOptions& options) const
 ```
 
 ## What It Does

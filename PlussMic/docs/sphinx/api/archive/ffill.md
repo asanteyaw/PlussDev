@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::ffill() const -> Archive
+Archive Archive::ffill() const
 ```
 
 ## What It Does

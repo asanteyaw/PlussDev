@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::pad(std::int64_t width,
-                        TextAlign align = TextAlign::Left,
-                        char fill = ' ') const -> Slate
+Slate SlateNoteAccessor::pad(std::int64_t width,
+                              TextAlign align = TextAlign::Left,
+                              char fill = ' ') const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::last() const -> DataFrame
+DataFrame DataFrameTsResampler::last() const
 ```
 
 ## What It Does

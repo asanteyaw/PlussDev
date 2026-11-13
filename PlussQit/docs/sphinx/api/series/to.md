@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::to(ScalarType dst) const -> Series
-Series::to(Platform target) const -> Series
-Series::to(Platform target, ScalarType dst) const -> Series
+Series Series::to(ScalarType dst) const
+Series Series::to(Platform target) const
+Series Series::to(Platform target, ScalarType dst) const
 ```
 
 ## What It Does

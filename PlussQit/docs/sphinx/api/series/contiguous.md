@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::contiguous() const -> Series
+Series Series::contiguous() const
 ```
 
 ## What It Does

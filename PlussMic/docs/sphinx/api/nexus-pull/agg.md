@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusPull::agg(std::string_view table) -> NexusPullAgg
+NexusPullAgg NexusPull::agg(std::string_view table)
 ```
 
 ## What It Does

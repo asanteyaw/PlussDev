@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::second() const -> DataFrame
+DataFrame DataFrameTimelineAccessor::second() const
 ```
 
 ## What It Does

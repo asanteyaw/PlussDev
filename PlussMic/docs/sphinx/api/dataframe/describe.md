@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::describe(bool render = false) const -> DataFrameView
+DataFrameView DataFrame::describe(bool render = false) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::median() const -> SlateValue
+SlateValue Slate::median() const
 ```
 
 ## What It Does

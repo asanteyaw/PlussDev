@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::strip() const -> Slate
-Slate::strip(std::string_view chars) const -> Slate
+Slate Slate::strip() const
+Slate Slate::strip(std::string_view chars) const
 ```
 
 ## What It Does

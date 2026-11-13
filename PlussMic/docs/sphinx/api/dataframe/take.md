@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::take(pluss::msharp::RangeView::Int indices) const -> DataFrame
-DataFrame::take(const Slate& indices) const -> DataFrame
+DataFrame DataFrame::take(pluss::msharp::RangeView::Int indices) const
+DataFrame DataFrame::take(const Slate& indices) const
 ```
 
 ## What It Does

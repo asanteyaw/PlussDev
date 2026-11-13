@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Slate::eq(double other) const -> Slate
-Slate::eq(std::string_view other) const -> Slate
-Slate::eq(const char* other) const -> Slate
-Slate::eq(const Slate& other) const -> Slate
+Slate Slate::eq(double other) const
+Slate Slate::eq(std::string_view other) const
+Slate Slate::eq(const char* other) const
+Slate Slate::eq(const Slate& other) const
 ```
 
 ## What It Does

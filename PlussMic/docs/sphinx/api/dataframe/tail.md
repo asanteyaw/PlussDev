@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::tail(std::int64_t n = 5, bool render = false) const -> DataFrameView
+DataFrameView DataFrame::tail(std::int64_t n = 5, bool render = false) const
 ```
 
 ## What It Does

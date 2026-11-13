@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::leaky_relu(double negative_slope) const -> Series
+Series Series::leaky_relu(double negative_slope) const
 Series& Series::leaky_relu_(double negative_slope)
 ```
 

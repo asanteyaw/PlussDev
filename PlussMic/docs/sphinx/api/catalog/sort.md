@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Catalog::sort(std::string_view by_field, bool ascending = true) const -> Catalog
-Catalog::sort(std::span<const std::string_view> fields, const std::vector<bool>& ascending = {}) const -> Catalog
-Catalog::sort(std::initializer_list<std::string_view> fields, const std::vector<bool>& ascending = {}) const -> Catalog
-Catalog::sort(const std::vector<std::string>& fields, const std::vector<bool>& ascending = {}) const -> Catalog
+Catalog Catalog::sort(std::string_view by_field, bool ascending = true) const
+Catalog Catalog::sort(std::span<const std::string_view> fields, const std::vector<bool>& ascending = {}) const
+Catalog Catalog::sort(std::initializer_list<std::string_view> fields, const std::vector<bool>& ascending = {}) const
+Catalog Catalog::sort(const std::vector<std::string>& fields, const std::vector<bool>& ascending = {}) const
 ```
 
 ## What It Does

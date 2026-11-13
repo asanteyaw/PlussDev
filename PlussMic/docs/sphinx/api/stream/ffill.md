@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::ffill() const -> Stream
+Stream Stream::ffill() const
 ```
 
 ## What It Does

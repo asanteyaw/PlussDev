@@ -7,17 +7,17 @@
 ## Signature
 
 ```cpp
-pluss::series::ones(sizes,
-                    ScalarType dt = ScalarType::Float32) -> Series
+Series pluss::series::ones(sizes,
+                           ScalarType dt = ScalarType::Float32)
 
-pluss::series::ones(sizes,
-                    Config cfg) -> Series
+Series pluss::series::ones(sizes,
+                           Config cfg)
 
-pluss::series::ones(sizes,
-                    opts...) -> Series
+Series pluss::series::ones(sizes,
+                           opts...)
 
-pluss::series::ones(sizes,
-                    {{"key", value}, ...}) -> Series
+Series pluss::series::ones(sizes,
+                           {{"key", value}, ...})
 ```
 
 ## What It Builds

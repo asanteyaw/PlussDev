@@ -28,7 +28,7 @@ A figure-sizing helper — two independent overloads:
   directly (via [`Studio::size`](../studio/size.md)) and its tick/axis-label font
   scale (via [`Studio::context_scales`](../studio/context_scales.md)), then re-applies
   that same tick font scale to every pane already in the figure. `plotting_context` is
-  an exact alias, verified byte-identical below.
+  an exact alias, identical below.
 - **`(Studio&, FlashContext, optional<double>, optional<double>)`** picks one of five
   named presets — each a fixed `(width, height, tick_scale, axis_scale)` quadruple — and
   forwards into the raw-numbers overload above, with `width`/`height` letting you
@@ -48,10 +48,10 @@ overload)
     re-applied per-pane to every pane currently in the figure (via the same internal
     tick-font-scale helper `flash::set_theme` uses).
 
-**context** (`FlashContext`, enum overload)
+**context** (`FlashContext`, `FlashContext` overload)
     See the field table below.
 
-**width**, **height** (`std::optional<double>`, default empty, enum overload)
+**width**, **height** (`std::optional<double>`, default empty, `FlashContext` overload)
     When set, used **instead of** the preset's own base width/height (the preset's tick/
     axis font scale is still applied). When `context == FlashContext::Inherit` and
     either is set, only [`Studio::size`](../studio/size.md) is called (no font-scale
@@ -75,7 +75,7 @@ axis_label_font_scale)` quadruple:
 **Poster** — `1840 × 1160`, scale `1.6`/`1.6`
     The largest preset, sized for poster printing.
 
-```{important} Inherit is not "no preset" -- it is genuinely special-cased
+```{important} Inherit is not "no preset" -- it is special-cased
 FlashContext::Inherit skips the preset table entirely: if width/height are also both
 empty, set_context(Studio&, FlashContext, ...) does nothing at all (early return, no
 Studio::size or Studio::context_scales call). If either width or height IS set while
@@ -111,7 +111,7 @@ Output:
 set_context extent after call: 900x600
 ```
 
-Example 2 (verification, not a distinct rendering). `plotting_context` is byte-identical
+Example 2 (a comparison, not a new picture). `plotting_context` is identical
 to the raw `set_context` overload.
 
 ```cpp

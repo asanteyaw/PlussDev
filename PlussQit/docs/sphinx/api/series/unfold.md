@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::unfold(std::int64_t dim, std::int64_t size, std::int64_t step) const -> Series
+Series Series::unfold(std::int64_t dim, std::int64_t size, std::int64_t step) const
 ```
 
 ## What It Does

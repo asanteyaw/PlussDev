@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::extract(std::string_view pattern,
-                            pluss::RangeView<std::string_view> names = {}) const -> DataFrame
+DataFrame SlateNoteAccessor::extract(std::string_view pattern,
+                                      pluss::RangeView<std::string_view> names = {}) const
 ```
 
 ## What It Does

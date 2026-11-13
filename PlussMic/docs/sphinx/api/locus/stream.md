@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Locus::to_string() const -> std::string
-Locus::show(std::ostream& os) const -> void
-Locus::show() const -> void
-operator<<(std::ostream& os, const Locus& value) -> std::ostream&
+std::string Locus::to_string() const
+void Locus::show(std::ostream& os) const
+void Locus::show() const
+std::ostream& operator<<(std::ostream& os, const Locus& value)
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::as_series() const -> const pluss::Series&
+const pluss::Series& Stream::as_series() const
 ```
 
 ## What It Does

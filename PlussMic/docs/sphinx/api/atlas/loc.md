@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Atlas::loc(std::string_view label) const -> DataFrame
-Atlas::loc(std::int64_t label) const -> DataFrame
-Atlas::loc(const pluss::Timeline& label) const -> DataFrame
+DataFrame Atlas::loc(std::string_view label) const
+DataFrame Atlas::loc(std::int64_t label) const
+DataFrame Atlas::loc(const pluss::Timeline& label) const
 ```
 
 ## What It Does

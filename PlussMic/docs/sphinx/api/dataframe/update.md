@@ -8,7 +8,7 @@
 ## Signatures
 
 ```cpp
-DataFrame::update(const DataFrame& other, bool overwrite = true) const -> DataFrame
+DataFrame DataFrame::update(const DataFrame& other, bool overwrite = true) const
 ```
 
 ## What It Does

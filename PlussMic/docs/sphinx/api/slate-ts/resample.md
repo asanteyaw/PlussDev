@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-TimeSeriesAccessor::resample(const Slate& axis, std::string_view freq, ResampleOp op = ResampleOp::Mean, std::int64_t step = 1) const -> TimeSeriesResample
-TimeSeriesAccessor::resample(const Slate& axis, const pluss::TimeIndex::ResampleOptions& options, ResampleOp op = ResampleOp::Mean) const -> TimeSeriesResample
+TimeSeriesResample TimeSeriesAccessor::resample(const Slate& axis, std::string_view freq, ResampleOp op = ResampleOp::Mean, std::int64_t step = 1) const
+TimeSeriesResample TimeSeriesAccessor::resample(const Slate& axis, const pluss::TimeIndex::ResampleOptions& options, ResampleOp op = ResampleOp::Mean) const
 ```
 
 ## What It Does

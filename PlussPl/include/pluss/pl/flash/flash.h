@@ -1,9 +1,11 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/codeh.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "pluss/pl/studio.h"
+#include "pluss/pl/style.h"
 #include "pluss/tils/view/html_window.h"
 
 #include <algorithm>
@@ -51,7 +53,6 @@ struct FromFrameOptions {
   bool include_series{true};
   bool include_text{true};
   bool include_timeline{true};
-  bool include_timeindex_as_timeline{true};
 };
 
 struct ToFrameOptions {
@@ -81,6 +82,32 @@ concept TableBackedValue =
     std::same_as<std::remove_cvref_t<T>, ::pluss::table::Atlas>;
 
 namespace detail {
+
+// Named numbers of the flash algorithms: published coefficients and design choices that were inline.
+inline constexpr double kPi = 3.14159265358979323846;
+inline constexpr double kOpaqueAlpha = 0.999;                 // an opacity at or above this is drawn as opaque
+inline constexpr double kSilvermanFactor = 1.06;              // bandwidth of a normal reference: 1.06 * sigma * n^(-1/5)
+inline constexpr double kKdeFlatSpanDivisor = 24.0;           // a sample with no spread gets a bandwidth of its range over this
+inline constexpr double kKdeBandwidthFloor = 1.0e-6;          // guard: a density bandwidth is never narrower than this
+inline constexpr double kKdeVarianceFloor = 1.0e-18;          // guard: variance below this is zero
+inline constexpr double kMinSpikeHeight = 1.0e-4;             // guard: a rug tick is never shorter than this
+inline constexpr std::int64_t kTriplotMinGrid = 2;            // the binned grid of a triplet has at least this many cells a side
+inline constexpr std::int64_t kTriplotMaxGrid = 20;           // and at most this many
+inline constexpr double kRadvizMargin = 1.1;                  // the unit circle of a radviz is shown with this much room
+inline constexpr double kRadvizAnchorSize = 26.0;             // area of the marker of a radviz anchor
+inline constexpr double kRadvizLabelOffsetX = 18.0;           // offset of the label of an anchor, in points
+inline constexpr double kRadvizLabelOffsetY = -10.0;
+// How many points a scatter cell of a pairplot can draw before it is thinned, from the room it has and the size of a marker.
+inline constexpr double kPairViewportMinWidth = 640.0;        // guard: the figure is treated as at least this wide
+inline constexpr double kPairViewportMinHeight = 420.0;       // and this tall
+inline constexpr double kPairPaneBudgetFloor = 48.0;          // guard: a cell is allowed at least this many points
+inline constexpr double kPairPaneOverlap = 1.75;              // a cell may be this many times fuller than one point per marker
+inline constexpr double kPairGlobalBudgetFloor = 96.0;        // guard: all cells together may draw at least this many points
+inline constexpr double kPairGlobalOverlap = 2.5;             // the figure may be this many times fuller than one point per marker
+inline constexpr double kPairMinMarkerCell = 10.0;            // guard on the area a marker is assumed to need, per cell
+inline constexpr double kPairMinMarkerFigure = 12.0;          // and per figure
+inline constexpr std::int64_t kPairMinPoints = 32;            // a cell always draws at least this many points
+
 
 template <class T>
 concept ArithmeticValue = std::is_arithmetic_v<std::remove_cvref_t<T>>;
@@ -191,7 +218,7 @@ inline void require_equal_xy_hue_lengths(
     const Series& y,
     const Series& hue) {
   if (x.numel() != y.numel() || x.numel() != hue.numel()) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(name) + " requires x, y, and hue to have identical lengths");
   }
 }
@@ -288,7 +315,7 @@ inline Trace& draw_grouped_hue(
     const std::vector<double>& levels,
     const std::vector<std::string>& labels) {
   if (levels.empty() || levels.size() != labels.size()) {
-    throw std::invalid_argument("flash::draw_grouped_hue requires aligned non-empty levels/labels");
+    PLUSS_FAIL("flash::draw_grouped_hue requires aligned non-empty levels/labels");
   }
   // Hue-driven plots should surface category labels by default.
   if (pane.legend_place() == KeyPlace::None) {
@@ -319,7 +346,7 @@ inline Trace& draw_grouped_hue(
     last = &out;
   }
   if (last == nullptr) {
-    throw std::invalid_argument("flash::draw_grouped_hue produced no traces");
+    PLUSS_FAIL("flash::draw_grouped_hue produced no traces");
   }
   return *last;
 }
@@ -343,7 +370,7 @@ inline Trace& draw_grouped_hue(
   const std::vector<double> vx = to_f64_vector(x);
   const std::vector<double> vy = to_f64_vector(y);
   if (vx.size() != vy.size() || vx.empty()) {
-    throw std::invalid_argument("flash::linear_fit requires equal non-empty x/y vectors");
+    PLUSS_FAIL("flash::linear_fit requires equal non-empty x/y vectors");
   }
 
   const double n = static_cast<double>(vx.size());
@@ -370,7 +397,7 @@ inline Trace& draw_grouped_hue(
   const Series sx = flatten_f64(x);
   const Series sy = flatten_f64(y);
   if (sx.numel() != sy.numel()) {
-    throw std::invalid_argument("flash::finite_xy requires equal length x/y");
+    PLUSS_FAIL("flash::finite_xy requires equal length x/y");
   }
   const Series mask = sx.isfinite().logical_and(sy.isfinite());
   return {sx.masked_select(mask), sy.masked_select(mask)};
@@ -432,7 +459,7 @@ inline Trace& draw_grouped_hue(
     std::int64_t degree,
     const std::vector<double>* weights = nullptr) {
   if (x.size() != y.size() || x.empty()) {
-    throw std::invalid_argument("flash::polyfit_coeffs requires equal non-empty x/y");
+    PLUSS_FAIL("flash::polyfit_coeffs requires equal non-empty x/y");
   }
   const auto d = std::max<std::int64_t>(1, degree);
   const auto p = d + 1;
@@ -530,11 +557,15 @@ inline Trace& draw_grouped_hue(
     double frac,
     const std::vector<double>* robust_weights = nullptr) {
   if (x.size() != y.size() || x.empty()) {
-    throw std::invalid_argument("flash::lowess_predict requires equal non-empty x/y");
+    PLUSS_FAIL("flash::lowess_predict requires equal non-empty x/y");
+  }
+  if (!(std::isfinite(frac) && frac > 0.0 && frac <= 1.0)) {
+    PLUSS_FAIL("flash::lowess_predict: lowess_frac must be in (0, 1]");
   }
   const std::int64_t n = static_cast<std::int64_t>(x.size());
+  // A neighbourhood holds at least two points (a line needs two) and at most all of them.
   const std::int64_t span = std::clamp<std::int64_t>(
-      static_cast<std::int64_t>(std::ceil(std::clamp(frac, 0.05, 1.0) * static_cast<double>(n))),
+      static_cast<std::int64_t>(std::ceil(frac * static_cast<double>(n))),
       2,
       n);
   std::vector<double> out(query.size(), 0.0);
@@ -648,12 +679,12 @@ inline Trace& draw_grouped_hue(
     m2 += delta * delta2;
   }
   const double variance = seen > 0 ? (m2 / static_cast<double>(seen)) : 0.0;
-  const double sigma = std::sqrt(std::max(variance, 1e-18));
-  const double span = std::max(high - low, 1e-6);
+  const double sigma = std::sqrt(std::max(variance, kKdeVarianceFloor));
+  const double span = std::max(high - low, kKdeBandwidthFloor);
   const double bandwidth =
-      sigma > 0.0 ? (1.06 * sigma * std::pow(static_cast<double>(samples.size()), -0.2)) : (span / 24.0);
-  const double h = std::max(bandwidth, 1e-6);
-  const double inv_norm = 1.0 / (std::sqrt(2.0 * 3.14159265358979323846) * h * static_cast<double>(samples.size()));
+      sigma > 0.0 ? (kSilvermanFactor * sigma * std::pow(static_cast<double>(samples.size()), -0.2)) : (span / kKdeFlatSpanDivisor);
+  const double h = std::max(bandwidth, kKdeBandwidthFloor);
+  const double inv_norm = 1.0 / (std::sqrt(2.0 * kPi) * h * static_cast<double>(samples.size()));
 
   for (std::size_t i = 0; i < x.size(); ++i) {
     const double x_i = x[i];
@@ -755,23 +786,48 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
   return scalar.host<double>().front();
 }
 
+// A kind given as text must be one of the kinds the function draws; anything else is refused with the nearest name.
+inline void require_kind(std::string_view kind, std::initializer_list<std::string_view> allowed, const std::string& function) {
+  for (const std::string_view name : allowed) {
+    if (kind == name) {
+      return;
+    }
+  }
+  std::vector<std::string> options;
+  for (const std::string_view name : allowed) {
+    options.emplace_back(name);
+  }
+  PLUSS_FAIL_UNKNOWN(function + " kind", std::string(kind), options);
+}
+
+
+// A count given as an option must be usable as it is: below its minimum the call is refused, not quietly raised.
+inline std::int64_t require_count(std::int64_t value, std::int64_t minimum, const char* function, const char* option) {
+  if (value < minimum) {
+    PLUSS_FAIL(std::string(function) + ": " + option + " must be at least " + std::to_string(minimum));
+  }
+  return value;
+}
+
+// A confidence level is a probability strictly between 0 and 1; anything else has no interval to draw.
+inline void require_confidence_level(double level, const char* where) {
+  if (!(std::isfinite(level) && level > 0.0 && level < 1.0)) {
+    PLUSS_FAIL(std::string(where) + ": confidence_level must be strictly between 0 and 1");
+  }
+}
+
+// The z-score of the two-sided normal interval of a given confidence level: the exact quantile, so every level
+// has its own interval (0.925 is not rounded to 0.90).
 [[nodiscard]] inline double z_for_confidence_level(double level) {
-  if (level >= 0.995) {
-    return 2.807;
+  require_confidence_level(level, "flash");
+  return inv_norm_cdf(0.5 * (1.0 + level));
+}
+
+// An opacity is a number in (0, 1]: 0 would draw nothing and above 1 is not an opacity.
+inline void require_opacity(double alpha, const char* where) {
+  if (!(std::isfinite(alpha) && alpha > 0.0 && alpha <= 1.0)) {
+    PLUSS_FAIL(std::string(where) + ": alpha must be in (0, 1]");
   }
-  if (level >= 0.99) {
-    return 2.576;
-  }
-  if (level >= 0.975) {
-    return 2.241;
-  }
-  if (level >= 0.95) {
-    return 1.96;
-  }
-  if (level >= 0.90) {
-    return 1.645;
-  }
-  return 1.282;
 }
 
 [[nodiscard]] inline Series normalize_unit(const Series& values) {
@@ -796,7 +852,7 @@ inline void apply_tick_font_scale(Pane& pane, double tick_scale, double axis_sca
   const std::int64_t nrows = columns.front().numel();
   for (const auto& column : columns) {
     if (column.numel() != nrows) {
-      throw std::invalid_argument(std::string(where) + " requires equal-length columns");
+      PLUSS_FAIL(std::string(where) + " requires equal-length columns");
     }
   }
   return nrows;
@@ -1026,7 +1082,7 @@ struct FieldmapGrid {
   // so the intended validation below must run first, against the un-reshaped flat mask.
   const Series flat_mask = flatten_f64(*mask);
   if (flat_mask.numel() != out.numel()) {
-    throw std::invalid_argument("flash::heatmap mask must match z element count");
+    PLUSS_FAIL("flash::heatmap mask must match z element count");
   }
   const Series valid = flat_mask.ne(0.0).reshape(out.sizes());
   const Series fill =
@@ -1042,15 +1098,15 @@ struct FieldmapGrid {
   const Series sx = flatten_f64(x_values);
   const Series sy = flatten_f64(y_values);
   if (sx.numel() != sy.numel() || sx.numel() <= 0) {
-    throw std::invalid_argument("flash::hist2d_grid requires equal non-empty x/y lengths");
+    PLUSS_FAIL("flash::hist2d_grid requires equal non-empty x/y lengths");
   }
 
-  const std::int64_t bx = std::max<std::int64_t>(4, bins_x);
-  const std::int64_t by = std::max<std::int64_t>(4, bins_y);
+  const std::int64_t bx = require_count(bins_x, 1, "flash::hist2d_grid", "bins_x");
+  const std::int64_t by = require_count(bins_y, 1, "flash::hist2d_grid", "bins_y");
   const std::vector<double> vx = to_f64_vector(sx);
   const std::vector<double> vy = to_f64_vector(sy);
   if (vx.size() != vy.size()) {
-    throw std::invalid_argument("flash::hist2d_grid x/y size mismatch");
+    PLUSS_FAIL("flash::hist2d_grid x/y size mismatch");
   }
 
   double x_min = std::numeric_limits<double>::infinity();
@@ -1071,7 +1127,7 @@ struct FieldmapGrid {
     ++valid_points;
   }
   if (valid_points == 0) {
-    throw std::invalid_argument("flash::hist2d_grid has no finite x/y pairs");
+    PLUSS_FAIL("flash::hist2d_grid has no finite x/y pairs");
   }
   const double x_span = (x_max > x_min) ? (x_max - x_min) : 1.0;
   const double y_span = (y_max > y_min) ? (y_max - y_min) : 1.0;
@@ -1167,13 +1223,13 @@ struct FieldmapGrid {
   const Series sy = flatten_f64(y_values);
   const Series sz = z_values.to(ScalarType::Float64);
   if (sz.dim() != 2) {
-    throw std::invalid_argument("flash::clustermap requires rank-2 z");
+    PLUSS_FAIL("flash::clustermap requires rank-2 z");
   }
 
   const auto rows = sz.sizes()[0];
   const auto cols = sz.sizes()[1];
   if (sx.numel() != cols || sy.numel() != rows) {
-    throw std::invalid_argument("flash::clustermap x/y extents must match z cols/rows");
+    PLUSS_FAIL("flash::clustermap x/y extents must match z cols/rows");
   }
 
   const std::vector<double> x = to_f64_vector(sx);
@@ -2124,10 +2180,10 @@ Trace& hist3d(Pane& pane, X&& x, Y&& y, const Hist3DOptions& options = {}) {
   auto grid = detail::hist2d_grid(
       detail::to_series(std::forward<X>(x)),
       detail::to_series(std::forward<Y>(y)),
-      std::max<std::int64_t>(4, options.bins_x),
-      std::max<std::int64_t>(4, options.bins_y));
+      detail::require_count(options.bins_x, 1, "flash::hist3d", "bins_x"),
+      detail::require_count(options.bins_y, 1, "flash::hist3d", "bins_y"));
   if (options.smooth) {
-    grid.z = detail::smooth_grid(grid.z, std::max<std::int64_t>(1, options.smooth_passes));
+    grid.z = detail::smooth_grid(grid.z, detail::require_count(options.smooth_passes, 1, "flash::hist3d", "smooth_passes"));
   }
   if (options.normalize) {
     const double total = detail::scalar_f64(grid.z.sum());
@@ -2199,7 +2255,7 @@ Trace& scatterplot(Pane& pane, X&& x, Y&& y, Hue&& hue) {
         labels);
   }
 
-  constexpr double marker_area = 18.0;
+  const double marker_area = StyleOptions{}.default_marker_size;
   return pane.cloud(sx, sy, std::array<double, 1>{marker_area}, hue_values).palette(PaletteRamp::lagoon());
 }
 
@@ -2215,7 +2271,7 @@ Trace& stepplot(Pane& pane, X&& x, Y&& y) {
   const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
   const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
   if (sx.numel() != sy.numel()) {
-    throw std::invalid_argument("flash::stepplot requires x and y with identical lengths");
+    PLUSS_FAIL("flash::stepplot requires x and y with identical lengths");
   }
   if (sx.numel() == 0) {
     return pane.trend(sx, sy);
@@ -2295,6 +2351,7 @@ Trace& lineplot(Pane& pane, X&& x, Y&& y, Hue&& hue) {
 
 template <class X, class Y>
 Trace& relplot(Pane& pane, X&& x, Y&& y, std::string_view kind = "scatter") {
+  detail::require_kind(kind, {"scatter", "line"}, "flash::relplot");
   if (kind == "line") {
     return lineplot(pane, std::forward<X>(x), std::forward<Y>(y));
   }
@@ -2303,6 +2360,7 @@ Trace& relplot(Pane& pane, X&& x, Y&& y, std::string_view kind = "scatter") {
 
 template <class X, class Y>
 Trace& relplot(Pane& pane, X&& x, Y&& y, const Note& hue, std::string_view kind = "scatter") {
+  detail::require_kind(kind, {"scatter", "line"}, "flash::relplot");
   if (kind == "line") {
     return lineplot(pane, std::forward<X>(x), std::forward<Y>(y), hue);
   }
@@ -2312,6 +2370,7 @@ Trace& relplot(Pane& pane, X&& x, Y&& y, const Note& hue, std::string_view kind 
 template <class X, class Y, class Hue>
   requires(detail::HueSeriesLike<Hue> && !std::same_as<std::remove_cvref_t<Hue>, Note>)
 Trace& relplot(Pane& pane, X&& x, Y&& y, Hue&& hue, std::string_view kind = "scatter") {
+  detail::require_kind(kind, {"scatter", "line"}, "flash::relplot");
   if (kind == "line") {
     return lineplot(pane, std::forward<X>(x), std::forward<Y>(y), std::forward<Hue>(hue));
   }
@@ -2387,7 +2446,7 @@ template <class Values>
   requires(!TableBackedValue<Values>)
 Trace& rugplot(Pane& pane, Values&& values, double height = 0.08) {
   const Series x = detail::to_series(std::forward<Values>(values));
-  const double spike_height = std::max(height, 1e-4);
+  const double spike_height = std::max(height, detail::kMinSpikeHeight);
   const Series y = ::pluss::series::full_like(x, spike_height, ScalarType::Float64).reshape({x.numel()});
   return pane.spike(x, y, 0.0);
 }
@@ -2506,6 +2565,7 @@ struct RegPlotOptions {
   bool show_ci{false};
   double confidence_level{0.95};
   std::int64_t n_boot{0};
+  std::uint64_t seed{81371};
   std::int64_t order{1};
   bool robust{false};
   bool lowess{false};
@@ -2785,19 +2845,19 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
       detail::to_series(std::forward<X>(x)),
       detail::to_series(std::forward<Y>(y)));
   if (sx.numel() < 2) {
-    throw std::invalid_argument("flash::regplot requires at least two finite x/y pairs");
+    PLUSS_FAIL("flash::regplot requires at least two finite x/y pairs");
   }
   const std::vector<double> vx = detail::to_f64_vector(sx);
   const std::vector<double> vy = detail::to_f64_vector(sy);
 
   const auto [xmin, xmax] = std::minmax_element(vx.begin(), vx.end());
-  const std::int64_t points = std::max<std::int64_t>(2, options.fit_points);
+  const std::int64_t points = detail::require_count(options.fit_points, 2, "flash::regplot", "fit_points");
   std::vector<double> fit_x = detail::linspace(*xmin, *xmax, points);
   std::vector<double> fit_y = detail::regression_predict(
       vx,
       vy,
       fit_x,
-      std::max<std::int64_t>(1, options.order),
+      detail::require_count(options.order, 1, "flash::regplot", "order"),
       options.robust,
       options.lowess,
       options.lowess_frac);
@@ -2812,10 +2872,10 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
   if (options.show_ci && sx.numel() > 2) {
     std::vector<double> y_err(static_cast<std::size_t>(points), 0.0);
     if (options.n_boot > 0) {
-      const auto boot_count = std::max<std::int64_t>(32, options.n_boot);
+      const auto boot_count = detail::require_count(options.n_boot, 2, "flash::regplot", "n_boot");
       std::vector<std::vector<double>> boot_preds(static_cast<std::size_t>(points));
       std::for_each(boot_preds.begin(), boot_preds.end(), [&](auto& v) { v.reserve(static_cast<std::size_t>(boot_count)); });
-      std::mt19937_64 rng(81371ULL);
+      std::mt19937_64 rng(options.seed);
       std::uniform_int_distribution<std::size_t> pick(0, vx.size() - 1);
       std::vector<double> bx(vx.size(), 0.0);
       std::vector<double> by(vy.size(), 0.0);
@@ -2829,7 +2889,7 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
             bx,
             by,
             fit_x,
-            std::max<std::int64_t>(1, options.order),
+            detail::require_count(options.order, 1, "flash::regplot", "order"),
             options.robust,
             options.lowess,
             options.lowess_frac);
@@ -2837,7 +2897,8 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
           boot_preds[i].push_back(pred[i]);
         }
       }
-      const double alpha = 0.5 * (1.0 - std::clamp(options.confidence_level, 0.01, 0.999));
+      detail::require_confidence_level(options.confidence_level, "flash::regplot");
+      const double alpha = 0.5 * (1.0 - options.confidence_level);
       for (const auto i : std::views::iota(std::size_t{0}, fit_y.size())) {
         auto& samples = boot_preds[i];
         std::sort(samples.begin(), samples.end());
@@ -2850,7 +2911,7 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
           vx,
           vy,
           vx,
-          std::max<std::int64_t>(1, options.order),
+          detail::require_count(options.order, 1, "flash::regplot", "order"),
           options.robust,
           options.lowess,
           options.lowess_frac);
@@ -2871,7 +2932,7 @@ Trace& regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {}) {
 
   Trace* scatter_trace = nullptr;
   if (options.show_scatter) {
-    auto& scatter = pane.cloud(sx, sy, std::array<double, 1>{std::max(1.0, options.marker_area)});
+    auto& scatter = pane.cloud(sx, sy, std::array<double, 1>{options.marker_area});
     scatter.width(options.scatter_trace_width).label("data");
     scatter_trace = &scatter;
   }
@@ -2912,7 +2973,7 @@ Trace& residplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options) {
       detail::to_series(std::forward<X>(x)),
       detail::to_series(std::forward<Y>(y)));
   if (sx.numel() < 2) {
-    throw std::invalid_argument("flash::residplot requires at least two finite x/y pairs");
+    PLUSS_FAIL("flash::residplot requires at least two finite x/y pairs");
   }
   std::vector<double> vx = detail::to_f64_vector(sx);
   std::vector<double> vy = detail::to_f64_vector(sy);
@@ -2920,7 +2981,7 @@ Trace& residplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options) {
       vx,
       vy,
       vx,
-      std::max<std::int64_t>(1, options.order),
+      detail::require_count(options.order, 1, "flash::residplot", "order"),
       options.robust,
       options.lowess,
       options.lowess_frac);
@@ -2941,7 +3002,7 @@ Trace& qqplot(Pane& pane, Values&& values, const QqPlotOptions& options = {}) {
   const Series base = detail::flatten_f64(detail::to_series(std::forward<Values>(values)));
   const Series finite = base.masked_select(base.isfinite());
   if (finite.numel() < 2) {
-    throw std::invalid_argument("flash::qqplot requires at least two finite values");
+    PLUSS_FAIL("flash::qqplot requires at least two finite values");
   }
   std::vector<double> sample = detail::to_f64_vector(finite);
   std::sort(sample.begin(), sample.end());
@@ -2982,7 +3043,7 @@ Trace& qqplot(Pane& pane, Values&& values, const QqPlotOptions& options = {}) {
     const std::array<double, 2> ly{intercept + slope * lx[0], intercept + slope * lx[1]};
     pane.trend(lx, ly).width(options.reference_width).label("reference");
   }
-  auto& trace = pane.cloud(q, sample, std::array<double, 1>{std::max(2.0, options.marker_area)});
+  auto& trace = pane.cloud(q, sample, std::array<double, 1>{options.marker_area});
   trace.width(options.trace_width).label("qq");
   pane.grid(GridStyle::Major).x_label("theoretical quantiles").y_label("sample quantiles");
   return trace;
@@ -3000,7 +3061,7 @@ Trace& resid_histplot(Pane& pane, X&& x, Y&& y, const ResidHistPlotOptions& opti
       detail::to_series(std::forward<X>(x)),
       detail::to_series(std::forward<Y>(y)));
   if (sx.numel() < 2) {
-    throw std::invalid_argument("flash::resid_histplot requires at least two finite x/y pairs");
+    PLUSS_FAIL("flash::resid_histplot requires at least two finite x/y pairs");
   }
   const std::vector<double> vx = detail::to_f64_vector(sx);
   std::vector<double> vy = detail::to_f64_vector(sy);
@@ -3008,7 +3069,7 @@ Trace& resid_histplot(Pane& pane, X&& x, Y&& y, const ResidHistPlotOptions& opti
       vx,
       vy,
       vx,
-      std::max<std::int64_t>(1, options.reg.order),
+      detail::require_count(options.reg.order, 1, "flash::resid_histplot", "order"),
       options.reg.robust,
       options.reg.lowess,
       options.reg.lowess_frac);
@@ -3017,7 +3078,7 @@ Trace& resid_histplot(Pane& pane, X&& x, Y&& y, const ResidHistPlotOptions& opti
   });
   auto& hist = pane.bucket(
       ::pluss::make_series(vy, {static_cast<std::int64_t>(vy.size())}),
-      std::max(4, options.bins));
+      detail::require_count(options.bins, 1, "flash::resid_histplot", "bins"));
   hist.width(options.trace_width).label("residuals");
   pane.grid(GridStyle::Major).x_label("residual").y_label("count").rule_x(0.0, "zero");
   return hist;
@@ -3165,6 +3226,7 @@ namespace detail {
   if (kind == "violin") return CatPlotKind::Violin;
   if (kind == "bar") return CatPlotKind::Bar;
   if (kind == "count") return CatPlotKind::Count;
+  require_kind(kind, {"strip"}, "flash::catplot");
   return CatPlotKind::Strip;
 }
 
@@ -3236,7 +3298,8 @@ namespace detail {
     std::sort(sorted.begin(), sorted.end());
     out.value = detail::quantile_sorted(sorted, 0.5);
     if (errorbar == CatErrorBar::PI) {
-      const double q = std::clamp((1.0 - confidence_level) * 0.5, 0.0, 0.5);
+      detail::require_confidence_level(confidence_level, "flash::catplot");
+      const double q = (1.0 - confidence_level) * 0.5;
       const double low = detail::quantile_sorted(sorted, q);
       const double high = detail::quantile_sorted(sorted, 1.0 - q);
       out.err_neg = std::max(0.0, out.value - low);
@@ -3258,7 +3321,8 @@ namespace detail {
   if (errorbar == CatErrorBar::PI) {
     std::vector<double> sorted = bucket.values;
     std::sort(sorted.begin(), sorted.end());
-    const double q = std::clamp((1.0 - confidence_level) * 0.5, 0.0, 0.5);
+    detail::require_confidence_level(confidence_level, "flash::catplot");
+      const double q = (1.0 - confidence_level) * 0.5;
     const double low = detail::quantile_sorted(sorted, q);
     const double high = detail::quantile_sorted(sorted, 1.0 - q);
     out.err_neg = std::max(0.0, out.value - low);
@@ -3320,19 +3384,19 @@ inline Trace& catplot(
   const auto groups = detail::note_values(group);
   const auto vals = detail::to_f64_vector(detail::flatten_f64(values));
   if (groups.size() != vals.size()) {
-    throw std::invalid_argument("flash::catplot group/value length mismatch");
+    PLUSS_FAIL("flash::catplot group/value length mismatch");
   }
   std::vector<std::string> hues;
   if (hue.numel() > 0) {
     hues = detail::note_values(hue);
     if (hues.size() != vals.size()) {
-      throw std::invalid_argument("flash::catplot hue length must match group/value");
+      PLUSS_FAIL("flash::catplot hue length must match group/value");
     }
   }
 
   const auto group_levels = detail::ordered_levels(groups, options.order);
   if (group_levels.empty()) {
-    throw std::invalid_argument("flash::catplot requires at least one category");
+    PLUSS_FAIL("flash::catplot requires at least one category");
   }
   std::unordered_map<std::string, std::size_t> group_idx;
   group_idx.reserve(group_levels.size());
@@ -3352,7 +3416,7 @@ inline Trace& catplot(
   const std::size_t nh = has_hue ? hue_levels.size() : std::size_t{1};
   const bool split_violin = options.kind == CatPlotKind::Violin && has_hue && options.split;
   if (split_violin && nh != 2) {
-    throw std::invalid_argument("flash::catplot split=true currently requires exactly two hue levels");
+    PLUSS_FAIL("flash::catplot split=true currently requires exactly two hue levels");
   }
   const bool use_dodge = has_hue && options.dodge && !split_violin;
   const bool bar_like = options.kind == CatPlotKind::Bar || options.kind == CatPlotKind::Count;
@@ -3451,7 +3515,7 @@ inline Trace& catplot(
       last = &trace;
     }
     if (last == nullptr) {
-      throw std::invalid_argument("flash::catplot produced no bar/count traces");
+      PLUSS_FAIL("flash::catplot produced no bar/count traces");
     }
     return *last;
   }
@@ -3525,7 +3589,7 @@ inline Trace& catplot(
     last = &out;
   }
   if (last == nullptr) {
-    throw std::invalid_argument("flash::catplot produced no traces");
+    PLUSS_FAIL("flash::catplot produced no traces");
   }
   return *last;
 }
@@ -3550,6 +3614,7 @@ inline Trace& catplot(
 template <class Group, class Values>
   requires(!std::same_as<std::remove_cvref_t<Group>, Note>)
 Trace& catplot(Pane& pane, Group&& group, Values&& values, std::string_view kind = "strip") {
+  detail::require_kind(kind, {"strip", "swarm", "box", "violin", "bar", "count"}, "flash::catplot");
   if (kind == "box") {
     return boxplot(pane, std::forward<Group>(group), std::forward<Values>(values));
   }
@@ -3592,7 +3657,9 @@ namespace detail {
   if (kind == "scatter") {
     return RelGridKind::Scatter;
   }
-  throw std::invalid_argument("flash::relgridplot unknown kind: " + std::string(kind));
+  static const bool pluss_vocab_1 = pluss::exception::names::define("relgridplot unknown kind", {"line", "reg", "scatter"});
+  (void)pluss_vocab_1;
+  PLUSS_FAIL("flash::relgridplot unknown kind '" + std::string(kind) + "'");
 }
 
 [[nodiscard]] inline DisGridKind disgrid_kind(std::string_view kind) {
@@ -3608,7 +3675,9 @@ namespace detail {
   if (kind == "rug") {
     return DisGridKind::Rug;
   }
-  throw std::invalid_argument("flash::disgridplot unknown kind: " + std::string(kind));
+  static const bool pluss_vocab_2 = pluss::exception::names::define("disgridplot unknown kind", {"hist", "density", "ecdf", "rug"});
+  (void)pluss_vocab_2;
+  PLUSS_FAIL("flash::disgridplot unknown kind '" + std::string(kind) + "'");
 }
 
 } // namespace detail
@@ -3660,12 +3729,12 @@ namespace detail {
     std::int64_t rows_hint,
     std::int64_t cols_hint) {
   if (facets == 0) {
-    throw std::invalid_argument("flash grid helpers require at least one facet");
+    PLUSS_FAIL("flash grid helpers require at least one facet");
   }
   const auto facet_count = static_cast<std::int64_t>(facets);
   if (rows_hint > 0 && cols_hint > 0) {
     if (rows_hint * cols_hint < facet_count) {
-      throw std::invalid_argument("flash grid helpers: rows*cols is smaller than facet count");
+      PLUSS_FAIL("flash grid helpers: rows*cols is smaller than facet count");
     }
     return {rows_hint, cols_hint};
   }
@@ -3692,7 +3761,7 @@ inline Studio& relgridplot(
     pluss::msharp::RangeView::Series ys,
     const RelGridPlotOptions& options = {}) {
   if (xs.empty() || ys.empty() || xs.size() != ys.size()) {
-    throw std::invalid_argument("flash::relgridplot requires non-empty aligned x/y facet vectors");
+    PLUSS_FAIL("flash::relgridplot requires non-empty aligned x/y facet vectors");
   }
   const auto [rows, cols] = detail::resolve_grid_shape(xs.size(), options.rows, options.cols);
   FacetGrid(studio, rows, cols, options.grid_gap_x, options.grid_gap_y);
@@ -3769,7 +3838,7 @@ inline Studio& catgridplot(
     pluss::msharp::RangeView::Series values,
     const CatGridPlotOptions& options = {}) {
   if (groups.empty() || values.empty() || groups.size() != values.size()) {
-    throw std::invalid_argument("flash::catgridplot requires non-empty aligned group/value facet vectors");
+    PLUSS_FAIL("flash::catgridplot requires non-empty aligned group/value facet vectors");
   }
   const auto [rows, cols] = detail::resolve_grid_shape(groups.size(), options.rows, options.cols);
   FacetGrid(studio, rows, cols, options.grid_gap_x, options.grid_gap_y);
@@ -3803,7 +3872,7 @@ inline Studio& catgridplot(
     const CatGridPlotOptions& options = {}) {
   if (groups.empty() || values.empty() || hues.empty() ||
       groups.size() != values.size() || groups.size() != hues.size()) {
-    throw std::invalid_argument("flash::catgridplot requires aligned group/value/hue facet vectors");
+    PLUSS_FAIL("flash::catgridplot requires aligned group/value/hue facet vectors");
   }
   const auto [rows, cols] = detail::resolve_grid_shape(groups.size(), options.rows, options.cols);
   FacetGrid(studio, rows, cols, options.grid_gap_x, options.grid_gap_y);
@@ -3860,7 +3929,7 @@ inline Studio& disgridplot(
     pluss::msharp::RangeView::Series values,
     const DisGridPlotOptions& options = {}) {
   if (values.empty()) {
-    throw std::invalid_argument("flash::disgridplot requires at least one facet series");
+    PLUSS_FAIL("flash::disgridplot requires at least one facet series");
   }
   const auto [rows, cols] = detail::resolve_grid_shape(values.size(), options.rows, options.cols);
   FacetGrid(studio, rows, cols, options.grid_gap_x, options.grid_gap_y);
@@ -3887,7 +3956,7 @@ inline Studio& disgridplot(
         break;
       case DisGridKind::Hist:
       default:
-        histplot(pane, values[panel], static_cast<int>(std::max<std::int64_t>(1, options.bins)));
+        histplot(pane, values[panel], static_cast<int>(detail::require_count(options.bins, 1, "flash::disgridplot", "bins")));
         break;
     }
     if (panel < options.x_labels.size()) {
@@ -3930,7 +3999,7 @@ inline Studio& facet_map_plot(
     double gx = 18.0,
     double gy = 18.0) {
   if (rows <= 0 || cols <= 0) {
-    throw std::invalid_argument("flash::facet_map_plot rows/cols must be positive");
+    PLUSS_FAIL("flash::facet_map_plot rows/cols must be positive");
   }
   FacetGrid(studio, rows, cols, gx, gy);
   for (const auto row : std::views::iota(std::int64_t{0}, rows)) {
@@ -3952,7 +4021,7 @@ inline Studio& pairgrid_map_plot(
     double gx = 14.0,
     double gy = 14.0) {
   if (dimensions <= 0) {
-    throw std::invalid_argument("flash::pairgrid_map_plot dimensions must be positive");
+    PLUSS_FAIL("flash::pairgrid_map_plot dimensions must be positive");
   }
   PairGrid(studio, dimensions, gx, gy);
   for (const auto row : std::views::iota(std::int64_t{0}, dimensions)) {
@@ -4064,22 +4133,25 @@ namespace detail {
   const double scatter_panes = static_cast<double>(
       std::max<std::int64_t>(1, pairplot_scatter_pane_count(feature_count, options.triangle)));
   const double viewport_area =
-      std::max(640.0, options.min_width) * std::max(420.0, options.min_height);
+      std::max(detail::kPairViewportMinWidth, options.min_width) * std::max(detail::kPairViewportMinHeight, options.min_height);
   const double cell_area =
       std::max(1.0, options.cell_width) * std::max(1.0, options.cell_height);
   const double baseline_marker_area =
       std::clamp(options.marker_area_min, 1.0, std::max(options.marker_area_min, options.marker_area_max));
-  const double marker_radius = std::clamp(std::sqrt(baseline_marker_area) * 0.31, 0.95, 9.0);
-  const double marker_diameter = std::max(2.0, (marker_radius * 2.0) + 1.0);
+  // The size of a marker is the renderer's: the radius follows the square root of the area, never below a visible dot.
+  const StyleOptions marker_style{};
+  const double marker_radius = std::max(marker_style.min_marker_radius_pt,
+                                        std::sqrt(baseline_marker_area) * marker_style.marker_radius_per_sqrt_size);
+  const double marker_diameter = (marker_radius * 2.0) + 1.0;
   const double pane_budget = std::max(
-      48.0,
-      cell_area / std::max(10.0, marker_diameter * marker_diameter * 1.75));
+      detail::kPairPaneBudgetFloor,
+      cell_area / std::max(detail::kPairMinMarkerCell, marker_diameter * marker_diameter * detail::kPairPaneOverlap));
   const double global_budget = std::max(
-      96.0,
-      viewport_area / std::max(12.0, marker_diameter * marker_diameter * 2.5));
+      detail::kPairGlobalBudgetFloor,
+      viewport_area / std::max(detail::kPairMinMarkerFigure, marker_diameter * marker_diameter * detail::kPairGlobalOverlap));
   const double effective =
       std::min({static_cast<double>(options.max_points), pane_budget, global_budget / scatter_panes});
-  return std::max<std::int64_t>(32, static_cast<std::int64_t>(std::llround(effective)));
+  return std::max<std::int64_t>(detail::kPairMinPoints, static_cast<std::int64_t>(std::llround(effective)));
 }
 
 [[nodiscard]] inline std::pair<std::vector<Series>, std::vector<std::string>> dataset_numeric_columns(
@@ -4102,7 +4174,7 @@ inline Studio& pairplot(
     pluss::msharp::RangeView::Series columns,
     const PairPlotOptions& options = {}) {
   if (columns.empty()) {
-    throw std::invalid_argument("flash::pairplot requires at least one series");
+    PLUSS_FAIL("flash::pairplot requires at least one series");
   }
 
   auto pair_options = options;
@@ -4127,7 +4199,7 @@ inline Studio& pairplot(
   detail::downsample_columns(prepared, detail::adaptive_pairplot_max_points(pair_options, n));
   const std::int64_t row_count = prepared.front().numel();
   if (row_count <= 0) {
-    throw std::invalid_argument("flash::pairplot has no rows after filtering/sampling");
+    PLUSS_FAIL("flash::pairplot has no rows after filtering/sampling");
   }
 
   if (pair_options.auto_size) {
@@ -4146,14 +4218,14 @@ inline Studio& pairplot(
   studio.mosaic(n, n, pair_options.grid_gap_x, pair_options.grid_gap_y);
   const auto colors = detail::categorical_colors(n);
   const bool labels_match = pair_options.labels.size() == static_cast<std::size_t>(n);
-  const double safe_tick_font_scale =
-      (std::isfinite(pair_options.tick_font_scale) && pair_options.tick_font_scale > 0.0)
-          ? pair_options.tick_font_scale
-          : 0.8;
-  const double safe_axis_label_font_scale =
-      (std::isfinite(pair_options.axis_label_font_scale) && pair_options.axis_label_font_scale > 0.0)
-          ? pair_options.axis_label_font_scale
-          : 0.9;
+  if (!(std::isfinite(pair_options.tick_font_scale) && pair_options.tick_font_scale > 0.0)) {
+    PLUSS_FAIL("flash::pairplot: tick_font_scale must be finite and positive");
+  }
+  if (!(std::isfinite(pair_options.axis_label_font_scale) && pair_options.axis_label_font_scale > 0.0)) {
+    PLUSS_FAIL("flash::pairplot: axis_label_font_scale must be finite and positive");
+  }
+  const double safe_tick_font_scale = pair_options.tick_font_scale;
+  const double safe_axis_label_font_scale = pair_options.axis_label_font_scale;
 
   for (const auto row : std::views::iota(std::int64_t{0}, n)) {
     for (const auto col : std::views::iota(std::int64_t{0}, n)) {
@@ -4161,11 +4233,13 @@ inline Studio& pairplot(
       const bool edge_x = row == n - 1;
       const bool edge_y = col == 0;
       const bool show_ticks = !pair_options.hide_inner_ticks || edge_x || edge_y;
-      const double tick_scale = show_ticks ? safe_tick_font_scale : 0.01;
       pane.place(row, col)
           .grid(pair_options.show_grid ? GridStyle::Major : GridStyle::None)
-          .tick_font_scale(tick_scale)
+          .tick_font_scale(safe_tick_font_scale)
           .axis_label_font_scale(safe_axis_label_font_scale);
+      if (!show_ticks) {
+        pane.x_tick_labels(false).y_tick_labels(false);
+      }
       if (pair_options.x_tick_format.has_value()) {
         pane.x_tick_format(*pair_options.x_tick_format);
       }
@@ -4230,7 +4304,7 @@ inline Studio& pairplot(
         if (pair_options.diag_kind == PairPlotDiagKind::Density) {
           const auto [dx, dy] = detail::gaussian_kde(
               y_values,
-              std::max<std::int64_t>(32, pair_options.diag_density_points));
+              detail::require_count(pair_options.diag_density_points, 2, "flash::pairplot", "diag_density_points"));
           auto& trace = pane.trend(dx, dy);
           trace.width(pair_options.diag_trace_width);
           if (!pair_options.monochrome && !colors.empty()) {
@@ -4239,7 +4313,7 @@ inline Studio& pairplot(
         } else {
           auto& trace = pane.bucket(
               y_values,
-              static_cast<int>(std::max<std::int64_t>(1, pair_options.diag_bins)));
+              static_cast<int>(detail::require_count(pair_options.diag_bins, 1, "flash::pairplot", "diag_bins")));
           trace.width(pair_options.diag_trace_width);
           if (!pair_options.monochrome && !colors.empty()) {
             trace.stroke(colors[static_cast<std::size_t>(row) % colors.size()]);
@@ -4466,8 +4540,8 @@ namespace detail {
   const auto n = static_cast<std::int64_t>(xs.size());
   const auto g = std::clamp<std::int64_t>(
       static_cast<std::int64_t>(std::ceil(std::sqrt(static_cast<double>(std::max<std::int64_t>(1, n))))),
-      2,
-      20);
+      detail::kTriplotMinGrid,
+      detail::kTriplotMaxGrid);
 
   const auto [x_min_it, x_max_it] = std::minmax_element(xs.begin(), xs.end());
   const auto [y_min_it, y_max_it] = std::minmax_element(ys.begin(), ys.end());
@@ -4602,7 +4676,7 @@ inline Studio& triplot(
             surface[0],
             surface[1],
             surface[2],
-            static_cast<int>(std::max<std::int64_t>(3, options.ridge_levels)));
+            static_cast<int>(detail::require_count(options.ridge_levels, 1, "flash::triplot", "ridge_levels")));
         break;
       }
       case TriplotKind::Cloud:
@@ -4809,14 +4883,14 @@ inline Studio& parallelplot(
     pluss::msharp::RangeView::Series columns,
     const ParallelCoordinatesOptions& options = {}) {
   if (columns.size() < 2) {
-    throw std::invalid_argument("flash::parallelplot requires at least two columns");
+    PLUSS_FAIL("flash::parallelplot requires at least two columns");
   }
 
   auto prepared = detail::prepare_numeric_columns(columns, options.normalize);
   const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
   const std::int64_t nrows = detail::require_equal_lengths(prepared, "flash::parallelplot");
   if (nrows <= 0) {
-    throw std::invalid_argument("flash::parallelplot requires at least one row");
+    PLUSS_FAIL("flash::parallelplot requires at least one row");
   }
 
   detail::downsample_columns(prepared, options.max_points);
@@ -4842,8 +4916,9 @@ inline Studio& parallelplot(
     std::copy_n(flat_values.begin() + static_cast<std::ptrdiff_t>(offset), cols_us, y.begin());
     auto& trace = pane.trend(x, y);
     Rgba color = colors[static_cast<std::size_t>(row) % colors.size()];
-    color.alpha = std::clamp(options.alpha, 0.05, 1.0);
-    trace.stroke(color).width(options.trace_width).transparent(color.alpha < 0.999);
+    detail::require_opacity(options.alpha, "flash");
+    color.alpha = options.alpha;
+    trace.stroke(color).width(options.trace_width).transparent(color.alpha < detail::kOpaqueAlpha);
   }
   return studio;
 }
@@ -4851,12 +4926,12 @@ inline Studio& parallelplot(
 inline Studio& parallelplot(
     Studio& studio,
     pluss::msharp::RangeView::Series columns,
-    const Note& class_labels,
+    const Note& group_labels,
     const ParallelCoordinatesOptions& options = {}) {
   if (columns.size() < 2) {
-    throw std::invalid_argument("flash::parallelplot requires at least two columns");
+    PLUSS_FAIL("flash::parallelplot requires at least two columns");
   }
-  std::vector<std::string> labels = detail::note_values(class_labels);
+  std::vector<std::string> labels = detail::note_values(group_labels);
   if (labels.empty()) {
     return parallelplot(studio, columns, options);
   }
@@ -4865,7 +4940,7 @@ inline Studio& parallelplot(
   const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
   const std::int64_t nrows = detail::require_equal_lengths(prepared, "flash::parallelplot");
   if (nrows != static_cast<std::int64_t>(labels.size())) {
-    throw std::invalid_argument("flash::parallelplot: class label length must match rows");
+    PLUSS_FAIL("flash::parallelplot: group label length must match rows");
   }
 
   detail::downsample_columns(prepared, options.max_points, &labels);
@@ -4903,8 +4978,9 @@ inline Studio& parallelplot(
     const auto class_name = labels[row];
     const auto class_idx = color_index[class_name];
     Rgba color = colors[class_idx % colors.size()];
-    color.alpha = std::clamp(options.alpha, 0.05, 1.0);
-    trace.stroke(color).width(options.trace_width).transparent(color.alpha < 0.999);
+    detail::require_opacity(options.alpha, "flash");
+    color.alpha = options.alpha;
+    trace.stroke(color).width(options.trace_width).transparent(color.alpha < detail::kOpaqueAlpha);
     if (!emitted[class_name]) {
       trace.label(class_name);
       emitted[class_name] = true;
@@ -4998,21 +5074,21 @@ inline Studio& andrews_curves(
     pluss::msharp::RangeView::Series columns,
     const AndrewsCurvesOptions& options = {}) {
   if (columns.size() < 2) {
-    throw std::invalid_argument("flash::andrews_curves requires at least two columns");
+    PLUSS_FAIL("flash::andrews_curves requires at least two columns");
   }
   auto prepared = detail::prepare_numeric_columns(columns, options.normalize);
   const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
   const std::int64_t nrows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
   if (nrows <= 0) {
-    throw std::invalid_argument("flash::andrews_curves requires at least one row");
+    PLUSS_FAIL("flash::andrews_curves requires at least one row");
   }
 
   detail::downsample_columns(prepared, options.max_curves);
   const std::int64_t plotted_rows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
 
-  const auto t = ::pluss::series::linspace(-3.14159265358979323846,
-                                 3.14159265358979323846,
-                                 std::max<std::int64_t>(64, options.points),
+  const auto t = ::pluss::series::linspace(-detail::kPi,
+                                 detail::kPi,
+                                 detail::require_count(options.points, 2, "flash::andrews_curves", "points"),
                                  ScalarType::Float64);
   const auto t_values = detail::to_f64_vector(t);
   const auto basis = detail::andrews_basis(t_values, ncols);
@@ -5033,8 +5109,9 @@ inline Studio& andrews_curves(
     std::copy_n(flat_curves.begin() + static_cast<std::ptrdiff_t>(offset), point_count, curve.begin());
     auto& trace = pane.trend(t_values, curve);
     Rgba color = colors[static_cast<std::size_t>(row) % colors.size()];
-    color.alpha = std::clamp(options.alpha, 0.05, 1.0);
-    trace.stroke(color).width(options.trace_width).transparent(color.alpha < 0.999);
+    detail::require_opacity(options.alpha, "flash");
+    color.alpha = options.alpha;
+    trace.stroke(color).width(options.trace_width).transparent(color.alpha < detail::kOpaqueAlpha);
   }
   return studio;
 }
@@ -5042,26 +5119,26 @@ inline Studio& andrews_curves(
 inline Studio& andrews_curves(
     Studio& studio,
     pluss::msharp::RangeView::Series columns,
-    const Note& class_labels,
+    const Note& group_labels,
     const AndrewsCurvesOptions& options = {}) {
   if (columns.size() < 2) {
-    throw std::invalid_argument("flash::andrews_curves requires at least two columns");
+    PLUSS_FAIL("flash::andrews_curves requires at least two columns");
   }
 
-  std::vector<std::string> labels = detail::note_values(class_labels);
+  std::vector<std::string> labels = detail::note_values(group_labels);
   auto prepared = detail::prepare_numeric_columns(columns, options.normalize);
   const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
   const std::int64_t nrows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
   if (nrows != static_cast<std::int64_t>(labels.size())) {
-    throw std::invalid_argument("flash::andrews_curves: class label length must match rows");
+    PLUSS_FAIL("flash::andrews_curves: group label length must match rows");
   }
 
   detail::downsample_columns(prepared, options.max_curves, &labels);
   const std::int64_t plotted_rows = detail::require_equal_lengths(prepared, "flash::andrews_curves");
 
-  const auto t = ::pluss::series::linspace(-3.14159265358979323846,
-                                 3.14159265358979323846,
-                                 std::max<std::int64_t>(64, options.points),
+  const auto t = ::pluss::series::linspace(-detail::kPi,
+                                 detail::kPi,
+                                 detail::require_count(options.points, 2, "flash::andrews_curves", "points"),
                                  ScalarType::Float64);
   const auto t_values = detail::to_f64_vector(t);
   const auto basis = detail::andrews_basis(t_values, ncols);
@@ -5095,8 +5172,9 @@ inline Studio& andrews_curves(
     const auto class_name = labels[row];
     const auto class_idx = color_index[class_name];
     Rgba color = colors[class_idx % colors.size()];
-    color.alpha = std::clamp(options.alpha, 0.05, 1.0);
-    trace.stroke(color).width(options.trace_width).transparent(color.alpha < 0.999);
+    detail::require_opacity(options.alpha, "flash");
+    color.alpha = options.alpha;
+    trace.stroke(color).width(options.trace_width).transparent(color.alpha < detail::kOpaqueAlpha);
     if (!emitted[class_name]) {
       trace.label(class_name);
       emitted[class_name] = true;
@@ -5190,14 +5268,14 @@ inline Studio& radviz(
     pluss::msharp::RangeView::Series columns,
     const RadvizOptions& options = {}) {
   if (columns.size() < 3) {
-    throw std::invalid_argument("flash::radviz requires at least three columns");
+    PLUSS_FAIL("flash::radviz requires at least three columns");
   }
 
   auto prepared = detail::prepare_numeric_columns(columns, options.normalize);
   const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
   const std::int64_t nrows = detail::require_equal_lengths(prepared, "flash::radviz");
   if (nrows <= 0) {
-    throw std::invalid_argument("flash::radviz requires at least one row");
+    PLUSS_FAIL("flash::radviz requires at least one row");
   }
 
   detail::downsample_columns(prepared, options.max_points);
@@ -5208,7 +5286,7 @@ inline Studio& radviz(
   anchor_x.reserve(static_cast<std::size_t>(ncols));
   anchor_y.reserve(static_cast<std::size_t>(ncols));
   for (const auto i : std::views::iota(std::int64_t{0}, ncols)) {
-    const double theta = 2.0 * 3.14159265358979323846 * static_cast<double>(i) / static_cast<double>(ncols);
+    const double theta = 2.0 * detail::kPi * static_cast<double>(i) / static_cast<double>(ncols);
     anchor_x.push_back(std::cos(theta));
     anchor_y.push_back(std::sin(theta));
   }
@@ -5239,16 +5317,16 @@ inline Studio& radviz(
       .legend(KeyPlace::None)
       .x_label("radviz-x")
       .y_label("radviz-y")
-      .x_limits({-1.1, 1.1})
-      .y_limits({-1.1, 1.1});
-  auto& trace = pane.cloud(x_points, y_points, std::array<double, 1>{std::max(2.0, options.marker_area)});
+      .x_limits({-detail::kRadvizMargin, detail::kRadvizMargin})
+      .y_limits({-detail::kRadvizMargin, detail::kRadvizMargin});
+  auto& trace = pane.cloud(x_points, y_points, std::array<double, 1>{options.marker_area});
   trace.width(options.trace_width);
   if (options.show_anchors) {
-    auto& anchors = pane.cloud(anchor_x, anchor_y, std::array<double, 1>{26.0});
+    auto& anchors = pane.cloud(anchor_x, anchor_y, std::array<double, 1>{detail::kRadvizAnchorSize});
     anchors.width(0.85F);
     const auto labels = detail::default_feature_labels(options.labels, ncols);
     for (const auto i : std::views::iota(std::size_t{0}, labels.size())) {
-      pane.pin(labels[i], anchor_x[i], anchor_y[i], 18.0, -10.0);
+      pane.pin(labels[i], anchor_x[i], anchor_y[i], detail::kRadvizLabelOffsetX, detail::kRadvizLabelOffsetY);
     }
   }
   return studio;
@@ -5257,18 +5335,18 @@ inline Studio& radviz(
 inline Studio& radviz(
     Studio& studio,
     pluss::msharp::RangeView::Series columns,
-    const Note& class_labels,
+    const Note& group_labels,
     const RadvizOptions& options = {}) {
   if (columns.size() < 3) {
-    throw std::invalid_argument("flash::radviz requires at least three columns");
+    PLUSS_FAIL("flash::radviz requires at least three columns");
   }
-  std::vector<std::string> labels = detail::note_values(class_labels);
+  std::vector<std::string> labels = detail::note_values(group_labels);
 
   auto prepared = detail::prepare_numeric_columns(columns, options.normalize);
   const std::int64_t ncols = static_cast<std::int64_t>(prepared.size());
   const std::int64_t nrows = detail::require_equal_lengths(prepared, "flash::radviz");
   if (nrows != static_cast<std::int64_t>(labels.size())) {
-    throw std::invalid_argument("flash::radviz: class label length must match rows");
+    PLUSS_FAIL("flash::radviz: group label length must match rows");
   }
 
   detail::downsample_columns(prepared, options.max_points, &labels);
@@ -5280,7 +5358,7 @@ inline Studio& radviz(
   anchor_x.reserve(static_cast<std::size_t>(ncols));
   anchor_y.reserve(static_cast<std::size_t>(ncols));
   for (const auto i : std::views::iota(std::int64_t{0}, ncols)) {
-    const double theta = 2.0 * 3.14159265358979323846 * static_cast<double>(i) / static_cast<double>(ncols);
+    const double theta = 2.0 * detail::kPi * static_cast<double>(i) / static_cast<double>(ncols);
     anchor_x.push_back(std::cos(theta));
     anchor_y.push_back(std::sin(theta));
   }
@@ -5320,19 +5398,19 @@ inline Studio& radviz(
       .legend(options.show_legend ? KeyPlace::Auto : KeyPlace::None)
       .x_label("radviz-x")
       .y_label("radviz-y")
-      .x_limits({-1.1, 1.1})
-      .y_limits({-1.1, 1.1});
+      .x_limits({-detail::kRadvizMargin, detail::kRadvizMargin})
+      .y_limits({-detail::kRadvizMargin, detail::kRadvizMargin});
   const auto colors = detail::categorical_colors(static_cast<std::int64_t>(ordered_classes.size()));
   for (const auto i : std::views::iota(std::size_t{0}, ordered_classes.size())) {
-    auto& trace = pane.cloud(grouped_x[i], grouped_y[i], std::array<double, 1>{std::max(2.0, options.marker_area)});
+    auto& trace = pane.cloud(grouped_x[i], grouped_y[i], std::array<double, 1>{options.marker_area});
     trace.stroke(colors[i % colors.size()]).width(options.trace_width).label(ordered_classes[i]);
   }
   if (options.show_anchors) {
-    auto& anchors = pane.cloud(anchor_x, anchor_y, std::array<double, 1>{26.0});
+    auto& anchors = pane.cloud(anchor_x, anchor_y, std::array<double, 1>{detail::kRadvizAnchorSize});
     anchors.width(0.85F);
     const auto feature_labels = detail::default_feature_labels(options.labels, ncols);
     for (const auto i : std::views::iota(std::size_t{0}, feature_labels.size())) {
-      pane.pin(feature_labels[i], anchor_x[i], anchor_y[i], 18.0, -10.0);
+      pane.pin(feature_labels[i], anchor_x[i], anchor_y[i], detail::kRadvizLabelOffsetX, detail::kRadvizLabelOffsetY);
     }
   }
   return studio;
@@ -5423,9 +5501,9 @@ Studio& lagplot(Studio& studio, Values&& values, const LagPlotOptions& options =
   const Series base = detail::flatten_f64(detail::to_series(std::forward<Values>(values)));
   const std::int64_t n = base.numel();
   if (n < 2) {
-    throw std::invalid_argument("flash::lagplot requires at least two points");
+    PLUSS_FAIL("flash::lagplot requires at least two points");
   }
-  const std::int64_t lag = std::clamp<std::int64_t>(options.lag, 1, n - 1);
+  const std::int64_t lag = std::min(detail::require_count(options.lag, 1, "flash::lagplot", "lag"), n - 1);
   const std::int64_t usable = n - lag;
   const std::int64_t step =
       (options.max_points > 0 && usable > options.max_points)
@@ -5435,7 +5513,7 @@ Studio& lagplot(Studio& studio, Values&& values, const LagPlotOptions& options =
   const auto idx_y = Series::arange(lag, lag + usable, step, ScalarType::Int64);
   auto& pane = studio.pane2();
   pane.grid(GridStyle::Major).x_label("x(t)").y_label("x(t + lag)");
-  auto& trace = pane.cloud(base.take(idx_x), base.take(idx_y), std::array<double, 1>{std::max(2.0, options.marker_area)});
+  auto& trace = pane.cloud(base.take(idx_x), base.take(idx_y), std::array<double, 1>{options.marker_area});
   trace.width(options.trace_width).label("lag");
   return studio;
 }
@@ -5445,13 +5523,13 @@ Studio& acfplot(Studio& studio, Values&& values, const AcfPlotOptions& options =
   const Series base = detail::flatten_f64(detail::to_series(std::forward<Values>(values)));
   const std::int64_t n = base.numel();
   if (n < 3) {
-    throw std::invalid_argument("flash::acfplot requires at least three points");
+    PLUSS_FAIL("flash::acfplot requires at least three points");
   }
   const double global_mean = detail::scalar_value(base.mean());
   const Series centered = base.sub(global_mean);
   const double denom = detail::scalar_value(centered.mul(centered).sum());
   const bool valid_denom = std::isfinite(denom) && denom > 0.0;
-  const std::int64_t max_lag = std::clamp<std::int64_t>(options.max_lag, 1, n - 1);
+  const std::int64_t max_lag = std::min(detail::require_count(options.max_lag, 1, "flash::acfplot", "max_lag"), n - 1);
   const std::int64_t lag_start = options.include_zero_lag ? 0 : 1;
   std::vector<double> lags;
   std::vector<double> acf;
@@ -5492,9 +5570,9 @@ Studio& pacfplot(Studio& studio, Values&& values, const PacfPlotOptions& options
   const Series base = detail::flatten_f64(detail::to_series(std::forward<Values>(values)));
   const std::int64_t n = base.numel();
   if (n < 4) {
-    throw std::invalid_argument("flash::pacfplot requires at least four points");
+    PLUSS_FAIL("flash::pacfplot requires at least four points");
   }
-  const std::int64_t max_lag = std::clamp<std::int64_t>(options.max_lag, 1, n - 1);
+  const std::int64_t max_lag = std::min(detail::require_count(options.max_lag, 1, "flash::pacfplot", "max_lag"), n - 1);
   const double global_mean = detail::scalar_value(base.mean());
   const Series centered = base.sub(global_mean);
   const double denom = detail::scalar_value(centered.mul(centered).sum());
@@ -5561,10 +5639,10 @@ Studio& ccfplot(Studio& studio, X&& x, Y&& y, const CcfPlotOptions& options = {}
   const Series sx = detail::flatten_f64(detail::to_series(std::forward<X>(x)));
   const Series sy = detail::flatten_f64(detail::to_series(std::forward<Y>(y)));
   if (sx.numel() != sy.numel() || sx.numel() < 3) {
-    throw std::invalid_argument("flash::ccfplot requires aligned x/y with at least three points");
+    PLUSS_FAIL("flash::ccfplot requires aligned x/y with at least three points");
   }
   const std::int64_t n = sx.numel();
-  const std::int64_t max_lag = std::clamp<std::int64_t>(options.max_lag, 1, n - 1);
+  const std::int64_t max_lag = std::min(detail::require_count(options.max_lag, 1, "flash::ccfplot", "max_lag"), n - 1);
   const Series x_centered = sx.sub(detail::scalar_value(sx.mean()));
   const Series y_centered = sy.sub(detail::scalar_value(sy.mean()));
   const double x_energy = detail::scalar_value(x_centered.mul(x_centered).sum());
@@ -5625,7 +5703,7 @@ Studio& resid_acfplot(Studio& studio, X&& x, Y&& y, const ResidAcfPlotOptions& o
       detail::to_series(std::forward<X>(x)),
       detail::to_series(std::forward<Y>(y)));
   if (sx.numel() < 3) {
-    throw std::invalid_argument("flash::resid_acfplot requires at least three finite x/y pairs");
+    PLUSS_FAIL("flash::resid_acfplot requires at least three finite x/y pairs");
   }
   const std::vector<double> vx = detail::to_f64_vector(sx);
   std::vector<double> vy = detail::to_f64_vector(sy);
@@ -5633,7 +5711,7 @@ Studio& resid_acfplot(Studio& studio, X&& x, Y&& y, const ResidAcfPlotOptions& o
       vx,
       vy,
       vx,
-      std::max<std::int64_t>(1, options.reg.order),
+      detail::require_count(options.reg.order, 1, "flash::resid_acfplot", "order"),
       options.reg.robust,
       options.reg.lowess,
       options.reg.lowess_frac);
@@ -5651,10 +5729,10 @@ Studio& bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOption
   const Series base = detail::flatten_f64(detail::to_series(std::forward<Values>(values)));
   const std::int64_t n = base.numel();
   if (n < 2) {
-    throw std::invalid_argument("flash::bootstrapplot requires at least two points");
+    PLUSS_FAIL("flash::bootstrapplot requires at least two points");
   }
   const std::int64_t draw_size = options.sample_size > 0 ? options.sample_size : n;
-  const std::int64_t samples = std::max<std::int64_t>(8, options.samples);
+  const std::int64_t samples = detail::require_count(options.samples, 2, "flash::bootstrapplot", "samples");
   std::vector<double> bootstrap_stats;
   bootstrap_stats.reserve(static_cast<std::size_t>(samples));
   for (const auto i : std::views::iota(std::int64_t{0}, samples)) {
@@ -5697,7 +5775,7 @@ Studio& bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOption
 
   auto& pane = studio.pane2();
   pane.grid(GridStyle::Major).x_label("bootstrap statistic").y_label("count");
-  auto& trace = pane.bucket(bootstrap_stats, std::max(4, options.bins));
+  auto& trace = pane.bucket(bootstrap_stats, detail::require_count(options.bins, 1, "flash::bootstrapplot", "bins"));
   trace.width(options.trace_width).label("bootstrap");
   pane.rule_x(observed, "observed");
   return studio;
@@ -5709,10 +5787,10 @@ inline Studio& summaryplot(
     pluss::msharp::RangeView::Of<std::string_view> labels,
     const SummaryOptions& options = {}) {
   if (columns.empty()) {
-    throw std::invalid_argument("flash::summaryplot requires at least one column");
+    PLUSS_FAIL("flash::summaryplot requires at least one column");
   }
   if (!labels.empty() && labels.size() != columns.size()) {
-    throw std::invalid_argument("flash::summaryplot: labels size must match columns size");
+    PLUSS_FAIL("flash::summaryplot: labels size must match columns size");
   }
 
   std::vector<std::string> names = detail::owned_labels(labels);
@@ -5731,7 +5809,7 @@ inline Studio& summaryplot(
   const std::int64_t ncases = static_cast<std::int64_t>(values.front().size());
   for (const auto& column_values : values) {
     if (static_cast<std::int64_t>(column_values.size()) != ncases) {
-      throw std::invalid_argument("flash::summaryplot requires equal-length columns");
+      PLUSS_FAIL("flash::summaryplot requires equal-length columns");
     }
   }
 
@@ -5744,7 +5822,7 @@ inline Studio& summaryplot(
     }
     std::ostringstream cell;
     cell.setf(std::ios::fixed);
-    cell << std::setprecision(std::max(0, options.precision)) << value;
+    cell << std::setprecision(static_cast<int>(detail::require_count(options.precision, 0, "flash::summaryplot", "precision"))) << value;
     return cell.str();
   };
 
@@ -5753,6 +5831,29 @@ inline Studio& summaryplot(
     if (col_begin >= col_end || col_end > values.size()) {
       return lines;
     }
+    // Columns are as wide as their widest entry, with two spaces between them, so no value overflows into the next.
+    constexpr std::size_t kColumnGap = 2;
+    std::size_t cell_width = 0;
+    for (const auto col : std::views::iota(col_begin, col_end)) {
+      cell_width = std::max(cell_width, names[col].size());
+      for (const auto case_idx : std::views::iota(std::int64_t{0}, shown_cases)) {
+        cell_width = std::max(cell_width, format_cell(values[col][static_cast<std::size_t>(case_idx)]).size());
+      }
+    }
+    std::size_t lead_width = 0;
+    if (options.transpose) {
+      lead_width = std::string("feature").size();
+      for (const auto col : std::views::iota(col_begin, col_end)) {
+        lead_width = std::max(lead_width, names[col].size());
+      }
+      for (const auto case_idx : std::views::iota(std::int64_t{0}, shown_cases)) {
+        cell_width = std::max(cell_width, ("case_" + std::to_string(case_idx)).size());
+      }
+    } else {
+      lead_width = std::max(std::string("case").size(), std::to_string(std::max<std::int64_t>(shown_cases - 1, 0)).size());
+    }
+    cell_width += kColumnGap;
+    lead_width += kColumnGap;
     auto push_line = [&](std::ostringstream& row) {
       lines.push_back(row.str());
       row.str("");
@@ -5762,17 +5863,17 @@ inline Studio& summaryplot(
     if (options.transpose) {
       if (options.include_header) {
         std::ostringstream row;
-        row << std::left << std::setw(18) << "feature";
+        row << std::left << std::setw(static_cast<int>(lead_width)) << "feature";
         for (const auto case_idx : std::views::iota(std::int64_t{0}, shown_cases)) {
-          row << std::right << std::setw(14) << ("case_" + std::to_string(case_idx));
+          row << std::right << std::setw(static_cast<int>(cell_width)) << ("case_" + std::to_string(case_idx));
         }
         push_line(row);
       }
       for (const auto col : std::views::iota(col_begin, col_end)) {
         std::ostringstream row;
-        row << std::left << std::setw(18) << names[col];
+        row << std::left << std::setw(static_cast<int>(lead_width)) << names[col];
         for (const auto case_idx : std::views::iota(std::int64_t{0}, shown_cases)) {
-          row << std::right << std::setw(14) << format_cell(values[col][static_cast<std::size_t>(case_idx)]);
+          row << std::right << std::setw(static_cast<int>(cell_width)) << format_cell(values[col][static_cast<std::size_t>(case_idx)]);
         }
         push_line(row);
       }
@@ -5780,20 +5881,20 @@ inline Studio& summaryplot(
       if (options.include_header) {
         std::ostringstream row;
         if (options.include_case_index) {
-          row << std::left << std::setw(10) << "case";
+          row << std::left << std::setw(static_cast<int>(lead_width)) << "case";
         }
         for (const auto col : std::views::iota(col_begin, col_end)) {
-          row << std::right << std::setw(14) << names[col];
+          row << std::right << std::setw(static_cast<int>(cell_width)) << names[col];
         }
         push_line(row);
       }
       for (const auto case_idx : std::views::iota(std::int64_t{0}, shown_cases)) {
         std::ostringstream row;
         if (options.include_case_index) {
-          row << std::left << std::setw(10) << case_idx;
+          row << std::left << std::setw(static_cast<int>(lead_width)) << case_idx;
         }
         for (const auto col : std::views::iota(col_begin, col_end)) {
-          row << std::right << std::setw(14) << format_cell(values[col][static_cast<std::size_t>(case_idx)]);
+          row << std::right << std::setw(static_cast<int>(cell_width)) << format_cell(values[col][static_cast<std::size_t>(case_idx)]);
         }
         push_line(row);
       }
@@ -5810,8 +5911,8 @@ inline Studio& summaryplot(
   const std::size_t features_per_table = static_cast<std::size_t>(
       std::max<std::int64_t>(1, options.features_per_table > 0 ? options.features_per_table
                                                                 : static_cast<std::int64_t>(feature_count)));
-  const std::size_t tables_per_row = static_cast<std::size_t>(std::max<std::int64_t>(1, options.tables_per_row));
-  const std::size_t gap_spaces = static_cast<std::size_t>(std::max<std::int64_t>(1, options.table_gap_spaces));
+  const std::size_t tables_per_row = static_cast<std::size_t>(detail::require_count(options.tables_per_row, 1, "flash::summaryplot", "tables_per_row"));
+  const std::size_t gap_spaces = static_cast<std::size_t>(detail::require_count(options.table_gap_spaces, 1, "flash::summaryplot", "table_gap_spaces"));
 
   std::vector<std::vector<std::string>> tables;
   tables.reserve((feature_count + features_per_table - 1) / features_per_table);
@@ -5869,8 +5970,9 @@ inline Studio& summaryplot(
       .legend(KeyPlace::None)
       .x_label("")
       .y_label("")
-      .tick_font_scale(0.01)
-      .axis_label_font_scale(0.01)
+      .axes_visible(false)
+      .x_tick_labels(false)
+      .y_tick_labels(false)
       .caption(out.str());
   return studio;
 }
@@ -5898,8 +6000,10 @@ Studio& jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter
   } else if (kind == "kde") {
     options.kind = JointPlotKind::Kde;
     options.marginal = JointMarginalKind::Kde;
-  } else {
+  } else if (kind == "scatter") {
     options.kind = JointPlotKind::Scatter;
+  } else {
+    PLUSS_FAIL("flash::jointplot: unknown kind '" + std::string(kind) + "'; the kinds are scatter, reg, hex and kde");
   }
   return jointplot(studio, std::forward<X>(x), std::forward<Y>(y), options);
 }
@@ -5910,7 +6014,7 @@ Studio& jointplot(Studio& studio, X&& x, Y&& y, const JointPlotOptions& options)
   const Series sx = detail::to_series(std::forward<X>(x));
   const Series sy = detail::to_series(std::forward<Y>(y));
   if (sx.numel() != sy.numel()) {
-    throw std::invalid_argument("flash::jointplot requires x/y with identical lengths");
+    PLUSS_FAIL("flash::jointplot requires x/y with identical lengths");
   }
   studio.mosaic(4, 4, options.grid_gap_x, options.grid_gap_y);
 
@@ -5936,28 +6040,28 @@ Studio& jointplot(Studio& studio, X&& x, Y&& y, const JointPlotOptions& options)
         grid.x,
         grid.y,
         grid.z,
-        static_cast<int>(std::max<std::int64_t>(4, options.kde_levels)))
+        static_cast<int>(detail::require_count(options.kde_levels, 1, "flash::jointplot", "kde_levels")))
         .width(std::max(0.85F, options.reg.fit_trace_width * 0.9F))
         .label("kde");
   } else {
-    joint.cloud(sx, sy, std::array<double, 1>{std::max(1.0, options.reg.marker_area)});
+    joint.cloud(sx, sy, std::array<double, 1>{options.reg.marker_area});
   }
 
   Pane& top = studio.pane2();
   top.place(0, 0, 1, 3).grid(options.show_marginal_grid ? GridStyle::Major : GridStyle::None).y_label("");
   if (options.marginal == JointMarginalKind::Kde) {
-    kdeplot(top, sx, std::max<std::int64_t>(16, options.marginal_kde_points));
+    kdeplot(top, sx, detail::require_count(options.marginal_kde_points, 2, "flash::jointplot", "marginal_kde_points"));
   } else {
-    top.bucket(sx, static_cast<int>(std::max<std::int64_t>(4, options.marginal_bins)));
+    top.bucket(sx, static_cast<int>(detail::require_count(options.marginal_bins, 1, "flash::jointplot", "marginal_bins")));
   }
 
   Pane& right = studio.pane2();
   right.place(1, 3, 3, 1).grid(options.show_marginal_grid ? GridStyle::Major : GridStyle::None).x_label("");
   if (options.marginal == JointMarginalKind::Kde) {
-    const auto [kde_x, kde_y] = detail::gaussian_kde(detail::flatten_f64(sy), std::max<std::int64_t>(16, options.marginal_kde_points));
+    const auto [kde_x, kde_y] = detail::gaussian_kde(detail::flatten_f64(sy), detail::require_count(options.marginal_kde_points, 2, "flash::jointplot", "marginal_kde_points"));
     right.trend(kde_y, kde_x);
   } else {
-    right.bucket(sy, static_cast<int>(std::max<std::int64_t>(4, options.marginal_bins)));
+    right.bucket(sy, static_cast<int>(detail::require_count(options.marginal_bins, 1, "flash::jointplot", "marginal_bins")));
   }
   return studio;
 }
@@ -6208,7 +6312,7 @@ inline Studio& jointplot(
 }
 
 [[nodiscard]] inline PaletteRamp hls_palette(std::int64_t n = 6, double saturation = 0.68, double lightness = 0.52) {
-  const std::int64_t count = std::max<std::int64_t>(n, 2);
+  const std::int64_t count = detail::require_count(n, 1, "flash::hls_palette", "n");
   std::vector<Rgba> stops;
   stops.reserve(static_cast<std::size_t>(count));
   for (std::int64_t i = 0; i < count; ++i) {
@@ -6227,7 +6331,7 @@ inline Studio& jointplot(
 }
 
 [[nodiscard]] inline PaletteRamp light_palette(Rgba color, std::int64_t n = 6) {
-  const std::int64_t count = std::max<std::int64_t>(n, 2);
+  const std::int64_t count = detail::require_count(n, 2, "flash::light_palette", "n");
   std::vector<Rgba> stops;
   stops.reserve(static_cast<std::size_t>(count));
   const Rgba white{1.0, 1.0, 1.0, 1.0};
@@ -6238,7 +6342,7 @@ inline Studio& jointplot(
 }
 
 [[nodiscard]] inline PaletteRamp dark_palette(Rgba color, std::int64_t n = 6) {
-  const std::int64_t count = std::max<std::int64_t>(n, 2);
+  const std::int64_t count = detail::require_count(n, 2, "flash::dark_palette", "n");
   std::vector<Rgba> stops;
   stops.reserve(static_cast<std::size_t>(count));
   const Rgba black{0.0, 0.0, 0.0, 1.0};
@@ -6249,7 +6353,7 @@ inline Studio& jointplot(
 }
 
 [[nodiscard]] inline PaletteRamp diverging_palette(Rgba left, Rgba right, std::int64_t n = 7) {
-  const std::int64_t count = std::max<std::int64_t>(n, 3);
+  const std::int64_t count = detail::require_count(n, 3, "flash::diverging_palette", "n");
   std::vector<Rgba> stops;
   stops.reserve(static_cast<std::size_t>(count));
   const std::int64_t mid = count / 2;

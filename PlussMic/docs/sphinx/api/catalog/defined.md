@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::defined() const noexcept -> bool
+bool Catalog::defined() const noexcept
 ```
 
 ## What It Does

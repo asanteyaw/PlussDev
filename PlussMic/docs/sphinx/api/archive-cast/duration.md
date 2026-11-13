@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-ArchiveCastAccessor::duration() -> Archive
+Archive ArchiveCastAccessor::duration()
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::view(std::int64_t start, std::int64_t stop, bool render = false) const -> DataFrameView
+DataFrameView DataFrame::view(std::int64_t start, std::int64_t stop, bool render = false) const
 ```
 
 ## What It Does

@@ -10,21 +10,8 @@
 PaletteRamp flash::mpl_palette(std::string_view name = "viridis")
 ```
 
-```{important} This page documents behavior fixed during this documentation pass -- mpl_palette previously ignored its argument entirely
-Before this page was written, mpl_palette's body was exactly `return
-PaletteRamp::lagoon();` -- the `name` parameter was declared but not even given a name
-in the signature (`std::string_view = "viridis"`), so EVERY call, including the
-function's own stated default `"viridis"`, returned the identical lagoon ramp with no
-way to get anything else. This was a genuine bug, not an intentional stub: unlike
-flash::despine (documented separately as a verified no-op with no fix available,
-since Pane has no per-spine machinery to hook into), a real dispatch pattern already
-existed two functions above this one in the same file --
-flash::color_palette(std::string_view) -- making the fix a straightforward,
-source-grounded application of an established pattern, not a new design decision.
-The fix: dispatch known legacy colormap-family names to PlussPl's five built-in
-PaletteRamp statics by closest hue-progression match, falling back to lagoon (the
-original, still-correct match for "viridis") for anything unrecognized. See the
-dispatch table below for the exact mapping now in effect.
+```{important} The name selects one of the five built-in ramps
+`mpl_palette(name)` maps the name of a familiar colormap family to the built-in `PaletteRamp` whose progression of hue is closest to it; the table below gives the mapping. A name that is not recognised, and the default `"viridis"`, give the lagoon ramp.
 ```
 
 ## What It Does
@@ -80,7 +67,7 @@ mpl_palette() default name=lagoon
 mpl_palette("viridis") == mpl_palette() default: 1
 ```
 
-Example 2. Four different colormap-family names now genuinely resolve to four
+Example 2. Four different colormap-family names now resolve to four
 different ramps — confirming the fix actually dispatches, rather than collapsing to
 one ramp regardless of input.
 

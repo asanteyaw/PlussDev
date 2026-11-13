@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Catalog::plot() const -> CatalogPlotAccessor
-Catalog::plot(const pluss::table::DataFramePlotOptions& options) const -> CatalogPlotAccessor
+CatalogPlotAccessor Catalog::plot() const
+CatalogPlotAccessor Catalog::plot(const pluss::table::DataFramePlotOptions& options) const
 ```
 
 ## What It Does

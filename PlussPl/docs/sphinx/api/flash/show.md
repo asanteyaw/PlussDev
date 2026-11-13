@@ -12,15 +12,8 @@ bool flash::show(
     std::int64_t width = 1280, std::int64_t height = 820, bool launch = true)
 ```
 
-```{important} Not independently invoked with launch=true while writing this page
-Like flash::animate3/flash::animate4, this function's launch=true path opens a real
-native window via Studio::show, which was never actually triggered from this
-unattended documentation-generation script -- same reasoning as those two pages: doing
-so risks a visible, unintended GUI window. This function's own body is a pure one-line
-forward (`return studio.show(title, width, height, launch);`) with no independent
-validation logic of its own to verify in isolation -- its full behavior, including
-every argument's effect, is already directly documented and verified on
-Studio::show's own page.
+```{important} With launch = true it opens a native window
+The launch = true path opens a window through `Studio::show`, as [`flash::animate3`](animate3.md) and [`flash::animate4`](animate4.md) do, so the examples that launch it are not run when the documentation is built. The function is a one-line forward (`return studio.show(title, width, height, launch);`) with no checks of its own; every argument is described on the page of [`Studio::show`](../studio/show.md).
 ```
 
 ## What It Does
@@ -77,7 +70,7 @@ pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 4, 9});
 ## See Also
 
 - [`Studio::show`](../studio/show.md): the underlying method this function forwards to
-  directly, and where every argument's real, verified behavior is documented.
+  directly, and where every argument's behavior is documented.
 - [`flash::save_png`](save_png.md): the sibling export wrapper that writes to disk
   instead of opening a window.
 - [`flash::animate3`](animate3.md), [`flash::animate4`](animate4.md): other

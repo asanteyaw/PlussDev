@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::center() const -> Series
-Series::center(std::int64_t dim) const -> Series
-Series::stat.center(...) -> Series
-Series::stat().center(...) -> Series
+Series Series::center() const
+Series Series::center(std::int64_t dim) const
+Series Series::stat.center(...)
+Series Series::stat().center(...)
 ```
 
 ## What It Does

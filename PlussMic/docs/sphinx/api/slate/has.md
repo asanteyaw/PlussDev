@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Slate::has(double value) const -> Slate
-Slate::has(std::string_view value) const -> Slate
-Slate::has(const char* value) const -> Slate
-Slate::has(const Slate& values) const -> Slate
+Slate Slate::has(double value) const
+Slate Slate::has(std::string_view value) const
+Slate Slate::has(const char* value) const
+Slate Slate::has(const Slate& values) const
 ```
 
 ## What It Does

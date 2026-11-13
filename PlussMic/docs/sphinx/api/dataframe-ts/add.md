@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsAccessor::add(const DataFrame& other, TsAlignMode mode = TsAlignMode::Exact) const -> DataFrame
+DataFrame DataFrameTsAccessor::add(const DataFrame& other, TsAlignMode mode = TsAlignMode::Exact) const
 ```
 
 ## What It Does

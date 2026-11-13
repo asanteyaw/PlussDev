@@ -7,17 +7,17 @@
 ## Signature
 
 ```cpp
-pluss::series::zeros(sizes,
-                     ScalarType dt = ScalarType::Float32) -> Series
+Series pluss::series::zeros(sizes,
+                            ScalarType dt = ScalarType::Float32)
 
-pluss::series::zeros(sizes,
-                     Config cfg) -> Series
+Series pluss::series::zeros(sizes,
+                            Config cfg)
 
-pluss::series::zeros(sizes,
-                     opts...) -> Series
+Series pluss::series::zeros(sizes,
+                            opts...)
 
-pluss::series::zeros(sizes,
-                     {{"key", value}, ...}) -> Series
+Series pluss::series::zeros(sizes,
+                            {{"key", value}, ...})
 ```
 
 ## What It Builds

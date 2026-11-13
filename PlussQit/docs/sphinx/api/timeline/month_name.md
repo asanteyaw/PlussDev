@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::month_name() -> Note
+Note Timeline::month_name()
 ```
 
 Returns the full month label for each timestamp.

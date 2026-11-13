@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::expanding(WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}) const -> Slate
+Slate TimeSeriesAccessor::expanding(WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}) const
 ```
 
 ## What It Does

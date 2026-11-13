@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-CatalogCastAccessor::duration() -> Catalog
+Catalog CatalogCastAccessor::duration()
 ```
 
 ## What It Does

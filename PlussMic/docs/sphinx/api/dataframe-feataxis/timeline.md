@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameFeatureAxisAccessor::timeline() const -> DataFrame
+DataFrame DataFrameFeatureAxisAccessor::timeline() const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::distinct(DistinctOptions options = {}) const -> Catalog
+Catalog Catalog::distinct(DistinctOptions options = {}) const
 ```
 
 ### `DistinctOptions` fields

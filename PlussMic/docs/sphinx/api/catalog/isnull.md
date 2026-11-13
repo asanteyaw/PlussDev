@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::isnull() const -> Catalog
+Catalog Catalog::isnull() const
 ```
 
 ## What It Does

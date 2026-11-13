@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::drop_meta_(std::string_view key) -> Stream&
+Stream& Stream::drop_meta_(std::string_view key)
 ```
 
 ## What It Does

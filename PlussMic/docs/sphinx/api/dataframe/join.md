@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::join(const DataFrame& other, std::string collision_suffix = "_right") const -> DataFrame
+DataFrame DataFrame::join(const DataFrame& other, std::string collision_suffix = "_right") const
 ```
 
 ## What It Does

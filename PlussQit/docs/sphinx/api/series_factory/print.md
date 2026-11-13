@@ -7,14 +7,14 @@
 ## Signature
 
 ```cpp
-pluss::series::print(const Series& s) -> std::string
+std::string pluss::series::print(const Series& s)
 
-pluss::series::print(const Series& s,
-                     const PrintOptions& opt) -> std::string
+std::string pluss::series::print(const Series& s,
+                                 const PrintOptions& opt)
 
-pluss::series::print(std::ostream& os,
-                     const Series& s,
-                     const PrintOptions& opt = {}) -> std::ostream&
+std::ostream& pluss::series::print(std::ostream& os,
+                                   const Series& s,
+                                   const PrintOptions& opt = {})
 ```
 
 ## What It Does

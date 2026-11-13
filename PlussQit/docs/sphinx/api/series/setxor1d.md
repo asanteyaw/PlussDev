@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::setxor1d(const Series& other) const -> Series
-Series::setxor1d(const Series& other, bool sorted) const -> Series
-Series::setxor1d(const Series& other, bool sorted, bool assume_unique) const -> Series
+Series Series::setxor1d(const Series& other) const
+Series Series::setxor1d(const Series& other, bool sorted) const
+Series Series::setxor1d(const Series& other, bool sorted, bool assume_unique) const
 ```
 
 ## What It Does

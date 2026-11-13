@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::prod(Axis axis = Axis::Case, bool skipnull = true) const -> Slate
+Slate DataFrame::prod(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does

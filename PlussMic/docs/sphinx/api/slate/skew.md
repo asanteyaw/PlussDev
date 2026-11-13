@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::skew(std::int64_t min_count = 3) const -> SlateValue
+SlateValue Slate::skew(std::int64_t min_count = 3) const
 ```
 
 ## What It Does

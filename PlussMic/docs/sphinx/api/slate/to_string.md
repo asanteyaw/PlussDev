@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::to_string(const display::DisplayOptions& options = {}) const -> std::string
+std::string Slate::to_string(const display::DisplayOptions& options = {}) const
 ```
 
 ## What It Does

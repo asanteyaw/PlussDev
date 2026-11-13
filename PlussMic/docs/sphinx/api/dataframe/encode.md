@@ -14,7 +14,7 @@ here for the first time alongside its implementation.
 ## Signature
 
 ```cpp
-DataFrame::encode(std::string_view feature, EncodeMode mode = EncodeMode::OneHot, const EncodeOptions& options = {}) const -> DataFrame
+DataFrame DataFrame::encode(std::string_view feature, EncodeMode mode = EncodeMode::OneHot, const EncodeOptions& options = {}) const
 ```
 
 ## What It Does

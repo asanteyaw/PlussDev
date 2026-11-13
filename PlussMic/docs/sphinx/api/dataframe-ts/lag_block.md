@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsAccessor::lag_block(pluss::RangeView<std::int64_t> lags) const -> DataFrame
+DataFrame DataFrameTsAccessor::lag_block(pluss::RangeView<std::int64_t> lags) const
 ```
 
 ## What It Does

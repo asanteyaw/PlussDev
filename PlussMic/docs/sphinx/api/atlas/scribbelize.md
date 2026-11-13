@@ -5,9 +5,9 @@
 ## Signatures
 
 ```cpp
-Atlas::scribbelize() -> pluss::scribble::Axel
+pluss::scribble::Axel Atlas::scribbelize()
 
-Atlas::scribbelize(const pluss::kindle::KindelizePolicy& policy) -> pluss::scribble::Axel
+pluss::scribble::Axel Atlas::scribbelize(const pluss::kindle::KindelizePolicy& policy)
 ```
 
 ## What It Does

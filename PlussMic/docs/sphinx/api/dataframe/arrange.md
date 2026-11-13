@@ -8,16 +8,16 @@
 ## Signatures
 
 ```cpp
-DataFrame::arrange(pluss::RangeView<DataFrame::ArrangeSpec> specs) const -> DataFrame
+DataFrame DataFrame::arrange(pluss::RangeView<DataFrame::ArrangeSpec> specs) const
 
-DataFrame::arrange(pluss::RangeView<std::string_view> features,
-                   bool ascending = true,
-                   bool nulls_last = true) const -> DataFrame
+DataFrame DataFrame::arrange(pluss::RangeView<std::string_view> features,
+                             bool ascending = true,
+                             bool nulls_last = true) const
 
 template <detail::StringViewNameRange NameRange>
-DataFrame::arrange(const NameRange& features,
-                   bool ascending = true,
-                   bool nulls_last = true) const -> DataFrame
+DataFrame DataFrame::arrange(const NameRange& features,
+                             bool ascending = true,
+                             bool nulls_last = true) const
 ```
 
 ## What It Does

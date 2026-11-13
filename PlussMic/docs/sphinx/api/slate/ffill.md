@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::ffill(std::int64_t limit = -1) const -> Slate
+Slate Slate::ffill(std::int64_t limit = -1) const
 ```
 
 ## What It Does

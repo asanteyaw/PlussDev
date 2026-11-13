@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::mask(const Slate& bool_mask, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::mask(const Slate& bool_mask, const AlignOptions& options, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::mask(const Slate& bool_mask, pluss::RangeView<std::string_view> features, const AlignOptions& options) const -> DataFrame
+DataFrame DataFrame::mask(const Slate& bool_mask, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::mask(const Slate& bool_mask, const AlignOptions& options, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::mask(const Slate& bool_mask, pluss::RangeView<std::string_view> features, const AlignOptions& options) const
 ```
 
 ## What It Does

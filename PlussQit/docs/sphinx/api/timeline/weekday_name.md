@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::weekday_name() -> Note
+Note Timeline::weekday_name()
 ```
 
 Returns the full weekday label for each timestamp.

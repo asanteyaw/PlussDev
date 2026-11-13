@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Registry::empty() const -> bool
+bool Registry::empty() const
 ```
 
 ## What It Does

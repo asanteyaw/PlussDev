@@ -7,19 +7,19 @@
 ## Signature
 
 ```cpp
-pluss::series::eye(std::int64_t n,
-                   std::int64_t m = -1,
-                   ScalarType dtype = ScalarType::Float32) -> Series
+Series pluss::series::eye(std::int64_t n,
+                          std::int64_t m = -1,
+                          ScalarType dtype = ScalarType::Float32)
 
-pluss::series::eye(std::int64_t n,
-                   ScalarType dtype) -> Series
+Series pluss::series::eye(std::int64_t n,
+                          ScalarType dtype)
 
-pluss::series::eye(std::int64_t n,
-                   Config config) -> Series
+Series pluss::series::eye(std::int64_t n,
+                          Config config)
 
-pluss::series::eye(std::int64_t n,
-                   std::int64_t m,
-                   Config config) -> Series
+Series pluss::series::eye(std::int64_t n,
+                          std::int64_t m,
+                          Config config)
 ```
 
 ## What It Builds

@@ -10,22 +10,8 @@
 Pane& flash::despine(Pane& pane, bool = true) noexcept
 ```
 
-```{important} This function is currently a verified no-op -- it does not remove anything
-Unlike every other function documented in this task, despine's body is exactly
-`return pane;` -- the pane is returned completely unmodified, regardless of the bool
-argument's value. This was directly verified below: a pane's rendered SVG is
-byte-identical before and after calling despine on it.
-
-This is not a wiring bug fixable by pointing despine at existing machinery, the way
-flash::triplot's grid-family cases were earlier in this reference: Pane's full method
-surface (see the Pane API reference) has no per-spine visibility control at all --
-only the coarse Pane::axes_visible(bool), which hides the entire axes frame at once and
-is already what flash::tickless uses. The name suggests removing individual plot
-spines (top/right, independently of left/bottom); PlussPl's Pane has no equivalent
-concept to hook into, so there is currently no way to implement this function's
-apparent intent without adding new rendering capability to Pane itself -- a feature
-decision, not a source bug. This is documented here as-is, matching this project's
-policy of never silently absorbing a coverage gap.
+```{important} Returns the pane unchanged: panes draw no top or right spines
+`despine` exists so that code written with the familiar name works. A planar pane draws only its left and bottom axes, so the top and right spines that the name refers to are never drawn and there is nothing to remove; the pane is returned as it is, whatever the `bool` is. The one control over the axes of a pane as a whole is [`Pane::axes_visible`](../pane/axes_visible.md), which hides both axis lines at once and is what [`flash::tickless`](tickless.md) uses.
 ```
 
 ## What It Does

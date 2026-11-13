@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::invalid() const -> Archive
+Archive Archive::invalid() const
 ```
 
 ## What It Does

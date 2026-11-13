@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::has_sensitivity() const -> bool
+bool Series::has_sensitivity() const
 ```
 
 ## What It Does

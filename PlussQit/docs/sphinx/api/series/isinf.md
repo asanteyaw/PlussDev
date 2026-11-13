@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::isinf() const -> Series
+Series Series::isinf() const
 Series& Series::isinf_()
 ```
 

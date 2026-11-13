@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::kindelize() const -> pluss::kindle::Catalog
-DataFrame::kindelize(const pluss::kindle::KindelizePolicy& policy) const -> pluss::kindle::Catalog
+pluss::kindle::Catalog DataFrame::kindelize() const
+pluss::kindle::Catalog DataFrame::kindelize(const pluss::kindle::KindelizePolicy& policy) const
 ```
 
 ## What It Does

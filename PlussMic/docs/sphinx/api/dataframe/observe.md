@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::observe(std::int64_t row, bool render = false) const -> DataFrameView
+DataFrameView DataFrame::observe(std::int64_t row, bool render = false) const
 ```
 
 ## What It Does

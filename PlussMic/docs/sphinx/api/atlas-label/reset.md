@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::reset() const -> Atlas
+Atlas AtlasLabelAccessor::reset() const
 ```
 
 ## What It Does

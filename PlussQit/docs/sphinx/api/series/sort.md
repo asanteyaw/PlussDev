@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::sort() const -> Series
-Series::sort(std::int64_t dim) const -> Series
-Series::sort(std::int64_t dim, bool descending) const -> Series
-Series::sort(std::int64_t dim, bool descending, bool stable) const -> Series
+Series Series::sort() const
+Series Series::sort(std::int64_t dim) const
+Series Series::sort(std::int64_t dim, bool descending) const
+Series Series::sort(std::int64_t dim, bool descending, bool stable) const
 ```
 
 ## What It Does

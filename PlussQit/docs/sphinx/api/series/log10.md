@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::log10() const -> Series
+Series Series::log10() const
 Series& Series::log10_()
 Series& Series::log10_() const
 ```

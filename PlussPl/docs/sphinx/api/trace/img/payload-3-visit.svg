@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280.0000" height="820.0000" viewBox="0 0 1280.0000 820.0000">
+<rect x="0" y="0" width="1280.0000" height="820.0000" fill="rgb(255,252,248)" fill-opacity="1.0000"/>
+<path d="M 0.0000 0.0000 L 1280.0000 0.0000 L 1280.0000 820.0000 L 0.0000 820.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 28.0000 28.0000 L 1252.0000 28.0000 L 1252.0000 792.0000 L 28.0000 792.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="640.0000" y="50.0000" font-family="Helvetica, Arial, sans-serif" font-size="14.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">Visit</text>
+<path d="M 81.2000 736.0000 L 1224.0000 736.0000 " stroke="rgb(25,24,23)" stroke-opacity="1.0000" stroke-width="1.0000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 81.2000 86.0000 L 81.2000 736.0000 " stroke="rgb(25,24,23)" stroke-opacity="1.0000" stroke-width="1.0000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 81.2000 736.0000 L 81.2000 740.5000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="81.2000" y="751.4000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">-1</text>
+<path d="M 309.7600 736.0000 L 309.7600 740.5000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="309.7600" y="751.4000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">0</text>
+<path d="M 538.3200 736.0000 L 538.3200 740.5000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="538.3200" y="751.4000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">1</text>
+<path d="M 766.8800 736.0000 L 766.8800 740.5000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="766.8800" y="751.4000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">2</text>
+<path d="M 995.4400 736.0000 L 995.4400 740.5000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="995.4400" y="751.4000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">3</text>
+<path d="M 1224.0000 736.0000 L 1224.0000 740.5000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1224.0000" y="751.4000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">4</text>
+<path d="M 76.7000 736.0000 L 81.2000 736.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="71.1000" y="739.5000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">-1</text>
+<path d="M 76.7000 627.6667 L 81.2000 627.6667 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="71.1000" y="631.1667" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">0</text>
+<path d="M 76.7000 519.3333 L 81.2000 519.3333 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="71.1000" y="522.8333" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">1</text>
+<path d="M 76.7000 411.0000 L 81.2000 411.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="71.1000" y="414.5000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">2</text>
+<path d="M 76.7000 302.6667 L 81.2000 302.6667 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="71.1000" y="306.1667" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">3</text>
+<path d="M 76.7000 194.3333 L 81.2000 194.3333 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="71.1000" y="197.8333" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">4</text>
+<path d="M 76.7000 86.0000 L 81.2000 86.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="71.1000" y="89.5000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">5</text>
+<clipPath id="clip1"><rect x="79.7000" y="84.5000" width="1145.8000" height="653.0000"/></clipPath>
+<g clip-path="url(#clip1)">
+<path d="M 538.3200 411.0000 L 766.8800 194.3333 L 995.4400 302.6667 L 1224.0000 86.0000 " stroke="rgb(28,87,141)" stroke-opacity="1.0000" stroke-width="1.5000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 538.3200 627.6667 L 576.4133 627.6667 L 576.4133 519.3333 L 538.3200 519.3333 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 576.4133 627.6667 L 614.5067 627.6667 L 614.5067 627.6667 L 576.4133 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 614.5067 627.6667 L 652.6000 627.6667 L 652.6000 627.6667 L 614.5067 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 652.6000 627.6667 L 690.6933 627.6667 L 690.6933 627.6667 L 652.6000 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 690.6933 627.6667 L 728.7867 627.6667 L 728.7867 627.6667 L 690.6933 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 728.7867 627.6667 L 766.8800 627.6667 L 766.8800 627.6667 L 728.7867 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 766.8800 627.6667 L 804.9733 627.6667 L 804.9733 411.0000 L 766.8800 411.0000 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 804.9733 627.6667 L 843.0667 627.6667 L 843.0667 627.6667 L 804.9733 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 843.0667 627.6667 L 881.1600 627.6667 L 881.1600 627.6667 L 843.0667 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 881.1600 627.6667 L 919.2533 627.6667 L 919.2533 627.6667 L 881.1600 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 919.2533 627.6667 L 957.3467 627.6667 L 957.3467 627.6667 L 919.2533 627.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 957.3467 627.6667 L 995.4400 627.6667 L 995.4400 302.6667 L 957.3467 302.6667 Z" stroke="rgb(48,95,83)" stroke-opacity="1.0000" stroke-width="0.8000" fill="rgb(88,172,150)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 652.6000 411.0000 L 652.6000 118.5000 L 690.7789 121.0024 L 728.3046 128.4667 L 764.5349 140.7652 L 798.8500 157.6876 L 830.6627 178.9441 L 859.4287 204.1713 L 884.6559 232.9373 L 905.9124 264.7500 L 922.8348 299.0651 L 935.1333 335.2954 L 942.5976 372.8211 L 945.1000 411.0000 L 942.5976 449.1789 L 935.1333 486.7046 L 922.8348 522.9349 L 905.9124 557.2500 L 884.6559 589.0627 L 859.4287 617.8287 L 830.6627 643.0559 L 798.8500 664.3124 L 764.5349 681.2348 L 728.3046 693.5333 L 690.7789 700.9976 L 652.6000 703.5000 Z" stroke="rgb(21,51,94)" stroke-opacity="1.0000" stroke-width="0.9000" fill="rgb(38,93,171)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="988.9750" y="411.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="start">50.0%</text>
+<path d="M 652.6000 411.0000 L 652.6000 703.5000 L 614.4211 700.9976 L 576.8954 693.5333 L 540.6651 681.2348 L 506.3500 664.3124 L 474.5373 643.0559 L 445.7713 617.8287 L 420.5441 589.0627 L 399.2876 557.2500 L 382.3652 522.9349 L 370.0667 486.7046 L 362.6024 449.1789 L 360.1000 411.0000 L 362.6024 372.8211 L 370.0667 335.2954 L 382.3652 299.0651 L 399.2876 264.7500 Z" stroke="rgb(26,91,94)" stroke-opacity="1.0000" stroke-width="0.9000" fill="rgb(48,166,170)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="361.2907" y="579.1875" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">33.3%</text>
+<path d="M 652.6000 411.0000 L 399.2876 264.7500 L 420.5441 232.9373 L 445.7713 204.1713 L 474.5373 178.9441 L 506.3500 157.6876 L 540.6651 140.7652 L 576.8954 128.4667 L 614.4211 121.0024 L 652.6000 118.5000 Z" stroke="rgb(136,108,40)" stroke-opacity="1.0000" stroke-width="0.9000" fill="rgb(248,196,72)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="484.4125" y="119.6907" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">16.7%</text>
+</g>
+</svg>

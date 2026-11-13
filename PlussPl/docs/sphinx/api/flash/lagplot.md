@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class Values>
-Studio& flash::lagplot(Studio& studio, Values&& values, const LagPlotOptions& options = {})
+Studio& flash::lagplot(Studio& studio, Series values, const LagPlotOptions& options = {})
 ```
 
 ## What It Does
@@ -26,7 +25,7 @@ lag-`n` correlation; a formless cloud suggests none). Single overload, single pa
 
 **values** (series-convertible)
     The sequence to lag against itself. Must contain at least two points, or `lagplot`
-    throws `std::invalid_argument("flash::lagplot requires at least two points")`.
+    throws `pluss::Error("flash::lagplot requires at least two points")`.
 
 **options** (`const LagPlotOptions&`, optional)
     See the field table below.
@@ -35,9 +34,9 @@ lag-`n` correlation; a formless cloud suggests none). Single overload, single pa
 
 | Field | Type and default | Description |
 |---|---|---|
-| `lag` | `std::int64_t`, default `1` | The step offset between `x(t)` (the x-axis) and `x(t + lag)` (the y-axis). Clamped to `[1, n - 1]` — always at least `1` step, never beyond the series' own length. |
+| `lag` | `std::int64_t`, default `1` | The step offset between `x(t)` (the x-axis) and `x(t + lag)` (the y-axis). At least `1` (fewer throws `pluss::Error`); a value above `n - 1` is reduced to `n - 1`, the longest lag the series has. |
 | `max_points` | `std::int64_t`, default `2500` | Cap on how many `(x(t), x(t+lag))` pairs are plotted. When the usable pair count (`n - lag`) exceeds this, an evenly-strided subset of at most `max_points` pairs is plotted instead — `0` or negative disables the cap entirely (every usable pair is plotted). |
-| `marker_area` | `double`, default `16.0` | Per-point marker area, clamped to at least `2.0`. |
+| `marker_area` | `double`, default `16.0` | Per-point marker area. A marker is never drawn below a visible dot. |
 | `trace_width` | `float`, default `0.55F` | Stroke width for the point cloud. |
 
 ## Returns
@@ -64,8 +63,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-lagplot-1-default.svg)
 
-Example 2 (verification, not a distinct rendering). `lag = 3` renders genuinely
-differently from the `lag = 1` default, confirmed via direct SVG comparison.
+Example 2 (a comparison, not a new picture). `lag = 3` renders differently from the `lag = 1` default.
 
 ```cpp
 using namespace pluss::pl;
@@ -104,8 +102,8 @@ auto fig = studio("flash_lagplot_too_few");
 std::vector<double> one{1.0};
 try {
   flash::lagplot(fig, one);
-} catch (const std::invalid_argument& e) {
-  std::cout << "lagplot(1 point) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "lagplot(1 point) threw: " << e.message() << "\n";
 }
 ```
 

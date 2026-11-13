@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::store(std::string_view name) const -> std::optional<JoinPlan>
-Locus::store(std::string_view name, const JoinPlan& plan) const -> Locus
+std::optional<JoinPlan> Locus::store(std::string_view name) const
+Locus Locus::store(std::string_view name, const JoinPlan& plan) const
 Locus& Locus::store_(std::string_view name, const JoinPlan& plan)
 ```
 

@@ -7,12 +7,12 @@
 ## Signatures
 
 ```cpp
-Nexus::links() const -> const std::vector<Relationship>&
+const std::vector<Relationship>& Nexus::links() const
 
-Nexus::links(const Relationship& rel) const -> Nexus
+Nexus Nexus::links(const Relationship& rel) const
 Nexus& Nexus::links_(const Relationship& rel)
 
-Nexus::links(std::initializer_list<Relationship> rels) const -> Nexus
+Nexus Nexus::links(std::initializer_list<Relationship> rels) const
 Nexus& Nexus::links_(std::initializer_list<Relationship> rels)
 ```
 

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::has_label() const -> bool
+bool Stream::has_label() const
 ```
 
 ## What It Does

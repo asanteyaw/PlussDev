@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::distinct(DistinctOptions options = {}) const -> Stream
+Stream Stream::distinct(DistinctOptions options = {}) const
 ```
 
 ### `DistinctOptions` fields

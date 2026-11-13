@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::tally(std::int64_t top_n = 0, bool dropnull = true, bool render = false) const -> DataFrameView
-DataFrame::tally(pluss::RangeView<std::string_view> features, std::int64_t top_n = 0, bool dropnull = true, bool render = false) const -> DataFrameView
-DataFrame::tally(std::string_view feature, std::int64_t top_n = 0, bool dropnull = true, bool render = false) const -> DataFrameView
+DataFrameView DataFrame::tally(std::int64_t top_n = 0, bool dropnull = true, bool render = false) const
+DataFrameView DataFrame::tally(pluss::RangeView<std::string_view> features, std::int64_t top_n = 0, bool dropnull = true, bool render = false) const
+DataFrameView DataFrame::tally(std::string_view feature, std::int64_t top_n = 0, bool dropnull = true, bool render = false) const
 ```
 
 ## What It Does

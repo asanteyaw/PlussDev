@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsAccessor::expanding(WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}) const -> Atlas
+Atlas AtlasTsAccessor::expanding(WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}) const
 ```
 
 ## What It Does

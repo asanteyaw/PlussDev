@@ -8,15 +8,15 @@
 ## Signatures
 
 ```cpp
-CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const
 
-CatalogPlotAccessor::corr_heatmap(std::initializer_list<std::string_view> keys) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(std::initializer_list<std::string_view> keys) const
 
-CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                   const CatalogCorrHeatmapPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                     const CatalogCorrHeatmapPlotOptions& options) const
 
-CatalogPlotAccessor::corr_heatmap(std::initializer_list<std::string_view> keys,
-                                   const CatalogCorrHeatmapPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::corr_heatmap(std::initializer_list<std::string_view> keys,
+                                                     const CatalogCorrHeatmapPlotOptions& options) const
 ```
 
 ## What It Does

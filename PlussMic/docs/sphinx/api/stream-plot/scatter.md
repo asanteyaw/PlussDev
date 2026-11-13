@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-StreamPlotAccessor::scatter(const Stream& x) const -> pluss::pl::Studio
-StreamPlotAccessor::scatter(const Stream& x, const ScatterPlotOptions& options) const -> pluss::pl::Studio
-StreamPlotAccessor::scatter(const Stream& x, const Stream& hue) const -> pluss::pl::Studio
-StreamPlotAccessor::scatter(const Stream& x, const Stream& hue, const ScatterPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio StreamPlotAccessor::scatter(const Stream& x) const
+pluss::pl::Studio StreamPlotAccessor::scatter(const Stream& x, const ScatterPlotOptions& options) const
+pluss::pl::Studio StreamPlotAccessor::scatter(const Stream& x, const Stream& hue) const
+pluss::pl::Studio StreamPlotAccessor::scatter(const Stream& x, const Stream& hue, const ScatterPlotOptions& options) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const -> DataFrame
+DataFrame Atlas::aggregate_over_frames(const std::function<DataFrame(const std::vector<DataFrame>&)>& fn) const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::order(pluss::msharp::RangeView::Of<std::string_view> names) const -> DataFrame
-DataFrameLabelAccessor::order(std::initializer_list<std::string_view> names) const -> DataFrame
+DataFrame DataFrameLabelAccessor::order(pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame DataFrameLabelAccessor::order(std::initializer_list<std::string_view> names) const
 ```
 
 ## What It Does

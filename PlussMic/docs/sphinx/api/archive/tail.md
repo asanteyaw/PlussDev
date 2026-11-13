@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::tail(std::int64_t n = 5) const -> Archive
+Archive Archive::tail(std::int64_t n = 5) const
 ```
 
 ## What It Does

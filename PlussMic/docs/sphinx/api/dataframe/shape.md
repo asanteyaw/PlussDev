@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::shape() const -> std::pair<std::int64_t, std::int64_t>
+std::pair<std::int64_t, std::int64_t> DataFrame::shape() const
 ```
 
 ## What It Does

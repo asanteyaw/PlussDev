@@ -7,23 +7,21 @@
 ## Signatures
 
 ```cpp
-template <class X, class Density>
-Trace& flash::kdeplot(Pane& pane, X&& x, Density&& density)
+Trace& flash::kdeplot(Pane& pane, Series x, Series density)
 
-template <class Values>
-Trace& flash::kdeplot(Pane& pane, Values&& values, std::int64_t points = 128)
+Trace& flash::kdeplot(Pane& pane, Series values, std::int64_t points = 128)
 ```
 
 ## What It Does
 
 Draws a smoothed density curve via [`flash::lineplot`](lineplot.md). Two overloads with
-genuinely different jobs:
+different jobs:
 
 - **`kdeplot(pane, x, density)`** — the caller has *already computed* a density curve
   (any two paired series) and just wants it line-plotted. No KDE math happens in this
   overload at all — it's a direct `lineplot(pane, x, density)` call.
 - **`kdeplot(pane, values, points = 128)`** — the caller supplies *raw observations*, and
-  `kdeplot()` computes a genuine Gaussian kernel density estimate itself, then line-plots
+  `kdeplot()` computes a Gaussian kernel density estimate itself, then line-plots
   the resulting curve.
 
 ```{important} The computed KDE's bandwidth uses Scott's rule, not a fixed constant
@@ -77,8 +75,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-kdeplot-1-computed-default-points.svg)
 
-Example 2. Custom, coarser `points` — 64 evaluation points. Verified via direct SVG diff to
-render genuinely different (visibly less smooth) curve resolution than a finer grid.
+Example 2. Custom, coarser `points` — 64 evaluation points. Renders different (visibly less smooth) curve resolution than a finer grid.
 
 ```cpp
 using namespace pluss::pl;
@@ -93,7 +90,7 @@ fig.show();
 
 ![Output of Example 2](img/flash-kdeplot-2-64-points.svg)
 
-Example 3. A much finer 256-point grid — verified genuinely different from Example 2.
+Example 3. A much finer 256-point grid — verified different from Example 2.
 
 ```cpp
 using namespace pluss::pl;

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::cummin(bool skip_nulls = true) const -> Slate
+Slate Slate::cummin(bool skip_nulls = true) const
 ```
 
 ## What It Does

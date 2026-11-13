@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const -> Slate
+Slate AtlasLabelAccessor::slice(std::string_view start, std::string_view stop) const
 ```
 
 ## What It Does

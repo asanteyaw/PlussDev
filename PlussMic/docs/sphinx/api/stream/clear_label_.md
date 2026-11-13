@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::clear_label_() -> Stream&
+Stream& Stream::clear_label_()
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::round() const -> Series
+Series Series::round() const
 Series& Series::round_()
 ```
 

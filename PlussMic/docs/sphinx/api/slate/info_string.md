@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::info_string() const -> std::string
+std::string Slate::info_string() const
 ```
 
 ## What It Does

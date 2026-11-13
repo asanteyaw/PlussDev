@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::plan(std::string_view from, std::string_view to, JoinHow how = JoinHow::Left) const -> JoinPlan
-Locus::plan(const JoinPath& path, JoinHow how = JoinHow::Left) const -> JoinPlan
+JoinPlan Locus::plan(std::string_view from, std::string_view to, JoinHow how = JoinHow::Left) const
+JoinPlan Locus::plan(const JoinPath& path, JoinHow how = JoinHow::Left) const
 ```
 
 ## What It Does

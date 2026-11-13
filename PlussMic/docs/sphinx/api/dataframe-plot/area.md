@@ -8,26 +8,26 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::area(std::string_view y_feature,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view y_feature,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::area(std::string_view y_feature,
-                             std::optional<std::string_view> x_feature,
-                             const AreaPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area(std::string_view y_feature,
+                                               std::optional<std::string_view> x_feature,
+                                               const AreaPlotOptions& options) const
 
-DataFramePlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature,
-                             const AreaPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature,
+                                               const AreaPlotOptions& options) const
 
-DataFramePlotAccessor::area(std::initializer_list<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area(std::initializer_list<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::area(std::initializer_list<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature,
-                             const AreaPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area(std::initializer_list<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature,
+                                               const AreaPlotOptions& options) const
 ```
 
 ## What It Does

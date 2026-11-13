@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const -> Atlas
+Atlas Atlas::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::group() const -> DataFrameGroupBuilder
-DataFrame::group(const GroupOptions& options) const -> DataFrameGroupBuilder
+DataFrameGroupBuilder DataFrame::group() const
+DataFrameGroupBuilder DataFrame::group(const GroupOptions& options) const
 ```
 
 ## What It Does

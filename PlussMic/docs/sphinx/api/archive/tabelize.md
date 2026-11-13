@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::tabelize(const TabelizePolicy& policy = {}) const -> pluss::table::Atlas
+pluss::table::Atlas Archive::tabelize(const TabelizePolicy& policy = {}) const
 ```
 
 ## What It Does

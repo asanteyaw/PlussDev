@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::grouped_std(
+Series Series::grouped_std(
     const Series& group_ids,
     std::int64_t group_count,
-    std::int64_t ddof = 1) const -> Series
+    std::int64_t ddof = 1) const
 ```
 
 ## What It Does

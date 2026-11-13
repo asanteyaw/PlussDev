@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::group() const -> SlateGroupBuilder
-Slate::group(const SlateGroupOptions& options) const -> SlateGroupBuilder
+SlateGroupBuilder Slate::group() const
+SlateGroupBuilder Slate::group(const SlateGroupOptions& options) const
 ```
 
 ## What It Does

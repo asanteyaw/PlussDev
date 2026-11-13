@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::var(bool unbiased = true) const -> SlateValue
-Slate::var(const StatisticOptions& options) const -> SlateValue
+SlateValue Slate::var(bool unbiased = true) const
+SlateValue Slate::var(const StatisticOptions& options) const
 ```
 
 ## What It Does

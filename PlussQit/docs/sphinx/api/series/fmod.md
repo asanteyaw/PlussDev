@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::fmod(const Series& other) const -> Series
-Series::fmod(double other) const -> Series
+Series Series::fmod(const Series& other) const
+Series Series::fmod(double other) const
 Series& Series::fmod_(const Series& other)
 Series& Series::fmod_(double other)
 Series& Series::fmod_(const Series& rhs) const

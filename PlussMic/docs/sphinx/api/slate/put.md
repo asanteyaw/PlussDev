@@ -8,16 +8,16 @@
 ## Signatures
 
 ```cpp
-Slate::put(const Slate& bool_mask, const Slate& value) const -> Slate
-Slate::put(const Slate& bool_mask, double value) const -> Slate
-Slate::put(const Slate& bool_mask, std::string_view value) const -> Slate
-Slate::put(const Slate& bool_mask, const char* value) const -> Slate
-Slate::put(const Slate& bool_mask, pluss::null_t value) const -> Slate
-Slate::put(const pluss::Series& bool_mask, const Slate& value) const -> Slate
-Slate::put(const pluss::Series& bool_mask, double value) const -> Slate
-Slate::put(const pluss::Series& bool_mask, std::string_view value) const -> Slate
-Slate::put(const pluss::Series& bool_mask, const char* value) const -> Slate
-Slate::put(const pluss::Series& bool_mask, pluss::null_t value) const -> Slate
+Slate Slate::put(const Slate& bool_mask, const Slate& value) const
+Slate Slate::put(const Slate& bool_mask, double value) const
+Slate Slate::put(const Slate& bool_mask, std::string_view value) const
+Slate Slate::put(const Slate& bool_mask, const char* value) const
+Slate Slate::put(const Slate& bool_mask, pluss::null_t value) const
+Slate Slate::put(const pluss::Series& bool_mask, const Slate& value) const
+Slate Slate::put(const pluss::Series& bool_mask, double value) const
+Slate Slate::put(const pluss::Series& bool_mask, std::string_view value) const
+Slate Slate::put(const pluss::Series& bool_mask, const char* value) const
+Slate Slate::put(const pluss::Series& bool_mask, pluss::null_t value) const
 ```
 
 ## What It Does

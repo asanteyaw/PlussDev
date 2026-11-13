@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::aggregate(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = false) const -> DataFrameView
+DataFrameView DataFrame::aggregate(pluss::msharp::RangeView::Of<SummarySpec> specs, bool render = false) const
 ```
 
 ## What It Does

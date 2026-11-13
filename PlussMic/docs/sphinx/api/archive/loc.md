@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Archive::loc(std::string_view label) const -> Catalog
-Archive::loc(std::int64_t label) const -> Catalog
-Archive::loc(const pluss::Timeline& label) const -> Catalog
+Catalog Archive::loc(std::string_view label) const
+Catalog Archive::loc(std::int64_t label) const
+Catalog Archive::loc(const pluss::Timeline& label) const
 ```
 
 ## What It Does

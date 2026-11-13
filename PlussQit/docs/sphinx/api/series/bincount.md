@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::bincount() const -> Series
-Series::bincount(std::int64_t minlength) const -> Series
+Series Series::bincount() const
+Series Series::bincount(std::int64_t minlength) const
 ```
 
 ## What It Does

@@ -4,122 +4,193 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& Pane::cloud3(X&& x, Y&& y, Z&& z)
-
-template <class X, class Y, class Z, class Size>
-Trace& Pane::cloud3(X&& x, Y&& y, Z&& z, Size&& size)
-
-template <class X, class Y, class Z, class Size, class Color>
-Trace& Pane::cloud3(X&& x, Y&& y, Z&& z, Size&& size, Color&& color)
+Trace& Pane::cloud3(Series x, Series y, Series z)
+Trace& Pane::cloud3(Series x, Series y, Series z, Series size)
+Trace& Pane::cloud3(Series x, Series y, Series z, Series size, Series color)
 ```
 
 ## What It Does
 
-Adds a 3D scatter trace — one marker per `(x[i], y[i], z[i])` point. The 3D counterpart of
-[`Pane::cloud`](cloud.md), sharing its exact three-overload progressive-enrichment shape:
+Adds a **cloud in three dimensions**: a marker at each point `(x[i], y[i], z[i])`, with nothing joining them. It is the three-dimensional [`cloud`](cloud.md), a scatter plot in space, and with the optional series it carries a size and a colour for each marker.
 
-- **`cloud3(x, y, z)`** — plain markers, uniform default size and color.
-- **`cloud3(x, y, z, size)`** — per-point marker size, driven by a fourth series.
-- **`cloud3(x, y, z, size, color)`** — per-point marker size *and* color, both driven by
-  their own series.
+| Call | Adds |
+|---|---|
+| `cloud3(x, y, z)` | Markers of one size and colour. |
+| `cloud3(x, y, z, size)` | A size for each marker. |
+| `cloud3(x, y, z, size, color)` | And a colour for each, from the palette over the range of `color`. |
 
-There is no overload that supplies `color` without `size` — exactly like `cloud()`,
-`color` is only reachable alongside an explicit `size` series.
-
-```{important} Requires a Volumetric pane
-Calling `cloud3()` on a `Planar` pane throws
-`std::logic_error("cloud3 requires a volumetric pane")`.
-```
+As for `cloud`, there is no call with a colour and no size. All series have the same length, or length 1.
 
 ## Parameters
 
-**x**, **y**, **z** (series-convertible)
-    The 3D coordinates of each point.
+**x**, **y**, **z** (`Series`-convertible)
+    The positions.
 
-**size** (series-convertible, two- and three-argument overloads)
-    A per-point marker-size value, paired with `x`/`y`/`z` by index.
-
-**color** (series-convertible, three-argument overload only)
-    A per-point color value, paired with `x`/`y`/`z`/`size` by index.
+**size**, **color** (`Series`-convertible, optional)
+    Size and colour value of each marker, or one for all.
 
 ## Returns
 
 `Trace&`
-    A reference to the newly created trace, for chaining.
+    The new trace.
 
 ## Examples
 
-Example 1. Plain 3D markers, uniform size and color.
+Example 1. A marker at each point of the helix.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("cloud3_xyz");
-auto& pane = fig.pane3();
-pane.cloud3(std::vector<double>{1.0, 2.0, 3.0, 4.0}, std::vector<double>{2.0, 1.0, 4.0, 3.0}, std::vector<double>{0.5, 1.5, 1.0, 2.0});
-fig.show();
+auto fig = studio("cloud3_plain");
+auto& pane = fig.pane3("p");
+std::vector<double> hx, hy, hz;
+for (int i = 0; i <= 40; ++i) {
+  const double t = 0.25 * i;
+  hx.push_back(std::cos(t));
+  hy.push_back(std::sin(t));
+  hz.push_back(0.1 * t);
+}
+pane.cloud3(hx, hy, hz);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/cloud3-1-xyz.svg)
+![Output of Example 1](img/cloud3-1-plain.svg)
 
-Example 2. Per-point marker size. Verified via direct SVG diff to render genuinely
-different from Example 1 — a narrow size range (tried first) rendered byte-for-byte
-identically to the no-size overload, so a wide range (`1` to `250`) was used instead to
-produce a genuinely visible difference, the same magnitude-dependent pattern documented on
-[`Pane::x_tick_format`](x_tick_format.md) for `TickFormat::Auto` vs. `Plain`.
+Example 2. A fourth series gives each marker its own size: here they grow along the helix.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("cloud3_xyz_size");
-auto& pane = fig.pane3();
-pane.cloud3(std::vector<double>{1.0, 2.0, 3.0, 4.0}, std::vector<double>{2.0, 1.0, 4.0, 3.0}, std::vector<double>{0.5, 1.5, 1.0, 2.0},
-            std::vector<double>{1.0, 100.0, 40.0, 250.0});
-fig.show();
+auto fig = studio("cloud3_size");
+auto& pane = fig.pane3("p");
+std::vector<double> hx, hy, hz;
+for (int i = 0; i <= 40; ++i) {
+  const double t = 0.25 * i;
+  hx.push_back(std::cos(t));
+  hy.push_back(std::sin(t));
+  hz.push_back(0.1 * t);
+}
+std::vector<double> size;
+for (std::size_t i = 0; i < hx.size(); ++i) size.push_back(10.0 + 2.0 * i);
+pane.cloud3(hx, hy, hz, size);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 2](img/cloud3-2-xyz-size.svg)
+![Output of Example 2](img/cloud3-2-size.svg)
 
-Example 3. Per-point size and color together. Verified via direct SVG diff to render
-genuinely different from Example 2.
+Example 3. A fifth series colours the markers through the palette, with the guide to say what the colours mean. A single size keeps the markers equal.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("cloud3_xyz_size_color");
-auto& pane = fig.pane3();
-pane.cloud3(std::vector<double>{1.0, 2.0, 3.0, 4.0}, std::vector<double>{2.0, 1.0, 4.0, 3.0}, std::vector<double>{0.5, 1.5, 1.0, 2.0},
-            std::vector<double>{1.0, 100.0, 40.0, 250.0}, std::vector<double>{0.1, 0.9, 0.5, 0.3});
-fig.show();
+auto fig = studio("cloud3_color");
+auto& pane = fig.pane3("p");
+std::vector<double> hx, hy, hz;
+for (int i = 0; i <= 40; ++i) {
+  const double t = 0.25 * i;
+  hx.push_back(std::cos(t));
+  hy.push_back(std::sin(t));
+  hz.push_back(0.1 * t);
+}
+pane.cloud3(hx, hy, hz, std::vector<double>{3}, hz);
+pane.scale_guide(true);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 3](img/cloud3-3-xyz-size-color.svg)
+![Output of Example 3](img/cloud3-3-color.svg)
+
+Example 4. A single size or colour is repeated for every point.
+
+```cpp
+auto build = [&](double size) {
+  auto fig = studio("cloud3_scalar");
+  auto& pane = fig.pane3("p");
+  pane.cloud3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2}, std::vector<double>{size});
+  return fig.to_svg();
+};
+std::cout << "size 50 != size 150: " << (build(50.0) != build(150.0)) << "\n";
+auto fig = studio("cloud3_scalar_out");
+auto& pane = fig.pane3("p");
+pane.cloud3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2}, std::vector<double>{150});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+size 50 != size 150: 1
+```
+
+![Output of Example 4](img/cloud3-4-scalar.svg)
+
+Example 5. Inputs that cannot be drawn are refused when the trace is added, and the message names the method and the problem. The pane keeps the traces it had.
+
+```cpp
+auto report = [](const char* what, auto&& call) {
+  auto fig = studio("cloud3_errors");
+  auto& pane = fig.pane3("p");
+  try {
+    call(pane);
+    std::cout << what << ": accepted\n";
+  } catch (const pluss::Error& e) {
+    std::cout << what << ": " << e.message() << "\n";
+  }
+};
+report("z differs", [](Pane& pane) { pane.cloud3(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2}); });
+report("size differs", [](Pane& pane) { pane.cloud3(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2}); });
+auto fig = studio("cloud3_errors_out");
+auto& pane = fig.pane3("p");
+pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+z differs: cloud3: z length must match broadcasted x/y length
+size differs: cloud3: size length must match the plotted point count or be scalar
+```
+
+![Output of Example 5](img/cloud3-5-errors.svg)
+
+Example 6. `cloud3` needs a volumetric pane. On a planar pane it throws at once, naming the kind it needs, and nothing is added.
+
+```cpp
+auto fig = studio("cloud3_wrong_pane");
+auto& pane = fig.pane2("p");
+try {
+  pane.cloud3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
+}
+std::cout << "traces: " << pane.trace_count() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+cloud3 requires a volumetric pane
+traces: 0
+```
+
+![Output of Example 6](img/cloud3-6-wrong_pane.svg)
 
 ## Notes
 
-- Not `noexcept`.
-- Marker size differences only render visibly when the `size` series spans a wide enough
-  relative range — verified directly (see Example 2's callout above).
-- `flash::scatter3d` (if present) is a convenience wrapper around this exact method.
+- Returns the new [`Trace&`](../trace/label.md); the reference stays valid for the life of the pane, and the style calls of the trace ([`label`](../trace/label.md), [`stroke`](../trace/stroke.md), [`width`](../trace/width.md), ...) chain off it.
+- The data is copied into the trace when it is added, so changing the vector afterwards does not change the figure.
 
 ## See Also
 
-- [`Pane::cloud`](cloud.md): the 2D counterpart, identical progressive-enrichment overload
-  shape, on a `Planar` pane instead.
-- [`Pane::path3`](path3.md): a connected-line 3D trace, for showing a trajectory rather
-  than discrete unordered points.
+- [`Pane::cloud`](cloud.md): the planar form.
+- [`Pane::path3`](path3.md): a line through points.
+- [`Pane::scale_guide`](scale_guide.md): the key to the colours.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="fieldmap.html">
+  <a class="prev-link" href="cloud.html">
     <span class="label">Previous</span>
-    <span class="title">fieldmap</span>
+    <span class="title">cloud</span>
   </a>
-  <a class="next-link" href="path3.html">
+  <a class="next-link" href="color_limit_method.html">
     <span class="label">Next</span>
-    <span class="title">path3</span>
+    <span class="title">color_limit_method</span>
   </a>
 </div>

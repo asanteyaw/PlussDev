@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::factor(std::string_view feature, bool ordered = false, bool sort_levels = false) const -> CategoryEncoding
+CategoryEncoding DataFrame::factor(std::string_view feature, bool ordered = false, bool sort_levels = false) const
 ```
 
 ## What It Does

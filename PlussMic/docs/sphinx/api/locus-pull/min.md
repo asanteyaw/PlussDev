@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::min(std::string_view source, std::string_view alias = {}) -> LocusPull&
+LocusPull& LocusPull::min(std::string_view source, std::string_view alias = {})
 ```
 
 ## What It Does

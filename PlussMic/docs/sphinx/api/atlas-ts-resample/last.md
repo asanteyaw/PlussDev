@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsResampler::last() const -> Atlas
+Atlas AtlasTsResampler::last() const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Archive::keys(std::span<const std::string_view> keys) const -> Archive
-Archive::keys(std::initializer_list<std::string_view> keys) const -> Archive
+Archive Archive::keys(std::span<const std::string_view> keys) const
+Archive Archive::keys(std::initializer_list<std::string_view> keys) const
 ```
 
 ## What It Does

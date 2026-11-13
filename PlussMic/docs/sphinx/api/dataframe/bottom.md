@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::bottom(std::string_view feature, std::int64_t n) const -> DataFrame
+DataFrame DataFrame::bottom(std::string_view feature, std::int64_t n) const
 ```
 
 ## What It Does

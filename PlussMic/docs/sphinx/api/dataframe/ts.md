@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::ts() const -> DataFrameTsAccessor
-DataFrame::ts(const TsOptions& options) const -> DataFrameTsAccessor
+DataFrameTsAccessor DataFrame::ts() const
+DataFrameTsAccessor DataFrame::ts(const TsOptions& options) const
 ```
 
 ## What It Does

@@ -7,31 +7,24 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::lattice(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::lattice(Pane& pane, Series x, Series y, Series z)
 
-template <class X, class Y, class Z, class C>
-Trace& flash::lattice(Pane& pane, X&& x, Y&& y, Z&& z, C&& c)
+Trace& flash::lattice(Pane& pane, Series x, Series y, Series z, Series c)
 
-template <class X, class Y, class Z>
-Trace& flash::lattice(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {})
+Trace& flash::lattice(Studio& studio, Series x, Series y, Series z, std::string title = {})
 ```
 
 ## What It Does
 
 A thin wrapper around [`Pane::lattice`](../pane/lattice.md): converts every argument to
 `Series`, validates each is rank ≤ 3, then delegates to the identically-shaped native
-`Pane::lattice` overload. Every `Pane`-overload delegation is byte-identical to calling
-`Pane::lattice` directly — directly verified via SVG comparison. Same three-overload
+`Pane::lattice` overload. Every `Pane`-overload delegation is identical to calling
+`Pane::lattice` directly. Same three-overload
 shape as [`flash::sheet`](sheet.md) — `lattice` and `sheet` share the exact same
 `SurfaceData` payload, differing only in `TraceKind` (wireframe vs. filled surface).
 
-```{important} The color-matrix c argument is documented to have NO effect on lattice, unlike sheet
-Per Pane::lattice's own Notes, the c argument has no observed rendering effect at all
-on lattice() -- even at extreme color contrast -- consistent with a pure wireframe
-having no filled area for a per-cell color to paint. flash::lattice(pane, x, y, z, c)
-still accepts and Series-converts c (and still validates its rank), it just has no
-visible effect once forwarded to Pane::lattice.
+```{important} The colour matrix c colours the wires
+The `(x, y, z, c)` overload passes `c` on to [`Pane::lattice`](../pane/lattice.md), which colours the lines of the wire grid by it, as [`sheet`](sheet.md) colours its surface. The values are placed in the palette by their position in the range of `c`, so a matrix that is a rescaling of `z` gives the same colours as none; a matrix that runs the other way reverses them.
 ```
 
 ## Parameters
@@ -94,8 +87,8 @@ fig.show();
 
 ![Output of Example 2](img/flash-lattice-2-studio.svg)
 
-Example 3 (verification, not a distinct rendering). `flash::lattice(pane, x, y, z)`
-renders byte-identical to `pane.lattice(x, y, z)` called directly.
+Example 3 (a comparison, not a new picture). `flash::lattice(pane, x, y, z)`
+renders identical to `pane.lattice(x, y, z)` called directly.
 
 ```cpp
 using namespace pluss::pl;
@@ -128,7 +121,7 @@ flash::lattice(pane,x,y,z) == pane.lattice(x,y,z): 1
   rank-2-exact requirement on `z` lives one layer deeper, inside
   [`Pane::lattice`](../pane/lattice.md) itself.
 - Used internally by [`flash::triplot`](triplot.md)'s `TriplotKind::Lattice`, via a
-  binned-grid triplet (see that page's important callout for the genuine bug this
+  binned-grid triplet (see that page's important callout for the bug this
   session fixed there).
 
 ## See Also

@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::setdiff1d(const Series& other) const -> Series
-Series::setdiff1d(const Series& other, bool sorted) const -> Series
-Series::setdiff1d(const Series& other, bool sorted, bool assume_unique) const -> Series
+Series Series::setdiff1d(const Series& other) const
+Series Series::setdiff1d(const Series& other, bool sorted) const
+Series Series::setdiff1d(const Series& other, bool sorted, bool assume_unique) const
 ```
 
 ## What It Does

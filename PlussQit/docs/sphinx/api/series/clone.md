@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::clone() const -> Series
+Series Series::clone() const
 ```
 
 ## What It Does

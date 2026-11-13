@@ -5,9 +5,9 @@
 ## Signatures
 
 ```cpp
-Registry::tabelize() -> pluss::table::DataFrame
+pluss::table::DataFrame Registry::tabelize()
 
-Registry::tabelize(const pluss::kindle::TabelizePolicy& policy) -> pluss::table::DataFrame
+pluss::table::DataFrame Registry::tabelize(const pluss::kindle::TabelizePolicy& policy)
 ```
 
 ## What It Does

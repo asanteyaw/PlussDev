@@ -7,14 +7,11 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::scatterplot(Pane& pane, X&& x, Y&& y)
+Trace& flash::scatterplot(Pane& pane, Series x, Series y)
 
-template <class X, class Y>
-Trace& flash::scatterplot(Pane& pane, X&& x, Y&& y, const Note& hue)
+Trace& flash::scatterplot(Pane& pane, Series x, Series y, const Note& hue)
 
-template <class X, class Y, class Hue>
-Trace& flash::scatterplot(Pane& pane, X&& x, Y&& y, Hue&& hue)
+Trace& flash::scatterplot(Pane& pane, Series x, Series y, Series hue)
 ```
 
 ## What It Does
@@ -44,12 +41,11 @@ whether (and how) a `hue` variable is supplied:
 flash::lineplot(pane, x, y, hue) applies the identical two-branch numeric-hue
 logic (small integer count -> discrete groups, otherwise a fallback), but its
 threshold is 8, not 10 -- and its fallback strategy is different too (binning
-into 6 groups, rather than a single continuous-palette trace). Directly
-verified: 9 unique hue values render as 9 discrete grouped traces under
+into 6 groups, rather than a single continuous-palette trace). 9 unique hue values render as 9 discrete grouped traces under
 scatterplot() (9 <= 10) but as only 6 (already binned) under lineplot() (9 > 8)
 on otherwise identical data. Do not assume the two functions share a threshold
 or an overflow strategy just because their hue-dispatch code looks similar --
-see flash::lineplot for its own verified numbers.
+see flash::lineplot for its own numbers.
 ```
 
 ```{important} The hue overloads return only the LAST group's Trace&
@@ -121,7 +117,7 @@ fig.show();
 ![Output of Example 2](img/flash-scatterplot-2-note-hue.svg)
 
 Example 3. Numeric hue with 5 unique values — at or under the 10-value threshold, so it
-renders as 5 discrete, legended groups (verified via `Pane::trace_count()`, not just the
+renders as 5 discrete, legended groups (read from `Pane::trace_count()`, not just the
 image).
 
 ```cpp
@@ -170,7 +166,7 @@ trace_count: 1
 ## Notes
 
 - Not `noexcept` — constructs `Series`/`Note` data and may allocate; the hue overloads
-  also validate `x`/`y`/`hue` have identical lengths, throwing `std::invalid_argument`
+  also validate `x`/`y`/`hue` have identical lengths, throwing `pluss::Error`
   ("... requires x, y, and hue to have identical lengths") on mismatch.
 - Marker styling for hue-grouped traces is fixed internally: `width(0.55F)` per group (a
   thin marker outline), with colors drawn from an evenly-spaced HSL wheel

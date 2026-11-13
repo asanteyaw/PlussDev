@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::se(Axis axis = Axis::Case, ErrorTarget target = ErrorTarget::Mean, const StatisticOptions& options = {}) const -> Slate
+Slate DataFrame::se(Axis axis = Axis::Case, ErrorTarget target = ErrorTarget::Mean, const StatisticOptions& options = {}) const
 ```
 
 ## What It Does

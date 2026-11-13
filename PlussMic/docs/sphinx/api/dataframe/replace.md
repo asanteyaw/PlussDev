@@ -8,32 +8,32 @@
 ## Signatures
 
 ```cpp
-DataFrame::replace(double from, double to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(double from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(pluss::null_t from, double to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame DataFrame::replace(double from, double to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(double from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(pluss::null_t from, double to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame::replace(std::string_view from, std::string_view to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(std::string_view from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(pluss::null_t from, std::string_view to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(const char* from, const char* to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(const char* from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(pluss::null_t from, const char* to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame DataFrame::replace(std::string_view from, std::string_view to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(std::string_view from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(pluss::null_t from, std::string_view to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(const char* from, const char* to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(const char* from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(pluss::null_t from, const char* to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame::replace(const pluss::Series& from, const pluss::Series& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(const pluss::Series& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(pluss::null_t from, const pluss::Series& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame DataFrame::replace(const pluss::Series& from, const pluss::Series& to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(const pluss::Series& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(pluss::null_t from, const pluss::Series& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame::replace(const pluss::Note& from, const pluss::Note& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(const pluss::Note& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(pluss::null_t from, const pluss::Note& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame DataFrame::replace(const pluss::Note& from, const pluss::Note& to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(const pluss::Note& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(pluss::null_t from, const pluss::Note& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame::replace(const pluss::Timeline& from, const pluss::Timeline& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(const pluss::Timeline& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(pluss::null_t from, const pluss::Timeline& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame DataFrame::replace(const pluss::Timeline& from, const pluss::Timeline& to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(const pluss::Timeline& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(pluss::null_t from, const pluss::Timeline& to, pluss::RangeView<std::string_view> features = {}) const
 
-DataFrame::replace(const pluss::Duration& from, const pluss::Duration& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(const pluss::Duration& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
-DataFrame::replace(pluss::null_t from, const pluss::Duration& to, pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame DataFrame::replace(const pluss::Duration& from, const pluss::Duration& to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(const pluss::Duration& from, pluss::null_t to, pluss::RangeView<std::string_view> features = {}) const
+DataFrame DataFrame::replace(pluss::null_t from, const pluss::Duration& to, pluss::RangeView<std::string_view> features = {}) const
 ```
 
 Every overload above except the two `const char*` overloads also has a template sibling

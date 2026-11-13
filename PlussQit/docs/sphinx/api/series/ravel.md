@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::ravel() const -> Series
+Series Series::ravel() const
 ```
 
 ## What It Does

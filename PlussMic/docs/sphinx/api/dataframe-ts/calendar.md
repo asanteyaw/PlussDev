@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::calendar() const -> DataFrame
-DataFrameTsAccessor::calendar(std::string_view time_feature) const -> DataFrame
+DataFrame DataFrameTsAccessor::calendar() const
+DataFrame DataFrameTsAccessor::calendar(std::string_view time_feature) const
 ```
 
 ## What It Does

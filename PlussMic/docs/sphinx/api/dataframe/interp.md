@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrame::interp(pluss::RangeView<std::string_view> features = {}, std::int64_t limit = -1) const -> DataFrame
+DataFrame DataFrame::interp(pluss::RangeView<std::string_view> features = {}, std::int64_t limit = -1) const
 
 template <detail::StringViewNameRange NameRange>
-DataFrame::interp(const NameRange& features, std::int64_t limit = -1) const -> DataFrame
+DataFrame DataFrame::interp(const NameRange& features, std::int64_t limit = -1) const
 
-DataFrame::interp(const FillOptions& options) const -> DataFrame
+DataFrame DataFrame::interp(const FillOptions& options) const
 ```
 
 ## What It Does

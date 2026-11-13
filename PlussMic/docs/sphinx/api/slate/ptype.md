@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::ptype() const -> std::string
+std::string Slate::ptype() const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::width() const -> std::int64_t
+std::int64_t DataFrame::width() const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::plot() const -> SlatePlotAccessor
-Slate::plot(const DataFramePlotOptions& options) const -> SlatePlotAccessor
+SlatePlotAccessor Slate::plot() const
+SlatePlotAccessor Slate::plot(const DataFramePlotOptions& options) const
 ```
 
 ## What It Does

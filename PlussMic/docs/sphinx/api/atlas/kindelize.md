@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Atlas::kindelize() const -> pluss::kindle::Archive
-Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) const -> pluss::kindle::Archive
+pluss::kindle::Archive Atlas::kindelize() const
+pluss::kindle::Archive Atlas::kindelize(const pluss::kindle::KindelizePolicy& policy) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameFeatureAxisAccessor::suffix(std::string_view suffix) const -> DataFrame
+DataFrame DataFrameFeatureAxisAccessor::suffix(std::string_view suffix) const
 ```
 
 ## What It Does

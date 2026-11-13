@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::as_note() const -> const pluss::Note&
+const pluss::Note& Slate::as_note() const
 ```
 
 ## What It Does

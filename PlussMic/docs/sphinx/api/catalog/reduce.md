@@ -5,9 +5,9 @@
 ## Signatures
 
 ```cpp
-Catalog::reduce(const std::vector<std::string>& ops, const CatalogReduceOptions& options = {}) -> Catalog
+Catalog Catalog::reduce(const std::vector<std::string>& ops, const CatalogReduceOptions& options = {})
 
-Catalog::reduce(std::initializer_list<std::string_view> ops, const CatalogReduceOptions& options = {}) -> Catalog
+Catalog Catalog::reduce(std::initializer_list<std::string_view> ops, const CatalogReduceOptions& options = {})
 ```
 
 ## What It Does

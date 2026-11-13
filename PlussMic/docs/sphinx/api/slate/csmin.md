@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::csmin() const -> SlateValue
+SlateValue Slate::csmin() const
 ```
 
 ## What It Does

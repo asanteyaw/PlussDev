@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::levels() const -> DataFrame
+DataFrame DataFrameLabelAccessor::levels() const
 ```
 
 ## What It Does

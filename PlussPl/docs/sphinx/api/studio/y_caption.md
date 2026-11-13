@@ -12,75 +12,196 @@ Studio& Studio::y_caption(std::string group, std::string text)
 
 ## What It Does
 
-The y-axis counterpart of [`x_caption`](x_caption.md): registers (or overwrites) a shared
-caption for one alignment group, drawn once, figure-wide, for the y-axis shared by every
-pane opted into that group via [`Pane::align_y(group)`](../pane/align_y.md) (or the
-combined [`align_xy`](../pane/align_xy.md) / [`align_xyz`](../pane/align_xyz.md)). Every
-behavioral detail from `x_caption` carries over unchanged:
+Sets a **shared y caption**: one line of text drawn once for the y axes of every pane that belongs to the alignment group `group`. A pane joins a group with [`Pane::align_y`](../pane/align_y.md) (or `align_xy` / `align_xyz`); the caption and the panes are tied together only by that string. Several panes in one group get a single caption, turned to read upward and placed to the left of the group's tick labels, centred on the group's plot areas.
 
-- Linked to `align_y`/`align_xy`/`align_xyz` purely by matching `group` string.
-- An unmatched group renders no text but still reserves the caption's layout space (this
-  time along the left edge, where a y-caption is drawn).
-- Re-calling with the same `group` overwrites that group's text.
+The caption is drawn only when something shows it. A caption whose group no visible pane belongs to, and a caption whose text is empty, are stored and read back by [`y_captions`](y_captions.md) but draw nothing and take no space: the figure is the same as one without the call. The caption takes its room (the left margin) as soon as at least one visible pane belongs to its group, so adding or hiding panes changes the layout the way you would expect.
+
+Calling `y_caption` again with the same group replaces the text; there is one caption per group. Different groups are independent, so two columns of panes can each carry their own caption.
 
 ## Parameters
 
 **group** (`std::string`)
-    The alignment-group key. Must match the string passed to some pane's
-    `align_y`/`align_xy`/`align_xyz` for the caption to render.
+    The alignment-group name. Panes join it with `align_y`, `align_xy` or `align_xyz` using the same string; the match is exact and case-sensitive.
 
 **text** (`std::string`)
-    The caption text to draw for that group.
+    The caption. Math text between dollar signs is typeset. An empty string draws nothing.
 
 ## Returns
 
 `Studio&`
-    A reference to the same figure, for chaining.
+    The same figure, for chaining.
 
 ## Examples
 
-Example 1. Two side-by-side panes, both opted into the same y-align group via `align_y`,
-with a matching `y_caption` — the caption renders once, shared across both panes' y-axis.
+Example 1. One caption for two panes. Both panes join the group `shared` and the caption is drawn once, to the left of them.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("caption_y");
+auto fig = studio("y_caption_shared");
 fig.mosaic(1, 2);
-fig.y_caption("shared_y", "Temperature (C)");
-auto& left = fig.pane2("left");
-left.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
-left.align_y("shared_y");
-auto& right = fig.pane2("right");
-right.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
-right.align_y("shared_y");
-fig.show();
-
-std::cout << fig.y_captions().at("shared_y") << "\n";
+fig.y_caption("shared", "Shared y caption");
+auto& top = fig.pane2("top");
+top.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+top.align_y("shared");
+auto& bottom = fig.pane2("bottom");
+bottom.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+bottom.align_y("shared");
+std::cout << "captions: " << fig.y_captions().size() << ", text: " << fig.y_captions().at("shared") << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-Temperature (C)
+captions: 1, text: Shared y caption
 ```
 
-![Output of Example 1](img/caption-4-y.svg)
+![Output of Example 1](img/y_caption-1-shared.svg)
+
+Example 2. Calling again with the same group replaces the text. The map still holds one entry; the figure shows the second text only.
+
+```cpp
+auto fig = studio("y_caption_overwrite");
+fig.mosaic(1, 2);
+auto& t1 = fig.pane2("top");
+t1.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+t1.align_y("g");
+auto& t2 = fig.pane2("bottom");
+t2.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+t2.align_y("g");
+fig.y_caption("g", "first text");
+fig.y_caption("g", "second text");
+std::cout << "entries: " << fig.y_captions().size() << ", text: " << fig.y_captions().at("g") << "\n";
+const std::string svg = fig.to_svg();
+std::cout << "first text drawn: " << (svg.find("first text") != std::string::npos) << ", second text drawn: " << (svg.find("second text") != std::string::npos) << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+entries: 1, text: second text
+first text drawn: 0, second text drawn: 1
+```
+
+![Output of Example 2](img/y_caption-2-overwrite.svg)
+
+Example 3. Two groups, two captions. The panes of each group are captioned separately; a pane in neither group has no caption.
+
+```cpp
+auto fig = studio("y_caption_groups");
+fig.mosaic(2, 2);
+auto& a1 = fig.pane2("a1");
+a1.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+a1.align_y("left");
+auto& a2 = fig.pane2("a2");
+a2.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+a2.align_y("right");
+auto& a3 = fig.pane2("a3");
+a3.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+a3.align_y("left");
+auto& a4 = fig.pane2("a4");
+a4.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.y_caption("left", "left group");
+fig.y_caption("right", "right group");
+std::cout << "captions: " << fig.y_captions().size() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+captions: 2
+```
+
+![Output of Example 3](img/y_caption-3-groups.svg)
+
+Example 4. A caption nobody shows. The group `nobody` has no pane, so the caption is stored but the SVG is identical to the figure without the call: no text, no reserved space. An empty text behaves the same way.
+
+```cpp
+auto build = [](int variant) {
+  auto fig = studio("y_caption_unmatched");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  pane.align_y("g");
+  if (variant == 1) fig.y_caption("nobody", "never drawn");
+  if (variant == 2) fig.y_caption("g", "");
+  return fig.to_svg();
+};
+std::cout << "no call == unmatched group: " << (build(0) == build(1)) << "\n";
+std::cout << "no call == empty text:      " << (build(0) == build(2)) << "\n";
+auto fig = studio("y_caption_unmatched_out");
+auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  pane.align_y("g");
+fig.y_caption("nobody", "never drawn");
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+no call == unmatched group: 1
+no call == empty text:      1
+```
+
+![Output of Example 4](img/y_caption-4-unmatched.svg)
+
+Example 5. Hiding the panes of a group removes the caption and its room. The caption is drawn while at least one pane of the group is visible, and is not drawn once every one of them is hidden.
+
+```cpp
+auto build = [](bool hide_a, bool hide_b) {
+  auto fig = studio("y_caption_hidden");
+  fig.mosaic(1, 2);
+  fig.y_caption("g", "group caption");
+  auto& a = fig.pane2("a");
+  a.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  a.align_y("g");
+  if (hide_a) a.hide();
+  auto& b = fig.pane2("b");
+  b.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  b.align_y("g");
+  if (hide_b) b.hide();
+  return fig.to_svg();
+};
+auto drawn = [](const std::string& svg) { return svg.find("group caption") != std::string::npos; };
+std::cout << "both visible:  " << drawn(build(false, false)) << "\n";
+std::cout << "a hidden:      " << drawn(build(true, false)) << "\n";
+std::cout << "both hidden:   " << drawn(build(true, true)) << "\n";
+auto fig = studio("y_caption_hidden_out");
+fig.mosaic(1, 2);
+fig.y_caption("g", "group caption");
+auto& a = fig.pane2("a");
+a.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+a.align_y("g");
+a.hide();
+auto& b = fig.pane2("b");
+b.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+b.align_y("g");
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+both visible:  1
+a hidden:      1
+both hidden:   0
+```
+
+![Output of Example 5](img/y_caption-5-hidden.svg)
 
 ## Notes
 
-- Not `noexcept`.
-- See [`x_caption`](x_caption.md)'s Notes and important callout — every detail (map-upsert
-  overwrite semantics, unmatched-group layout reservation, no compile-time link to
-  `align_y`) applies identically here, just for the y-axis.
+- The group string is the only link between the caption and the panes, so a misspelt group draws nothing. [`y_captions`](y_captions.md) lists the registered groups, which makes a mismatch easy to spot.
+- A caption is figure-level text. For text that belongs to one pane use the pane's own axis label ([`Pane::y_label`](../pane/y_label.md)).
+- Pane groups are set on the pane, so they follow the pane when it is moved with [`mosaic`](mosaic.md) or [`subpane2`](subpane2.md).
 
 ## See Also
 
-- [`Studio::y_captions`](y_captions.md): reads back the full map of registered y-captions.
-- [`Pane::align_y`](../pane/align_y.md) / [`align_xy`](../pane/align_xy.md) /
-  [`align_xyz`](../pane/align_xyz.md): how a pane opts into a caption's group.
-- [`Studio::x_caption`](x_caption.md) / [`z_caption`](z_caption.md): the x- and z-axis
-  equivalents.
+- [`Studio::y_captions`](y_captions.md): reads the registered captions back.
+- [`Pane::align_y`](../pane/align_y.md): how a pane joins a group.
+- [`Studio::x_caption`](x_caption.md), [`y_caption`](y_caption.md), [`z_caption`](z_caption.md): the three axes.
+- [`Studio::row_title`](row_title.md): a title for a whole row of the mosaic.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="x_captions.html">

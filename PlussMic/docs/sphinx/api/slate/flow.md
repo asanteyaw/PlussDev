@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::flow(const std::function<Slate(const Slate&)>& fn) const -> Slate
+Slate Slate::flow(const std::function<Slate(const Slate&)>& fn) const
 ```
 
 ## What It Does

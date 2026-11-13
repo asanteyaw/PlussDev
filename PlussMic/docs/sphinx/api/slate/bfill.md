@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::bfill(std::int64_t limit = -1) const -> Slate
+Slate Slate::bfill(std::int64_t limit = -1) const
 ```
 
 ## What It Does

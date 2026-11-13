@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::tracks_slope_() const -> Series&
-Series::tracks_slope_(bool enabled) const -> Series&
+Series& Series::tracks_slope_() const
+Series& Series::tracks_slope_(bool enabled) const
 ```
 
 ## What It Does

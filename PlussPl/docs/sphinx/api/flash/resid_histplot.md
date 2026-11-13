@@ -7,11 +7,9 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::resid_histplot(Pane& pane, X&& x, Y&& y, const ResidHistPlotOptions& options = {})
+Trace& flash::resid_histplot(Pane& pane, Series x, Series y, const ResidHistPlotOptions& options = {})
 
-template <class X, class Y>
-Trace& flash::resid_histplot(Studio& studio, X&& x, Y&& y,
+Trace& flash::resid_histplot(Studio& studio, Series x, Series y,
                               const ResidHistPlotOptions& options = {}, std::string title = {})
 ```
 
@@ -31,7 +29,7 @@ where a perfectly-fit residual would land.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `bins` | `int`, default `24`, clamped to a minimum of `4` | The histogram bin count, forwarded to `Pane::bucket`. |
+| `bins` | `int`, default `24`, at least `1` | The histogram bin count, forwarded to `Pane::bucket`. |
 | `trace_width` | `float`, default `0.85F` | The histogram trace's stroke width. |
 | `reg` | `RegPlotOptions`, default-constructed | The fit-algorithm configuration used to compute residuals — **only its `order`/`robust`/`lowess`/`lowess_frac` fields are consulted**, exactly like [`residplot`](residplot.md)'s own `RegPlotOptions` parameter. `show_scatter`, `show_fit`, `show_ci`, `confidence_level`, and `n_boot` are all ignored here too. |
 
@@ -42,7 +40,7 @@ where a perfectly-fit residual would land.
 
 **x**, **y** (series-convertible)
     The raw observation pairs. Filtered to finite pairs; fewer than two finite pairs
-    throws `std::invalid_argument("flash::resid_histplot requires at least two finite
+    throws `pluss::Error("flash::resid_histplot requires at least two finite
     x/y pairs")`.
 
 **options** (`const ResidHistPlotOptions&`, optional)
@@ -93,10 +91,7 @@ fig.show();
 ## Notes
 
 - Not `noexcept`.
-- Unlike [`flash::regplot`](regplot.md)/[`flash::qqplot`](qqplot.md), `resid_histplot`
-  was never exposed to the reference-invalidation hazard documented on those pages — it
-  only ever draws a single trace, so there is no earlier-captured reference at risk of
-  dangling.
+- It draws a single histogram trace, which is the one returned.
 - Sets `x_label("residual")` and `y_label("count")` on the pane automatically, along with
   `GridStyle::Major` — these overwrite any labels/grid style already set on the pane.
 

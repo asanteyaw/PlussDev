@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::logsumexp() const -> Series
-Series::logsumexp(std::int64_t dim) const -> Series
-Series::logsumexp(std::int64_t dim, bool keepdim) const -> Series
+Series Series::logsumexp() const
+Series Series::logsumexp(std::int64_t dim) const
+Series Series::logsumexp(std::int64_t dim, bool keepdim) const
 ```
 
 ## What It Does

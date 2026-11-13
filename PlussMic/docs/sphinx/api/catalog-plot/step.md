@@ -8,26 +8,26 @@
 ## Signatures
 
 ```cpp
-CatalogPlotAccessor::step(std::string_view y_key,
-                           std::optional<std::string_view> x_key = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key,
+                                             std::optional<std::string_view> x_key = std::nullopt) const
 
-CatalogPlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
-                           std::optional<std::string_view> x_key = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_keys = {},
+                                             std::optional<std::string_view> x_key = std::nullopt) const
 
-CatalogPlotAccessor::step(std::initializer_list<std::string_view> y_keys,
-                           std::optional<std::string_view> x_key = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::step(std::initializer_list<std::string_view> y_keys,
+                                             std::optional<std::string_view> x_key = std::nullopt) const
 
-CatalogPlotAccessor::step(std::string_view y_key,
-                           std::optional<std::string_view> x_key,
-                           const StepPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::step(std::string_view y_key,
+                                             std::optional<std::string_view> x_key,
+                                             const StepPlotOptions& options) const
 
-CatalogPlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_keys,
-                           std::optional<std::string_view> x_key,
-                           const StepPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_keys,
+                                             std::optional<std::string_view> x_key,
+                                             const StepPlotOptions& options) const
 
-CatalogPlotAccessor::step(std::initializer_list<std::string_view> y_keys,
-                           std::optional<std::string_view> x_key,
-                           const StepPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::step(std::initializer_list<std::string_view> y_keys,
+                                             std::optional<std::string_view> x_key,
+                                             const StepPlotOptions& options) const
 ```
 
 ## What It Does

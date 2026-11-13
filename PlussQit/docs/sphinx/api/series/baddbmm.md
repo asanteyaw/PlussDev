@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::baddbmm(const Series& batch1, const Series& batch2,
-                double beta = 1.0, double alpha = 1.0) const -> Series
+Series Series::baddbmm(const Series& batch1, const Series& batch2,
+                       double beta = 1.0, double alpha = 1.0) const
 Series& Series::baddbmm_(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const
 ```
 

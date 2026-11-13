@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::unionize(pluss::RangeView<Series> others, bool sorted = true) const -> Series
+Series Series::unionize(pluss::RangeView<Series> others, bool sorted = true) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::max() const -> SlateValue
+SlateValue Slate::max() const
 ```
 
 ## What It Does

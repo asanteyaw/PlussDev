@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Stream::cast(pluss::table::SlateCastTarget target, std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const -> Stream
-Stream::cast(pluss::table::SlateCastTarget target, const pluss::table::SlateCastOptions& options) const -> Stream
+Stream Stream::cast(pluss::table::SlateCastTarget target, std::optional<pluss::codem::ScalarType> series_dtype = std::nullopt) const
+Stream Stream::cast(pluss::table::SlateCastTarget target, const pluss::table::SlateCastOptions& options) const
 ```
 
 ## What It Does

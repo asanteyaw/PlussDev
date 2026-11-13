@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::rxor(const Slate& other) const -> Slate
+Slate Slate::rxor(const Slate& other) const
 ```
 
 ## What It Does

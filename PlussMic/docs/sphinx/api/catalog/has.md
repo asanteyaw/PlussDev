@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::has(std::string_view key) const -> bool
+bool Catalog::has(std::string_view key) const
 ```
 
 ## What It Does

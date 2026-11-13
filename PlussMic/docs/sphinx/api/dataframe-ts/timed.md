@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::timed(std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> DataFrame
-DataFrameTsAccessor::timed(const Slate& axis, std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> DataFrame
+DataFrame DataFrameTsAccessor::timed(std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
+DataFrame DataFrameTsAccessor::timed(const Slate& axis, std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
 ```
 
 ## What It Does

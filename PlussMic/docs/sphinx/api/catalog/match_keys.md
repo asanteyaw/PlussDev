@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::match_keys(const Catalog& other, const std::vector<std::string>& left_keys, const std::vector<std::string>& right_keys, relational::JoinHow how, std::optional<relational::RelationshipCardinality> validate = std::nullopt, const RaggedPolicy& ragged = RaggedPolicy::defaults(OpClass::Relational)) -> CatalogMatch
+CatalogMatch Catalog::match_keys(const Catalog& other, const std::vector<std::string>& left_keys, const std::vector<std::string>& right_keys, relational::JoinHow how, std::optional<relational::RelationshipCardinality> validate = std::nullopt, const RaggedPolicy& ragged = RaggedPolicy::defaults(OpClass::Relational))
 ```
 
 ## What It Does

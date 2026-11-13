@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::argmin() const -> Series
-Series::argmin(std::int64_t dim) const -> Series
-Series::argmin(std::int64_t dim, bool keepdim) const -> Series
+Series Series::argmin() const
+Series Series::argmin(std::int64_t dim) const
+Series Series::argmin(std::int64_t dim, bool keepdim) const
 ```
 
 ## What It Does

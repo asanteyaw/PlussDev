@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> features = {}) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 
-DataFramePlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> features,
-                                     const CorrHeatmapPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::corr_heatmap(pluss::msharp::RangeView::Of<std::string_view> features,
+                                                       const CorrHeatmapPlotOptions& options) const
 ```
 
 ## What It Does

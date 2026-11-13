@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::floor(std::string_view unit) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::floor(std::string_view unit) const
 ```
 
 ## What It Does

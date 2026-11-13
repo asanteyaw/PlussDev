@@ -35,7 +35,7 @@ rotation angle to render for each exported frame.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `frames` | `std::int64_t`, default `96` | How many `HyperPlotOptions` snapshots to generate. Must be greater than `1`, or `hyper_animation_sequence` throws `std::invalid_argument("flash::hyper_animation_sequence: frames must be > 1")`. |
+| `frames` | `std::int64_t`, default `96` | How many `HyperPlotOptions` snapshots to generate. Must be greater than `1`, or `hyper_animation_sequence` throws `pluss::Error("flash::hyper_animation_sequence: frames must be > 1")`. |
 | `plane` | `HyperSweepPlane`, default `XW` | Which of `base`'s six rotation fields is swept: `XY` → `rot_xy_deg`, `XZ` → `rot_xz_deg`, `XW` → `rot_xw_deg`, `YZ` → `rot_yz_deg`, `YW` → `rot_yw_deg`, `ZW` → `rot_zw_deg`. Every other rotation field stays fixed at `base`'s value. |
 | `start_deg`, `end_deg` | `double`, default `0.0`, `360.0` | The angular range swept across the generated frames. |
 | `include_endpoint` | `bool`, default `false` | Whether the step size divides the range by `frames` (`false`, so frame `frames - 1` lands just short of `end_deg` — the conventional choice for a seamlessly looping `0°`–`360°` animation, where `end_deg` and the next loop's `start_deg` would otherwise coincide and duplicate a frame) or by `frames - 1` (`true`, so the last frame lands exactly on `end_deg`). |
@@ -90,7 +90,7 @@ sweep.frames = 1;
 try {
   auto frames = flash::hyper_animation_sequence(base, sweep);
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << "hyper_animation_sequence(frames=1) threw: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

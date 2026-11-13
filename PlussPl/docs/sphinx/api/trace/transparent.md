@@ -4,7 +4,7 @@
 
 [Back to Trace API Reference](../../trace_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 bool Trace::transparent() const noexcept
@@ -14,128 +14,177 @@ Trace& Trace::transparent(bool enable) noexcept
 
 ## What It Does
 
-Gets/sets whether this trace renders with a translucent fill (most relevant to
-filled-area and surface trace kinds). Default `false`.
+Makes a 3D surface see-through, and the getter reports the setting. It is off by default. With `transparent(true)` the faces of the surface are drawn at a reduced opacity (a little over half), so whatever lies behind them, another surface, a cue or the far axes, shows through. Without it a surface is opaque and hides what is behind it.
 
-```{important} Fixed: enable is now required, not defaulted
-Earlier revisions of this method declared the setter as transparent(bool enable =
-true), sharing its name with the separate const getter overload. On a
-non-const Trace&, that made the bare zero-argument call t.transparent()
-silently resolve to the SETTER rather than the getter -- a real
-overload-resolution hazard, directly confirmed by compiled reproduction during
-this documentation effort. It has since been fixed at the source: enable no
-longer has a default, so t.transparent() (zero arguments) now only matches the
-const getter and always safely reads the current value, on both const and
-non-const Trace objects. To set the value, pass the argument explicitly:
-t.transparent(true) or t.transparent(false). See Trace::annotate_levels for the
-identical fix applied to that method, and Pane::visible for the same fix applied
-to the three affected Pane methods.
-```
+It applies to the surface kinds `sheet`, `spire3` and `isoshell`. On every other kind the call is stored and has no effect. The setter takes its argument without a default, so `transparent()` with no argument is always the getter.
 
 ## Parameters
 
-**enable** (`bool`, required, setter only)
-    Whether the trace's fill should render translucent.
+**enable** (`bool`, setter only)
+    True for see-through faces, false for opaque ones.
 
 ## Returns
 
 `bool` (getter)
-    The current transparent state, `false` by default.
+    Whether the surface is transparent, false by default.
 
 `Trace&` (setter)
-    A reference to `*this`, for chaining.
+    The same trace, for chaining.
 
 ## Examples
 
-Example 1. The default (opaque) fill on a `sheet()` surface.
+Example 1. An opaque and a see-through surface. The same surface in two panes, the second with `transparent(true)`: the grid behind the far part of the surface shows through.
 
 ```cpp
-using namespace pluss::pl;
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
 
-// `grid_n` is the single source of truth for the grid's row/col count -- the axis
-// length, z's element count, and z's reshape dimensions all derive from it.
-constexpr std::int64_t grid_n = 4;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-auto z = pluss::series::linspace(0.0, 1.0, grid_n * grid_n, pluss::ScalarType::Float64).reshape({grid_n, grid_n});
-
-auto fig = studio("trace_transparent_default");
-auto& pane = fig.pane3();
-pane.sheet(coord, coord, z);
-fig.show();
+auto fig = studio("transparent_surface");
+fig.mosaic(1, 2);
+fig.pane3("opaque").sheet(coord, coord, z).shade(ShadeMode::Smooth);
+fig.pane3("transparent(true)").sheet(coord, coord, z).shade(ShadeMode::Smooth).transparent(true);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/trace-transparent-1-default.svg)
+![Output of Example 1](img/transparent-1-surface.svg)
 
-Example 2. `transparent(true)`. Verified via direct SVG diff to render genuinely
-different from Example 1.
+Example 2. Seeing through to a second surface. A tall bump is drawn first and a smaller one behind it; with the first transparent the second can be seen through it, and with the first opaque it is hidden.
 
 ```cpp
-using namespace pluss::pl;
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
 
-// `grid_n` is the single source of truth for the grid's row/col count -- the axis
-// length, z's element count, and z's reshape dimensions all derive from it.
-constexpr std::int64_t grid_n = 4;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-auto z = pluss::series::linspace(0.0, 1.0, grid_n * grid_n, pluss::ScalarType::Float64).reshape({grid_n, grid_n});
-
-auto fig = studio("trace_transparent_enabled");
-auto& pane = fig.pane3();
-pane.sheet(coord, coord, z).transparent(true);
-fig.show();
+auto shifted = pluss::series::linspace(0.2, 2.2, n, pluss::ScalarType::Float64);
+auto fig = studio("transparent_two");
+fig.mosaic(1, 2);
+for (int i = 0; i < 2; ++i) {
+  auto& pane = fig.pane3(i == 0 ? "front opaque" : "front transparent");
+  pane.sheet(shifted, coord, z).shade(ShadeMode::Smooth).palette(PaletteRamp::ocean());
+  Trace& front = pane.sheet(coord, coord, z).shade(ShadeMode::Smooth);
+  if (i == 1) front.transparent(true);
+}
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 2](img/trace-transparent-2-enabled.svg)
+![Output of Example 2](img/transparent-2-two_surfaces.svg)
 
-Example 3 (edge case). Since `enable` is now required, a bare `t.transparent()` call
-compiles as a *read* — it can no longer accidentally mutate state.
+Example 3. Reading the setting back. It is false by default; the setter turns it on and returns the trace; the bare getter never changes the setting.
 
 ```cpp
-using namespace pluss::pl;
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
 
-constexpr std::int64_t point_count = 4;
-auto x = pluss::series::linspace(0.0, point_count - 1.0, point_count, pluss::ScalarType::Float64);
-auto y = pluss::series::linspace(1.0, 3.0, point_count, pluss::ScalarType::Float64);
-
-auto fig = studio("trace_transparent_safe_bare_call");
-auto& pane = fig.pane2();
-Trace& t = pane.trend(x, y);
-std::cout << "default transparent(): " << t.transparent() << "\n";
+auto fig = studio("transparent_readback");
+auto& pane = fig.pane3("Transparent");
+Trace& t = pane.sheet(coord, coord, z);
+std::cout << "default: " << t.transparent() << "\n";
 t.transparent(true);
-std::cout << "after t.transparent(true): " << t.transparent() << "\n";
+std::cout << "after transparent(true): " << t.transparent() << "\n";
+t.transparent(false);
+std::cout << "after transparent(false): " << t.transparent() << "\n";
+t.transparent(true);
+fig.save_svg("figure.svg");
 ```
 
-Output:
+### Output
 
 ```text
-default transparent(): 0
-after t.transparent(true): 1
+default: 0
+after transparent(true): 1
+after transparent(false): 0
 ```
+
+![Output of Example 3](img/transparent-3-readback.svg)
+
+Example 4. Which kinds become see-through. Each is drawn with and without `transparent(true)` and the SVG text compared: the surface, the pillars and the level surfaces change; a wireframe, a contour and a line do not.
+
+```cpp
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
+
+std::vector<double> volume(static_cast<std::size_t>(n * n * n));
+for (std::size_t i = 0; i < volume.size(); ++i) volume[i] = std::sin(0.05 * static_cast<double>(i));
+auto vol = pluss::make_series(volume, {n, n, n});
+auto changes = [&](auto make, bool is3d) {
+  std::string svg[2];
+  for (int i = 0; i < 2; ++i) {
+    auto fig = studio("transparent_kinds");
+    Pane& pane = is3d ? fig.pane3("p") : fig.pane2("p");
+    Trace& t = make(pane);
+    if (i == 1) t.transparent(true);
+    svg[i] = fig.to_svg();
+  }
+  return svg[0] != svg[1];
+};
+std::cout << "sheet:    " << changes([&](Pane& p) -> Trace& { return p.sheet(coord, coord, z); }, true) << "\n";
+std::cout << "spire3:   " << changes([&](Pane& p) -> Trace& { return p.spire3(coord, coord, z); }, true) << "\n";
+std::cout << "isoshell: " << changes([&](Pane& p) -> Trace& { return p.isoshell(coord, coord, coord, vol); }, true) << "\n";
+std::cout << "lattice:  " << changes([&](Pane& p) -> Trace& { return p.lattice(coord, coord, z); }, true) << "\n";
+std::cout << "contour:  " << changes([&](Pane& p) -> Trace& { return p.contour(coord, coord, z); }, false) << "\n";
+auto fig = studio("transparent_kinds_out");
+fig.pane3("spire3, transparent").spire3(coord, coord, z).transparent(true);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+sheet:    1
+spire3:   1
+isoshell: 1
+lattice:  0
+contour:  0
+```
+
+![Output of Example 4](img/transparent-4-kinds.svg)
 
 ## Notes
 
-- Both getter and setter are `noexcept`.
-- `enable`'s default argument was removed specifically to eliminate the getter/setter
-  overload-resolution hazard — see the important callout above. `t.transparent()` (no
-  arguments) is now unconditionally the getter, on both `const` and non-`const` objects;
-  `std::as_const(t).transparent()` still works but is no longer necessary to reach the
-  getter safely.
-- Most meaningfully affects filled-area and surface trace kinds; expected to have little
-  or no visible effect on pure line/point trace kinds with no fill.
+- Transparency is a property of the trace's faces only; the pane's axes, grid and legend are never made transparent.
+- Opacity of a 2D stroke is set through the alpha channel of the colour ([`Trace::stroke`](stroke.md)), not through this call.
+- `transparent` is `noexcept`.
 
 ## See Also
 
-- [`Trace::annotate_levels`](annotate_levels.md): the other `Trace` method that received
-  the identical fix.
-- [`Pane::visible`](../pane/visible.md): the three `Pane` methods that received the same
-  fix.
+- [`Trace::shade`](shade.md), [`Trace::lighting`](lighting.md), [`Trace::material`](material.md): the other surface options.
+- [`Trace::stroke`](stroke.md): colour with an alpha channel.
+- [`Pane::sheet`](../pane/sheet.md), [`Pane::spire3`](../pane/spire3.md), [`Pane::isoshell`](../pane/isoshell.md): the kinds it applies to.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="material.html">
+  <a class="prev-link" href="stroke.html">
     <span class="label">Previous</span>
-    <span class="title">material</span>
+    <span class="title">stroke</span>
   </a>
-  <a class="next-link" href="annotate_levels.html">
+  <a class="next-link" href="visible.html">
     <span class="label">Next</span>
-    <span class="title">annotate_levels</span>
+    <span class="title">visible</span>
   </a>
 </div>

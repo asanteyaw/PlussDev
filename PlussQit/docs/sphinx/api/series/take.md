@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::take(const Series& index) const -> Series
+Series Series::take(const Series& index) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::slice_depth(std::int64_t start, std::int64_t stop) const -> Archive
+Archive Archive::slice_depth(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does

@@ -7,17 +7,13 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::heatmap(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::heatmap(Pane& pane, Series x, Series y, Series z)
 
-template <class X, class Y, class Z>
-Trace& flash::heatmap(Pane& pane, X&& x, Y&& y, Z&& z, const HeatmapOptions& options)
+Trace& flash::heatmap(Pane& pane, Series x, Series y, Series z, const HeatmapOptions& options)
 
-template <class X, class Y, class Z, class C>
-Trace& flash::heatmap(Pane& pane, X&& x, Y&& y, Z&& z, C&& c)
+Trace& flash::heatmap(Pane& pane, Series x, Series y, Series z, Series c)
 
-template <class X, class Y, class Z, class C>
-Trace& flash::heatmap(Pane& pane, X&& x, Y&& y, Z&& z, C&& c, const HeatmapOptions& options)
+Trace& flash::heatmap(Pane& pane, Series x, Series y, Series z, Series c, const HeatmapOptions& options)
 ```
 
 ## What It Does
@@ -33,8 +29,7 @@ masking, and axis/grid styling layered on top. Four overloads:
 ```{important} vmin/vmax/mask apply only to z, never to c
 In the four-argument (with c) overload, options.vmin, options.vmax, and
 options.mask are applied to z -- the SHAPE-defining matrix -- not to c, the
-matrix that actually determines the rendered fill color. Directly verified:
-setting vmin/vmax on a call that supplies a separate c matrix produces
+matrix that actually determines the rendered fill color. Setting vmin/vmax on a call that supplies a separate c matrix produces
 byte-for-byte IDENTICAL output to the same call without vmin/vmax -- the
 clamping has no visible effect at all, because the values it clamps are never
 used for coloring. If you need to clamp or mask the rendered color range when
@@ -49,22 +44,7 @@ using the c-parameter overload, clamp/mask c yourself before passing it in.
 | `scale_guide` | `bool`, default `true` | Forwarded to `Pane::scale_guide` — whether to draw a color-scale legend/guide. |
 | `borderless` | `bool`, default `true` | When `true` (the default), applies a bundle of pane styling suited to a clean grid-only look: `GridStyle::None`, all four grid-line toggles off, axes hidden (`axes_visible(false)`), tick *labels* kept visible (`x_tick_labels(true)`, `y_tick_labels(true)`), and both axes' limit method set to `LimitMethod::Tight`. When `false`, none of this styling is applied — the pane keeps whatever grid/axis appearance it already had. |
 | `vmin`, `vmax` | `std::optional<double>`, default unset | Clamp `z`'s values to `[vmin, vmax]` before rendering (only when both bounds resolve to finite values with `vmin <= vmax` — otherwise clamping is silently skipped). See the important callout above for why this has no effect in the `c`-taking overloads. |
-| `mask` | `std::optional<Series>`, default unset | A same-shape-as-`z` series where zero means "hide this cell" (replaced with `NaN`) and any non-zero means "keep it". Must flatten to exactly `z`'s element count — a mismatch throws `std::invalid_argument("flash::heatmap mask must match z element count")` (see the important callout below on this validation being genuinely broken until this fix). |
-
-```{important} Fixed: a mismatched mask crashed with an unrelated internal error instead of throwing cleanly
-The mask-length validation used to reshape the flattened mask to z's element
-count BEFORE checking whether the flattened mask's own element count actually
-matched -- meaning a genuinely mismatched mask's reshape call itself threw a
-raw, unrelated internal error ("view: requires contiguous in v0") rather than
-ever reaching the intended, documented std::invalid_argument("flash::heatmap
-mask must match z element count") check. Directly verified: passing a
-3-element mask against a 3x4 (12-cell) z crashed the process with an
-uncaught internal exception instead of a catchable, clearly-worded
-std::invalid_argument. Fixed at the source: the element-count check now runs
-against the flattened (but not yet reshaped) mask, before any reshape is
-attempted -- confirmed the same mismatched call now throws the intended,
-documented, catchable error.
-```
+| `mask` | `std::optional<Series>`, default unset | A same-shape-as-`z` series where zero means "hide this cell" (replaced with `NaN`) and any non-zero means "keep it". Must flatten to exactly `z`'s element count — a mismatch throws `pluss::Error("flash::heatmap mask must match z element count")` (see the important callout below on this validation being broken until this fix). |
 
 ## Parameters
 
@@ -110,7 +90,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-heatmap-1-default.svg)
 
-Example 2. `vmin`/`vmax` clamping — verified to genuinely change the rendered output when
+Example 2. `vmin`/`vmax` clamping — changes the rendered output when
 `z` itself carries the color.
 
 ```cpp
@@ -237,8 +217,8 @@ std::vector<double> mask{1, 1, 1};
 opts.mask = pluss::make_series(mask);
 try {
   flash::heatmap(pane, x, y, zs, opts);
-} catch (const std::invalid_argument& e) {
-  std::cout << "threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "threw: " << e.message() << "\n";
 }
 ```
 
@@ -253,7 +233,7 @@ threw: flash::heatmap mask must match z element count
 - Not `noexcept`.
 - [`flash::clustermap`](clustermap.md) wraps `heatmap`, adding row/column reordering
   before rendering.
-- `z` (and `c`) must be genuine rank-2 series — see
+- `z` (and `c`) must be rank-2 series — see
   [`Pane::fieldmap`](../pane/fieldmap.md)'s own docs for the exact error this raises on a
   flat, one-dimensional input.
 

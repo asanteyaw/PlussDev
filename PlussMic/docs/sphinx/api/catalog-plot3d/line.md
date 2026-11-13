@@ -8,15 +8,15 @@
 ## Signatures
 
 ```cpp
-CatalogPlot3DAccessor::line(std::string_view x_key,
-                             std::string_view y_key,
-                             std::string_view z_key,
-                             const pluss::table::Line3DPlotOptions& options = {}) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlot3DAccessor::line(std::string_view x_key,
+                                               std::string_view y_key,
+                                               std::string_view z_key,
+                                               const pluss::table::Line3DPlotOptions& options = {}) const
 
-CatalogPlot3DAccessor::line(std::string_view x_key,
-                             std::string_view y_key,
-                             std::string_view z_key,
-                             const CatalogLine3DPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlot3DAccessor::line(std::string_view x_key,
+                                               std::string_view y_key,
+                                               std::string_view z_key,
+                                               const CatalogLine3DPlotOptions& options) const
 ```
 
 ## What It Does

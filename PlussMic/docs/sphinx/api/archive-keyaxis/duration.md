@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-ArchiveKeyAxisAccessor::duration() -> Archive
+Archive ArchiveKeyAxisAccessor::duration()
 ```
 
 ## What It Does

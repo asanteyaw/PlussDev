@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::transpose(bool render = false) const -> DataFrameView
+DataFrameView DataFrame::transpose(bool render = false) const
 ```
 
 ## What It Does

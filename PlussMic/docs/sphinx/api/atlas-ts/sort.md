@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsAccessor::sort(bool ascending = true, bool nulls_last = true) const -> Atlas
+Atlas AtlasTsAccessor::sort(bool ascending = true, bool nulls_last = true) const
 ```
 
 ## What It Does

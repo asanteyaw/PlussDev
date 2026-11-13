@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::detect_orphans(std::string_view relationship_name, RelationshipSide side = RelationshipSide::Left) const -> DataFrame
+DataFrame Nexus::detect_orphans(std::string_view relationship_name, RelationshipSide side = RelationshipSide::Left) const
 ```
 
 ## What It Does

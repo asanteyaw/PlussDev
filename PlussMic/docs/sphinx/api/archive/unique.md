@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::unique() const noexcept -> bool
+bool Archive::unique() const noexcept
 ```
 
 ## What It Does

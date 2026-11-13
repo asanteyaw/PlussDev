@@ -7,11 +7,11 @@
 ## Signature
 
 ```cpp
-Series::nanstd() const -> Series
-Series::nanstd(std::int64_t dim) const -> Series
-Series::nanstd(std::int64_t dim, bool keepdim) const -> Series
-Series::stat.nanstd(...) -> Series
-Series::stat().nanstd(...) -> Series
+Series Series::nanstd() const
+Series Series::nanstd(std::int64_t dim) const
+Series Series::nanstd(std::int64_t dim, bool keepdim) const
+Series Series::stat.nanstd(...)
+Series Series::stat().nanstd(...)
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameNoteAccessor::rstrip() const -> DataFrame
-DataFrameNoteAccessor::rstrip(std::string_view chars) const -> DataFrame
+DataFrame DataFrameNoteAccessor::rstrip() const
+DataFrame DataFrameNoteAccessor::rstrip(std::string_view chars) const
 ```
 
 ## What It Does

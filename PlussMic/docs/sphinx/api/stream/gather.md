@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Stream::gather(const std::vector<std::int64_t>& source, std::int64_t shift = 0, bool trim_trailing = true) -> Stream
+Stream Stream::gather(const std::vector<std::int64_t>& source, std::int64_t shift = 0, bool trim_trailing = true)
 ```
 
 ## What It Does

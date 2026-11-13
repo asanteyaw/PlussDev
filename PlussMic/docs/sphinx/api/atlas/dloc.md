@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::dloc(std::int64_t index) const -> DataFrame
+DataFrame Atlas::dloc(std::int64_t index) const
 ```
 
 ## What It Does

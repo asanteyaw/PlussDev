@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::scan(ScanStatistic statistic, bool skip_nulls = true) const -> DataFrame
-DataFrame::scan(ScanStatistic statistic, Axis axis, bool skip_nulls = true) const -> DataFrame
+DataFrame DataFrame::scan(ScanStatistic statistic, bool skip_nulls = true) const
+DataFrame DataFrame::scan(ScanStatistic statistic, Axis axis, bool skip_nulls = true) const
 ```
 
 ## What It Does

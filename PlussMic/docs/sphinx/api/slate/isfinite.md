@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::isfinite() const -> Slate
+Slate Slate::isfinite() const
 ```
 
 ## What It Does

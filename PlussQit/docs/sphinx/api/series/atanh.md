@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::atanh() const -> Series
+Series Series::atanh() const
 Series& Series::atanh_()
 ```
 

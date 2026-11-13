@@ -4,7 +4,7 @@
 
 [Back to Trace API Reference](../../trace_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 bool Trace::annotate_levels() const noexcept
@@ -14,128 +14,166 @@ Trace& Trace::annotate_levels(bool enable) noexcept
 
 ## What It Does
 
-Gets/sets whether contour-family traces ([`contour`](../pane/contour.md),
-[`isoband`](../pane/isoband.md), [`ridge3`](../pane/ridge3.md)) draw numeric level labels
-alongside their contour lines/bands. Default `false`.
+Draws the numeric value of each level on a contour-style trace, and the getter reports the setting. It is off by default. When it is on, every contour line, band or ridge level is labelled with its value (three significant digits) where the line is long enough to carry the text, so the figure can be read without a colour bar.
 
-```{important} Fixed: enable is now required, not defaulted
-Earlier revisions declared the setter as annotate_levels(bool enable = true),
-sharing its name with the separate const getter overload -- exactly the same
-shape as the transparent() hazard. On a non-const Trace&, the bare
-zero-argument call t.annotate_levels() silently resolved to the SETTER,
-directly confirmed by compiled reproduction during this documentation effort.
-It has since been fixed at the source: enable no longer has a default, so
-t.annotate_levels() (zero arguments) now only matches the const getter and
-always safely reads the current value. To set the value, pass the argument
-explicitly: t.annotate_levels(true) or t.annotate_levels(false). See
-Trace::transparent for the identical fix, and Pane::visible for the same fix
-applied to the three affected Pane methods.
-```
+It applies to the level-based kinds: `contour`, `isoband` and `ridge3`, and to a `fieldmap`, whose labels show the values of the cells. On other kinds the call is stored and has no effect. The setter takes its argument without a default: `annotate_levels()` with no argument is always the getter, and writing `annotate_levels(true)` is how to turn the labels on.
 
 ## Parameters
 
-**enable** (`bool`, required, setter only)
-    Whether to draw numeric level annotations.
+**enable** (`bool`, setter only)
+    True to draw the level labels, false to remove them.
 
 ## Returns
 
 `bool` (getter)
-    The current annotate_levels state, `false` by default.
+    Whether level labels are drawn, false by default.
 
 `Trace&` (setter)
-    A reference to `*this`, for chaining.
+    The same trace, for chaining.
 
 ## Examples
 
-Example 1. The default (no level annotations) on a `contour()` trace.
+Example 1. Level labels on a contour plot. The same contour lines without labels and with `annotate_levels(true)`: each ring carries the value of its level.
 
 ```cpp
-using namespace pluss::pl;
+constexpr std::int64_t n = 24;
+auto coord = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
+std::vector<double> field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -2.0 + 4.0 * i / (n - 1), y = -2.0 + 4.0 * j / (n - 1);
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) - 0.4 * std::exp(-((x - 1) * (x - 1) + (y + 1) * (y + 1)));
+  }
+auto z = pluss::make_series(field, {n, n});
 
-// `grid_n` is the single source of truth for the grid's row/col count -- the axis
-// length, z's element count, and z's reshape dimensions all derive from it.
-constexpr std::int64_t grid_n = 4;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-auto z = pluss::series::linspace(0.0, 1.0, grid_n * grid_n, pluss::ScalarType::Float64).reshape({grid_n, grid_n});
-
-auto fig = studio("trace_annotate_levels_default");
-auto& pane = fig.pane2();
-pane.contour(coord, coord, z);
-fig.show();
+auto fig = studio("annotate_contour");
+fig.mosaic(1, 2);
+fig.pane2("no labels").contour(coord, coord, z);
+fig.pane2("annotate_levels(true)").contour(coord, coord, z).annotate_levels(true);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/trace-annotate-levels-1-default.svg)
+![Output of Example 1](img/annotate_levels-1-contour.svg)
 
-Example 2. `annotate_levels(true)`. Verified via direct SVG diff to render genuinely
-different from Example 1 (numeric level labels now appear).
-
-```cpp
-using namespace pluss::pl;
-
-// `grid_n` is the single source of truth for the grid's row/col count -- the axis
-// length, z's element count, and z's reshape dimensions all derive from it.
-constexpr std::int64_t grid_n = 4;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-auto z = pluss::series::linspace(0.0, 1.0, grid_n * grid_n, pluss::ScalarType::Float64).reshape({grid_n, grid_n});
-
-auto fig = studio("trace_annotate_levels_enabled");
-auto& pane = fig.pane2();
-pane.contour(coord, coord, z).annotate_levels(true);
-fig.show();
-```
-
-![Output of Example 2](img/trace-annotate-levels-2-enabled.svg)
-
-Example 3 (edge case). Since `enable` is now required, a bare `t.annotate_levels()` call
-compiles as a *read* — it can no longer accidentally mutate state.
+Example 2. Reading the setting back. It is false by default; the setter turns it on and returns the trace; calling the getter with no argument never changes anything.
 
 ```cpp
-using namespace pluss::pl;
+constexpr std::int64_t n = 24;
+auto coord = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
+std::vector<double> field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -2.0 + 4.0 * i / (n - 1), y = -2.0 + 4.0 * j / (n - 1);
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) - 0.4 * std::exp(-((x - 1) * (x - 1) + (y + 1) * (y + 1)));
+  }
+auto z = pluss::make_series(field, {n, n});
 
-constexpr std::int64_t point_count = 4;
-auto x = pluss::series::linspace(0.0, point_count - 1.0, point_count, pluss::ScalarType::Float64);
-auto y = pluss::series::linspace(1.0, 3.0, point_count, pluss::ScalarType::Float64);
-
-auto fig = studio("trace_annotate_levels_safe_bare_call");
-auto& pane = fig.pane2();
-Trace& t = pane.trend(x, y);
-std::cout << "default annotate_levels(): " << t.annotate_levels() << "\n";
+auto fig = studio("annotate_readback");
+auto& pane = fig.pane2("Annotate");
+Trace& t = pane.contour(coord, coord, z);
+std::cout << "default: " << t.annotate_levels() << "\n";
 t.annotate_levels(true);
-std::cout << "after t.annotate_levels(true): " << t.annotate_levels() << "\n";
+std::cout << "after annotate_levels(true): " << t.annotate_levels() << "\n";
+t.annotate_levels(false);
+std::cout << "after annotate_levels(false): " << t.annotate_levels() << "\n";
+t.annotate_levels(true);
+fig.save_svg("figure.svg");
 ```
 
-Output:
+### Output
 
 ```text
-default annotate_levels(): 0
-after t.annotate_levels(true): 1
+default: 0
+after annotate_levels(true): 1
+after annotate_levels(false): 0
 ```
+
+![Output of Example 2](img/annotate_levels-2-readback.svg)
+
+Example 3. Level labels on filled bands. An `isoband` fills the regions between levels, and `annotate_levels(true)` writes the level values on its boundaries, which replaces a colour bar.
+
+```cpp
+constexpr std::int64_t n = 24;
+auto coord = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
+std::vector<double> field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -2.0 + 4.0 * i / (n - 1), y = -2.0 + 4.0 * j / (n - 1);
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) - 0.4 * std::exp(-((x - 1) * (x - 1) + (y + 1) * (y + 1)));
+  }
+auto z = pluss::make_series(field, {n, n});
+
+auto fig = studio("annotate_isoband");
+fig.mosaic(1, 2);
+fig.pane2("isoband").isoband(coord, coord, z);
+fig.pane2("isoband, annotated").isoband(coord, coord, z).annotate_levels(true);
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 3](img/annotate_levels-3-bands.svg)
+
+Example 4. Which kinds draw labels. Each is drawn with and without the labels and the SVG text compared: a contour, an isoband, a ridge surface and a field map change; a line and a surface do not.
+
+```cpp
+constexpr std::int64_t n = 24;
+auto coord = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
+std::vector<double> field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -2.0 + 4.0 * i / (n - 1), y = -2.0 + 4.0 * j / (n - 1);
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) - 0.4 * std::exp(-((x - 1) * (x - 1) + (y + 1) * (y + 1)));
+  }
+auto z = pluss::make_series(field, {n, n});
+
+auto changes = [&](auto make, bool is3d) {
+  std::string svg[2];
+  for (int i = 0; i < 2; ++i) {
+    auto fig = studio("annotate_kinds");
+    Pane& pane = is3d ? fig.pane3("p") : fig.pane2("p");
+    Trace& t = make(pane);
+    if (i == 1) t.annotate_levels(true);
+    svg[i] = fig.to_svg();
+  }
+  return svg[0] != svg[1];
+};
+std::cout << "contour:  " << changes([&](Pane& p) -> Trace& { return p.contour(coord, coord, z); }, false) << "\n";
+std::cout << "isoband:  " << changes([&](Pane& p) -> Trace& { return p.isoband(coord, coord, z); }, false) << "\n";
+std::cout << "fieldmap: " << changes([&](Pane& p) -> Trace& { return p.fieldmap(coord, coord, z); }, false) << "\n";
+std::cout << "ridge3:   " << changes([&](Pane& p) -> Trace& { return p.ridge3(coord, coord, z); }, true) << "\n";
+std::cout << "sheet:    " << changes([&](Pane& p) -> Trace& { return p.sheet(coord, coord, z); }, true) << "\n";
+std::cout << "trend:    " << changes([&](Pane& p) -> Trace& { return p.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}); }, false) << "\n";
+auto fig = studio("annotate_kinds_out");
+fig.pane2("fieldmap, annotated").fieldmap(coord, coord, z).annotate_levels(true);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+contour:  1
+isoband:  1
+fieldmap: 1
+ridge3:   1
+sheet:    0
+trend:    0
+```
+
+![Output of Example 4](img/annotate_levels-4-kinds.svg)
 
 ## Notes
 
-- Both getter and setter are `noexcept`.
-- `enable`'s default argument was removed specifically to eliminate the getter/setter
-  overload-resolution hazard — see the important callout above.
-- Meaningfully affects only contour-family trace kinds
-  ([`contour`](../pane/contour.md), [`isoband`](../pane/isoband.md),
-  [`ridge3`](../pane/ridge3.md)); setting it on other trace kinds is expected to have no
-  visible effect, though this wasn't exhaustively checked across every kind.
+- Labels are drawn only where a contour line is long enough to hold the text, so a tiny closed ring carries no label.
+- The labelled values are the contour levels, which are chosen automatically from the data or given when the trace is made.
+- `annotate_levels` is `noexcept`.
 
 ## See Also
 
-- [`Trace::transparent`](transparent.md): the other `Trace` method that received the
-  identical fix.
-- [`Pane::visible`](../pane/visible.md), [`Pane::axes_visible`](../pane/axes_visible.md),
-  [`Pane::parallel_xy_labels`](../pane/parallel_xy_labels.md): the three `Pane`-level
-  methods that received the same fix.
+- [`Pane::contour`](../pane/contour.md), [`Pane::isoband`](../pane/isoband.md), [`Pane::ridge3`](../pane/ridge3.md): the kinds with levels.
+- [`Trace::palette`](palette.md), [`Trace::color_limits`](color_limits.md): how the levels are coloured.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="transparent.html">
-    <span class="label">Previous</span>
-    <span class="title">transparent</span>
-  </a>
-  <a class="next-link" href="visible.html">
+  <a class="next-link" href="color_limits.html">
     <span class="label">Next</span>
-    <span class="title">visible</span>
+    <span class="title">color_limits</span>
   </a>
 </div>

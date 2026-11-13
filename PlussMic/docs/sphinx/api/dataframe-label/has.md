@@ -8,11 +8,11 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::has() const -> bool
-DataFrameLabelAccessor::has(double value) const -> Slate
-DataFrameLabelAccessor::has(std::string_view value) const -> Slate
-DataFrameLabelAccessor::has(const char* value) const -> Slate
-DataFrameLabelAccessor::has(const Slate& values) const -> Slate
+bool DataFrameLabelAccessor::has() const
+Slate DataFrameLabelAccessor::has(double value) const
+Slate DataFrameLabelAccessor::has(std::string_view value) const
+Slate DataFrameLabelAccessor::has(const char* value) const
+Slate DataFrameLabelAccessor::has(const Slate& values) const
 ```
 
 ## What It Does

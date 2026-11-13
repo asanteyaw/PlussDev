@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::round(std::string_view unit) const -> Atlas
+Atlas AtlasTimelineAccessor::round(std::string_view unit) const
 ```
 
 ## What It Does

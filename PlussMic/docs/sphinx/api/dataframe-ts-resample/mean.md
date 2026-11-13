@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::mean() const -> DataFrame
+DataFrame DataFrameTsResampler::mean() const
 ```
 
 ## What It Does

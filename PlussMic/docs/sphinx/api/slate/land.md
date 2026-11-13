@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::land(const Slate& other) const -> Slate
+Slate Slate::land(const Slate& other) const
 ```
 
 ## What It Does

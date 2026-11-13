@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::topk(std::int64_t k) const -> Series
-Series::topk(std::int64_t k, std::int64_t dim) const -> Series
-Series::topk(std::int64_t k, std::int64_t dim, bool largest) const -> Series
-Series::topk(std::int64_t k, std::int64_t dim, bool largest, bool sorted) const -> Series
+Series Series::topk(std::int64_t k) const
+Series Series::topk(std::int64_t k, std::int64_t dim) const
+Series Series::topk(std::int64_t k, std::int64_t dim, bool largest) const
+Series Series::topk(std::int64_t k, std::int64_t dim, bool largest, bool sorted) const
 ```
 
 ## What It Does

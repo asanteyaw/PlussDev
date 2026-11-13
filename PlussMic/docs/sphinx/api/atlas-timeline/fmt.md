@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::fmt(std::string_view pattern) const -> Atlas
+Atlas AtlasTimelineAccessor::fmt(std::string_view pattern) const
 ```
 
 ## What It Does

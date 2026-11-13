@@ -7,23 +7,23 @@
 ## Signature
 
 ```cpp
-pluss::series::randint(std::int64_t lo,
-                       std::int64_t hi,
-                       sizes,
-                       ScalarType dtype = ScalarType::Int64,
-                       std::uint64_t seed = 0) -> Series
+Series pluss::series::randint(std::int64_t lo,
+                              std::int64_t hi,
+                              sizes,
+                              ScalarType dtype = ScalarType::Int64,
+                              std::uint64_t seed = 0)
 
-pluss::series::randint(std::int64_t lo,
-                       std::int64_t hi,
-                       sizes,
-                       Config config,
-                       std::uint64_t seed = 0) -> Series
+Series pluss::series::randint(std::int64_t lo,
+                              std::int64_t hi,
+                              sizes,
+                              Config config,
+                              std::uint64_t seed = 0)
 
-pluss::series::randint(std::int64_t lo,
-                       std::int64_t hi,
-                       sizes,
-                       std::uint64_t seed,
-                       opts...) -> Series
+Series pluss::series::randint(std::int64_t lo,
+                              std::int64_t hi,
+                              sizes,
+                              std::uint64_t seed,
+                              opts...)
 ```
 
 ## What It Builds

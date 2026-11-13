@@ -7,11 +7,11 @@
 ## Signature
 
 ```cpp
-Series::where(const Series& condition,
-              const Series& other) const -> Series
+Series Series::where(const Series& condition,
+                     const Series& other) const
 
-Series::where(const Series& condition,
-              double other) const -> Series
+Series Series::where(const Series& condition,
+                     double other) const
 ```
 
 ## What It Does

@@ -9,7 +9,6 @@
 ```cpp
 DisGridKind flash::disgrid_kind(std::string_view kind);
 
-
 Studio& flash::disgridplot(Studio& studio, pluss::msharp::RangeView::Series values,
                             const DisGridPlotOptions& options = {})
 
@@ -32,7 +31,7 @@ grid — the distribution sibling of [`flash::relgridplot`](relgridplot.md) and
 [`flash::histplot`](histplot.md), [`flash::kdeplot`](kdeplot.md),
 [`flash::ecdfplot`](ecdfplot.md), or [`flash::rugplot`](rugplot.md) according to
 `options.kind`. Unlike `catgridplot`, it shares `relgridplot`'s kind-string convenience
-overload — four overloads total, covering "options struct vs. bare kind string" crossed
+overload — four overloads total, covering "an options value vs. a bare kind string" crossed
 with "`RangeView::Series` vs. `std::initializer_list<Series>`" input.
 
 The grid-shape auto-resolution, the `titles`/`x_labels`/`y_labels` positional-and-
@@ -44,13 +43,13 @@ mechanics.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `kind` | `DisGridKind`, default `DisGridKind::Hist` | Which flash function draws each panel: `Hist` → [`histplot`](histplot.md) (using `bins`), `Density` → [`kdeplot`](kdeplot.md) (using `density_points`), `Ecdf` → [`ecdfplot`](ecdfplot.md), `Rug` → [`rugplot`](rugplot.md) (using `rug_height`). The kind-string overloads resolve this via `flash::disgrid_kind("hist"\|"density"\|"ecdf"\| "rug")`, which throws `std::invalid_argument("flash::disgridplot unknown kind: " + kind)` for any other string. |
+| `kind` | `DisGridKind`, default `DisGridKind::Hist` | Which flash function draws each panel: `Hist` → [`histplot`](histplot.md) (using `bins`), `Density` → [`kdeplot`](kdeplot.md) (using `density_points`), `Ecdf` → [`ecdfplot`](ecdfplot.md), `Rug` → [`rugplot`](rugplot.md) (using `rug_height`). The kind-string overloads resolve this via `flash::disgrid_kind("hist"\|"density"\|"ecdf"\| "rug")`, which throws `pluss::Error("flash::disgridplot unknown kind: " + kind)` for any other string. |
 | `rows`, `cols` | `std::int64_t`, default `0` each | Explicit grid shape hints; `0` means "auto" — resolved identically to `RelGridPlotOptions::rows`/`cols` on the [`flash::relgridplot`](relgridplot.md) page. |
 | `grid_gap_x`, `grid_gap_y` | `double`, default `16.0` each | Forwarded to the internal [`flash::FacetGrid`](FacetGrid.md) call as its `gx`/`gy` gutter. |
 | `show_grid` | `bool`, default `true` | Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`). |
 | `titles` | `std::vector<std::string>`, default empty | Per-facet panel titles, applied positionally — short vectors leave the remaining panels untitled. |
 | `x_labels`, `y_labels` | `std::vector<std::string>`, default empty | Per-facet axis labels, applied positionally, same short-vector tolerance. |
-| `bins` | `std::int64_t`, default `12` | Forwarded to [`flash::histplot`](histplot.md) as its bin count when `kind == DisGridKind::Hist`. Clamped to at least `1` internally (`std::max<std::int64_t>(1, options.bins)`) before being cast to `int`. Unused for other kinds. |
+| `bins` | `std::int64_t`, default `12` | Forwarded to [`flash::histplot`](histplot.md) as its bin count when `kind == DisGridKind::Hist`. At least `1`; fewer throws `pluss::Error` before being cast to `int`. Unused for other kinds. |
 | `density_points` | `std::int64_t`, default `96` | Forwarded to [`flash::kdeplot`](kdeplot.md) as its evaluation-point count when `kind == DisGridKind::Density`. Unused for other kinds. |
 | `rug_height` | `double`, default `0.06` | Forwarded to [`flash::rugplot`](rugplot.md) as its tick height when `kind == DisGridKind::Rug`. Unused for other kinds. |
 
@@ -62,7 +61,7 @@ mechanics.
 **values** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
     One entry per facet — `values[i]` is that facet's complete sample series. Must be
     non-empty, or `disgridplot` throws
-    `std::invalid_argument("flash::disgridplot requires at least one facet series")`.
+    `pluss::Error("flash::disgridplot requires at least one facet series")`.
     Unlike `relgridplot`/`catgridplot`, there is no second series to align against, so
     this is the only shape check.
 
@@ -176,12 +175,12 @@ fig.show();
 - Not `noexcept`.
 - `values` has no companion series to align against — the emptiness check is the only
   validation performed on it, unlike `relgridplot`'s/`catgridplot`'s length-match checks.
-- `bins` is clamped to at least `1` before use; `density_points` and `rug_height` are not
+- `bins` below `1` throws `pluss::Error`; `density_points` and `rug_height` are not
   clamped and are passed through to their respective functions as-is.
 - Grid-shape resolution, overflow-cell hiding, and positional short-vector tolerance for
   `titles`/`x_labels`/`y_labels` are shared verbatim with
-  [`flash::relgridplot`](relgridplot.md) — see that page for directly-verified examples of
-  each (this page does not re-demonstrate them to avoid redundant probes).
+  [`flash::relgridplot`](relgridplot.md) — see that page for an example of
+  each.
 
 ## See Also
 

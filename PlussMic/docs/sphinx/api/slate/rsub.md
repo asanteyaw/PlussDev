@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::rsub(double other) const -> Slate
-Slate::rsub(const Slate& other) const -> Slate
+Slate Slate::rsub(double other) const
+Slate Slate::rsub(const Slate& other) const
 ```
 
 ## What It Does

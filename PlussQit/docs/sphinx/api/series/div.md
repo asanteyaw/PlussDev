@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::div(const Series& rhs) const -> Series
+Series Series::div(const Series& rhs) const
 Series& Series::div_(const Series& rhs)
 Series& Series::div_(double rhs)
 ```

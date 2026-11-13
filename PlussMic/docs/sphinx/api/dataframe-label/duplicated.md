@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::duplicated(bool keep_first = true, bool keep_last = false) const -> Slate
-DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::string_view> names, bool keep_first = true, bool keep_last = false) const -> Slate
-DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view> names, bool keep_first = true, bool keep_last = false) const -> Slate
+Slate DataFrameLabelAccessor::duplicated(bool keep_first = true, bool keep_last = false) const
+Slate DataFrameLabelAccessor::duplicated(pluss::msharp::RangeView::Of<std::string_view> names, bool keep_first = true, bool keep_last = false) const
+Slate DataFrameLabelAccessor::duplicated(std::initializer_list<std::string_view> names, bool keep_first = true, bool keep_last = false) const
 ```
 
 ## What It Does

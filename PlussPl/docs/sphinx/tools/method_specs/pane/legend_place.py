@@ -1,0 +1,20 @@
+PAGE = dict(
+    slug='legend_place',
+    title='Pane::legend_place',
+    signature='KeyPlace Pane::legend_place() const noexcept',
+    intro='Returns the placement most recently given to [`legend`](legend.md): `None` (the default), `Auto`, `NorthEast`, `NorthWest`, `SouthEast`, `SouthWest` or `OutsideEast`.\n\nIt returns the request, not the result. After `legend(KeyPlace::Auto)` it returns `Auto`, whatever corner the figure then draws the legend in; the corner is chosen when the figure is drawn. Use it to find out whether a pane has an inset legend at all (anything but `None`) before adding a figure-level legend that would repeat it.',
+    parameters='*(none)*',
+    returns='`KeyPlace`\n    The placement last set, `None` for a pane that was never given one.',
+    examples=[
+        dict(id='default', text='A new pane has no inset legend.',
+             code='auto fig = studio("legend_place_default");\nauto& pane = fig.pane2("p");\npane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("a");\nstd::cout << "None: " << (pane.legend_place() == KeyPlace::None) << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='each', text='Every placement reads back as set.',
+             code='auto fig = studio("legend_place_each");\nauto& pane = fig.pane2("p");\npane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("a");\nconst KeyPlace places[] = {KeyPlace::Auto, KeyPlace::NorthEast, KeyPlace::NorthWest, KeyPlace::SouthEast, KeyPlace::SouthWest, KeyPlace::OutsideEast, KeyPlace::None};\nconst char* names[] = {"Auto", "NorthEast", "NorthWest", "SouthEast", "SouthWest", "OutsideEast", "None"};\nfor (int i = 0; i < 7; ++i) {\n  pane.legend(places[i]);\n  std::cout << names[i] << ": " << (pane.legend_place() == places[i]) << "\\n";\n}\npane.legend(KeyPlace::NorthWest);\nfig.save_svg("figure.svg");'),
+        dict(id='auto_is_a_request', text='`Auto` is a request. The figure draws the legend in one of the four corners, but the accessor still returns `Auto`.',
+             code='auto fig = studio("legend_place_auto");\nauto& pane = fig.pane2("p");\npane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 2, 1}).label("a");\npane.legend(KeyPlace::Auto);\nfig.to_svg();\nstd::cout << "still Auto after drawing: " << (pane.legend_place() == KeyPlace::Auto) << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='decide', text='Deciding whether a pane already has a legend. A figure-level legend is added only for panes that have none of their own.',
+             code='auto fig = studio("legend_place_decide");\nfig.mosaic(1, 2);\nauto& left = fig.pane2("with legend");\nleft.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("a");\nleft.legend(KeyPlace::NorthEast);\nauto& right = fig.pane2("without");\nright.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2}).label("b");\nfor (const auto& pane : fig.panes()) {\n  std::cout << pane.title_text() << ": " << (pane.legend_place() != KeyPlace::None ? "has its own legend" : "needs one") << "\\n";\n}\nfig.save_svg("figure.svg");'),
+    ],
+    notes='- `noexcept`; reads only.',
+    see=['[`Pane::legend`](legend.md): set the placement.', '[`Pane::legend_frame`](legend_frame.md), [`legend_shape`](legend_shape.md): the other legend settings.'],
+)

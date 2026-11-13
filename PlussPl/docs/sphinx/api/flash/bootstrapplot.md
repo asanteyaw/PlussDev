@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class Values>
-Studio& flash::bootstrapplot(Studio& studio, Values&& values, const BootstrapPlotOptions& options = {})
+Studio& flash::bootstrapplot(Studio& studio, Series values, const BootstrapPlotOptions& options = {})
 ```
 
 ## What It Does
@@ -28,7 +27,7 @@ different samples from the same underlying distribution.
 
 **values** (series-convertible)
     The base sample to bootstrap from. Must contain at least two points, or
-    `bootstrapplot` throws `std::invalid_argument("flash::bootstrapplot requires at least
+    `bootstrapplot` throws `pluss::Error("flash::bootstrapplot requires at least
     two points")`.
 
 **options** (`const BootstrapPlotOptions&`, optional)
@@ -38,10 +37,10 @@ different samples from the same underlying distribution.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `samples` | `std::int64_t`, default `300` | How many bootstrap resamples are drawn. Clamped to at least `8`. |
+| `samples` | `std::int64_t`, default `300` | How many bootstrap resamples are drawn. At least `2`; fewer throws `pluss::Error`. |
 | `sample_size` | `std::int64_t`, default `0` | How many points each individual resample draws (with replacement). `0` or negative falls back to `values`' own length — the conventional bootstrap setup (each resample is the same size as the original sample). Set explicitly to bootstrap at a different resample size. |
-| `seed` | `std::uint64_t`, default `7` | Base RNG seed. Each of the `samples` resamples uses `seed + (i + 1)` as its own draw seed (`i` from `0`), so the entire sequence of resamples — and therefore the rendered histogram — is fully deterministic and reproducible for a given `seed`. Directly verified: two calls with the same `seed` render byte-identical output; a different `seed` renders differently. |
-| `bins` | `int`, default `24` | Histogram bin count for the resampled-statistic distribution. Clamped to at least `4`. |
+| `seed` | `std::uint64_t`, default `7` | Base RNG seed. Each of the `samples` resamples uses `seed + (i + 1)` as its own draw seed (`i` from `0`), so the entire sequence of resamples — and therefore the rendered histogram — is fully deterministic and reproducible for a given `seed`. Two calls with the same `seed` render identical output; a different `seed` renders differently. |
+| `bins` | `int`, default `24` | Histogram bin count for the resampled-statistic distribution. At least `1`; fewer throws `pluss::Error`. |
 | `statistic` | `BootstrapStatistic`, default `Mean` | Which statistic is computed per resample (and for the "observed" reference line): `Mean`, `Median`, or `Std` (population standard deviation, `ddof = 0`). |
 | `trace_width` | `float`, default `0.85F` | Stroke width for the histogram. |
 
@@ -104,8 +103,8 @@ fig.show();
 
 ![Output of Example 3](img/flash-bootstrapplot-3-std.svg)
 
-Example 4 (verification, not a distinct rendering). `seed` reproducibility: the same seed
-renders byte-identical output across separate calls; a different seed renders
+Example 4 (a comparison, not a new picture). `seed` reproducibility: the same seed
+renders identical output across separate calls; a different seed renders
 differently.
 
 ```cpp
@@ -150,8 +149,8 @@ auto fig = studio("flash_bootstrapplot_too_few");
 std::vector<double> one{1.0};
 try {
   flash::bootstrapplot(fig, one);
-} catch (const std::invalid_argument& e) {
-  std::cout << "bootstrapplot(1 point) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "bootstrapplot(1 point) threw: " << e.message() << "\n";
 }
 ```
 
@@ -164,7 +163,7 @@ bootstrapplot(1 point) threw: flash::bootstrapplot requires at least two points
 ## Notes
 
 - Not `noexcept`.
-- Sampling is genuinely with replacement — a single resample can (and typically does)
+- Sampling is with replacement — a single resample can (and typically does)
   include the same original point more than once and omit others entirely.
 - `Std` uses population standard deviation (`ddof = 0`, dividing by `n` not `n - 1`), not
   sample standard deviation.

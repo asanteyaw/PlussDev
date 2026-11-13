@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::rpow(double other) const -> DataFrame
+DataFrame DataFrame::rpow(double other) const
 ```
 
 ## What It Does

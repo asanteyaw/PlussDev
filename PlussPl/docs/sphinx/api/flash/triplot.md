@@ -49,22 +49,8 @@ to `max_panels`, auto-resolves a grid shape for them via the same
 initializer list, `Dataset` (see the [`flash::pairplot`](pairplot.md) page), and four
 matrix forms) exactly mirrors [`flash::pairplot`](pairplot.md)'s.
 
-```{important} Genuine bug fixed at the source: Sheet/Lattice/Spire/Ridge used to crash unconditionally
-Of the six TriplotKind values, only Cloud and Path draw from three flat, unstructured
-observation columns -- the underlying Pane methods for the other four
-(sheet()/lattice()/spire3()/ridge3()) all require z to be an actual rank-2 grid matrix,
-with x/y as separate per-axis coordinate vectors (the same contract documented on their
-own pages). Earlier, triplot passed its three selected columns into those four functions
-positionally as flat (x, y, z) triples -- which do not satisfy that contract -- so calling
-triplot with kind set to Sheet, Lattice, Spire, or Ridge crashed unconditionally with an
-uncaught std::invalid_argument, on every input, no matter what data was passed. This has
-been fixed: triplot now bins the two axis features of the triplet into a square grid over
-their observed [min, max] range (grid_size = clamp(ceil(sqrt(row_count)), 2, 20)) and
-averages the third feature within each cell, producing a genuine coordinate-grid triplet
-that these four functions can render. Cells with no observations fall back to the
-triplet's overall mean rather than leaving gaps. All four kinds were directly verified,
-post-fix, to render real surfaces/bar-forests/contours rather than crashing -- see
-Examples 8-11 below.
+```{important} Sheet, Lattice, Spire and Ridge draw a binned grid
+Of the six `TriplotKind` values, only Cloud and Path draw from three flat columns of observations. The other four (`sheet`, `lattice`, `spire3`, `ridge3`) need `z` as a rank-2 grid with `x` and `y` as coordinate vectors, so `triplot` first bins the two axis features of the triplet into a square grid over their `[min, max]` range, with `ceil(sqrt(row_count))` cells along each side (at least 2 and at most 20), and averages the third feature within each cell. Cells with no observations take the mean of the whole third feature, so the grid has no gaps. Examples 8 to 11 show the four kinds.
 ```
 
 ## `TriplotOptions` fields
@@ -86,7 +72,7 @@ Examples 8-11 below.
 |---|---|---|
 | `rows`, `cols` | `std::int64_t`, default `0` each | Explicit panel-grid shape hints — `0` means "auto," resolved via the same [`flash::resolve_grid_shape`](FacetGrid.md) rule documented on [`flash::relgridplot`](relgridplot.md), including the `rows*cols < triplet_count` error. |
 | `max_points` | `std::int64_t`, default `2500` | Row-count cap. Feature columns exceeding this are deterministically downsampled to an evenly-strided subset, same mechanism as [`flash::pairplot`](pairplot.md)'s `max_points`. |
-| `ridge_levels` | `std::int64_t`, default `8` | Contour-level count forwarded to [`Pane::ridge3`](../pane/ridge3.md) when `kind == Ridge`. Clamped to at least `3`. Unused for every other kind. |
+| `ridge_levels` | `std::int64_t`, default `8` | Contour-level count forwarded to [`Pane::ridge3`](../pane/ridge3.md) when `kind == Ridge`. At least `1`; fewer throws `pluss::Error`. Unused for every other kind. |
 
 ### Sizing & layout
 
@@ -157,7 +143,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-triplot-1-default-cloud.svg)
 
-Example 2. `std::initializer_list<Series>` overload — verified byte-identical to the
+Example 2. `std::initializer_list<Series>` overload — identical to the
 `RangeView::Series` form given the same data.
 
 ```cpp
@@ -268,8 +254,8 @@ fig.show();
 
 ![Output of Example 7](img/flash-triplot-7-kind-path.svg)
 
-Example 8. `kind = Sheet` — a filled surface over the binned grid (see the important
-callout above; directly verified to render, not crash, post-fix).
+Example 8. `kind = Sheet` — a filled surface over the binned grid (see the
+callout above).
 
 ```cpp
 using namespace pluss::pl;
@@ -469,7 +455,7 @@ std::vector<pluss::Series> cols{
 try {
   flash::triplot(fig, pluss::msharp::RangeView::Series(cols));
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << "triplot(2 features) threw: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -496,7 +482,7 @@ opts.feature_names = {"alpha", "nonexistent"};
 try {
   flash::triplot(fig, pluss::msharp::RangeView::Series(cols), opts);
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << "triplot(unknown feature name) threw: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -510,12 +496,7 @@ triplot(unknown feature name) threw: flash::triplot unknown feature name: nonexi
 ## Notes
 
 - Not `noexcept`.
-- Unlike [`flash::pairplot`](pairplot.md), which throws `std::invalid_argument` directly,
-  `triplot`'s feature-count/index/name validation goes through the internal
-  `PLUSS_CHECK` macro, which throws `pluss::Error` (a `std::runtime_error` subclass) with
-  the check message as the first line of `e.what()`, followed by a stack trace — catch
-  `pluss::Error` (or `std::exception`) for these, not `std::invalid_argument`; the
-  examples above extract just the first line for a stable, reproducible message.
+- Invalid feature counts, indices and names throw `pluss::Error`; `e.message()` is the message alone, without the traceback that `e.what()` adds. The examples above print `e.message()` for a stable, reproducible text.
 - Every panel is a [`Studio::pane3`](../studio/pane3.md) (`Volumetric`) pane, regardless
   of `kind` — including `Cloud`/`Path`, which draw unstructured points/lines rather than
   a surface.

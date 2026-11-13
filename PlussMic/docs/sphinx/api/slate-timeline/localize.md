@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::localize(const TimelineLocalizeOptions& options = {}) const -> Slate
+Slate SlateTimelineAccessor::localize(const TimelineLocalizeOptions& options = {}) const
 ```
 
 ## What It Does

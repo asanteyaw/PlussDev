@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::clear_join_cache() -> void
+void Catalog::clear_join_cache()
 ```
 
 ## What It Does

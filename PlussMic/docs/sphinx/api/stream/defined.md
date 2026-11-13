@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::defined() const noexcept -> bool
+bool Stream::defined() const noexcept
 ```
 
 ## What It Does

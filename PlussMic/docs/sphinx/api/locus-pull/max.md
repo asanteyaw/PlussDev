@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::max(std::string_view source, std::string_view alias = {}) -> LocusPull&
+LocusPull& LocusPull::max(std::string_view source, std::string_view alias = {})
 ```
 
 ## What It Does

@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-DataFrame::eq(double other) const -> DataFrame
-DataFrame::eq(std::string_view other) const -> DataFrame
-DataFrame::eq(const DataFrame& other) const -> DataFrame
-DataFrame::eq(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::eq(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::eq(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::eq(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame DataFrame::eq(double other) const
+DataFrame DataFrame::eq(std::string_view other) const
+DataFrame DataFrame::eq(const DataFrame& other) const
+DataFrame DataFrame::eq(const DataFrame& other, const AlignOptions& options) const
+DataFrame DataFrame::eq(const Slate& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::eq(const Slate& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::eq(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does

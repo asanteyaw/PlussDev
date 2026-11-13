@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::rename_(std::string_view from, std::string_view to) -> Catalog&
+Catalog& Catalog::rename_(std::string_view from, std::string_view to)
 ```
 
 ## What It Does

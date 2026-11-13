@@ -7,26 +7,26 @@
 ## Signature
 
 ```cpp
-pluss::series::arange(std::int64_t end,
-                      ScalarType dt = ScalarType::Int64) -> Series
+Series pluss::series::arange(std::int64_t end,
+                             ScalarType dt = ScalarType::Int64)
 
-pluss::series::arange(std::int64_t start,
-                      std::int64_t end,
-                      ScalarType dt = ScalarType::Int64) -> Series
+Series pluss::series::arange(std::int64_t start,
+                             std::int64_t end,
+                             ScalarType dt = ScalarType::Int64)
 
-pluss::series::arange(std::int64_t start,
-                      std::int64_t end,
-                      std::int64_t step,
-                      ScalarType dt = ScalarType::Int64) -> Series
+Series pluss::series::arange(std::int64_t start,
+                             std::int64_t end,
+                             std::int64_t step,
+                             ScalarType dt = ScalarType::Int64)
 
-pluss::series::arange(std::int64_t start,
-                      std::int64_t end,
-                      Config cfg) -> Series
+Series pluss::series::arange(std::int64_t start,
+                             std::int64_t end,
+                             Config cfg)
 
-pluss::series::arange(std::int64_t start,
-                      std::int64_t end,
-                      std::int64_t step,
-                      Config cfg) -> Series
+Series pluss::series::arange(std::int64_t start,
+                             std::int64_t end,
+                             std::int64_t step,
+                             Config cfg)
 ```
 
 ## What It Builds

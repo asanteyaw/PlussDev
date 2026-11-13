@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::tail(std::int64_t n) const -> Catalog
+Catalog Catalog::tail(std::int64_t n) const
 ```
 
 ## What It Does

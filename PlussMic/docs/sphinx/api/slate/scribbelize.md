@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Slate::scribbelize() -> pluss::scribble::Slot
+pluss::scribble::Slot Slate::scribbelize()
 ```
 
 ## What It Does

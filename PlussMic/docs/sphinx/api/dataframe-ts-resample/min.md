@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::min() const -> DataFrame
+DataFrame DataFrameTsResampler::min() const
 ```
 
 ## What It Does

@@ -8,9 +8,9 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::extract(
+DataFrame DataFrameNoteAccessor::extract(
     std::string_view pattern,
-    pluss::msharp::RangeView::Of<std::string_view> names = {}) const -> DataFrame
+    pluss::msharp::RangeView::Of<std::string_view> names = {}) const
 ```
 
 ## What It Does

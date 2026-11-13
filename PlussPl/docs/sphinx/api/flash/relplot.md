@@ -7,23 +7,17 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::relplot(Pane& pane, X&& x, Y&& y, std::string_view kind = "scatter")
+Trace& flash::relplot(Pane& pane, Series x, Series y, std::string_view kind = "scatter")
 
-template <class X, class Y>
-Trace& flash::relplot(Pane& pane, X&& x, Y&& y, const Note& hue, std::string_view kind = "scatter")
+Trace& flash::relplot(Pane& pane, Series x, Series y, const Note& hue, std::string_view kind = "scatter")
 
-template <class X, class Y, class Hue>
-Trace& flash::relplot(Pane& pane, X&& x, Y&& y, Hue&& hue, std::string_view kind = "scatter")
+Trace& flash::relplot(Pane& pane, Series x, Series y, Series hue, std::string_view kind = "scatter")
 
-template <class X, class Y>
-Trace& flash::relplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter", std::string title = {})
+Trace& flash::relplot(Studio& studio, Series x, Series y, std::string_view kind = "scatter", std::string title = {})
 
-template <class X, class Y>
-Trace& flash::relplot(Studio& studio, X&& x, Y&& y, const Note& hue, std::string_view kind = "scatter", std::string title = {})
+Trace& flash::relplot(Studio& studio, Series x, Series y, const Note& hue, std::string_view kind = "scatter", std::string title = {})
 
-template <class X, class Y, class Hue>
-Trace& flash::relplot(Studio& studio, X&& x, Y&& y, Hue&& hue, std::string_view kind = "scatter", std::string title = {})
+Trace& flash::relplot(Studio& studio, Series x, Series y, Series hue, std::string_view kind = "scatter", std::string title = {})
 ```
 
 ## What It Does
@@ -44,14 +38,8 @@ covering every combination of:
   [`flash::lineplot`](lineplot.md)'s important callouts — `relplot()` does not
   standardize or override either).
 
-```{important} kind accepts exactly "scatter" or "line" -- anything else silently falls back to scatter
-relplot()'s dispatch is a plain string comparison against the literal "line";
-every other value (including typos like "Line" or "lines", or any other
-string) takes the same code path as kind = "scatter" (the default), with no
-validation and no exception. Passing an unrecognized kind does not fail loudly
--- it just silently draws a scatter plot. Double-check the exact spelling
-"line" if a relplot() call isn't producing the connected-line output you
-expect.
+```{important} kind is exactly "scatter" or "line"
+Any other value, including a different spelling such as `"Line"` or `"lines"`, throws `pluss::Error` naming the kinds there are and the nearest one, and nothing is drawn.
 ```
 
 ## Parameters
@@ -69,8 +57,7 @@ expect.
 
 **kind** (`std::string_view`, default `"scatter"`)
     `"scatter"` dispatches to [`flash::scatterplot`](scatterplot.md);
-    `"line"` dispatches to [`flash::lineplot`](lineplot.md). Anything else behaves like
-    `"scatter"` — see the important callout above.
+    `"line"` dispatches to [`flash::lineplot`](lineplot.md). Anything else throws `pluss::Error`.
 
 **title** (`std::string`, default `{}`, `Studio&` overloads only)
     Passed through to [`Studio::pane2`](../studio/pane2.md) as the new pane's title.
@@ -84,7 +71,7 @@ expect.
 ## Examples
 
 Example 1. `kind = "scatter"` (explicit) vs. `kind = "line"` on identical data — verified
-via direct SVG diff to render genuinely different output.
+via direct SVG diff to render different output.
 
 ```cpp
 using namespace pluss::pl;
@@ -97,6 +84,8 @@ fig1.show();
 ```
 
 ![Output of Example 1](img/flash-relplot-1-scatter-kind.svg)
+
+Example 2. The same data with `kind = "line"`.
 
 ```cpp
 using namespace pluss::pl;

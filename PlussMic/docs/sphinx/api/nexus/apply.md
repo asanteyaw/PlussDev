@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Nexus::apply(std::string_view key, const std::function<DataFrame(const DataFrame&)>& fn) const -> Nexus
-Nexus::apply_(std::string_view key, const std::function<DataFrame(const DataFrame&)>& fn) -> Nexus&
+Nexus Nexus::apply(std::string_view key, const std::function<DataFrame(const DataFrame&)>& fn) const
+Nexus& Nexus::apply_(std::string_view key, const std::function<DataFrame(const DataFrame&)>& fn)
 ```
 
 ## What It Does

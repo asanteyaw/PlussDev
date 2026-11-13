@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Nexus::audit() const -> DataFrame
-Nexus::audit(std::string_view name) const -> DataFrame
+DataFrame Nexus::audit() const
+DataFrame Nexus::audit(std::string_view name) const
 ```
 
 ## What It Does

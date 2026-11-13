@@ -8,14 +8,14 @@
 ## Signatures
 
 ```cpp
-Slate::compare(double other, SlateBinaryCompareOp op) const -> Slate
-Slate::compare(std::string_view other, SlateBinaryCompareOp op) const -> Slate
-Slate::compare(const char* other, SlateBinaryCompareOp op) const -> Slate
-Slate::compare(const pluss::Series& other, SlateBinaryCompareOp op) const -> Slate
-Slate::compare(const pluss::Note& other, SlateBinaryCompareOp op) const -> Slate
-Slate::compare(const pluss::Timeline& other, SlateBinaryCompareOp op) const -> Slate
-Slate::compare(const pluss::Duration& other, SlateBinaryCompareOp op) const -> Slate
-Slate::compare(const Slate& other, SlateBinaryCompareOp op) const -> Slate
+Slate Slate::compare(double other, SlateBinaryCompareOp op) const
+Slate Slate::compare(std::string_view other, SlateBinaryCompareOp op) const
+Slate Slate::compare(const char* other, SlateBinaryCompareOp op) const
+Slate Slate::compare(const pluss::Series& other, SlateBinaryCompareOp op) const
+Slate Slate::compare(const pluss::Note& other, SlateBinaryCompareOp op) const
+Slate Slate::compare(const pluss::Timeline& other, SlateBinaryCompareOp op) const
+Slate Slate::compare(const pluss::Duration& other, SlateBinaryCompareOp op) const
+Slate Slate::compare(const Slate& other, SlateBinaryCompareOp op) const
 ```
 
 ## What It Does

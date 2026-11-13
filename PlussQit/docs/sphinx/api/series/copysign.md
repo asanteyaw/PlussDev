@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::copysign(const Series& other) const -> Series
+Series Series::copysign(const Series& other) const
 Series& Series::copysign_(const Series& other)
 Series& Series::copysign_(const Series& rhs) const
 ```

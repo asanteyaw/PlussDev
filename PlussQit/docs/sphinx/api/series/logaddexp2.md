@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::logaddexp2(const Series& other) const -> Series
+Series Series::logaddexp2(const Series& other) const
 Series& Series::logaddexp2_(const Series& other)
 ```
 

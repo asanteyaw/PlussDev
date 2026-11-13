@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::info(const display::DisplayOptions& options = {}) -> void
+void DataFrame::info(const display::DisplayOptions& options = {})
 
-DataFrame::info(std::ostream& os, const display::DisplayOptions& options = {}) -> void
+void DataFrame::info(std::ostream& os, const display::DisplayOptions& options = {})
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::round(std::string_view unit) const -> Slate
+Slate SlateTimelineAccessor::round(std::string_view unit) const
 ```
 
 ## What It Does

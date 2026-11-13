@@ -7,11 +7,9 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::lmplot(Studio& studio, X&& x, Y&& y, std::string title = {})
+Trace& flash::lmplot(Studio& studio, Series x, Series y, std::string title = {})
 
-template <class X, class Y>
-Trace& flash::lmplot(Studio& studio, X&& x, Y&& y, const RegPlotOptions& options, std::string title = {})
+Trace& flash::lmplot(Studio& studio, Series x, Series y, const RegPlotOptions& options, std::string title = {})
 ```
 
 ## What It Does

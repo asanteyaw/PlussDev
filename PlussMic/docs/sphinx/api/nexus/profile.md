@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::profile() const -> DataFrame
+DataFrame Nexus::profile() const
 ```
 
 ## What It Does

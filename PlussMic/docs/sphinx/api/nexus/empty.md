@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::empty() const -> bool
+bool Nexus::empty() const
 ```
 
 ## What It Does

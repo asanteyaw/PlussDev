@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrameNoteAccessor::replace(std::string_view from,
-                                std::string_view to) const -> DataFrame
+DataFrame DataFrameNoteAccessor::replace(std::string_view from,
+                                          std::string_view to) const
 
-DataFrameNoteAccessor::replace(std::string_view from,
-                                std::string_view to,
-                                const TextOptions& options) const -> DataFrame
+DataFrame DataFrameNoteAccessor::replace(std::string_view from,
+                                          std::string_view to,
+                                          const TextOptions& options) const
 ```
 
 ## What It Does

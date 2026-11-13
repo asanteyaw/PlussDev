@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::query(std::string_view expression) -> DataFrame
+DataFrame DataFrame::query(std::string_view expression)
 ```
 
 Filter rows with a boolean expression written against DataFrame feature names.

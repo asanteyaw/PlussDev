@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::retain_grad() const -> Series
-Series::retain_grad(bool keep) const -> Series
+Series Series::retain_grad() const
+Series Series::retain_grad(bool keep) const
 ```
 
 ## What It Does

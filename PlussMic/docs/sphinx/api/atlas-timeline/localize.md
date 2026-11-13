@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::localize(const TimelineLocalizeOptions& options = {}) const -> Atlas
+Atlas AtlasTimelineAccessor::localize(const TimelineLocalizeOptions& options = {}) const
 ```
 
 ## What It Does

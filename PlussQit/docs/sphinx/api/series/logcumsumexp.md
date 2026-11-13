@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::logcumsumexp() const -> Series
-Series::logcumsumexp(std::int64_t dim) const -> Series
+Series Series::logcumsumexp() const
+Series Series::logcumsumexp(std::int64_t dim) const
 ```
 
 ## What It Does

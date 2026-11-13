@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::nrows() -> std::int64_t
+std::int64_t Catalog::nrows()
 ```
 
 ## What It Does

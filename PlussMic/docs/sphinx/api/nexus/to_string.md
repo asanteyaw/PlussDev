@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::to_string(const display::DisplayOptions& options = {}) const -> std::string
+std::string Nexus::to_string(const display::DisplayOptions& options = {}) const
 ```
 
 ## What It Does

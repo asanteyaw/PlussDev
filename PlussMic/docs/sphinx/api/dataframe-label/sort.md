@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::sort(bool ascending = true, bool nulls_last = true) const -> DataFrame
-DataFrameLabelAccessor::sort(const DataFrame::SortLabelOptions& options) const -> DataFrame
+DataFrame DataFrameLabelAccessor::sort(bool ascending = true, bool nulls_last = true) const
+DataFrame DataFrameLabelAccessor::sort(const DataFrame::SortLabelOptions& options) const
 ```
 
 ## What It Does

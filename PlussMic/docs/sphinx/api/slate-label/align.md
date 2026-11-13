@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::align(const Slate& target_labels, const AlignOptions& options = {}) const -> Slate
+Slate SlateLabelAccessor::align(const Slate& target_labels, const AlignOptions& options = {}) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::map(const std::function<SlateValue(const SlateValue&)>& fn) const -> Atlas
+Atlas Atlas::map(const std::function<SlateValue(const SlateValue&)>& fn) const
 ```
 
 ## What It Does

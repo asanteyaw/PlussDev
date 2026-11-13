@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::has_table_meta(std::string_view key) const -> bool
+bool Nexus::has_table_meta(std::string_view key) const
 ```
 
 ## What It Does

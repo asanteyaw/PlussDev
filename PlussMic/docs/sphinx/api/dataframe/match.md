@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::match(const DataFrame& other, const FrameMatchOptions& options = {}) const -> FrameMatch
+FrameMatch DataFrame::match(const DataFrame& other, const FrameMatchOptions& options = {}) const
 ```
 
 ## What It Does

@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-DataFramePlot3DAccessor::wireframe(
+pluss::pl::Studio DataFramePlot3DAccessor::wireframe(
     std::string_view x_feature,
     std::string_view y_feature,
     std::string_view z_feature,
     DataFrame::GroupOp op = DataFrame::GroupOp::Mean,
-    const Wireframe3DPlotOptions& options = {}) const -> pluss::pl::Studio
+    const Wireframe3DPlotOptions& options = {}) const
 ```
 
 ## What It Does

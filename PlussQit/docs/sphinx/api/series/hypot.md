@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::hypot(const Series& other) const -> Series
+Series Series::hypot(const Series& other) const
 Series& Series::hypot_(const Series& other)
 Series& Series::hypot_(const Series& rhs) const
 ```

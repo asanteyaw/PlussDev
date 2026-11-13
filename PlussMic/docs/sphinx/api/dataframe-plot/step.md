@@ -8,26 +8,26 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::step(std::string_view y_feature,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view y_feature,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::step(std::string_view y_feature,
-                             std::optional<std::string_view> x_feature,
-                             const StepPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::step(std::string_view y_feature,
+                                               std::optional<std::string_view> x_feature,
+                                               const StepPlotOptions& options) const
 
-DataFramePlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature,
-                             const StepPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::step(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature,
+                                               const StepPlotOptions& options) const
 
-DataFramePlotAccessor::step(std::initializer_list<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::step(std::initializer_list<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::step(std::initializer_list<std::string_view> y_features,
-                             std::optional<std::string_view> x_feature,
-                             const StepPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::step(std::initializer_list<std::string_view> y_features,
+                                               std::optional<std::string_view> x_feature,
+                                               const StepPlotOptions& options) const
 ```
 
 ## What It Does

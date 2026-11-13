@@ -72,7 +72,7 @@ fig.show();
 
 ![Output of Example 2](img/flash-camera-preset3d-2-isometric.svg)
 
-Example 3 (verification, not a distinct rendering). `TopDown` renders byte-identical to
+Example 3 (a comparison, not a new picture). `TopDown` renders identical to
 the equivalent explicit [`flash::camera3d`](camera3d.md) call.
 
 ```cpp

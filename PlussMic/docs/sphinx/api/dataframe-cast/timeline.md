@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-DataFrameCastAccessor::timeline() const -> DataFrame
+DataFrame DataFrameCastAccessor::timeline() const
 ```
 
 ## What It Does

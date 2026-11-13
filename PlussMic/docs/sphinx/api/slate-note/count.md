@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-SlateNoteAccessor::count(std::string_view pattern) const -> Slate
-SlateNoteAccessor::count(std::string_view pattern, const TextOptions& options) const -> Slate
+Slate SlateNoteAccessor::count(std::string_view pattern) const
+Slate SlateNoteAccessor::count(std::string_view pattern, const TextOptions& options) const
 ```
 
 ## What It Does

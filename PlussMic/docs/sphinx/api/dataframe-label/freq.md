@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::freq(std::int64_t top_n = 0, bool dropnull = true) const -> Slate
+Slate DataFrameLabelAccessor::freq(std::int64_t top_n = 0, bool dropnull = true) const
 ```
 
 ## What It Does

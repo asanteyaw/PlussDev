@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::bfill() const -> Catalog
+Catalog Catalog::bfill() const
 ```
 
 ## What It Does

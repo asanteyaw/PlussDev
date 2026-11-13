@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::pie() const -> pluss::pl::Studio
-SlatePlotAccessor::pie(const PiePlotOptions& options) const -> pluss::pl::Studio
-SlatePlotAccessor::pie(const Slate& labels) const -> pluss::pl::Studio
-SlatePlotAccessor::pie(const Slate& labels, const PiePlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::pie() const
+pluss::pl::Studio SlatePlotAccessor::pie(const PiePlotOptions& options) const
+pluss::pl::Studio SlatePlotAccessor::pie(const Slate& labels) const
+pluss::pl::Studio SlatePlotAccessor::pie(const Slate& labels, const PiePlotOptions& options) const
 ```
 
 ## What It Does

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Slate::as_duration() -> const pluss::Duration&
+const pluss::Duration& Slate::as_duration()
 ```
 
 ## What It Does

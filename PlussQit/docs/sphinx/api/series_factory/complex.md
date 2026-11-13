@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-pluss::series::complex(const Series& real,
-                       const Series& imag,
-                       ScalarType dtype = ScalarType::Complex64) -> Series
+Series pluss::series::complex(const Series& real,
+                              const Series& imag,
+                              ScalarType dtype = ScalarType::Complex64)
 ```
 
 ## What It Builds

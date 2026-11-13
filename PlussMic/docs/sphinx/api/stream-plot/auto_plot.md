@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-StreamPlotAccessor::auto_plot() const -> pluss::pl::Studio
-StreamPlotAccessor::auto_plot(const AutoPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio StreamPlotAccessor::auto_plot() const
+pluss::pl::Studio StreamPlotAccessor::auto_plot(const AutoPlotOptions& options) const
 ```
 
 ## What It Does

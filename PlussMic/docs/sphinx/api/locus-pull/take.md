@@ -8,21 +8,21 @@
 
 ```cpp
 // Root fields, unaliased
-LocusPull::take(pluss::msharp::RangeView::Of<std::string_view> sources) -> LocusPull&
-LocusPull::take(std::initializer_list<std::string_view> sources) -> LocusPull&
+LocusPull& LocusPull::take(pluss::msharp::RangeView::Of<std::string_view> sources)
+LocusPull& LocusPull::take(std::initializer_list<std::string_view> sources)
 
 // A single root (or related) field, with an optional alias
-LocusPull::take(std::string_view source, std::string_view alias = {}) -> LocusPull&
+LocusPull& LocusPull::take(std::string_view source, std::string_view alias = {})
 
 // Root fields, renamed as a batch of (source, alias) pairs
-LocusPull::take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) -> LocusPull&
-LocusPull::take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) -> LocusPull&
+LocusPull& LocusPull::take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+LocusPull& LocusPull::take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 
 // Related-table fields, scoped under one table token
-LocusPull::take(std::string_view table,
-                pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) -> LocusPull&
-LocusPull::take(std::string_view table,
-                std::initializer_list<std::pair<std::string_view, std::string_view>> fields) -> LocusPull&
+LocusPull& LocusPull::take(std::string_view table,
+                           pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+LocusPull& LocusPull::take(std::string_view table,
+                           std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 
 ## What It Does

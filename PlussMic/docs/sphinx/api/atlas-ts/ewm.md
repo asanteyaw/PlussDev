@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsAccessor::ewm(double alpha, WindowStatistic statistic = WindowStatistic::Mean, bool adjusted = true, bool bias_corrected = true, std::int64_t min_count = 1, bool ignore_nulls = false) const -> Atlas
+Atlas AtlasTsAccessor::ewm(double alpha, WindowStatistic statistic = WindowStatistic::Mean, bool adjusted = true, bool bias_corrected = true, std::int64_t min_count = 1, bool ignore_nulls = false) const
 ```
 
 ## What It Does

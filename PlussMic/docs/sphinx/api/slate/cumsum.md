@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::cumsum(bool skip_nulls = true) const -> Slate
+Slate Slate::cumsum(bool skip_nulls = true) const
 ```
 
 ## What It Does

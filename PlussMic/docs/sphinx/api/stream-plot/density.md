@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-StreamPlotAccessor::density(std::int64_t points = 128) const -> pluss::pl::Studio
-StreamPlotAccessor::density(const DensityPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio StreamPlotAccessor::density(std::int64_t points = 128) const
+pluss::pl::Studio StreamPlotAccessor::density(const DensityPlotOptions& options) const
 ```
 
 ## What It Does

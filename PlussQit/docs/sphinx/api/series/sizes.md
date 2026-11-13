@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::sizes() const -> pluss::RangeView<std::int64_t>
+pluss::RangeView<std::int64_t> Series::sizes() const
 ```
 
 ## What It Does

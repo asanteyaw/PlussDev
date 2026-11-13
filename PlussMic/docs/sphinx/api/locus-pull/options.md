@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::options(const PullOptions& options) -> LocusPull&
+LocusPull& LocusPull::options(const PullOptions& options)
 ```
 
 ## What It Does

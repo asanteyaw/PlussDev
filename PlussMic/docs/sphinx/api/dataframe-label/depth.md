@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::depth() const -> std::int64_t
+std::int64_t DataFrameLabelAccessor::depth() const
 ```
 
 ## What It Does

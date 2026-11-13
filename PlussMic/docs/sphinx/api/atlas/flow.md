@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::flow(const std::function<Atlas(const Atlas&)>& fn) const -> Atlas
+Atlas Atlas::flow(const std::function<Atlas(const Atlas&)>& fn) const
 ```
 
 ## What It Does

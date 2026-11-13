@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::slice(std::int64_t start, std::int64_t stop) const -> Catalog
+Catalog Catalog::slice(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does

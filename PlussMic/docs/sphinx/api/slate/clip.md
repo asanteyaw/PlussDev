@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::clip(double min_value, double max_value) const -> Slate
+Slate Slate::clip(double min_value, double max_value) const
 ```
 
 ## What It Does

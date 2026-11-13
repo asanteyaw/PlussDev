@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::isnat() -> Series
+Series Timeline::isnat()
 ```
 
 ## What It Does

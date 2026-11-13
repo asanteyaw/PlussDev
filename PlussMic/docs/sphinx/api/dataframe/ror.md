@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::ror(const DataFrame& other) const -> DataFrame
-DataFrame::ror(const Slate& other) const -> DataFrame
+DataFrame DataFrame::ror(const DataFrame& other) const
+DataFrame DataFrame::ror(const Slate& other) const
 ```
 
 ## What It Does

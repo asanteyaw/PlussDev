@@ -8,8 +8,8 @@
 
 ```cpp
 // -- core (series-convertible x/y) --
-Studio& flash::jointplot(Studio& studio, X&& x, Y&& y, std::string_view kind = "scatter")
-Studio& flash::jointplot(Studio& studio, X&& x, Y&& y, const JointPlotOptions& options)
+Studio& flash::jointplot(Studio& studio, Series x, Series y, std::string_view kind = "scatter")
+Studio& flash::jointplot(Studio& studio, Series x, Series y, const JointPlotOptions& options)
 
 // -- Dataset, by feature name --
 Studio& flash::jointplot(Studio& studio, const Dataset& data, std::string_view x_name,
@@ -92,8 +92,7 @@ two directly -- they call flash::make_dataset(matrix, feature_names, feature_axi
 build a full Dataset, then delegate to the Dataset-by-name overload, which looks up
 x_name/y_name via Dataset::numeric(). This means an unrecognized x_name/y_name on ANY
 matrix overload surfaces the same "flash::jointplot(dataset): unknown numeric feature"
-message as the Dataset overload itself, not a matrix- or index-specific one -- directly
-verified below.
+message as the Dataset overload itself, not a matrix- or index-specific one.
 ```
 
 ## `JointPlotOptions` fields
@@ -102,12 +101,12 @@ verified below.
 |---|---|---|
 | `kind` | `JointPlotKind`, default `Scatter` | The joint (central) panel's glyph: - `Scatter` — a point cloud via [`Pane::cloud`](../pane/cloud.md). - `Reg` — delegates the entire joint panel to [`flash::regplot`](regplot.md) with the nested `reg` options. - `Hex` — a 2D-binned heatmap (via [`flash::heatmap`](heatmap.md)) over a `hex_bins_x × hex_bins_y` grid. The name is historical; the rendered result is a rectangular-cell density view, not literal hexagon tiles. - `Kde` — a smoothed 2D density: the same binned grid, blurred by `kde_smooth_passes`, drawn as filled contours (`kde_fill`) plus a [`Pane::contour`](../pane/contour.md) outline at `kde_levels` levels. Also switches the default `marginal` to `Kde` (see the important callout below). |
 | `marginal` | `JointMarginalKind`, default `Hist` | The two marginal panels' glyph: `Hist` (via [`Pane::bucket`](../pane/bucket.md), using `marginal_bins`) or `Kde` (a density curve using `marginal_kde_points`). |
-| `marginal_bins` | `std::int64_t`, default `18` | Bin count for `Hist`-kind marginals. Clamped to at least `4`. |
-| `marginal_kde_points` | `std::int64_t`, default `128` | Evaluation-point count for `Kde`-kind marginals. Clamped to at least `16`. |
-| `hex_bins_x`, `hex_bins_y` | `std::int64_t`, default `28`, `22` | Grid resolution for `kind = Hex`. Each clamped to at least `4` internally by `hist2d_grid`. |
+| `marginal_bins` | `std::int64_t`, default `18` | Bin count for `Hist`-kind marginals. At least `1`; fewer throws `pluss::Error`. |
+| `marginal_kde_points` | `std::int64_t`, default `128` | Evaluation-point count for `Kde`-kind marginals. At least `2`; fewer throws `pluss::Error`. |
+| `hex_bins_x`, `hex_bins_y` | `std::int64_t`, default `28`, `22` | Grid resolution for `kind = Hex`. Each at least `1`; fewer throws `pluss::Error`. |
 | `kde_bins_x`, `kde_bins_y` | `std::int64_t`, default `30`, `24` | Grid resolution for `kind = Kde`, before smoothing. Same `4`-minimum clamp. |
 | `kde_smooth_passes` | `std::int64_t`, default `2` | How many smoothing passes are applied to the binned KDE grid before contouring. `0` or negative disables smoothing (returns the raw binned grid unchanged). |
-| `kde_levels` | `std::int64_t`, default `10` | Contour level count for `kind = Kde`'s outline. Clamped to at least `4`. |
+| `kde_levels` | `std::int64_t`, default `10` | Contour level count for `kind = Kde`'s outline. At least `1`; fewer throws `pluss::Error`. |
 | `kde_fill` | `bool`, default `true` | Whether `kind = Kde` also draws a filled [`flash::heatmap`](heatmap.md) underneath the contour outline (`true`) or only the contour lines (`false`). |
 | `show_joint_grid` | `bool`, default `true` | Whether the joint (central) panel gets `GridStyle::Major` gridlines. |
 | `show_marginal_grid` | `bool`, default `false` | Whether the two marginal panels get `GridStyle::Major` gridlines — note the default is `false` here, the opposite of `show_joint_grid`'s `true` default. |
@@ -121,7 +120,7 @@ Kde as part of building its JointPlotOptions -- so flash::jointplot(studio, x, y
 directly through a hand-built JointPlotOptions does NOT do this -- marginal stays
 whatever you left it (Hist by default), since that override only lives in the
 kind-string convenience overload's translation logic, not in the core function itself.
-Directly verified: Example 4 (kind-string "kde") renders Kde marginals; achieving the
+Example 4 (kind-string "kde") renders Kde marginals; achieving the
 same via the options overload requires setting BOTH kind and marginal explicitly, shown
 in Example 5.
 ```
@@ -141,12 +140,11 @@ in Example 5.
 
 **x**, **y** (series-convertible, core overloads)
     The two features to plot directly. Must have identical lengths, or `jointplot` throws
-    `std::invalid_argument("flash::jointplot requires x/y with identical lengths")`.
+    `pluss::Error("flash::jointplot requires x/y with identical lengths")`.
 
 **kind** (`std::string_view`, default `"scatter"`, kind-string overloads)
-    `"scatter"`, `"reg"`, `"hex"`, or `"kde"` — any other string silently falls back to
-    `Scatter` (unlike most other `flash::` kind-string parsers, this one does **not**
-    throw on an unrecognized string).
+    `"scatter"`, `"reg"`, `"hex"`, or `"kde"` — any other string throws `pluss::Error`
+    naming the kinds there are.
 
 **data** (`const Dataset&`, Dataset overloads)
     See `flash::make_dataset` on the [`flash::pairplot`](pairplot.md) page.
@@ -303,7 +301,7 @@ fig.show();
 
 ![Output of Example 8](img/flash-jointplot-8-matrix-frame-options.svg)
 
-Example 9. Matrix + explicit `feature_names` + `Axis` overload — verified byte-identical
+Example 9. Matrix + explicit `feature_names` + `Axis` overload — identical
 to Example 8 given the same data (both route through the same `Dataset`-building path).
 
 ```cpp
@@ -374,8 +372,8 @@ std::vector<double> x{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 2.5, 5.
 std::vector<double> short_y{1.0, 2.0, 3.0};
 try {
   flash::jointplot(fig, x, short_y);
-} catch (const std::invalid_argument& e) {
-  std::cout << "jointplot(x/y mismatch) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "jointplot(x/y mismatch) threw: " << e.message() << "\n";
 }
 ```
 
@@ -398,7 +396,7 @@ auto data = flash::make_dataset({pluss::make_series(x, {16}), pluss::make_series
 try {
   flash::jointplot(fig, data, "alpha", "nonexistent");
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << "jointplot(dataset, unknown feature) threw: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -406,7 +404,7 @@ try {
 Output:
 
 ```text
-jointplot(dataset, unknown feature) threw: flash::jointplot(dataset): unknown numeric feature 'nonexistent'
+jointplot(dataset, unknown feature) threw: flash::jointplot(dataset): unknown continuous feature 'nonexistent'
 ```
 
 Example 14 (edge case). `MatrixJointOptions::x_feature == y_feature` throws.
@@ -427,7 +425,7 @@ matrix_opts.y_feature = 0;
 try {
   flash::jointplot(fig, matrix, matrix_opts);
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << "jointplot(matrix, x_feature==y_feature) threw: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -443,10 +441,7 @@ jointplot(matrix, x_feature==y_feature) threw: flash::jointplot(matrix): x_featu
 - Not `noexcept`.
 - Always produces exactly three panes in a `4×4` mosaic — see [`Pane::place`](../pane/place.md)
   for the row/col/span layout this relies on.
-- The kind-string parser (`"scatter"`/`"reg"`/`"hex"`/`"kde"`) silently falls back to
-  `Scatter` on any unrecognized string, unlike most other `flash::` kind-string parsers
-  (e.g. [`flash::relgrid_kind`](relgridplot.md)) which throw — a genuine, verified
-  asymmetry in this function's surface, not an oversight in this reference.
+- The kind string (`"scatter"`, `"reg"`, `"hex"` or `"kde"`) is checked like the kind strings of the other `flash::` functions: any other string throws `pluss::Error`.
 - `Dataset`-based name lookups (`Dataset::numeric`) power every name-based overload,
   including all the matrix ones — see the important callout above.
 - `kind = Scatter`'s marker size is drawn from `options.reg.marker_area`, even though

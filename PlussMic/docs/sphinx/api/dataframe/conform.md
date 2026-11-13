@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::conform(const DataFrame& other) const -> DataFrame
+DataFrame DataFrame::conform(const DataFrame& other) const
 ```
 
 ## What It Does

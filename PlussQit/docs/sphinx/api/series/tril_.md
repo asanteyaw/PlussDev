@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::tril_() const -> Series&
-Series::tril_(std::int64_t diagonal) const -> Series&
+Series& Series::tril_() const
+Series& Series::tril_(std::int64_t diagonal) const
 ```
 
 ## What It Does

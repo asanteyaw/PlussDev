@@ -7,12 +7,10 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Z, class W>
-Trace& flash::cloud4(Pane& pane, X&& x, Y&& y, Z&& z, W&& w,
+Trace& flash::cloud4(Pane& pane, Series x, Series y, Series z, Series w,
                       const HyperPlotOptions& options = {})
 
-template <class X, class Y, class Z, class W>
-Trace& flash::cloud4(Studio& studio, X&& x, Y&& y, Z&& z, W&& w,
+Trace& flash::cloud4(Studio& studio, Series x, Series y, Series z, Series w,
                       const HyperPlotOptions& options = {}, std::string title = {})
 ```
 
@@ -29,7 +27,7 @@ Two overloads: a `Pane`-taking form, and a `Studio`-taking convenience form that
 a new [`Volumetric`](../studio/pane3.md) pane for you.
 
 ```{important} point_size sets a UNIFORM marker size for every point -- not read from w or any projected value
-Unlike a genuine per-point size series (as flash::cloud3's own size overload accepts),
+Unlike a per-point size series (as flash::cloud3's own size overload accepts),
 cloud4 always passes a single, uniform size -- max(1.0, options.point_size) -- for
 EVERY projected point, via Series::full(...). There is no way to vary marker size by
 the original w coordinate or by projected depth through this function alone; every
@@ -47,11 +45,11 @@ point in the cloud renders at the same size regardless of options.
 **x**, **y**, **z**, **w** (series-convertible, must each be rank ≤ 3 and identical
 lengths)
     The 4D point coordinates. Unequal lengths throw
-    `std::invalid_argument("flash::cloud4: x, y, z, w must have identical lengths")`.
+    `pluss::Error("flash::cloud4: x, y, z, w must have identical lengths")`.
 
 **options** (`const HyperPlotOptions&`, optional)
-    See [`flash::path4`](path4.md)'s field table — identical struct, shared between both
-    functions. `point_size` is the one field that's genuinely consumed here (see the
+    See [`flash::path4`](path4.md)'s field table — identical options, shared between both
+    functions. `point_size` is the one field that's consumed here (see the
     important callout above); it is inert on `path4`.
 
 **title** (`std::string`, default `{}`, Studio overload only)
@@ -97,8 +95,8 @@ fig.show();
 
 ![Output of Example 2](img/flash-cloud4-2-studio.svg)
 
-Example 3 (verification, not a distinct rendering). `w_slice = {0.0, 0.5}` renders
-genuinely differently from the unsliced default, confirmed via direct SVG comparison —
+Example 3 (a comparison, not a new picture). `w_slice = {0.0, 0.5}` renders
+differently from the unsliced default —
 some points are dropped entirely.
 
 ```cpp
@@ -134,7 +132,7 @@ cloud4 no-slice vs w_slice(0,0.5) differ: 1
 ## Notes
 
 - Not `noexcept`.
-- `point_size` is clamped to at least `1.0` before use.
+- `point_size` is the marker size; a marker is never drawn below a visible dot.
 - Same `w_slice`-excludes-every-point edge case as [`flash::path4`](path4.md) applies
   here too, with a `cloud4`-specific message
   (`"flash::cloud4: no points remain after projection/slice"`).

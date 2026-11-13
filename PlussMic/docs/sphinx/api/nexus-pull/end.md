@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusPullAgg::end() const -> NexusPull&
+NexusPull& NexusPullAgg::end() const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::isnan() const -> Slate
+Slate Slate::isnan() const
 ```
 
 ## What It Does

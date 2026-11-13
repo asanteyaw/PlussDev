@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::isfinite() const -> Series
+Series Series::isfinite() const
 Series& Series::isfinite_()
 ```
 

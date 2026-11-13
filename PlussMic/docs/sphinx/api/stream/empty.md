@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::empty() const -> bool
+bool Stream::empty() const
 ```
 
 ## What It Does

@@ -8,10 +8,10 @@
 ## Signature
 
 ```cpp
-DataFramePlot3DAccessor::hist(
+pluss::pl::Studio DataFramePlot3DAccessor::hist(
     std::string_view x_feature,
     std::string_view y_feature,
-    const Hist3DPlotOptions& options = {}) const -> pluss::pl::Studio
+    const Hist3DPlotOptions& options = {}) const
 ```
 
 ## What It Does

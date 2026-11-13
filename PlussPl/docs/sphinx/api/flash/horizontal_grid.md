@@ -24,7 +24,7 @@ If the pane's current theme name does NOT match one of the three grid-family
 substrings above -- e.g. it was styled with FlashStyle::Dark/Light/Sand, or never
 styled via flash::set_style/set_theme at all -- horizontal_grid unconditionally forces
 the pane fully gridless (Pane::grid(GridStyle::None), all major/minor grids off) on
-EVERY call, even when enable is true. This was directly verified below: calling
+EVERY call, even when enable is true. calling
 horizontal_grid(pane, true) on a FlashStyle::Dark pane produces byte-identical output
 to not calling it at all, since Dark is already gridless -- but on a pane whose theme
 name does not contain a recognized "*grid" substring for any other reason, this
@@ -49,7 +49,7 @@ function will actively strip any existing grid rather than leaving it untouched.
 ## Examples
 
 Example 1. `Lightgrid`-styled pane, `horizontal_grid(pane, true)` — confirmed to render
-genuinely differently from the un-toggled `Lightgrid` pane via direct SVG comparison.
+differently from the un-toggled `Lightgrid` pane.
 
 ```cpp
 using namespace pluss::pl;
@@ -77,7 +77,7 @@ horizontal_grid(true) on gridstyle theme differs: 1
 ![Output of Example 1](img/flash-horizontal-grid-on-lightgrid.svg)
 
 Example 2 (edge case). `Dark`-styled pane (a non-grid-family style, already gridless) —
-`horizontal_grid(pane, true)` is byte-identical to leaving it alone, since both paths
+`horizontal_grid(pane, true)` is identical to leaving it alone, since both paths
 land on fully gridless.
 
 ```cpp
@@ -106,7 +106,7 @@ horizontal_grid(true) on non-grid style (Dark) byte-identical: 1
 
 - `noexcept`.
 - The grid-family detection is a plain substring search on the pane's current theme
-  *name string* — it is not a stored enum/flag. A hand-built `Theme` whose name happens
+  *name string* — it is not a stored flag. A hand-built `Theme` whose name happens
   to contain e.g. `"lightgrid"` would be treated as grid-family by this function even
   if it was never produced by `flash::set_style`.
 - See the important callout above: this function is not purely additive — on an

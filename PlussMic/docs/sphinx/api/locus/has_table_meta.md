@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::has_table_meta(std::string_view name) const -> bool
-Locus::table_meta(std::string_view name) const -> std::optional<TableMeta>
+bool Locus::has_table_meta(std::string_view name) const
+std::optional<TableMeta> Locus::table_meta(std::string_view name) const
 ```
 
 ## What It Does

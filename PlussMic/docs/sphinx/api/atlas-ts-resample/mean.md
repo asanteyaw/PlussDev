@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsResampler::mean() const -> Atlas
+Atlas AtlasTsResampler::mean() const
 ```
 
 ## What It Does

@@ -5,11 +5,11 @@
 ## Signature
 
 ```cpp
-Timeline::TimelineIndexAccessor::join_asof(
+pluss::Series Timeline::TimelineIndexAccessor::join_asof(
     const Timeline::TimelineIndexAccessor& right,
     AsofDirection direction = AsofDirection::Backward,
     const Duration* tolerance = nullptr,
-    bool allow_exact_matches = true) const -> pluss::Series
+    bool allow_exact_matches = true) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::trunc() const -> Series
+Series Series::trunc() const
 Series& Series::trunc_()
 ```
 

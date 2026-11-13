@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-SlotCastAccessor::duration() -> Slot
+Slot SlotCastAccessor::duration()
 ```
 
 ## What It Does

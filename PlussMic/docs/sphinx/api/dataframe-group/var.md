@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameGrouped::var() const -> DataFrame
-DataFrameGrouped::var(std::string_view feature) const -> DataFrame
-DataFrameGrouped::var(std::initializer_list<std::string_view> features) const -> DataFrame
-DataFrameGrouped::var(pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrameGrouped::var() const
+DataFrame DataFrameGrouped::var(std::string_view feature) const
+DataFrame DataFrameGrouped::var(std::initializer_list<std::string_view> features) const
+DataFrame DataFrameGrouped::var(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does

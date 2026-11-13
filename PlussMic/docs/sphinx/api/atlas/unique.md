@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::unique() const noexcept -> bool
+bool Atlas::unique() const noexcept
 ```
 
 ## What It Does

@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::pos(double value) const -> Slate
-DataFrameLabelAccessor::pos(std::string_view value) const -> Slate
-DataFrameLabelAccessor::pos(const char* value) const -> Slate
+Slate DataFrameLabelAccessor::pos(double value) const
+Slate DataFrameLabelAccessor::pos(std::string_view value) const
+Slate DataFrameLabelAccessor::pos(const char* value) const
 ```
 
 ## What It Does

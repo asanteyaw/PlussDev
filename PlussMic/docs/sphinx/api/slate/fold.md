@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::fold(const std::function<Slate(const Slate&)>& fn, ResultShape shape = ResultShape::Reduce) const -> Slate
+Slate Slate::fold(const std::function<Slate(const Slate&)>& fn, ResultShape shape = ResultShape::Reduce) const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameGrouped::agg(pluss::msharp::RangeView::Of<DataFrame::GroupSpec> specs) const -> DataFrame
-DataFrameGrouped::agg(std::initializer_list<DataFrame::GroupSpec> specs) const -> DataFrame
+DataFrame DataFrameGrouped::agg(pluss::msharp::RangeView::Of<DataFrame::GroupSpec> specs) const
+DataFrame DataFrameGrouped::agg(std::initializer_list<DataFrame::GroupSpec> specs) const
 ```
 
 ## What It Does

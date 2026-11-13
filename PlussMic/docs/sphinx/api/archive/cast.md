@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Archive::cast() const -> ArchiveCastAccessor
-Archive::cast(const pluss::table::SlateCastOptions& options) const -> ArchiveCastAccessor
-Archive::cast(pluss::table::SlateCastTarget target, const pluss::table::SlateCastOptions& options = {}) const -> Archive
+ArchiveCastAccessor Archive::cast() const
+ArchiveCastAccessor Archive::cast(const pluss::table::SlateCastOptions& options) const
+Archive Archive::cast(pluss::table::SlateCastTarget target, const pluss::table::SlateCastOptions& options = {}) const
 ```
 
 ## What It Does

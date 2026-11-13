@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::utc() const -> DataFrame
+DataFrame DataFrameTimelineAccessor::utc() const
 ```
 
 ## What It Does

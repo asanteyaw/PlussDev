@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::query(const QueryFn& fn) const -> Catalog
+Catalog Catalog::query(const QueryFn& fn) const
 ```
 
 ```cpp

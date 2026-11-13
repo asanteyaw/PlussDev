@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::kurtosis(Axis axis = Axis::Case, std::int64_t min_count = 4) const -> Slate
+Slate DataFrame::kurtosis(Axis axis = Axis::Case, std::int64_t min_count = 4) const
 ```
 
 ## What It Does

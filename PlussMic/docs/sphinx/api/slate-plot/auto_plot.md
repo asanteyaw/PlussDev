@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::auto_plot() const -> pluss::pl::Studio
-SlatePlotAccessor::auto_plot(const AutoPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::auto_plot() const
+pluss::pl::Studio SlatePlotAccessor::auto_plot(const AutoPlotOptions& options) const
 ```
 
 ## What It Does

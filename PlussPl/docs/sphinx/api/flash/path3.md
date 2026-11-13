@@ -7,19 +7,16 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::path3(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::path3(Pane& pane, Series x, Series y, Series z)
 
-template <class X, class Y, class Z>
-Trace& flash::path3(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {})
+Trace& flash::path3(Studio& studio, Series x, Series y, Series z, std::string title = {})
 ```
 
 ## What It Does
 
 A thin wrapper around [`Pane::path3`](../pane/path3.md): converts `x`/`y`/`z` to `Series`,
 validates each is rank ≤ 3, then delegates to `pane.path3(x, y, z)`. The `Pane` overload
-is byte-identical to calling `Pane::path3` directly — directly verified via SVG
-comparison. The `Studio` overload additionally creates a new
+is identical to calling `Pane::path3` directly. The `Studio` overload additionally creates a new
 [`Volumetric`](../studio/pane3.md) pane for you via `studio.pane3(title)`, so you never
 have to create the pane yourself first.
 
@@ -45,7 +42,7 @@ family for its own verification.
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3)
     The trajectory coordinates. A rank-4-or-higher input throws
-    `std::invalid_argument("flash::path3: expected input rank <= 3")` — see
+    `pluss::Error("flash::path3: expected input rank <= 3")` — see
     [`Pane::path3`](../pane/path3.md) for the coordinate-length-matching requirements this
     layer doesn't itself add anything to.
 
@@ -101,8 +98,8 @@ fig.show();
 
 ![Output of Example 2](img/flash-path3-2-studio.svg)
 
-Example 3 (verification, not a distinct rendering). `flash::path3(pane, ...)` renders
-byte-identical to `pane.path3(...)` called directly, confirming the important callout
+Example 3 (a comparison, not a new picture). `flash::path3(pane, ...)` renders
+identical to `pane.path3(...)` called directly, confirming the important callout
 above.
 
 ```cpp

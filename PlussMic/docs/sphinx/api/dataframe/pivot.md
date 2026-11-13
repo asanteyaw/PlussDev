@@ -8,11 +8,11 @@
 ## Signature
 
 ```cpp
-DataFrame::pivot(std::string_view case_feature,
-                 std::string_view feature_feature,
-                 std::string_view value_feature,
-                 bool dropnull_keys = true,
-                 bool render = false) const -> DataFrameView
+DataFrameView DataFrame::pivot(std::string_view case_feature,
+                               std::string_view feature_feature,
+                               std::string_view value_feature,
+                               bool dropnull_keys = true,
+                               bool render = false) const
 ```
 
 ## What It Does

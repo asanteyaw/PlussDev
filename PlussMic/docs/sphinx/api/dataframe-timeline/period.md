@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::period(std::string_view freq) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::period(std::string_view freq) const
 ```
 
 ## What It Does

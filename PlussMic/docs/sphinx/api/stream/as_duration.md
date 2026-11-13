@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Stream::as_duration() -> const pluss::Duration&
+const pluss::Duration& Stream::as_duration()
 ```
 
 ## What It Does

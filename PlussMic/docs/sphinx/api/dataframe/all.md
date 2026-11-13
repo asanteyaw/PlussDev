@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::all(bool skipnull = true) const -> Slate
-DataFrame::all(Axis axis, bool skipnull = true) const -> Slate
+Slate DataFrame::all(bool skipnull = true) const
+Slate DataFrame::all(Axis axis, bool skipnull = true) const
 ```
 
 ## What It Does

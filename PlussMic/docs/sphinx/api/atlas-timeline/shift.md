@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const -> Atlas
+Atlas AtlasTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const
 ```
 
 ## What It Does

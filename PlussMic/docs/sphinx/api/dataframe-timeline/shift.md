@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::shift(std::int64_t periods, std::string_view freq) const
 ```
 
 ## What It Does

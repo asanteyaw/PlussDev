@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::fill_gaps(GapFillMode mode = GapFillMode::Forward, std::optional<double> constant = std::nullopt) const -> Slate
+Slate TimeSeriesAccessor::fill_gaps(GapFillMode mode = GapFillMode::Forward, std::optional<double> constant = std::nullopt) const
 ```
 
 ## What It Does

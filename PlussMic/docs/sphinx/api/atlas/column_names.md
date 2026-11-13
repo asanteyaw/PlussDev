@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::column_names() const -> const std::vector<std::string>&
+const std::vector<std::string>& Atlas::column_names() const
 ```
 
 ## What It Does

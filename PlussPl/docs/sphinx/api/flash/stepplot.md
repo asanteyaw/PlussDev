@@ -7,8 +7,7 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::stepplot(Pane& pane, X&& x, Y&& y)
+Trace& flash::stepplot(Pane& pane, Series x, Series y)
 ```
 
 ## What It Does
@@ -61,8 +60,8 @@ auto fig = studio("flash_stepplot_mismatched");
 auto& pane = fig.pane2();
 try {
   flash::stepplot(pane, std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0});
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
 }
 ```
 
@@ -74,8 +73,7 @@ flash::stepplot requires x and y with identical lengths
 
 Example 3 (edge case). Empty input. The implementation's own comment suggests an
 empty-input call should fall through to a plain `Pane::trend()` call and succeed
-trivially — but `Pane::trend()` itself rejects empty series, so the *actual*, verified
-behavior is that empty input throws too, just with a different message coming from one
+trivially — but `Pane::trend()` itself rejects empty series, so empty input throws too, just with a different message coming from one
 layer deeper.
 
 ```cpp
@@ -85,8 +83,8 @@ auto fig = studio("flash_stepplot_empty");
 auto& pane = fig.pane2();
 try {
   flash::stepplot(pane, std::vector<double>{}, std::vector<double>{});
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
 }
 ```
 

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::map(const std::function<SlateValue(const SlateValue&)>& fn) const -> DataFrame
+DataFrame DataFrameLabelAccessor::map(const std::function<SlateValue(const SlateValue&)>& fn) const
 ```
 
 ## What It Does

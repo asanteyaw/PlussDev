@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::epoch(TimeUnit unit = TimeUnit::Nanos) const -> Atlas
+Atlas AtlasTimelineAccessor::epoch(TimeUnit unit = TimeUnit::Nanos) const
 ```
 
 ## What It Does

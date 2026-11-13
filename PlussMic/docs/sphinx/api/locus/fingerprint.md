@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::fingerprint() const -> std::string
+std::string Locus::fingerprint() const
 ```
 
 ## What It Does

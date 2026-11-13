@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::apply_all(const std::function<DataFrame(const DataFrame&)>& fn) const -> Nexus
+Nexus Nexus::apply_all(const std::function<DataFrame(const DataFrame&)>& fn) const
 ```
 
 ## What It Does

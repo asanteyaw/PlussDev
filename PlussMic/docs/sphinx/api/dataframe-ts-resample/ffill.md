@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::ffill() const -> DataFrame
+DataFrame DataFrameTsResampler::ffill() const
 ```
 
 ## What It Does

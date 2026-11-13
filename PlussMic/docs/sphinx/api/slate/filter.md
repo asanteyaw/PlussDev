@@ -8,8 +8,8 @@
 ## Signature
 
 ```cpp
-Slate::filter(const pluss::Series& bool_mask) const -> Slate
-Slate::filter(const Slate& bool_mask) const -> Slate
+Slate Slate::filter(const pluss::Series& bool_mask) const
+Slate Slate::filter(const Slate& bool_mask) const
 ```
 
 ## What It Does

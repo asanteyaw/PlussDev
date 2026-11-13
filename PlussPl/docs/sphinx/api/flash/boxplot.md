@@ -7,13 +7,11 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::boxplot(Pane& pane, Values&& values)
+Trace& flash::boxplot(Pane& pane, Series values)
 
 Trace& flash::boxplot(Pane& pane, const Note& categories, const Series& values)
 
-template <class Group, class Values>
-Trace& flash::boxplot(Pane& pane, Group&& group, Values&& values)
+Trace& flash::boxplot(Pane& pane, Series group, Series values)
 ```
 
 ## What It Does
@@ -33,9 +31,9 @@ Draws a classic box-and-whisker summary (quartiles, median, whiskers, outliers) 
 
 ```{important} Same Note-vs-numeric-group category-labeling split as stripplot()
 Only the Note overload calls Pane::x_categories() to set real text tick
-labels. The numeric-group overload skips that step. Directly verified: with an
+labels. The numeric-group overload skips that step. With an
 identical two-group structure (five observations in each group), the Note-based
-call and the numeric-group-based call produce genuinely DIFFERENT rendered SVG
+call and the numeric-group-based call produce DIFFERENT rendered SVG
 output -- not just different tick text, the boxes themselves render at
 different x positions/labels. If you want readable category names on the
 x-axis, pass a Note, not a numeric group vector.
@@ -94,8 +92,7 @@ fig.show();
 
 ![Output of Example 2](img/flash-boxplot-2-note-categories.svg)
 
-Example 3. Grouped by a numeric variable — no category-label setup, verified to render
-genuinely differently from the equivalent `Note`-based call.
+Example 3. Grouped by a numeric variable — no category-label setup, rendering differently from the equivalent `Note`-based call.
 
 ```cpp
 using namespace pluss::pl;

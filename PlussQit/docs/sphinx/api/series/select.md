@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::select(std::int64_t dim, std::int64_t index) const -> Series
+Series Series::select(std::int64_t dim, std::int64_t index) const
 ```
 
 ## What It Does

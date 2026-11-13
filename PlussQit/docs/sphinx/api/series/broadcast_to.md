@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::broadcast_to(pluss::RangeView::Int shape) const -> Series
+Series Series::broadcast_to(pluss::RangeView::Int shape) const
 ```
 
 ## What It Does

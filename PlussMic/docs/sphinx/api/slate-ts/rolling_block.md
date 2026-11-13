@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::rolling_block(pluss::msharp::RangeView::Int windows, const TsRollingBlockOptions& options = {}) const -> DataFrame
+DataFrame TimeSeriesAccessor::rolling_block(pluss::msharp::RangeView::Int windows, const TsRollingBlockOptions& options = {}) const
 ```
 
 ## What It Does

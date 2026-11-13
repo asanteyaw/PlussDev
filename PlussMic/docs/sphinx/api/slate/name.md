@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::name() const -> std::string
-Slate::name(std::string value) const -> Slate
+std::string Slate::name() const
+Slate Slate::name(std::string value) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::ceil() const -> Series
+Series Series::ceil() const
 Series& Series::ceil_()
 ```
 

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::astype(pluss::codem::ScalarType dtype) const -> Stream
+Stream Stream::astype(pluss::codem::ScalarType dtype) const
 ```
 
 ## What It Does

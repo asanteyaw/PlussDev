@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::exp() const -> Slate
+Slate Slate::exp() const
 ```
 
 ## What It Does

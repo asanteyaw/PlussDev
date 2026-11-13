@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::transpose(std::int64_t d0, std::int64_t d1) const -> Series
+Series Series::transpose(std::int64_t d0, std::int64_t d1) const
 Series& Series::transpose_(std::int64_t dim0, std::int64_t dim1) const
 ```
 

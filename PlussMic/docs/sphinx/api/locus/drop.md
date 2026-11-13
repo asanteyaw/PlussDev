@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::drop(std::initializer_list<std::string_view> names) const -> Locus
-Locus::drop(const std::vector<std::string>& names) const -> Locus
+Locus Locus::drop(std::initializer_list<std::string_view> names) const
+Locus Locus::drop(const std::vector<std::string>& names) const
 ```
 
 ## What It Does

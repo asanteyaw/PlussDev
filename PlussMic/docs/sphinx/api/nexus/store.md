@@ -7,9 +7,9 @@
 ## Signatures
 
 ```cpp
-Nexus::store(std::string_view name) const -> std::optional<JoinPlan>
+std::optional<JoinPlan> Nexus::store(std::string_view name) const
 
-Nexus::store(std::string_view name, const JoinPlan& plan) const -> Nexus
+Nexus Nexus::store(std::string_view name, const JoinPlan& plan) const
 Nexus& Nexus::store_(std::string_view name, const JoinPlan& plan)
 ```
 

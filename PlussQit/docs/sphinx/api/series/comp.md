@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::comp(const Series& universe) const -> Series
-Series::comp(const Series& universe, bool sorted) const -> Series
-Series::comp(const Series& universe, bool sorted, bool assume_unique) const -> Series
+Series Series::comp(const Series& universe) const
+Series Series::comp(const Series& universe, bool sorted) const
+Series Series::comp(const Series& universe, bool sorted, bool assume_unique) const
 ```
 
 ## What It Does

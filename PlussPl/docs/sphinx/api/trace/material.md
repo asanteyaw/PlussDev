@@ -1,10 +1,10 @@
 <!-- pluss-hand-authored -->
 
-# Trace::material / Trace::material_profile
+# Trace::material
 
 [Back to Trace API Reference](../../trace_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 MaterialProfile Trace::material_profile() const noexcept
@@ -14,175 +14,211 @@ Trace& Trace::material(MaterialProfile profile) noexcept
 
 ## What It Does
 
-Gets/sets a per-trace surface material profile: `MaterialProfile::Default` (the
-constructor default), `Dull`, `Shiny`, or `Metal`. Each profile is a fixed bundle of
-ambient/diffuse/specular/exponent/specular-color coefficients consumed by the same
-lighting calculation as [`Trace::lighting`](lighting.md).
+Chooses how a lit 3D surface responds to light, and `material_profile()` reads the choice back. The four profiles, `Default`, `Dull`, `Shiny` and `Metal`, are described and compared on the [`MaterialProfile`](../types/MaterialProfile.md) page; the point to know here is that `Default` is exactly `Shiny`, so a surface that never calls `material` already has a glossy highlight, and `Dull` is how to remove it.
 
-```{important} Requires at least one light configured on the pane
-Like lighting() (see its important callout for the full explanation),
-material() only has an observed effect once the owning Pane has at least one
-light added via Pane::lights(). With no lights configured, every material
-profile was directly verified to render byte-for-byte identical output --
-Dull and Metal (the two most different profiles) included. Add a light first
-and the identical toggle produces a genuinely different render, also directly
-verified below. As with lighting(), this was corrected during this
-documentation effort after being initially miscategorized as "no observed
-effect" from testing without any lights configured.
-```
+A material only shows on a lit surface: the trace needs a [lighting mode](lighting.md) other than `None` and the pane needs lights. Without them every profile draws the same figure. It applies to the surface kinds `sheet`, `spire3` and `isoshell`.
 
 ## Parameters
 
 **profile** (`MaterialProfile`)
-    `Default`, `Dull`, `Shiny`, or `Metal`.
+    `Default`, `Dull`, `Shiny` or `Metal`.
 
 ## Returns
 
 `MaterialProfile` (getter)
-    The current material profile.
+    The current profile, `Default` by default.
 
 `Trace&` (setter)
-    A reference to `*this`, for chaining.
+    The same trace, for chaining.
 
 ## Examples
 
-Example 1. **With `pane.lights().sun_key()` configured** (a strong two-light directional
-rig) and `LightingMode::Gouraud`, `MaterialProfile::Dull`.
+Example 1. The four profiles under one sun-like rig with Gouraud lighting. `Default` and `Shiny` are the same; `Dull` has no highlight and `Metal` a tight one on a darker surface.
 
 ```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 12;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-std::vector<double> peak(static_cast<std::size_t>(grid_n * grid_n));
-for (std::int64_t i = 0; i < grid_n; ++i) {
-  for (std::int64_t j = 0; j < grid_n; ++j) {
-    const double x = (i - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    const double y = (j - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    peak[static_cast<std::size_t>(i * grid_n + j)] = std::exp(-(x * x + y * y) * 3.0);
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
   }
-}
-auto z = pluss::make_series(peak, {grid_n, grid_n});
+auto z = pluss::make_series(peak, {n, n});
 
-auto fig = studio("trace_material_with_lights_dull");
-auto& pane = fig.pane3();
+const MaterialProfile profiles[] = {MaterialProfile::Default, MaterialProfile::Dull, MaterialProfile::Shiny, MaterialProfile::Metal};
+const char* names[] = {"Default", "Dull", "Shiny", "Metal"};
+auto fig = studio("material_gallery");
+fig.mosaic(1, 4);
+for (int i = 0; i < 4; ++i) {
+  auto& pane = fig.pane3(names[i]);
+  pane.lights().sun_key();
+  pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(profiles[i]);
+}
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 1](img/material-1-gallery.svg)
+
+Example 2. A material needs light. The four profiles on a surface with no lighting are the same figure: all three comparisons with the first are true.
+
+```cpp
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
+
+std::string svg[4];
+const MaterialProfile profiles[] = {MaterialProfile::Default, MaterialProfile::Dull, MaterialProfile::Shiny, MaterialProfile::Metal};
+for (int i = 0; i < 4; ++i) {
+  auto fig = studio("material_unlit");
+  fig.pane3("Unlit").sheet(coord, coord, z).material(profiles[i]);
+  svg[i] = fig.to_svg();
+}
+std::cout << "Default == Dull:  " << (svg[0] == svg[1]) << "\n";
+std::cout << "Default == Shiny: " << (svg[0] == svg[2]) << "\n";
+std::cout << "Default == Metal: " << (svg[0] == svg[3]) << "\n";
+auto fig = studio("material_unlit_out");
+fig.pane3("Unlit, Metal").sheet(coord, coord, z).material(MaterialProfile::Metal);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+Default == Dull:  1
+Default == Shiny: 1
+Default == Metal: 1
+```
+
+![Output of Example 2](img/material-2-unlit.svg)
+
+Example 3. `Default` is `Shiny`. Under light the two give the same figure (the first comparison is true), while `Dull` and `Metal` differ from `Default` (false). To make a surface matt, ask for `Dull`.
+
+```cpp
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
+
+std::string svg[4];
+const MaterialProfile profiles[] = {MaterialProfile::Default, MaterialProfile::Shiny, MaterialProfile::Dull, MaterialProfile::Metal};
+for (int i = 0; i < 4; ++i) {
+  auto fig = studio("material_default");
+  auto& pane = fig.pane3("p");
+  pane.lights().sun_key();
+  pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(profiles[i]);
+  svg[i] = fig.to_svg();
+}
+std::cout << "Default == Shiny: " << (svg[0] == svg[1]) << "\n";
+std::cout << "Default == Dull:  " << (svg[0] == svg[2]) << "\n";
+std::cout << "Default == Metal: " << (svg[0] == svg[3]) << "\n";
+auto fig = studio("material_default_out");
+auto& pane = fig.pane3("Dull");
 pane.lights().sun_key();
-pane.sheet(coord, coord, z).material(MaterialProfile::Dull).lighting(LightingMode::Gouraud);
-fig.show();
+pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(MaterialProfile::Dull);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/trace-material-3-with-lights-dull.svg)
+### Output
 
-Example 2. The identical scene, `pane.lights().sun_key()` still configured,
-`MaterialProfile::Metal` instead. Verified via direct SVG diff to render **genuinely
-different** output from Example 1 — confirming `material()` does have a real,
-correctly-wired effect once a light exists.
+```text
+Default == Shiny: 1
+Default == Dull:  0
+Default == Metal: 0
+```
+
+![Output of Example 3](img/material-3-default_is_shiny.svg)
+
+Example 4. Reading the profile back. The default reads `Default`; each call stores its profile and returns the trace.
 
 ```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 12;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-std::vector<double> peak(static_cast<std::size_t>(grid_n * grid_n));
-for (std::int64_t i = 0; i < grid_n; ++i) {
-  for (std::int64_t j = 0; j < grid_n; ++j) {
-    const double x = (i - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    const double y = (j - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    peak[static_cast<std::size_t>(i * grid_n + j)] = std::exp(-(x * x + y * y) * 3.0);
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
   }
-}
-auto z = pluss::make_series(peak, {grid_n, grid_n});
+auto z = pluss::make_series(peak, {n, n});
 
-auto fig = studio("trace_material_with_lights_metal");
-auto& pane = fig.pane3();
-pane.lights().sun_key();
-pane.sheet(coord, coord, z).material(MaterialProfile::Metal).lighting(LightingMode::Gouraud);
-fig.show();
+auto fig = studio("material_readback");
+auto& pane = fig.pane3("Material");
+Trace& t = pane.sheet(coord, coord, z);
+std::cout << "default: " << static_cast<int>(t.material_profile()) << "  (Default = 0, Dull = 1, Shiny = 2, Metal = 3)\n";
+for (MaterialProfile m : {MaterialProfile::Dull, MaterialProfile::Shiny, MaterialProfile::Metal}) {
+  t.material(m);
+  std::cout << static_cast<int>(m) << " -> " << static_cast<int>(t.material_profile()) << "\n";
+}
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 2](img/trace-material-4-with-lights-metal.svg)
+### Output
 
-Example 3 (edge case). **No lights configured** — `MaterialProfile::Dull`.
+```text
+default: 0  (Default = 0, Dull = 1, Shiny = 2, Metal = 3)
+1 -> 1
+2 -> 2
+3 -> 3
+```
+
+![Output of Example 4](img/material-4-readback.svg)
+
+Example 5. The same material under two rigs. A `Metal` surface lit by a headlight (a light at the viewer) shows little of its character, and the same surface under the angled `sun_key` shows the highlight: the choice of material and the choice of lights are made together.
 
 ```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 12;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-std::vector<double> peak(static_cast<std::size_t>(grid_n * grid_n));
-for (std::int64_t i = 0; i < grid_n; ++i) {
-  for (std::int64_t j = 0; j < grid_n; ++j) {
-    const double x = (i - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    const double y = (j - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    peak[static_cast<std::size_t>(i * grid_n + j)] = std::exp(-(x * x + y * y) * 3.0);
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
   }
-}
-auto z = pluss::make_series(peak, {grid_n, grid_n});
+auto z = pluss::make_series(peak, {n, n});
 
-auto fig = studio("trace_material_no_lights_dull");
-auto& pane = fig.pane3();
-pane.sheet(coord, coord, z).material(MaterialProfile::Dull);
-fig.show();
+auto fig = studio("material_rigs");
+fig.mosaic(1, 2);
+auto& head = fig.pane3("Metal, headlight");
+head.lights().headlight();
+head.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(MaterialProfile::Metal);
+auto& sun = fig.pane3("Metal, sun_key");
+sun.lights().sun_key();
+sun.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud).material(MaterialProfile::Metal);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 3](img/trace-material-5-no-lights-dull.svg)
-
-Example 4 (edge case). The identical scene, still **no lights configured**,
-`MaterialProfile::Metal` instead. Verified via direct SVG diff to render
-**byte-for-byte identically** to Example 3.
-
-```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 12;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-std::vector<double> peak(static_cast<std::size_t>(grid_n * grid_n));
-for (std::int64_t i = 0; i < grid_n; ++i) {
-  for (std::int64_t j = 0; j < grid_n; ++j) {
-    const double x = (i - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    const double y = (j - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    peak[static_cast<std::size_t>(i * grid_n + j)] = std::exp(-(x * x + y * y) * 3.0);
-  }
-}
-auto z = pluss::make_series(peak, {grid_n, grid_n});
-
-auto fig = studio("trace_material_no_lights_metal");
-auto& pane = fig.pane3();
-pane.sheet(coord, coord, z).material(MaterialProfile::Metal);
-fig.show();
-```
-
-![Output of Example 4](img/trace-material-6-no-lights-metal.svg)
+![Output of Example 5](img/material-5-rigs.svg)
 
 ## Notes
 
-- Both getter and setter are `noexcept`.
-- The gating dependency on [`Pane::lights()`](../pane/lights.md) is the single most
-  important fact about this setting — see the important callout above.
-- `MaterialProfile::Default` and `MaterialProfile::Shiny` share the exact same underlying
-  coefficients in the renderer (both `{ambient=0.3, diffuse=0.6, specular=0.9,
-  exponent=20.0, specular_color=1.0}`) — expect `Default` and `Shiny` to render
-  identically to each other under any lighting configuration; this wasn't separately
-  isolated as its own example here, but follows directly from reading the renderer's
-  material-coefficient table.
+- `material` is `noexcept` and accepts every value.
+- Material and lighting are per trace; the lights are per pane ([`LightRig`](../types/LightRig.md)).
 
 ## See Also
 
-- [`Pane::lights`](../pane/lights.md): must have at least one light added for this setting
-  to have any observed effect — read this page first if `material()` appears to do
-  nothing.
-- [`Trace::lighting`](lighting.md): the paired lighting-response control with the
-  identical `Pane::lights()` gating dependency.
-- [`Trace::shade`](shade.md): the one 3D-surface-appearance control on `Trace` confirmed
-  to have an observed effect regardless of whether any lights are configured.
+- [`MaterialProfile`](../types/MaterialProfile.md): the four profiles, compared.
+- [`Trace::lighting`](lighting.md), [`Trace::shade`](shade.md): the other appearance options.
+- [`LightRig`](../types/LightRig.md): the lights a material responds to.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="lighting.html">
     <span class="label">Previous</span>
     <span class="title">lighting</span>
   </a>
-  <a class="next-link" href="transparent.html">
+  <a class="next-link" href="palette.html">
     <span class="label">Next</span>
-    <span class="title">transparent</span>
+    <span class="title">palette</span>
   </a>
 </div>

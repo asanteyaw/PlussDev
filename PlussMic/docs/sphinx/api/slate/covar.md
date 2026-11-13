@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::covar(const Slate& other, const StatisticOptions& options = {}) const -> SlateValue
+SlateValue Slate::covar(const Slate& other, const StatisticOptions& options = {}) const
 ```
 
 ## What It Does

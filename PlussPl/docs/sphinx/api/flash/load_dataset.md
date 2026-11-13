@@ -87,7 +87,7 @@ Named accessors:
 Related pages:
 
 - [`flash::Dataset`](Dataset.md)
-- [`flash::Dataset::from_frame`](dataset_from_frame.md)
+- [`flash::Dataset::from_table`](dataset_from_table.md)
 - [`flash::Dataset::frame`](dataset_frame.md)
 - [`flash::Dataset::nrows`](dataset_nrows.md)
 - [`flash::Dataset::ncols`](dataset_ncols.md)
@@ -100,7 +100,7 @@ sample datasets:
 
 - `tips` — 240 rows, 9 columns. Restaurant-style mixed numeric/categorical data.
 - `flights` — 144 rows, 8 columns. Seasonal airline time-series sample data.
-- `petals` — 150 rows, 8 columns. Compact class-labelled measurement data.
+- `petals` — 150 rows, 8 columns. Compact category-labelled measurement data.
 - `exams` — 180 rows, 10 columns. Assessment and grade-policy demonstrations.
 - `retail_daily` — 3,650 rows, 11 columns. Daily retail panel with promotions and seasonality.
 - `weather_hourly` — 120,000 rows, 12 columns. Large hourly temporal dataset for long-run demos.
@@ -261,14 +261,14 @@ Output plot:
   - invalid entries are surfaced as `NaN` in the returned numeric series
 - Name lookups are linear over the grouped `Note` name vectors. That is fine for
   curated sample datasets and modest-width plotting frames.
-- When PlussMic is available, [`flash::Dataset::from_frame`](dataset_from_frame.md) and
+- When PlussMic is available, [`flash::Dataset::from_table`](dataset_from_table.md) and
   [`flash::Dataset::frame`](dataset_frame.md) provide DataFrame interop on top of this
   same `Dataset` structure.
 
 ## See Also
 
 - [`flash::get_dataset_names`](get_dataset_names.md): discover the curated registry.
-- [`flash::Dataset::from_frame`](dataset_from_frame.md): export a `DataFrame` into this
+- [`flash::Dataset::from_table`](dataset_from_table.md): export a `DataFrame` into this
   grouped dataset surface.
 - [`flash::Dataset::frame`](dataset_frame.md): rebuild a rectangular `DataFrame` from a
   loaded dataset.

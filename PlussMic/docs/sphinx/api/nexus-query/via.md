@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusTraverse::via(std::string_view to, JoinHow how = JoinHow::Left) const -> NexusTraverse
+NexusTraverse NexusTraverse::via(std::string_view to, JoinHow how = JoinHow::Left) const
 ```
 
 ## What It Does

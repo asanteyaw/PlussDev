@@ -8,11 +8,11 @@
 ## Signatures
 
 ```cpp
-Archive::fillnull(double value) const -> Archive
-Archive::fillnull(std::string_view value) const -> Archive
-Archive::fillnull(const char* value) const -> Archive
-Archive::fillnull(const pluss::Timeline& value) const -> Archive
-Archive::fillnull(const pluss::Duration& value) const -> Archive
+Archive Archive::fillnull(double value) const
+Archive Archive::fillnull(std::string_view value) const
+Archive Archive::fillnull(const char* value) const
+Archive Archive::fillnull(const pluss::Timeline& value) const
+Archive Archive::fillnull(const pluss::Duration& value) const
 ```
 
 ## What It Does

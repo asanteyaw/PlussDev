@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::isnat_scalar() -> bool
+bool Timeline::isnat_scalar()
 ```
 
 ## What It Does

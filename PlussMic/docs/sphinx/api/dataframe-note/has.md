@@ -8,8 +8,8 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::has(std::string_view needle,
-                            const TextOptions& options = {}) const -> DataFrame
+DataFrame DataFrameNoteAccessor::has(std::string_view needle,
+                                      const TextOptions& options = {}) const
 ```
 
 ## What It Does

@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::diagonal() const -> Series
-Series::diagonal(std::int64_t diagonal) const -> Series
-Series::diagonal(std::int64_t diagonal, std::int64_t dim1, std::int64_t dim2) const -> Series
+Series Series::diagonal() const
+Series Series::diagonal(std::int64_t diagonal) const
+Series Series::diagonal(std::int64_t diagonal, std::int64_t dim1, std::int64_t dim2) const
 ```
 
 ## What It Does

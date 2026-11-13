@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::hour() const -> Slate
+Slate SlateTimelineAccessor::hour() const
 ```
 
 ## What It Does

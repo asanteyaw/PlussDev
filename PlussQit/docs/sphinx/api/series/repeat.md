@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::repeat(pluss::RangeView::Int reps) const -> Series
+Series Series::repeat(pluss::RangeView::Int reps) const
 ```
 
 ## What It Does

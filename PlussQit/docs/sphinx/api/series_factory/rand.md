@@ -7,17 +7,17 @@
 ## Signature
 
 ```cpp
-pluss::series::rand(sizes,
-                    ScalarType dtype = Float32,
-                    std::uint64_t seed = 0) -> Series
+Series pluss::series::rand(sizes,
+                           ScalarType dtype = Float32,
+                           std::uint64_t seed = 0)
 
-pluss::series::rand(sizes,
-                    Config config,
-                    std::uint64_t seed = 0) -> Series
+Series pluss::series::rand(sizes,
+                           Config config,
+                           std::uint64_t seed = 0)
 
-pluss::series::rand(sizes,
-                    std::uint64_t seed,
-                    opts...) -> Series
+Series pluss::series::rand(sizes,
+                           std::uint64_t seed,
+                           opts...)
 ```
 
 ## What It Builds

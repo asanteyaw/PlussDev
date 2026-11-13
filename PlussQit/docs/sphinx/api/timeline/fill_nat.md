@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::fill_nat(const Timeline& value) -> Timeline
+Timeline Timeline::fill_nat(const Timeline& value)
 ```
 
 ## What It Does

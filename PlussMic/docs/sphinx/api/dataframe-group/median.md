@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameGrouped::median() const -> DataFrame
-DataFrameGrouped::median(std::string_view feature) const -> DataFrame
-DataFrameGrouped::median(std::initializer_list<std::string_view> features) const -> DataFrame
-DataFrameGrouped::median(pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrameGrouped::median() const
+DataFrame DataFrameGrouped::median(std::string_view feature) const
+DataFrame DataFrameGrouped::median(std::initializer_list<std::string_view> features) const
+DataFrame DataFrameGrouped::median(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::merge(const Catalog& other, std::string_view on, std::string_view how = "inner") const -> Catalog
+Catalog Catalog::merge(const Catalog& other, std::string_view on, std::string_view how = "inner") const
 ```
 
 ## What It Does

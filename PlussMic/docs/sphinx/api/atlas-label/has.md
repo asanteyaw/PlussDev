@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::has() const -> bool
+bool AtlasLabelAccessor::has() const
 ```
 
 ## What It Does

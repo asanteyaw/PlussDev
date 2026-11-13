@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::max() const -> Stream
+Stream Stream::max() const
 ```
 
 ## What It Does

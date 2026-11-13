@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-ContingencyTable::ndim() const -> std::int64_t
+std::int64_t ContingencyTable::ndim() const
 ```
 
 ## What It Does

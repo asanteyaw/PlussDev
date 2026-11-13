@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::amax() const -> Series
-Series::amax(std::int64_t dim) const -> Series
-Series::amax(std::int64_t dim, bool keepdim) const -> Series
+Series Series::amax() const
+Series Series::amax(std::int64_t dim) const
+Series Series::amax(std::int64_t dim, bool keepdim) const
 ```
 
 ## What It Does

@@ -8,9 +8,9 @@
 ## Signature
 
 ```cpp
-Slate::pad(std::int64_t width,
-            TextAlign align = TextAlign::Left,
-            char fill = ' ') const -> Slate
+Slate Slate::pad(std::int64_t width,
+                  TextAlign align = TextAlign::Left,
+                  char fill = ' ') const
 ```
 
 ## What It Does

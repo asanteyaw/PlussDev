@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::signbit() const -> Series
+Series Series::signbit() const
 Series& Series::signbit_() const
 ```
 

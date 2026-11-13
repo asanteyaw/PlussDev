@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::depth() const -> std::int64_t
+std::int64_t Atlas::depth() const
 ```
 
 ## What It Does

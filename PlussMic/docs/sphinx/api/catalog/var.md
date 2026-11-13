@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Catalog::var() const -> Catalog
-Catalog::var(pluss::kindle::ReduceAxis axis) const -> Catalog
-Catalog::var(const pluss::kindle::CatalogReduceOptions& options) const -> Catalog
+Catalog Catalog::var() const
+Catalog Catalog::var(pluss::kindle::ReduceAxis axis) const
+Catalog Catalog::var(const pluss::kindle::CatalogReduceOptions& options) const
 ```
 
 ## What It Does

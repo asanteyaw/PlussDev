@@ -8,14 +8,14 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::scatter(std::string_view x_feature,
-                                std::string_view y_feature,
-                                std::optional<std::string_view> hue_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
+                                                  std::string_view y_feature,
+                                                  std::optional<std::string_view> hue_feature = std::nullopt) const
 
-DataFramePlotAccessor::scatter(std::string_view x_feature,
-                                std::string_view y_feature,
-                                std::optional<std::string_view> hue_feature,
-                                const ScatterPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::scatter(std::string_view x_feature,
+                                                  std::string_view y_feature,
+                                                  std::optional<std::string_view> hue_feature,
+                                                  const ScatterPlotOptions& options) const
 ```
 
 ## What It Does

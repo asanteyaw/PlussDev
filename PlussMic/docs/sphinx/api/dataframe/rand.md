@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::rand(const DataFrame& other) const -> DataFrame
-DataFrame::rand(const Slate& other) const -> DataFrame
+DataFrame DataFrame::rand(const DataFrame& other) const
+DataFrame DataFrame::rand(const Slate& other) const
 ```
 
 ## What It Does

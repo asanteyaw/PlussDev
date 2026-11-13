@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::nextafter(const Series& other) const -> Series
+Series Series::nextafter(const Series& other) const
 Series& Series::nextafter_(const Series& other)
 Series& Series::nextafter_(const Series& rhs) const
 ```

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::label() const -> const std::optional<pluss::table::Slate>&
+const std::optional<pluss::table::Slate>& Stream::label() const
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Atlas::show(const display::DisplayOptions& options = {}) const -> void
-Atlas::show(std::ostream& os, const display::DisplayOptions& options = {}) const -> void
+void Atlas::show(const display::DisplayOptions& options = {}) const
+void Atlas::show(std::ostream& os, const display::DisplayOptions& options = {}) const
 ```
 
 ## What It Does

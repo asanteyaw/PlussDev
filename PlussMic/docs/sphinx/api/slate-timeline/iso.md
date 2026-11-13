@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::iso() const -> Slate
+Slate SlateTimelineAccessor::iso() const
 ```
 
 ## What It Does

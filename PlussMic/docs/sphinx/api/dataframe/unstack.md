@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::unstack(const UnstackOptions& options) const -> DataFrame
-DataFrame::unstack(std::string_view label) const  // shorthand for UnstackOptions{.label = label}
+DataFrame DataFrame::unstack(const UnstackOptions& options) const
+DataFrame DataFrame::unstack(std::string_view label) const  // shorthand for UnstackOptions{.label = label}
 ```
 
 ## What It Does

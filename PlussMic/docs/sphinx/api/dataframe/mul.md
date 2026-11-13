@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrame::mul(double other) const -> DataFrame
-DataFrame::mul(const DataFrame& other) const -> DataFrame
-DataFrame::mul(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::mul(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::mul(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::mul(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame DataFrame::mul(double other) const
+DataFrame DataFrame::mul(const DataFrame& other) const
+DataFrame DataFrame::mul(const DataFrame& other, const AlignOptions& options) const
+DataFrame DataFrame::mul(const Slate& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::mul(const Slate& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::mul(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does

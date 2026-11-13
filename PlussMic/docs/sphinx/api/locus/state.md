@@ -7,12 +7,12 @@
 ## Signature
 
 ```cpp
-Locus::defined() const noexcept -> bool
-Locus::unique() const noexcept -> bool
-Locus::empty() const -> bool
-Locus::ntables() const -> std::int64_t
-Locus::nrelationships() const -> std::int64_t
-Locus::shape() const -> std::pair<std::int64_t, std::int64_t>
+bool Locus::defined() const noexcept
+bool Locus::unique() const noexcept
+bool Locus::empty() const
+std::int64_t Locus::ntables() const
+std::int64_t Locus::nrelationships() const
+std::pair<std::int64_t, std::int64_t> Locus::shape() const
 ```
 
 ## What It Does

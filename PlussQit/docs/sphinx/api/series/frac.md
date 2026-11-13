@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::frac() const -> Series
+Series Series::frac() const
 Series& Series::frac_()
 Series& Series::frac_() const
 ```

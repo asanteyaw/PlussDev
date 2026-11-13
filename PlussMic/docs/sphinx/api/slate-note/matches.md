@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::matches(std::string_view pattern, bool full = false) const -> Slate
+Slate SlateNoteAccessor::matches(std::string_view pattern, bool full = false) const
 ```
 
 ## What It Does

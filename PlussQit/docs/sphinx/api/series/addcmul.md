@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::addcmul(const Series& tensor1, const Series& tensor2,
-                double value = 1.0) const -> Series
+Series Series::addcmul(const Series& tensor1, const Series& tensor2,
+                       double value = 1.0) const
 Series& Series::addcmul_(const Series& tensor1, const Series& tensor2, double value=1.0) const
 ```
 

@@ -7,13 +7,13 @@
 ## Signature
 
 ```cpp
-pluss::series::randperm(std::int64_t n,
-                        ScalarType dtype = ScalarType::Int64,
-                        std::uint64_t seed = 0) -> Series
+Series pluss::series::randperm(std::int64_t n,
+                               ScalarType dtype = ScalarType::Int64,
+                               std::uint64_t seed = 0)
 
-pluss::series::randperm(std::int64_t n,
-                        Config config,
-                        std::uint64_t seed = 0) -> Series
+Series pluss::series::randperm(std::int64_t n,
+                               Config config,
+                               std::uint64_t seed = 0)
 ```
 
 ## What It Builds

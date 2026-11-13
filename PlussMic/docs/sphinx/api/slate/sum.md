@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::sum() const -> SlateValue
+SlateValue Slate::sum() const
 ```
 
 ## What It Does

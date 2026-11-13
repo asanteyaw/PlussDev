@@ -8,11 +8,11 @@
 ## Signatures
 
 ```cpp
-Catalog::fillnull(double value) const -> Catalog
-Catalog::fillnull(std::string_view value) const -> Catalog
-Catalog::fillnull(const char* value) const -> Catalog
-Catalog::fillnull(const pluss::Timeline& value) const -> Catalog
-Catalog::fillnull(const pluss::Duration& value) const -> Catalog
+Catalog Catalog::fillnull(double value) const
+Catalog Catalog::fillnull(std::string_view value) const
+Catalog Catalog::fillnull(const char* value) const
+Catalog Catalog::fillnull(const pluss::Timeline& value) const
+Catalog Catalog::fillnull(const pluss::Duration& value) const
 ```
 
 ## What It Does

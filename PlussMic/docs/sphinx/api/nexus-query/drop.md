@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-NexusTraverse::drop(std::initializer_list<std::string_view> features) const -> NexusTraverse
-NexusTraverse::drop(pluss::msharp::RangeView::Of<std::string_view> features) const -> NexusTraverse
+NexusTraverse NexusTraverse::drop(std::initializer_list<std::string_view> features) const
+NexusTraverse NexusTraverse::drop(pluss::msharp::RangeView::Of<std::string_view> features) const
 template <detail::StringViewNameRange NameRange>
-NexusTraverse::drop(const NameRange& features) const -> NexusTraverse
+NexusTraverse NexusTraverse::drop(const NameRange& features) const
 ```
 
 ## What It Does

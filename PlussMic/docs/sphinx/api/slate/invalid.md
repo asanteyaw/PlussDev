@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::invalid() const -> Slate
+Slate Slate::invalid() const
 ```
 
 ## What It Does

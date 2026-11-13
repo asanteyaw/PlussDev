@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::ncases() const -> std::int64_t
+std::int64_t Atlas::ncases() const
 ```
 
 ## What It Does

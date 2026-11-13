@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::squeeze() const -> Series
-Series::squeeze(std::int64_t dim) const -> Series
+Series Series::squeeze() const
+Series Series::squeeze(std::int64_t dim) const
 Series& Series::squeeze_() const
 Series& Series::squeeze_(std::int64_t dim) const
 ```

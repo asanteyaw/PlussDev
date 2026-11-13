@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::month_start() const -> Atlas
+Atlas AtlasTimelineAccessor::month_start() const
 ```
 
 ## What It Does

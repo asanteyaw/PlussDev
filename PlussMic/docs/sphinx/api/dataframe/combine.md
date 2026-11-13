@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::combine(const DataFrame& other) const -> DataFrame
-DataFrame::combine(const DataFrame& other, const CombineSpec& spec) const -> DataFrame
+DataFrame DataFrame::combine(const DataFrame& other) const
+DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) const
 ```
 
 ## What It Does

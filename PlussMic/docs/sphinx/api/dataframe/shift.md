@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::shift(std::int64_t periods = 1) const -> DataFrame
+DataFrame DataFrame::shift(std::int64_t periods = 1) const
 ```
 
 ## What It Does

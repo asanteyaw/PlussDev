@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsAccessor::sort(bool ascending = true, bool nulls_last = true) const -> DataFrame
+DataFrame DataFrameTsAccessor::sort(bool ascending = true, bool nulls_last = true) const
 ```
 
 ## What It Does

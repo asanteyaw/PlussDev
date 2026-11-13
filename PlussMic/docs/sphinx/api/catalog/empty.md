@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::empty() const -> bool
+bool Catalog::empty() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::relationships() const -> const std::vector<Relationship>&
+const std::vector<Relationship>& Nexus::relationships() const
 ```
 
 ## What It Does

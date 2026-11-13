@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::length() const -> std::int64_t
+std::int64_t DataFrame::length() const
 ```
 
 ## What It Does

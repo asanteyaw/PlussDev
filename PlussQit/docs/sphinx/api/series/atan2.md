@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::atan2(const Series& other) const -> Series
+Series Series::atan2(const Series& other) const
 Series& Series::atan2_(const Series& other)
 Series& Series::atan2_(const Series& rhs) const
 ```

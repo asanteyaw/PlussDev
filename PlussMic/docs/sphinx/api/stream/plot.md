@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Stream::plot() const -> StreamPlotAccessor
-Stream::plot(const pluss::table::DataFramePlotOptions& options) const -> StreamPlotAccessor
+StreamPlotAccessor Stream::plot() const
+StreamPlotAccessor Stream::plot(const pluss::table::DataFramePlotOptions& options) const
 ```
 
 ## What It Does

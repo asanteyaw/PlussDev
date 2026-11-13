@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::pie(std::string_view value_feature,
-                            std::optional<std::string_view> label_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::pie(std::string_view value_feature,
+                                              std::optional<std::string_view> label_feature = std::nullopt) const
 
-DataFramePlotAccessor::pie(std::string_view value_feature,
-                            std::optional<std::string_view> label_feature,
-                            const PiePlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::pie(std::string_view value_feature,
+                                              std::optional<std::string_view> label_feature,
+                                              const PiePlotOptions& options) const
 ```
 
 ## What It Does

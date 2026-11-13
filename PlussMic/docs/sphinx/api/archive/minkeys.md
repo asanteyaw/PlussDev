@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::minkeys() const -> std::int64_t
+std::int64_t Archive::minkeys() const
 ```
 
 ## What It Does

@@ -8,19 +8,19 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                                     std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                                       std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                                     std::optional<std::string_view> x_feature,
-                                     const AreaStackedPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                                       std::optional<std::string_view> x_feature,
+                                                       const AreaStackedPlotOptions& options) const
 
-DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features,
-                                     std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features,
+                                                       std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features,
-                                     std::optional<std::string_view> x_feature,
-                                     const AreaStackedPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::area_stacked(std::initializer_list<std::string_view> y_features,
+                                                       std::optional<std::string_view> x_feature,
+                                                       const AreaStackedPlotOptions& options) const
 ```
 
 ## What It Does

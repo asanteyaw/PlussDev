@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrame::pow(double other) const -> DataFrame
-DataFrame::pow(const DataFrame& other) const -> DataFrame
-DataFrame::pow(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::pow(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::pow(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::pow(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame DataFrame::pow(double other) const
+DataFrame DataFrame::pow(const DataFrame& other) const
+DataFrame DataFrame::pow(const DataFrame& other, const AlignOptions& options) const
+DataFrame DataFrame::pow(const Slate& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::pow(const Slate& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::pow(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does

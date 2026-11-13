@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::head(std::int64_t n = 5) const -> Archive
+Archive Archive::head(std::int64_t n = 5) const
 ```
 
 ## What It Does

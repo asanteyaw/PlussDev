@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features = {}) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 
-DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
-                                       ScatterMatrixTriangle triangle) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
+                                                         ScatterMatrixTriangle triangle) const
 
-DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
-                                       const ScatterMatrixPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> features,
+                                                         const ScatterMatrixPlotOptions& options) const
 ```
 
 ## What It Does

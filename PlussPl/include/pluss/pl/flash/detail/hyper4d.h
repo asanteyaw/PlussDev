@@ -357,7 +357,7 @@ namespace detail {
 inline void save_studio_frame(const Studio& studio, const std::filesystem::path& path, const HyperFrameExportOptions& options) {
   switch (options.format) {
     case AnimationFrameFormat::Png:
-      studio.save_png(path.string(), std::max<std::int64_t>(72, options.dpi));
+      studio.save_png(path.string(), options.dpi);  // save_png checks the resolution
       return;
     case AnimationFrameFormat::Svg:
       studio.save_svg(path.string());
@@ -456,7 +456,7 @@ Trace& cloud4(
     py.push_back(point.y);
     pz.push_back(point.z);
   }
-  const double size = std::max(1.0, options.point_size);
+  const double size = options.point_size;  // a marker never draws below a visible dot, whatever its size
   return pane.cloud3(
       ::pluss::make_series(px),
       ::pluss::make_series(py),

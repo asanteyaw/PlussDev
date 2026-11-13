@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::arrange(bool ascending = true, bool nulls_last = true) const -> Slate
+Slate Slate::arrange(bool ascending = true, bool nulls_last = true) const
 ```
 
 ## What It Does

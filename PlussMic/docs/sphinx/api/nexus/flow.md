@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::flow(const std::function<Nexus(const Nexus&)>& fn) const -> Nexus
+Nexus Nexus::flow(const std::function<Nexus(const Nexus&)>& fn) const
 ```
 
 ## What It Does

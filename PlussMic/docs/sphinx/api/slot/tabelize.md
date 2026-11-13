@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Slot::tabelize() -> pluss::table::Slate
+pluss::table::Slate Slot::tabelize()
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-ContingencyTable::freq() const -> ContingencyTable
+ContingencyTable ContingencyTable::freq() const
 ```
 
 ## What It Does

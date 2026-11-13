@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::scatter(const Slate& x) const -> pluss::pl::Studio
-SlatePlotAccessor::scatter(const Slate& x, const ScatterPlotOptions& options) const -> pluss::pl::Studio
-SlatePlotAccessor::scatter(const Slate& x, const Slate& hue) const -> pluss::pl::Studio
-SlatePlotAccessor::scatter(const Slate& x, const Slate& hue, const ScatterPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::scatter(const Slate& x) const
+pluss::pl::Studio SlatePlotAccessor::scatter(const Slate& x, const ScatterPlotOptions& options) const
+pluss::pl::Studio SlatePlotAccessor::scatter(const Slate& x, const Slate& hue) const
+pluss::pl::Studio SlatePlotAccessor::scatter(const Slate& x, const Slate& hue, const ScatterPlotOptions& options) const
 ```
 
 ## What It Does

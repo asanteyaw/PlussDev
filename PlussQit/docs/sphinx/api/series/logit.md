@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::logit(double eps) const -> Series
+Series Series::logit(double eps) const
 Series& Series::logit_(double eps)
 Series& Series::logit_(double eps) const
 ```

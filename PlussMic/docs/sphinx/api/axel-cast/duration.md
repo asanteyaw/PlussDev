@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-AxelCastAccessor::duration() -> Axel
+Axel AxelCastAccessor::duration()
 ```
 
 ## What It Does

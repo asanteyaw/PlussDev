@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsAccessor::diff(std::int64_t periods = 1) const -> Atlas
+Atlas AtlasTsAccessor::diff(std::int64_t periods = 1) const
 ```
 
 ## What It Does

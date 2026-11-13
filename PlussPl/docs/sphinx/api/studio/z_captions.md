@@ -12,10 +12,9 @@ const std::map<std::string, std::string>& Studio::z_captions() const noexcept
 
 ## What It Does
 
-The z-axis counterpart of [`x_captions`](x_captions.md)/[`y_captions`](y_captions.md):
-returns the full map of registered z-axis captions — every `group → text` pair set via
-[`z_caption(group, text)`](z_caption.md), keyed by group string, sorted lexicographically.
-Empty if `z_caption()` has never been called.
+Returns every shared z caption that [`z_caption`](z_caption.md) has registered, as a map from group name to text, sorted by group name (not by the order of the calls). It is what is registered, not what is drawn: a caption whose group no visible pane belongs to, and a caption with empty text, are in the map but draw nothing and take no room. The map is empty for a figure that never called `z_caption`, and a caption cannot be removed, only replaced (an empty text draws nothing).
+
+The reference is to the figure's own map, so it shows later calls and should be copied when a snapshot is needed.
 
 ## Parameters
 
@@ -24,57 +23,90 @@ Empty if `z_caption()` has never been called.
 ## Returns
 
 `const std::map<std::string, std::string>&`
-    A reference to the figure's internal z-caption map.
+    The registered captions, keyed by group.
 
 ## Examples
 
-Example 1. Empty by default, then populated.
+Example 1. Reading the registry. Empty by default; each group is one entry, sorted by group name, and calling again for a group replaces its text.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("z_captions_check");
-std::cout << fig.z_captions().empty() << "\n";
-
-fig.z_caption("shared_z", "Depth (m)");
-std::cout << fig.z_captions().size() << "\n";
-std::cout << fig.z_captions().at("shared_z") << "\n";
-
-auto& pane = fig.pane3();
-pane.path3(std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
-fig.show();
+auto fig = studio("z_captions_read");
+std::cout << "empty: " << fig.z_captions().empty() << "\n";
+fig.z_caption("zeta", "last group").z_caption("alpha", "first group");
+fig.z_caption("alpha", "first group, revised");
+for (const auto& [group, text] : fig.z_captions()) std::cout << group << " => " << text << "\n";
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
-1
-Depth (m)
+empty: 1
+alpha => first group, revised
+zeta => last group
 ```
 
-![Output of Example 1](img/z_captions-1-check.svg)
+![Output of Example 1](img/z_captions-1-read.svg)
+
+Example 2. Registered is not drawn. A caption for a group nobody joined is in the map while the figure is exactly the figure without it; a pane joining the group makes it appear.
+
+```cpp
+auto build = [](bool join) {
+  auto fig = studio("z_captions_drawn");
+  fig.z_caption("g", "caption text");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  if (join) pane.align_z("g");
+  return fig;
+};
+auto alone = build(false), joined = build(true);
+std::cout << "registered either way: " << alone.z_captions().size() << " and " << joined.z_captions().size() << "\n";
+std::cout << "drawn without the group: " << (alone.to_svg().find("caption text") != std::string::npos) << ", with it: " << (joined.to_svg().find("caption text") != std::string::npos) << "\n";
+joined.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+registered either way: 1 and 1
+drawn without the group: 0, with it: 1
+```
+
+![Output of Example 2](img/z_captions-2-registered_not_drawn.svg)
+
+Example 3. The three axes are separate registries. A caption set for one axis is not in the maps of the others.
+
+```cpp
+auto fig = studio("z_captions_axes");
+fig.z_caption("g", "z only");
+std::cout << "x: " << fig.x_captions().size() << ", y: " << fig.y_captions().size() << ", z: " << fig.z_captions().size() << "\n";
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+x: 0, y: 0, z: 1
+```
+
+![Output of Example 3](img/z_captions-3-axes_separate.svg)
 
 ## Notes
 
-- `noexcept`.
-- Returns a reference into the `Studio`'s own storage.
-- Same caveats as [`x_captions`](x_captions.md): sorted by key, doesn't reflect whether any
-  pane's `align_z` actually matches.
+- `noexcept`, and has no effect on the figure.
+- Groups are matched exactly and case-sensitively against the names panes pass to [`Pane::align_z`](../pane/align_z.md).
 
 ## See Also
 
-- [`Studio::z_caption`](z_caption.md): the only way to add or overwrite entries.
-- [`Studio::x_captions`](x_captions.md) / [`y_captions`](y_captions.md): the x- and y-axis
-  equivalents.
+- [`Studio::z_caption`](z_caption.md): registers a caption and says when it is drawn.
+- [`Pane::align_z`](../pane/align_z.md): how a pane joins a group.
+- [`Studio::x_captions`](x_captions.md), [`y_captions`](y_captions.md), [`z_captions`](z_captions.md): the three axes.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="z_caption.html">
     <span class="label">Previous</span>
     <span class="title">z_caption</span>
-  </a>
-  <a class="next-link" href="row_title.html">
-    <span class="label">Next</span>
-    <span class="title">row_title</span>
   </a>
 </div>

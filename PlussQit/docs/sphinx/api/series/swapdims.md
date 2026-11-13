@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::swapdims(std::int64_t axis0, std::int64_t axis1) const -> Series
+Series Series::swapdims(std::int64_t axis0, std::int64_t axis1) const
 Series& Series::swapdims_(std::int64_t dim0, std::int64_t dim1) const
 ```
 

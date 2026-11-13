@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::transform(const std::function<Stream(const Stream&)>& fn) const -> Catalog
+Catalog Catalog::transform(const std::function<Stream(const Stream&)>& fn) const
 ```
 
 ## What It Does

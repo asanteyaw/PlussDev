@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::isnull() const -> Archive
+Archive Archive::isnull() const
 ```
 
 ## What It Does

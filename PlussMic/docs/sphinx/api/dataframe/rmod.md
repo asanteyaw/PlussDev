@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::rmod(double other) const -> DataFrame
+DataFrame DataFrame::rmod(double other) const
 ```
 
 ## What It Does

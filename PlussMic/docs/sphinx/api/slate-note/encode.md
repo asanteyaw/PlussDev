@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::encode(std::string_view encoding = "base64") const -> Slate
+Slate SlateNoteAccessor::encode(std::string_view encoding = "base64") const
 ```
 
 ## What It Does

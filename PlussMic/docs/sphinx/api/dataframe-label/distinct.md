@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::distinct(bool dropnull = true) const -> Slate
+Slate DataFrameLabelAccessor::distinct(bool dropnull = true) const
 ```
 
 ## What It Does

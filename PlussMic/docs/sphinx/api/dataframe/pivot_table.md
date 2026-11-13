@@ -8,30 +8,30 @@
 ## Signatures
 
 ```cpp
-DataFrame::pivot_table(std::string_view case_feature,
-                       std::string_view feature_feature,
-                       std::string_view value_feature,
-                       GroupOp op = GroupOp::Mean,
-                       bool dropnull_keys = true,
-                       bool render = false) const -> DataFrameView
+DataFrameView DataFrame::pivot_table(std::string_view case_feature,
+                                     std::string_view feature_feature,
+                                     std::string_view value_feature,
+                                     GroupOp op = GroupOp::Mean,
+                                     bool dropnull_keys = true,
+                                     bool render = false) const
 
-DataFrame::pivot_table(const PivotTableOptions& options) const -> DataFrameView
+DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const
 
-DataFrame::pivot_table(pluss::msharp::RangeView::Of<std::string_view> index_features,
-                       pluss::msharp::RangeView::Of<std::string_view> column_features,
-                       pluss::msharp::RangeView::Of<std::string_view> value_features,
-                       GroupOp op = GroupOp::Mean,
-                       bool dropna = true,
-                       bool render = false,
-                       bool sort = true) const -> DataFrameView
+DataFrameView DataFrame::pivot_table(pluss::msharp::RangeView::Of<std::string_view> index_features,
+                                     pluss::msharp::RangeView::Of<std::string_view> column_features,
+                                     pluss::msharp::RangeView::Of<std::string_view> value_features,
+                                     GroupOp op = GroupOp::Mean,
+                                     bool dropna = true,
+                                     bool render = false,
+                                     bool sort = true) const
 
-DataFrame::pivot_table(std::initializer_list<std::string_view> index_features,
-                       std::initializer_list<std::string_view> column_features,
-                       std::initializer_list<std::string_view> value_features,
-                       GroupOp op = GroupOp::Mean,
-                       bool dropna = true,
-                       bool render = false,
-                       bool sort = true) const -> DataFrameView
+DataFrameView DataFrame::pivot_table(std::initializer_list<std::string_view> index_features,
+                                     std::initializer_list<std::string_view> column_features,
+                                     std::initializer_list<std::string_view> value_features,
+                                     GroupOp op = GroupOp::Mean,
+                                     bool dropna = true,
+                                     bool render = false,
+                                     bool sort = true) const
 ```
 
 ## What It Is

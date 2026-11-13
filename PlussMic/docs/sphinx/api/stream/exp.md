@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::exp() const -> Stream
+Stream Stream::exp() const
 ```
 
 ## What It Does

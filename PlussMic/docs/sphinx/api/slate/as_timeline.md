@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::as_timeline() const -> const pluss::Timeline&
+const pluss::Timeline& Slate::as_timeline() const
 ```
 
 ## What It Does

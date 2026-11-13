@@ -1,207 +1,198 @@
 <!-- pluss-hand-authored -->
 
-# Pane::visible / hide / show
+# Pane::visible
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Pane& Pane::visible(bool enable) noexcept   // setter -- enable is now required
-bool Pane::visible() const noexcept          // getter -- always safe to call bare
-Pane& Pane::hide() noexcept                   // shorthand for visible(false)
-Pane& Pane::show() noexcept                   // shorthand for visible(true)
+Pane& Pane::visible(bool enable) noexcept
+bool Pane::visible() const noexcept
+Pane& Pane::hide() noexcept
+Pane& Pane::show() noexcept
 ```
 
 ## What It Does
 
-Controls whether this pane renders at all — `false` skips it entirely at render time
-(useful for temporarily disabling a pane in a multi-pane mosaic without removing it from
-the figure). `hide()` and `show()` are pure shorthands: `hide()` is exactly
-`visible(false)`, `show()` is exactly `visible(true)`.
+Controls whether the pane is drawn at all. A hidden pane draws nothing: no title, no axes, no traces, no legend entries. It keeps its cell in a [`mosaic`](../studio/mosaic.md), so the other panes stay where they are and the cell is left empty. Its data and settings are kept, and showing it again restores it exactly.
 
-```{important} Fixed: enable is now required, not defaulted
-Earlier revisions declared the setter as visible(bool enable = true), sharing its
-name with a separate const getter overload. On a non-const Pane&, C++ overload
-resolution prefers a non-const member function over a const one for a
-non-const object, so the bare, argument-less call pane.visible() -- exactly the
-form that looks like "just reading the current value" -- silently resolved to
-the SETTER, called with its default enable = true. This was directly verified
-during this documentation effort: after explicitly hiding a pane with
-visible(false), calling the bare pane.visible() on that same mutable pane
-silently flipped it back to visible.
+`hide()` is `visible(false)` and `show()` is `visible(true)`. The getter takes no argument. The setter requires one, so `pane.visible()` always reads and never changes anything.
 
-It has since been fixed at the source: enable no longer has a default, so
-pane.visible() (zero arguments) now only matches the const getter and always
-safely reads the current value, on both const and non-const Pane objects. To
-set the value, pass the argument explicitly -- visible(true)/visible(false) --
-or use the unambiguous hide()/show() shorthands, which never had this problem in
-the first place (they take no arguments and have no same-named const
-counterpart). See Example 4 below for the fixed behavior, reproduced and
-verified.
-
-The identical fix was applied to axes_visible and parallel_xy_labels, which carried
-the same setter-with-default-argument-plus-same-named-getter shape, and to
-Trace::transparent/Trace::annotate_levels on the sibling Trace class. It never
-applied to methods like tick_font_scale, whose setter requires an explicit
-argument with no default, leaving no zero-argument ambiguity to fall into in
-the first place.
-```
+Use it to compare figures with and without a pane, or to switch panes by a condition without rebuilding the figure. To keep a pane but remove only its axes, use [`axes_visible`](axes_visible.md); to remove one trace, use [`Trace::visible`](../trace/visible.md).
 
 ## Parameters
 
-**enable** (`bool`, required, setter only)
-    `true` to render the pane, `false` to skip it.
+**enable** (`bool`, setter only)
+    `true` to draw the pane, `false` to hide it.
 
 ## Returns
 
-**Setters (`visible(bool)`, `hide()`, `show()`):** `Pane&` — a reference to the same pane,
-for chaining.
-
-**Getter (`Pane::visible() const`):** `bool` — whether the pane currently renders. Now
-always reachable with a bare call, on both `const` and non-`const` panes.
+**Setters:** `Pane&`, the same pane.
+**Getter:** `bool`, whether the pane is drawn. A new pane is visible.
 
 ## Examples
 
-Example 1. The default: visible.
+Example 1. A new pane is visible, and reading the state with no argument changes nothing.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("visible_default");
-fig.mosaic(1, 2);
-auto& pane_a = fig.pane2("a");
-pane_a.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-bool a_visible = pane_a.visible();
-
-auto& pane_b = fig.pane2("b");
-pane_b.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
-
-fig.show();
-std::cout << a_visible << "\n";
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.hide();
+std::cout << "after hide: " << pane.visible() << "\n";
+std::cout << "reading again: " << pane.visible() << "\n";
+pane.show();
+std::cout << "after show: " << pane.visible() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
+after hide: 0
+reading again: 0
+after show: 1
 ```
 
-![Output of Example 1](img/visible-1-default-both.svg)
+![Output of Example 1](img/visible-1-default.svg)
 
-Example 2. `hide()` — the pane's mosaic slot is skipped entirely.
+Example 2. `hide()` and `visible(false)` are the same, and so are `show()` and `visible(true)`.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("visible_hide_method");
-fig.mosaic(1, 2);
-auto& pane_a = fig.pane2("a");
-pane_a.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane_a.hide();
-bool a_hidden = pane_a.visible();
-
-auto& pane_b = fig.pane2("b");
-pane_b.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
-
-fig.show();
-std::cout << a_hidden << "\n";
+auto build = [&](int how) {
+  auto fig = studio("visible_spellings");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+  if (how == 0) pane.hide();
+  if (how == 1) pane.visible(false);
+  return fig.to_svg();
+};
+std::cout << "hide() == visible(false): " << (build(0) == build(1)) << "\n";
+auto fig = studio("visible_spellings_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.visible(false).visible(true);
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0
+hide() == visible(false): 1
 ```
 
-![Output of Example 2](img/visible-2-hide-called.svg)
+![Output of Example 2](img/visible-2-spellings.svg)
 
-Example 3. `visible(false)` directly — identical effect to `hide()`.
+Example 3. A hidden pane draws nothing. Its title is in the figure while it is shown and gone while it is hidden, and showing it again gives back the original figure.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("visible_false_direct");
-fig.mosaic(1, 2);
-auto& pane_a = fig.pane2("a");
-pane_a.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane_a.visible(false);
-bool a_visible = pane_a.visible();
-
-auto& pane_b = fig.pane2("b");
-pane_b.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
-
-fig.show();
-std::cout << a_visible << "\n";
+auto fig = studio("visible_draws");
+auto& pane = fig.pane2("alpha");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+const std::string shown = fig.to_svg();
+pane.hide();
+const std::string hidden = fig.to_svg();
+pane.show();
+std::cout << "title while shown: " << (shown.find(">alpha<") != std::string::npos) << ", while hidden: " << (hidden.find(">alpha<") != std::string::npos) << "\n";
+std::cout << "shown again == shown before: " << (fig.to_svg() == shown) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0
+title while shown: 1, while hidden: 0
+shown again == shown before: 1
 ```
 
-![Output of Example 3](img/visible-3-visible-false.svg)
+![Output of Example 3](img/visible-3-draws_nothing.svg)
 
-Example 4 (edge case). Since `enable` is now required, a bare `pane.visible()` call
-compiles as a *read* — it can no longer accidentally reset visibility.
+Example 4. The cell stays. Of two panes side by side, the left is hidden: the right one is still in the right half of the figure and the left half is empty.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("visible_safe_bare_call");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-
-pane.visible(false);
-std::cout << pane.visible() << "\n";
-
-std::cout << pane.visible() << "\n";  // bare call: now unconditionally a read
-
-fig.show();
+auto fig = studio("visible_mosaic");
+fig.mosaic(1, 2);
+auto& left = fig.pane2("left");
+left.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+auto& right = fig.pane2("right");
+right.trend(std::vector<double>{0, 1, 2}, std::vector<double>{1, 0, 1});
+auto at = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  auto number = [&](const char* key) {
+    const auto k = svg.find(std::string(key) + "=\"", open) + std::string(key).size() + 2;
+    return std::stod(svg.substr(k, svg.find('"', k) - k));
+  };
+  return "(" + std::to_string(static_cast<int>(number("x"))) + ", " + std::to_string(static_cast<int>(number("y"))) + ")";
+};
+const std::string before = fig.to_svg();
+left.hide();
+const std::string after = fig.to_svg();
+std::cout << "right title before " << at(before, "right") << ", after " << at(after, "right") << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0
-0
+right title before (950, 50), after (950, 50)
 ```
+
+![Output of Example 4](img/visible-4-mosaic.svg)
+
+Example 5. Switching by a condition. The same figure is built for two modes; the second pane is shown only in the detailed one.
+
+```cpp
+auto build = [&](bool detailed) {
+  auto fig = studio("visible_condition");
+  fig.mosaic(1, 2);
+  auto& overview = fig.pane2("overview");
+  overview.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 2, 1, 3});
+  auto& detail = fig.pane2("detail");
+  detail.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{1, 3, 2, 4});
+  detail.visible(detailed);
+  return fig.to_svg();
+};
+std::cout << "detail drawn: " << (build(true).find(">detail<") != std::string::npos) << ", " << (build(false).find(">detail<") != std::string::npos) << "\n";
+auto fig = studio("visible_condition_out");
+fig.mosaic(1, 2);
+auto& overview = fig.pane2("overview");
+overview.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 2, 1, 3});
+auto& detail = fig.pane2("detail");
+detail.trend(std::vector<double>{0, 1, 2, 3}, std::vector<double>{1, 3, 2, 4});
+detail.hide();
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+detail drawn: 1, 0
+```
+
+![Output of Example 5](img/visible-5-condition.svg)
 
 ## Notes
 
-- `visible(bool)`, `hide()`, and `show()` are all `noexcept`. The `const` getter overload
-  is also `noexcept`.
-- `enable`'s default argument was removed specifically to eliminate the getter/setter
-  overload-resolution hazard — see the important callout above. `std::as_const(pane)` is
-  no longer necessary to reach the getter safely, though it still works.
-- `hide()` and `show()` remain the more explicit, self-documenting spelling for setting
-  visibility, and were never affected by the hazard in the first place (no arguments, no
-  same-named `const` counterpart).
-- Hiding a pane does not remove it from [`Studio::panes()`](../studio/panes.md) or affect
-  [`Studio::pane_count()`](../studio/pane_count.md) — it only affects whether that pane's
-  slot renders content.
+- All four are `noexcept`.
+- Hiding a pane does not remove its data or settings, and does not remove it from [`Studio::panes`](../studio/panes.md).
+- A hidden pane gets no share of a group caption (see [`align_x`](align_x.md)).
 
 ## See Also
 
-- [`Pane::axes_visible`](axes_visible.md): the same visibility concept, scoped to just the
-  axes rather than the whole pane, which received the identical fix.
-- [`Pane::parallel_xy_labels`](parallel_xy_labels.md): another setter/getter pair that
-  received the same fix.
-- [`Pane::tick_font_scale`](tick_font_scale.md): a setter/getter pair with **no** such
-  hazard, since its setter has no default argument.
-- [`Trace::transparent`](../trace/transparent.md), [`Trace::annotate_levels`](../trace/annotate_levels.md):
-  the same fix applied to the sibling `Trace` class.
-- [`Trace::visible`](../trace/visible.md): never had this problem — `Trace` was built with
-  `hide()`/`show()` as its only setters from the start, with `visible()` getter-only.
+- [`Pane::axes_visible`](axes_visible.md): hide only the axes.
+- [`Trace::visible`](../trace/visible.md): hide one trace.
+- [`Studio::mosaic`](../studio/mosaic.md): the cells a hidden pane keeps.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="align_group_accessors.html">
+  <a class="prev-link" href="violin.html">
     <span class="label">Previous</span>
-    <span class="title">align_group_accessors</span>
+    <span class="title">violin</span>
   </a>
-  <a class="next-link" href="axes_visible.html">
+  <a class="next-link" href="wedge.html">
     <span class="label">Next</span>
-    <span class="title">axes_visible</span>
+    <span class="title">wedge</span>
   </a>
 </div>

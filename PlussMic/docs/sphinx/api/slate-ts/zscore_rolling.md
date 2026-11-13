@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods = 1, double epsilon = 1e-12) const -> Slate
+Slate TimeSeriesAccessor::zscore_rolling(std::int64_t window, std::int64_t min_periods = 1, double epsilon = 1e-12) const
 ```
 
 ## What It Does

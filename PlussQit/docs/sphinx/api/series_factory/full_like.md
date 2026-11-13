@@ -7,17 +7,17 @@
 ## Signature
 
 ```cpp
-pluss::series::full_like(const Series& like,
-                         double fill_value,
-                         ScalarType dtype) -> Series
+Series pluss::series::full_like(const Series& like,
+                                double fill_value,
+                                ScalarType dtype)
 
-pluss::series::full_like(const Series& like,
-                         double fill_value,
-                         Config cfg = {}) -> Series
+Series pluss::series::full_like(const Series& like,
+                                double fill_value,
+                                Config cfg = {})
 
-pluss::series::full_like(const Series& like,
-                         double fill_value,
-                         opts...) -> Series
+Series pluss::series::full_like(const Series& like,
+                                double fill_value,
+                                opts...)
 ```
 
 ## What It Builds

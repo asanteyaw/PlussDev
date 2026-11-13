@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::deduce(double min_confidence = 0.5) const -> DataFrame
+DataFrame Nexus::deduce(double min_confidence = 0.5) const
 ```
 
 ## What It Does

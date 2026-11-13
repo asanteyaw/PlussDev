@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::ror(const Slate& other) const -> Slate
+Slate Slate::ror(const Slate& other) const
 ```
 
 ## What It Does

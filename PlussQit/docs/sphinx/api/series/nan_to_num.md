@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::nan_to_num(double nan, double posinf, double neginf) const -> Series
+Series Series::nan_to_num(double nan, double posinf, double neginf) const
 Series& Series::nan_to_num_(double nan, double posinf, double neginf)
 ```
 

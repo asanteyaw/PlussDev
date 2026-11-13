@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::diag() const -> Series
-Series::diag(std::int64_t diagonal) const -> Series
+Series Series::diag() const
+Series Series::diag(std::int64_t diagonal) const
 ```
 
 ## What It Does

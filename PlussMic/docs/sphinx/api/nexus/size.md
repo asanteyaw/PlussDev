@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::size() const -> std::int64_t
+std::int64_t Nexus::size() const
 ```
 
 ## What It Does

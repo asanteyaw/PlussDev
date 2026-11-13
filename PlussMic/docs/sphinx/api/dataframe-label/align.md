@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::align(const Slate& new_label) const -> DataFrame
-DataFrameLabelAccessor::align(const Slate& new_label, std::optional<double> fill) const -> DataFrame
+DataFrame DataFrameLabelAccessor::align(const Slate& new_label) const
+DataFrame DataFrameLabelAccessor::align(const Slate& new_label, std::optional<double> fill) const
 ```
 
 ## What It Does

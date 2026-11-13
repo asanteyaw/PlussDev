@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::bfill() const -> DataFrame
+DataFrame DataFrameTsResampler::bfill() const
 ```
 
 ## What It Does

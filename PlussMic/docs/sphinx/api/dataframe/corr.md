@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::corr(bool render = false) const -> DataFrameView
+DataFrameView DataFrame::corr(bool render = false) const
 
-DataFrame::corr(CorrMethod method, bool render = false) const -> DataFrameView
+DataFrameView DataFrame::corr(CorrMethod method, bool render = false) const
 ```
 
 ## What It Does

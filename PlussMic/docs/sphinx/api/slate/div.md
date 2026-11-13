@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::div(double other) const -> Slate
-Slate::div(const Slate& other) const -> Slate
+Slate Slate::div(double other) const
+Slate Slate::div(const Slate& other) const
 ```
 
 ## What It Does

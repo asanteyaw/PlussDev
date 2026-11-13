@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Catalog::rename(std::string_view from, std::string_view to) const -> Catalog
-Catalog::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const -> Catalog
-Catalog::rename(const std::unordered_map<std::string, std::string>& mapping) const -> Catalog
+Catalog Catalog::rename(std::string_view from, std::string_view to) const
+Catalog Catalog::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const
+Catalog Catalog::rename(const std::unordered_map<std::string, std::string>& mapping) const
 ```
 
 ## What It Does

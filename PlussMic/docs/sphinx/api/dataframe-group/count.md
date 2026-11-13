@@ -8,10 +8,10 @@
 ## Signature
 
 ```cpp
-DataFrameGrouped::count() const -> DataFrame
-DataFrameGrouped::count(std::string_view feature) const -> DataFrame
-DataFrameGrouped::count(std::initializer_list<std::string_view> features) const -> DataFrame
-DataFrameGrouped::count(pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrameGrouped::count() const
+DataFrame DataFrameGrouped::count(std::string_view feature) const
+DataFrame DataFrameGrouped::count(std::initializer_list<std::string_view> features) const
+DataFrame DataFrameGrouped::count(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does

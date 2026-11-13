@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::median(Axis axis = Axis::Case, bool skipnull = true) const -> Slate
+Slate DataFrame::median(Axis axis = Axis::Case, bool skipnull = true) const
 ```
 
 ## What It Does

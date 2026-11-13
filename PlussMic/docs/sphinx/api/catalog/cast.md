@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Catalog::cast() const -> CatalogCastAccessor
-Catalog::cast(const pluss::table::SlateCastOptions& options) const -> CatalogCastAccessor
-Catalog::cast(pluss::table::SlateCastTarget target,
-              const pluss::table::SlateCastOptions& options = {}) const -> Catalog
+CatalogCastAccessor Catalog::cast() const
+CatalogCastAccessor Catalog::cast(const pluss::table::SlateCastOptions& options) const
+Catalog Catalog::cast(pluss::table::SlateCastTarget target,
+                      const pluss::table::SlateCastOptions& options = {}) const
 ```
 
 ## What It Does

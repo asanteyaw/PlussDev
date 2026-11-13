@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-static Stream Stream::from_slate(const pluss::table::Slate& slate, std::optional<pluss::table::Slate> cases = std::nullopt) -> Stream
+static Stream Stream::from_slate(const pluss::table::Slate& slate, std::optional<pluss::table::Slate> cases = std::nullopt)
 ```
 
 ## What It Does

@@ -7,12 +7,12 @@
 ## Signature
 
 ```cpp
-NexusQueryPrepared::execute() const -> DataFrame
-NexusQueryPrepared::execute(
-    std::unordered_map<std::string, pluss::table::DataFrame::SqlOptions::SqlParam> params) const -> DataFrame
-NexusQueryPrepared::execute(
+DataFrame NexusQueryPrepared::execute() const
+DataFrame NexusQueryPrepared::execute(
+    std::unordered_map<std::string, pluss::table::DataFrame::SqlOptions::SqlParam> params) const
+DataFrame NexusQueryPrepared::execute(
     std::unordered_map<std::string, pluss::table::DataFrame::SqlOptions::SqlParam> params,
-    std::unordered_map<std::string, std::string> identifier_params) const -> DataFrame
+    std::unordered_map<std::string, std::string> identifier_params) const
 ```
 
 ## What It Does

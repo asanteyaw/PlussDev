@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Catalog::mean() const -> Catalog
-Catalog::mean(pluss::kindle::ReduceAxis axis) const -> Catalog
-Catalog::mean(const pluss::kindle::CatalogReduceOptions& options) const -> Catalog
+Catalog Catalog::mean() const
+Catalog Catalog::mean(pluss::kindle::ReduceAxis axis) const
+Catalog Catalog::mean(const pluss::kindle::CatalogReduceOptions& options) const
 ```
 
 ## What It Does

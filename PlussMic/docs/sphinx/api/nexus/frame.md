@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-Nexus::frame(std::string_view key) const -> DataFrame
-Nexus::frame(std::int64_t index) const -> DataFrame
+DataFrame Nexus::frame(std::string_view key) const
+DataFrame Nexus::frame(std::int64_t index) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::std(bool unbiased = true) const -> Stream
+Stream Stream::std(bool unbiased = true) const
 ```
 
 ## What It Does

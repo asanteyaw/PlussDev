@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::maxrows() -> std::int64_t
+std::int64_t Catalog::maxrows()
 ```
 
 ## What It Does

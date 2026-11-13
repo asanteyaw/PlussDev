@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::window(std::int64_t window, SlateWindowOp op, std::int64_t min_periods = 1) const -> Slate
+Slate Slate::window(std::int64_t window, SlateWindowOp op, std::int64_t min_periods = 1) const
 ```
 
 ## What It Does

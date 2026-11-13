@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::has(double value) const -> DataFrame
-DataFrame::has(std::string_view value) const -> DataFrame
-DataFrame::has(const Slate& values) const -> DataFrame
+DataFrame DataFrame::has(double value) const
+DataFrame DataFrame::has(std::string_view value) const
+DataFrame DataFrame::has(const Slate& values) const
 ```
 
 ## What It Does

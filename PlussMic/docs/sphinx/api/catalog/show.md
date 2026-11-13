@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::show(std::ostream& os) const -> void
+void Catalog::show(std::ostream& os) const
 ```
 
 ## What It Does

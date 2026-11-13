@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::indicate(std::string_view delimiter = "|",
-                             std::string prefix = "") const -> DataFrame
+DataFrame SlateNoteAccessor::indicate(std::string_view delimiter = "|",
+                                       std::string prefix = "") const
 ```
 
 ## What It Does

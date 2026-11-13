@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::apply_all(const CatalogFn& fn) const -> Locus
+Locus Locus::apply_all(const CatalogFn& fn) const
 ```
 
 ## What It Does

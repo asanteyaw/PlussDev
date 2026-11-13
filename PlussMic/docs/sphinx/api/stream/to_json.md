@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::to_json() const -> std::string
+std::string Stream::to_json() const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const -> Catalog
+Catalog Catalog::sample(std::int64_t n, std::optional<std::uint64_t> random_state = std::nullopt) const
 ```
 
 ## What It Does

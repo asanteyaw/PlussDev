@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::matrix() const -> MatrixValues
+MatrixValues DataFrame::matrix() const
 ```
 
 ## What It Does

@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameGrouped::max() const -> DataFrame
-DataFrameGrouped::max(std::string_view feature) const -> DataFrame
-DataFrameGrouped::max(std::initializer_list<std::string_view> features) const -> DataFrame
-DataFrameGrouped::max(pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrameGrouped::max() const
+DataFrame DataFrameGrouped::max(std::string_view feature) const
+DataFrame DataFrameGrouped::max(std::initializer_list<std::string_view> features) const
+DataFrame DataFrameGrouped::max(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does

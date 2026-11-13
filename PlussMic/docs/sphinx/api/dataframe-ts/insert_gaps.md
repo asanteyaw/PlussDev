@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::insert_gaps(std::string_view freq, std::int64_t step = 1) const -> DataFrame
-DataFrameTsAccessor::insert_gaps(std::string_view time_feature, std::string_view freq, std::int64_t step = 1) const -> DataFrame
+DataFrame DataFrameTsAccessor::insert_gaps(std::string_view freq, std::int64_t step = 1) const
+DataFrame DataFrameTsAccessor::insert_gaps(std::string_view time_feature, std::string_view freq, std::int64_t step = 1) const
 ```
 
 ## What It Does

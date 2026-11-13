@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::bfill() const -> Stream
+Stream Stream::bfill() const
 ```
 
 ## What It Does

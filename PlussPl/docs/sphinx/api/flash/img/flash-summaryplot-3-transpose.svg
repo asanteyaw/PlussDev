@@ -4,7 +4,10 @@
 <path d="M 0.0000 0.0000 L 1280.0000 0.0000 L 1280.0000 820.0000 L 0.0000 820.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
 <path d="M 28.0000 28.0000 L 1252.0000 28.0000 L 1252.0000 792.0000 L 28.0000 792.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
 <text x="640.0000" y="50.0000" font-family="Helvetica, Arial, sans-serif" font-size="14.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">table</text>
-<text x="74.7140" y="102.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">feature                   case_0        case_1        case_2        case_3</text>
-<text x="74.7140" y="114.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">alpha                     1.2340        2.3450        3.4560        4.5670</text>
-<text x="74.7140" y="126.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">beta                     10.1000       20.2000       30.3000       40.4000</text>
+<text x="52.0000" y="102.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">feature     case_0   case_1   case_2   case_3</text>
+<text x="52.0000" y="114.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">alpha       1.2340   2.3450   3.4560   4.5670</text>
+<text x="52.0000" y="126.0000" font-family="Helvetica, Arial, sans-serif" font-size="10.0000" fill="rgb(24,23,21)" fill-opacity="1.0000" text-anchor="start">beta       10.1000  20.2000  30.3000  40.4000</text>
+<clipPath id="clip1"><rect x="44.0000" y="86.0000" width="1192.0000" height="684.0000"/></clipPath>
+<g clip-path="url(#clip1)">
+</g>
 </svg>

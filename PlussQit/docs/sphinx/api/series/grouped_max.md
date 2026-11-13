@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::grouped_max(const Series& group_ids, std::int64_t group_count) const -> Series
+Series Series::grouped_max(const Series& group_ids, std::int64_t group_count) const
 ```
 
 ## What It Does

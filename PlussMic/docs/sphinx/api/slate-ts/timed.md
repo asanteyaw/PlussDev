@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::timed(const Slate& axis, std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> Slate
+Slate TimeSeriesAccessor::timed(const Slate& axis, std::int64_t duration_nanos, TimeWindowStatistic statistic = TimeWindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
 ```
 
 ## What It Does

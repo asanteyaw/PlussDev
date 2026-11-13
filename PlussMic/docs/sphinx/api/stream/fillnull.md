@@ -8,11 +8,11 @@
 ## Signatures
 
 ```cpp
-Stream::fillnull(double value) const -> Stream
-Stream::fillnull(std::string_view value) const -> Stream
-Stream::fillnull(const char* value) const -> Stream
-Stream::fillnull(const pluss::Timeline& value) const -> Stream
-Stream::fillnull(const pluss::Duration& value) const -> Stream
+Stream Stream::fillnull(double value) const
+Stream Stream::fillnull(std::string_view value) const
+Stream Stream::fillnull(const char* value) const
+Stream Stream::fillnull(const pluss::Timeline& value) const
+Stream Stream::fillnull(const pluss::Duration& value) const
 ```
 
 ## What It Does

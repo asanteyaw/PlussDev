@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::freq(std::int64_t top_n = 0, bool dropnull = true) const -> Slate
+Slate SlateLabelAccessor::freq(std::int64_t top_n = 0, bool dropnull = true) const
 ```
 
 ## What It Does

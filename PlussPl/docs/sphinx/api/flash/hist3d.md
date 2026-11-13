@@ -7,16 +7,14 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::hist3d(Pane& pane, X&& x, Y&& y, const Hist3DOptions& options = {})
+Trace& flash::hist3d(Pane& pane, Series x, Series y, const Hist3DOptions& options = {})
 
-template <class X, class Y>
-Trace& flash::hist3d(Studio& studio, X&& x, Y&& y, const Hist3DOptions& options = {}, std::string title = {})
+Trace& flash::hist3d(Studio& studio, Series x, Series y, const Hist3DOptions& options = {}, std::string title = {})
 ```
 
 ## What It Does
 
-The one genuinely new function in the 3D familiar-naming family (not a rename of
+The one new function in the 3D familiar-naming family (not a rename of
 an existing 3D-native function): bins raw `(x, y)` observations into a 2D histogram grid
 (via the same `hist2d_grid` helper [`flash::jointplot`](jointplot.md)'s `Hex`/`Kde` kinds
 use), then renders that grid's bin counts as a bar-forest by default — or, via
@@ -34,10 +32,10 @@ once; the check order simply decides which one silently wins.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `bins_x`, `bins_y` | `std::int64_t`, default `26`, `20` | Grid resolution for the underlying 2D histogram. Each clamped to at least `4` internally by `hist2d_grid` — the same helper and same clamp [`flash::jointplot`](jointplot.md)'s `Hex`/`Kde` kinds use, though `hist3d`'s own defaults (`26`/`20`) differ from `jointplot`'s `Hex` defaults (`28`/`22`). |
-| `normalize` | `bool`, default `false` | Whether the binned grid is divided by its own total sum before rendering (turning raw counts into a density-like proportion) — a no-op when the total is `0` or non-finite. Directly verified to render genuinely differently from the default (raw-count) grid. |
+| `bins_x`, `bins_y` | `std::int64_t`, default `26`, `20` | Grid resolution for the underlying 2D histogram. Each at least `1`; fewer throws `pluss::Error` — the same helper and same minimum [`flash::jointplot`](jointplot.md)'s `Hex`/`Kde` kinds use, though `hist3d`'s own defaults (`26`/`20`) differ from `jointplot`'s `Hex` defaults (`28`/`22`). |
+| `normalize` | `bool`, default `false` | Whether the binned grid is divided by its own total sum before rendering (turning raw counts into a density-like proportion) — a no-op when the total is `0` or non-finite. Directly, rendering differently from the default (raw-count) grid. |
 | `smooth` | `bool`, default `false` | Whether the binned grid is blurred by `smooth_passes` passes before rendering — same smoothing mechanism [`flash::jointplot`](jointplot.md)'s `Kde` kind uses on its own binned grid. |
-| `smooth_passes` | `std::int64_t`, default `1` | Smoothing pass count when `smooth` is `true`. Clamped to at least `1`. |
+| `smooth_passes` | `std::int64_t`, default `1` | Smoothing pass count when `smooth` is `true`. At least `1`; fewer throws `pluss::Error`. |
 | `as_surface` | `bool`, default `false` | Render the binned grid as a filled [`flash::sheet`](sheet.md) surface instead of the default bar forest. See the important callout above for its interaction with `as_wireframe`. |
 | `as_wireframe` | `bool`, default `false` | Render the binned grid as a [`flash::lattice`](lattice.md) wireframe mesh instead of the default bar forest. Takes priority over `as_surface` when both are set. |
 
@@ -117,8 +115,7 @@ fig.show();
 
 ![Output of Example 3](img/flash-hist3d-3-as-wireframe.svg)
 
-Example 4 (verification, not a distinct rendering). `normalize = true` renders genuinely
-differently from the default (raw-count) grid, confirmed via direct SVG comparison.
+Example 4 (a comparison, not a new picture). `normalize = true` renders differently from the default (raw-count) grid.
 
 ```cpp
 using namespace pluss::pl;
@@ -148,9 +145,8 @@ hist3d normalize vs default differ: 1
 
 ![Output of Example 4](img/flash-hist3d-4-normalize.svg)
 
-Example 5 (verification, not a distinct rendering). `smooth = true` on the `as_surface`
-rendering renders genuinely differently from the unsmoothed surface, confirmed via
-direct SVG comparison.
+Example 5 (a comparison, not a new picture). `smooth = true` on the `as_surface`
+rendering renders differently from the unsmoothed surface.
 
 ```cpp
 using namespace pluss::pl;

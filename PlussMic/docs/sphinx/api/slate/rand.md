@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::rand(const Slate& other) const -> Slate
+Slate Slate::rand(const Slate& other) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::invalid(pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame DataFrame::invalid(pluss::RangeView<std::string_view> features = {}) const
 ```
 
 ## What It Does

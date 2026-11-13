@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::shape() const -> std::pair<std::int64_t, std::int64_t>
+std::pair<std::int64_t, std::int64_t> Slate::shape() const
 ```
 
 ## What It Does

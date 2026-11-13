@@ -8,21 +8,21 @@
 ## Signatures
 
 ```cpp
-CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys = {}) const
 
-CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys) const
 
-CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                     pluss::table::ScatterMatrixTriangle triangle) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                       pluss::table::ScatterMatrixTriangle triangle) const
 
-CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys,
-                                     pluss::table::ScatterMatrixTriangle triangle) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys,
+                                                       pluss::table::ScatterMatrixTriangle triangle) const
 
-CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
-                                     const CatalogScatterMatrixPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                                       const CatalogScatterMatrixPlotOptions& options) const
 
-CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys,
-                                     const CatalogScatterMatrixPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter_matrix(std::initializer_list<std::string_view> keys,
+                                                       const CatalogScatterMatrixPlotOptions& options) const
 ```
 
 ## What It Does

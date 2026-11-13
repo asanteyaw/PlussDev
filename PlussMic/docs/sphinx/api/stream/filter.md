@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::filter(const pluss::Series& bool_mask) const -> Stream
+Stream Stream::filter(const pluss::Series& bool_mask) const
 ```
 
 ## What It Does

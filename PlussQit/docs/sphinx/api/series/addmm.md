@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::addmm(const Series& mat1, const Series& mat2,
-              double beta = 1.0, double alpha = 1.0) const -> Series
+Series Series::addmm(const Series& mat1, const Series& mat2,
+                     double beta = 1.0, double alpha = 1.0) const
 Series& Series::addmm_(const Series& mat1, const Series& mat2, double beta=1.0, double alpha=1.0) const
 ```
 

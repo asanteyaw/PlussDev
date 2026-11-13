@@ -8,26 +8,26 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::bar(std::string_view y_feature,
-                            std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view y_feature,
+                                              std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::bar(std::string_view y_feature,
-                            std::optional<std::string_view> x_feature,
-                            const BarPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar(std::string_view y_feature,
+                                              std::optional<std::string_view> x_feature,
+                                              const BarPlotOptions& options) const
 
-DataFramePlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                            std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                              std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                            std::optional<std::string_view> x_feature,
-                            const BarPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                              std::optional<std::string_view> x_feature,
+                                              const BarPlotOptions& options) const
 
-DataFramePlotAccessor::bar(std::initializer_list<std::string_view> y_features,
-                            std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar(std::initializer_list<std::string_view> y_features,
+                                              std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::bar(std::initializer_list<std::string_view> y_features,
-                            std::optional<std::string_view> x_feature,
-                            const BarPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar(std::initializer_list<std::string_view> y_features,
+                                              std::optional<std::string_view> x_feature,
+                                              const BarPlotOptions& options) const
 ```
 
 ## What It Does

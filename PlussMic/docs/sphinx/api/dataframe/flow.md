@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::flow(const std::function<DataFrame(const DataFrame&)>& fn) const -> DataFrame
+DataFrame DataFrame::flow(const std::function<DataFrame(const DataFrame&)>& fn) const
 ```
 
 ## What It Does

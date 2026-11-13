@@ -7,22 +7,22 @@
 ## Signature
 
 ```cpp
-Locus::link(const Relationship& rel) const -> Locus
-Locus::link(std::string_view left, std::string_view left_key,
-            std::string_view right, std::string_view right_key,
-            RelationshipCardinality cardinality = ManyToOne) const -> Locus
-Locus::link(std::string_view left, std::string_view right, std::string_view key,
-            RelationshipCardinality cardinality = ManyToOne) const -> Locus
-Locus::add_relationship(const Relationship& rel) const -> Locus
-Locus::add_relationships(std::initializer_list<Relationship> rels) const -> Locus
-Locus::unlink(std::string_view name) const -> Locus
+Locus Locus::link(const Relationship& rel) const
+Locus Locus::link(std::string_view left, std::string_view left_key,
+                  std::string_view right, std::string_view right_key,
+                  RelationshipCardinality cardinality = ManyToOne) const
+Locus Locus::link(std::string_view left, std::string_view right, std::string_view key,
+                  RelationshipCardinality cardinality = ManyToOne) const
+Locus Locus::add_relationship(const Relationship& rel) const
+Locus Locus::add_relationships(std::initializer_list<Relationship> rels) const
+Locus Locus::unlink(std::string_view name) const
 
-Locus::relationships() const -> const std::vector<Relationship>&
-Locus::links() const -> const std::vector<Relationship>&              // alias
-Locus::has_relationship(std::string_view name) const -> bool
-Locus::relationship(std::string_view name) const -> std::optional<Relationship>
-Locus::neighbors(std::string_view table) const -> std::vector<std::string>
-Locus::path(std::string_view from, std::string_view to) const -> std::optional<JoinPath>
+const std::vector<Relationship>& Locus::relationships() const
+const std::vector<Relationship>& Locus::links() const  // alias
+bool Locus::has_relationship(std::string_view name) const
+std::optional<Relationship> Locus::relationship(std::string_view name) const
+std::vector<std::string> Locus::neighbors(std::string_view table) const
+std::optional<JoinPath> Locus::path(std::string_view from, std::string_view to) const
 ```
 
 ## What It Does

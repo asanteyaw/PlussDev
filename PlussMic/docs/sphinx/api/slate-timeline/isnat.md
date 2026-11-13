@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::isnat() const -> Slate
+Slate SlateTimelineAccessor::isnat() const
 ```
 
 ## What It Does

@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameNoteAccessor::count(std::string_view pattern) const -> DataFrame
+DataFrame DataFrameNoteAccessor::count(std::string_view pattern) const
 
-DataFrameNoteAccessor::count(std::string_view pattern,
-                              const TextOptions& options) const -> DataFrame
+DataFrame DataFrameNoteAccessor::count(std::string_view pattern,
+                                        const TextOptions& options) const
 ```
 
 ## What It Does

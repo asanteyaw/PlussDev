@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::maxkeys() const -> std::int64_t
+std::int64_t Archive::maxkeys() const
 ```
 
 ## What It Does

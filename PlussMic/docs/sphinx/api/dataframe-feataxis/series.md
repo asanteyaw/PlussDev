@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameFeatureAxisAccessor::series() const -> DataFrame
+DataFrame DataFrameFeatureAxisAccessor::series() const
 ```
 
 ## What It Does

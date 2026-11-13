@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::astype(pluss::codem::ScalarType dtype) const -> Catalog
+Catalog Catalog::astype(pluss::codem::ScalarType dtype) const
 ```
 
 ## What It Does

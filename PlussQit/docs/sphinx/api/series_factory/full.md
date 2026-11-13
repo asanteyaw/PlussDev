@@ -7,17 +7,17 @@
 ## Signature
 
 ```cpp
-pluss::series::full(sizes, double fill_value,
-                    ScalarType dt = ScalarType::Float32) -> Series
+Series pluss::series::full(sizes, double fill_value,
+                           ScalarType dt = ScalarType::Float32)
 
-pluss::series::full(sizes, double fill_value,
-                    Config cfg) -> Series
+Series pluss::series::full(sizes, double fill_value,
+                           Config cfg)
 
-pluss::series::full(sizes, double fill_value,
-                    opts...) -> Series
+Series pluss::series::full(sizes, double fill_value,
+                           opts...)
 
-pluss::series::full(sizes, double fill_value,
-                    {{"key", value}, ...}) -> Series
+Series pluss::series::full(sizes, double fill_value,
+                           {{"key", value}, ...})
 ```
 
 ## What It Builds

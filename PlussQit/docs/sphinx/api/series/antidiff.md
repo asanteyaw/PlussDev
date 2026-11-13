@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::antidiff -> Series::AntidiffAccessor
+Series::AntidiffAccessor Series::antidiff
 
-Series::antidiff() -> SeriesAntidiffProxy
-Series::antidiff(const Series& x) -> SeriesAntidiffProxy
+SeriesAntidiffProxy Series::antidiff()
+SeriesAntidiffProxy Series::antidiff(const Series& x)
 ```
 
 ## What It Does

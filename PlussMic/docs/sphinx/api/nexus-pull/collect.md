@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusPull::collect() const -> DataFrame
+DataFrame NexusPull::collect() const
 ```
 
 ## What It Does

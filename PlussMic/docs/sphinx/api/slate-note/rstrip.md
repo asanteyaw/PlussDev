@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-SlateNoteAccessor::rstrip() const -> Slate
-SlateNoteAccessor::rstrip(std::string_view chars) const -> Slate
+Slate SlateNoteAccessor::rstrip() const
+Slate SlateNoteAccessor::rstrip(std::string_view chars) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::agg(std::string_view table) -> LocusPullAgg
+LocusPullAgg LocusPull::agg(std::string_view table)
 ```
 
 ## What It Does

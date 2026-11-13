@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::ceil(std::string_view unit) const -> Atlas
+Atlas AtlasTimelineAccessor::ceil(std::string_view unit) const
 ```
 
 ## What It Does

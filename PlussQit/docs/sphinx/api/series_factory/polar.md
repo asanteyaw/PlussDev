@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-pluss::series::polar(const Series& abs,
-                     const Series& angle,
-                     ScalarType dtype = ScalarType::Complex64) -> Series
+Series pluss::series::polar(const Series& abs,
+                            const Series& angle,
+                            ScalarType dtype = ScalarType::Complex64)
 ```
 
 ## What It Builds

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::titlecase() const -> Slate
+Slate Slate::titlecase() const
 ```
 
 ## What It Does

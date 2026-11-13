@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::addmv(const Series& mat, const Series& vec,
-              double beta = 1.0, double alpha = 1.0) const -> Series
+Series Series::addmv(const Series& mat, const Series& vec,
+                     double beta = 1.0, double alpha = 1.0) const
 Series& Series::addmv_(const Series& mat, const Series& vec, double beta=1.0, double alpha=1.0) const
 ```
 

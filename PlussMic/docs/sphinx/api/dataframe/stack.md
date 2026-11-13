@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::stack(std::string feature_name = "feature", std::string value_name = "value") const -> DataFrame
+DataFrame DataFrame::stack(std::string feature_name = "feature", std::string value_name = "value") const
 ```
 
 ## What It Does

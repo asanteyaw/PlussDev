@@ -28,7 +28,7 @@ None.
 
 ## Examples
 
-Example 1 (verification, not a distinct rendering). Genuinely different colors from
+Example 1 (a comparison, not a new picture). Different colors from
 [`flash::xkcd_palette`](xkcd_palette.md).
 
 ```cpp

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::normalize(UnicodeForm form = UnicodeForm::NFC) const -> DataFrame
+DataFrame DataFrameNoteAccessor::normalize(UnicodeForm form = UnicodeForm::NFC) const
 ```
 
 ## What It Does

@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-Slate::between(double a, double b, bool inclusive = false) const -> Slate
-Slate::between(double a, double b, bool include_left, bool include_right) const -> Slate
-Slate::between(std::string_view lo, std::string_view hi, bool inclusive = true) const -> Slate
-Slate::between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const -> Slate
-Slate::between(const Slate& lo, const Slate& hi, bool inclusive = true) const -> Slate
-Slate::between(const Slate& lo, const Slate& hi, bool include_left, bool include_right) const -> Slate
+Slate Slate::between(double a, double b, bool inclusive = false) const
+Slate Slate::between(double a, double b, bool include_left, bool include_right) const
+Slate Slate::between(std::string_view lo, std::string_view hi, bool inclusive = true) const
+Slate Slate::between(std::string_view lo, std::string_view hi, bool include_left, bool include_right) const
+Slate Slate::between(const Slate& lo, const Slate& hi, bool inclusive = true) const
+Slate Slate::between(const Slate& lo, const Slate& hi, bool include_left, bool include_right) const
 ```
 
 ## What It Does

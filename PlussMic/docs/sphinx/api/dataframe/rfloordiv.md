@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::rfloordiv(double other) const -> DataFrame
+DataFrame DataFrame::rfloordiv(double other) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::kurtosis(std::int64_t min_count = 4) const -> SlateValue
+SlateValue Slate::kurtosis(std::int64_t min_count = 4) const
 ```
 
 ## What It Does

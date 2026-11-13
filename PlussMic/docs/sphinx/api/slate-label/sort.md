@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::sort(bool ascending = true, bool nulls_last = true) const -> Slate
+Slate SlateLabelAccessor::sort(bool ascending = true, bool nulls_last = true) const
 ```
 
 ## What It Does

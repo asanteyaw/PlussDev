@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::exp() const -> DataFrame
+DataFrame DataFrame::exp() const
 ```
 
 ## What It Does

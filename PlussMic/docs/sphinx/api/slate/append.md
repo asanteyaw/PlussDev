@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::append(const Slate& other) const -> Slate
+Slate Slate::append(const Slate& other) const
 ```
 
 ## What It Does

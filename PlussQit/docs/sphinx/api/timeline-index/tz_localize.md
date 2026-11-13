@@ -5,10 +5,10 @@
 ## Signature
 
 ```cpp
-Timeline::TimelineIndexAccessor::tz_localize(
+Timeline::TimelineIndexAccessor Timeline::TimelineIndexAccessor::tz_localize(
     std::string_view tz_name,
     int fold = 0,
-    std::string_view nonexistent = "raise") const -> Timeline::TimelineIndexAccessor
+    std::string_view nonexistent = "raise") const
 ```
 
 ## What It Does

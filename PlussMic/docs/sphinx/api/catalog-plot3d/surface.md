@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-CatalogPlot3DAccessor::surface(
+pluss::pl::Studio CatalogPlot3DAccessor::surface(
     std::string_view x_key,
     std::string_view y_key,
     std::string_view z_key,
     pluss::table::DataFrame::GroupOp op = pluss::table::DataFrame::GroupOp::Mean,
-    const pluss::table::Surface3DPlotOptions& options = {}) const -> pluss::pl::Studio
+    const pluss::table::Surface3DPlotOptions& options = {}) const
 ```
 
 ## What It Does

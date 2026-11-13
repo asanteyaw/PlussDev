@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::has_meta(std::string_view key) const -> bool
+bool Stream::has_meta(std::string_view key) const
 ```
 
 ## What It Does

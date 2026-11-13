@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::sensitivity() const -> Series
+Series Series::sensitivity() const
 ```
 
 ## What It Does

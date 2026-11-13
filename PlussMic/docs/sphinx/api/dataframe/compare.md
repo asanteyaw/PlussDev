@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrame::compare(double other) const -> DataFrame
-DataFrame::compare(const DataFrame& other) const -> DataFrame
-DataFrame::compare(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::compare(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::compare(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::compare(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame DataFrame::compare(double other) const
+DataFrame DataFrame::compare(const DataFrame& other) const
+DataFrame DataFrame::compare(const DataFrame& other, const AlignOptions& options) const
+DataFrame DataFrame::compare(const Slate& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::compare(const Slate& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::compare(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does

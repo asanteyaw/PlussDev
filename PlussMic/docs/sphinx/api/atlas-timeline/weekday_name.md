@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::weekday_name() const -> Atlas
+Atlas AtlasTimelineAccessor::weekday_name() const
 ```
 
 ## What It Does

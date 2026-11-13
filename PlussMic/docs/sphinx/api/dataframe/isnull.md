@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrame::isnull(pluss::RangeView<std::string_view> features = {}) const -> DataFrame
+DataFrame DataFrame::isnull(pluss::RangeView<std::string_view> features = {}) const
 
 template <detail::StringViewNameRange NameRange>
-DataFrame::isnull(const NameRange& features) const -> DataFrame
+DataFrame DataFrame::isnull(const NameRange& features) const
 ```
 
 ## What It Does

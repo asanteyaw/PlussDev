@@ -8,10 +8,10 @@
 ## Signature
 
 ```cpp
-DataFramePlotAccessor::radviz(
+pluss::pl::Studio DataFramePlotAccessor::radviz(
     pluss::msharp::RangeView::Of<std::string_view> features = {},
     std::optional<std::string_view> class_feature = std::nullopt,
-    const RadvizPlotOptions& options = {}) const -> pluss::pl::Studio
+    const RadvizPlotOptions& options = {}) const
 ```
 
 ## What It Does

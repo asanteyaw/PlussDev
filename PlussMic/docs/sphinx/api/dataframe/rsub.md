@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::rsub(double other) const -> DataFrame
+DataFrame DataFrame::rsub(double other) const
 ```
 
 ## What It Does

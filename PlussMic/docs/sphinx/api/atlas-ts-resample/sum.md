@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsResampler::sum() const -> Atlas
+Atlas AtlasTsResampler::sum() const
 ```
 
 ## What It Does

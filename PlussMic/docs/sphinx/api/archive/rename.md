@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Archive::rename(std::string_view from, std::string_view to) const -> Archive
-Archive::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const -> Archive
+Archive Archive::rename(std::string_view from, std::string_view to) const
+Archive Archive::rename(std::initializer_list<std::pair<std::string_view, std::string_view>> mapping) const
 ```
 
 ## What It Does

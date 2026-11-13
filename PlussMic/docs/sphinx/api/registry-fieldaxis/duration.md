@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-RegistryFieldAxisAccessor::duration() -> Registry
+Registry RegistryFieldAxisAccessor::duration()
 ```
 
 ## What It Does

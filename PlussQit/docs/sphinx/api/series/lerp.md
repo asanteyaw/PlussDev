@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::lerp(const Series& end, const Series& weight) const -> Series
+Series Series::lerp(const Series& end, const Series& weight) const
 Series& Series::lerp_(const Series& end, const Series& weight)
 Series& Series::lerp_(const Series& end, double weight) const
 Series& Series::lerp_(const Series& end, const Series& weight) const

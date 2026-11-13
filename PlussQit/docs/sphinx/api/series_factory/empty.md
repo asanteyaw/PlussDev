@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-pluss::series::empty(sizes, ScalarType dt) -> Series
-pluss::series::empty(sizes, Config cfg) -> Series
-pluss::series::empty(sizes, opts...) -> Series
-pluss::series::empty(sizes, {{"key", value}, ...}) -> Series
+Series pluss::series::empty(sizes, ScalarType dt)
+Series pluss::series::empty(sizes, Config cfg)
+Series pluss::series::empty(sizes, opts...)
+Series pluss::series::empty(sizes, {{"key", value}, ...})
 ```
 
 ## What It Builds

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::duplicated(bool keep_first = true, bool keep_last = false) const -> Slate
+Slate DataFrame::duplicated(bool keep_first = true, bool keep_last = false) const
 ```
 
 ## What It Does

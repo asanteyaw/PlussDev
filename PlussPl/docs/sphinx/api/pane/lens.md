@@ -4,7 +4,7 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 const Lens& Pane::lens() const noexcept
@@ -13,235 +13,294 @@ Lens& Pane::lens() noexcept
 
 ## What It Does
 
-Returns this pane's `Lens` — the camera/viewpoint state controlling azimuth, elevation,
-projection style, view angle, look-at target, and up-vector. As with
-[`theme_tokens()`](theme_tokens.md), there is no separate `Pane::lens(Lens)` setter method;
-instead, `lens()`'s non-`const` overload returns a **mutable reference** to the pane's own
-`Lens` object, and every change is made by calling `Lens`'s own chainable mutators through
-that reference (`pane.lens().look(...)`), or by assigning a whole new `Lens` value to it
-directly.
+Returns the pane's camera, a [`Lens`](../types/Lens.md): the viewing angles, the point looked at, the direction that is up, and the projection. There is no `Pane::lens(Lens)` setter: the non-const call returns a reference, and the view is changed through the chainable calls of the lens, `pane.lens().look(60, 25).project(ProjectionKind::Perspective)`, or by assigning a whole `Lens` to it.
 
-`Lens` matters for both 2D and 3D panes, though its effect is far more visible on 3D
-(`Volumetric`) panes — orbiting a 3D scene is the primary use case — while on 2D
-(`Planar`) panes it mainly governs the pane's projection style, which ordinarily stays
-`Orthographic` (2D data has no meaningful perspective to project).
+| Call on the lens | Effect |
+|---|---|
+| `look(azimuth, elevation)` | Sets the viewing angles in degrees, replacing the current ones. |
+| `spin(d_azimuth, d_elevation)` | Turns the view by the given angles from where it is. |
+| `project(kind)` | `Orthographic` (the default of a pane: parallel lines stay parallel) or `Perspective` (distant parts look smaller). |
+| `view_angle(degrees)` | The field of view of the perspective projection, strictly between 0 and 180; anything else throws. Orthographic views ignore it. |
+| `target_at(point)` | The point the picture is centred on, in box units (0 is the centre of the data box, 0.5 its faces). |
+| `up(vector)` | The direction drawn upward on the page. |
 
-```{important} The default Lens depends on Pane::kind()
-Every pane starts with a `Lens` chosen by its [`kind()`](kind.md): a `Planar` pane
-(`pane2()`) starts with `Lens::planar()` — a straight-down, `Orthographic` view
-(`elevation_deg = 90`, `up = {0, 1, 0}`) suited to flat 2D data — while a `Volumetric` pane
-(`pane3()`) starts with `Lens::spatial()` — an angled, `Orthographic` view
-(`azimuth_deg = -37.5`, `elevation_deg = 30`, `up = {0, 0, 1}`) suited to 3D data. Both
-static factories are directly callable too (`Lens::planar()`, `Lens::spatial()`), most
-often useful when building a `Lens` value to assign wholesale rather than mutating one
-in place. See Example 1 and Example 6.
-```
-
-### The `Lens` mutator methods
-
-All six return `Lens&` and are `noexcept`, so they chain freely:
-
-- **`look(azimuth_deg, elevation_deg)`** — sets both camera angles outright (an absolute
-  set, not a delta).
-- **`spin(delta_azimuth_deg, delta_elevation_deg)`** — nudges both camera angles by the
-  given deltas relative to their *current* values — additive, unlike `look()`.
-- **`target_at(Vec3d target)`** — sets the point the camera looks toward.
-- **`up(Vec3d up_vector)`** — sets which direction is considered "up" in the scene.
-- **`project(ProjectionKind projection)`** — switches between `ProjectionKind::Perspective`
-  and `ProjectionKind::Orthographic`.
-- **`view_angle(double degrees)`** — sets the field-of-view angle used under perspective
-  projection.
+A volumetric pane starts with `Lens::spatial()` (azimuth -37.5, elevation 30, up = z) and a planar pane with `Lens::planar()` (straight down the z axis, up = y); see [`kind`](kind.md). Only volumetric panes are drawn through the lens: a planar pane looks straight down whatever it holds.
 
 ## Parameters
 
-*(none — see `Lens`'s own mutator methods above for their individual parameters)*
+*(none)*
 
 ## Returns
 
-`const Lens&` (const overload) / `Lens&` (non-const overload)
-    A reference to this pane's current lens/camera state.
+`const Lens&` / `Lens&`
+    The pane's own lens. The reference follows later calls; copy the lens to keep a view.
 
 ## Examples
 
-Example 1. The default `Lens` differs by pane `kind()` — a 2D pane starts top-down
-(`elevation_deg = 90`) and orthographic; a 3D pane starts angled
-(`azimuth_deg = -37.5`, `elevation_deg = 30`) and also orthographic by default.
+Example 1. The lens each kind of pane starts with.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("lens_defaults");
-auto& planar = fig.pane2();
-planar.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-std::cout << planar.lens().azimuth_deg() << " " << planar.lens().elevation_deg() << "\n";
-std::cout << (planar.lens().projection() == ProjectionKind::Orthographic) << "\n";
-
-auto& volumetric = fig.pane3();
-volumetric.path3(std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
-std::cout << volumetric.lens().azimuth_deg() << " " << volumetric.lens().elevation_deg() << "\n";
-std::cout << (volumetric.lens().projection() == ProjectionKind::Orthographic) << "\n";
+fig.mosaic(1, 2);
+auto& flat = fig.pane2("flat");
+flat.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+auto& deep = fig.pane3("deep");
+auto& pane = deep;
+pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+auto show = [](const char* name, const Lens& lens) {
+  std::cout << name << ": azimuth " << lens.azimuth_deg() << ", elevation " << lens.elevation_deg() << ", view angle " << lens.view_angle_deg()
+            << ", orthographic " << (lens.projection() == ProjectionKind::Orthographic) << ", target (" << lens.target().x << ", " << lens.target().y << ", " << lens.target().z
+            << "), up (" << lens.up_vector().x << ", " << lens.up_vector().y << ", " << lens.up_vector().z << ")\n";
+};
+show("planar    ", flat.lens());
+show("volumetric", deep.lens());
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0 90
-1
--37.5 30
-1
+planar    : azimuth 0, elevation 90, view angle 30, orthographic 1, target (0, 0, 0), up (0, 1, 0)
+volumetric: azimuth -37.5, elevation 30, view angle 30, orthographic 1, target (0, 0, 0), up (0, 0, 1)
 ```
 
-Example 2. `look(azimuth, elevation)` sets both angles outright.
+![Output of Example 1](img/lens-1-defaults.svg)
+
+Example 2. `look` sets the angles outright; a second call replaces the first. Four views of the same data by azimuth and elevation.
 
 ```cpp
-using namespace pluss::pl;
-
+const double views[4][2] = {{-37.5, 30.0}, {-90.0, 10.0}, {0.0, 80.0}, {45.0, 30.0}};
 auto fig = studio("lens_look");
-auto& pane = fig.pane3();
-std::vector<double> x{0.0, 1.0, 2.0, 1.0}, y{0.0, 1.0, 0.0, -1.0}, z{0.0, 1.0, 2.0, 1.0};
-pane.path3(x, y, z);
-pane.lens().look(45.0, 60.0);
-fig.show();
-
-std::cout << pane.lens().azimuth_deg() << " " << pane.lens().elevation_deg() << "\n";
+fig.mosaic(1, 4);
+for (int i = 0; i < 4; ++i) {
+  auto& pane = fig.pane3("az " + std::to_string(static_cast<int>(views[i][0])) + ", el " + std::to_string(static_cast<int>(views[i][1])));
+  pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+  pane.lens().look(0.0, 0.0).look(views[i][0], views[i][1]);
+}
+std::cout << "last pane: azimuth " << fig.panes().back().lens().azimuth_deg() << ", elevation " << fig.panes().back().lens().elevation_deg() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-45 60
+last pane: azimuth 45, elevation 30
 ```
 
 ![Output of Example 2](img/lens-2-look.svg)
 
-Example 3. `spin(delta_azimuth, delta_elevation)` nudges the *current* angles rather than
-replacing them — additive, not absolute, unlike `look()`.
+Example 3. `spin` adds to the angles. After `look(10, 20)` a spin of (5, -5) leaves 15 and 15, and a second spin goes on from there; `look` would have replaced them.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("lens_spin");
-auto& pane = fig.pane3();
-std::vector<double> x{0.0, 1.0, 2.0, 1.0}, y{0.0, 1.0, 0.0, -1.0}, z{0.0, 1.0, 2.0, 1.0};
-pane.path3(x, y, z);
-
-const double az0 = pane.lens().azimuth_deg();
-const double el0 = pane.lens().elevation_deg();
-pane.lens().spin(15.0, -10.0);
-
-std::cout << (pane.lens().azimuth_deg() - az0) << "\n";
-std::cout << (pane.lens().elevation_deg() - el0) << "\n";
+auto& pane = fig.pane3("p");
+pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+pane.lens().look(10.0, 20.0).spin(5.0, -5.0);
+std::cout << "after look(10, 20).spin(5, -5): " << pane.lens().azimuth_deg() << ", " << pane.lens().elevation_deg() << "\n";
+pane.lens().spin(5.0, -5.0);
+std::cout << "after a second spin: " << pane.lens().azimuth_deg() << ", " << pane.lens().elevation_deg() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-15
--10
+after look(10, 20).spin(5, -5): 15, 15
+after a second spin: 20, 10
 ```
 
-Example 4. Chaining every mutator together — `look()`, `target_at()`, `up()`,
-`project()`, and `view_angle()` in one fluent expression, since all six return `Lens&`.
+![Output of Example 3](img/lens-3-spin.svg)
+
+Example 4. `project`. A pane starts orthographic, where parallel lines stay parallel; in the perspective view the near part of the scene is drawn larger and parallel edges converge.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("lens_chained");
-auto& pane = fig.pane3();
-std::vector<double> x{0.0, 1.0, 2.0, 1.0}, y{0.0, 1.0, 0.0, -1.0}, z{0.0, 1.0, 2.0, 1.0};
-pane.path3(x, y, z);
-
-pane.lens()
-    .look(20.0, 45.0)
-    .target_at(Vec3d{0.5, 0.5, 0.5})
-    .up(Vec3d{0.0, 1.0, 0.0})
-    .project(ProjectionKind::Perspective)
-    .view_angle(50.0);
-fig.show();
-
-std::cout << pane.lens().view_angle_deg() << "\n";
-std::cout << (pane.lens().projection() == ProjectionKind::Perspective) << "\n";
-std::cout << pane.lens().target().x << " " << pane.lens().target().y << " " << pane.lens().target().z << "\n";
-```
-
-### Output
-
-```text
-50
-1
-0.5 0.5 0.5
-```
-
-![Output of Example 4](img/lens-4-chained.svg)
-
-Example 5. Switching a 3D pane to `Perspective` projection and back to `Orthographic` —
-`project()` in isolation.
-
-```cpp
-using namespace pluss::pl;
-
 auto fig = studio("lens_project");
-auto& pane = fig.pane3();
-pane.path3(std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0}, std::vector<double>{0.0, 1.0});
-
-pane.lens().project(ProjectionKind::Perspective);
-std::cout << (pane.lens().projection() == ProjectionKind::Perspective) << "\n";
-
-pane.lens().project(ProjectionKind::Orthographic);
-std::cout << (pane.lens().projection() == ProjectionKind::Orthographic) << "\n";
+fig.mosaic(1, 2);
+for (int i = 0; i < 2; ++i) {
+  auto& pane = fig.pane3(i == 0 ? "Orthographic" : "Perspective");
+  pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+  pane.lens().project(i == 0 ? ProjectionKind::Orthographic : ProjectionKind::Perspective);
+}
+std::cout << "default is Orthographic: " << (studio("d").pane3().lens().projection() == ProjectionKind::Orthographic) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
-1
+default is Orthographic: 1
 ```
 
-Example 6. The static factories `Lens::planar()`/`Lens::spatial()`, called directly rather
-than read off an existing pane — useful for building a `Lens` value to assign wholesale.
+![Output of Example 4](img/lens-4-project.svg)
+
+Example 5. `view_angle` is the field of view of the perspective projection. A wide angle puts the eye close and exaggerates the perspective, a narrow one moves it away and flattens the view; the orthographic view has no field of view and ignores the angle.
 
 ```cpp
-using namespace pluss::pl;
-
-Lens planar_lens = Lens::planar();
-Lens spatial_lens = Lens::spatial();
-
-std::cout << planar_lens.elevation_deg() << "\n";
-std::cout << spatial_lens.elevation_deg() << "\n";
+auto build = [&](ProjectionKind kind, double angle) {
+  auto fig = studio("lens_view_angle");
+  auto& pane = fig.pane3("p");
+  pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+  pane.lens().project(kind).view_angle(angle);
+  return fig.to_svg();
+};
+std::cout << "perspective, 20 vs 70 degrees differ: " << (build(ProjectionKind::Perspective, 20.0) != build(ProjectionKind::Perspective, 70.0)) << "\n";
+std::cout << "orthographic, 20 vs 70 degrees differ: " << (build(ProjectionKind::Orthographic, 20.0) != build(ProjectionKind::Orthographic, 70.0)) << "\n";
+auto fig = studio("lens_view_angle_out");
+fig.mosaic(1, 2);
+for (int i = 0; i < 2; ++i) {
+  auto& pane = fig.pane3(i == 0 ? "20 degrees" : "70 degrees");
+  pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+  pane.lens().project(ProjectionKind::Perspective).view_angle(i == 0 ? 20.0 : 70.0);
+}
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-90
-30
+perspective, 20 vs 70 degrees differ: 1
+orthographic, 20 vs 70 degrees differ: 0
 ```
+
+![Output of Example 5](img/lens-5-view_angle.svg)
+
+Example 6. An angle outside (0, 180) has no field of view, so `view_angle` throws and leaves the lens as it was.
+
+```cpp
+auto fig = studio("lens_view_angle_errors");
+auto& pane = fig.pane3("p");
+pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+for (double bad : {0.0, 180.0, -5.0, std::numeric_limits<double>::quiet_NaN()}) {
+  try {
+    pane.lens().view_angle(bad);
+  } catch (const pluss::Error& e) {
+    std::cout << e.message() << "\n";
+  }
+}
+std::cout << "still " << pane.lens().view_angle_deg() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+Lens::view_angle: the angle must be strictly between 0 and 180 degrees
+Lens::view_angle: the angle must be strictly between 0 and 180 degrees
+Lens::view_angle: the angle must be strictly between 0 and 180 degrees
+Lens::view_angle: the angle must be strictly between 0 and 180 degrees
+still 30
+```
+
+![Output of Example 6](img/lens-6-view_angle_errors.svg)
+
+Example 7. `target_at` centres the picture on a point, given in box units: (0, 0, 0) is the centre of the data box, which is where every lens starts. A target 0.4 box widths along x puts that point in the middle, and the whole box stays in view, so the data sits off the centre of the picture.
+
+```cpp
+auto fig = studio("lens_target");
+fig.mosaic(1, 2);
+for (int i = 0; i < 2; ++i) {
+  auto& pane = fig.pane3(i == 0 ? "target at the centre" : "target at (0.4, 0, 0)");
+  pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+  if (i == 1) pane.lens().target_at(Vec3d{0.4, 0.0, 0.0});
+}
+const Lens& lens = fig.panes().back().lens();
+std::cout << "target (" << lens.target().x << ", " << lens.target().y << ", " << lens.target().z << ")\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+target (0.4, 0, 0)
+```
+
+![Output of Example 7](img/lens-7-target.svg)
+
+Example 8. `up` chooses which direction is drawn upward. By default z is up; with y up, the same data is drawn turned.
+
+```cpp
+auto fig = studio("lens_up");
+fig.mosaic(1, 2);
+for (int i = 0; i < 2; ++i) {
+  auto& pane = fig.pane3(i == 0 ? "z up" : "y up");
+  pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+  if (i == 1) pane.lens().up(Vec3d{0.0, 1.0, 0.0});
+}
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 8](img/lens-8-up.svg)
+
+Example 9. A view can be kept and reused as a value. The lens of the first pane is copied into the second, which is then drawn from the same view; assigning `Lens::planar()` goes straight down.
+
+```cpp
+auto fig = studio("lens_assign");
+fig.mosaic(1, 3);
+auto& first = fig.pane3("tuned");
+first.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+first.lens().look(20.0, 45.0).project(ProjectionKind::Perspective);
+const Lens kept = first.lens();
+auto& second = fig.pane3("copied");
+second.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+second.lens() = kept;
+auto& third = fig.pane3("from above");
+third.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+third.lens() = Lens::planar();
+std::cout << "copied: azimuth " << second.lens().azimuth_deg() << ", elevation " << second.lens().elevation_deg() << "\n";
+std::cout << "from above: elevation " << third.lens().elevation_deg() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+copied: azimuth 20, elevation 45
+from above: elevation 90
+```
+
+![Output of Example 9](img/lens-9-assign.svg)
+
+Example 10. A planar pane is drawn straight down whatever its lens says: the figure is the same with any view.
+
+```cpp
+auto build = [&](bool turned) {
+  auto fig = studio("lens_planar");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+  if (turned) pane.lens().look(40.0, 40.0);
+  return fig.to_svg();
+};
+std::cout << "planar pane unchanged by look(): " << (build(true) == build(false)) << "\n";
+auto fig = studio("lens_planar_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+planar pane unchanged by look(): 1
+```
+
+![Output of Example 10](img/lens-10-planar.svg)
 
 ## Notes
 
-- Both `Pane::lens()` overloads are `noexcept`; every `Lens` mutator is also `noexcept`.
-- No `Pane::lens(Lens)` setter exists — assign through the mutable reference instead:
-  `pane.lens() = Lens::spatial();` (whole-value) or chain individual mutators
-  (`pane.lens().look(...).view_angle(...)`).
-- `look()` is absolute; `spin()` is relative to the *current* angles — don't confuse the
-  two when orbiting a scene interactively.
-- The default `Lens` depends on `kind()` (`Planar` → `Lens::planar()`, `Volumetric` →
-  `Lens::spatial()`) — see the important callout above.
-- `Lens::planar()` and `Lens::spatial()` are both `Orthographic` by default; reach for
-  `project(ProjectionKind::Perspective)` explicitly for a perspective-projected 3D view.
+- `look`, `spin`, `target_at`, `up` and `project` are `noexcept`; `view_angle` throws `pluss::Error` for an angle outside (0, 180).
+- The pane is fitted to its plot area after the view is applied, so the view changes the shape of the picture and not its size.
 
 ## See Also
 
-- [`Pane::kind`](kind.md): determines the default `Lens` a new pane starts with.
-- [`Pane::lights`](lights.md): the companion `LightRig` state for 3D lighting, alongside
-  camera orientation.
-- [`Studio::pane3`](../studio/pane3.md): creates the 3D panes where `Lens` matters most.
+- [`Lens`](../types/Lens.md): the type, with its full member list.
+- [`Pane::kind`](kind.md): which lens a pane starts with.
+- [`Pane::lights`](lights.md): the light, which is placed relative to the view.
+- [`Pane::parallel_xy_labels`](parallel_xy_labels.md): axis labels that follow the view.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="theme_tokens.html">
+  <a class="prev-link" href="legend_shape.html">
     <span class="label">Previous</span>
-    <span class="title">theme_tokens</span>
+    <span class="title">legend_shape</span>
   </a>
   <a class="next-link" href="lights.html">
     <span class="label">Next</span>

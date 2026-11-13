@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::flip(std::int64_t dim) const -> Series
-Series::flip(pluss::RangeView<std::int64_t> dims) const -> Series
+Series Series::flip(std::int64_t dim) const
+Series Series::flip(pluss::RangeView<std::int64_t> dims) const
 ```
 
 ## What It Does

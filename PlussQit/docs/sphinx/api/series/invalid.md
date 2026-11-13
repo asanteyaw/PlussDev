@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::invalid() const -> Series
+Series Series::invalid() const
 ```
 
 ## What It Does

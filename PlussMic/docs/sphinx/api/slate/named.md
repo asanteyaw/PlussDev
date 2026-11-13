@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::named() const -> bool
+bool Slate::named() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::traverse_put_(pluss::RangeView<ExtractSpec> specs, const Series& values) -> Series&
+Series& Series::traverse_put_(pluss::RangeView<ExtractSpec> specs, const Series& values)
 ```
 
 ## What It Does

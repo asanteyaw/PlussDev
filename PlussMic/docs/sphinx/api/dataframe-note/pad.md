@@ -8,9 +8,9 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::pad(std::int64_t width,
-                            TextAlign align = TextAlign::Left,
-                            char fill = ' ') const -> DataFrame
+DataFrame DataFrameNoteAccessor::pad(std::int64_t width,
+                                      TextAlign align = TextAlign::Left,
+                                      char fill = ' ') const
 ```
 
 ## What It Does

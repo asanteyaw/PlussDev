@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Catalog::set_(std::string_view key, const Stream& value) -> Catalog&
-Catalog::set_(std::initializer_list<std::pair<std::string_view, Stream>> items) -> Catalog&
-Catalog::set_(std::initializer_list<NamedStream> items) -> Catalog&
+Catalog& Catalog::set_(std::string_view key, const Stream& value)
+Catalog& Catalog::set_(std::initializer_list<std::pair<std::string_view, Stream>> items)
+Catalog& Catalog::set_(std::initializer_list<NamedStream> items)
 ```
 
 ## What It Does

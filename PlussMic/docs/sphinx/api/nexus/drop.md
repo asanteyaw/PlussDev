@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Nexus::drop(std::initializer_list<std::string_view> keys) const -> Nexus
-Nexus::drop(pluss::msharp::RangeView::Of<std::string_view> keys) const -> Nexus
+Nexus Nexus::drop(std::initializer_list<std::string_view> keys) const
+Nexus Nexus::drop(pluss::msharp::RangeView::Of<std::string_view> keys) const
 template <detail::StringViewNameRange NameRange>
-Nexus::drop(const NameRange& keys) const -> Nexus
+Nexus Nexus::drop(const NameRange& keys) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::log() const -> Slate
+Slate Slate::log() const
 ```
 
 ## What It Does

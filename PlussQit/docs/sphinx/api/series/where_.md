@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::where_(const Series& condition, const Series& other) -> Series&
+Series& Series::where_(const Series& condition, const Series& other)
 
-Series::where_(const Series& condition, double other) -> Series&
+Series& Series::where_(const Series& condition, double other)
 ```
 
 ## What It Does

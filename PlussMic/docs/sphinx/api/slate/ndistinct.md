@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::ndistinct(bool dropnull = true) const -> SlateValue
+SlateValue Slate::ndistinct(bool dropnull = true) const
 ```
 
 ## What It Does

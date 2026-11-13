@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::movedim(std::int64_t source, std::int64_t destination) const -> Series
+Series Series::movedim(std::int64_t source, std::int64_t destination) const
 ```
 
 ## What It Does

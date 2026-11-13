@@ -8,32 +8,32 @@
 ## Signatures
 
 ```cpp
-DataFrame::fillnull(double value) const -> DataFrame
-DataFrame::fillnull(double value, pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrame::fillnull(double value) const
+DataFrame DataFrame::fillnull(double value, pluss::RangeView<std::string_view> features) const
 template <detail::StringViewNameRange NameRange>
-DataFrame::fillnull(double value, const NameRange& features) const -> DataFrame
+DataFrame DataFrame::fillnull(double value, const NameRange& features) const
 
-DataFrame::fillnull(std::string_view value) const -> DataFrame
-DataFrame::fillnull(std::string_view value, pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrame::fillnull(std::string_view value) const
+DataFrame DataFrame::fillnull(std::string_view value, pluss::RangeView<std::string_view> features) const
 template <detail::StringViewNameRange NameRange>
-DataFrame::fillnull(std::string_view value, const NameRange& features) const -> DataFrame
-DataFrame::fillnull(const char* value) const -> DataFrame
-DataFrame::fillnull(const char* value, pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrame::fillnull(std::string_view value, const NameRange& features) const
+DataFrame DataFrame::fillnull(const char* value) const
+DataFrame DataFrame::fillnull(const char* value, pluss::RangeView<std::string_view> features) const
 template <detail::StringViewNameRange NameRange>
-DataFrame::fillnull(const char* value, const NameRange& features) const -> DataFrame
+DataFrame DataFrame::fillnull(const char* value, const NameRange& features) const
 
-DataFrame::fillnull(const pluss::Timeline& value) const -> DataFrame
-DataFrame::fillnull(const pluss::Timeline& value, pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrame::fillnull(const pluss::Timeline& value) const
+DataFrame DataFrame::fillnull(const pluss::Timeline& value, pluss::RangeView<std::string_view> features) const
 template <detail::StringViewNameRange NameRange>
-DataFrame::fillnull(const pluss::Timeline& value, const NameRange& features) const -> DataFrame
+DataFrame DataFrame::fillnull(const pluss::Timeline& value, const NameRange& features) const
 
-DataFrame::fillnull(const pluss::Duration& value) const -> DataFrame
-DataFrame::fillnull(const pluss::Duration& value, pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrame::fillnull(const pluss::Duration& value) const
+DataFrame DataFrame::fillnull(const pluss::Duration& value, pluss::RangeView<std::string_view> features) const
 template <detail::StringViewNameRange NameRange>
-DataFrame::fillnull(const pluss::Duration& value, const NameRange& features) const -> DataFrame
+DataFrame DataFrame::fillnull(const pluss::Duration& value, const NameRange& features) const
 
-DataFrame::fillnull(pluss::RangeView<FillSpec> specs) const -> DataFrame
-DataFrame::fillnull(std::initializer_list<FillSpec> specs) const -> DataFrame
+DataFrame DataFrame::fillnull(pluss::RangeView<FillSpec> specs) const
+DataFrame DataFrame::fillnull(std::initializer_list<FillSpec> specs) const
 ```
 
 ## What It Does

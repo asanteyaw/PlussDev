@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::pow(double other) const -> Slate
-Slate::pow(const Slate& other) const -> Slate
+Slate Slate::pow(double other) const
+Slate Slate::pow(const Slate& other) const
 ```
 
 ## What It Does

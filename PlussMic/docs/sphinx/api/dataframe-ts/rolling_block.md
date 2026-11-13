@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsAccessor::rolling_block(pluss::RangeView<std::int64_t> windows, const TsRollingBlockOptions& options = {}) const -> DataFrame
+DataFrame DataFrameTsAccessor::rolling_block(pluss::RangeView<std::int64_t> windows, const TsRollingBlockOptions& options = {}) const
 ```
 
 ## What It Does

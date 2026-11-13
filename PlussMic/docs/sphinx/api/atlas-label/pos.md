@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-AtlasLabelAccessor::pos(double value) const -> Slate
-AtlasLabelAccessor::pos(std::string_view value) const -> Slate
-AtlasLabelAccessor::pos(const char* value) const -> Slate
+Slate AtlasLabelAccessor::pos(double value) const
+Slate AtlasLabelAccessor::pos(std::string_view value) const
+Slate AtlasLabelAccessor::pos(const char* value) const
 ```
 
 ## What It Does

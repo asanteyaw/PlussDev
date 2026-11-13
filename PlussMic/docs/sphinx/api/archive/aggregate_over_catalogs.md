@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::aggregate_over_catalogs(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const -> Catalog
+Catalog Archive::aggregate_over_catalogs(const std::function<Catalog(const std::vector<Catalog>&)>& fn) const
 ```
 
 ## What It Does

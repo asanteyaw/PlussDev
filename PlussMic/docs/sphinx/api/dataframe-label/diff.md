@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::diff(const Slate& other) const -> Slate
+Slate DataFrameLabelAccessor::diff(const Slate& other) const
 ```
 
 ## What It Does

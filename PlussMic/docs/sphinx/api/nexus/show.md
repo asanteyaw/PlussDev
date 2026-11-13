@@ -7,9 +7,9 @@
 ## Signatures
 
 ```cpp
-Nexus::show(const display::DisplayOptions& options = {}) const -> void
+void Nexus::show(const display::DisplayOptions& options = {}) const
 
-Nexus::show(std::ostream& os, const display::DisplayOptions& options = {}) const -> void
+void Nexus::show(std::ostream& os, const display::DisplayOptions& options = {}) const
 ```
 
 ## What It Does

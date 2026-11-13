@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-Series::index_put_(pluss::RangeView<Series> indices, const Series& values, bool accumulate) const -> Series&
-Series::index_put_(std::initializer_list<Series> indices, const Series& values, bool accumulate) const -> Series&
-Series::index_put_(std::int64_t index, const Series& values, bool accumulate = false) const -> Series&
-Series::index_put_(std::initializer_list<ExtractSpec> specs, const Series& values, bool accumulate = false) const -> Series&
+Series& Series::index_put_(pluss::RangeView<Series> indices, const Series& values, bool accumulate) const
+Series& Series::index_put_(std::initializer_list<Series> indices, const Series& values, bool accumulate) const
+Series& Series::index_put_(std::int64_t index, const Series& values, bool accumulate = false) const
+Series& Series::index_put_(std::initializer_list<ExtractSpec> specs, const Series& values, bool accumulate = false) const
 ```
 
 ## What It Does

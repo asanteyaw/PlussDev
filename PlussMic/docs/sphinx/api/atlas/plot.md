@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Atlas::plot() const -> AtlasPlotAccessor
-Atlas::plot(const AtlasPlotOptions& options) const -> AtlasPlotAccessor
+AtlasPlotAccessor Atlas::plot() const
+AtlasPlotAccessor Atlas::plot(const AtlasPlotOptions& options) const
 ```
 
 ## What It Does

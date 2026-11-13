@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::size(int dim) const -> std::int64_t
-Series::size(std::int64_t dim) const -> std::int64_t
+std::int64_t Series::size(int dim) const
+std::int64_t Series::size(std::int64_t dim) const
 ```
 
 ## What It Does

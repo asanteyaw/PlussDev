@@ -8,16 +8,16 @@
 ## Signatures
 
 ```cpp
-DataFrame::sample(std::int64_t n) const -> DataFrame
-DataFrame::sample(std::int64_t n, bool replace, Axis axis) const -> DataFrame
-DataFrame::sample(std::int64_t n, std::uint64_t random_state, bool replace = false, Axis axis = Axis::Case) const -> DataFrame
+DataFrame DataFrame::sample(std::int64_t n) const
+DataFrame DataFrame::sample(std::int64_t n, bool replace, Axis axis) const
+DataFrame DataFrame::sample(std::int64_t n, std::uint64_t random_state, bool replace = false, Axis axis = Axis::Case) const
 
 template <std::floating_point Float>
-DataFrame::sample(Float frac) const -> DataFrame
+DataFrame DataFrame::sample(Float frac) const
 template <std::floating_point Float>
-DataFrame::sample(Float frac, bool replace, Axis axis) const -> DataFrame
+DataFrame DataFrame::sample(Float frac, bool replace, Axis axis) const
 template <std::floating_point Float>
-DataFrame::sample(Float frac, std::uint64_t random_state, bool replace = false, Axis axis = Axis::Case) const -> DataFrame
+DataFrame DataFrame::sample(Float frac, std::uint64_t random_state, bool replace = false, Axis axis = Axis::Case) const
 ```
 
 ## What It Does

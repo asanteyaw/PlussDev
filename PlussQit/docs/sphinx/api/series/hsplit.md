@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-Series::hsplit(std::int64_t sections) const -> std::vector<Series>
-Series::hsplit(pluss::RangeView::Int indices) const -> std::vector<Series>
+std::vector<Series> Series::hsplit(std::int64_t sections) const
+std::vector<Series> Series::hsplit(pluss::RangeView::Int indices) const
 ```
 
 ## What It Does

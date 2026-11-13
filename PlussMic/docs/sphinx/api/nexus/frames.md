@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::frames() const -> const std::vector<DataFrame>&
+const std::vector<DataFrame>& Nexus::frames() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::scan() const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::scan() const
 ```
 
 ## What It Does

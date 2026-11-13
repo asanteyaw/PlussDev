@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::min() const -> Stream
+Stream Stream::min() const
 ```
 
 ## What It Does

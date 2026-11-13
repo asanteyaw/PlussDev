@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::upper() const -> DataFrame
+DataFrame DataFrameNoteAccessor::upper() const
 ```
 
 ## What It Does

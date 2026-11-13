@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::weigh(pluss::RangeView<double> weights, WindowStatistic statistic = WindowStatistic::Mean, std::int64_t min_count = 1) const -> Slate
+Slate Slate::weigh(pluss::RangeView<double> weights, WindowStatistic statistic = WindowStatistic::Mean, std::int64_t min_count = 1) const
 ```
 
 ## What It Does

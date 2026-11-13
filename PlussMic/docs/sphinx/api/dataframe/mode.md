@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::mode(bool drop_nulls = true) const -> DataFrame
+DataFrame DataFrame::mode(bool drop_nulls = true) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::info() const -> void
+void Catalog::info() const
 ```
 
 ## What It Does

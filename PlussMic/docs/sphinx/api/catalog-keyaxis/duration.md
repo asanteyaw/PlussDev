@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-CatalogKeyAxisAccessor::duration() -> Catalog
+Catalog CatalogKeyAxisAccessor::duration()
 ```
 
 ## What It Does

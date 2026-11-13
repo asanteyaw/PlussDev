@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::tl() const -> DataFrameTimelineAccessor
+DataFrameTimelineAccessor DataFrame::tl() const
 ```
 
 ## What It Does

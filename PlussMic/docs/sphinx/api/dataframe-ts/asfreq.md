@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::asfreq(const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt, pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const -> DataFrame
-DataFrameTsAccessor::asfreq(std::string_view freq, std::int64_t step = 1, pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt, pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const -> DataFrame
-DataFrameTsAccessor::asfreq(std::string_view time_feature, const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt, pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const -> DataFrame
-DataFrameTsAccessor::asfreq(std::string_view time_feature, std::string_view freq, std::int64_t step = 1, pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt, pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const -> DataFrame
+DataFrame DataFrameTsAccessor::asfreq(const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt, pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const
+DataFrame DataFrameTsAccessor::asfreq(std::string_view freq, std::int64_t step = 1, pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt, pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const
+DataFrame DataFrameTsAccessor::asfreq(std::string_view time_feature, const pluss::Timeline::ResampleOptions& options, pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt, pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const
+DataFrame DataFrameTsAccessor::asfreq(std::string_view time_feature, std::string_view freq, std::int64_t step = 1, pluss::subsp::stats::ts::GapFillMode fill_mode = pluss::subsp::stats::ts::GapFillMode::Forward, std::optional<double> constant = std::nullopt, pluss::subsp::stats::ts::ResampleOp op = pluss::subsp::stats::ts::ResampleOp::Last) const
 ```
 
 ## What It Does

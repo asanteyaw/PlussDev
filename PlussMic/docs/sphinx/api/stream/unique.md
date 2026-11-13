@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::unique() const noexcept -> bool
+bool Stream::unique() const noexcept
 ```
 
 ## What It Does

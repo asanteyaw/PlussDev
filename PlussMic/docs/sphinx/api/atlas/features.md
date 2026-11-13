@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Atlas::features(std::string_view feature) const -> Atlas
-Atlas::features(std::initializer_list<std::string_view> features) const -> Atlas
-Atlas::features(pluss::msharp::RangeView::Of<std::string_view> features) const -> Atlas
+Atlas Atlas::features(std::string_view feature) const
+Atlas Atlas::features(std::initializer_list<std::string_view> features) const
+Atlas Atlas::features(pluss::msharp::RangeView::Of<std::string_view> features) const
 ```
 
 ## What It Does

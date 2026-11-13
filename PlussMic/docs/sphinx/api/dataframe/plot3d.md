@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::plot3d() const -> DataFramePlot3DAccessor
-DataFrame::plot3d(const DataFramePlotOptions& options) const -> DataFramePlot3DAccessor
+DataFramePlot3DAccessor DataFrame::plot3d() const
+DataFramePlot3DAccessor DataFrame::plot3d(const DataFramePlotOptions& options) const
 ```
 
 ## What It Does

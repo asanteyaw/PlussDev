@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::normalize(UnicodeForm form = UnicodeForm::NFC) const -> Slate
+Slate Slate::normalize(UnicodeForm form = UnicodeForm::NFC) const
 ```
 
 ## What It Does

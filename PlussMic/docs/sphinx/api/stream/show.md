@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::show(std::ostream& os) const -> void
+void Stream::show(std::ostream& os) const
 ```
 
 ## What It Does

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Slate::framerize(std::string_view name = {}) -> DataFrame
+DataFrame Slate::framerize(std::string_view name = {})
 ```
 
 Reshape this Slate into a one-column `DataFrame` -- the 1-D to 2-D counterpart of pandas `Series.to_frame`.

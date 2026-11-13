@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-DataFrameFeatureAxisAccessor::duration() -> DataFrame
+DataFrame DataFrameFeatureAxisAccessor::duration()
 ```
 
 ## What It Does

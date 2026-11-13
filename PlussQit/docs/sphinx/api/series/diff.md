@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::diff(std::int64_t n) const -> Series
-Series::diff(std::int64_t n, std::int64_t dim) const -> Series
+Series Series::diff(std::int64_t n) const
+Series Series::diff(std::int64_t n, std::int64_t dim) const
 ```
 
 ## What It Does

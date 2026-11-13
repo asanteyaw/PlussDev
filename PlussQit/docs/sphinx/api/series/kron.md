@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::kron(const Series& other) const -> Series
+Series Series::kron(const Series& other) const
 ```
 
 ## What It Does

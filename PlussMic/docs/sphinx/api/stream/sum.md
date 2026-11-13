@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::sum() const -> Stream
+Stream Stream::sum() const
 ```
 
 ## What It Does

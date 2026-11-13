@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::cummax() const -> Series
-Series::cummax(std::int64_t dim) const -> Series
+Series Series::cummax() const
+Series Series::cummax(std::int64_t dim) const
 ```
 
 ## What It Does

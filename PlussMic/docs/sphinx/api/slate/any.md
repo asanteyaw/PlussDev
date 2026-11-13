@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::any(bool skipnull = true) const -> SlateValue
+SlateValue Slate::any(bool skipnull = true) const
 ```
 
 ## What It Does

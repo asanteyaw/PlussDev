@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-DataFrame::place(std::string name,
-                 const Slate& feature,
-                 std::string_view anchor_feature,
-                 bool after = false) const -> DataFrame
-DataFrame::place(std::string_view name,
-                 std::string_view anchor_feature,
-                 bool after = false) const -> DataFrame
+DataFrame DataFrame::place(std::string name,
+                           const Slate& feature,
+                           std::string_view anchor_feature,
+                           bool after = false) const
+DataFrame DataFrame::place(std::string_view name,
+                           std::string_view anchor_feature,
+                           bool after = false) const
 ```
 
 ## What It Does

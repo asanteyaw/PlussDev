@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::relabel_depth(const Slate& labels) const -> Atlas
+Atlas Atlas::relabel_depth(const Slate& labels) const
 ```
 
 ## What It Does

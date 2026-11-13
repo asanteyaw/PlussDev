@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::asfreq(std::optional<double> fill_value = std::nullopt) const -> DataFrame
+DataFrame DataFrameTsResampler::asfreq(std::optional<double> fill_value = std::nullopt) const
 ```
 
 ## What It Does

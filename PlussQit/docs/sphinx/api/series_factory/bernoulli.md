@@ -7,15 +7,15 @@
 ## Signature
 
 ```cpp
-pluss::series::bernoulli(sizes,
-                         double p = 0.5,
-                         ScalarType dtype = ScalarType::Bool,
-                         std::uint64_t seed = 0) -> Series
+Series pluss::series::bernoulli(sizes,
+                                double p = 0.5,
+                                ScalarType dtype = ScalarType::Bool,
+                                std::uint64_t seed = 0)
 
-pluss::series::bernoulli(sizes,
-                         double p,
-                         Config cfg,
-                         std::uint64_t seed = 0) -> Series
+Series pluss::series::bernoulli(sizes,
+                                double p,
+                                Config cfg,
+                                std::uint64_t seed = 0)
 ```
 
 ## What It Builds

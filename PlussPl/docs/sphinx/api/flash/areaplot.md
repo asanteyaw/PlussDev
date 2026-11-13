@@ -7,8 +7,7 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::areaplot(Pane& pane, X&& x, Y&& y, double base = 0.0)
+Trace& flash::areaplot(Pane& pane, Series x, Series y, double base = 0.0)
 ```
 
 ## What It Does
@@ -53,7 +52,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-areaplot-1-default-base.svg)
 
-Example 2. An explicit, non-zero `base`. Verified via direct SVG diff to render genuinely
+Example 2. An explicit, non-zero `base`. Renders
 different (a visibly shifted bottom edge) from Example 1.
 
 ```cpp

@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-Series::cross(const Series& other) const -> Series
-Series::cross(const Series& other, std::int64_t dim) const -> Series
+Series Series::cross(const Series& other) const
+Series Series::cross(const Series& other, std::int64_t dim) const
 ```
 
 ## What It Does

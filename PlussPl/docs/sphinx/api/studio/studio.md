@@ -1,153 +1,155 @@
 <!-- pluss-hand-authored -->
 
-# pluss::pl::studio
+# studio
 
 [Back to Studio API Reference](../../studio_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-pluss::pl::studio(std::string name = {}) -> Studio
-
-// The constructor studio() wraps:
+Studio studio(std::string name = {})
 Studio::Studio(std::string name = {}, Theme theme = Theme::paper())
 ```
 
 ## What It Does
 
-`studio()` is the idiomatic entry point into every `PlussPl` chart — it builds an empty
-`Studio` (a figure with no panes yet) and hands it back by value. It is a thin one-line
-wrapper: `studio(name)` is exactly `Studio(std::move(name))`, nothing more. The only reason
-to reach for the `Studio` constructor directly instead of `studio()` is to pass an explicit
-`theme` as a second argument at construction time — `studio()` has no parameter for that;
-every `Studio` it builds starts on `Theme::paper()` and is themed afterward via
-[`Studio::theme`](theme.md) if a different theme is wanted.
+Creates a figure. `studio(name)` is the everyday spelling and is exactly `Studio(name)`: an empty figure with no panes, 1280 by 820 drawing units, the paper theme, no headline, no mosaic, no docked legend and the relaxed layout. The constructor is the form that also takes a `Theme`, used for the figure's own parts (background, headline, captions, docked legend) and copied into every pane created afterwards. There is nothing to set before use: panes are added with [`pane2`](pane2.md) and [`pane3`](pane3.md), and the figure is looked at with [`show`](show.md) or saved with [`save_svg`](save_svg.md), [`save_pdf`](save_pdf.md) or [`save_png`](save_png.md).
 
-```{important} An empty Studio has nothing to render yet
-`studio()`/`Studio(...)` alone produces a figure with zero panes. Nothing is drawn — and
-[`to_svg()`](to_svg.md)/[`show()`](show.md) on a pane-less `Studio` still succeeds, just
-producing an essentially blank canvas. A real chart needs at least one
-[`pane2()`](pane2.md)/[`pane3()`](pane3.md) call, followed by a `flash::` plotting function
-(e.g. `pane.trend(x, y)`) drawing into that pane.
-```
+The name is bookkeeping: it is never drawn (see [`name`](name.md)); an empty name is the default. A `Studio` is a value: copying one copies its panes and settings, and the copy is independent of the original. Moving is cheap, and a figure cannot be shared between two names. Panes created from a figure stay valid for as long as that figure lives.
 
 ## Parameters
 
-**name** (`std::string`, default `{}`)
-    The figure's own name — used as the fallback window title for [`show()`](show.md), the
-    fallback output-file stem some save paths use internally, and returned unchanged by
-    [`name()`](name.md). Purely bookkeeping: it is **not** rendered anywhere inside the SVG
-    itself (unlike [`headline()`](headline.md), which is). An empty name (the default) is a
-    valid, common choice for one-off exploratory charts.
+**name** (`std::string`, default empty)
+    The figure's name, used for window titles and temporary file names. Not drawn.
 
-**theme** (`Theme`, default `Theme::paper()`, constructor-only)
-    The starting theme every pane created afterward inherits, unless overridden per-pane.
-    See [`Studio::theme`](theme.md) for the full explanation of `Theme` and the built-in
-    `Theme::paper()`/`Theme::ocean()` presets. Only reachable via the `Studio` constructor
-    directly — `studio()` always starts on `Theme::paper()`.
+**theme** (`Theme`, constructor only, default `Theme::paper()`)
+    The figure's theme; `Theme::ocean()` is the other built-in one.
 
 ## Returns
 
 `Studio`
-    A new, empty figure — by value, ready to have panes added to it.
+    A new, empty figure.
 
 ## Examples
 
-Example 1. The default, no-argument call: an unnamed figure.
+Example 1. What a new figure holds. Nothing is drawn yet; the size, theme and settings are the defaults, and the first pane makes the figure worth drawing.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio();
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
-fig.show();
+auto fig = studio("studio_defaults");
+std::cout << "name: " << fig.name() << ", panes: " << fig.pane_count() << "\n";
+std::cout << "size: " << fig.extent().width << " x " << fig.extent().height << ", theme: " << fig.theme_tokens().name() << "\n";
+std::cout << "headline empty: " << fig.headline_text().empty() << ", mosaic active: " << fig.mosaic_layout().active << ", dock: " << static_cast<int>(fig.legend_dock()) << ", tight layout: " << fig.tight_layout_enabled() << "\n";
+fig.pane2("p").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
+fig.save_svg("figure.svg");
 ```
 
-`fig.name()` is the empty string here — perfectly valid; nothing about rendering or export
-requires a name.
+### Output
 
-![Output of Example 1](img/ctor-1.svg)
+```text
+name: studio_defaults, panes: 0
+size: 1280 x 820, theme: paper
+headline empty: 1, mosaic active: 0, dock: 0, tight layout: 0
+```
 
-Example 2. An explicit name.
+![Output of Example 1](img/studio-1-defaults.svg)
+
+Example 2. The two spellings. `studio(name)` and `Studio(name)` make the same figure, and an unnamed figure is allowed.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("revenue");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
-fig.show();
+auto a = studio("same");
+Studio b("same");
+Studio unnamed;
+for (Studio* fig : {&a, &b}) fig->pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+std::cout << "same SVG: " << (a.to_svg() == b.to_svg()) << ", unnamed name empty: " << unnamed.name().empty() << "\n";
+a.save_svg("figure.svg");
 ```
 
-`fig.name()` is now `"revenue"` — used as the window title if [`show()`](show.md)'s own
-`title` argument is left empty, and as the default output-filename stem for
-[`save_pdf(..., PdfEngine::SvgConvert)`](save_pdf.md)/[`save_png`](save_png.md)'s internal
-temp files.
+### Output
 
-![Output of Example 2](img/ctor-2.svg)
+```text
+same SVG: 1, unnamed name empty: 1
+```
 
-Example 3. Reaching past `studio()` to the `Studio` constructor directly, for an explicit
-starting theme.
+![Output of Example 2](img/studio-2-spellings.svg)
+
+Example 3. A theme at construction. The constructor takes the figure's theme, here `ocean`; panes created afterwards copy it, and the figure's own parts use it.
 
 ```cpp
-using namespace pluss::pl;
-
-Studio fig("revenue", Theme::ocean());
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
-fig.show();
+Studio fig("studio_ocean", Theme::ocean());
+fig.headline("Ocean theme");
+fig.pane2("p").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
+std::cout << "figure theme: " << fig.theme_tokens().name() << ", pane theme: " << fig.panes()[0].theme_tokens().name() << "\n";
+fig.save_svg("figure.svg");
 ```
 
-`studio()` alone has no way to set an initial theme — reach for the constructor when the
-very first pane needs to already be themed (as opposed to calling
-[`.theme(Theme::ocean())`](theme.md) as a second step, which produces an identical result
-for any panes created afterward).
+### Output
 
-![Output of Example 3](img/ctor-3.svg)
+```text
+figure theme: ocean, pane theme: ocean
+```
 
-Example 4. `studio(name)` and `Studio(name)` (default theme) produce byte-identical SVGs
-for the same subsequent calls — confirming `studio()` really is just a thin wrapper.
+![Output of Example 3](img/studio-3-theme.svg)
+
+Example 4. A figure is a value. A copy carries the panes and settings of the moment, and adding a pane to the copy leaves the original alone.
 
 ```cpp
-using namespace pluss::pl;
-
-auto via_factory = studio("revenue");
-auto& p1 = via_factory.pane2();
-p1.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
-
-Studio via_ctor("revenue");
-auto& p2 = via_ctor.pane2();
-p2.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{1.0, 2.0, 3.0});
-
-via_factory.show();
+auto original = studio("original");
+original.pane2("first").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+Studio copy = original;
+copy.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+copy.mosaic(1, 2);
+std::cout << "original panes: " << original.pane_count() << ", copy panes: " << copy.pane_count() << "\n";
+std::cout << "original mosaic: " << original.mosaic_layout().active << ", copy mosaic: " << copy.mosaic_layout().active << "\n";
+copy.save_svg("figure.svg");
 ```
 
-![Output of Example 4](img/ctor-4.svg)
+### Output
+
+```text
+original panes: 1, copy panes: 2
+original mosaic: 0, copy mosaic: 1
+```
+
+![Output of Example 4](img/studio-4-copy.svg)
+
+Example 5. An empty figure is valid. With no panes it renders as an empty canvas and every output function works.
+
+```cpp
+auto fig = studio("studio_empty");
+const std::string svg = fig.to_svg();
+std::cout << "svg: " << (svg.find("<svg") != std::string::npos) << ", pdf: " << (fig.to_pdf().rfind("%PDF", 0) == 0) << "\n";
+auto shown = studio("studio_empty_out");
+shown.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+shown.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+svg: 1, pdf: 1
+```
+
+![Output of Example 5](img/studio-5-empty.svg)
 
 ## Notes
 
-- `studio()` is a one-line forward to `Studio(std::move(name))` — identical output to the
-  constructor's default-theme form for the same `name`.
-- `name` is bookkeeping only — it never appears inside the rendered SVG. For text that
-  actually renders on the figure, see [`headline()`](headline.md).
-- An empty `Studio` renders successfully but has nothing visible in it — see the important
-  callout above.
-- The `Theme`-taking constructor overload is the only way to set a theme at construction
-  time; every other path (including `studio()`) starts on `Theme::paper()` and themes
-  afterward via [`theme()`](theme.md).
+- `studio` is the factory in `pluss::pl`; `Studio` is the type. Both are the public face of the plotting layer.
+- A figure owns its panes; references to panes stay valid for the figure's life, and [`pane_index`](pane_index.md) turns one into a position.
 
 ## See Also
 
-- [`Studio::rename`](rename.md): change the name after construction.
-- [`Studio::theme`](theme.md): change the theme after construction — the `studio()`-first,
-  theme-second alternative to Example 3's constructor call.
-- [`Studio::pane2`](pane2.md) / [`pane3`](pane3.md): the next step after building an empty
-  `Studio` — add a pane to actually draw into.
+- [`Studio::pane2`](pane2.md), [`pane3`](pane3.md): add panes.
+- [`Studio::theme`](theme.md): replaces the theme later.
+- [`Studio::name`](name.md), [`rename`](rename.md): the name.
+- [`Studio::size`](size.md): the figure size.
 
 <div class="pluss-inline-prev-next">
-  <a class="next-link" href="rename.html">
+  <a class="prev-link" href="size.html">
+    <span class="label">Previous</span>
+    <span class="title">size</span>
+  </a>
+  <a class="next-link" href="style.html">
     <span class="label">Next</span>
-    <span class="title">rename</span>
+    <span class="title">style</span>
   </a>
 </div>

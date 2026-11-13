@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::ndistinct(DistinctOptions options = {}) const -> Archive
+Archive Archive::ndistinct(DistinctOptions options = {}) const
 ```
 
 ### `DistinctOptions` fields

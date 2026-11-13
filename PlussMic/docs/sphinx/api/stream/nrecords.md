@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::nrecords() const -> std::int64_t
+std::int64_t Stream::nrecords() const
 ```
 
 ## What It Does

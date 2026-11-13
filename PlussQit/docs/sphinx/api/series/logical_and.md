@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::logical_and(const Series& rhs) const -> Series
+Series Series::logical_and(const Series& rhs) const
 Series& Series::logical_and_(const Series& rhs) const
 ```
 

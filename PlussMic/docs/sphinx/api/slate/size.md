@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::size() const -> std::int64_t
+std::int64_t Slate::size() const
 ```
 
 ## What It Does

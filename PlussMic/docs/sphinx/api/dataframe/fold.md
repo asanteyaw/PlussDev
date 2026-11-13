@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::fold(const std::function<Slate(const DataFrame&)>& fn, ResultShape shape = ResultShape::Reduce) const -> Slate
+Slate DataFrame::fold(const std::function<Slate(const DataFrame&)>& fn, ResultShape shape = ResultShape::Reduce) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::corr(const Slate& other, SlateCorrMethod method = SlateCorrMethod::Pearson) const -> double
+double Slate::corr(const Slate& other, SlateCorrMethod method = SlateCorrMethod::Pearson) const
 ```
 
 ## What It Does

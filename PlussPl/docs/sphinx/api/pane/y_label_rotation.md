@@ -4,75 +4,189 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Pane& Pane::y_label_rotation(double degrees)          // sets an explicit rotation
-Pane& Pane::clear_y_label_rotation() noexcept          // clears back to the default
+Pane& Pane::y_label_rotation(double degrees)
+Pane& Pane::clear_y_label_rotation() noexcept
 ```
 
 ## What It Does
 
-The y-axis counterpart of [`x_label_rotation()`](x_label_rotation.md)/
-[`clear_x_label_rotation()`](x_label_rotation.md). Every detail carries over unchanged —
-only validated for finiteness — see [`x_label_rotation()`](x_label_rotation.md) for the
-full worked-example set.
+Rotates the y axis label by an explicit angle in degrees. The angle is stored in `y_axis().label_rotation_deg` as an optional value: empty until set, which means the renderer chooses the angle for the axis. `y_label_rotation` stores the angle and `clear_y_label_rotation()` removes it, restoring the automatic choice, so a figure that sets and then clears an angle is exactly the figure that never set one.
+
+The angle must be finite. Infinity and NaN are refused with `pluss::Error` and the stored value is left as it was; every finite number is stored as given, so 90, -90 and 720 are all accepted and are not reduced to a range. It is per axis, and it is read when the figure is rendered.
 
 ## Parameters
 
-**degrees** (`double`, setter only)
-    The rotation angle in degrees. Must be finite.
+**degrees** (`double`)
+    The angle in degrees. Finite.
 
 ## Returns
 
 `Pane&`
-    A reference to the same pane, for chaining.
+    The same pane, for chaining.
 
 ## Examples
 
-Example 1. A vertical (`-90` degree) rotation, a common choice for y-axis labels.
+Example 1. Default, set, clear. A new pane has no override (`label_rotation_deg` is empty); the call stores the angle exactly as given, and `clear_y_label_rotation()` removes it.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("y_label_rotation_neg90");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane.y_label("Amplitude");
-pane.y_label_rotation(-90.0);
-fig.show();
-
-std::cout << *pane.y_axis().label_rotation_deg << "\n";
+auto fig = studio("y_label_rotation_readback");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+auto show = [&] { const auto& v = pane.y_axis().label_rotation_deg; std::cout << (v ? std::to_string(*v) : std::string("none")) << "\n"; };
+std::cout << "new pane: "; show();
+pane.y_label_rotation(45.0);
+std::cout << "after y_label_rotation(45): "; show();
+pane.clear_y_label_rotation();
+std::cout << "after clear_y_label_rotation(): "; show();
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
--90
+new pane: none
+after y_label_rotation(45): 45.000000
+after clear_y_label_rotation(): none
 ```
 
-![Output of Example 1](img/y_label_rotation-1-neg90.svg)
+![Output of Example 1](img/y_label_rotation-1-readback.svg)
+
+Example 2. Any finite angle. The values 0, 45, 90, -90 and 720 are all accepted and stored as given, with no normalisation; the saved figure is rotated 45 degrees.
+
+```cpp
+auto fig = studio("y_label_rotation_angles");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_label("Axis label");
+for (double degrees : {0.0, 45.0, 90.0, -90.0, 720.0}) {
+  pane.y_label_rotation(degrees);
+  std::cout << degrees << " stored as " << *pane.y_axis().label_rotation_deg << "\n";
+}
+pane.y_label_rotation(45.0);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+0 stored as 0
+45 stored as 45
+90 stored as 90
+-90 stored as -90
+720 stored as 720
+```
+
+![Output of Example 2](img/y_label_rotation-2-angles.svg)
+
+Example 3. The effect. Rotating changes the figure, and the rotated text carries a rotation in the SVG; the angle 0 equals the figure with no override.
+
+```cpp
+auto build = [&](const char* mode) {
+  auto fig = studio("y_label_rotation_effect");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  pane.y_label("Axis label");
+  if (std::string(mode) == "0") pane.y_label_rotation(0.0);
+  if (std::string(mode) == "60") pane.y_label_rotation(60.0);
+  return fig.to_svg();
+};
+std::cout << "60 differs from none: " << (build("60") != build("none")) << ", rotate() present: " << (build("60").find("rotate(60") != std::string::npos) << "\n";
+std::cout << "explicit 0 equals none: " << (build("0") == build("none")) << "\n";
+auto fig = studio("y_label_rotation_effect_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_label("Axis label");
+pane.y_label_rotation(60.0);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+60 differs from none: 1, rotate() present: 1
+explicit 0 equals none: 1
+```
+
+![Output of Example 3](img/y_label_rotation-3-effect.svg)
+
+Example 4. Only finite angles. Infinity and NaN are refused with `pluss::Error` and the stored angle is kept; every finite number is accepted.
+
+```cpp
+auto fig = studio("y_label_rotation_invalid");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_label("Axis label");
+pane.y_label_rotation(30.0);
+for (double bad : {std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()}) {
+  try {
+    pane.y_label_rotation(bad);
+  } catch (const pluss::Error& e) {
+    std::cout << bad << ": " << e.message() << "\n";
+  }
+}
+std::cout << "kept: " << *pane.y_axis().label_rotation_deg << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+inf: y_label_rotation: angle must be finite
+-inf: y_label_rotation: angle must be finite
+nan: y_label_rotation: angle must be finite
+kept: 30
+```
+
+![Output of Example 4](img/y_label_rotation-4-invalid.svg)
+
+Example 5. Clearing restores the default. After `clear_y_label_rotation()` the figure equals the one that never set an angle.
+
+```cpp
+auto build = [&](bool set_then_clear) {
+  auto fig = studio("y_label_rotation_clear");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  pane.y_label("Axis label");
+  if (set_then_clear) pane.y_label_rotation(75.0).clear_y_label_rotation();
+  return fig.to_svg();
+};
+std::cout << "equal: " << (build(true) == build(false)) << "\n";
+auto fig = studio("y_label_rotation_clear_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_label("Axis label");
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+equal: 1
+```
+
+![Output of Example 5](img/y_label_rotation-5-clear_restores.svg)
 
 ## Notes
 
-See [`x_label_rotation()`](x_label_rotation.md)'s Notes — every detail applies identically
-here.
+- `y_label_rotation` throws, so it is not `noexcept`; `clear_y_label_rotation` never throws.
+- Rotated text needs room: the gap between the axis and its labels is set with [`y_label_gap`](y_label_gap.md).
 
 ## See Also
 
-- [`Pane::x_label_rotation`](x_label_rotation.md): the x-axis equivalent, with the full
-  worked-example set for validation failures.
-- [`Pane::z_label_rotation`](z_label_rotation.md): the z-axis equivalent.
-- [`Pane::y_label_centered`](y_label_centered.md): a y-axis-only layout toggle, unrelated
-  to rotation.
+- [`Pane::y_tick_rotation`](y_tick_rotation.md): the other rotation.
+- [`Pane::x_label_rotation`](x_label_rotation.md): the same setting for the x axis.
+- [`Pane::z_label_rotation`](z_label_rotation.md): the same setting for the z axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="x_label_rotation.html">
+  <a class="prev-link" href="y_label_gap.html">
     <span class="label">Previous</span>
-    <span class="title">x_label_rotation</span>
+    <span class="title">y_label_gap</span>
   </a>
-  <a class="next-link" href="z_label_rotation.html">
+  <a class="next-link" href="y_limit_method.html">
     <span class="label">Next</span>
-    <span class="title">z_label_rotation</span>
+    <span class="title">y_limit_method</span>
   </a>
 </div>

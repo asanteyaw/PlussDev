@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::nearest() const -> DataFrame
+DataFrame DataFrameTsResampler::nearest() const
 ```
 
 ## What It Does

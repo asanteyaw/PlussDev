@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-DataFrameCastAccessor::series() const -> DataFrame
+DataFrame DataFrameCastAccessor::series() const
 ```
 
 ## What It Does

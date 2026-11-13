@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::square() const -> Series
+Series Series::square() const
 Series& Series::square_()
 Series& Series::square_() const
 ```

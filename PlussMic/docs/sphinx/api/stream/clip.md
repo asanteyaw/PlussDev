@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::clip(double min_value, double max_value) const -> Stream
+Stream Stream::clip(double min_value, double max_value) const
 ```
 
 ## What It Does

@@ -4,7 +4,7 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 const Theme& Pane::theme_tokens() const noexcept
@@ -13,20 +13,9 @@ Theme& Pane::theme_tokens() noexcept
 
 ## What It Does
 
-Returns this pane's own `Theme` — colors, name, and palette used when rendering this
-specific pane. The `const` overload is a read-only accessor; the non-`const` overload
-returns a **mutable reference**, letting the pane's theme be replaced in place by
-assigning a whole new `Theme` value through it (`Theme` itself has no field-level setters
-— so whole-value assignment is the only way to change it; `Theme` does not yet have its
-own dedicated reference page).
+Returns the pane's own [`Theme`](../types/Theme.md): the accent colours its traces cycle through, the background and foreground colours, and the palette of its surfaces. The non-const call returns a reference, and the theme is changed by assigning a whole `Theme` to it; a `Theme` has no setters for single fields.
 
-Every new pane starts out with a **copy** of whatever `Theme` its figure's
-[`Studio::theme_tokens()`](../studio/theme_tokens.md)/[`theme()`](../studio/theme.md) held
-at the moment [`pane2()`](../studio/pane2.md)/[`pane3()`](../studio/pane3.md) created it —
-the same creation-time-snapshot rule documented on `Studio::theme()`. After that moment,
-though, the two are **completely independent**: mutating a pane's own `theme_tokens()`
-never affects the figure's theme (or any other pane's), and mutating the figure's theme
-afterward never reaches back into panes already created. See Example 3.
+A pane takes a **copy** of the figure's theme at the moment it is made ([`Studio::theme`](../studio/theme.md) before [`pane2`](../studio/pane2.md)). After that the two are independent: changing the pane's theme does not touch the figure or the other panes, and changing the figure's theme later does not reach panes that already exist. To restyle a whole figure, set the figure's theme first and then make the panes; to restyle one pane, assign to its `theme_tokens()`.
 
 ## Parameters
 
@@ -34,117 +23,157 @@ afterward never reaches back into panes already created. See Example 3.
 
 ## Returns
 
-`const Theme&` (const overload) / `Theme&` (non-const overload)
-    A reference to this pane's current theme.
+`const Theme&` / `Theme&`
+    The pane's own theme. The reference follows later calls; copy it to keep a theme.
 
 ## Examples
 
-Example 1. A freshly created pane's theme matches whatever the figure's default theme
-was — `Theme::paper()`, `Studio`'s own constructor default, in this case.
+Example 1. A pane starts with the theme of its figure.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("pane_theme_default");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-fig.show();
-
-std::cout << pane.theme_tokens().name() << "\n";
+auto fig = studio("theme_default");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+std::cout << "figure: " << fig.theme_tokens().name() << ", pane: " << pane.theme_tokens().name() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-paper
+figure: paper, pane: paper
 ```
 
 ![Output of Example 1](img/theme_tokens-1-default.svg)
 
-Example 2. Overriding a single pane's theme in place, independent of the figure's own
-theme, via the non-`const` overload.
+Example 2. Assigning a theme restyles the pane: the same data in the two built-in themes, `Theme::paper()` and `Theme::ocean()`.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("pane_theme_mutated");
-auto& pane = fig.pane2();
-pane.theme_tokens() = Theme::ocean();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-fig.show();
-
-std::cout << pane.theme_tokens().name() << "\n";
-```
-
-### Output
-
-```text
-ocean
-```
-
-![Output of Example 2](img/theme_tokens-2-mutated.svg)
-
-Example 3. Two panes on the same `Studio` themed `ocean` at the figure level, then one
-pane overridden back to `paper` individually — the override doesn't leak to its sibling
-pane, and reading each pane's theme happens immediately after that pane's own creation
-(before the next `pane2()` call), per [`pane2()`](../studio/pane2.md)'s reference-safety
-rule.
-
-```cpp
-using namespace pluss::pl;
-
-auto fig = studio("pane_theme_independent");
-fig.theme(Theme::ocean());
-
-auto& first = fig.pane2("figure default (ocean)");
-first.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-std::string first_theme = first.theme_tokens().name();
-
-auto& second = fig.pane2("overridden (paper)");
-second.theme_tokens() = Theme::paper();
-second.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
-std::string second_theme = second.theme_tokens().name();
-
+auto fig = studio("theme_assign");
 fig.mosaic(1, 2);
-fig.show();
-
-std::cout << first_theme << " " << second_theme << "\n";
+auto& a = fig.pane2("paper");
+a.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+a.theme_tokens() = Theme::paper();
+auto& b = fig.pane2("ocean");
+b.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+b.theme_tokens() = Theme::ocean();
+std::cout << a.theme_tokens().name() << " and " << b.theme_tokens().name() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-ocean paper
+paper and ocean
 ```
 
-![Output of Example 3](img/theme_tokens-3-independent.svg)
+![Output of Example 2](img/theme_tokens-2-assign.svg)
+
+Example 3. The copy is taken when the pane is made. The first pane is made under the ocean theme; the figure's theme is then changed to paper, and the second pane is made. Each keeps the theme of its moment.
+
+```cpp
+auto fig = studio("theme_snapshot");
+fig.mosaic(1, 2);
+fig.theme(Theme::ocean());
+auto& first = fig.pane2("made under ocean");
+first.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+fig.theme(Theme::paper());
+auto& second = fig.pane2("made under paper");
+second.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+std::cout << "first: " << first.theme_tokens().name() << ", second: " << second.theme_tokens().name() << ", figure: " << fig.theme_tokens().name() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+first: ocean, second: paper, figure: paper
+```
+
+![Output of Example 3](img/theme_tokens-3-snapshot.svg)
+
+Example 4. Independent afterwards. Assigning a theme to one pane leaves the figure's theme and the other pane as they were.
+
+```cpp
+auto fig = studio("theme_independent");
+fig.mosaic(1, 2);
+auto& changed = fig.pane2("changed");
+changed.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+auto& untouched = fig.pane2("untouched");
+untouched.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+const std::string before = fig.theme_tokens().name();
+changed.theme_tokens() = before == "paper" ? Theme::ocean() : Theme::paper();
+std::cout << "changed: " << changed.theme_tokens().name() << ", untouched: " << untouched.theme_tokens().name() << ", figure still " << fig.theme_tokens().name() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+changed: ocean, untouched: paper, figure still paper
+```
+
+![Output of Example 4](img/theme_tokens-4-independent.svg)
+
+Example 5. Reading the tokens. The accents are the colours the traces take in turn, and the background and foreground are the colours of the page and of text and axes.
+
+```cpp
+auto fig = studio("theme_read");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+const Theme& theme = pane.theme_tokens();
+std::cout << theme.name() << ": " << theme.accents().size() << " accents; accent(0) red " << theme.accent(0).red << "\n";
+std::cout << "background alpha " << theme.background().alpha << ", foreground alpha " << theme.foreground().alpha << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+paper: 5 accents; accent(0) red 0.109804
+background alpha 1, foreground alpha 1
+```
+
+![Output of Example 5](img/theme_tokens-5-read.svg)
+
+Example 6. A theme of your own. The constructor takes a name, the accents, the background and foreground, and the palette of surfaces; this one is a dark page with two accents.
+
+```cpp
+auto fig = studio("theme_custom");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{1, 0, 1});
+pane.theme_tokens() = Theme("night", {Rgba::from_u8(255, 170, 60), Rgba::from_u8(90, 200, 255)}, Rgba::from_u8(18, 20, 28), Rgba::from_u8(230, 230, 235), PaletteRamp::thermal());
+std::cout << pane.theme_tokens().name() << " with " << pane.theme_tokens().accents().size() << " accents\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+night with 2 accents
+```
+
+![Output of Example 6](img/theme_tokens-6-custom.svg)
 
 ## Notes
 
-- Both overloads are `noexcept`.
-- `Theme` has no field-level setters (only accessors and the two static factories
-  `Theme::paper()`/`Theme::ocean()`), so the non-`const` overload is used for whole-value
-  reassignment, e.g. `pane.theme_tokens() = Theme::ocean();` — the exact same idiom as
-  [`Studio::theme_tokens()`](../studio/theme_tokens.md).
-- Copied from the figure's theme at pane-creation time, then fully independent — mutating
-  one side never affects the other afterward. See Example 3, and see
-  [`pane_style_defaults()`](../studio/pane_style_defaults.md) for the figure-wide mechanism
-  that captures a *template* pane's theme (among other fields) for future panes to inherit.
+- Both forms are `noexcept`.
+- The figure's page background is the figure's theme; a pane's own background colour is drawn inside its area.
 
 ## See Also
 
-- [`Studio::theme`](../studio/theme.md) / [`Studio::theme_tokens`](../studio/theme_tokens.md):
-  the figure-wide theme every new pane starts from.
-- [`Studio::pane_style_defaults`](../studio/pane_style_defaults.md): captures a template
-  pane's theme (and other style fields) for future `pane2()`/`pane3()` calls to inherit.
+- [`Theme`](../types/Theme.md): the type and its built-in themes.
+- [`Studio::theme`](../studio/theme.md): the figure's theme, which new panes copy.
+- [`Studio::theme_tokens`](../studio/theme_tokens.md): the figure's theme, read back.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="title.html">
+  <a class="prev-link" href="spire3.html">
     <span class="label">Previous</span>
-    <span class="title">title</span>
+    <span class="title">spire3</span>
   </a>
-  <a class="next-link" href="lens.html">
+  <a class="next-link" href="tick_font_scale.html">
     <span class="label">Next</span>
-    <span class="title">lens</span>
+    <span class="title">tick_font_scale</span>
   </a>
 </div>

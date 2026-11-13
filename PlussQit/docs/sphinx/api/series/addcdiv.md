@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::addcdiv(const Series& tensor1, const Series& tensor2,
-                double value = 1.0) const -> Series
+Series Series::addcdiv(const Series& tensor1, const Series& tensor2,
+                       double value = 1.0) const
 Series& Series::addcdiv_(const Series& tensor1, const Series& tensor2, double value=1.0) const
 ```
 

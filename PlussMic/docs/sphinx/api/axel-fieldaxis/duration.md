@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-AxelFieldAxisAccessor::duration() -> Axel
+Axel AxelFieldAxisAccessor::duration()
 ```
 
 ## What It Does

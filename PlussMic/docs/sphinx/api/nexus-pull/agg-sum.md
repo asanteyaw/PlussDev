@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-NexusPullAgg::sum(std::string_view feature, std::string_view alias = {}) -> NexusPullAgg&
-NexusPullAgg::sum(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) -> NexusPullAgg&
-NexusPullAgg::sum(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) -> NexusPullAgg&
+NexusPullAgg& NexusPullAgg::sum(std::string_view feature, std::string_view alias = {})
+NexusPullAgg& NexusPullAgg::sum(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+NexusPullAgg& NexusPullAgg::sum(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 
 ## What It Does

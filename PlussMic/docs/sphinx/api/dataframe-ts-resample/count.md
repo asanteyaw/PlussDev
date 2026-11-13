@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsResampler::count() const -> DataFrame
+DataFrame DataFrameTsResampler::count() const
 ```
 
 ## What It Does

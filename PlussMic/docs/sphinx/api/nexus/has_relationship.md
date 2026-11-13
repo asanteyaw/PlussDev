@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::has_relationship(std::string_view name) const -> bool
+bool Nexus::has_relationship(std::string_view name) const
 ```
 
 ## What It Does

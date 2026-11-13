@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTimelineAccessor::second() const -> Atlas
+Atlas AtlasTimelineAccessor::second() const
 ```
 
 ## What It Does

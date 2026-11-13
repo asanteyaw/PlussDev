@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::bottom(std::int64_t n, bool render = false) const -> SlateView
+SlateView Slate::bottom(std::int64_t n, bool render = false) const
 ```
 
 ## What It Does

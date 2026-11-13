@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::describe(bool render = false) const -> SlateView
+SlateView Slate::describe(bool render = false) const
 ```
 
 ## What It Does

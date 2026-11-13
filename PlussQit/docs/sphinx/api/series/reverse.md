@@ -7,15 +7,15 @@
 ## Signature
 
 ```cpp
-Series::reverse() const -> void
-Series::reverse(bool keep_graph,
-                bool accumulate_sensitivity = false,
-                bool track_higher_order = false) const -> void
-Series::reverse(const Series& sensitivity_output) const -> void
-Series::reverse(const Series& sensitivity_output,
-                bool keep_graph,
-                bool accumulate_sensitivity = false,
-                bool track_higher_order = false) const -> void
+void Series::reverse() const
+void Series::reverse(bool keep_graph,
+                     bool accumulate_sensitivity = false,
+                     bool track_higher_order = false) const
+void Series::reverse(const Series& sensitivity_output) const
+void Series::reverse(const Series& sensitivity_output,
+                     bool keep_graph,
+                     bool accumulate_sensitivity = false,
+                     bool track_higher_order = false) const
 ```
 
 ## What It Does

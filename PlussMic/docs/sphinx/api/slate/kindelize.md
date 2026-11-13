@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Slate::kindelize() -> pluss::kindle::Stream
+pluss::kindle::Stream Slate::kindelize()
 ```
 
 ## What It Does

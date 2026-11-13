@@ -8,11 +8,11 @@
 ## Signature
 
 ```cpp
-DataFramePlot3DAccessor::line(
+pluss::pl::Studio DataFramePlot3DAccessor::line(
     std::string_view x_feature,
     std::string_view y_feature,
     std::string_view z_feature,
-    const Line3DPlotOptions& options = {}) const -> pluss::pl::Studio
+    const Line3DPlotOptions& options = {}) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::matches(std::string_view pattern) const -> Slate
+Slate Slate::matches(std::string_view pattern) const
 ```
 
 ## What It Does

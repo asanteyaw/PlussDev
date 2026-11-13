@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-ContingencyTable::share() const -> ContingencyTable
+ContingencyTable ContingencyTable::share() const
 ```
 
 ## What It Does

@@ -8,10 +8,10 @@
 ## Signature
 
 ```cpp
-DataFrame::rank(RankTieRule ties = RankTieRule::Average,
-                 RankNullRule nulls = RankNullRule::Keep,
-                 bool ascending = true,
-                 bool percentage = false) const -> DataFrame
+DataFrame DataFrame::rank(RankTieRule ties = RankTieRule::Average,
+                           RankNullRule nulls = RankNullRule::Keep,
+                           bool ascending = true,
+                           bool percentage = false) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::monotonic(bool ascending = true, bool strict = false, bool nulls_last = true) const -> bool
+bool SlateLabelAccessor::monotonic(bool ascending = true, bool strict = false, bool nulls_last = true) const
 ```
 
 ## What It Does

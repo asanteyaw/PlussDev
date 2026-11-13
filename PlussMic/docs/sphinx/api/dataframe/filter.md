@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::filter(const pluss::Series& bool_mask) const -> DataFrame
-DataFrame::filter(const Slate& bool_mask) const -> DataFrame
-DataFrame::filter(const Slate& bool_mask, const AlignOptions& options) const -> DataFrame
+DataFrame DataFrame::filter(const pluss::Series& bool_mask) const
+DataFrame DataFrame::filter(const Slate& bool_mask) const
+DataFrame DataFrame::filter(const Slate& bool_mask, const AlignOptions& options) const
 ```
 
 ## What It Does

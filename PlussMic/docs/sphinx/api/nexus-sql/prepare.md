@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusQuery::prepare(std::string_view statement) const -> NexusQueryPrepared
+NexusQueryPrepared NexusQuery::prepare(std::string_view statement) const
 ```
 
 ## What It Does

@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::line() const -> pluss::pl::Studio
-SlatePlotAccessor::line(const Slate& x) const -> pluss::pl::Studio
-SlatePlotAccessor::line(const LinePlotOptions& options) const -> pluss::pl::Studio
-SlatePlotAccessor::line(const Slate& x, const LinePlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::line() const
+pluss::pl::Studio SlatePlotAccessor::line(const Slate& x) const
+pluss::pl::Studio SlatePlotAccessor::line(const LinePlotOptions& options) const
+pluss::pl::Studio SlatePlotAccessor::line(const Slate& x, const LinePlotOptions& options) const
 ```
 
 ## What It Does

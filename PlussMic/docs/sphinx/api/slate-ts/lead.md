@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::lead(std::int64_t periods = 1) const -> Slate
+Slate TimeSeriesAccessor::lead(std::int64_t periods = 1) const
 ```
 
 ## What It Does

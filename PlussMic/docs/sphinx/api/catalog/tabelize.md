@@ -8,8 +8,8 @@
 ## Signature
 
 ```cpp
-Catalog::tabelize(const TabelizePolicy& policy = {}) const -> pluss::table::DataFrame
-Catalog::tabelize(const RaggedPolicy& policy) const -> pluss::table::DataFrame
+pluss::table::DataFrame Catalog::tabelize(const TabelizePolicy& policy = {}) const
+pluss::table::DataFrame Catalog::tabelize(const RaggedPolicy& policy) const
 ```
 
 ### `TabelizePolicy` fields

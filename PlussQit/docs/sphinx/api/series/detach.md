@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::detach() const -> Series
+Series Series::detach() const
 ```
 
 ## What It Does

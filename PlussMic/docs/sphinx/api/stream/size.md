@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::size() const -> std::int64_t
+std::int64_t Stream::size() const
 ```
 
 ## What It Does

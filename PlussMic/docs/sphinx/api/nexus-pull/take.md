@@ -8,23 +8,23 @@
 
 ```cpp
 // Root fields, unaliased
-NexusPull::take(pluss::msharp::RangeView::Of<std::string_view> sources) -> NexusPull&
-NexusPull::take(std::initializer_list<std::string_view> sources) -> NexusPull&
+NexusPull& NexusPull::take(pluss::msharp::RangeView::Of<std::string_view> sources)
+NexusPull& NexusPull::take(std::initializer_list<std::string_view> sources)
 
 // Root fields, one at a time, with an optional alias
-NexusPull::take(std::string_view source, std::string_view alias = {}) -> NexusPull&
+NexusPull& NexusPull::take(std::string_view source, std::string_view alias = {})
 
 // Root fields, renamed as a batch of (source, alias) pairs
-NexusPull::take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) -> NexusPull&
-NexusPull::take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) -> NexusPull&
-NexusPull::take(const std::map<Key, Value, Compare, Alloc>& fields) -> NexusPull&
-NexusPull::take(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) -> NexusPull&
+NexusPull& NexusPull::take(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+NexusPull& NexusPull::take(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
+NexusPull& NexusPull::take(const std::map<Key, Value, Compare, Alloc>& fields)
+NexusPull& NexusPull::take(const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields)
 
 // Related-table fields, scoped under one table token
-NexusPull::take(std::string_view table, pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) -> NexusPull&
-NexusPull::take(std::string_view table, std::initializer_list<std::pair<std::string_view, std::string_view>> fields) -> NexusPull&
-NexusPull::take(std::string_view table, const std::map<Key, Value, Compare, Alloc>& fields) -> NexusPull&
-NexusPull::take(std::string_view table, const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields) -> NexusPull&
+NexusPull& NexusPull::take(std::string_view table, pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+NexusPull& NexusPull::take(std::string_view table, std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
+NexusPull& NexusPull::take(std::string_view table, const std::map<Key, Value, Compare, Alloc>& fields)
+NexusPull& NexusPull::take(std::string_view table, const std::unordered_map<Key, Value, Hash, Eq, Alloc>& fields)
 ```
 
 ## What It Does

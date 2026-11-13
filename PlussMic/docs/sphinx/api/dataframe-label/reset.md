@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::reset(std::string case_feature = {}) const -> DataFrame
-DataFrameLabelAccessor::reset(const DataFrame::ResetLabelOptions& options) const -> DataFrame
+DataFrame DataFrameLabelAccessor::reset(std::string case_feature = {}) const
+DataFrame DataFrameLabelAccessor::reset(const DataFrame::ResetLabelOptions& options) const
 ```
 
 ## What It Does

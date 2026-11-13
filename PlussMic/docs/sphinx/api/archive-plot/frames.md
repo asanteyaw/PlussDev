@@ -8,16 +8,16 @@
 ## Signatures
 
 ```cpp
-ArchivePlotAccessor::frames(std::int64_t frame_index = 0) const -> CatalogPlotAccessor
+CatalogPlotAccessor ArchivePlotAccessor::frames(std::int64_t frame_index = 0) const
 
-ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
-                            std::string_view y_key,
-                            std::optional<std::string_view> x_key = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
+                                              std::string_view y_key,
+                                              std::optional<std::string_view> x_key = std::nullopt) const
 
-ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
-                            std::string_view y_key,
-                            std::optional<std::string_view> x_key,
-                            const pluss::table::AtlasFramesPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio ArchivePlotAccessor::frames(pluss::msharp::RangeView::Int frame_indices,
+                                              std::string_view y_key,
+                                              std::optional<std::string_view> x_key,
+                                              const pluss::table::AtlasFramesPlotOptions& options) const
 ```
 
 ## What It Does

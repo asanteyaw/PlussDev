@@ -7,8 +7,7 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::barplot(Pane& pane, X&& x, Y&& y, const BarPlotOptions& options = {})
+Trace& flash::barplot(Pane& pane, Series x, Series y, const BarPlotOptions& options = {})
 
 Trace& flash::barplot(Pane& pane, const Note& categories, const Series& values,
                        const BarPlotOptions& options = {})
@@ -32,9 +31,9 @@ Draws a bar/column chart via [`Pane::columns`](../pane/columns.md) (vertical) or
 
 ```{important} Same Note-vs-numeric category-labeling split as stripplot()/boxplot()
 Only the Note overload sets real text tick labels; the generic numeric (X, Y)
-overload does not, regardless of options.horizontal. Directly verified: a
+overload does not, regardless of options.horizontal. A
 horizontal Note-based call sets 3 labels on the y-axis and 0 on the x-axis --
-the axis that receives the labels genuinely tracks options.horizontal, it
+the axis that receives the labels tracks options.horizontal, it
 is not hardcoded to always be the x-axis.
 ```
 
@@ -139,7 +138,7 @@ barplot(horizontal) x_categories count: 0
 ![Output of Example 3](img/flash-barplot-3-note-horizontal.svg)
 
 Example 4. `horizontal = true` on the **numeric** overload — no category labels involved
-at all, confirming `options.horizontal` genuinely governs the numeric overload's own
+at all, confirming `options.horizontal` governs the numeric overload's own
 orientation too, not just the `Note` overload's label placement.
 
 ```cpp

@@ -27,9 +27,7 @@ midpoint.
     The color at index `n - 1`.
 
 **n** (`std::int64_t`, default `7`)
-    Number of stops. Clamped to at least `3` (`std::max<std::int64_t>(n, 3)`) — a
-    diverging ramp with fewer than 3 stops couldn't represent both ends plus a distinct
-    midpoint.
+    Number of stops, at least `3` (the ramp needs its two ends and a midpoint); fewer throws `pluss::Error`.
 
 ## Returns
 
@@ -39,8 +37,7 @@ midpoint.
 
 ## Examples
 
-Example 1. Red-to-blue diverging ramp, 7 stops — the midpoint stop confirmed to be
-near-white.
+Example 1. Red-to-blue diverging ramp, 7 stops; the midpoint stop is near-white.
 
 ```cpp
 using namespace pluss::pl;

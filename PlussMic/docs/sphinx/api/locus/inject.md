@@ -7,11 +7,11 @@
 ## Signature
 
 ```cpp
-Locus::inject(std::string_view name, const Catalog& value) const -> Locus
+Locus Locus::inject(std::string_view name, const Catalog& value) const
 Locus& Locus::inject_(std::string_view name, const Catalog& value)
-Locus::inject(std::initializer_list<std::pair<std::string_view, Catalog>> catalogs) const -> Locus
+Locus Locus::inject(std::initializer_list<std::pair<std::string_view, Catalog>> catalogs) const
 Locus& Locus::inject_(std::initializer_list<std::pair<std::string_view, Catalog>> catalogs)
-Locus::inject(const Archive& archive) const -> Locus
+Locus Locus::inject(const Archive& archive) const
 Locus& Locus::inject_(const Archive& archive)
 ```
 

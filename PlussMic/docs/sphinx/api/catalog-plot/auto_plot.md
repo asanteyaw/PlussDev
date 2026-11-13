@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-CatalogPlotAccessor::auto_plot() const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::auto_plot() const
 
-CatalogPlotAccessor::auto_plot(const AutoPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::auto_plot(const AutoPlotOptions& options) const
 ```
 
 ## What It Does

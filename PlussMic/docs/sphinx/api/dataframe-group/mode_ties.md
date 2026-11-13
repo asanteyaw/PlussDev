@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameGrouped::mode_ties(std::string_view feature, std::string_view output = "") const -> DataFrame
+DataFrame DataFrameGrouped::mode_ties(std::string_view feature, std::string_view output = "") const
 ```
 
 ## What It Does

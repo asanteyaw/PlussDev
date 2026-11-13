@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusQuery::execute(std::string_view statement) const -> DataFrame
+DataFrame NexusQuery::execute(std::string_view statement) const
 ```
 
 ## What It Does

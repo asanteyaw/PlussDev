@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::ceil(std::string_view unit) const -> Slate
+Slate SlateTimelineAccessor::ceil(std::string_view unit) const
 ```
 
 ## What It Does

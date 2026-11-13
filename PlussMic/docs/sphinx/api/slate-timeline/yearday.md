@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::yearday() const -> Slate
+Slate SlateTimelineAccessor::yearday() const
 ```
 
 ## What It Does

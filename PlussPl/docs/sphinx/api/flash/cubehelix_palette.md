@@ -18,7 +18,7 @@ A simplified wrapper: `return hls_palette(n,
 defaults and [`flash::husl_palette`](husl_palette.md)'s), no way to override either.
 
 ```{important} Not an actual cubehelix algorithm
-Despite the name (evoking Dave Green's genuine cubehelix color scheme -- a spiral
+Despite the name (evoking Dave Green's cubehelix color scheme -- a spiral
 through color space designed to be monotonic in perceived brightness even in
 grayscale), this function is the same plain HLS hue sweep flash::hls_palette/
 flash::husl_palette use, just with different fixed saturation/lightness. It has no
@@ -30,7 +30,7 @@ algorithmic equivalence.
 
 **n** (`std::int64_t`, default `6`)
     Forwarded to [`flash::hls_palette`](hls_palette.md) — see that page for the
-    clamping behavior (`n < 2` silently becomes `2`).
+    minimum.
 
 ## Returns
 
@@ -39,7 +39,7 @@ algorithmic equivalence.
 
 ## Examples
 
-Example 1 (verification, not a distinct rendering). Genuinely different stops from both
+Example 1 (a comparison, not a new picture). Different stops from both
 `hls_palette`'s default and `husl_palette`'s output.
 
 ```cpp

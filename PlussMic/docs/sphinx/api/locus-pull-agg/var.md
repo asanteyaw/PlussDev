@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-LocusPullAgg::var(std::string_view feature, std::string_view alias = {}) -> LocusPullAgg&
-LocusPullAgg::var(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) -> LocusPullAgg&
-LocusPullAgg::var(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) -> LocusPullAgg&
+LocusPullAgg& LocusPullAgg::var(std::string_view feature, std::string_view alias = {})
+LocusPullAgg& LocusPullAgg::var(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+LocusPullAgg& LocusPullAgg::var(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 
 ## What It Does

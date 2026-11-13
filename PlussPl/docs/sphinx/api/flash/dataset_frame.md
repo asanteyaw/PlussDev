@@ -15,7 +15,7 @@ pluss::table::DataFrame flash::Dataset::frame(
 
 Rebuilds a rectangular PlussMic `DataFrame` from a flash `Dataset`.
 
-This is the `flash::Dataset -> DataFrame` bridge. It takes the grouped numeric, text,
+This is the `DataFrame flash::Dataset` bridge. It takes the grouped numeric, text,
 and temporal families stored in the dataset and reconstructs a tabular frame suitable
 for the higher-level PlussMic ecosystem.
 
@@ -87,7 +87,7 @@ auto grades = DataFrame({
     })},
 }).title("grades");
 
-auto data = pluss::pl::flash::Dataset::from_frame(grades);
+auto data = pluss::pl::flash::Dataset::from_table(grades);
 auto rebuilt = data.frame({.title = "rebuilt"});
 std::cout << rebuilt << "\n";
 ```
@@ -103,7 +103,6 @@ Output:
 2    | Kumasi  88     2026-01-03
 --------------------------------
 [3 cs x 3 feat]
-title=rebuilt
 ```
 
 Example 2. Use `FramePolicy::PadNull` to rectangularize a ragged dataset and preserve
@@ -143,8 +142,6 @@ Output:
 2    | NULL                    30     NULL 
 -------------------------------------------
 [3 cs x 3 feat]
-time_valid=1,1,0
-label_valid=1,1,0
 ```
 
 Example 3. `feature_order` controls the output column order even though numeric and text
@@ -177,7 +174,6 @@ Output:
 1    | beta   20   
 -------------------
 [2 cs x 2 feat]
-features=label,value
 ```
 
 Example 4. The default `FramePolicy::Strict` rejects ragged datasets immediately.
@@ -201,7 +197,7 @@ data.numeric_validity.push_back(std::nullopt);
 try {
   (void)data.frame();
 } catch (const pluss::Error& err) {
-  std::cout << err.what() << "\n";
+  std::cout << "error=" << err.message() << "\n";
 }
 ```
 
@@ -213,7 +209,7 @@ error=flash::Dataset::frame: dataset is ragged; use FramePolicy::PadNull to rect
 
 ## See Also
 
-- [`flash::Dataset::from_frame`](dataset_from_frame.md): exports a `DataFrame` into a
+- [`flash::Dataset::from_table`](dataset_from_table.md): exports a `DataFrame` into a
   flash dataset.
 - [`flash::Dataset::nrows`](dataset_nrows.md): reports the shared row count for
   rectangular datasets.
@@ -221,9 +217,9 @@ error=flash::Dataset::frame: dataset is ragged; use FramePolicy::PadNull to rect
   datasets.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="dataset_from_frame.html">
+  <a class="prev-link" href="dataset_from_table.html">
     <span class="label">Previous</span>
-    <span class="title">Dataset<br>from_frame</span>
+    <span class="title">Dataset<br>from_table</span>
   </a>
   <a class="next-link" href="dataset_nrows.html">
     <span class="label">Next</span>

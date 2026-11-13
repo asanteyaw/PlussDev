@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::info() const -> void
-Slate::info(std::ostream& os) const -> void
+void Slate::info() const
+void Slate::info(std::ostream& os) const
 ```
 
 ## What It Does

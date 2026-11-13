@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Stream::meta() const -> const std::unordered_map<std::string, std::string>&
-Stream::meta(std::string_view key) const -> std::optional<std::string>
+const std::unordered_map<std::string, std::string>& Stream::meta() const
+std::optional<std::string> Stream::meta(std::string_view key) const
 ```
 
 ## What It Does

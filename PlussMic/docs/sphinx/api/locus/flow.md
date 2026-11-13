@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::flow(const std::function<Locus(const Locus&)>& fn) const -> Locus
+Locus Locus::flow(const std::function<Locus(const Locus&)>& fn) const
 ```
 
 ## What It Does

@@ -34,6 +34,7 @@ ALPHABETICAL_CLASSES = {
     "Pane": {"slug": "pane", "landing": "pane_api_reference.html"},
     "Studio": {"slug": "studio", "landing": "studio_api_reference.html"},
     "Trace": {"slug": "trace", "landing": "trace_api_reference.html"},
+    "Types": {"slug": "types", "landing": "types_api_reference.html"},
 }
 
 # ---------------------------------------------------------------------------
@@ -91,7 +92,7 @@ FLASH_FAMILIES = [
                 "title": "Dataset",
                 "methods": [
                     "Dataset",
-                    "dataset_from_frame",
+                    "dataset_from_table",
                     "dataset_frame",
                     "dataset_nrows",
                     "dataset_ncols",

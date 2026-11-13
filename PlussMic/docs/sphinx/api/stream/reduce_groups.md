@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Stream::reduce_groups(const std::vector<std::int64_t>& source, std::int64_t shift, const std::vector<std::int64_t>& offsets, GroupReduce op, bool unbiased = true) -> Stream
+Stream Stream::reduce_groups(const std::vector<std::int64_t>& source, std::int64_t shift, const std::vector<std::int64_t>& offsets, GroupReduce op, bool unbiased = true)
 ```
 
 ## What It Does

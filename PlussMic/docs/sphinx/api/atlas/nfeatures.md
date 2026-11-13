@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::nfeatures() const -> std::int64_t
+std::int64_t Atlas::nfeatures() const
 ```
 
 ## What It Does

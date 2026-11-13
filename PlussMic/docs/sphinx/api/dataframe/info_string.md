@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::info_string(const display::DisplayOptions& options = {}) const -> std::string
+std::string DataFrame::info_string(const display::DisplayOptions& options = {}) const
 ```
 
 ## What It Does

@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-DataFrame::le(double other) const -> DataFrame
-DataFrame::le(std::string_view other) const -> DataFrame
-DataFrame::le(const DataFrame& other) const -> DataFrame
-DataFrame::le(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::le(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::le(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::le(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame DataFrame::le(double other) const
+DataFrame DataFrame::le(std::string_view other) const
+DataFrame DataFrame::le(const DataFrame& other) const
+DataFrame DataFrame::le(const DataFrame& other, const AlignOptions& options) const
+DataFrame DataFrame::le(const Slate& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::le(const Slate& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::le(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does

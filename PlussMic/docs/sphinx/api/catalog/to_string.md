@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::to_string() const -> std::string
+std::string Catalog::to_string() const
 ```
 
 ## What It Does

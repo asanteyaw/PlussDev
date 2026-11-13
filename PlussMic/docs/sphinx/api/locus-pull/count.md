@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::count(std::string_view source, std::string_view alias = {}) -> LocusPull&
+LocusPull& LocusPull::count(std::string_view source, std::string_view alias = {})
 ```
 
 ## What It Does

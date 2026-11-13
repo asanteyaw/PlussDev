@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::weekend() const -> DataFrame
+DataFrame DataFrameTimelineAccessor::weekend() const
 ```
 
 ## What It Does

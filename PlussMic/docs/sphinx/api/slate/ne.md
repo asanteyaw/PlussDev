@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Slate::ne(double other) const -> Slate
-Slate::ne(std::string_view other) const -> Slate
-Slate::ne(const char* other) const -> Slate
-Slate::ne(const Slate& other) const -> Slate
+Slate Slate::ne(double other) const
+Slate Slate::ne(std::string_view other) const
+Slate Slate::ne(const char* other) const
+Slate Slate::ne(const Slate& other) const
 ```
 
 ## What It Does

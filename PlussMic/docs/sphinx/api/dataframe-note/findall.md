@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameNoteAccessor::findall(std::string_view pattern) const -> DataFrame
+DataFrame DataFrameNoteAccessor::findall(std::string_view pattern) const
 
-DataFrameNoteAccessor::findall(std::string_view pattern,
-                                const TextOptions& options) const -> DataFrame
+DataFrame DataFrameNoteAccessor::findall(std::string_view pattern,
+                                          const TextOptions& options) const
 ```
 
 ## What It Does

@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::addr(const Series& vec1, const Series& vec2,
-             double beta = 1.0, double alpha = 1.0) const -> Series
+Series Series::addr(const Series& vec1, const Series& vec2,
+                    double beta = 1.0, double alpha = 1.0) const
 Series& Series::addr_(const Series& vec1, const Series& vec2, double beta=1.0, double alpha=1.0) const
 ```
 

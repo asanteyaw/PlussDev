@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameFeatureAxisAccessor::match(std::string_view pattern) const -> DataFrame
+DataFrame DataFrameFeatureAxisAccessor::match(std::string_view pattern) const
 ```
 
 ## What It Does

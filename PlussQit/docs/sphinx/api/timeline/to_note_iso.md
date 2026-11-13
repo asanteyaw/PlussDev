@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::to_note_iso() -> Note
+Note Timeline::to_note_iso()
 ```
 
 Formats the full timeline into canonical ISO-style text.

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::defined() const noexcept -> bool
+bool Archive::defined() const noexcept
 ```
 
 ## What It Does

@@ -7,12 +7,12 @@
 ## Signature
 
 ```cpp
-Series::intersection_along(const Series& other, std::int64_t dim) const -> Series
-Series::intersection_along(const Series& other, std::int64_t dim, bool sorted) const -> Series
-Series::intersection_along(const Series& other,
-                           std::int64_t dim,
-                           bool sorted,
-                           bool assume_unique) const -> Series
+Series Series::intersection_along(const Series& other, std::int64_t dim) const
+Series Series::intersection_along(const Series& other, std::int64_t dim, bool sorted) const
+Series Series::intersection_along(const Series& other,
+                                  std::int64_t dim,
+                                  bool sorted,
+                                  bool assume_unique) const
 ```
 
 ## What It Does

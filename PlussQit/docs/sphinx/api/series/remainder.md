@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::remainder(const Series& other) const -> Series
+Series Series::remainder(const Series& other) const
 Series& Series::remainder_(const Series& other)
 Series& Series::remainder_(const Series& rhs) const
 Series& Series::remainder_(double rhs) const

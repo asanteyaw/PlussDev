@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::reciprocal() const -> Series
+Series Series::reciprocal() const
 Series& Series::reciprocal_()
 ```
 

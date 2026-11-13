@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-SlateTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const -> Slate
-SlateTimelineAccessor::span(const Slate& other, TimeUnit unit) const -> Slate
-SlateTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const -> Slate
-SlateTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const -> Slate
+Slate SlateTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const
+Slate SlateTimelineAccessor::span(const Slate& other, TimeUnit unit) const
+Slate SlateTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const
+Slate SlateTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const
 ```
 
 ## What It Does

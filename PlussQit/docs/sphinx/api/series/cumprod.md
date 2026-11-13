@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::cumprod(std::int64_t dim) const -> Series
-Series::cumprod(std::int64_t dim, bool keepdim) const -> Series
+Series Series::cumprod(std::int64_t dim) const
+Series Series::cumprod(std::int64_t dim, bool keepdim) const
 Series& Series::cumprod_(std::int64_t dim)
 Series& Series::cumprod_(std::int64_t dim, bool keepdim)
 Series& Series::cumprod_(std::int64_t dim) const

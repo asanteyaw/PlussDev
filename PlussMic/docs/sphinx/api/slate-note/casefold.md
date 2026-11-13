@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::casefold() const -> Slate
+Slate SlateNoteAccessor::casefold() const
 ```
 
 ## What It Does

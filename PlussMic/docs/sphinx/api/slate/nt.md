@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::nt() const -> SlateNoteAccessor
+SlateNoteAccessor Slate::nt() const
 ```
 
 ## What It Does

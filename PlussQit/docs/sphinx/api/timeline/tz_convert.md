@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::tz_convert(std::string_view tz_name) -> Timeline
+Timeline Timeline::tz_convert(std::string_view tz_name)
 ```
 
 ## What It Does

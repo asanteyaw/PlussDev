@@ -133,8 +133,14 @@ if(PLUSSMIC_CURL_TARGET)
   # Export a stable PlussII curl link surface so downstream consumers do not
   # see raw unresolved "CURL::libcurl" tokens at link time.
   add_library(plussmic_curl_link INTERFACE)
+  set(_plussmic_curl_build_link "${PLUSSMIC_CURL_TARGET}")
+  if(APPLE AND CURL_INCLUDE_DIR STREQUAL "${CMAKE_OSX_SYSROOT}/usr/include")
+    # SDK headers are supplied by -isysroot. Passing this directory through
+    # curl's imported target would put C headers ahead of libc++ wrappers.
+    set(_plussmic_curl_build_link "$<LINK_ONLY:${PLUSSMIC_CURL_TARGET}>")
+  endif()
   target_link_libraries(plussmic_curl_link INTERFACE
-    $<BUILD_INTERFACE:${PLUSSMIC_CURL_TARGET}>
+    $<BUILD_INTERFACE:${_plussmic_curl_build_link}>
   )
 
   set(_plussmic_curl_install_link "")

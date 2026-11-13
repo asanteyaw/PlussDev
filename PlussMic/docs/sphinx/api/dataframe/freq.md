@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::freq() const -> Slate
-DataFrame::freq(FreqOptions options) const -> Slate
+Slate DataFrame::freq() const
+Slate DataFrame::freq(FreqOptions options) const
 ```
 
 ## What It Does

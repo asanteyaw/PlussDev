@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::dtypes() const -> DTypes
+DTypes DataFrame::dtypes() const
 ```
 
 ## What It Does

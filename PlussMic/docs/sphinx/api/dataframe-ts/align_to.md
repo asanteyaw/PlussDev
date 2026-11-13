@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::align_to(const Slate& target_axis, TsAlignMode mode = TsAlignMode::Exact) const -> DataFrame
-DataFrameTsAccessor::align_to(const Slate& target_axis, TsAlignMode mode, TsReindexFill fill, std::optional<double> constant = std::nullopt) const -> DataFrame
-DataFrameTsAccessor::align_to(std::string_view time_feature, const Slate& target_axis, TsAlignMode mode = TsAlignMode::Exact) const -> DataFrame
-DataFrameTsAccessor::align_to(std::string_view time_feature, const Slate& target_axis, TsAlignMode mode, TsReindexFill fill, std::optional<double> constant = std::nullopt) const -> DataFrame
+DataFrame DataFrameTsAccessor::align_to(const Slate& target_axis, TsAlignMode mode = TsAlignMode::Exact) const
+DataFrame DataFrameTsAccessor::align_to(const Slate& target_axis, TsAlignMode mode, TsReindexFill fill, std::optional<double> constant = std::nullopt) const
+DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Slate& target_axis, TsAlignMode mode = TsAlignMode::Exact) const
+DataFrame DataFrameTsAccessor::align_to(std::string_view time_feature, const Slate& target_axis, TsAlignMode mode, TsReindexFill fill, std::optional<double> constant = std::nullopt) const
 ```
 
 ## What It Does

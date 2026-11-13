@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-SlateLabelAccessor::fillnull(double value) const -> Slate
-SlateLabelAccessor::fillnull(std::string_view value) const -> Slate
-SlateLabelAccessor::fillnull(const pluss::Timeline& value) const -> Slate
-SlateLabelAccessor::fillnull(const pluss::TimeIndex& value) const -> Slate
+Slate SlateLabelAccessor::fillnull(double value) const
+Slate SlateLabelAccessor::fillnull(std::string_view value) const
+Slate SlateLabelAccessor::fillnull(const pluss::Timeline& value) const
+Slate SlateLabelAccessor::fillnull(const pluss::TimeIndex& value) const
 ```
 
 ## What It Does

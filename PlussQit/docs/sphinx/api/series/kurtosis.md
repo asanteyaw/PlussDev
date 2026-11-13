@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::stat.kurtosis() -> Series
-Series::stat.kurtosis(std::int64_t dim) -> Series
-Series::stat().kurtosis() -> Series
-Series::stat().kurtosis(std::int64_t dim) -> Series
+Series Series::stat.kurtosis()
+Series Series::stat.kurtosis(std::int64_t dim)
+Series Series::stat().kurtosis()
+Series Series::stat().kurtosis(std::int64_t dim)
 ```
 
 ## What It Does

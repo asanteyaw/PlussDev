@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusPull::specs() const noexcept -> const std::vector<nexus::PullSpec>&
+const std::vector<nexus::PullSpec>& NexusPull::specs() const noexcept
 ```
 
 ## What It Does

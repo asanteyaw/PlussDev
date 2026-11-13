@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::equals(const DataFrame& other) const -> bool
-DataFrame::equals(const DataFrame& other, double atol, double rtol) const -> bool
+bool DataFrame::equals(const DataFrame& other) const
+bool DataFrame::equals(const DataFrame& other, double atol, double rtol) const
 ```
 
 ## What It Does

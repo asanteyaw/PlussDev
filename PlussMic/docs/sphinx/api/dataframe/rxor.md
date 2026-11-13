@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::rxor(const DataFrame& other) const -> DataFrame
-DataFrame::rxor(const Slate& other) const -> DataFrame
+DataFrame DataFrame::rxor(const DataFrame& other) const
+DataFrame DataFrame::rxor(const Slate& other) const
 ```
 
 ## What It Does

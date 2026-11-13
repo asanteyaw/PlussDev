@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::freq(FreqOptions options = {}) const -> Catalog
+Catalog Catalog::freq(FreqOptions options = {}) const
 ```
 
 ### `FreqOptions` fields

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::floordiv(double other) const -> Slate
-Slate::floordiv(const Slate& other) const -> Slate
+Slate Slate::floordiv(double other) const
+Slate Slate::floordiv(const Slate& other) const
 ```
 
 ## What It Does

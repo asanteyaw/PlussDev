@@ -1,10 +1,10 @@
 <!-- pluss-hand-authored -->
 
-# Trace::lighting / Trace::lighting_mode
+# Trace::lighting
 
 [Back to Trace API Reference](../../trace_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 LightingMode Trace::lighting_mode() const noexcept
@@ -14,178 +14,214 @@ Trace& Trace::lighting(LightingMode mode) noexcept
 
 ## What It Does
 
-Gets/sets a per-trace lighting-response mode: `LightingMode::None` (the constructor
-default), `Flat`, or `Gouraud`.
+Chooses whether a 3D surface is lit, and how, and `lighting_mode()` reads the choice back. The default is `LightingMode::None`: the surface shows its data colour only. `Flat` lights each cell as a whole, `Gouraud` interpolates the light across each cell; they are compared on the [`LightingMode`](../types/LightingMode.md) page.
 
-```{important} Requires at least one light configured on the pane
-lighting() only has an observed effect when the owning Pane has at least one
-light added via Pane::lights() (headlight(), lamp_right(), lamp_left(),
-sun_key(), or add()). A fresh Pane's LightRig starts empty (Pane::lights().empty()
-is true), and the renderer's shading calculation short-circuits and returns the
-trace's base color unchanged whenever there are no lights to shade with --
-regardless of lighting_mode(). With no lights configured, None and Gouraud were
-directly verified to render byte-for-byte identical output. Add a light first
-(see Pane::lights) and the identical toggle produces a genuinely different
-render, also directly verified below. This was initially miscategorized as
-"no observed effect" earlier in this documentation effort, before the
-Pane::lights() gating was traced through the renderer and confirmed by
-compiled reproduction -- corrected here.
-```
+Lighting needs two things: a mode other than `None` on the trace, and at least one light in the pane's [`LightRig`](../types/LightRig.md). A new pane has no lights, so lighting on its own changes nothing (Example 2). It applies to the surface kinds `sheet`, `spire3` and `isoshell`, and the look of the lit surface is set by [`Trace::material`](material.md).
 
 ## Parameters
 
 **mode** (`LightingMode`)
-    `None`, `Flat`, or `Gouraud`.
+    `None`, `Flat` or `Gouraud`.
 
 ## Returns
 
 `LightingMode` (getter)
-    The current lighting mode.
+    The current mode, `None` by default.
 
 `Trace&` (setter)
-    A reference to `*this`, for chaining.
+    The same trace, for chaining.
 
 ## Examples
 
-Example 1. **No lights configured** (the default `LightRig` state) — `LightingMode::None`
-on a curved 3D surface.
+Example 1. The three modes under one sun-like rig. `None` ignores the lights; `Flat` and `Gouraud` light the surface and differ in how the light is carried across each cell.
 
 ```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 12;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-// A gently-peaked field (not a flat plane), so facet normals vary enough for lighting
-// to have something to compute against, once a light exists to shade with.
-std::vector<double> peak(static_cast<std::size_t>(grid_n * grid_n));
-for (std::int64_t i = 0; i < grid_n; ++i) {
-  for (std::int64_t j = 0; j < grid_n; ++j) {
-    const double x = (i - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    const double y = (j - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    peak[static_cast<std::size_t>(i * grid_n + j)] = std::exp(-(x * x + y * y) * 3.0);
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
   }
-}
-auto z = pluss::make_series(peak, {grid_n, grid_n});
+auto z = pluss::make_series(peak, {n, n});
 
-auto fig = studio("trace_lighting_no_lights_none");
-auto& pane = fig.pane3();
-pane.sheet(coord, coord, z).lighting(LightingMode::None);
-fig.show();
+const LightingMode modes[] = {LightingMode::None, LightingMode::Flat, LightingMode::Gouraud};
+const char* names[] = {"None", "Flat", "Gouraud"};
+auto fig = studio("lighting_gallery");
+fig.mosaic(1, 3);
+for (int i = 0; i < 3; ++i) {
+  auto& pane = fig.pane3(names[i]);
+  pane.lights().sun_key();
+  pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(modes[i]);
+}
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/trace-lighting-3-no-lights-none.svg)
+![Output of Example 1](img/lighting-1-gallery.svg)
 
-Example 2. The same pane, still **no lights configured**, `LightingMode::Gouraud`.
-Verified via direct SVG diff to render **byte-for-byte identically** to Example 1 —
-confirming `lighting()` has no observed effect when there's nothing to light the surface
-with.
+Example 2. Lighting without lights does nothing. With an empty rig a surface with `Gouraud` lighting is the same figure as one with `None`: the two SVG texts are equal. Adding a light is what makes the mode visible.
 
 ```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 12;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-std::vector<double> peak(static_cast<std::size_t>(grid_n * grid_n));
-for (std::int64_t i = 0; i < grid_n; ++i) {
-  for (std::int64_t j = 0; j < grid_n; ++j) {
-    const double x = (i - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    const double y = (j - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    peak[static_cast<std::size_t>(i * grid_n + j)] = std::exp(-(x * x + y * y) * 3.0);
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
   }
+auto z = pluss::make_series(peak, {n, n});
+
+std::string svg[3];
+for (int i = 0; i < 3; ++i) {
+  auto fig = studio("lighting_no_lights");
+  auto& pane = fig.pane3("p");
+  if (i == 2) pane.lights().headlight();
+  pane.sheet(coord, coord, z).lighting(i == 0 ? LightingMode::None : LightingMode::Gouraud);
+  svg[i] = fig.to_svg();
 }
-auto z = pluss::make_series(peak, {grid_n, grid_n});
-
-auto fig = studio("trace_lighting_no_lights_gouraud");
-auto& pane = fig.pane3();
-pane.sheet(coord, coord, z).lighting(LightingMode::Gouraud);
-fig.show();
-```
-
-![Output of Example 2](img/trace-lighting-4-no-lights-gouraud.svg)
-
-Example 3. **With `pane.lights().headlight()` configured**, `LightingMode::None` — the
-baseline for comparison against Example 4.
-
-```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 12;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-std::vector<double> peak(static_cast<std::size_t>(grid_n * grid_n));
-for (std::int64_t i = 0; i < grid_n; ++i) {
-  for (std::int64_t j = 0; j < grid_n; ++j) {
-    const double x = (i - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    const double y = (j - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    peak[static_cast<std::size_t>(i * grid_n + j)] = std::exp(-(x * x + y * y) * 3.0);
-  }
-}
-auto z = pluss::make_series(peak, {grid_n, grid_n});
-
-auto fig = studio("trace_lighting_with_lights_none");
-auto& pane = fig.pane3();
-pane.lights().headlight();
-pane.sheet(coord, coord, z).lighting(LightingMode::None);
-fig.show();
-```
-
-![Output of Example 3](img/trace-lighting-5-with-lights-none.svg)
-
-Example 4. The identical scene as Example 3, `pane.lights().headlight()` still
-configured, now `LightingMode::Gouraud`. Verified via direct SVG diff to render
-**genuinely different** output from Example 3 — confirming `lighting()` does have a real,
-correctly-wired effect once a light exists.
-
-```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 12;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-std::vector<double> peak(static_cast<std::size_t>(grid_n * grid_n));
-for (std::int64_t i = 0; i < grid_n; ++i) {
-  for (std::int64_t j = 0; j < grid_n; ++j) {
-    const double x = (i - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    const double y = (j - (grid_n - 1) / 2.0) / ((grid_n - 1) / 2.0);
-    peak[static_cast<std::size_t>(i * grid_n + j)] = std::exp(-(x * x + y * y) * 3.0);
-  }
-}
-auto z = pluss::make_series(peak, {grid_n, grid_n});
-
-auto fig = studio("trace_lighting_with_lights_gouraud");
-auto& pane = fig.pane3();
+std::cout << "empty rig, None == Gouraud: " << (svg[0] == svg[1]) << "\n";
+std::cout << "with a headlight, Gouraud == the unlit figure: " << (svg[2] == svg[0]) << "\n";
+auto fig = studio("lighting_no_lights_out");
+auto& pane = fig.pane3("headlight, Gouraud");
 pane.lights().headlight();
 pane.sheet(coord, coord, z).lighting(LightingMode::Gouraud);
-fig.show();
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 4](img/trace-lighting-6-with-lights-gouraud.svg)
+### Output
+
+```text
+empty rig, None == Gouraud: 1
+with a headlight, Gouraud == the unlit figure: 0
+```
+
+![Output of Example 2](img/lighting-2-no_lights.svg)
+
+Example 3. Reading the mode back. The default is `None`; each call stores its mode and returns the trace.
+
+```cpp
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
+
+auto fig = studio("lighting_readback");
+auto& pane = fig.pane3("Lighting");
+Trace& t = pane.sheet(coord, coord, z);
+std::cout << "default: " << static_cast<int>(t.lighting_mode()) << "  (None = 0, Flat = 1, Gouraud = 2)\n";
+t.lighting(LightingMode::Flat);
+std::cout << "after lighting(Flat):    " << static_cast<int>(t.lighting_mode()) << "\n";
+t.lighting(LightingMode::Gouraud).label("lit");
+std::cout << "after lighting(Gouraud): " << static_cast<int>(t.lighting_mode()) << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+default: 0  (None = 0, Flat = 1, Gouraud = 2)
+after lighting(Flat):    1
+after lighting(Gouraud): 2
+```
+
+![Output of Example 3](img/lighting-3-readback.svg)
+
+Example 4. Lighting is per trace and the rig is per pane. Two surfaces in one pane share the lights; only the one with a lighting mode is lit. The second surface is shifted so that both can be seen.
+
+```cpp
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
+
+auto fig = studio("lighting_two_traces");
+auto& pane = fig.pane3("one lit, one unlit");
+pane.lights().sun_key();
+pane.sheet(coord, coord, z).shade(ShadeMode::Smooth).lighting(LightingMode::Gouraud);
+auto shifted = pluss::series::linspace(1.5, 3.5, n, pluss::ScalarType::Float64);
+pane.sheet(shifted, coord, z).shade(ShadeMode::Smooth);
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 4](img/lighting-4-two_traces.svg)
+
+Example 5. Which kinds are lit. Each is drawn under a sun-like rig with `None` and with `Gouraud`, and the SVG text compared: the surface, the pillars and the level surfaces change; the wireframe and a line do not.
+
+```cpp
+constexpr std::int64_t n = 16;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> peak(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -1.0 + 2.0 * i / (n - 1), y = -1.0 + 2.0 * j / (n - 1);
+    peak[static_cast<std::size_t>(i * n + j)] = std::exp(-3.0 * (x * x + y * y)) + 0.25 * std::sin(4.0 * x);
+  }
+auto z = pluss::make_series(peak, {n, n});
+
+std::vector<double> volume(static_cast<std::size_t>(n * n * n));
+for (std::size_t i = 0; i < volume.size(); ++i) volume[i] = std::sin(0.05 * static_cast<double>(i));
+auto vol = pluss::make_series(volume, {n, n, n});
+auto changes = [&](auto make, bool is3d) {
+  std::string svg[2];
+  for (int i = 0; i < 2; ++i) {
+    auto fig = studio("lighting_kinds");
+    Pane& pane = is3d ? fig.pane3("p") : fig.pane2("p");
+    if (is3d) pane.lights().sun_key();
+    Trace& t = make(pane);
+    t.lighting(i == 0 ? LightingMode::None : LightingMode::Gouraud);
+    svg[i] = fig.to_svg();
+  }
+  return svg[0] != svg[1];
+};
+std::cout << "sheet:    " << changes([&](Pane& p) -> Trace& { return p.sheet(coord, coord, z); }, true) << "\n";
+std::cout << "spire3:   " << changes([&](Pane& p) -> Trace& { return p.spire3(coord, coord, z); }, true) << "\n";
+std::cout << "isoshell: " << changes([&](Pane& p) -> Trace& { return p.isoshell(coord, coord, coord, vol); }, true) << "\n";
+std::cout << "lattice:  " << changes([&](Pane& p) -> Trace& { return p.lattice(coord, coord, z); }, true) << "\n";
+auto fig = studio("lighting_kinds_out");
+auto& pane = fig.pane3("spire3, lit");
+pane.lights().sun_key();
+pane.spire3(coord, coord, z).lighting(LightingMode::Gouraud);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+sheet:    1
+spire3:   1
+isoshell: 1
+lattice:  0
+```
+
+![Output of Example 5](img/lighting-5-kinds.svg)
 
 ## Notes
 
-- Both getter and setter are `noexcept`.
-- The gating dependency on [`Pane::lights()`](../pane/lights.md) is the single most
-  important fact about this setting — see the important callout above.
-- `LightingMode::Flat`'s distinction from `Gouraud` (both with lights configured) was not
-  separately isolated in this documentation pass — treat it as a real, declared third
-  option rather than assuming its specific visual difference from `Gouraud` without
-  checking further.
-- Meaningfully affects only 3D surface-family trace kinds
-  ([`sheet`](../pane/sheet.md), [`lattice`](../pane/lattice.md), and other
-  `Volumetric`-only kinds); expected to have no visible effect on 2D trace kinds.
+- `lighting` is `noexcept` and accepts every value; no light or an unlit kind simply makes it invisible, never an error.
+- A pane's lights can be fixed to the camera or to the data ([`LightRig`](../types/LightRig.md)), which decides whether turning the view moves the light across the surface.
 
 ## See Also
 
-- [`Pane::lights`](../pane/lights.md): must have at least one light added for this setting
-  to have any observed effect — read this page first if `lighting()` appears to do
-  nothing.
-- [`Trace::material`](material.md): the other 3D-surface-appearance control on `Trace`,
-  sharing the identical `Pane::lights()` gating dependency.
-- [`Trace::shade`](shade.md): a related 3D-surface-appearance control that has an observed
-  effect **regardless** of whether any lights are configured, for contrast.
+- [`LightingMode`](../types/LightingMode.md): the three modes, compared.
+- [`LightRig`](../types/LightRig.md), [`Pane::lights`](../pane/lights.md): the lights a mode needs.
+- [`Trace::material`](material.md), [`Trace::shade`](shade.md): the other appearance options of a surface.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="shade.html">
+  <a class="prev-link" href="label.html">
     <span class="label">Previous</span>
-    <span class="title">shade</span>
+    <span class="title">label</span>
   </a>
   <a class="next-link" href="material.html">
     <span class="label">Next</span>

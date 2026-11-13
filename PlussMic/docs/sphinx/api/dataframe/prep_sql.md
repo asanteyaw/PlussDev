@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::prep_sql(std::string_view statement) const -> DataFrameSqlPrepared
-DataFrame::prep_sql(std::string_view statement, SqlOptions options) const -> DataFrameSqlPrepared
+DataFrameSqlPrepared DataFrame::prep_sql(std::string_view statement) const
+DataFrameSqlPrepared DataFrame::prep_sql(std::string_view statement, SqlOptions options) const
 ```
 
 ## What It Does

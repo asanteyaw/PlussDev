@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::nanmedian() const -> Series
-Series::nanmedian(std::int64_t dim) const -> Series
+Series Series::nanmedian() const
+Series Series::nanmedian(std::int64_t dim) const
 ```
 
 ## What It Does

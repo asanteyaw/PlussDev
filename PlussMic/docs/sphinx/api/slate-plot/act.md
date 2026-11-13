@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-SlatePlotAccessor::act(const ActPlotOptions& options = {}) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::act(const ActPlotOptions& options = {}) const
 ```
 
 ## What It Does

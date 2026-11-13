@@ -46,8 +46,8 @@ flash::tight_layout(fig);
 fig.show();
 ```
 
-Example 2. Wider `padding = 24.0` — confirmed to render genuinely differently from
-Example 1's default via direct SVG comparison.
+Example 2. Wider `padding = 24.0`, which renders differently from
+Example 1's default.
 
 ```cpp
 using namespace pluss::pl;

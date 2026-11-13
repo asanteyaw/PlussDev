@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::invalid() const -> Stream
+Stream Stream::invalid() const
 ```
 
 ## What It Does

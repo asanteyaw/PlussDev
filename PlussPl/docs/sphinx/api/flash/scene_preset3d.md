@@ -56,8 +56,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-scene-preset3d-1-survey.svg)
 
-Example 2 (verification, not a distinct rendering). `Topology` renders genuinely
-differently from `Survey`, confirmed via direct SVG comparison.
+Example 2 (a comparison, not a new picture). `Topology` renders differently from `Survey`.
 
 ```cpp
 using namespace pluss::pl;
@@ -94,8 +93,8 @@ auto fig = studio("flash_scene_preset3d_presentation");
 auto& pane = fig.pane3();
 auto gx = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
 auto gy = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
-auto gz = gx.reshape({1, 24}).tile({24, 1}).mul(0.6).sin()
-            .add(gy.reshape({24, 1}).tile({1, 24}).mul(0.7).cos());
+auto gz = gx.reshape({1, 24}).repeat({24, 1}).mul(0.6).sin()
+            .add(gy.reshape({24, 1}).repeat({1, 24}).mul(0.7).cos());
 
 flash::scene_preset3d(pane, flash::ScenePreset3D::Presentation);
 auto& trace = pane.sheet(gx, gy, gz);

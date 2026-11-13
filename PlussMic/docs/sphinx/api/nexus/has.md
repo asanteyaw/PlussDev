@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::has(std::string_view key) const -> bool
+bool Nexus::has(std::string_view key) const
 ```
 
 ## What It Does

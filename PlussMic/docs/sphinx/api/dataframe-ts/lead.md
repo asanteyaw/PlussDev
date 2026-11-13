@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsAccessor::lead(std::int64_t periods = 1) const -> DataFrame
+DataFrame DataFrameTsAccessor::lead(std::int64_t periods = 1) const
 ```
 
 ## What It Does

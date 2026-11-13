@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-static DataFrame load(std::string_view source_type, std::string_view filepath) -> DataFrame
-static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config) -> DataFrame
-static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries) -> DataFrame
-static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options) -> DataFrame
-static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats = {}, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error) -> DataFrame
-static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::RangeView<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error) -> DataFrame
+static DataFrame load(std::string_view source_type, std::string_view filepath)
+static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::Config& config)
+static DataFrame load(std::string_view source_type, std::string_view filepath, std::initializer_list<pluss::loader::ConfigEntry> config_entries)
+static DataFrame load(std::string_view source_type, std::string_view filepath, const pluss::loader::ReadCsvOptions& options)
+static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases = std::nullopt, std::vector<std::string> usefeats = {}, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
+static DataFrame load(std::string_view source_type, std::string_view filepath, char sep, std::optional<std::size_t> ncases, pluss::RangeView<std::string_view> usefeats, std::optional<std::string> case_col = std::nullopt, pluss::loader::BadLinePolicy on_bad_lines = pluss::loader::BadLinePolicy::Error)
 ```
 
 ## What It Does

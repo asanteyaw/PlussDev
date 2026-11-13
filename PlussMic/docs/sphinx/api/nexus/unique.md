@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::unique() const noexcept -> bool
+bool Nexus::unique() const noexcept
 ```
 
 ## What It Does

@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::mod(double other) const -> Slate
-Slate::mod(const Slate& other) const -> Slate
+Slate Slate::mod(double other) const
+Slate Slate::mod(const Slate& other) const
 ```
 
 ## What It Does

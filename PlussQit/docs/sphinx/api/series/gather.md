@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::gather(std::int64_t dim, const Series& index) const -> Series
+Series Series::gather(std::int64_t dim, const Series& index) const
 ```
 
 ## What It Does

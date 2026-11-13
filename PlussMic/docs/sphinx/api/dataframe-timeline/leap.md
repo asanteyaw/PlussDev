@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::leap() const -> DataFrame
+DataFrame DataFrameTimelineAccessor::leap() const
 ```
 
 ## What It Does

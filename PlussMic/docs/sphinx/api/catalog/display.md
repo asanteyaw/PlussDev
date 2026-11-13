@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::display() const -> void
+void Catalog::display() const
 ```
 
 ## What It Does

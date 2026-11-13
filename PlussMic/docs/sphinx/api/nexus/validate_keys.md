@@ -7,12 +7,12 @@
 ## Signatures
 
 ```cpp
-Nexus::validate_keys(std::string_view table) const -> bool
+bool Nexus::validate_keys(std::string_view table) const
 
-Nexus::validate_keys(std::string_view table, std::initializer_list<std::string_view> keys) const -> bool
-Nexus::validate_keys(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const -> bool
+bool Nexus::validate_keys(std::string_view table, std::initializer_list<std::string_view> keys) const
+bool Nexus::validate_keys(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const
 template <detail::StringViewNameRange NameRange>
-Nexus::validate_keys(std::string_view table, const NameRange& keys) const -> bool
+bool Nexus::validate_keys(std::string_view table, const NameRange& keys) const
 ```
 
 ## What It Does

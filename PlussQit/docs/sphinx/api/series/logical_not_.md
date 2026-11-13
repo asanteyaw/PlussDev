@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::logical_not_() -> Series&
+Series& Series::logical_not_()
 ```
 
 ## What It Does

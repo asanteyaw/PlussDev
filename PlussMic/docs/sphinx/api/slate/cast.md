@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::cast() const -> SlateCastAccessor
-Slate::cast(const SlateCastOptions& options) const -> SlateCastAccessor
+SlateCastAccessor Slate::cast() const
+SlateCastAccessor Slate::cast(const SlateCastOptions& options) const
 ```
 
 ## What It Does

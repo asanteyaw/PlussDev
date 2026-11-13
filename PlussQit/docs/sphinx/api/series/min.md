@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::min() const -> Series
-Series::min(std::int64_t dim) const -> Series
-Series::min(std::int64_t dim, bool keepdim) const -> Series
-Series::min(const Series& other) const -> Series
+Series Series::min() const
+Series Series::min(std::int64_t dim) const
+Series Series::min(std::int64_t dim, bool keepdim) const
+Series Series::min(const Series& other) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::summary() const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::summary() const
 ```
 
 ## What It Does

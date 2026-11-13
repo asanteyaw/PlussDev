@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrameTsAccessor::grouped(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
-DataFrameTsAccessor::grouped(std::string_view group_feature, std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
-DataFrameTsAccessor::grouped(const Slate& groups, std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
+DataFrame DataFrameTsAccessor::grouped(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const
+DataFrame DataFrameTsAccessor::grouped(std::string_view group_feature, std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const
+DataFrame DataFrameTsAccessor::grouped(const Slate& groups, std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const
 ```
 
 ## What It Does

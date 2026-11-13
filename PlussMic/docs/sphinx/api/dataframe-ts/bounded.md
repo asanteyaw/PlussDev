@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsAccessor::bounded(const WindowBoundsFn& bounds, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> DataFrame
+DataFrame DataFrameTsAccessor::bounded(const WindowBoundsFn& bounds, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const
 ```
 
 ## What It Does

@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Timeline::isoformat() -> std::string
+std::string Timeline::isoformat()
 ```
 
 Formats one scalar timestamp into canonical ISO-style text.

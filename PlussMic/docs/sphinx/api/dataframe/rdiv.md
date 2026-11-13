@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::rdiv(double other) const -> DataFrame
+DataFrame DataFrame::rdiv(double other) const
 ```
 
 ## What It Does

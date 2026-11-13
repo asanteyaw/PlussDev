@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::repeated() const -> Slate
+Slate DataFrame::repeated() const
 ```
 
 ## What It Does

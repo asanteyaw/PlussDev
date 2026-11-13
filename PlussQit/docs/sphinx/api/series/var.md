@@ -7,13 +7,13 @@
 ## Signature
 
 ```cpp
-Series::var() const -> Series
-Series::var(bool unbiased) const -> Series
-Series::var(std::int64_t dim,
-            bool unbiased = true,
-            bool keepdim = false) const -> Series
-Series::stat.var(...) -> Series
-Series::stat().var(...) -> Series
+Series Series::var() const
+Series Series::var(bool unbiased) const
+Series Series::var(std::int64_t dim,
+                   bool unbiased = true,
+                   bool keepdim = false) const
+Series Series::stat.var(...)
+Series Series::stat().var(...)
 ```
 
 ## What It Does

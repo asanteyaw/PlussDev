@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::head(std::int64_t n = 5, bool render = false) -> DataFrameView
+DataFrameView DataFrame::head(std::int64_t n = 5, bool render = false)
 ```
 
 ## What It Does

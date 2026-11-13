@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrame::bfill(std::int64_t limit = -1) const -> DataFrame
+DataFrame DataFrame::bfill(std::int64_t limit = -1) const
 
-DataFrame::bfill(const FillOptions& options) const -> DataFrame
+DataFrame DataFrame::bfill(const FillOptions& options) const
 ```
 
 ## What It Does

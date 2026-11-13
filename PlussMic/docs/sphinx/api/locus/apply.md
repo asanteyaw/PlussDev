@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::apply(std::string_view name, const CatalogFn& fn) const -> Locus
+Locus Locus::apply(std::string_view name, const CatalogFn& fn) const
 Locus& Locus::apply_(std::string_view name, const CatalogFn& fn)
 ```
 

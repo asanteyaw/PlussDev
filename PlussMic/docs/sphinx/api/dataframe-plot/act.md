@@ -8,9 +8,9 @@
 ## Signature
 
 ```cpp
-DataFramePlotAccessor::act(
+pluss::pl::Studio DataFramePlotAccessor::act(
     std::string_view feature,
-    const ActPlotOptions& options = {}) const -> pluss::pl::Studio
+    const ActPlotOptions& options = {}) const
 ```
 
 ## What It Does

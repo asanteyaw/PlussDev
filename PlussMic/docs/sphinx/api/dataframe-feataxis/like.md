@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameFeatureAxisAccessor::like(std::string_view needle, bool case_sensitive = true) const -> DataFrame
+DataFrame DataFrameFeatureAxisAccessor::like(std::string_view needle, bool case_sensitive = true) const
 ```
 
 ## What It Does

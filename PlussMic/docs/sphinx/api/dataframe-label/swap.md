@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::swap(std::string_view left, std::string_view right) const -> DataFrame
+DataFrame DataFrameLabelAccessor::swap(std::string_view left, std::string_view right) const
 ```
 
 ## What It Does

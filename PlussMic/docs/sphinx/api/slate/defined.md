@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::defined() const noexcept -> bool
+bool Slate::defined() const noexcept
 ```
 
 ## What It Does

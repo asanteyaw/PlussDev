@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::minrecords() const -> std::int64_t
+std::int64_t Archive::minrecords() const
 ```
 
 ## What It Does

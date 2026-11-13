@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::grain_audit(std::string_view table) const -> DataFrame
+DataFrame Nexus::grain_audit(std::string_view table) const
 ```
 
 ## What It Does

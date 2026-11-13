@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::similarity(std::string_view field1, std::string_view field2, std::string_view method = "cosine") -> Catalog
+Catalog Catalog::similarity(std::string_view field1, std::string_view field2, std::string_view method = "cosine")
 ```
 
 ## What It Does

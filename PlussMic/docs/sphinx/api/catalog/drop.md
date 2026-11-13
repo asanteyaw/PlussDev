@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-Catalog::drop(std::string_view field_name) const -> Catalog
-Catalog::drop(std::span<const std::string_view> field_names) const -> Catalog
-Catalog::drop(std::initializer_list<std::string_view> field_names) const -> Catalog
-Catalog::drop(const std::vector<std::string>& field_names) const -> Catalog
+Catalog Catalog::drop(std::string_view field_name) const
+Catalog Catalog::drop(std::span<const std::string_view> field_names) const
+Catalog Catalog::drop(std::initializer_list<std::string_view> field_names) const
+Catalog Catalog::drop(const std::vector<std::string>& field_names) const
 ```
 
 ## What It Does

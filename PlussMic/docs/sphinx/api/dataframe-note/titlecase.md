@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::titlecase() const -> DataFrame
+DataFrame DataFrameNoteAccessor::titlecase() const
 ```
 
 ## What It Does

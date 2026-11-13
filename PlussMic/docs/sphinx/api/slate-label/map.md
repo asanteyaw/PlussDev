@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::map(const std::function<SlateValue(const SlateValue&)>& fn) const -> Slate
+Slate SlateLabelAccessor::map(const std::function<SlateValue(const SlateValue&)>& fn) const
 ```
 
 ## What It Does

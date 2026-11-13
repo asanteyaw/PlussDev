@@ -8,12 +8,12 @@
 ## Signature
 
 ```cpp
-DataFramePlot3DAccessor::surface(
+pluss::pl::Studio DataFramePlot3DAccessor::surface(
     std::string_view x_feature,
     std::string_view y_feature,
     std::string_view z_feature,
     DataFrame::GroupOp op = DataFrame::GroupOp::Mean,
-    const Surface3DPlotOptions& options = {}) const -> pluss::pl::Studio
+    const Surface3DPlotOptions& options = {}) const
 ```
 
 ## What It Does

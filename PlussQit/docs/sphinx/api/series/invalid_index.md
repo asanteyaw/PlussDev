@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::invalid_index() const -> Series
+Series Series::invalid_index() const
 ```
 
 ## What It Does

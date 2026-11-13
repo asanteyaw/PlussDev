@@ -8,17 +8,17 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::density(std::string_view feature, std::int64_t points = 128) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::density(std::string_view feature, std::int64_t points = 128) const
 
-DataFramePlotAccessor::density(std::string_view feature, const DensityPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::density(std::string_view feature, const DensityPlotOptions& options) const
 
-DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t points = 128) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> features, std::int64_t points = 128) const
 
-DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> features, const DensityPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::density(pluss::msharp::RangeView::Of<std::string_view> features, const DensityPlotOptions& options) const
 
-DataFramePlotAccessor::density(std::initializer_list<std::string_view> features, std::int64_t points = 128) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::density(std::initializer_list<std::string_view> features, std::int64_t points = 128) const
 
-DataFramePlotAccessor::density(std::initializer_list<std::string_view> features, const DensityPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::density(std::initializer_list<std::string_view> features, const DensityPlotOptions& options) const
 ```
 
 ## What It Does

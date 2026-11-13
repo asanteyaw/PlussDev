@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::join_detailed(const Catalog& other, const CatalogJoinSpec& spec, const CatalogJoinOptions& options = {}) -> CatalogJoinResult
+CatalogJoinResult Catalog::join_detailed(const Catalog& other, const CatalogJoinSpec& spec, const CatalogJoinOptions& options = {})
 ```
 
 ## What It Does

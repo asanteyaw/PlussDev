@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-static Locus::default_policy() -> TabelizePolicy
-Locus::policy() const -> const TabelizePolicy&
-Locus::with_policy(const TabelizePolicy& policy) const -> Locus
+static TabelizePolicy Locus::default_policy()
+const TabelizePolicy& Locus::policy() const
+Locus Locus::with_policy(const TabelizePolicy& policy) const
 Locus& Locus::with_policy_(const TabelizePolicy& policy)
 ```
 

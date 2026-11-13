@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::nkeys() const -> std::int64_t
+std::int64_t Catalog::nkeys() const
 ```
 
 ## What It Does

@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::select(std::initializer_list<std::string_view> names) const -> Locus
-Locus::select(const std::vector<std::string>& names) const -> Locus
+Locus Locus::select(std::initializer_list<std::string_view> names) const
+Locus Locus::select(const std::vector<std::string>& names) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::relationship_audit(std::string_view name) const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::relationship_audit(std::string_view name) const
 ```
 
 ## What It Does

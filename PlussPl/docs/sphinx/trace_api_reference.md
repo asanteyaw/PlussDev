@@ -48,17 +48,17 @@ same-named bool overload -- see Trace::visible for the contrast.
 :hidden:
 :maxdepth: 1
 
-api/trace/kind
-api/trace/payload
-api/trace/label
-api/trace/width
-api/trace/stroke
-api/trace/palette
+api/trace/annotate_levels
 api/trace/color_limits
-api/trace/shade
+api/trace/kind
+api/trace/label
 api/trace/lighting
 api/trace/material
+api/trace/palette
+api/trace/payload
+api/trace/shade
+api/trace/stroke
 api/trace/transparent
-api/trace/annotate_levels
 api/trace/visible
+api/trace/width
 ```

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-SlatePlotAccessor::bootstrap(const BootstrapPlotOptions& options = {}) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::bootstrap(const BootstrapPlotOptions& options = {}) const
 ```
 
 ## What It Does

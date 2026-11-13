@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::collect() const -> Catalog
+Catalog LocusPull::collect() const
 ```
 
 ## What It Does

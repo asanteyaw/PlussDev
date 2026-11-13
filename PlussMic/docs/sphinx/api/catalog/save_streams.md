@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::save_streams(std::string_view directory, std::string_view store_kind = "parquet") -> void
+void Catalog::save_streams(std::string_view directory, std::string_view store_kind = "parquet")
 ```
 
 ## What It Does

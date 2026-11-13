@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::sigmoid() const -> Series
+Series Series::sigmoid() const
 Series& Series::sigmoid_()
 ```
 

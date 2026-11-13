@@ -8,10 +8,10 @@
 ## Signature
 
 ```cpp
-DataFrame::zoom(std::int64_t case_start,
-                std::int64_t case_stop,
-                std::int64_t feature_start,
-                std::int64_t feature_stop) const -> DataFrame
+DataFrame DataFrame::zoom(std::int64_t case_start,
+                          std::int64_t case_stop,
+                          std::int64_t feature_start,
+                          std::int64_t feature_stop) const
 ```
 
 ## What It Does

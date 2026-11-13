@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::prelu(const Series& weight) const -> Series
-Series::prelu(double weight) const -> Series
+Series Series::prelu(const Series& weight) const
+Series Series::prelu(double weight) const
 ```
 
 ## What It Does

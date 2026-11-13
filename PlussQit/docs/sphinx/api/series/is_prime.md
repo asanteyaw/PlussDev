@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::is_prime() const -> Series
+Series Series::is_prime() const
 ```
 
 ## What It Does

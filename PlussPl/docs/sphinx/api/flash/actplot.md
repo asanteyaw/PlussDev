@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class Values>
-Studio& flash::actplot(Studio& studio, Values&& values, const AutocorrelationPlotOptions& options = {})
+Studio& flash::actplot(Studio& studio, Series values, const AutocorrelationPlotOptions& options = {})
 ```
 
 ## What It Does
@@ -20,7 +19,7 @@ A simplified-options convenience wrapper around [`flash::acfplot`](acfplot.md): 
 
 ```{important} Byte-identical to flash::acfplot(values) with default options
 actplot(studio, values) and acfplot(studio, values) produce exactly the same figure
-state -- directly verified via SVG comparison. AutocorrelationPlotOptions is a strict
+state. AutocorrelationPlotOptions is a strict
 subset of AcfPlotOptions' fields (missing include_zero_lag and marker_area, the latter
 of which is inert on acfplot anyway -- see that page's Notes), and actplot always
 passes include_zero_lag = false, matching AcfPlotOptions' own default. actplot exists
@@ -36,7 +35,7 @@ purely as a smaller-surface, more conventionally-named entry point ("act" for
 
 **values** (series-convertible)
     The sequence to autocorrelate. Must contain at least three points, or `actplot`
-    throws (via [`flash::acfplot`](acfplot.md)) `std::invalid_argument("flash::acfplot
+    throws (via [`flash::acfplot`](acfplot.md)) `pluss::Error("flash::acfplot
     requires at least three points")` — note the error message names `acfplot`, not
     `actplot`, since it's thrown by the delegated-to function.
 
@@ -49,7 +48,7 @@ purely as a smaller-surface, more conventionally-named entry point ("act" for
 |---|---|---|
 | `max_lag` | `std::int64_t`, default `40` | Forwarded to [`AcfPlotOptions::max_lag`](acfplot.md). |
 | `show_confidence_band` | `bool`, default `true` | Forwarded to [`AcfPlotOptions::show_confidence_band`](acfplot.md). |
-| `confidence_level` | `double`, default `0.95` | Forwarded to [`AcfPlotOptions::confidence_level`](acfplot.md) — same discrete-bucket z-score lookup described on that page. |
+| `confidence_level` | `double`, default `0.95` | Forwarded to [`AcfPlotOptions::confidence_level`](acfplot.md): strictly between 0 and 1, with the band at the exact normal quantile of the level. |
 | `trace_width` | `float`, default `1.2F` | Forwarded to [`AcfPlotOptions::trace_width`](acfplot.md). |
 
 ## Returns
@@ -75,8 +74,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-actplot-1-default.svg)
 
-Example 2 (verification, not a distinct rendering). `actplot(values)` renders
-byte-identical to `acfplot(values)` with default options, confirming the important
+Example 2 (a comparison, not a new picture). `actplot(values)` renders
+identical to `acfplot(values)` with default options, confirming the important
 callout above.
 
 ```cpp

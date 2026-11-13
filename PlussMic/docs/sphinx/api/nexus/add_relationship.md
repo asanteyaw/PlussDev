@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-Nexus::add_relationship(const Relationship& rel) const -> Nexus
+Nexus Nexus::add_relationship(const Relationship& rel) const
 Nexus& Nexus::add_relationship_(const Relationship& rel)
 
-Nexus::add_relationships(std::initializer_list<Relationship> rels) const -> Nexus
+Nexus Nexus::add_relationships(std::initializer_list<Relationship> rels) const
 Nexus& Nexus::add_relationships_(std::initializer_list<Relationship> rels)
 ```
 

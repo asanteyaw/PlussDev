@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::unique() const noexcept -> bool
+bool Catalog::unique() const noexcept
 ```
 
 ## What It Does

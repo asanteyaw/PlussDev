@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::check(std::string_view name) const -> bool
+bool Nexus::check(std::string_view name) const
 ```
 
 ## What It Does

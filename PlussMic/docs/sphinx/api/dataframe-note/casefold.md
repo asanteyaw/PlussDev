@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::casefold() const -> DataFrame
+DataFrame DataFrameNoteAccessor::casefold() const
 ```
 
 ## What It Does

@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Nexus::query() const -> NexusQuery
-Nexus::query(DataFrame::SqlOptions options) const -> NexusQuery
+NexusQuery Nexus::query() const
+NexusQuery Nexus::query(DataFrame::SqlOptions options) const
 ```
 
 ## What It Does

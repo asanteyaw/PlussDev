@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::land(const DataFrame& other) const -> DataFrame
-DataFrame::land(const Slate& other) const -> DataFrame
+DataFrame DataFrame::land(const DataFrame& other) const
+DataFrame DataFrame::land(const Slate& other) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::floor() const -> Series
+Series Series::floor() const
 Series& Series::floor_()
 ```
 

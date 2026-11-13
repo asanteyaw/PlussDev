@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::head(std::int64_t n = 5) const -> Atlas
+Atlas Atlas::head(std::int64_t n = 5) const
 ```
 
 ## What It Does

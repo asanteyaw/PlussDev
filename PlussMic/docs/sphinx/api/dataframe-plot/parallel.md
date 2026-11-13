@@ -8,10 +8,10 @@
 ## Signature
 
 ```cpp
-DataFramePlotAccessor::parallel(
+pluss::pl::Studio DataFramePlotAccessor::parallel(
     pluss::msharp::RangeView::Of<std::string_view> features = {},
     std::optional<std::string_view> class_feature = std::nullopt,
-    const ParallelPlotOptions& options = {}) const -> pluss::pl::Studio
+    const ParallelPlotOptions& options = {}) const
 ```
 
 ## What It Does

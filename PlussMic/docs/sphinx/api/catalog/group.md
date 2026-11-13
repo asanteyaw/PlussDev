@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::group() const -> CatalogGroupBuilder
+CatalogGroupBuilder Catalog::group() const
 ```
 
 ## What It Does

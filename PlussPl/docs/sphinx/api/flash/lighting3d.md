@@ -21,10 +21,10 @@ preset, applied in that fixed order, instead of chaining the calls yourself.
 lighting3d only mutates the pane's LightRig contents (via Pane::lights()) -- it never
 touches any trace's own Trace::lighting mode. A trace's LightingMode defaults to
 ::None (per Trace::lighting's own documented default), and a ::None trace ignores the
-LightRig entirely, regardless of how many lights are configured. Directly verified: two
-otherwise-identical scenes with genuinely different light configurations (headlight-only
+LightRig entirely, regardless of how many lights are configured. Two
+otherwise-identical scenes with different light configurations (headlight-only
 vs. sun_key-only) render byte-IDENTICAL when the pane's trace is left at its default
-LightingMode::None, but render genuinely DIFFERENT once the same trace has
+LightingMode::None, but render DIFFERENT once the same trace has
 LightingMode::Gouraud set (e.g. via flash::trace_preset3d(trace,
 TracePreset3D::Surface), which sets Gouraud). Always pair lighting3d with a
 Gouraud/Flat-lit trace if you expect to see its effect.
@@ -73,8 +73,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-lighting3d-1-headlight-only.svg)
 
-Example 2 (verification, not a distinct rendering). `headlight = false, sun_key = true`
-renders genuinely differently from the default, confirmed via direct SVG comparison —
+Example 2 (a comparison, not a new picture). `headlight = false, sun_key = true`
+renders differently from the default —
 provided the trace has `LightingMode::Gouraud` set, per the important callout above.
 
 ```cpp
@@ -122,8 +122,8 @@ auto fig = studio("flash_lighting3d_rig");
 auto& pane = fig.pane3();
 auto gx = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
 auto gy = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
-auto gz = gx.reshape({1, 24}).tile({24, 1}).mul(0.6).sin()
-            .add(gy.reshape({24, 1}).tile({1, 24}).mul(0.7).cos());
+auto gz = gx.reshape({1, 24}).repeat({24, 1}).mul(0.6).sin()
+            .add(gy.reshape({24, 1}).repeat({1, 24}).mul(0.7).cos());
 
 auto& trace = pane.sheet(gx, gy, gz);
 flash::trace_preset3d(trace, flash::TracePreset3D::Surface);

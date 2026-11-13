@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::invalid() const -> Catalog
+Catalog Catalog::invalid() const
 ```
 
 ## What It Does

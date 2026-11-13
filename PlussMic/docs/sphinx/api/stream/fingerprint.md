@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Stream::fingerprint() -> std::uint64_t
+std::uint64_t Stream::fingerprint()
 ```
 
 ## What It Does

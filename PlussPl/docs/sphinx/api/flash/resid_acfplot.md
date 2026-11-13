@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class X, class Y>
-Studio& flash::resid_acfplot(Studio& studio, X&& x, Y&& y, const ResidAcfPlotOptions& options = {})
+Studio& flash::resid_acfplot(Studio& studio, Series x, Series y, const ResidAcfPlotOptions& options = {})
 ```
 
 ## What It Does
@@ -33,7 +32,7 @@ spikes.
     finite `(x, y)` pairs participate (non-finite pairs are dropped via an internal
     `detail::finite_xy` filter, the same mechanism [`flash::regplot`](regplot.md) itself
     uses). At least three finite pairs must remain, or `resid_acfplot` throws
-    `std::invalid_argument("flash::resid_acfplot requires at least three finite x/y
+    `pluss::Error("flash::resid_acfplot requires at least three finite x/y
     pairs")`.
 
 **options** (`const ResidAcfPlotOptions&`, optional)
@@ -81,8 +80,8 @@ std::vector<double> x{1.0, 2.0};
 std::vector<double> y{1.0, 2.0};
 try {
   flash::resid_acfplot(fig, x, y);
-} catch (const std::invalid_argument& e) {
-  std::cout << "resid_acfplot(2 points) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "resid_acfplot(2 points) threw: " << e.message() << "\n";
 }
 ```
 
@@ -95,8 +94,7 @@ resid_acfplot(2 points) threw: flash::resid_acfplot requires at least three fini
 ## Notes
 
 - Not `noexcept`.
-- `options.reg.order` is clamped to at least `1` before fitting, mirroring
-  [`flash::regplot`](regplot.md)'s own clamp.
+- `options.reg.order` must be at least `1`, as for [`flash::regplot`](regplot.md); otherwise the call throws `pluss::Error`.
 - Only the *prediction* half of `RegPlotOptions` matters here — every rendering-only
   field (`show_scatter`, `show_fit`, `show_ci`, `marker_area`, `fit_trace_width`, …) is
   silently irrelevant, since `resid_acfplot` never draws the regression itself, only the

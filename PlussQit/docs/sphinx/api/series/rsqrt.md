@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::rsqrt() const -> Series
+Series Series::rsqrt() const
 Series& Series::rsqrt_()
 Series& Series::rsqrt_() const
 ```

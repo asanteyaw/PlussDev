@@ -202,9 +202,9 @@ the studio:  ocean, the first pane still: paper
 - [`PaletteRamp`](PaletteRamp.md), [`Rgba`](Rgba.md): the pieces a theme is built from.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="ShadeMode.html">
+  <a class="prev-link" href="StyleOptions.html">
     <span class="label">Previous</span>
-    <span class="title">ShadeMode</span>
+    <span class="title">StyleOptions</span>
   </a>
   <a class="next-link" href="TickFormat.html">
     <span class="label">Next</span>

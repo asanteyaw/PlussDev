@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-SlateLabelAccessor::has() const -> bool
-SlateLabelAccessor::has(const Slate& values) const -> Slate
+bool SlateLabelAccessor::has() const
+Slate SlateLabelAccessor::has(const Slate& values) const
 ```
 
 ## What It Does

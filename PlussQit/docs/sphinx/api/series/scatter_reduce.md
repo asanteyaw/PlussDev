@@ -7,27 +7,27 @@
 ## Signature
 
 ```cpp
-Series::scatter_reduce(
+Series Series::scatter_reduce(
     std::int64_t dim,
     const Series& index,
     const Series& src,
-    const std::string& reduce) const -> Series
+    const std::string& reduce) const
 
-Series::scatter_reduce(
+Series Series::scatter_reduce(
     std::int64_t dim,
     const Series& index,
     const Series& src,
     const std::string& reduce,
-    bool include_self) const -> Series
+    bool include_self) const
 
-Series::scatter_reduce(
+Series Series::scatter_reduce(
     std::int64_t dim,
     const Series& index,
     const Series& src,
     const std::string& reduce,
     bool include_self,
     bool has_initial,
-    double initial) const -> Series
+    double initial) const
 ```
 
 ## What It Does

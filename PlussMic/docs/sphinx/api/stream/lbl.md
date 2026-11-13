@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::lbl() const -> StreamLabelAccessor
+StreamLabelAccessor Stream::lbl() const
 ```
 
 ## What It Does

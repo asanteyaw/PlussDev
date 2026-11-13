@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::percentiles(pluss::RangeView<double> points = {0.25, 0.5, 0.75}, std::int64_t min_count = 1) const -> DataFrame
+DataFrame DataFrame::percentiles(pluss::RangeView<double> points = {0.25, 0.5, 0.75}, std::int64_t min_count = 1) const
 ```
 
 ## What It Does

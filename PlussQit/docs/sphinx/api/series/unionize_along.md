@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::unionize_along(const Series& other, std::int64_t dim) const -> Series
-Series::unionize_along(const Series& other, std::int64_t dim, bool sorted) const -> Series
+Series Series::unionize_along(const Series& other, std::int64_t dim) const
+Series Series::unionize_along(const Series& other, std::int64_t dim, bool sorted) const
 ```
 
 ## What It Does

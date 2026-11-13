@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::round(std::int64_t decimals = 0) const -> DataFrame
+DataFrame DataFrame::round(std::int64_t decimals = 0) const
 ```
 
 ## What It Does

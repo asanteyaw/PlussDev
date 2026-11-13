@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::mode(bool drop_nulls = true) const -> Slate
+Slate Slate::mode(bool drop_nulls = true) const
 ```
 
 ## What It Does

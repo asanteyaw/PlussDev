@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrame::floordiv(double other) const -> DataFrame
-DataFrame::floordiv(const DataFrame& other) const -> DataFrame
-DataFrame::floordiv(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::floordiv(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::floordiv(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::floordiv(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame DataFrame::floordiv(double other) const
+DataFrame DataFrame::floordiv(const DataFrame& other) const
+DataFrame DataFrame::floordiv(const DataFrame& other, const AlignOptions& options) const
+DataFrame DataFrame::floordiv(const Slate& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::floordiv(const Slate& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::floordiv(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does

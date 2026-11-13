@@ -7,12 +7,12 @@
 ## Signature
 
 ```cpp
-Locus::keys() const -> const std::vector<std::string>&
-Locus::catalogs() const -> const std::vector<Catalog>&
-Locus::has(std::string_view name) const -> bool
-Locus::catalog(std::string_view name) const -> Catalog
-Locus::catalog(std::int64_t index) const -> Catalog
-Locus::get(std::string_view name) const -> std::optional<Catalog>
+const std::vector<std::string>& Locus::keys() const
+const std::vector<Catalog>& Locus::catalogs() const
+bool Locus::has(std::string_view name) const
+Catalog Locus::catalog(std::string_view name) const
+Catalog Locus::catalog(std::int64_t index) const
+std::optional<Catalog> Locus::get(std::string_view name) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::round(std::int64_t decimals = 0) const -> Slate
+Slate Slate::round(std::int64_t decimals = 0) const
 ```
 
 ## What It Does

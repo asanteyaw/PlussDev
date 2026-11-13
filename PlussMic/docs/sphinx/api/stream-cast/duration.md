@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-StreamCastAccessor::duration() -> Stream
+Stream StreamCastAccessor::duration()
 ```
 
 ## What It Does

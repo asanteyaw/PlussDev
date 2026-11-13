@@ -1,3 +1,4 @@
+#include "style_defaults.h"
 #include "pluss/pl/plusspl.h"
 #include "plotism/render/export_bridge.h"
 #include "plotism/spatex/spatex.h"
@@ -25,9 +26,36 @@
 #include <vector>
 
 namespace pluss::pl {
+namespace style {
+namespace {
+thread_local const StyleOptions* g_active = nullptr;
+}  // namespace
+
+const StyleOptions& active() noexcept {
+  static const StyleOptions defaults{};
+  return g_active != nullptr ? *g_active : defaults;
+}
+
+Scope::Scope(const StyleOptions& options) noexcept : previous_(g_active) { g_active = &options; }
+Scope::~Scope() { g_active = previous_; }
+}  // namespace style
+
 namespace {
 
 constexpr double kPi = 3.14159265358979323846;
+
+// Numerical tolerances. Each is a guard against floating-point noise, not a matter of taste: it says how close two
+// computed numbers must be to count as the same one.
+constexpr double kMinSpan = 1.0e-9;                    // smallest span of a range that is still treated as having extent
+constexpr double kTickCoincidence = 1.0e-8;            // ticks closer than this share of the span are one tick
+constexpr double kMinorTickCoincidence = 1.0e-7;       // the same for minor ticks and symlog ticks
+constexpr double kDecimalMatch = 1.0e-6;               // a tick matches a number of decimals within this relative error
+constexpr double kCoincidentPointsSquared = 1.0e-16;   // squared distance below which two points are one point
+constexpr double kParallelVectors = 1.0e-8;            // a cross product shorter than this means the vectors are parallel
+constexpr double kSameRow = 1.0e-5;                    // panes whose tops differ by less than this are in one row
+constexpr double kNoSpreadBandwidth = 1.0e-6;          // a density bandwidth below this means the sample has no spread
+constexpr double kFallbackBandwidthFloor = 0.05;       // guard: the bandwidth of a sample with no spread is at least this
+constexpr double kBandwidthAdjustFloor = 1.0e-4;       // guard: a bandwidth adjustment is never smaller than this
 constexpr char kMathTextMarker = '\x1F';
 
 struct Point2d {
@@ -42,11 +70,11 @@ struct Point3d {
 };
 
 struct MaterialCoefficients {
-  double ambient{0.3};
-  double diffuse{0.6};
-  double specular{0.9};
-  double exponent{20.0};
-  double specular_color{1.0};
+  double ambient{0.0};
+  double diffuse{0.0};
+  double specular{0.0};
+  double exponent{1.0};
+  double specular_color{0.0};
 };
 
 struct Rect {
@@ -160,13 +188,20 @@ struct PathCommand {
 struct TextCommand {
   Point2d anchor{};
   std::string text{};
-  double size{12.0};
+  double size{look().default_text_pt};
   Rgba color{};
   double rotation_deg{0.0};
   enum class Align : std::uint8_t { Start, Middle, End } align{Align::Start};
 };
 
-using DrawCommand = std::variant<PathCommand, TextCommand>;
+// Everything drawn between a begin and its end is cut at the rectangle (a pane's plot area, so data outside a
+// manual axis range does not run into the margins).
+struct ClipCommand {
+  bool begin{true};
+  Rect rect{};
+};
+
+using DrawCommand = std::variant<PathCommand, TextCommand, ClipCommand>;
 
 struct DrawList {
   Extent2d extent{};
@@ -191,6 +226,9 @@ struct WrappedKeyEntry {
   std::size_t entry_index{0};
   std::vector<std::string> lines{};
   double block_height{0.0};
+  double x_offset{10.0}; // left edge of the entry's cell, from the box's left edge
+  double y_offset{0.0};  // top of the entry's row, from the top of the first row
+  bool truncated{false}; // the label did not fit in the allowed lines and ends with "..."
 };
 
 struct KeyBoxMetrics {
@@ -251,6 +289,25 @@ struct CachedOptionalAxisValues {
 
   [[nodiscard]] bool has_values() const noexcept {
     return active && values && !values->empty();
+  }
+
+  // The scale of a marker radius (radius = scale * sqrt(size)) for markers sized by this channel: the usual scale,
+  // raised just enough for the smallest positive size to reach the smallest visible radius. Sizes keep their ratios,
+  // so distinct sizes stay distinct instead of collapsing into the smallest visible dot.
+  [[nodiscard]] double radius_scale(double per_sqrt_size, double min_radius) const noexcept {
+    if (!has_values()) {
+      return per_sqrt_size;
+    }
+    double smallest = std::numeric_limits<double>::infinity();
+    for (const double size : *values) {
+      if (std::isfinite(size) && size > 0.0 && size < smallest) {
+        smallest = size;
+      }
+    }
+    if (!std::isfinite(smallest)) {
+      return per_sqrt_size;
+    }
+    return std::max(per_sqrt_size, min_radius / std::sqrt(smallest));
   }
 };
 
@@ -525,6 +582,10 @@ class ScopedSeriesVectorCache {
 }
 
 [[nodiscard]] double scalar_f64(const Series& series) {
+  // A single value held in a vector (a whisker length given as {0.7}, say) is as good as a rank-0 scalar.
+  if (series.dim() != 0) {
+    return series.to(ScalarType::Float64).reshape({series.numel()}).host<double>().front();
+  }
   if (series.scalar_type() == ScalarType::Float64) {
     return series.item<double>();
   }
@@ -567,7 +628,7 @@ class ScopedSeriesVectorCache {
   if (values.numel() == rows * cols) {
     return values.reshape({rows, cols});
   }
-  throw std::invalid_argument("plot matrix broadcast failed");
+  PLUSS_FAIL("plot matrix broadcast failed");
 }
 
 [[nodiscard]] Series broadcast_delta_matrix(
@@ -709,10 +770,10 @@ class ScopedSeriesVectorCache {
 }
 
 [[nodiscard]] std::string format_tick_value(double value) {
-  const double snapped = std::abs(value) <= 1.0e-12 ? 0.0 : value;
+  const double snapped = std::abs(value) <= look().tick_snap_to_zero ? 0.0 : value;
   const auto format_plain = [](double v) {
     std::ostringstream out;
-    out << std::fixed << std::setprecision(6) << v;
+    out << std::fixed << std::setprecision(look().tick_plain_decimals) << v;
     std::string text = out.str();
     const auto dot = text.find('.');
     if (dot != std::string::npos) {
@@ -731,8 +792,8 @@ class ScopedSeriesVectorCache {
 
   std::ostringstream label;
   const double magnitude = std::abs(snapped);
-  if (magnitude >= 1.0e6 || (magnitude > 0.0 && magnitude < 1.0e-3)) {
-    label << std::scientific << std::setprecision(2) << snapped;
+  if (magnitude >= look().auto_scientific_above || (magnitude > 0.0 && magnitude < look().auto_scientific_below)) {
+    label << std::scientific << std::setprecision(look().tick_scientific_decimals) << snapped;
   } else {
     return format_plain(snapped);
   }
@@ -743,7 +804,7 @@ class ScopedSeriesVectorCache {
   if (!std::isfinite(value)) {
     return {};
   }
-  const double snapped = std::abs(value) <= 1.0e-12 ? 0.0 : value;
+  const double snapped = std::abs(value) <= look().tick_snap_to_zero ? 0.0 : value;
   if (format == TickFormat::Auto) {
     return format_tick_value(snapped);
   }
@@ -800,20 +861,25 @@ class ScopedSeriesVectorCache {
 }
 
 [[nodiscard]] double nice_step(double span, int target_ticks = 5);
+// Whether the pane has a colour scale to show and the guide is on: the room for it is reserved only then.
+[[nodiscard]] bool scale_guide_drawn(const Pane& pane);
+// Whether the pane has any labelled trace for its own legend to list: no entries, no legend and no room for one.
+[[nodiscard]] bool pane_has_legend_entries(const Pane& pane);
 
 [[nodiscard]] Range1d effective_range(const AxisState& axis, double derived_low, double derived_high) {
   if (axis.limit_mode == LimitMode::Manual && axis.limits.has_value()) {
     return *axis.limits;
   }
   if (!std::isfinite(derived_low) || !std::isfinite(derived_high)) {
-    return axis.scale.kind == ScaleKind::Log10 ? Range1d{0.1, 10.0} : Range1d{-1.0, 1.0};
+    return axis.scale.kind == ScaleKind::Log10 ? Range1d{look().empty_log_range_low, look().empty_log_range_high}
+                                               : Range1d{-look().empty_linear_range_half_width, look().empty_linear_range_half_width};
   }
   if (axis.scale.kind == ScaleKind::Log10) {
     if (derived_high <= 0.0) {
-      return {0.1, 10.0};
+      return {look().empty_log_range_low, look().empty_log_range_high};
     }
     if (derived_low <= 0.0) {
-      derived_low = std::max(derived_high * 1.0e-3, 1.0e-6);
+      derived_low = std::max(derived_high * look().log_floor_share, look().log_floor_min);
     }
   }
 
@@ -840,7 +906,7 @@ class ScopedSeriesVectorCache {
 
   const double span_t = aligned_high_t - aligned_low_t;
   if (axis.limit_method == LimitMethod::Padded) {
-    const double pad_t = std::max(span_t * 0.06, 1.0e-9);
+    const double pad_t = std::max(span_t * look().limit_pad_share, kMinSpan);
     aligned_low_t -= pad_t;
     aligned_high_t += pad_t;
   } else if (axis.limit_method == LimitMethod::TickAligned) {
@@ -871,11 +937,11 @@ class ScopedSeriesVectorCache {
   const double exponent = std::floor(std::log10(raw));
   const double scaled = raw / std::pow(10.0, exponent);
   double nice = 1.0;
-  if (scaled < 1.5) {
+  if (scaled < look().nice_step_one_below) {
     nice = 1.0;
-  } else if (scaled < 3.5) {
+  } else if (scaled < look().nice_step_two_below) {
     nice = 2.0;
-  } else if (scaled < 7.5) {
+  } else if (scaled < look().nice_step_five_below) {
     nice = 5.0;
   } else {
     nice = 10.0;
@@ -891,7 +957,7 @@ class ScopedSeriesVectorCache {
     if (value >= range.low - step * 0.5 && value <= range.high + step * 0.5) {
       ticks.emplace_back(value, format_tick_value(value));
     }
-    if (ticks.size() > 12) {
+    if (ticks.size() > static_cast<std::size_t>(look().tick_count_limit)) {
       break;
     }
   }
@@ -905,7 +971,7 @@ class ScopedSeriesVectorCache {
   }
   const int low = static_cast<int>(std::ceil(std::log10(range.low)));
   const int high = static_cast<int>(std::floor(std::log10(range.high)));
-  for (int power = low; power <= high && ticks.size() < 12; ++power) {
+  for (int power = low; power <= high && ticks.size() < static_cast<std::size_t>(look().tick_count_limit); ++power) {
     const double value = std::pow(10.0, static_cast<double>(power));
     std::ostringstream label;
     label << "1e" << power;
@@ -923,7 +989,7 @@ class ScopedSeriesVectorCache {
   }
   const auto transformed_ticks = linear_ticks({*low_t, *high_t}, 7);
   ticks.reserve(transformed_ticks.size());
-  const double eps = std::max(1.0e-9, 1.0e-7 * std::max(std::abs(range.low), std::abs(range.high)));
+  const double eps = std::max(kMinSpan, kMinorTickCoincidence * std::max(std::abs(range.low), std::abs(range.high)));
   for (const auto& [transformed, _] : transformed_ticks) {
     const auto value = unscale_value(transformed, policy);
     if (!value.has_value() || !std::isfinite(*value)) {
@@ -965,7 +1031,7 @@ class ScopedSeriesVectorCache {
 
   const auto [min_it, max_it] = std::minmax_element(values.begin(), values.end());
   const double span = std::max(*max_it - *min_it, 1.0e-12);
-  const double eps = std::max(1.0e-9, span * 1.0e-8);
+  const double eps = std::max(kMinSpan, span * kTickCoincidence);
 
   if (forced_decimals.has_value()) {
     const int decimals = std::clamp(*forced_decimals, 0, 8);
@@ -978,7 +1044,7 @@ class ScopedSeriesVectorCache {
     return ticks;
   }
 
-  if (max_abs >= 1.0e4 || (std::isfinite(min_nonzero_abs) && min_nonzero_abs < 1.0e-3)) {
+  if (max_abs >= look().harmonize_scientific_above || (std::isfinite(min_nonzero_abs) && min_nonzero_abs < look().auto_scientific_below)) {
     return ticks;
   }
 
@@ -1011,13 +1077,13 @@ class ScopedSeriesVectorCache {
     for (int d = 0; d <= 6; ++d) {
       const double scaled = min_step * std::pow(10.0, static_cast<double>(d));
       const double rounded = std::round(scaled);
-      const double tolerance = 1.0e-6 * std::max(1.0, std::abs(scaled));
+      const double tolerance = kDecimalMatch * std::max(1.0, std::abs(scaled));
       if (std::abs(scaled - rounded) <= tolerance) {
         detected = d;
         break;
       }
     }
-    decimals = std::clamp(detected, 1, 3);
+    decimals = std::clamp(detected, look().auto_tick_decimals_min, look().auto_tick_decimals_max);
   }
 
   for (auto& [value, label] : ticks) {
@@ -1149,7 +1215,7 @@ class ScopedSeriesVectorCache {
   }
 
   const double span = std::max(range.high - range.low, 1e-12);
-  const double eps = std::max(1.0e-9, span * 1.0e-7);
+  const double eps = std::max(kMinSpan, span * kMinorTickCoincidence);
   std::vector<double> major;
   major.reserve(major_ticks.size());
   for (const auto& [value, _] : major_ticks) {
@@ -1204,7 +1270,7 @@ class ScopedSeriesVectorCache {
       for (int m = 2; m <= 9; ++m) {
         push_minor(base * static_cast<double>(m));
       }
-      if (minor.size() >= 96) {
+      if (minor.size() >= static_cast<std::size_t>(look().minor_tick_limit)) {
         break;
       }
     }
@@ -1233,17 +1299,17 @@ class ScopedSeriesVectorCache {
       continue;
     }
     for (int div = 1; div < 5; ++div) {
-      const double transformed = *lo_t + (*hi_t - *lo_t) * (static_cast<double>(div) / 5.0);
+      const double transformed = *lo_t + (*hi_t - *lo_t) * (static_cast<double>(div) / static_cast<double>(look().minor_tick_divisions));
       const auto value = unscale_value(transformed, axis.scale);
       if (!value.has_value()) {
         continue;
       }
       push_minor(*value);
-      if (minor.size() >= 128) {
+      if (minor.size() >= static_cast<std::size_t>(look().minor_tick_limit_total)) {
         break;
       }
     }
-    if (minor.size() >= 128) {
+    if (minor.size() >= static_cast<std::size_t>(look().minor_tick_limit_total)) {
       break;
     }
   }
@@ -1274,6 +1340,30 @@ class ScopedSeriesVectorCache {
   out.second.count = out.count;
   return out;
 }
+
+// The width of the bars of a columns trace, in the units of the axis they are spread along: `data.width` (0.8) of the
+// smallest gap between two positions, so bars stand apart whatever the spacing of their positions. With one position,
+// or positions one unit apart, it is `data.width` itself.
+[[nodiscard]] double columns_bar_width(const ColumnsData& data, const SeriesPairData& xy) {
+  std::vector<double> positions;
+  positions.reserve(xy.count);
+  for (std::size_t i = 0; i < xy.count; ++i) {
+    const double position = data.horizontal ? xy.second.at(i) : xy.first.at(i);
+    if (std::isfinite(position)) {
+      positions.push_back(position);
+    }
+  }
+  std::sort(positions.begin(), positions.end());
+  double smallest_gap = std::numeric_limits<double>::infinity();
+  for (std::size_t i = 1; i < positions.size(); ++i) {
+    const double gap = positions[i] - positions[i - 1];
+    if (gap > 0.0 && gap < smallest_gap) {
+      smallest_gap = gap;
+    }
+  }
+  return std::isfinite(smallest_gap) ? data.width * smallest_gap : data.width;
+}
+
 
 [[nodiscard]] CachedAxisValues normalize_cloud_axis(const Series& series) {
   CachedAxisValues out;
@@ -1317,7 +1407,7 @@ class ScopedSeriesVectorCache {
   }
   cloud.x.count = cloud.count;
   cloud.y.count = cloud.count;
-  cloud.size = normalize_optional_cloud_axis(data.size, cloud.count, 18.0);
+  cloud.size = normalize_optional_cloud_axis(data.size, cloud.count, look().default_marker_size);
   cloud.color = normalize_optional_cloud_axis(data.color, cloud.count, 0.0);
   return cloud;
 }
@@ -1346,7 +1436,7 @@ class ScopedSeriesVectorCache {
   cloud.x.count = cloud.count;
   cloud.y.count = cloud.count;
   cloud.z.count = cloud.count;
-  cloud.size = normalize_optional_cloud_axis(data.size, cloud.count, 18.0);
+  cloud.size = normalize_optional_cloud_axis(data.size, cloud.count, look().default_marker_size);
   cloud.color = normalize_optional_cloud_axis(data.color, cloud.count, 0.0);
   return cloud;
 }
@@ -1465,8 +1555,8 @@ class ScopedSeriesVectorCache {
     summary.median = scalar_f64(sample.median());
     summary.q3 = scalar_f64(sample.quantile(0.75));
     const double iqr = summary.q3 - summary.q1;
-    const double lower_fence = summary.q1 - 1.5 * iqr;
-    const double upper_fence = summary.q3 + 1.5 * iqr;
+    const double lower_fence = summary.q1 - look().quartet_whisker_iqr_factor * iqr;
+    const double upper_fence = summary.q3 + look().quartet_whisker_iqr_factor * iqr;
     const Series inlier_mask = sample.ge(lower_fence).logical_and(sample.le(upper_fence));
     const Series inliers = sample.masked_select(inlier_mask);
     summary.low_whisker = inliers.numel() > 0 ? scalar_f64(inliers.min()) : summary.q1;
@@ -1495,7 +1585,7 @@ class ScopedSeriesVectorCache {
 }
 
 [[nodiscard]] std::vector<ViolinShape> violin_shapes(const ViolinData& data) {
-  constexpr std::size_t kResolution = 120;
+  const std::size_t kResolution = static_cast<std::size_t>(look().violin_resolution);
   constexpr double kInvSqrt2Pi = 0.3989422804014327;
   struct ViolinKernel {
     std::vector<double> y{};
@@ -1540,13 +1630,13 @@ class ScopedSeriesVectorCache {
     const double variance = count > 0 ? (m2 / static_cast<double>(count)) : 0.0;
     const double stddev = std::sqrt(std::max(variance, 0.0));
     const double iqr = std::max(q3 - q1, 0.0);
-    const double robust_sigma = iqr > 0.0 ? iqr / 1.34 : stddev;
+    const double robust_sigma = iqr > 0.0 ? iqr / look().violin_iqr_to_sigma : stddev;
     const double sigma = std::max(robust_sigma, stddev);
-    double bandwidth = 0.9 * sigma * std::pow(static_cast<double>(n), -0.2);
-    if (!std::isfinite(bandwidth) || bandwidth <= 1e-6) {
-      bandwidth = std::max(span / 22.0, 0.05);
+    double bandwidth = look().violin_bandwidth_factor * sigma * std::pow(static_cast<double>(n), -0.2);
+    if (!std::isfinite(bandwidth) || bandwidth <= kNoSpreadBandwidth) {
+      bandwidth = std::max(span / look().violin_fallback_bandwidth_span_divisor, kFallbackBandwidthFloor);
     }
-    bandwidth = std::max(bandwidth * std::max(1e-4, data.options.bw_adjust), span / 64.0);
+    bandwidth = std::max(bandwidth * std::max(kBandwidthAdjustFloor, data.options.bw_adjust), span / look().violin_min_bandwidth_span_divisor);
 
     const double cut_extent = std::max(0.0, data.options.cut) * bandwidth;
     const double low = min_value - cut_extent;
@@ -1646,7 +1736,8 @@ class ScopedSeriesVectorCache {
     global_peak = std::max(global_peak, local_peak);
   }
 
-  const double half_width_target = std::clamp(0.5 * data.options.width, 0.02, 0.9);
+  // The width is validated when the trace is added (positive and finite); it is used as given, so wide violins may touch.
+  const double half_width_target = 0.5 * data.options.width;
   const double width_scale = global_peak > 0.0 ? (half_width_target / global_peak) : 0.0;
 
   std::vector<ViolinShape> shapes;
@@ -2001,7 +2092,7 @@ struct FiniteMinMax {
     const double dx = a.x - b.x;
     const double dy = a.y - b.y;
     const double dz = a.z - b.z;
-    return dx * dx + dy * dy + dz * dz <= 1e-16;
+    return dx * dx + dy * dy + dz * dz <= kCoincidentPointsSquared;
   };
 
   for (const auto [ia, ib] : edges) {
@@ -2187,24 +2278,56 @@ struct FiniteMinMax {
   };
 }
 
+// Fonts and tick marks follow the style defaults and the pane's font scales. The scale is applied as given
+// (validated positive when it is set); the only bound is that a font never reaches zero size.
+[[nodiscard]] double tick_font_for(const Pane& pane) {
+  return std::max(look().min_font_pt, look().tick_font_pt * pane.tick_font_scale());
+}
+[[nodiscard]] double axis_label_font_for(const Pane& pane) {
+  return std::max(look().min_font_pt, look().axis_label_font_pt * pane.axis_label_font_scale());
+}
+[[nodiscard]] double tick_length_for(double tick_font) noexcept {
+  return look().tick_length_em * tick_font;
+}
+
+// How far a line of text reaches along `direction` (a unit vector) from its anchor: its box (the given width,
+// one line of the font size high), aligned as drawn and turned by `rotation_deg` (clockwise on the page), is
+// projected on the direction and the farthest corner is taken. It is the one formula behind every "how much room
+// do these labels need" question, so longer labels and labels turned to 60 or 90 degrees need exactly what they need.
+[[nodiscard]] double text_box_reach(double width, double font_size, double rotation_deg, TextCommand::Align align,
+                                    double direction_x, double direction_y) {
+  const double left = align == TextCommand::Align::Start ? 0.0
+                      : (align == TextCommand::Align::End ? -width : -0.5 * width);
+  const double theta = rotation_deg * (kPi / 180.0);
+  double reach = 0.0;
+  for (const double cx : {left, left + width}) {
+    for (const double cy : {-look().text_ascent_em * font_size, look().text_descent_em * font_size}) {
+      const double rx = cx * std::cos(theta) - cy * std::sin(theta);
+      const double ry = cx * std::sin(theta) + cy * std::cos(theta);
+      reach = std::max(reach, rx * direction_x + ry * direction_y);
+    }
+  }
+  return reach;
+}
+
 [[nodiscard]] double default_planar_tick_label_gap(
     bool axes_visible,
     double tick_font,
     double rotation_deg,
     bool x_axis) {
   (void)x_axis;
-  constexpr double kBorderedVirtualTickFactor = 1.0;
-  constexpr double kBorderlessVirtualTickFactor = 0.35;
   const double abs_rotation = std::abs(rotation_deg);
-  const double tick_len = std::clamp(tick_font * 0.45, 4.0, 9.0);
   // Borderless panes still need a small virtual tick clearance, but less than bordered panes.
-  const double virtual_tick_factor = axes_visible ? kBorderedVirtualTickFactor : kBorderlessVirtualTickFactor;
-  const double base_tick_len = tick_len * virtual_tick_factor;
+  const double virtual_tick_factor =
+      axes_visible ? look().bordered_virtual_tick_factor : look().borderless_virtual_tick_factor;
+  const double base_tick_len = tick_length_for(tick_font) * virtual_tick_factor;
   if (abs_rotation <= 1e-9) {
-    return base_tick_len + std::clamp(tick_font * 0.74, 4.0, 13.0);
+    return base_tick_len + look().tick_text_gap_em * tick_font;
   }
-  const double rotation_gain = std::clamp(abs_rotation / 90.0, 0.0, 1.0);
-  return base_tick_len + std::clamp(tick_font * (0.28 + 0.16 * rotation_gain), 2.0, 9.0);
+  // The share of the 90-degree rotation, between 0 (not rotated) and 1 (upright): a proportion of an angle, not a bound.
+  const double rotation_gain = std::min(abs_rotation / 90.0, 1.0);
+  return base_tick_len +
+         tick_font * (look().rotated_tick_text_gap_base_em + look().rotated_tick_text_gap_gain_em * rotation_gain);
 }
 
 [[nodiscard]] double resolved_planar_tick_label_gap(
@@ -2218,14 +2341,9 @@ struct FiniteMinMax {
   double gap = default_planar_tick_label_gap(axes_visible, tick_font, axis.tick_rotation_deg.value_or(0.0), x_axis);
   if (!x_axis) {
     // Optical correction: y tick labels are end-anchored, which renders visually farther from the axis.
-    constexpr double kYAxisOpticalCompFactor = 0.18;
-    constexpr double kYAxisOpticalCompMin = 0.8;
-    constexpr double kYAxisOpticalCompMax = 3.0;
-    const double rotation_gain = std::clamp(std::abs(axis.tick_rotation_deg.value_or(0.0)) / 90.0, 0.0, 1.0);
-    const double attenuation = 1.0 - 0.6 * rotation_gain;
-    const double optical_comp =
-        std::clamp(tick_font * kYAxisOpticalCompFactor * attenuation, kYAxisOpticalCompMin, kYAxisOpticalCompMax);
-    gap = std::max(0.0, gap - optical_comp);
+    const double rotation_gain = std::min(std::abs(axis.tick_rotation_deg.value_or(0.0)) / 90.0, 1.0);
+    const double attenuation = 1.0 - look().y_axis_optical_comp_rotation_attenuation * rotation_gain;
+    gap = std::max(0.0, gap - tick_font * look().y_axis_optical_comp_em * attenuation);
   }
   return gap;
 }
@@ -2239,20 +2357,20 @@ struct FiniteMinMax {
     return std::max(0.0, *axis.label_gap);
   }
   if (!axes_visible) {
-    return x_axis ? std::clamp(axis_font * 0.55, 4.0, 14.0) : std::clamp(axis_font * 0.45, 4.0, 12.0);
+    return axis_font * (x_axis ? look().axis_label_gap_x_no_axes_em : look().axis_label_gap_y_no_axes_em);
   }
-  return x_axis ? std::clamp(axis_font * 0.85, 6.0, 20.0) : std::clamp(axis_font * 0.75, 6.0, 18.0);
+  return axis_font * (x_axis ? look().axis_label_gap_x_em : look().axis_label_gap_y_em);
 }
 
 [[nodiscard]] double default_scale_guide_bar_gap(bool axes_visible) noexcept {
-  return axes_visible ? 22.0 : 7.0;
+  return axes_visible ? look().scale_guide_bar_gap_axes_pt : look().scale_guide_bar_gap_bare_pt;
 }
 
 [[nodiscard]] double default_scale_guide_right_inset(bool axes_visible, bool tight) noexcept {
-  constexpr double kScaleGuideBarWidth = 14.0;
-  constexpr double kScaleGuideTickLength = 5.0;
-  const double kScaleGuideTickLabelPad = axes_visible ? 8.0 : 6.0;
-  const double tick_label_allowance = axes_visible ? (tight ? 34.0 : 40.0) : (tight ? 22.0 : 28.0);
+  const double kScaleGuideBarWidth = look().scale_guide_bar_width_pt;
+  const double kScaleGuideTickLength = look().scale_guide_tick_length_pt;
+  const double kScaleGuideTickLabelPad = axes_visible ? look().scale_guide_tick_label_pad_axes_pt : look().scale_guide_tick_label_pad_bare_pt;
+  const double tick_label_allowance = (axes_visible ? look().scale_guide_label_allowance_axes : look().scale_guide_label_allowance_bare).of(tight);
   return default_scale_guide_bar_gap(axes_visible)
          + kScaleGuideBarWidth
          + kScaleGuideTickLength
@@ -2280,6 +2398,23 @@ struct FiniteMinMax {
   return layout;
 }
 
+[[nodiscard]] bool docked_legend_has_entries(const Studio& studio);
+[[nodiscard]] double east_dock_extent(const Studio& studio);
+[[nodiscard]] double south_dock_extent(const Studio& studio);
+[[nodiscard]] std::vector<std::string> headline_lines(const Studio& studio);
+[[nodiscard]] double headline_extra_height(const Studio& studio);
+
+// Whether the y-axis label is turned and centred along the axis (the layout and the drawing must agree on this): when
+// the caller asks for it, or explicitly turns the label to near vertical. Otherwise the label sits upright above the
+// axis, right-aligned to it.
+[[nodiscard]] bool y_label_centered_on_axis(const Pane& pane) {
+  const AxisState& axis = pane.y_axis();
+  const double rotation = axis.label_rotation_deg.value_or(0.0);
+  const bool near_vertical = std::abs(std::fmod(std::abs(rotation), 180.0) - 90.0) <= look().near_vertical_tolerance_deg;
+  return axis.label_centered_on_axis ||
+         (!axis.label_centered_explicit && axis.label_rotation_deg.has_value() && near_vertical);
+}
+
 [[nodiscard]] std::vector<PaneLayout> layout_panes(const Studio& studio) {
   std::vector<PaneLayout> layouts;
   if (studio.panes().empty()) {
@@ -2288,9 +2423,6 @@ struct FiniteMinMax {
 
   const bool tight = studio.tight_layout_enabled();
   const double pad = tight ? studio.tight_layout_padding() : 0.0;
-  const auto compact_or_default = [tight, pad](double relaxed, double compact) {
-    return (tight ? compact : relaxed) + pad;
-  };
   const auto max_tick_label_chars = [](const AxisState& axis, std::size_t fallback_chars) {
     std::size_t chars = fallback_chars;
     if (axis.ticks.has_value()) {
@@ -2301,24 +2433,24 @@ struct FiniteMinMax {
     return chars;
   };
   const auto pane_insets = [tight, &max_tick_label_chars](const Pane& pane) {
-    double top = tight ? 44.0 : 58.0;
-    double left = tight ? 28.0 : 38.0;
+    double top = look().pane_top_inset.of(tight);
+    double left = look().pane_left_inset.of(tight);
     const bool axes_visible = pane.axes_visible();
-    double right = pane.scale_guide_enabled() ? default_scale_guide_right_inset(axes_visible, tight)
-                                              : (tight ? 20.0 : 28.0);
-    if (pane.legend_place() == KeyPlace::OutsideEast) {
-      right = std::max(right, tight ? 176.0 : 212.0);
+    double right = scale_guide_drawn(pane) ? default_scale_guide_right_inset(axes_visible, tight)
+                                              : look().pane_right_inset.of(tight);
+    if (pane.legend_place() == KeyPlace::OutsideEast && pane_has_legend_entries(pane)) {
+      right = std::max(right, look().pane_outside_legend_right_inset.of(tight));
     }
-    double bottom = tight ? 42.0 : 56.0;
+    double bottom = look().pane_bottom_inset.of(tight);
 
-    const double tick_font = std::clamp(10.0 * pane.tick_font_scale(), 7.0, 32.0);
-    const double axis_font = std::clamp(11.0 * pane.axis_label_font_scale(), 8.0, 36.0);
+    const double tick_font = tick_font_for(pane);
+    const double axis_font = axis_label_font_for(pane);
     const auto axis_text_extent = [&](const AxisState& axis, std::size_t fallback_chars) {
       if (!axis.tick_labels_visible) {
         return 0.0;
       }
       const auto chars = max_tick_label_chars(axis, fallback_chars);
-      return std::max(1.0, static_cast<double>(chars)) * tick_font * 0.56;
+      return std::max(1.0, static_cast<double>(chars)) * tick_font * look().estimated_glyph_width_em;
     };
 
     if (pane.kind() == PaneKind::Planar) {
@@ -2329,37 +2461,49 @@ struct FiniteMinMax {
             || !pane.x_axis().label.empty()
             || !pane.y_axis().label.empty();
         if (!has_axis_text) {
-          left = tight ? 12.0 : 16.0;
-          bottom = tight ? 18.0 : 22.0;
-          if (!pane.scale_guide_enabled()) {
-            right = tight ? 12.0 : 16.0;
+          left = look().bare_left_inset.of(tight);
+          bottom = look().bare_bottom_inset.of(tight);
+          if (!scale_guide_drawn(pane)) {
+            right = look().bare_right_inset.of(tight);
           }
         }
       }
       const auto axis_tick_depth = [&](const AxisState& axis, std::size_t fallback_chars, bool x_axis) {
         if (!axis.tick_labels_visible) {
-          return axes_visible ? std::clamp(tick_font * 0.45, 4.0, 9.0) : 0.0;
+          return axes_visible ? tick_length_for(tick_font) : 0.0;
         }
         const auto chars = max_tick_label_chars(axis, fallback_chars);
-        const double extent = std::max(1.0, static_cast<double>(chars)) * tick_font * 0.56;
-        const double radians = std::abs(axis.tick_rotation_deg.value_or(0.0)) * kPi / 180.0;
-        const double projection = x_axis ? (0.5 * std::sin(radians) * extent) : (0.95 * std::cos(radians) * extent);
+        const double extent = std::max(1.0, static_cast<double>(chars)) * tick_font * look().estimated_glyph_width_em;
+        const double rotation = axis.tick_rotation_deg.value_or(0.0);
+        // x tick labels hang below the axis (centred when upright, anchored at the tick when turned); y tick labels
+        // are right-aligned to the left of it.
+        const double reach = x_axis ? text_box_reach(extent, tick_font, rotation,
+                                                     std::abs(rotation) > 1e-9 ? TextCommand::Align::Start : TextCommand::Align::Middle, 0.0, 1.0)
+                                    : text_box_reach(extent, tick_font, rotation, TextCommand::Align::End, -1.0, 0.0);
         return resolved_planar_tick_label_gap(axis, axes_visible, tick_font, x_axis)
-               + tick_font * 0.35
-               + std::max(0.0, projection);
+               + tick_font * look().tick_text_clearance_em
+               + reach;
       };
 
       const double x_depth = axis_tick_depth(pane.x_axis(), 8, true);
       const double x_label_extent = pane.x_axis().label.empty() ? 0.0 : axis_font;
       const double x_label_pad =
-          pane.x_axis().label.empty() ? 6.0 : resolved_axis_label_gap(pane.x_axis(), axes_visible, axis_font, true);
+          pane.x_axis().label.empty() ? look().empty_axis_label_pad : resolved_axis_label_gap(pane.x_axis(), axes_visible, axis_font, true);
       bottom = std::max(bottom, x_depth + x_label_pad + x_label_extent);
 
       const double y_depth = axis_tick_depth(pane.y_axis(), 6, false);
       const double y_label_extent = pane.y_axis().label.empty() ? 0.0 : axis_font;
       const double y_label_pad =
-          pane.y_axis().label.empty() ? 6.0 : resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_font, false);
+          pane.y_axis().label.empty() ? look().empty_axis_label_pad : resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_font, false);
       left = std::max(left, y_depth + y_label_pad + y_label_extent);
+      // An upright y label hangs to the left of the axis from its right-aligned anchor: it needs its own width, turned by
+      // its rotation, beyond the tick-label gap.
+      if (!pane.y_axis().label.empty() && !y_label_centered_on_axis(pane)) {
+        const double label_width = static_cast<double>(pane.y_axis().label.size()) * axis_font * look().estimated_glyph_width_em;
+        left = std::max(left, resolved_planar_tick_label_gap(pane.y_axis(), axes_visible, tick_font, false) +
+                                  text_box_reach(label_width, axis_font, pane.y_axis().label_rotation_deg.value_or(0.0),
+                                                 TextCommand::Align::End, -1.0, 0.0));
+      }
     } else if (pane.kind() == PaneKind::Volumetric) {
       const double x_extent = axis_text_extent(pane.x_axis(), 8);
       const double y_extent = axis_text_extent(pane.y_axis(), 8);
@@ -2368,32 +2512,55 @@ struct FiniteMinMax {
       const double y_label_extent = pane.y_axis().label.empty() ? 0.0 : axis_font;
       const double z_label_extent = pane.z_axis().label.empty() ? 0.0 : axis_font;
 
-      const double near_pad = tight ? 8.0 : 12.0;
-      const double far_pad = tight ? 10.0 : 14.0;
+      const double near_pad = look().volume_near_pad.of(tight);
+      const double far_pad = look().volume_far_pad.of(tight);
 
-      left = std::max(left, near_pad + std::max(y_extent, z_extent) + 0.6 * std::max(y_label_extent, z_label_extent));
-      right = std::max(right, far_pad + std::max(x_extent, z_extent) + 0.65 * x_label_extent);
-      bottom = std::max(bottom, near_pad + 0.55 * (x_extent + y_extent) + 0.8 * x_label_extent);
-      top = std::max(top, near_pad + 0.45 * x_extent + (pane.title_text().empty() ? 0.0 : axis_font * 1.1));
+      left = std::max(left, near_pad + std::max(y_extent, z_extent) + look().volume_left_label_share * std::max(y_label_extent, z_label_extent));
+      right = std::max(right, far_pad + std::max(x_extent, z_extent) + look().volume_right_label_share * x_label_extent);
+      bottom = std::max(bottom, near_pad + look().volume_bottom_tick_share * (x_extent + y_extent) + look().volume_bottom_label_share * x_label_extent);
+      top = std::max(top, near_pad + look().volume_top_tick_share * x_extent + (pane.title_text().empty() ? 0.0 : axis_font * look().volume_title_em));
     }
 
     return std::array<double, 4>{left, top, right, bottom};
   };
 
-  const double left_margin = studio.y_captions().empty()
-                                 ? compact_or_default(28.0, 18.0)
-                                 : compact_or_default(54.0, 34.0);
-  const double right_margin = studio.legend_dock() == KeyDock::East
-                                  ? compact_or_default(276.0, 232.0)
-                                  : compact_or_default(28.0, 18.0);
-  const double top_margin = studio.headline_text().empty()
-                                ? compact_or_default(28.0, 18.0)
-                                : compact_or_default(58.0, 40.0);
-  double bottom_margin = studio.x_captions().empty()
-                             ? compact_or_default(28.0, 18.0)
-                             : compact_or_default(56.0, 40.0);
-  if (studio.legend_dock() == KeyDock::South) {
-    bottom_margin += tight ? 78.0 : 104.0;
+  // A caption only claims margin when some visible pane is in its group and the text is not empty.
+  const auto caption_drawn = [&](const std::map<std::string, std::string>& captions, const auto& group_of) {
+    for (const Pane& pane : studio.panes()) {
+      if (!pane.visible() || group_of(pane).empty()) {
+        continue;
+      }
+      const auto it = captions.find(group_of(pane));
+      if (it != captions.end() && !it->second.empty()) {
+        return true;
+      }
+    }
+    return false;
+  };
+  const bool y_caption_drawn = caption_drawn(studio.y_captions(), [](const Pane& p) -> const std::string& { return p.y_align_group(); });
+  const bool x_caption_drawn = caption_drawn(studio.x_captions(), [](const Pane& p) -> const std::string& { return p.x_align_group(); });
+
+  // Margins are shares of the figure's width and height; what a caption, a headline or a docked legend adds is
+  // measured from its own font or its own key, not a fixed amount.
+  const double edge_x = look().figure_edge_share_x.of(tight) * studio.extent().width + pad;
+  const double edge_y = look().figure_edge_share_y.of(tight) * studio.extent().height + pad;
+  const double left_margin = !y_caption_drawn
+                                 ? edge_x
+                                 : edge_x + look().figure_caption_column_em.of(tight) * look().caption_font_pt;
+  const bool dock_drawn = studio.legend_dock() != KeyDock::None && docked_legend_has_entries(studio);
+  // An east dock reserves exactly the room its key needs (the key, its inset and the gap to the panes).
+  const double right_margin = (dock_drawn && studio.legend_dock() == KeyDock::East)
+                                  ? east_dock_extent(studio) + pad
+                                  : edge_x;
+  const bool has_headline = !headline_lines(studio).empty();
+  const double top_margin = !has_headline
+                                ? edge_y
+                                : edge_y + look().figure_headline_clearance_em.of(tight) * look().headline_font_pt + headline_extra_height(studio);
+  double bottom_margin = !x_caption_drawn
+                             ? edge_y
+                             : edge_y + look().figure_caption_row_em.of(tight) * look().caption_font_pt;
+  if (dock_drawn && studio.legend_dock() == KeyDock::South) {
+    bottom_margin += south_dock_extent(studio);
   }
   const double inner_width = std::max(0.0, studio.extent().width - left_margin - right_margin);
   const double inner_height = std::max(0.0, studio.extent().height - top_margin - bottom_margin);
@@ -2411,17 +2578,26 @@ struct FiniteMinMax {
       continue;
     }
     if (parent >= static_cast<std::int64_t>(studio.pane_count())) {
-      throw std::invalid_argument("pane placement references an invalid parent pane index");
+      PLUSS_FAIL("pane placement references an invalid parent pane index");
     }
     children[static_cast<std::size_t>(parent)].push_back(i);
   }
   if (top_level_indices.empty()) {
-    throw std::invalid_argument("layout requires at least one top-level pane");
+    PLUSS_FAIL("layout requires at least one top-level pane");
   }
 
   auto place_top_level_mosaic = [&]() {
-    const double gap_x = tight ? std::max(6.0, mosaic.gutter_x * 0.62) : mosaic.gutter_x;
-    const double gap_y = tight ? std::max(6.0, mosaic.gutter_y * 0.62) : mosaic.gutter_y;
+    // A gutter is a distance, or auto_gutter: a share of a cell. With n cells and gaps g = share * cell,
+    // cell = (inner - g * (n - 1)) / n, which gives g = share * inner / (n + share * (n - 1)).
+    const auto resolve_gutter = [&](double gutter, double inner, std::int64_t count) {
+      if (gutter == auto_gutter) {
+        const double share = look().mosaic_gutter_share * (tight ? look().tight_gutter_factor : 1.0);
+        return share * inner / (static_cast<double>(count) + share * static_cast<double>(count - 1));
+      }
+      return tight ? std::max(look().min_tight_gutter_pt, gutter * look().tight_gutter_factor) : gutter;
+    };
+    const double gap_x = resolve_gutter(mosaic.gutter_x, inner_width, mosaic.cols);
+    const double gap_y = resolve_gutter(mosaic.gutter_y, inner_height, mosaic.rows);
     const double cell_width =
         std::max(0.0, inner_width - gap_x * static_cast<double>(std::max<std::int64_t>(mosaic.cols - 1, 0))) /
         static_cast<double>(mosaic.cols);
@@ -2431,13 +2607,13 @@ struct FiniteMinMax {
     std::vector<bool> occupied(static_cast<std::size_t>(mosaic.rows * mosaic.cols), false);
     auto claim = [&](std::int64_t row, std::int64_t col, std::int64_t row_span, std::int64_t col_span) {
       if (row < 0 || col < 0 || row + row_span > mosaic.rows || col + col_span > mosaic.cols) {
-        throw std::invalid_argument("pane placement exceeds mosaic bounds");
+        PLUSS_FAIL("pane placement exceeds mosaic bounds");
       }
       for (std::int64_t r = row; r < row + row_span; ++r) {
         for (std::int64_t c = col; c < col + col_span; ++c) {
           const auto index = static_cast<std::size_t>(r * mosaic.cols + c);
           if (occupied[index]) {
-            throw std::invalid_argument("pane placement overlaps an occupied mosaic cell");
+            PLUSS_FAIL("pane placement overlaps an occupied mosaic cell");
           }
           occupied[index] = true;
         }
@@ -2457,7 +2633,7 @@ struct FiniteMinMax {
           }
         }
       }
-      throw std::invalid_argument("mosaic has no free cells left for pane placement");
+      PLUSS_FAIL("mosaic has no free cells left for pane placement");
     };
 
     for (const auto pane_index : top_level_indices) {
@@ -2482,7 +2658,7 @@ struct FiniteMinMax {
   };
 
   auto place_top_level_stacked = [&]() {
-    const double gap = tight ? 12.0 : 18.0;
+    const double gap = look().stacked_pane_gap.of(tight);
     const double stacked_height =
         std::max(0.0, inner_height - gap * static_cast<double>(top_level_indices.size() - 1));
     const double pane_height = stacked_height / static_cast<double>(top_level_indices.size());
@@ -2512,12 +2688,12 @@ struct FiniteMinMax {
     const Rect container = layouts[parent_index].plot;
     std::int64_t rows = 0;
     std::int64_t cols = 0;
-    double gutter_x = 12.0;
-    double gutter_y = 12.0;
+    double gutter_x = look().subpane_gutter_pt;
+    double gutter_y = look().subpane_gutter_pt;
     for (const auto child_index : child_indices) {
       const PanePlacement placement = studio.panes()[child_index].placement();
       if (placement.local_rows <= 0 || placement.local_cols <= 0) {
-        throw std::invalid_argument("subpane placement requires positive local_rows/local_cols");
+        PLUSS_FAIL("subpane placement requires positive local_rows/local_cols");
       }
       if (rows == 0) {
         rows = placement.local_rows;
@@ -2526,12 +2702,12 @@ struct FiniteMinMax {
         gutter_y = placement.local_gutter_y;
       } else {
         if (rows != placement.local_rows || cols != placement.local_cols) {
-          throw std::invalid_argument("all sibling subpanes must share the same local grid dimensions");
+          PLUSS_FAIL("all sibling subpanes must share the same local grid dimensions");
         }
       }
     }
-    const double gap_x = tight ? std::max(4.0, gutter_x * 0.62) : gutter_x;
-    const double gap_y = tight ? std::max(4.0, gutter_y * 0.62) : gutter_y;
+    const double gap_x = tight ? std::max(look().min_tight_subpane_gutter_pt, gutter_x * look().tight_gutter_factor) : gutter_x;
+    const double gap_y = tight ? std::max(look().min_tight_subpane_gutter_pt, gutter_y * look().tight_gutter_factor) : gutter_y;
     const double cell_width =
         std::max(0.0, container.width - gap_x * static_cast<double>(std::max<std::int64_t>(cols - 1, 0))) /
         static_cast<double>(cols);
@@ -2541,13 +2717,13 @@ struct FiniteMinMax {
     std::vector<bool> occupied(static_cast<std::size_t>(rows * cols), false);
     auto claim = [&](std::int64_t row, std::int64_t col, std::int64_t row_span, std::int64_t col_span) {
       if (row < 0 || col < 0 || row + row_span > rows || col + col_span > cols) {
-        throw std::invalid_argument("subpane placement exceeds local grid bounds");
+        PLUSS_FAIL("subpane placement exceeds local grid bounds");
       }
       for (std::int64_t r = row; r < row + row_span; ++r) {
         for (std::int64_t c = col; c < col + col_span; ++c) {
           const auto index = static_cast<std::size_t>(r * cols + c);
           if (occupied[index]) {
-            throw std::invalid_argument("subpane placement overlaps an occupied local grid cell");
+            PLUSS_FAIL("subpane placement overlaps an occupied local grid cell");
           }
           occupied[index] = true;
         }
@@ -2567,7 +2743,7 @@ struct FiniteMinMax {
           }
         }
       }
-      throw std::invalid_argument("local subgrid has no free cells left for subpane placement");
+      PLUSS_FAIL("local subgrid has no free cells left for subpane placement");
     };
 
     for (const auto child_index : child_indices) {
@@ -2614,7 +2790,7 @@ struct FiniteMinMax {
 
   for (std::size_t i = 0; i < assigned.size(); ++i) {
     if (!assigned[i]) {
-      throw std::invalid_argument("pane layout contains an unreachable nested pane");
+      PLUSS_FAIL("pane layout contains an unreachable nested pane");
     }
   }
   return layouts;
@@ -2692,7 +2868,7 @@ struct FiniteMinMax {
           } else if constexpr (std::is_same_v<Payload, ColumnsData>) {
             only_radial = false;
             const auto xy = normalize_pairs(payload.x, payload.y);
-            const double half_width = 0.5 * payload.width;
+            const double half_width = 0.5 * columns_bar_width(payload, xy);
             for (std::size_t i = 0; i < xy.count; ++i) {
               if (payload.horizontal) {
                 const double x0 = std::min(payload.base, xy.first.at(i));
@@ -2922,19 +3098,34 @@ void apply_aligned_limits(
     const Studio& studio,
     std::vector<std::optional<Bounds2d>>& planar_bounds,
     std::vector<std::optional<Bounds3d>>& volume_bounds) {
+  // The range an alignment group shares on one axis: the union of the members' ranges, unless a member set its
+  // limits by hand. Limits set by hand are the group's choice of window, so the group shares their union and
+  // the other members' data is clipped to it.
   struct SharedRange {
     double low{std::numeric_limits<double>::infinity()};
     double high{-std::numeric_limits<double>::infinity()};
+    double manual_low{std::numeric_limits<double>::infinity()};
+    double manual_high{-std::numeric_limits<double>::infinity()};
     bool valid{false};
-
-    void include(double lo, double hi) noexcept {
+    bool has_manual{false};
+    void include(double lo, double hi, bool manual) noexcept {
       if (!std::isfinite(lo) || !std::isfinite(hi)) {
         return;
       }
       low = std::min(low, lo);
       high = std::max(high, hi);
       valid = true;
+      if (manual) {
+        manual_low = std::min(manual_low, lo);
+        manual_high = std::max(manual_high, hi);
+        has_manual = true;
+      }
     }
+    [[nodiscard]] double chosen_low() const noexcept { return has_manual ? manual_low : low; }
+    [[nodiscard]] double chosen_high() const noexcept { return has_manual ? manual_high : high; }
+  };
+  const auto is_manual = [](const AxisState& axis) {
+    return axis.limit_mode == LimitMode::Manual && axis.limits.has_value();
   };
 
   std::map<std::string, SharedRange> x_groups;
@@ -2946,68 +3137,45 @@ void apply_aligned_limits(
     if (planar_bounds[i].has_value()) {
       const Bounds2d& bounds = *planar_bounds[i];
       if (!pane.x_align_group().empty()) {
-        x_groups[pane.x_align_group()].include(bounds.min_x, bounds.max_x);
+        x_groups[pane.x_align_group()].include(bounds.min_x, bounds.max_x, is_manual(pane.x_axis()));
       }
       if (!pane.y_align_group().empty()) {
-        y_groups[pane.y_align_group()].include(bounds.min_y, bounds.max_y);
+        y_groups[pane.y_align_group()].include(bounds.min_y, bounds.max_y, is_manual(pane.y_axis()));
       }
     }
     if (volume_bounds[i].has_value()) {
       const Bounds3d& bounds = *volume_bounds[i];
       if (!pane.x_align_group().empty()) {
-        x_groups[pane.x_align_group()].include(bounds.min_x, bounds.max_x);
+        x_groups[pane.x_align_group()].include(bounds.min_x, bounds.max_x, is_manual(pane.x_axis()));
       }
       if (!pane.y_align_group().empty()) {
-        y_groups[pane.y_align_group()].include(bounds.min_y, bounds.max_y);
+        y_groups[pane.y_align_group()].include(bounds.min_y, bounds.max_y, is_manual(pane.y_axis()));
       }
       if (!pane.z_align_group().empty()) {
-        z_groups[pane.z_align_group()].include(bounds.min_z, bounds.max_z);
+        z_groups[pane.z_align_group()].include(bounds.min_z, bounds.max_z, is_manual(pane.z_axis()));
       }
     }
   }
 
+  const auto apply = [](std::map<std::string, SharedRange>& groups, const std::string& group, double& low, double& high) {
+    const auto it = groups.find(group);
+    if (it != groups.end() && it->second.valid) {
+      low = it->second.chosen_low();
+      high = it->second.chosen_high();
+    }
+  };
   for (std::size_t i = 0; i < studio.pane_count(); ++i) {
     const Pane& pane = studio.panes()[i];
     if (planar_bounds[i].has_value()) {
       Bounds2d& bounds = *planar_bounds[i];
-      if (!pane.x_align_group().empty()) {
-        const auto it = x_groups.find(pane.x_align_group());
-        if (it != x_groups.end() && it->second.valid) {
-          bounds.min_x = it->second.low;
-          bounds.max_x = it->second.high;
-        }
-      }
-      if (!pane.y_align_group().empty()) {
-        const auto it = y_groups.find(pane.y_align_group());
-        if (it != y_groups.end() && it->second.valid) {
-          bounds.min_y = it->second.low;
-          bounds.max_y = it->second.high;
-        }
-      }
+      if (!pane.x_align_group().empty()) apply(x_groups, pane.x_align_group(), bounds.min_x, bounds.max_x);
+      if (!pane.y_align_group().empty()) apply(y_groups, pane.y_align_group(), bounds.min_y, bounds.max_y);
     }
     if (volume_bounds[i].has_value()) {
       Bounds3d& bounds = *volume_bounds[i];
-      if (!pane.x_align_group().empty()) {
-        const auto it = x_groups.find(pane.x_align_group());
-        if (it != x_groups.end() && it->second.valid) {
-          bounds.min_x = it->second.low;
-          bounds.max_x = it->second.high;
-        }
-      }
-      if (!pane.y_align_group().empty()) {
-        const auto it = y_groups.find(pane.y_align_group());
-        if (it != y_groups.end() && it->second.valid) {
-          bounds.min_y = it->second.low;
-          bounds.max_y = it->second.high;
-        }
-      }
-      if (!pane.z_align_group().empty()) {
-        const auto it = z_groups.find(pane.z_align_group());
-        if (it != z_groups.end() && it->second.valid) {
-          bounds.min_z = it->second.low;
-          bounds.max_z = it->second.high;
-        }
-      }
+      if (!pane.x_align_group().empty()) apply(x_groups, pane.x_align_group(), bounds.min_x, bounds.max_x);
+      if (!pane.y_align_group().empty()) apply(y_groups, pane.y_align_group(), bounds.min_y, bounds.max_y);
+      if (!pane.z_align_group().empty()) apply(z_groups, pane.z_align_group(), bounds.min_z, bounds.max_z);
     }
   }
 }
@@ -3083,7 +3251,7 @@ struct CameraBasis {
   Point3d forward{};
   Point3d right{};
   Point3d up{};
-  double distance{3.2};
+  double distance{0.0};
   double focal{1.0};
 };
 
@@ -3115,14 +3283,21 @@ struct CameraBasis {
   Point3d forward = scale(eye_direction, -1.0);
   Point3d up_reference = normalize({lens.up_vector().x, lens.up_vector().y, lens.up_vector().z});
   Point3d right = cross(forward, up_reference);
-  if (norm(right) < 1e-8) {
-    up_reference = std::abs(forward.z) < 0.95 ? Point3d{0.0, 0.0, 1.0} : Point3d{0.0, 1.0, 0.0};
+  if (norm(right) < kParallelVectors) {
+    up_reference = std::abs(forward.z) < look().camera_up_flip_threshold ? Point3d{0.0, 0.0, 1.0} : Point3d{0.0, 1.0, 0.0};
     right = cross(forward, up_reference);
   }
   right = normalize(right);
   Point3d up = normalize(cross(right, forward));
-  const double focal = 1.0 / std::tan(std::clamp(lens.view_angle_deg(), 4.0, 120.0) * kPi / 360.0);
-  return CameraBasis{eye_direction, forward, right, up, 3.2, focal};
+  // Lens::view_angle accepts only angles strictly between 0 and 180 degrees, so the tangent is finite.
+  const double half_view = lens.view_angle_deg() * kPi / 360.0;
+  const double focal = 1.0 / std::tan(half_view);
+  // The projected figure is fitted to the plot area, so a field of view only changes the picture through the
+  // distance of the camera: a wider angle puts the eye closer and exaggerates the perspective, a narrower one
+  // moves it away and flattens it. The default angle of 30 degrees keeps the historical distance of 3.2.
+  const double reference_half_view = look().camera_reference_half_view_deg * kPi / 180.0;
+  const double distance = std::max(look().camera_min_distance, look().camera_reference_distance * std::tan(reference_half_view) / std::tan(half_view));
+  return CameraBasis{eye_direction, forward, right, up, distance, focal};
 }
 
 [[nodiscard]] Point3d rotate_world(Point3d point, const Lens& lens, Point3d /*center*/) {
@@ -3136,7 +3311,10 @@ struct CameraBasis {
 
 [[nodiscard]] Point3d camera_space_point(Point3d point, const Pane& pane, const Bounds3d& bounds) {
   const CameraBasis basis = camera_basis(pane.lens());
-  const Point3d eye = scale(basis.eye_direction, basis.distance);
+  // The camera sits `distance` away from the lens target, on the side the angles give, and looks at it. The target
+  // is in box units: 0 is the centre of the data box and +-0.5 its faces.
+  const Vec3d& target = pane.lens().target();
+  const Point3d eye = add(Point3d{target.x, target.y, target.z}, scale(basis.eye_direction, basis.distance));
   const Point3d normalized = normalize_box_point(point, bounds);
   const Point3d relative = subtract(normalized, eye);
   return {
@@ -3176,6 +3354,23 @@ struct CameraBasis {
     projected.include(projected_corner.x, projected_corner.y);
   }
   projected.pad_if_flat();
+  // A lens target away from the centre of the box puts that point in the middle of the picture: the window is
+  // centred on the target's projection and made just wide enough to keep the whole box in view.
+  const Vec3d& target = pane.lens().target();
+  if (target.x != 0.0 || target.y != 0.0 || target.z != 0.0) {
+    const Point3d at{
+        0.5 * (bounds.min_x + bounds.max_x) + target.x * (bounds.max_x - bounds.min_x),
+        0.5 * (bounds.min_y + bounds.max_y) + target.y * (bounds.max_y - bounds.min_y),
+        0.5 * (bounds.min_z + bounds.max_z) + target.z * (bounds.max_z - bounds.min_z)};
+    const Point3d centre = project_world(at, pane, bounds);
+    const double half_x = std::max(centre.x - projected.min_x, projected.max_x - centre.x);
+    const double half_y = std::max(centre.y - projected.min_y, projected.max_y - centre.y);
+    projected.min_x = centre.x - half_x;
+    projected.max_x = centre.x + half_x;
+    projected.min_y = centre.y - half_y;
+    projected.max_y = centre.y + half_y;
+    projected.pad_if_flat();
+  }
   return projected;
 }
 
@@ -3211,22 +3406,27 @@ struct CameraBasis {
 [[nodiscard]] MaterialCoefficients material_coefficients(MaterialProfile profile) noexcept {
   switch (profile) {
     case MaterialProfile::Dull:
-      return {0.3, 0.8, 0.0, 10.0, 1.0};
+      return {look().material_dull.ambient, look().material_dull.diffuse, look().material_dull.specular, look().material_dull.exponent, look().material_dull.specular_color};
     case MaterialProfile::Shiny:
-      return {0.3, 0.6, 0.9, 20.0, 1.0};
+      return {look().material_shiny.ambient, look().material_shiny.diffuse, look().material_shiny.specular, look().material_shiny.exponent, look().material_shiny.specular_color};
     case MaterialProfile::Metal:
-      return {0.3, 0.3, 1.0, 25.0, 0.5};
+      return {look().material_metal.ambient, look().material_metal.diffuse, look().material_metal.specular, look().material_metal.exponent, look().material_metal.specular_color};
     case MaterialProfile::Default:
     default:
-      return {0.3, 0.6, 0.9, 20.0, 1.0};
+      return {look().material_default.ambient, look().material_default.diffuse, look().material_default.specular, look().material_default.exponent, look().material_default.specular_color};
   }
 }
+
+// A `Local` light is a point light at a fixed distance from the centre of the scene along its direction, so the direction of the
+// light changes from one cell to the next; an `Infinite` light shines along one direction everywhere.
+const double kLocalLightDistance = look().local_light_distance;
 
 [[nodiscard]] Rgba apply_surface_lighting(
     Rgba base,
     const Trace& trace,
     const Pane& pane,
-    const std::array<Point3d, 4>& cell) noexcept {
+    const std::array<Point3d, 4>& cell,
+    const Bounds3d& bounds) noexcept {
   if (trace.lighting_mode() == LightingMode::None || pane.lights().empty()) {
     return base;
   }
@@ -3241,6 +3441,11 @@ struct CameraBasis {
 
   const MaterialCoefficients material = material_coefficients(trace.material_profile());
   const Point3d view_dir{0.0, 0.0, 1.0};
+  const Point3d centroid_data{
+      0.25 * (cell[0].x + cell[1].x + cell[2].x + cell[3].x),
+      0.25 * (cell[0].y + cell[1].y + cell[2].y + cell[3].y),
+      0.25 * (cell[0].z + cell[1].z + cell[2].z + cell[3].z)};
+  const Point3d centroid_cam = rotate_world(normalize_box_point(centroid_data, bounds), pane.lens(), {0.0, 0.0, 0.0});
 
   double diffuse_accum = 0.0;
   double specular_accum = 0.0;
@@ -3248,6 +3453,12 @@ struct CameraBasis {
     Point3d light_dir = direction_from_angles(light.azimuth_deg, light.elevation_deg);
     if (light.space == LightSpace::Data) {
       light_dir = normalize(rotate_world(light_dir, pane.lens(), {0.0, 0.0, 0.0}));
+    }
+    if (light.style == LightStyle::Local) {
+      const Point3d toward_light = subtract(scale(light_dir, kLocalLightDistance), centroid_cam);
+      if (norm(toward_light) > 1e-9) {
+        light_dir = normalize(toward_light);
+      }
     }
     const double n_dot_l = std::max(0.0, dot(normal_cam, light_dir));
     diffuse_accum += n_dot_l;
@@ -3259,7 +3470,7 @@ struct CameraBasis {
   const double light_scale = 1.0 / static_cast<double>(pane.lights().lights().size());
   const double diffuse = material.diffuse * diffuse_accum * light_scale;
   const double specular = material.specular * specular_accum * light_scale;
-  const double intensity = std::clamp(material.ambient + diffuse, 0.15, 1.5);
+  const double intensity = std::clamp(material.ambient + diffuse, look().surface_min_intensity, look().surface_max_intensity);
   Rgba shaded = multiply_rgb(base, intensity);
   const Rgba highlight{
       specular * material.specular_color,
@@ -3270,18 +3481,18 @@ struct CameraBasis {
   shaded = add_rgb(shaded, highlight);
 
   if (trace.shade_mode() == ShadeMode::Smooth) {
-    shaded = mix(shaded, Rgba::from_u8(255, 255, 255, static_cast<unsigned>(std::round(base.alpha * 255.0))), 0.08);
+    shaded = mix(shaded, Rgba::from_u8(255, 255, 255, static_cast<unsigned>(std::round(base.alpha * 255.0))), look().smooth_surface_white_mix);
   }
 
   return shaded;
 }
 
 [[nodiscard]] FillStroke surface_face_style(Rgba fill, const Trace& trace) noexcept {
-  const double alpha = trace.transparent() ? 0.56 : 1.0;
+  const double alpha = trace.transparent() ? look().transparent_surface_alpha : 1.0;
   fill.alpha = alpha;
   switch (trace.shade_mode()) {
     case ShadeMode::Faceted:
-      return FillStroke{multiply_rgb(fill, 0.45), fill, true, true, 0.45};
+      return FillStroke{multiply_rgb(fill, look().facet_outline_shade), fill, true, true, look().facet_outline_stroke_pt};
     case ShadeMode::Flat:
       return FillStroke{fill, fill, false, true, 0.0};
     case ShadeMode::Smooth:
@@ -3515,39 +3726,30 @@ struct ScalarVertex2d {
   return intervals;
 }
 
-[[nodiscard]] Range1d surface_color_range(const Pane& pane, const Trace& trace, const SurfaceGrid& grid) {
+// The range a colour scale spans, for data whose own extent is [lo, hi]: the trace's colour limits if it has them,
+// else the pane's (set by hand, or derived from the data by the pane's colour limit method).
+[[nodiscard]] Range1d color_range_for(const Pane& pane, const Trace& trace, double lo, double hi) {
   if (trace.color_limits().has_value()) {
     return *trace.color_limits();
   }
-  if (pane.color_axis().limit_mode == LimitMode::Manual && pane.color_axis().limits.has_value()) {
-    return *pane.color_axis().limits;
-  }
+  return effective_range(pane.color_axis(), lo, hi);
+}
+
+[[nodiscard]] Range1d surface_color_range(const Pane& pane, const Trace& trace, const SurfaceGrid& grid) {
   const auto& values = grid.color.has_value() ? *grid.color : grid.z;
   const auto [min_it, max_it] = std::minmax_element(values.begin(), values.end());
   if (min_it == values.end() || max_it == values.end()) {
-    return {0.0, 1.0};
+    return trace.color_limits().value_or(Range1d{0.0, 1.0});
   }
-  if (*min_it == *max_it) {
-    return {*min_it - 0.5, *max_it + 0.5};
-  }
-  return {*min_it, *max_it};
+  return color_range_for(pane, trace, *min_it, *max_it);
 }
 
 [[nodiscard]] Range1d contour_color_range(const Pane& pane, const Trace& trace, const std::vector<double>& levels) {
-  if (trace.color_limits().has_value()) {
-    return *trace.color_limits();
-  }
-  if (pane.color_axis().limit_mode == LimitMode::Manual && pane.color_axis().limits.has_value()) {
-    return *pane.color_axis().limits;
-  }
   if (levels.empty()) {
-    return {0.0, 1.0};
+    return trace.color_limits().value_or(Range1d{0.0, 1.0});
   }
   const auto [min_it, max_it] = std::minmax_element(levels.begin(), levels.end());
-  if (*min_it == *max_it) {
-    return {*min_it - 0.5, *max_it + 0.5};
-  }
-  return {*min_it, *max_it};
+  return color_range_for(pane, trace, *min_it, *max_it);
 }
 
 struct ScaleGuideSpec {
@@ -3574,9 +3776,7 @@ struct ScaleGuideSpec {
               return;
             }
             const Series color = flatten_f64(*payload.color);
-            range = trace.color_limits().has_value()
-                        ? trace.color_limits()
-                        : std::optional<Range1d>{Range1d{scalar_f64(color.min()), scalar_f64(color.max())}};
+            range = color_range_for(pane, trace, scalar_f64(color.min()), scalar_f64(color.max()));
           } else if constexpr (std::is_same_v<Payload, FieldmapData>) {
             const auto grid = normalize_surface_grid(payload);
             if (!grid.has_value()) {
@@ -3605,7 +3805,7 @@ struct ScaleGuideSpec {
             if (levels.empty()) {
               return;
             }
-            range = Range1d{levels.front(), levels.back()};
+            range = color_range_for(pane, trace, levels.front(), levels.back());
           } else if constexpr (std::is_same_v<Payload, SurfaceData>) {
             const auto grid = normalize_surface_grid(payload);
             if (!grid.has_value()) {
@@ -3622,6 +3822,10 @@ struct ScaleGuideSpec {
   }
 
   return std::nullopt;
+}
+
+bool scale_guide_drawn(const Pane& pane) {
+  return scale_guide_spec(pane).has_value();
 }
 
 [[nodiscard]] Rgba palette_lookup(const PaletteRamp& palette, Range1d range, double value) {
@@ -3702,24 +3906,24 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
   }
   lines.push_back(std::move(current));
 
-  const Rgba color = multiply_rgb(pane.theme_tokens().foreground(), 0.85);
-  const double font_size = 10.0;
+  const Rgba color = multiply_rgb(pane.theme_tokens().foreground(), look().pane_caption_color_share);
+  const double font_size = look().pane_caption_font_pt;
 
   if (lines.size() <= 1U) {
     add_text(
         list,
-        {layout.outer.x + 10.0, layout.outer.y + layout.outer.height - 14.0},
+        {layout.outer.x + look().pane_caption_inset_x_pt, layout.outer.y + layout.outer.height - look().pane_caption_from_bottom_pt},
         lines.empty() ? std::string{} : lines.front(),
         font_size,
         color);
     return;
   }
 
-  const double line_gap = 2.0;
+  const double line_gap = look().pane_caption_line_gap_pt;
   const double line_step = font_size + line_gap;
-  const double start_x = layout.plot.x + 8.0;
-  const double start_y = layout.plot.y + 16.0;
-  const double available_height = std::max(0.0, layout.plot.height - 8.0);
+  const double start_x = layout.plot.x + look().pane_caption_block_inset_x_pt;
+  const double start_y = layout.plot.y + look().pane_caption_block_top_pt;
+  const double available_height = std::max(0.0, layout.plot.height - look().pane_caption_block_bottom_margin_pt);
   const std::size_t max_lines = static_cast<std::size_t>(
       std::max(1.0, std::floor(available_height / std::max(1.0, line_step))));
   const std::size_t limit = std::min(lines.size(), max_lines);
@@ -3751,27 +3955,34 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
         trace.kind() == TraceKind::Ribbon || trace.kind() == TraceKind::Columns || trace.kind() == TraceKind::Bucket ||
         trace.kind() == TraceKind::Quartet || trace.kind() == TraceKind::Violin) {
       entry.filled = true;
-      entry.fill = trace.palette_ramp().sample(0.65);
-      entry.stroke = multiply_rgb(entry.fill, 0.55);
+      entry.fill = trace.palette_ramp().sample(look().key_swatch_palette_sample);
+      entry.stroke = multiply_rgb(entry.fill, look().key_swatch_outline_shade);
     }
     entries.push_back(std::move(entry));
   }
   return entries;
 }
 
-[[nodiscard]] double estimated_text_extent(std::string_view text, double font_size) {
-  return std::max(1.0, static_cast<double>(text.size())) * font_size * 0.56;
+bool pane_has_legend_entries(const Pane& pane) {
+  return !key_entries_for_pane(pane, false).empty();
 }
 
+[[nodiscard]] double estimated_text_extent(std::string_view text, double font_size) {
+  return std::max(1.0, static_cast<double>(text.size())) * font_size * look().estimated_glyph_width_em;
+}
+
+// Wraps `text` at word boundaries to `max_text_width`. A cap of `max_lines` lines cuts the rest with a visible "..."
+// (0 means no cap: a headline, for instance, is never cut).
 [[nodiscard]] std::vector<std::string> wrap_key_label(
     const std::string& text,
     double max_text_width,
-    double font_size) {
+    double font_size,
+    std::size_t max_lines = look().key_max_label_lines) {
   if (text.empty()) {
     return {"-"};
   }
   const std::size_t max_chars =
-      static_cast<std::size_t>(std::clamp(std::floor(max_text_width / (font_size * 0.56)), 4.0, 120.0));
+      static_cast<std::size_t>(std::max(std::floor(max_text_width / (font_size * look().estimated_glyph_width_em)), look().key_min_wrap_chars));
   if (text.size() <= max_chars) {
     return {text};
   }
@@ -3832,9 +4043,8 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
   }
   flush_current();
 
-  constexpr std::size_t kMaxLines = 4;
-  if (lines.size() > kMaxLines) {
-    lines.resize(kMaxLines);
+  if (max_lines > 0 && lines.size() > max_lines) {
+    lines.resize(max_lines);
     std::string& tail = lines.back();
     if (tail.size() > 1) {
       tail = tail.substr(0, tail.size() - 1) + "...";
@@ -3846,36 +4056,51 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
 [[nodiscard]] KeyBoxMetrics compute_key_box_metrics(
     const std::vector<KeyEntry>& entries,
     std::string_view title,
-    double box_width) {
+    double box_width,
+    int columns = 1) {
   KeyBoxMetrics metrics;
   if (entries.empty()) {
     return metrics;
   }
 
-  constexpr double kTopPad = 10.0;
-  constexpr double kBottomPad = 10.0;
-  constexpr double kLeftPad = 10.0;
-  constexpr double kIconSpan = 24.0;
-  constexpr double kLabelGap = 8.0;
-  constexpr double kRightPad = 10.0;
-  constexpr double kFont = 11.0;
-  constexpr double kTitleHeight = 18.0;
-  constexpr double kLineHeight = 12.0;
-  constexpr double kRowPad = 4.0;
-  constexpr double kRowMinHeight = 16.0;
+  const double kTopPad = look().key_pad_top_pt;
+  const double kBottomPad = look().key_pad_bottom_pt;
+  const double kLeftPad = look().key_pad_left_pt;
+  const double kIconSpan = look().key_icon_span_pt;
+  const double kLabelGap = look().key_label_gap_pt;
+  const double kRightPad = look().key_pad_right_pt;
+  const double kFont = look().key_font_pt;
+  const double kTitleHeight = look().key_title_height_pt;
+  const double kLineHeight = look().key_line_height_pt;
+  const double kRowPad = look().key_row_pad_pt;
+  const double kRowMinHeight = look().key_row_min_height_pt;
 
-  const double text_x = kLeftPad + kIconSpan + kLabelGap;
-  const double label_width = std::max(24.0, box_width - text_x - kRightPad);
+  // Entries fill a grid of `columns` equal cells row by row; one column is the stacked legend.
+  const double kColumnGap = look().key_column_gap_pt;
+  const std::size_t cols = static_cast<std::size_t>(std::max(1, columns));
+  const double cell_width = (box_width - kLeftPad - kRightPad - kColumnGap * static_cast<double>(cols - 1)) / static_cast<double>(cols);
+  const double text_x = kIconSpan + kLabelGap;
+  const double label_width = std::max(look().key_min_label_width_pt, cell_width - text_x);
 
   metrics.wrapped_entries.reserve(entries.size());
-  double total_height = kTopPad + (title.empty() ? 0.0 : kTitleHeight + 2.0);
+  double total_height = kTopPad + (title.empty() ? 0.0 : kTitleHeight + look().key_title_gap_pt);
+  double row_top = 0.0;
+  double row_height = 0.0;
   for (std::size_t i = 0; i < entries.size(); ++i) {
     auto lines = wrap_key_label(entries[i].label, label_width, kFont);
     const double text_block = static_cast<double>(std::max<std::size_t>(1, lines.size())) * kLineHeight;
     const double block_height = std::max(kRowMinHeight, text_block + kRowPad);
-    total_height += block_height;
-    metrics.wrapped_entries.push_back(WrappedKeyEntry{i, std::move(lines), block_height});
+    const std::size_t column = i % cols;
+    if (column == 0 && i != 0) {
+      row_top += row_height;
+      row_height = 0.0;
+    }
+    row_height = std::max(row_height, block_height);
+    const bool truncated = wrap_key_label(entries[i].label, label_width, kFont, 0).size() > look().key_max_label_lines;
+    metrics.wrapped_entries.push_back(WrappedKeyEntry{
+        i, std::move(lines), block_height, kLeftPad + static_cast<double>(column) * (cell_width + kColumnGap), row_top, truncated});
   }
+  total_height += row_top + row_height;
   total_height += kBottomPad;
   metrics.box_height = total_height;
   return metrics;
@@ -3886,9 +4111,9 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
     std::string_view title,
     double min_width,
     double max_width) {
-  constexpr double kFont = 11.0;
-  constexpr double kTextX = 42.0;
-  constexpr double kRightPad = 10.0;
+  const double kFont = look().key_font_pt;
+  const double kTextX = look().key_pad_left_pt + look().key_icon_span_pt + look().key_label_gap_pt;
+  const double kRightPad = look().key_pad_right_pt;
   double max_text_extent = estimated_text_extent(title, kFont);
   for (const auto& entry : entries) {
     max_text_extent = std::max(max_text_extent, estimated_text_extent(entry.label, kFont));
@@ -3900,12 +4125,12 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
 [[nodiscard]] double legend_shape_target_ratio(KeyShape shape) noexcept {
   switch (shape) {
     case KeyShape::Horizontal:
-      return 1.7;
+      return look().key_target_ratio_horizontal;
     case KeyShape::Vertical:
-      return 0.72;
+      return look().key_target_ratio_vertical;
     case KeyShape::Auto:
     default:
-      return 1.0;
+      return look().key_target_ratio_auto;
   }
 }
 
@@ -3926,7 +4151,7 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
   std::vector<double> candidates;
   candidates.reserve(16);
   const double requested = estimate_key_width(entries, title, min_width, max_width);
-  constexpr std::int64_t kSamples = 10;
+  const std::int64_t kSamples = look().key_width_samples;
   const double span = max_width - min_width;
   for (std::int64_t i = 0; i <= kSamples; ++i) {
     candidates.push_back(min_width + span * static_cast<double>(i) / static_cast<double>(kSamples));
@@ -3948,9 +4173,11 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
     const double ratio = width / box_height;
     const double ratio_score = std::abs(std::log((ratio + 1e-9) / (target_ratio + 1e-9)));
     const double overflow = std::max(0.0, box_height - max_height) / std::max(1.0, max_height);
-    const double overflow_score = overflow > 0.0 ? (5.0 + overflow * 8.0) : 0.0;
-    const double area_score = 0.03 * (width / max_width) + 0.03 * (box_height / std::max(max_height, box_height));
-    const double score = ratio_score + overflow_score + area_score;
+    const double overflow_score = overflow > 0.0 ? (look().key_overflow_base_score + overflow * look().key_overflow_gain_score) : 0.0;
+    const double area_score = look().key_area_weight * (width / max_width) + look().key_area_weight * (box_height / std::max(max_height, box_height));
+    const double truncation_score = look().key_truncation_score * static_cast<double>(std::count_if(
+        metrics.wrapped_entries.begin(), metrics.wrapped_entries.end(), [](const WrappedKeyEntry& entry) { return entry.truncated; }));
+    const double score = ratio_score + overflow_score + area_score + truncation_score;
     if (score < best_score) {
       best_score = score;
       best_width = width;
@@ -3960,17 +4187,59 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
   return std::clamp(best_width, min_width, max_width);
 }
 
+struct KeyLayoutPlan {
+  double box_width{0.0};
+  int columns{1};
+};
+
+// Chooses the legend's grid. `Horizontal` lays the entries out side by side, in as many columns as fit within `max_width`
+// (all of them in one row when they fit); `Vertical` stacks them in one column. `Auto` is a row for a legend docked to the
+// bottom edge and a column everywhere else. A column keeps the proportion preference of the box, which sets how wide it
+// is allowed to be, and so how many lines a long label wraps onto.
+[[nodiscard]] KeyLayoutPlan plan_key_layout(
+    const std::vector<KeyEntry>& entries,
+    std::string_view title,
+    double min_width,
+    double max_width,
+    double max_height,
+    KeyShape shape,
+    bool auto_is_horizontal) {
+  const bool horizontal = shape == KeyShape::Horizontal || (shape == KeyShape::Auto && auto_is_horizontal);
+  if (horizontal && entries.size() > 1) {
+    const double kFont = look().key_font_pt;
+    const double kPad = look().key_pad_left_pt + look().key_pad_right_pt;
+    const double kIconAndGap = look().key_icon_span_pt + look().key_label_gap_pt;
+    const double kColumnGap = look().key_column_gap_pt;
+    double widest_label = 0.0;
+    for (const auto& entry : entries) {
+      widest_label = std::max(widest_label, estimated_text_extent(entry.label, kFont));
+    }
+    const double cell = kIconAndGap + widest_label;
+    const auto total = [&](std::size_t columns) {
+      return kPad + static_cast<double>(columns) * cell + kColumnGap * static_cast<double>(columns - 1);
+    };
+    for (std::size_t columns = entries.size(); columns >= 2; --columns) {
+      if (total(columns) <= max_width) {
+        const double title_width = kPad + estimated_text_extent(title, kFont);
+        return {std::clamp(std::max(total(columns), title_width), min_width, max_width), static_cast<int>(columns)};
+      }
+    }
+  }
+  return {choose_key_box_width(entries, title, min_width, max_width, max_height, shape == KeyShape::Vertical ? KeyShape::Vertical : KeyShape::Auto), 1};
+}
+
 [[nodiscard]] std::vector<KeyEntry> fit_key_entries_to_height(
     const std::vector<KeyEntry>& entries,
     std::string_view title,
     double box_width,
     double max_height,
-    const Theme& theme) {
+    const Theme& theme,
+    int columns = 1) {
   if (entries.empty()) {
     return {};
   }
   const auto fits = [&](const std::vector<KeyEntry>& candidate) {
-    return compute_key_box_metrics(candidate, title, box_width).box_height <= max_height;
+    return compute_key_box_metrics(candidate, title, box_width, columns).box_height <= max_height;
   };
 
   if (fits(entries)) {
@@ -4000,7 +4269,7 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
     }
 
     constexpr std::size_t kPreviewLimit = 5;
-    constexpr std::size_t kPreviewMaxChars = 10;
+    const std::size_t kPreviewMaxChars = static_cast<std::size_t>(look().key_preview_max_chars);
     std::vector<std::string_view> preview;
     preview.reserve(kPreviewLimit);
 
@@ -4064,8 +4333,8 @@ void add_caption_block(DrawList& list, const Pane& pane, const PaneLayout& layou
     }
     KeyEntry more{};
     more.label = build_hidden_preview_label(visible_count);
-    more.stroke = mix(theme.foreground(), theme.background(), 0.25);
-    more.stroke_width = 1.2;
+    more.stroke = mix(theme.foreground(), theme.background(), look().key_more_mix);
+    more.stroke_width = look().key_more_stroke_pt;
     candidate.push_back(std::move(more));
   };
 
@@ -4092,18 +4361,19 @@ void render_key_box(
     Rect box,
     std::string_view title,
     const std::vector<KeyEntry>& entries,
-    KeyFrame frame) {
+    KeyFrame frame,
+    int columns = 1) {
   if (entries.empty()) {
     return;
   }
-  constexpr double kLeftPad = 10.0;
-  constexpr double kIconSpan = 24.0;
-  constexpr double kLabelGap = 8.0;
-  constexpr double kTopPad = 10.0;
-  constexpr double kTitleHeight = 18.0;
-  constexpr double kLineHeight = 12.0;
-  constexpr double kFont = 11.0;
-  const KeyBoxMetrics metrics = compute_key_box_metrics(entries, title, box.width);
+  const double kLeftPad = look().key_pad_left_pt;
+  const double kIconSpan = look().key_icon_span_pt;
+  const double kLabelGap = look().key_label_gap_pt;
+  const double kTopPad = look().key_pad_top_pt;
+  const double kTitleHeight = look().key_title_height_pt;
+  const double kLineHeight = look().key_line_height_pt;
+  const double kFont = look().key_font_pt;
+  const KeyBoxMetrics metrics = compute_key_box_metrics(entries, title, box.width, columns);
   if (metrics.wrapped_entries.empty()) {
     return;
   }
@@ -4111,20 +4381,20 @@ void render_key_box(
   bool draw_panel = true;
   Rgba panel_fill = theme.background();
   Rgba panel_stroke = theme.foreground();
-  double panel_stroke_width = 0.7;
+  double panel_stroke_width = look().key_framed_stroke_pt;
   switch (frame) {
     case KeyFrame::Framed:
       panel_fill = theme.background();
       panel_stroke = theme.foreground();
-      panel_stroke.alpha = std::clamp(panel_stroke.alpha * 0.72, 0.0, 1.0);
-      panel_stroke_width = 0.7;
+      panel_stroke.alpha = std::clamp(panel_stroke.alpha * look().key_framed_stroke_alpha, 0.0, 1.0);
+      panel_stroke_width = look().key_framed_stroke_pt;
       break;
     case KeyFrame::Soft:
-      panel_fill = mix(theme.background(), Rgba::from_u8(255, 255, 255), 0.08);
-      panel_fill.alpha = std::clamp(panel_fill.alpha * 0.94, 0.0, 1.0);
-      panel_stroke = mix(theme.foreground(), theme.background(), 0.78);
-      panel_stroke.alpha = std::clamp(panel_stroke.alpha * 0.28, 0.0, 1.0);
-      panel_stroke_width = 0.6;
+      panel_fill = mix(theme.background(), Rgba::from_u8(255, 255, 255), look().key_soft_fill_white_mix);
+      panel_fill.alpha = std::clamp(panel_fill.alpha * look().key_soft_fill_alpha, 0.0, 1.0);
+      panel_stroke = mix(theme.foreground(), theme.background(), look().key_soft_stroke_background_mix);
+      panel_stroke.alpha = std::clamp(panel_stroke.alpha * look().key_soft_stroke_alpha, 0.0, 1.0);
+      panel_stroke_width = look().key_soft_stroke_pt;
       break;
     case KeyFrame::None:
       draw_panel = false;
@@ -4146,43 +4416,44 @@ void render_key_box(
 
   double cursor_y = box.y + kTopPad;
   if (!title.empty()) {
-    add_text(list, {box.x + kLeftPad, cursor_y + 13.0}, std::string(title), kFont, theme.foreground());
-    cursor_y += kTitleHeight + 2.0;
+    add_text(list, {box.x + kLeftPad, cursor_y + look().key_title_baseline_pt}, std::string(title), kFont, theme.foreground());
+    cursor_y += kTitleHeight + look().key_title_gap_pt;
   }
 
   for (const WrappedKeyEntry& wrapped : metrics.wrapped_entries) {
     const KeyEntry& entry = entries[wrapped.entry_index];
-    const double cy = cursor_y + wrapped.block_height * 0.5;
+    const double left = box.x + wrapped.x_offset;
+    const double row_y = cursor_y + wrapped.y_offset;
+    const double cy = row_y + wrapped.block_height * 0.5;
     if (entry.filled) {
       add_path(
           list,
           {
-              {box.x + kLeftPad, cy - 5.0},
-              {box.x + kLeftPad + kIconSpan, cy - 5.0},
-              {box.x + kLeftPad + kIconSpan, cy + 5.0},
-              {box.x + kLeftPad, cy + 5.0},
+              {left, cy - look().key_swatch_half_height_pt},
+              {left + kIconSpan, cy - look().key_swatch_half_height_pt},
+              {left + kIconSpan, cy + look().key_swatch_half_height_pt},
+              {left, cy + look().key_swatch_half_height_pt},
           },
-          FillStroke{entry.stroke, entry.fill, true, true, 0.6},
+          FillStroke{entry.stroke, entry.fill, true, true, look().key_swatch_stroke_pt},
           true);
     } else {
       add_path(
           list,
-          {{box.x + kLeftPad, cy}, {box.x + kLeftPad + kIconSpan, cy}},
+          {{left, cy}, {left + kIconSpan, cy}},
           FillStroke{entry.stroke, {}, true, false, entry.stroke_width},
           false);
     }
 
-    double text_y = cursor_y + 10.0;
+    double text_y = row_y + look().key_first_baseline_pt;
     for (const std::string& line : wrapped.lines) {
       add_text(
           list,
-          {box.x + kLeftPad + kIconSpan + kLabelGap, text_y},
+          {left + kIconSpan + kLabelGap, text_y},
           line,
           kFont,
           theme.foreground());
       text_y += kLineHeight;
     }
-    cursor_y += wrapped.block_height;
   }
 }
 
@@ -4195,19 +4466,36 @@ void render_key_box(
     const Rect& candidate,
     const Rect& pane_plot,
     std::size_t command_begin) {
+  // What the legend would cover: every drawn point of the plot area inside the candidate box, and the stretches of
+  // line between points, sampled at the spacing the legend's own entries have so that a line crossing the box with
+  // no vertex inside it still counts.
+  const double step = look().legend_overlap_sample_step_pt;
+  const auto covered = [&](Point2d point) { return point_in_rect(pane_plot, point) && point_in_rect(candidate, point); };
   double score = 0.0;
   for (std::size_t i = command_begin; i < list.commands.size(); ++i) {
     std::visit(
         [&](const auto& command) {
           using Cmd = std::decay_t<decltype(command)>;
           if constexpr (std::is_same_v<Cmd, PathCommand>) {
-            for (const auto& point : command.points) {
-              if (point_in_rect(pane_plot, point) && point_in_rect(candidate, point)) {
+            for (std::size_t k = 0; k < command.points.size(); ++k) {
+              const Point2d point = command.points[k];
+              if (covered(point)) {
                 score += 1.0;
+              }
+              if (k + 1 < command.points.size()) {
+                const Point2d next = command.points[k + 1];
+                const double length = std::hypot(next.x - point.x, next.y - point.y);
+                const std::size_t pieces = static_cast<std::size_t>(length / step);
+                for (std::size_t m = 1; m < pieces; ++m) {
+                  const double t = static_cast<double>(m) / static_cast<double>(pieces);
+                  if (covered({point.x + (next.x - point.x) * t, point.y + (next.y - point.y) * t})) {
+                    score += 1.0;
+                  }
+                }
               }
             }
           } else if constexpr (std::is_same_v<Cmd, TextCommand>) {
-            if (point_in_rect(pane_plot, command.anchor) && point_in_rect(candidate, command.anchor)) {
+            if (covered(command.anchor)) {
               score += 2.0;
             }
           }
@@ -4228,40 +4516,35 @@ void render_legend(DrawList& list, const Pane& pane, const PaneLayout& layout, s
   }
 
   const bool outside_east = pane.legend_place() == KeyPlace::OutsideEast;
-  const double min_width = outside_east ? 168.0 : 126.0;
-  const double max_width = outside_east ? 280.0 : std::max(160.0, layout.plot.width * 0.52);
-  const double max_height = std::max(48.0, layout.plot.height - 16.0);
-  const double box_width = choose_key_box_width(
-      entries,
-      {},
-      min_width,
-      max_width,
-      max_height,
-      pane.legend_shape());
-  const auto fitted_entries = fit_key_entries_to_height(entries, {}, box_width, max_height, pane.theme_tokens());
+  const double min_width = outside_east ? look().key_min_width_outside_pt : look().key_min_width_pt;
+  const double max_width = outside_east ? look().key_max_width_outside_pt : std::max(look().key_max_width_floor_pt, layout.plot.width * look().key_max_width_plot_share);
+  const double max_height = std::max(look().key_max_height_floor_pt, layout.plot.height - look().key_max_height_margin_pt);
+  const KeyLayoutPlan plan = plan_key_layout(entries, {}, min_width, max_width, max_height, pane.legend_shape(), false);
+  const double box_width = plan.box_width;
+  const auto fitted_entries = fit_key_entries_to_height(entries, {}, box_width, max_height, pane.theme_tokens(), plan.columns);
   if (fitted_entries.empty()) {
     return;
   }
-  const double box_height = compute_key_box_metrics(fitted_entries, {}, box_width).box_height;
+  const double box_height = compute_key_box_metrics(fitted_entries, {}, box_width, plan.columns).box_height;
 
   const auto rect_for_place = [&](KeyPlace place) {
-    double x = layout.plot.x + layout.plot.width - box_width - 8.0;
-    double y = layout.plot.y + 8.0;
+    double x = layout.plot.x + layout.plot.width - box_width - look().key_inset_pt;
+    double y = layout.plot.y + look().key_inset_pt;
     if (place == KeyPlace::NorthWest) {
-      x = layout.plot.x + 8.0;
+      x = layout.plot.x + look().key_inset_pt;
     } else if (place == KeyPlace::SouthWest) {
-      x = layout.plot.x + 8.0;
-      y = layout.plot.y + layout.plot.height - box_height - 8.0;
+      x = layout.plot.x + look().key_inset_pt;
+      y = layout.plot.y + layout.plot.height - box_height - look().key_inset_pt;
     } else if (place == KeyPlace::SouthEast) {
-      y = layout.plot.y + layout.plot.height - box_height - 8.0;
+      y = layout.plot.y + layout.plot.height - box_height - look().key_inset_pt;
     } else if (place == KeyPlace::OutsideEast) {
-      x = layout.plot.x + layout.plot.width + 22.0;
-      y = layout.plot.y + 8.0;
+      x = layout.plot.x + layout.plot.width + look().key_outside_gap_pt;
+      y = layout.plot.y + look().key_inset_pt;
     }
-    const double y_min = layout.plot.y + 8.0;
-    const double y_max = layout.plot.y + layout.plot.height - box_height - 8.0;
+    const double y_min = layout.plot.y + look().key_inset_pt;
+    const double y_max = layout.plot.y + layout.plot.height - box_height - look().key_inset_pt;
     y = std::clamp(y, y_min, std::max(y_min, y_max));
-    return Rect{x, y, box_width, 0.0};
+    return Rect{x, y, box_width, box_height};
   };
 
   Rect legend_box{};
@@ -4293,7 +4576,134 @@ void render_legend(DrawList& list, const Pane& pane, const PaneLayout& layout, s
       legend_box,
       {},
       fitted_entries,
-      pane.legend_frame());
+      pane.legend_frame(),
+      plan.columns);
+}
+
+// The headline's typography in one place: the drawing, the wrapping and the room it takes all read these, so
+// changing the font size moves everything with it. Line height and side margin are proportions of the font.
+struct HeadlineStyle {
+  double font_size{look().headline_font_pt};
+  double line_height{look().headline_line_height_em * look().headline_font_pt};  // distance between baselines
+  double side_margin{look().headline_side_margin_em * look().headline_font_pt};  // kept free at each side when wrapping
+  double first_baseline{look().headline_first_baseline_em * look().headline_font_pt};
+};
+
+[[nodiscard]] HeadlineStyle headline_style() {
+  return HeadlineStyle{};
+}
+
+// The headline as drawn: explicit line breaks are kept, a line wider than the figure wraps at word
+// boundaries, and a headline with nothing visible in it is no headline at all.
+[[nodiscard]] std::vector<std::string> headline_lines(const Studio& studio) {
+  const HeadlineStyle headline = headline_style();
+  std::vector<std::string> lines;
+  const std::string& text = studio.headline_text();
+  const double width = std::max(look().headline_min_wrap_width_em * headline.font_size, studio.extent().width - 2.0 * headline.side_margin);
+  std::size_t start = 0;
+  while (start <= text.size()) {
+    const auto end = text.find('\n', start);
+    std::string line = text.substr(start, end == std::string::npos ? std::string::npos : end - start);
+    const auto first = line.find_first_not_of(" \t\r");
+    if (first != std::string::npos) {
+      line = line.substr(first, line.find_last_not_of(" \t\r") - first + 1);
+      if (line.find('$') != std::string::npos) {
+        lines.push_back(line);  // math text is not split
+      } else {
+        for (auto& piece : wrap_key_label(line, width, headline.font_size, 0)) {
+          lines.push_back(std::move(piece));
+        }
+      }
+    }
+    if (end == std::string::npos) break;
+    start = end + 1;
+  }
+  return lines;
+}
+
+// How much taller than a one-line headline the headline is: the room every layout below it gives up.
+[[nodiscard]] double headline_extra_height(const Studio& studio) {
+  const auto lines = headline_lines(studio).size();
+  return lines > 1 ? headline_style().line_height * static_cast<double>(lines - 1) : 0.0;
+}
+
+[[nodiscard]] bool docked_legend_has_entries(const Studio& studio) {
+  const bool include_titles = std::count_if(studio.panes().begin(), studio.panes().end(), [](const Pane& pane) { return pane.visible(); }) > 1;
+  for (const Pane& pane : studio.panes()) {
+    if (pane.visible() && !key_entries_for_pane(pane, include_titles).empty()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// The limits the east dock plans its key within. Shared by the drawing and by the layout that reserves its room.
+struct EastDockLimits {
+  double min_width;
+  double max_width;
+  double max_height;
+};
+
+[[nodiscard]] EastDockLimits east_dock_limits(const Studio& studio) {
+  const double headline_room = headline_lines(studio).empty()
+                                   ? look().dock_east_height_margin_pt
+                                   : look().dock_east_height_margin_with_headline_pt + headline_extra_height(studio);
+  return EastDockLimits{
+      look().dock_min_width_east_pt,
+      std::max(studio.extent().width * look().dock_east_width_share, look().dock_east_width_min_pt),
+      std::max(look().dock_east_height_floor_pt, studio.extent().height - headline_room)};
+}
+
+[[nodiscard]] std::vector<KeyEntry> docked_entries(const Studio& studio) {
+  std::vector<KeyEntry> entries;
+  const bool include_titles = std::count_if(studio.panes().begin(), studio.panes().end(), [](const Pane& pane) { return pane.visible(); }) > 1;
+  for (const Pane& pane : studio.panes()) {
+    if (!pane.visible()) {
+      continue;
+    }
+    auto pane_entries = key_entries_for_pane(pane, include_titles);
+    entries.insert(entries.end(), std::make_move_iterator(pane_entries.begin()), std::make_move_iterator(pane_entries.end()));
+  }
+  return entries;
+}
+
+// The limits a south dock plans its key within.
+[[nodiscard]] EastDockLimits south_dock_limits(const Studio& studio) {
+  const double min_width = look().dock_min_width_south_pt;
+  return EastDockLimits{
+      min_width,
+      std::max(min_width, studio.extent().width - look().dock_south_side_margin_pt),
+      std::max(look().dock_south_height_floor_pt, studio.extent().height * look().dock_south_height_share)};
+}
+
+// The height a south dock takes from the figure: its key, the inset from the bottom edge and the gap to the panes.
+[[nodiscard]] double south_dock_extent(const Studio& studio) {
+  if (studio.legend_dock() != KeyDock::South) {
+    return 0.0;
+  }
+  const auto entries = docked_entries(studio);
+  if (entries.empty()) {
+    return 0.0;
+  }
+  const EastDockLimits limits = south_dock_limits(studio);
+  const KeyLayoutPlan plan = plan_key_layout(entries, "trace key", limits.min_width, limits.max_width, limits.max_height, studio.legend_shape(), true);
+  const auto fitted = fit_key_entries_to_height(entries, "trace key", plan.box_width, limits.max_height, studio.theme_tokens(), plan.columns);
+  const double box_height = compute_key_box_metrics(fitted, "trace key", plan.box_width, plan.columns).box_height;
+  return box_height + look().dock_south_bottom_pt + look().dock_south_plot_gap_pt;
+}
+
+// The width an east dock takes from the figure: its key, the inset from the right edge and the gap to the panes.
+[[nodiscard]] double east_dock_extent(const Studio& studio) {
+  if (studio.legend_dock() != KeyDock::East) {
+    return 0.0;
+  }
+  const auto entries = docked_entries(studio);
+  if (entries.empty()) {
+    return 0.0;
+  }
+  const EastDockLimits limits = east_dock_limits(studio);
+  const KeyLayoutPlan plan = plan_key_layout(entries, "trace key", limits.min_width, limits.max_width, limits.max_height, studio.legend_shape(), false);
+  return plan.box_width + look().dock_east_right_inset_pt + look().dock_east_plot_gap_pt;
 }
 
 void render_legend_dock(
@@ -4326,59 +4736,54 @@ void render_legend_dock(
   Rect box{};
   std::string_view title{"trace key"};
   std::vector<KeyEntry> fitted_entries;
+  int columns = 1;
   if (studio.legend_dock() == KeyDock::East) {
-    const double min_width = 168.0;
-    const double max_width = std::clamp(studio.extent().width * 0.24, 220.0, 360.0);
-    const double max_height = std::max(64.0, studio.extent().height - (studio.headline_text().empty() ? 62.0 : 92.0));
-    const double box_width = choose_key_box_width(
-        entries,
-        title,
-        min_width,
-        max_width,
-        max_height,
-        studio.legend_shape());
-    fitted_entries = fit_key_entries_to_height(entries, title, box_width, max_height, studio.theme_tokens());
+    const EastDockLimits limits = east_dock_limits(studio);
+    const double min_width = limits.min_width;
+    const double max_width = limits.max_width;
+    const double max_height = limits.max_height;
+    const KeyLayoutPlan plan = plan_key_layout(entries, title, min_width, max_width, max_height, studio.legend_shape(), false);
+    const double box_width = plan.box_width;
+    columns = plan.columns;
+    fitted_entries = fit_key_entries_to_height(entries, title, box_width, max_height, studio.theme_tokens(), columns);
     if (fitted_entries.empty()) {
       return;
     }
-    const double box_height = compute_key_box_metrics(fitted_entries, title, box_width).box_height;
+    const double box_height = compute_key_box_metrics(fitted_entries, title, box_width, columns).box_height;
     box = Rect{
-        studio.extent().width - (box_width + 28.0),
-        studio.headline_text().empty() ? 28.0 : 58.0,
+        studio.extent().width - (box_width + look().dock_east_right_inset_pt),
+        headline_lines(studio).empty() ? look().dock_east_top_pt : look().dock_east_top_with_headline_pt + headline_extra_height(studio),
         box_width,
         0.0,
     };
-    const double y_min = studio.headline_text().empty() ? 28.0 : 58.0;
-    const double y_max = studio.extent().height - box_height - 22.0;
+    const double y_min = headline_lines(studio).empty() ? look().dock_east_top_pt : look().dock_east_top_with_headline_pt + headline_extra_height(studio);
+    const double y_max = studio.extent().height - box_height - look().dock_bottom_inset_pt;
     box.y = std::clamp(box.y, y_min, std::max(y_min, y_max));
   } else {
-    const double min_width = 220.0;
-    const double max_width = std::max(min_width, studio.extent().width - 108.0);
-    const double max_height = std::max(52.0, studio.extent().height * 0.26);
-    const double box_width = choose_key_box_width(
-        entries,
-        title,
-        min_width,
-        max_width,
-        max_height,
-        studio.legend_shape());
-    fitted_entries = fit_key_entries_to_height(entries, title, box_width, max_height, studio.theme_tokens());
+    const EastDockLimits limits = south_dock_limits(studio);
+    const double min_width = limits.min_width;
+    const double max_width = limits.max_width;
+    const double max_height = limits.max_height;
+    const KeyLayoutPlan plan = plan_key_layout(entries, title, min_width, max_width, max_height, studio.legend_shape(), true);
+    const double box_width = plan.box_width;
+    columns = plan.columns;
+    fitted_entries = fit_key_entries_to_height(entries, title, box_width, max_height, studio.theme_tokens(), columns);
     if (fitted_entries.empty()) {
       return;
     }
-    const double box_height = compute_key_box_metrics(fitted_entries, title, box_width).box_height;
+    const double box_height = compute_key_box_metrics(fitted_entries, title, box_width, columns).box_height;
     box = Rect{
         (studio.extent().width - box_width) * 0.5,
-        studio.extent().height - box_height - 18.0,
+        studio.extent().height - box_height - look().dock_south_bottom_pt,
         box_width,
         0.0,
     };
-    const double x_min = 22.0;
-    const double x_max = studio.extent().width - box_width - 22.0;
+    const double x_min = look().dock_south_side_inset_pt;
+    const double x_max = studio.extent().width - box_width - look().dock_south_side_inset_pt;
     box.x = std::clamp(box.x, x_min, std::max(x_min, x_max));
   }
 
-  render_key_box(list, studio.theme_tokens(), box, title, fitted_entries, studio.legend_frame());
+  render_key_box(list, studio.theme_tokens(), box, title, fitted_entries, studio.legend_frame(), columns);
 }
 
 void render_shared_captions(
@@ -4386,7 +4791,8 @@ void render_shared_captions(
     const Studio& studio,
     const std::vector<PaneLayout>& layouts) {
   std::map<std::string, GroupRect> x_groups;
-  std::map<std::string, GroupRect> y_groups;
+  std::map<std::string, GroupRect> y_groups;      // outer rectangles: the caption sits outside the tick labels
+  std::map<std::string, GroupRect> y_plot_groups; // plot rectangles: the caption is centred on the plot
   std::map<std::string, GroupRect> z_groups;
 
   for (std::size_t i = 0; i < studio.pane_count(); ++i) {
@@ -4398,7 +4804,8 @@ void render_shared_captions(
       x_groups[pane.x_align_group()].include(layouts[i].plot);
     }
     if (!pane.y_align_group().empty()) {
-      y_groups[pane.y_align_group()].include(layouts[i].plot);
+      y_groups[pane.y_align_group()].include(layouts[i].outer);
+      y_plot_groups[pane.y_align_group()].include(layouts[i].plot);
     }
     if (!pane.z_align_group().empty()) {
       z_groups[pane.z_align_group()].include(layouts[i].plot);
@@ -4411,9 +4818,9 @@ void render_shared_captions(
       const Rect& rect = it->second.rect;
       add_text(
           list,
-          {rect.x + rect.width * 0.5, rect.y + rect.height + 36.0},
+          {rect.x + rect.width * 0.5, rect.y + rect.height + look().caption_below_plot_em * look().caption_font_pt},
           text,
-          12.0,
+          look().caption_font_pt,
           studio.theme_tokens().foreground(),
           TextCommand::Align::Middle);
     }
@@ -4422,14 +4829,16 @@ void render_shared_captions(
   for (const auto& [group, text] : studio.y_captions()) {
     const auto it = y_groups.find(group);
     if (it != y_groups.end() && it->second.valid && !text.empty()) {
-      const Rect& rect = it->second.rect;
+      const Rect& outer = it->second.rect;
+      const Rect& plot = y_plot_groups[group].rect;
       add_text(
           list,
-          {rect.x - 18.0, rect.y + rect.height * 0.5},
+          {outer.x - look().caption_left_of_ticks_em * look().caption_font_pt, plot.y + plot.height * 0.5},
           text,
-          12.0,
+          look().caption_font_pt,
           studio.theme_tokens().foreground(),
-          TextCommand::Align::End);
+          TextCommand::Align::Middle,
+          -90.0);
     }
   }
 
@@ -4439,9 +4848,9 @@ void render_shared_captions(
       const Rect& rect = it->second.rect;
       add_text(
           list,
-          {rect.x + 8.0, rect.y - 10.0},
+          {rect.x + look().caption_above_left_x_em * look().caption_font_pt, rect.y - look().caption_above_left_y_em * look().caption_font_pt},
           text,
-          12.0,
+          look().caption_font_pt,
           studio.theme_tokens().foreground());
     }
   }
@@ -4482,7 +4891,7 @@ void render_row_titles(
   std::vector<double> inferred_row_origins;
   inferred_row_origins.reserve(top_level_by_y.size());
   std::vector<std::int64_t> inferred_row_for_pane(studio.pane_count(), -1);
-  constexpr double row_eps = 1e-5;
+  constexpr double row_eps = kSameRow;
   for (const auto& [y, pane_index] : top_level_by_y) {
     auto it = std::find_if(
         inferred_row_origins.begin(),
@@ -4516,8 +4925,9 @@ void render_row_titles(
     }
   }
 
-  const double font_size = 12.5 * studio.default_axis_label_font_scale();
-  const double min_y = studio.headline_text().empty() ? (font_size + 7.0) : (54.0 + font_size * 0.45);
+  const double font_size = look().row_title_font_pt * studio.default_axis_label_font_scale();
+  const double min_y = headline_lines(studio).empty() ? (font_size + look().row_title_below_edge_pt)
+                                                      : (look().row_title_below_headline_pt + headline_extra_height(studio) + font_size * look().row_title_below_headline_font_share);
   for (const auto& [row, title] : studio.row_titles()) {
     if (title.empty()) {
       continue;
@@ -4527,7 +4937,7 @@ void render_row_titles(
       continue;
     }
     const Rect& rect = it->second.rect;
-    const double y = std::max(min_y, rect.y - (font_size * 0.7 + 4.0));
+    const double y = std::max(min_y, rect.y - (font_size * look().row_title_above_row_em + look().row_title_above_row_pt));
     add_text(
         list,
         {rect.x + rect.width * 0.5, y},
@@ -4544,11 +4954,11 @@ void render_scale_guide(DrawList& list, const Pane& pane, const PaneLayout& layo
     return;
   }
 
-  constexpr double bar_width = 14.0;
+  const double bar_width = look().scale_guide_bar_width_pt;
   const double bar_height = layout.plot.height;
   const double bar_x = layout.plot.x + layout.plot.width + default_scale_guide_bar_gap(pane.axes_visible());
   const double bar_y = layout.plot.y;
-  constexpr int slices = 64;
+  const int slices = look().scale_guide_slices;
 
   for (int i = 0; i < slices; ++i) {
     const double t0 = static_cast<double>(i) / static_cast<double>(slices);
@@ -4576,26 +4986,73 @@ void render_scale_guide(DrawList& list, const Pane& pane, const PaneLayout& layo
           {bar_x + bar_width, bar_y + bar_height},
           {bar_x, bar_y + bar_height},
       },
-      FillStroke{pane.theme_tokens().foreground(), {}, true, false, 0.8},
+      FillStroke{pane.theme_tokens().foreground(), {}, true, false, look().scale_guide_stroke_pt},
       true);
 
-  const auto ticks = linear_ticks(guide->range, 5);
+  const auto ticks = linear_ticks(guide->range, look().scale_guide_tick_count);
   for (const auto& [value, label] : ticks) {
     const double t = (value - guide->range.low) / std::max(guide->range.high - guide->range.low, 1e-12);
     const double y = bar_y + (1.0 - std::clamp(t, 0.0, 1.0)) * bar_height;
     add_path(
         list,
-        {{bar_x + bar_width, y}, {bar_x + bar_width + 5.0, y}},
-        FillStroke{pane.theme_tokens().foreground(), {}, true, false, 0.8},
+        {{bar_x + bar_width, y}, {bar_x + bar_width + look().scale_guide_tick_length_pt, y}},
+        FillStroke{pane.theme_tokens().foreground(), {}, true, false, look().scale_guide_stroke_pt},
         false);
     add_text(
         list,
-        {bar_x + bar_width + 8.0, y + 4.0},
+        {bar_x + bar_width + look().scale_guide_label_x_pt, y + look().scale_guide_label_baseline_pt},
         label,
-        9.5,
+        look().scale_guide_font_pt,
         pane.theme_tokens().foreground());
   }
 }
+
+// A filled kind (columns, histogram, ribbon) is filled from the palette until the trace's colour is set; once `stroke` has been
+// called the fill is that colour, and an explicit `width` is the width of the outline.
+struct FilledStyle {
+  Rgba fill{};
+  Rgba outline{};
+  double outline_width{0.8};
+};
+
+[[nodiscard]] FilledStyle filled_style(const Trace& trace, Rgba palette_fill, double default_outline_width) {
+  FilledStyle style;
+  style.fill = trace.stroke_explicit() ? trace.stroke_color() : palette_fill;
+  style.outline = multiply_rgb(style.fill, look().filled_outline_shade);
+  style.outline.alpha = style.fill.alpha;
+  style.outline_width = trace.width_explicit() ? static_cast<double>(trace.stroke_width()) : default_outline_width;
+  return style;
+}
+
+// Places the text labels of a pane's cues so that two labels never overlap: a label that would land on one already placed is moved
+// by one line at a time (down for labels along the top edge, up for labels along the left edge) until it is clear.
+struct CueLabelPlacer {
+  std::vector<Rect> placed{};
+
+  [[nodiscard]] Point2d place(Point2d anchor, std::string_view text, double font_size, bool centered, double direction) {
+    const double width = estimated_text_extent(text, font_size);
+    const double height = font_size + 1.0;
+    for (int attempt = 0; attempt < 12; ++attempt) {
+      const double left = centered ? anchor.x - 0.5 * width : anchor.x;
+      const Rect candidate{left, anchor.y - font_size, width, height};
+      bool clear = true;
+      for (const Rect& other : placed) {
+        if (candidate.x < other.x + other.width && other.x < candidate.x + candidate.width &&
+            candidate.y < other.y + other.height && other.y < candidate.y + candidate.height) {
+          clear = false;
+          break;
+        }
+      }
+      if (clear) {
+        placed.push_back(candidate);
+        return anchor;
+      }
+      anchor.y += direction * (font_size + 2.0);
+    }
+    placed.push_back(Rect{anchor.x, anchor.y - font_size, width, height});
+    return anchor;
+  }
+};
 
 void render_planar_cues(
     DrawList& list,
@@ -4603,6 +5060,8 @@ void render_planar_cues(
     const PaneLayout& layout,
     const Bounds2d& bounds,
     bool radial_only) {
+  CueLabelPlacer top_labels;
+  CueLabelPlacer left_labels;
   for (const BandCue& band : pane.bands()) {
     if (band.axis == CueAxis::Z) {
       continue;
@@ -4610,9 +5069,18 @@ void render_planar_cues(
     if (band.span.high < band.span.low) {
       continue;
     }
+    // A cue is drawn only where the axis is displayed: a band is trimmed to the visible range and one that is
+    // entirely outside it (a manual range, or a log axis) is skipped, so nothing is emitted off the plot.
+    const double visible_low = band.axis == CueAxis::X ? bounds.min_x : bounds.min_y;
+    const double visible_high = band.axis == CueAxis::X ? bounds.max_x : bounds.max_y;
+    if (band.span.high < visible_low || band.span.low > visible_high) {
+      continue;
+    }
+    const double span_low = std::max(band.span.low, visible_low);
+    const double span_high = std::min(band.span.high, visible_high);
     if (band.axis == CueAxis::X) {
-      const Point2d p0 = map_planar_point(band.span.low, bounds.min_y, pane, bounds, layout.plot, radial_only);
-      const Point2d p1 = map_planar_point(band.span.high, bounds.max_y, pane, bounds, layout.plot, radial_only);
+      const Point2d p0 = map_planar_point(span_low, bounds.min_y, pane, bounds, layout.plot, radial_only);
+      const Point2d p1 = map_planar_point(span_high, bounds.max_y, pane, bounds, layout.plot, radial_only);
       add_path(
           list,
           {
@@ -4621,15 +5089,15 @@ void render_planar_cues(
               {p1.x, layout.plot.y + layout.plot.height},
               {p0.x, layout.plot.y + layout.plot.height},
           },
-          FillStroke{band.stroke, band.fill, true, true, 0.7},
+          FillStroke{band.stroke, band.fill, true, true, look().cue_band_stroke_pt},
           true);
       if (!band.label.empty()) {
-        add_text(list, {0.5 * (p0.x + p1.x), layout.plot.y + 14.0}, band.label, 10.0, band.stroke,
-                 TextCommand::Align::Middle);
+        const Point2d at = top_labels.place({0.5 * (p0.x + p1.x), layout.plot.y + look().cue_label_from_edge_em * look().cue_label_font_pt}, band.label, look().cue_label_font_pt, true, 1.0);
+        add_text(list, at, band.label, look().cue_label_font_pt, band.stroke, TextCommand::Align::Middle);
       }
     } else if (band.axis == CueAxis::Y) {
-      const Point2d p0 = map_planar_point(bounds.min_x, band.span.low, pane, bounds, layout.plot, radial_only);
-      const Point2d p1 = map_planar_point(bounds.max_x, band.span.high, pane, bounds, layout.plot, radial_only);
+      const Point2d p0 = map_planar_point(bounds.min_x, span_low, pane, bounds, layout.plot, radial_only);
+      const Point2d p1 = map_planar_point(bounds.max_x, span_high, pane, bounds, layout.plot, radial_only);
       add_path(
           list,
           {
@@ -4638,10 +5106,11 @@ void render_planar_cues(
               {layout.plot.x + layout.plot.width, p0.y},
               {layout.plot.x, p0.y},
           },
-          FillStroke{band.stroke, band.fill, true, true, 0.7},
+          FillStroke{band.stroke, band.fill, true, true, look().cue_band_stroke_pt},
           true);
       if (!band.label.empty()) {
-        add_text(list, {layout.plot.x + 10.0, 0.5 * (p0.y + p1.y)}, band.label, 10.0, band.stroke);
+        const Point2d at = left_labels.place({layout.plot.x + look().cue_label_inset_em * look().cue_label_font_pt, 0.5 * (p0.y + p1.y)}, band.label, look().cue_label_font_pt, false, -1.0);
+        add_text(list, at, band.label, look().cue_label_font_pt, band.stroke);
       }
     }
   }
@@ -4649,6 +5118,11 @@ void render_planar_cues(
   for (const RuleCue& rule : pane.rules()) {
     if (rule.axis == CueAxis::Z) {
       continue;
+    }
+    const double visible_low = rule.axis == CueAxis::X ? bounds.min_x : bounds.min_y;
+    const double visible_high = rule.axis == CueAxis::X ? bounds.max_x : bounds.max_y;
+    if (rule.value < visible_low || rule.value > visible_high) {
+      continue;  // outside the displayed range: nothing to draw on
     }
     if (rule.axis == CueAxis::X) {
       const Point2d p = map_planar_point(rule.value, bounds.min_y, pane, bounds, layout.plot, radial_only);
@@ -4658,7 +5132,8 @@ void render_planar_cues(
           FillStroke{rule.color, {}, true, false, rule.width},
           false);
       if (!rule.label.empty()) {
-        add_text(list, {p.x + 4.0, layout.plot.y + 14.0}, rule.label, 10.0, rule.color);
+        const Point2d at = top_labels.place({p.x + look().cue_label_beside_line_em * look().cue_label_font_pt, layout.plot.y + look().cue_label_from_edge_em * look().cue_label_font_pt}, rule.label, look().cue_label_font_pt, false, 1.0);
+        add_text(list, at, rule.label, look().cue_label_font_pt, rule.color);
       }
     } else if (rule.axis == CueAxis::Y) {
       const Point2d p = map_planar_point(bounds.min_x, rule.value, pane, bounds, layout.plot, radial_only);
@@ -4668,26 +5143,31 @@ void render_planar_cues(
           FillStroke{rule.color, {}, true, false, rule.width},
           false);
       if (!rule.label.empty()) {
-        add_text(list, {layout.plot.x + 10.0, p.y - 4.0}, rule.label, 10.0, rule.color);
+        const Point2d at = left_labels.place({layout.plot.x + look().cue_label_inset_em * look().cue_label_font_pt, p.y - look().cue_label_beside_line_em * look().cue_label_font_pt}, rule.label, look().cue_label_font_pt, false, -1.0);
+        add_text(list, at, rule.label, look().cue_label_font_pt, rule.color);
       }
     }
   }
 
   for (const PinCue& pin : pane.pins()) {
+    if (pin.anchor.x < bounds.min_x || pin.anchor.x > bounds.max_x || pin.anchor.y < bounds.min_y || pin.anchor.y > bounds.max_y) {
+      continue;  // the point is outside the displayed ranges
+    }
     const Point2d anchor = map_planar_point(pin.anchor.x, pin.anchor.y, pane, bounds, layout.plot, radial_only);
     const Point2d label{anchor.x + pin.offset_x, anchor.y + pin.offset_y};
-    add_path(list, {anchor, label}, FillStroke{pin.color, {}, true, false, 0.9}, false);
+    const double pin_half = look().pin_mark_em * look().cue_label_font_pt;
+    add_path(list, {anchor, label}, FillStroke{pin.color, {}, true, false, look().pin_leader_stroke_pt}, false);
     add_path(
         list,
         {
-            {anchor.x - 2.5, anchor.y - 2.5},
-            {anchor.x + 2.5, anchor.y - 2.5},
-            {anchor.x + 2.5, anchor.y + 2.5},
-            {anchor.x - 2.5, anchor.y + 2.5},
+            {anchor.x - pin_half, anchor.y - pin_half},
+            {anchor.x + pin_half, anchor.y - pin_half},
+            {anchor.x + pin_half, anchor.y + pin_half},
+            {anchor.x - pin_half, anchor.y + pin_half},
         },
-        FillStroke{pin.color, pin.color, true, true, 0.5},
+        FillStroke{pin.color, pin.color, true, true, look().pin_mark_stroke_pt},
         true);
-    add_text(list, {label.x + 4.0, label.y - 2.0}, pin.text, 10.0, pin.color);
+    add_text(list, {label.x + look().pin_text_offset_x_em * look().cue_label_font_pt, label.y - look().pin_text_offset_y_em * look().cue_label_font_pt}, pin.text, look().cue_label_font_pt, pin.color);
   }
 }
 
@@ -4722,6 +5202,7 @@ void render_volume_cues(
     add_path(list, std::move(polygon), style, filled);
   };
 
+  CueLabelPlacer volume_labels;
   for (const BandCue& band : pane.bands()) {
     if (band.span.high < band.span.low) {
       continue;
@@ -4729,12 +5210,12 @@ void render_volume_cues(
     draw_plane(
         band.axis,
         band.span.low,
-        FillStroke{band.stroke, band.fill, true, true, 0.6},
+        FillStroke{band.stroke, band.fill, true, true, look().volume_band_stroke_pt},
         true);
     draw_plane(
         band.axis,
         band.span.high,
-        FillStroke{band.stroke, band.fill, true, true, 0.6},
+        FillStroke{band.stroke, band.fill, true, true, look().volume_band_stroke_pt},
         true);
     if (!band.label.empty()) {
       const Point3d anchor = band.axis == CueAxis::X
@@ -4742,7 +5223,7 @@ void render_volume_cues(
                                  : (band.axis == CueAxis::Y ? Point3d{bounds.max_x, 0.5 * (band.span.low + band.span.high), bounds.max_z}
                                                             : Point3d{bounds.max_x, bounds.max_y, 0.5 * (band.span.low + band.span.high)});
       const Point2d label = map_projected_point(anchor, pane, bounds, layout.plot);
-      add_text(list, {label.x + 6.0, label.y - 4.0}, band.label, 10.0, band.stroke);
+      add_text(list, volume_labels.place({label.x + look().volume_cue_label_offset_x_em * look().cue_label_font_pt, label.y - look().volume_cue_label_offset_y_em * look().cue_label_font_pt}, band.label, look().cue_label_font_pt, false, -1.0), band.label, look().cue_label_font_pt, band.stroke);
     }
   }
 
@@ -4754,25 +5235,25 @@ void render_volume_cues(
                                  : (rule.axis == CueAxis::Y ? Point3d{bounds.max_x, rule.value, bounds.max_z}
                                                             : Point3d{bounds.max_x, bounds.max_y, rule.value});
       const Point2d label = map_projected_point(anchor, pane, bounds, layout.plot);
-      add_text(list, {label.x + 6.0, label.y - 4.0}, rule.label, 10.0, rule.color);
+      add_text(list, volume_labels.place({label.x + look().volume_cue_label_offset_x_em * look().cue_label_font_pt, label.y - look().volume_cue_label_offset_y_em * look().cue_label_font_pt}, rule.label, look().cue_label_font_pt, false, -1.0), rule.label, look().cue_label_font_pt, rule.color);
     }
   }
 
   for (const PinCue& pin : pane.pins()) {
     const Point2d anchor = map_projected_point({pin.anchor.x, pin.anchor.y, pin.anchor.z}, pane, bounds, layout.plot);
     const Point2d label{anchor.x + pin.offset_x, anchor.y + pin.offset_y};
-    add_path(list, {anchor, label}, FillStroke{pin.color, {}, true, false, 0.9}, false);
+    add_path(list, {anchor, label}, FillStroke{pin.color, {}, true, false, look().pin_leader_stroke_pt}, false);
     add_path(
         list,
         {
-            {anchor.x - 2.5, anchor.y - 2.5},
-            {anchor.x + 2.5, anchor.y - 2.5},
-            {anchor.x + 2.5, anchor.y + 2.5},
-            {anchor.x - 2.5, anchor.y + 2.5},
+            {anchor.x - look().volume_cue_mark_half_size_pt, anchor.y - look().volume_cue_mark_half_size_pt},
+            {anchor.x + look().volume_cue_mark_half_size_pt, anchor.y - look().volume_cue_mark_half_size_pt},
+            {anchor.x + look().volume_cue_mark_half_size_pt, anchor.y + look().volume_cue_mark_half_size_pt},
+            {anchor.x - look().volume_cue_mark_half_size_pt, anchor.y + look().volume_cue_mark_half_size_pt},
         },
-        FillStroke{pin.color, pin.color, true, true, 0.5},
+        FillStroke{pin.color, pin.color, true, true, look().pin_mark_stroke_pt},
         true);
-    add_text(list, {label.x + 4.0, label.y - 2.0}, pin.text, 10.0, pin.color);
+    add_text(list, {label.x + look().pin_text_offset_x_em * look().cue_label_font_pt, label.y - look().pin_text_offset_y_em * look().cue_label_font_pt}, pin.text, look().cue_label_font_pt, pin.color);
   }
 }
 
@@ -4818,17 +5299,15 @@ void render_planar_axes(
   if (!pane.title_text().empty()) {
     add_text(
         list,
-        {layout.outer.x + layout.outer.width * 0.5, layout.outer.y + 22.0},
+        {layout.outer.x + layout.outer.width * 0.5, layout.outer.y + look().pane_title_baseline_em * look().pane_title_font_pt},
         pane.title_text(),
-        14.0,
+        look().pane_title_font_pt,
         pane.theme_tokens().foreground(),
         TextCommand::Align::Middle);
   }
 
-  const double tick_font =
-      std::clamp(10.0 * pane.tick_font_scale(), 7.0, 32.0);
-  const double axis_label_font =
-      std::clamp(11.0 * pane.axis_label_font_scale(), 8.0, 36.0);
+  const double tick_font = tick_font_for(pane);
+  const double axis_label_font = axis_label_font_for(pane);
   const double x_tick_rotation = pane.x_axis().tick_rotation_deg.value_or(0.0);
   const double y_tick_rotation = pane.y_axis().tick_rotation_deg.value_or(0.0);
   const double x_label_rotation = pane.x_axis().label_rotation_deg.value_or(0.0);
@@ -4851,28 +5330,28 @@ void render_planar_axes(
     if (axes_visible) {
       const double radius = 0.5 * std::min(layout.plot.width, layout.plot.height);
       const Point2d center{layout.plot.x + layout.plot.width * 0.5, layout.plot.y + layout.plot.height * 0.5};
-      for (int ring = 1; ring <= 4; ++ring) {
+      for (int ring = 1; ring <= look().polar_ring_count; ++ring) {
         std::vector<Point2d> circle;
-        for (int i = 0; i <= 96; ++i) {
-          const double angle = 2.0 * kPi * static_cast<double>(i) / 96.0;
-          const double ring_radius = radius * static_cast<double>(ring) / 4.0;
+        for (int i = 0; i <= look().polar_ring_segments; ++i) {
+          const double angle = 2.0 * kPi * static_cast<double>(i) / look().polar_ring_segments;
+          const double ring_radius = radius * static_cast<double>(ring) / look().polar_ring_count;
           circle.push_back({center.x + std::cos(angle) * ring_radius, center.y + std::sin(angle) * ring_radius});
         }
         add_path(
             list,
             std::move(circle),
-            FillStroke{Rgba::from_u8(195, 203, 214), {}, true, false, ring == 4 ? 1.0 : 0.6},
+            FillStroke{look().polar_ring_color, {}, true, false, ring == look().polar_ring_count ? look().polar_outer_ring_stroke_pt : look().polar_ring_stroke_pt},
             false);
       }
-      for (int spoke = 0; spoke < 12; ++spoke) {
-        const double angle = 2.0 * kPi * static_cast<double>(spoke) / 12.0;
+      for (int spoke = 0; spoke < look().polar_spoke_count; ++spoke) {
+        const double angle = 2.0 * kPi * static_cast<double>(spoke) / look().polar_spoke_count;
         add_path(
             list,
             {
                 center,
                 {center.x + std::cos(angle) * radius, center.y + std::sin(angle) * radius},
             },
-            FillStroke{Rgba::from_u8(215, 221, 230), {}, true, false, 0.6},
+            FillStroke{look().polar_spoke_color, {}, true, false, look().polar_spoke_stroke_pt},
             false);
       }
     }
@@ -4903,12 +5382,12 @@ void render_planar_axes(
     const bool sand_style = !sandgrid_style &&
                             (theme_name.find("flash_style_sand") != std::string_view::npos ||
                              theme_name.find("flash_sand") != std::string_view::npos);
-    const double bg_luma = 0.2126 * bg.red + 0.7152 * bg.green + 0.0722 * bg.blue;
-    const bool dark_background = bg_luma < 0.5;
+    const double bg_luma = look().luma_red * bg.red + look().luma_green * bg.green + look().luma_blue * bg.blue;
+    const bool dark_background = bg_luma < look().dark_background_luma;
     if (darkgrid_style || sandgrid_style || dark_style || sand_style) {
-      const Rgba plot_face = darkgrid_style ? Rgba::from_u8(239, 242, 246)
-                                            : (sandgrid_style || sand_style ? Rgba::from_u8(250, 244, 225)
-                                                                            : Rgba::from_u8(231, 236, 242));
+      const Rgba plot_face = darkgrid_style ? look().plot_face_dark_grid
+                                            : (sandgrid_style || sand_style ? look().plot_face_sand
+                                                                            : look().plot_face_styled);
       add_path(
           list,
           {
@@ -4922,15 +5401,15 @@ void render_planar_axes(
           true);
     }
     const Rgba minor_grid_color = darkgrid_style
-                                      ? Rgba::from_u8(184, 192, 204, 186)
-                                      : (sandgrid_style ? Rgba::from_u8(222, 212, 182)
-                                                        : (dark_background ? Rgba::from_u8(73, 86, 104, 170)
-                                                                           : Rgba::from_u8(234, 238, 244)));
+                                      ? look().minor_grid_dark_grid
+                                      : (sandgrid_style ? look().minor_grid_sand
+                                                        : (dark_background ? look().minor_grid_dark_background
+                                                                           : look().minor_grid_light));
     const Rgba major_grid_color = darkgrid_style
-                                      ? Rgba::from_u8(151, 163, 181, 210)
-                                      : (sandgrid_style ? Rgba::from_u8(194, 178, 139)
-                                                        : (dark_background ? Rgba::from_u8(96, 111, 131, 190)
-                                                                           : Rgba::from_u8(224, 229, 236)));
+                                      ? look().major_grid_dark_grid
+                                      : (sandgrid_style ? look().major_grid_sand
+                                                        : (dark_background ? look().major_grid_dark_background
+                                                                           : look().major_grid_light));
 
     if (pane.x_axis().minor_grid) {
       for (const double value : x_minor) {
@@ -4938,7 +5417,7 @@ void render_planar_axes(
         add_path(
             list,
             {{p.x, layout.plot.y}, {p.x, layout.plot.y + layout.plot.height}},
-            FillStroke{minor_grid_color, {}, true, false, 0.5},
+            FillStroke{minor_grid_color, {}, true, false, look().grid_minor_stroke_pt},
             false);
       }
     }
@@ -4948,7 +5427,7 @@ void render_planar_axes(
         add_path(
             list,
             {{layout.plot.x, p.y}, {layout.plot.x + layout.plot.width, p.y}},
-            FillStroke{minor_grid_color, {}, true, false, 0.5},
+            FillStroke{minor_grid_color, {}, true, false, look().grid_minor_stroke_pt},
             false);
       }
     }
@@ -4959,7 +5438,7 @@ void render_planar_axes(
         add_path(
             list,
             {{p.x, layout.plot.y}, {p.x, layout.plot.y + layout.plot.height}},
-            FillStroke{major_grid_color, {}, true, false, 0.8},
+            FillStroke{major_grid_color, {}, true, false, look().grid_major_stroke_pt},
             false);
       }
     }
@@ -4969,7 +5448,7 @@ void render_planar_axes(
         add_path(
             list,
             {{layout.plot.x, p.y}, {layout.plot.x + layout.plot.width, p.y}},
-            FillStroke{major_grid_color, {}, true, false, 0.8},
+            FillStroke{major_grid_color, {}, true, false, look().grid_major_stroke_pt},
             false);
       }
     }
@@ -4983,26 +5462,26 @@ void render_planar_axes(
               {layout.plot.x, layout.plot.y + layout.plot.height},
               {layout.plot.x, layout.plot.y},
           },
-          FillStroke{major_grid_color, {}, true, false, 0.8},
+          FillStroke{major_grid_color, {}, true, false, look().grid_major_stroke_pt},
           false);
     }
-    const double tick_len = std::clamp(tick_font * 0.45, 4.0, 9.0);
+    const double tick_len = tick_length_for(tick_font);
     const double x_axis_y = layout.plot.y + layout.plot.height;
     const double y_axis_x = layout.plot.x;
-    const Rgba tick_color = multiply_rgb(pane.theme_tokens().foreground(), 0.7);
-    const Rgba axis_color = multiply_rgb(pane.theme_tokens().foreground(), 0.9);
+    const Rgba tick_color = multiply_rgb(pane.theme_tokens().foreground(), look().tick_color_foreground_share);
+    const Rgba axis_color = multiply_rgb(pane.theme_tokens().foreground(), look().axis_color_foreground_share);
     const double x_tick_gap = resolved_planar_tick_label_gap(pane.x_axis(), axes_visible, tick_font, true);
     const double y_tick_gap = resolved_planar_tick_label_gap(pane.y_axis(), axes_visible, tick_font, false);
     if (axes_visible) {
       add_path(
           list,
           {{layout.plot.x, x_axis_y}, {layout.plot.x + layout.plot.width, x_axis_y}},
-          FillStroke{axis_color, {}, true, false, 1.0},
+          FillStroke{axis_color, {}, true, false, look().axis_line_stroke_pt},
           false);
       add_path(
           list,
           {{y_axis_x, layout.plot.y}, {y_axis_x, layout.plot.y + layout.plot.height}},
-          FillStroke{axis_color, {}, true, false, 1.0},
+          FillStroke{axis_color, {}, true, false, look().axis_line_stroke_pt},
           false);
 
       // For horizontal-grid panes (y-major only), close the top/right edge using grid tone,
@@ -5013,12 +5492,12 @@ void render_planar_axes(
             list,
             {{layout.plot.x + layout.plot.width, layout.plot.y},
              {layout.plot.x + layout.plot.width, layout.plot.y + layout.plot.height}},
-            FillStroke{close_color, {}, true, false, 0.8},
+            FillStroke{close_color, {}, true, false, look().axis_close_stroke_pt},
             false);
         add_path(
             list,
             {{layout.plot.x, layout.plot.y}, {layout.plot.x + layout.plot.width, layout.plot.y}},
-            FillStroke{close_color, {}, true, false, 0.8},
+            FillStroke{close_color, {}, true, false, look().axis_close_stroke_pt},
             false);
       }
     }
@@ -5032,13 +5511,13 @@ void render_planar_axes(
         add_path(
             list,
             {{p.x, x_axis_y}, {p.x, x_axis_y + tick_len}},
-            FillStroke{tick_color, {}, true, false, 0.9},
+            FillStroke{tick_color, {}, true, false, look().tick_stroke_pt},
             false);
       }
       if (pane.x_axis().tick_labels_visible) {
         add_text(
             list,
-            {p.x, x_axis_y + x_tick_gap + tick_font * 0.35},
+            {p.x, x_axis_y + x_tick_gap + tick_font * look().tick_text_centering_em},
             label,
             tick_font,
             pane.theme_tokens().foreground(),
@@ -5055,13 +5534,13 @@ void render_planar_axes(
         add_path(
             list,
             {{y_axis_x - tick_len, p.y}, {y_axis_x, p.y}},
-            FillStroke{tick_color, {}, true, false, 0.9},
+            FillStroke{tick_color, {}, true, false, look().tick_stroke_pt},
             false);
       }
       if (pane.y_axis().tick_labels_visible) {
         add_text(
             list,
-            {y_axis_x - y_tick_gap, p.y + tick_font * 0.35},
+            {y_axis_x - y_tick_gap, p.y + tick_font * look().tick_text_centering_em},
             label,
             tick_font,
             pane.theme_tokens().foreground(),
@@ -5073,16 +5552,21 @@ void render_planar_axes(
 
   if (!pane.x_axis().label.empty()) {
     const double x_axis_y = layout.plot.y + layout.plot.height;
-    const double x_tick_len = axes_visible ? std::clamp(tick_font * 0.45, 4.0, 9.0) : 0.0;
+    const double x_tick_len = axes_visible ? tick_length_for(tick_font) : 0.0;
     const double x_tick_gap = resolved_planar_tick_label_gap(pane.x_axis(), axes_visible, tick_font, true);
     const double x_label_gap = resolved_axis_label_gap(pane.x_axis(), axes_visible, axis_label_font, true);
+    // The label sits below the longest tick label's measured reach, not below a fixed amount.
+    std::size_t longest_tick_chars = 1;
+    for (const auto& [value, label] : x_ticks_cache) {
+      longest_tick_chars = std::max(longest_tick_chars, label.size());
+    }
     const double x_tick_extent_rot =
         pane.x_axis().tick_labels_visible
-            ? tick_font * (std::abs(x_tick_rotation) <= 1e-9 ? 0.85 : 1.10)
+            ? text_box_reach(static_cast<double>(longest_tick_chars) * tick_font * look().estimated_glyph_width_em, tick_font, x_tick_rotation,
+                             std::abs(x_tick_rotation) > 1e-9 ? TextCommand::Align::Start : TextCommand::Align::Middle, 0.0, 1.0)
             : 0.0;
-    const double x_label_y = std::min(
-        layout.outer.y + layout.outer.height - 8.0,
-        x_axis_y + x_tick_len + x_tick_gap + x_tick_extent_rot + x_label_gap + axis_label_font * 0.85);
+    const double x_label_y = x_axis_y + x_tick_len + x_tick_gap + x_tick_extent_rot + x_label_gap +
+                             axis_label_font * look().axis_label_baseline_em;
     add_text(
         list,
         {layout.plot.x + layout.plot.width * 0.5, x_label_y},
@@ -5096,21 +5580,12 @@ void render_planar_axes(
     const bool center_on_axis = pane.y_axis().label_centered_on_axis;
     const double y_tick_gap = resolved_planar_tick_label_gap(pane.y_axis(), axes_visible, tick_font, false);
     const double y_label_gap = resolved_axis_label_gap(pane.y_axis(), axes_visible, axis_label_font, false);
-    constexpr double kUncenteredYLabelBaseClearance = 8.0;
-    constexpr double kUncenteredYLabelFontFactor = 0.95;
     const double y_label_top_clearance = std::max(
-        kUncenteredYLabelBaseClearance,
-        tick_font * kUncenteredYLabelFontFactor);
-    const double explicit_label_rotation =
-        pane.y_axis().label_rotation_deg.value_or(y_label_rotation);
-    const double explicit_rotation_mod = std::fmod(std::abs(explicit_label_rotation), 180.0);
-    const bool explicit_near_vertical = std::abs(explicit_rotation_mod - 90.0) <= 20.0;
+        look().uncentered_y_label_clearance_pt,
+        tick_font * look().uncentered_y_label_clearance_em);
     // Core 2D rule: if caller explicitly rotates y-label near vertical, place it
     // as an axis-centered label (same semantic family as x-axis labels).
-    const bool effective_center_on_axis =
-        center_on_axis || (!pane.y_axis().label_centered_explicit
-                           && pane.y_axis().label_rotation_deg.has_value()
-                           && explicit_near_vertical);
+    const bool effective_center_on_axis = center_on_axis || y_label_centered_on_axis(pane);
 
     const auto rotated_text_width = [](std::string_view text, double font_size, double rotation_deg) {
       const double w = estimated_text_extent(text, font_size);
@@ -5124,7 +5599,7 @@ void render_planar_axes(
         y_tick_extent_rot = std::max(y_tick_extent_rot, rotated_text_width(label, tick_font, y_tick_rotation));
       }
     }
-    const double centered_clearance = y_tick_gap + y_tick_extent_rot + y_label_gap + axis_label_font * 0.75;
+    const double centered_clearance = y_tick_gap + y_tick_extent_rot + y_label_gap + axis_label_font * look().centered_y_label_baseline_em;
     const double label_x = effective_center_on_axis
                                ? (layout.plot.x - centered_clearance)
                                : (layout.plot.x - y_tick_gap);
@@ -5138,17 +5613,17 @@ void render_planar_axes(
     std::string label_text = pane.y_axis().label;
     if (effective_center_on_axis) {
       const double rotation_mod = std::fmod(std::abs(label_rotation), 180.0);
-      const bool near_vertical = std::abs(rotation_mod - 90.0) <= 20.0;
+      const bool near_vertical = std::abs(rotation_mod - 90.0) <= look().near_vertical_tolerance_deg;
       if (near_vertical) {
-        const double available = std::max(12.0, layout.plot.height - 10.0);
+        const double available = std::max(look().y_label_fit_floor_pt, layout.plot.height - look().y_label_fit_margin_pt);
         const double needed = estimated_text_extent(label_text, label_font);
         if (needed > available) {
-          label_font = std::max(7.0, label_font * (available / needed));
+          label_font = std::max(look().y_label_fit_min_font_pt, label_font * (available / needed));
         }
         const double fitted_extent = estimated_text_extent(label_text, label_font);
         if (fitted_extent > available) {
           const std::size_t max_chars = static_cast<std::size_t>(
-              std::clamp(std::floor(available / std::max(1.0, label_font * 0.56)), 4.0, 2048.0));
+              std::clamp(std::floor(available / std::max(1.0, label_font * look().estimated_glyph_width_em)), look().y_label_min_chars, look().y_label_max_chars));
           if (label_text.size() > max_chars) {
             label_text = label_text.substr(0, max_chars > 3 ? max_chars - 3 : 1);
             label_text += "...";
@@ -5168,7 +5643,7 @@ void render_planar_axes(
   add_caption_block(list, pane, layout);
 }
 
-[[nodiscard]] std::vector<Point2d> marker_circle(Point2d center, double radius, int steps = 14) {
+[[nodiscard]] std::vector<Point2d> marker_circle(Point2d center, double radius, int steps = look().marker_default_steps) {
   std::vector<Point2d> points;
   points.reserve(static_cast<std::size_t>(steps) + 1U);
   for (int i = 0; i < steps; ++i) {
@@ -5233,14 +5708,13 @@ void render_planar_traces(
             Range1d color_range{0.0, 1.0};
             if (payload.color.has_value()) {
               const Series color = flatten_f64(*payload.color);
-              color_range = trace.color_limits().has_value()
-                                ? *trace.color_limits()
-                                : Range1d{scalar_f64(color.min()), scalar_f64(color.max())};
+              color_range = color_range_for(pane, trace, scalar_f64(color.min()), scalar_f64(color.max()));
               if (!(color_range.high > color_range.low)) {
-                color_range.low -= 0.5;
-                color_range.high += 0.5;
+                color_range.low -= look().degenerate_range_half_width;
+                color_range.high += look().degenerate_range_half_width;
               }
             }
+            const double radius_scale = cloud.size.radius_scale(look().marker_radius_per_sqrt_size, look().min_marker_radius_pt);
             const bool uniform_fill = !cloud.color.has_values() || cloud.color.values->size() == 1U;
             const bool uniform_size = !cloud.size.has_values() || cloud.size.values->size() == 1U;
             if (uniform_fill && uniform_size && cloud.count > 0U) {
@@ -5248,9 +5722,9 @@ void render_planar_traces(
               if (cloud.color.has_values()) {
                 fill = palette_lookup(trace.palette_ramp(), color_range, cloud.color.at(0));
               }
-              fill.alpha = std::clamp(fill.alpha * 0.82, 0.18, 1.0);
-              const double radius = std::clamp(std::sqrt(std::max(cloud.size.at(0), 1.0)) * 0.31, 0.95, 9.0);
-              const int marker_steps = std::clamp(static_cast<int>(std::ceil(radius * 1.8)), 6, 14);
+              fill.alpha = std::clamp(fill.alpha * look().marker_fill_alpha, look().marker_min_fill_alpha, 1.0);
+              const double radius = std::max(look().min_marker_radius_pt, std::sqrt(std::max(cloud.size.at(0), 0.0)) * radius_scale);
+              const int marker_steps = std::max(look().marker_min_steps, static_cast<int>(std::ceil(radius * look().marker_steps_per_radius)));
               std::vector<Point2d> marker_points;
               std::vector<std::size_t> subpath_starts;
               marker_points.reserve(cloud.count * static_cast<std::size_t>(marker_steps));
@@ -5277,12 +5751,12 @@ void render_planar_traces(
               if (!std::isfinite(center.x) || !std::isfinite(center.y)) {
                 continue;
               }
-              const double radius = std::clamp(std::sqrt(std::max(cloud.size.at(i), 1.0)) * 0.31, 0.95, 9.0);
+              const double radius = std::max(look().min_marker_radius_pt, std::sqrt(std::max(cloud.size.at(i), 0.0)) * radius_scale);
               Rgba fill = trace.stroke_color();
               if (cloud.color.has_values()) {
                 fill = palette_lookup(trace.palette_ramp(), color_range, cloud.color.at(i));
               }
-              fill.alpha = std::clamp(fill.alpha * 0.82, 0.18, 1.0);
+              fill.alpha = std::clamp(fill.alpha * look().marker_fill_alpha, look().marker_min_fill_alpha, 1.0);
               add_path(
                   list,
                   marker_circle(center, radius),
@@ -5311,7 +5785,7 @@ void render_planar_traces(
                 add_path(
                     list,
                     polygon,
-                    FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.4},
+                    FillStroke{multiply_rgb(fill, look().outline_shade), fill, true, true, look().field_cell_stroke_pt},
                     true);
                 if (trace.annotate_levels() && std::isfinite(color_value)) {
                   Point2d center{};
@@ -5323,17 +5797,17 @@ void render_planar_traces(
                   center.y /= static_cast<double>(polygon.size());
 
                   const double luminance =
-                      0.2126 * fill.red + 0.7152 * fill.green + 0.0722 * fill.blue;
-                  const Rgba text_color = luminance > 0.55
-                      ? Rgba::from_u8(24, 23, 21)
-                      : Rgba::from_u8(248, 247, 244);
+                      look().luma_red * fill.red + look().luma_green * fill.green + look().luma_blue * fill.blue;
+                  const Rgba text_color = luminance > look().field_label_luma_threshold
+                      ? look().field_label_on_light
+                      : look().field_label_on_dark;
                   std::ostringstream label;
                   label << std::setprecision(3) << color_value;
                   add_text(
                       list,
                       center,
                       label.str(),
-                      10.0,
+                      look().field_label_font_pt,
                       text_color,
                       TextCommand::Align::Middle);
                 }
@@ -5346,25 +5820,25 @@ void render_planar_traces(
                   map_planar_point(xy.first.at(i), payload.base, pane, bounds, layout.plot, false);
               const Point2d top =
                   map_planar_point(xy.first.at(i), xy.second.at(i), pane, bounds, layout.plot, false);
-              add_path(list, {base, top}, FillStroke{trace.stroke_color(), {}, true, false, 1.0}, false);
+              add_path(list, {base, top}, FillStroke{trace.stroke_color(), {}, true, false, static_cast<double>(trace.stroke_width())}, false);
               add_path(
                   list,
-                  marker_circle(top, 3.0, 12),
-                  FillStroke{trace.stroke_color(), pane.theme_tokens().background(), true, true, 0.9},
+                  marker_circle(top, look().spike_head_radius_pt, look().spike_head_segments),
+                  FillStroke{trace.stroke_color(), pane.theme_tokens().background(), true, true, look().trace_line_stroke_pt},
                   true);
             }
           } else if constexpr (std::is_same_v<Payload, WedgeData>) {
             const auto slices = wedge_slices(payload);
-            const double radius = 0.45 * std::min(layout.plot.width, layout.plot.height);
+            const double radius = look().pie_radius_share * std::min(layout.plot.width, layout.plot.height);
             const Point2d center{layout.plot.x + 0.5 * layout.plot.width, layout.plot.y + 0.5 * layout.plot.height};
             for (std::size_t i = 0; i < slices.size(); ++i) {
               const auto& slice = slices[i];
               const double mid = 0.5 * (slice.start_angle + slice.end_angle);
-              const double offset = slice.explode * radius * 0.18;
+              const double offset = slice.explode * radius * look().pie_explode_share;
               const Point2d origin{center.x + std::cos(mid) * offset, center.y + std::sin(mid) * offset};
               std::vector<Point2d> polygon;
               polygon.push_back(origin);
-              const int steps = std::max(8, static_cast<int>(48.0 * slice.fraction));
+              const int steps = std::max(look().pie_min_steps, static_cast<int>(look().pie_steps_per_full_turn * slice.fraction));
               for (int step = 0; step <= steps; ++step) {
                 const double angle =
                     slice.start_angle + (slice.end_angle - slice.start_angle) * static_cast<double>(step) / static_cast<double>(steps);
@@ -5372,20 +5846,22 @@ void render_planar_traces(
               }
               const Rgba fill = trace.palette_ramp().sample(
                   static_cast<double>(i + 1) / static_cast<double>(slices.size() + 1));
+              // slices keep their palette colours; an explicit stroke colours their outlines and an explicit width sets it
               add_path(
                   list,
                   std::move(polygon),
-                  FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.9},
+                  FillStroke{trace.stroke_explicit() ? trace.stroke_color() : multiply_rgb(fill, look().outline_shade), fill, true, true,
+                             trace.width_explicit() ? static_cast<double>(trace.stroke_width()) : look().filled_outline_stroke_pt},
                   true);
               const Point2d label{
-                  origin.x + std::cos(mid) * radius * 1.15,
-                  origin.y + std::sin(mid) * radius * 1.15,
+                  origin.x + std::cos(mid) * radius * look().pie_label_radius_factor,
+                  origin.y + std::sin(mid) * radius * look().pie_label_radius_factor,
               };
               add_text(
                   list,
                   label,
                   slice.label,
-                  10.0,
+                  look().pie_label_font_pt,
                   pane.theme_tokens().foreground(),
                   std::cos(mid) >= 0.0 ? TextCommand::Align::Start : TextCommand::Align::End);
             }
@@ -5397,10 +5873,14 @@ void render_planar_traces(
             for (std::int64_t col = 0; col < geometry->cols; ++col) {
               std::vector<Point2d> polygon;
               polygon.reserve(static_cast<std::size_t>(geometry->rows) * 2U);
-              const Rgba fill =
+              const Rgba palette_fill =
                   trace.palette_ramp().sample(geometry->cols == 1
-                                                  ? 0.58
+                                                  ? look().ribbon_palette_sample
                                                   : static_cast<double>(col + 1) / static_cast<double>(geometry->cols + 1));
+              // several bands keep their palette colours, so that they stay distinguishable
+              const FilledStyle style = geometry->cols == 1 ? filled_style(trace, palette_fill, look().filled_outline_stroke_pt)
+                                                           : FilledStyle{palette_fill, multiply_rgb(palette_fill, look().outline_shade),
+                                                                         trace.width_explicit() ? static_cast<double>(trace.stroke_width()) : look().filled_outline_stroke_pt};
               for (std::int64_t row = 0; row < geometry->rows; ++row) {
                 const auto index = static_cast<std::size_t>(row * geometry->cols + col);
                 polygon.push_back(
@@ -5414,7 +5894,7 @@ void render_planar_traces(
               add_path(
                   list,
                   std::move(polygon),
-                  FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.9},
+                  FillStroke{style.outline, style.fill, true, true, style.outline_width},
                   true);
             }
           } else if constexpr (std::is_same_v<Payload, WhiskData>) {
@@ -5436,16 +5916,16 @@ void render_planar_traces(
                       map_planar_point(geometry->x[index], geometry->ylow[index], pane, bounds, layout.plot, false);
                   const Point2d high =
                       map_planar_point(geometry->x[index], geometry->yhigh[index], pane, bounds, layout.plot, false);
-                  add_path(list, {low, high}, FillStroke{trace.stroke_color(), {}, true, false, 0.9}, false);
+                  add_path(list, {low, high}, FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt}, false);
                   add_path(
                       list,
-                      {{low.x - 4.0, low.y}, {low.x + 4.0, low.y}},
-                      FillStroke{trace.stroke_color(), {}, true, false, 0.9},
+                      {{low.x - look().error_cap_half_width_pt, low.y}, {low.x + look().error_cap_half_width_pt, low.y}},
+                      FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt},
                       false);
                   add_path(
                       list,
-                      {{high.x - 4.0, high.y}, {high.x + 4.0, high.y}},
-                      FillStroke{trace.stroke_color(), {}, true, false, 0.9},
+                      {{high.x - look().error_cap_half_width_pt, high.y}, {high.x + look().error_cap_half_width_pt, high.y}},
+                      FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt},
                       false);
                 }
                 if (geometry->has_x) {
@@ -5453,22 +5933,22 @@ void render_planar_traces(
                       map_planar_point(geometry->xlow[index], geometry->y[index], pane, bounds, layout.plot, false);
                   const Point2d right =
                       map_planar_point(geometry->xhigh[index], geometry->y[index], pane, bounds, layout.plot, false);
-                  add_path(list, {left, right}, FillStroke{trace.stroke_color(), {}, true, false, 0.9}, false);
+                  add_path(list, {left, right}, FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt}, false);
                   add_path(
                       list,
-                      {{left.x, left.y - 4.0}, {left.x, left.y + 4.0}},
-                      FillStroke{trace.stroke_color(), {}, true, false, 0.9},
+                      {{left.x, left.y - look().error_cap_half_width_pt}, {left.x, left.y + look().error_cap_half_width_pt}},
+                      FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt},
                       false);
                   add_path(
                       list,
-                      {{right.x, right.y - 4.0}, {right.x, right.y + 4.0}},
-                      FillStroke{trace.stroke_color(), {}, true, false, 0.9},
+                      {{right.x, right.y - look().error_cap_half_width_pt}, {right.x, right.y + look().error_cap_half_width_pt}},
+                      FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt},
                       false);
                 }
                 add_path(
                     list,
-                    marker_circle(center, 2.7, 12),
-                    FillStroke{trace.stroke_color(), pane.theme_tokens().background(), true, true, 0.8},
+                    marker_circle(center, look().whisk_centre_radius_pt, look().whisk_centre_segments),
+                    FillStroke{trace.stroke_color(), pane.theme_tokens().background(), true, true, look().trace_marker_outline_stroke_pt},
                     true);
               }
               add_path(
@@ -5479,8 +5959,8 @@ void render_planar_traces(
             }
           } else if constexpr (std::is_same_v<Payload, ColumnsData>) {
             const auto xy = normalize_pairs(payload.x, payload.y);
-            const double half_width = 0.5 * payload.width;
-            const Rgba fill = trace.palette_ramp().sample(0.62);
+            const double half_width = 0.5 * columns_bar_width(payload, xy);
+            const FilledStyle style = filled_style(trace, trace.palette_ramp().sample(look().columns_palette_sample), look().columns_outline_stroke_pt);
             for (std::size_t i = 0; i < xy.count; ++i) {
               Point2d p00{};
               Point2d p10{};
@@ -5513,12 +5993,12 @@ void render_planar_traces(
                       {p11.x, p11.y},
                       {p01.x, p01.y},
                   },
-                  FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.8},
+                  FillStroke{style.outline, style.fill, true, true, style.outline_width},
                   true);
             }
           } else if constexpr (std::is_same_v<Payload, BucketData>) {
             const auto geometry = bucket_geometry(payload);
-            const Rgba fill = trace.palette_ramp().sample(0.55);
+            const FilledStyle style = filled_style(trace, trace.palette_ramp().sample(look().bucket_palette_sample), look().bucket_outline_stroke_pt);
             const double width =
                 (geometry.high - geometry.low) / std::max<std::size_t>(geometry.counts.size(), 1U);
             for (std::size_t i = 0; i < geometry.counts.size(); ++i) {
@@ -5538,12 +6018,12 @@ void render_planar_traces(
                       {top_right.x, top_right.y},
                       {top_left.x, top_left.y},
                   },
-                  FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.8},
+                  FillStroke{style.outline, style.fill, true, true, style.outline_width},
                   true);
             }
           } else if constexpr (std::is_same_v<Payload, QuartetData>) {
             const auto summaries = quartet_summaries(payload);
-            const Rgba fill = trace.palette_ramp().sample(0.42);
+            const Rgba fill = trace.palette_ramp().sample(look().quartet_palette_sample);
             const double half_width = 0.5 * payload.width;
             for (const auto& summary : summaries) {
               const Point2d q1_left =
@@ -5558,7 +6038,7 @@ void render_planar_traces(
                       {q3_right.x, q3_right.y},
                       {q1_left.x, q3_right.y},
                   },
-                  FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.8},
+                  FillStroke{multiply_rgb(fill, look().outline_shade), fill, true, true, look().quartet_box_stroke_pt},
                   true);
 
               const Point2d median_left =
@@ -5567,7 +6047,7 @@ void render_planar_traces(
                   map_planar_point(summary.group + half_width, summary.median, pane, bounds, layout.plot, false);
               add_path(list,
                        {median_left, median_right},
-                       FillStroke{trace.stroke_color(), {}, true, false, std::max(1.2, static_cast<double>(trace.stroke_width()))},
+                       FillStroke{trace.stroke_color(), {}, true, false, std::max(look().trace_box_min_median_stroke_pt, static_cast<double>(trace.stroke_width()))},
                        false);
 
               const Point2d center_top =
@@ -5578,21 +6058,21 @@ void render_planar_traces(
                   map_planar_point(summary.group, summary.q1, pane, bounds, layout.plot, false);
               const Point2d whisker_bottom =
                   map_planar_point(summary.group, summary.low_whisker, pane, bounds, layout.plot, false);
-              add_path(list, {center_top, whisker_top}, FillStroke{trace.stroke_color(), {}, true, false, 0.9}, false);
-              add_path(list, {center_bottom, whisker_bottom}, FillStroke{trace.stroke_color(), {}, true, false, 0.9}, false);
+              add_path(list, {center_top, whisker_top}, FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt}, false);
+              add_path(list, {center_bottom, whisker_bottom}, FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt}, false);
 
               const Point2d whisker_top_left =
-                  map_planar_point(summary.group - half_width * 0.45, summary.high_whisker, pane, bounds, layout.plot, false);
+                  map_planar_point(summary.group - half_width * look().quartet_whisker_cap_share, summary.high_whisker, pane, bounds, layout.plot, false);
               const Point2d whisker_top_right =
-                  map_planar_point(summary.group + half_width * 0.45, summary.high_whisker, pane, bounds, layout.plot, false);
+                  map_planar_point(summary.group + half_width * look().quartet_whisker_cap_share, summary.high_whisker, pane, bounds, layout.plot, false);
               const Point2d whisker_bottom_left =
-                  map_planar_point(summary.group - half_width * 0.45, summary.low_whisker, pane, bounds, layout.plot, false);
+                  map_planar_point(summary.group - half_width * look().quartet_whisker_cap_share, summary.low_whisker, pane, bounds, layout.plot, false);
               const Point2d whisker_bottom_right =
-                  map_planar_point(summary.group + half_width * 0.45, summary.low_whisker, pane, bounds, layout.plot, false);
-              add_path(list, {whisker_top_left, whisker_top_right}, FillStroke{trace.stroke_color(), {}, true, false, 0.9}, false);
+                  map_planar_point(summary.group + half_width * look().quartet_whisker_cap_share, summary.low_whisker, pane, bounds, layout.plot, false);
+              add_path(list, {whisker_top_left, whisker_top_right}, FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt}, false);
               add_path(list,
                        {whisker_bottom_left, whisker_bottom_right},
-                       FillStroke{trace.stroke_color(), {}, true, false, 0.9},
+                       FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt},
                        false);
 
               for (const double outlier : summary.outliers) {
@@ -5600,14 +6080,14 @@ void render_planar_traces(
                     map_planar_point(summary.group, outlier, pane, bounds, layout.plot, false);
                 add_path(
                     list,
-                    marker_circle(center, 2.5, 10),
-                    FillStroke{trace.stroke_color(), pane.theme_tokens().background(), true, true, 0.8},
+                    marker_circle(center, look().quartet_mean_radius_pt, look().quartet_mean_segments),
+                    FillStroke{trace.stroke_color(), pane.theme_tokens().background(), true, true, look().trace_marker_outline_stroke_pt},
                     true);
               }
             }
           } else if constexpr (std::is_same_v<Payload, ViolinData>) {
             const auto shapes = violin_shapes(payload);
-            const Rgba fill = trace.palette_ramp().sample(0.42);
+            const Rgba fill = trace.palette_ramp().sample(look().violin_palette_sample);
             for (const auto& shape : shapes) {
               if (shape.y.size() < 3 || shape.left_half_width.size() != shape.y.size()
                   || shape.right_half_width.size() != shape.y.size()) {
@@ -5634,7 +6114,7 @@ void render_planar_traces(
               add_path(
                   list,
                   std::move(polygon),
-                  FillStroke{multiply_rgb(fill, 0.58), fill, true, true, 0.9},
+                  FillStroke{multiply_rgb(fill, look().quartet_outline_shade), fill, true, true, look().filled_outline_stroke_pt},
                   true);
 
               const auto median_width = widths_at_y(shape, shape.median);
@@ -5653,7 +6133,7 @@ void render_planar_traces(
                     list,
                     {left, right},
                     FillStroke{
-                        emphasize ? multiply_rgb(trace.stroke_color(), 0.82) : trace.stroke_color(),
+                        emphasize ? multiply_rgb(trace.stroke_color(), look().quartet_emphasis_shade) : trace.stroke_color(),
                         {},
                         true,
                         false,
@@ -5665,43 +6145,43 @@ void render_planar_traces(
                 case ViolinInner::None:
                   break;
                 case ViolinInner::Box: {
-                  add_inner_line(shape.median, median_width, std::max(1.25, static_cast<double>(trace.stroke_width())), true);
+                  add_inner_line(shape.median, median_width, std::max(look().trace_quartet_min_median_stroke_pt, static_cast<double>(trace.stroke_width())), true);
                   const Point2d whisk_low =
                       map_planar_point(shape.group, shape.low_whisker, pane, bounds, layout.plot, false);
                   const Point2d whisk_high =
                       map_planar_point(shape.group, shape.high_whisker, pane, bounds, layout.plot, false);
-                  add_path(list, {whisk_low, whisk_high}, FillStroke{trace.stroke_color(), {}, true, false, 0.9}, false);
-                  add_inner_line(shape.q1, q1_width, 0.9);
-                  add_inner_line(shape.q3, q3_width, 0.9);
-                  add_inner_line(shape.low_whisker, whisk_low_width, 0.8);
-                  add_inner_line(shape.high_whisker, whisk_high_width, 0.8);
+                  add_path(list, {whisk_low, whisk_high}, FillStroke{trace.stroke_color(), {}, true, false, look().trace_line_stroke_pt}, false);
+                  add_inner_line(shape.q1, q1_width, look().trace_line_stroke_pt);
+                  add_inner_line(shape.q3, q3_width, look().trace_line_stroke_pt);
+                  add_inner_line(shape.low_whisker, whisk_low_width, look().trace_thin_line_stroke_pt);
+                  add_inner_line(shape.high_whisker, whisk_high_width, look().trace_thin_line_stroke_pt);
                   break;
                 }
                 case ViolinInner::Quartile: {
-                  add_inner_line(shape.q1, q1_width, 0.9);
-                  add_inner_line(shape.median, median_width, std::max(1.2, static_cast<double>(trace.stroke_width())), true);
-                  add_inner_line(shape.q3, q3_width, 0.9);
+                  add_inner_line(shape.q1, q1_width, look().trace_line_stroke_pt);
+                  add_inner_line(shape.median, median_width, std::max(look().trace_box_min_median_stroke_pt, static_cast<double>(trace.stroke_width())), true);
+                  add_inner_line(shape.q3, q3_width, look().trace_line_stroke_pt);
                   break;
                 }
                 case ViolinInner::Stick: {
                   const std::size_t n = shape.sample.size();
-                  const std::size_t step = std::max<std::size_t>(1, n / 280);
+                  const std::size_t step = std::max<std::size_t>(1, n / look().violin_stick_budget);
                   for (std::size_t i = 0; i < n; i += step) {
                     const double value = shape.sample[i];
                     const auto width = widths_at_y(shape, value);
-                    add_inner_line(value, {width.left * 0.92, width.right * 0.92}, 0.75);
+                    add_inner_line(value, {width.left * look().quartet_inner_line_share, width.right * look().quartet_inner_line_share}, look().trace_fine_line_stroke_pt);
                   }
                   break;
                 }
                 case ViolinInner::Point: {
                   const std::size_t n = shape.sample.size();
-                  const std::size_t step = std::max<std::size_t>(1, n / 280);
+                  const std::size_t step = std::max<std::size_t>(1, n / look().violin_stick_budget);
                   for (std::size_t i = 0; i < n; i += step) {
                     const Point2d center = map_planar_point(shape.group, shape.sample[i], pane, bounds, layout.plot, false);
                     add_path(
                         list,
-                        marker_circle(center, 1.9, 10),
-                        FillStroke{trace.stroke_color(), pane.theme_tokens().background(), true, true, 0.65},
+                        marker_circle(center, look().violin_point_radius_pt, look().violin_point_segments),
+                        FillStroke{trace.stroke_color(), pane.theme_tokens().background(), true, true, look().violin_point_stroke_pt},
                         true);
                   }
                   break;
@@ -5752,7 +6232,7 @@ void render_planar_traces(
                       add_path(
                           list,
                           std::move(polygon),
-                          FillStroke{multiply_rgb(fill, 0.65), fill, true, true, 0.18},
+                          FillStroke{multiply_rgb(fill, look().isoband_outline_shade), fill, true, true, look().isoband_outline_stroke_pt},
                           true);
                     }
                   }
@@ -5786,14 +6266,14 @@ void render_planar_traces(
                            false);
                 }
               }
-              if (trace.annotate_levels() && longest > 24.0) {
+              if (trace.annotate_levels() && longest > look().contour_label_min_length_pt) {
                 std::ostringstream label;
                 label << std::setprecision(3) << level;
                 add_text(
                     list,
                     label_anchor,
                     label.str(),
-                    10.0,
+                    look().contour_label_font_pt,
                     pane.theme_tokens().foreground(),
                     TextCommand::Align::Middle);
               }
@@ -5926,8 +6406,8 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
                            : std::vector<double>{};
 
   const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
-  const Rgba grid = Rgba::from_u8(190, 198, 208, 148);
-  const Rgba minor_grid = Rgba::from_u8(205, 212, 221, 122);
+  const Rgba grid = look().volume_grid_major_color;
+  const Rgba minor_grid = look().volume_grid_minor_color;
   const double x_wall_y = frame.rear_y;
   const double y_wall_x = frame.rear_x;
   const auto draw_x_grid_lines = [&](double value, Rgba floor_color, double floor_width, Rgba wall_color, double wall_width) {
@@ -5984,22 +6464,22 @@ void render_volume_grid(DrawList& list, const Pane& pane, const PaneLayout& layo
   };
 
   for (const double value : x_minor) {
-    draw_x_grid_lines(value, minor_grid, 0.38, minor_grid, 0.32);
+    draw_x_grid_lines(value, minor_grid, look().volume_grid_minor_stroke_pt, minor_grid, look().volume_grid_minor_floor_stroke_pt);
   }
   for (const double value : y_minor) {
-    draw_y_grid_lines(value, minor_grid, 0.38, minor_grid, 0.32);
+    draw_y_grid_lines(value, minor_grid, look().volume_grid_minor_stroke_pt, minor_grid, look().volume_grid_minor_floor_stroke_pt);
   }
   for (const double value : z_minor) {
-    draw_z_grid_lines(value, minor_grid, 0.32);
+    draw_z_grid_lines(value, minor_grid, look().volume_grid_minor_floor_stroke_pt);
   }
   for (const double value : x_pos) {
-    draw_x_grid_lines(value, grid, 0.65, grid, 0.55);
+    draw_x_grid_lines(value, grid, look().volume_grid_major_stroke_pt, grid, look().volume_grid_major_floor_stroke_pt);
   }
   for (const double value : y_pos) {
-    draw_y_grid_lines(value, grid, 0.65, grid, 0.55);
+    draw_y_grid_lines(value, grid, look().volume_grid_major_stroke_pt, grid, look().volume_grid_major_floor_stroke_pt);
   }
   for (const double value : z_pos) {
-    draw_z_grid_lines(value, grid, 0.55);
+    draw_z_grid_lines(value, grid, look().volume_grid_major_floor_stroke_pt);
   }
 }
 
@@ -6007,9 +6487,9 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   if (!pane.title_text().empty()) {
     add_text(
         list,
-        {layout.outer.x + layout.outer.width * 0.5, layout.outer.y + 22.0},
+        {layout.outer.x + layout.outer.width * 0.5, layout.outer.y + look().pane_title_baseline_em * look().pane_title_font_pt},
         pane.title_text(),
-        14.0,
+        look().pane_title_font_pt,
         pane.theme_tokens().foreground(),
         TextCommand::Align::Middle);
   }
@@ -6028,8 +6508,8 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
       {bounds.min_z, bounds.max_z},
       pane.z_axis());
   const VolumeAxisFrame frame = resolve_volume_axis_frame(pane, bounds, layout.plot);
-  const Rgba primary = multiply_rgb(pane.theme_tokens().foreground(), 0.58);
-  const Rgba tick_stroke = multiply_rgb(pane.theme_tokens().foreground(), 0.72);
+  const Rgba primary = multiply_rgb(pane.theme_tokens().foreground(), look().volume_axis_color_share);
+  const Rgba tick_stroke = multiply_rgb(pane.theme_tokens().foreground(), look().volume_tick_color_share);
 
   const auto outward_normal = [&](Point2d a, Point2d b) {
     const double dx = b.x - a.x;
@@ -6057,7 +6537,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     return angle;
   };
   const auto tick_text_align = [](Point2d outward) {
-    if (std::abs(outward.x) < 0.35) {
+    if (std::abs(outward.x) < look().tick_align_middle_threshold) {
       return TextCommand::Align::Middle;
     }
     return outward.x > 0.0 ? TextCommand::Align::Start : TextCommand::Align::End;
@@ -6079,35 +6559,52 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     return max_chars;
   };
   const auto estimated_text_extent = [](std::size_t chars, double font_size) {
-    return static_cast<double>(chars) * font_size * 0.56;
+    return static_cast<double>(chars) * font_size * look().estimated_glyph_width_em;
   };
   const double plot_scale = std::max(1.0, std::min(layout.plot.width, layout.plot.height));
-  const double tick_font_base = std::clamp(plot_scale * 0.016, 9.5, 11.8);
-  const double axis_font_base = std::clamp(plot_scale * 0.019, 12.0, 14.6);
-  const double tick_font_size = std::clamp(tick_font_base * pane.tick_font_scale(), 8.0, 24.0);
-  const double axis_font_size = std::clamp(axis_font_base * pane.axis_label_font_scale(), 9.0, 32.0);
-  const double tick_len_xy = std::clamp(plot_scale * 0.013, 5.8, 12.5);
-  const double tick_len_z = std::clamp(plot_scale * 0.012, 5.2, 11.0);
-  const double tick_to_text_gap = std::clamp(plot_scale * 0.020, 14.0, 30.0);
+  const double tick_font_size = tick_font_for(pane);
+  const double axis_font_size = axis_label_font_for(pane);
+  // Tick marks, the gap from a tick to its text, and the base gap to the axis label are proportions of the
+  // font sizes they sit beside, so they follow the font (and the font scale) without fixed bounds.
+  const double tick_len_xy = look().spatial_tick_length_em * tick_font_size;
+  const double tick_len_z = look().spatial_z_tick_length_em * tick_font_size;
+  const double tick_to_text_gap = look().spatial_tick_text_gap_em * tick_font_size;
   const std::size_t x_tick_chars = max_tick_label_chars(x_ticks);
   const std::size_t y_tick_chars = max_tick_label_chars(y_ticks);
   const std::size_t z_tick_chars = max_tick_label_chars(z_ticks);
   const double x_tick_extent = estimated_text_extent(x_tick_chars, tick_font_size);
   const double y_tick_extent = estimated_text_extent(y_tick_chars, tick_font_size);
   const double z_tick_extent = estimated_text_extent(z_tick_chars, tick_font_size);
-  const double axis_label_base_gap = std::clamp(plot_scale * 0.042, 26.0, 66.0);
-  const double x_label_gap =
-      axis_label_base_gap + tick_len_xy + tick_to_text_gap + std::clamp(x_tick_extent * 0.55, 12.0, 48.0);
-  const double y_label_gap =
-      axis_label_base_gap + tick_len_xy + tick_to_text_gap + std::clamp(y_tick_extent * 0.55, 12.0, 48.0);
-  const double z_label_gap =
-      axis_label_base_gap + tick_len_z + tick_to_text_gap + std::clamp(z_tick_extent * 0.52, 10.0, 42.0);
-
+  // An explicit gap from the pane's axis settings replaces the automatic one: the tick-label gap is the
+  // distance from the end of a tick to its text, the label gap the distance from the axis to its label.
+  const double x_text_gap = pane.x_axis().tick_label_gap.value_or(tick_to_text_gap);
+  const double y_text_gap = pane.y_axis().tick_label_gap.value_or(tick_to_text_gap);
+  const double z_text_gap = pane.z_axis().tick_label_gap.value_or(tick_to_text_gap);
+  const double axis_label_base_gap = look().spatial_axis_label_base_gap_em * axis_font_size;
+  // How far the tick labels of an axis reach outward: the box of the longest label (its width, one line high),
+  // turned by the labels' rotation and aligned as drawn, projected on the direction the axis label is pushed.
+  // It is a formula of the text and the angle, so longer labels, and labels turned 60 or 90 degrees, move the
+  // axis label out by exactly what they need instead of by a fixed amount.
+  const auto tick_text_reach = [&](bool labels_visible, double longest_width, double rotation_deg, Point2d outward) {
+    if (!labels_visible) {
+      return 0.0;
+    }
+    return text_box_reach(longest_width, tick_font_size, rotation_deg, tick_text_align(outward), outward.x, outward.y);
+  };
   const Point2d x_outward = outward_normal(frame.x_start, frame.x_end);
   const Point2d y_outward = outward_normal(frame.y_start, frame.y_end);
   const Point2d z_axis_start = frame.z_start;
   const Point2d z_axis_end = frame.z_end;
   const Point2d z_outward = outward_normal(z_axis_start, z_axis_end);
+  const double x_label_gap = pane.x_axis().label_gap.value_or(
+      axis_label_base_gap + tick_len_xy + x_text_gap +
+      tick_text_reach(pane.x_axis().tick_labels_visible, x_tick_extent, pane.x_axis().tick_rotation_deg.value_or(0.0), x_outward));
+  const double y_label_gap = pane.y_axis().label_gap.value_or(
+      axis_label_base_gap + tick_len_xy + y_text_gap +
+      tick_text_reach(pane.y_axis().tick_labels_visible, y_tick_extent, pane.y_axis().tick_rotation_deg.value_or(0.0), y_outward));
+  const double z_label_gap = pane.z_axis().label_gap.value_or(
+      axis_label_base_gap + tick_len_z + z_text_gap +
+      tick_text_reach(pane.z_axis().tick_labels_visible, z_tick_extent, pane.z_axis().tick_rotation_deg.value_or(0.0), z_outward));
   const auto distance_sq = [](Point2d a, Point2d b) {
     const double dx = a.x - b.x;
     const double dy = a.y - b.y;
@@ -6139,9 +6636,9 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
   const double z_tick_rotation = pane.z_axis().tick_rotation_deg.value_or(0.0);
 
   if (axes_visible) {
-    add_path(list, {frame.x_start, frame.x_end}, FillStroke{primary, {}, true, false, 1.25}, false);
-    add_path(list, {frame.y_start, frame.y_end}, FillStroke{primary, {}, true, false, 1.25}, false);
-    add_path(list, {z_axis_start, z_axis_end}, FillStroke{primary, {}, true, false, 1.25}, false);
+    add_path(list, {frame.x_start, frame.x_end}, FillStroke{primary, {}, true, false, look().volume_axis_stroke_pt}, false);
+    add_path(list, {frame.y_start, frame.y_end}, FillStroke{primary, {}, true, false, look().volume_axis_stroke_pt}, false);
+    add_path(list, {z_axis_start, z_axis_end}, FillStroke{primary, {}, true, false, look().volume_axis_stroke_pt}, false);
   }
 
   for (std::size_t i = 0; i < x_ticks.size(); ++i) {
@@ -6155,11 +6652,11 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
     const Point2d tick_end{p.x + tick_dir.x * tick_len_xy, p.y + tick_dir.y * tick_len_xy};
     const Point2d text_anchor{
-        p.x + tick_dir.x * (tick_len_xy + tick_to_text_gap),
-        p.y + tick_dir.y * (tick_len_xy + tick_to_text_gap),
+        p.x + tick_dir.x * (tick_len_xy + x_text_gap),
+        p.y + tick_dir.y * (tick_len_xy + x_text_gap),
     };
     if (axes_visible) {
-      add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
+      add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, look().volume_tick_stroke_pt}, false);
     }
     if (pane.x_axis().tick_labels_visible) {
       add_text(list,
@@ -6182,11 +6679,11 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     }
     const Point2d tick_end{p.x + tick_dir.x * tick_len_xy, p.y + tick_dir.y * tick_len_xy};
     const Point2d text_anchor{
-        p.x + tick_dir.x * (tick_len_xy + tick_to_text_gap),
-        p.y + tick_dir.y * (tick_len_xy + tick_to_text_gap),
+        p.x + tick_dir.x * (tick_len_xy + y_text_gap),
+        p.y + tick_dir.y * (tick_len_xy + y_text_gap),
     };
     if (axes_visible) {
-      add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
+      add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, look().volume_tick_stroke_pt}, false);
     }
     if (pane.y_axis().tick_labels_visible) {
       add_text(list,
@@ -6204,11 +6701,11 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
     const Point2d tick_dir = z_parallel_tick_dir;
     const Point2d tick_end{p.x + tick_dir.x * tick_len_z, p.y + tick_dir.y * tick_len_z};
     const Point2d text_anchor{
-        p.x + tick_dir.x * (tick_len_z + tick_to_text_gap),
-        p.y + tick_dir.y * (tick_len_z + tick_to_text_gap),
+        p.x + tick_dir.x * (tick_len_z + z_text_gap),
+        p.y + tick_dir.y * (tick_len_z + z_text_gap),
     };
     if (axes_visible) {
-      add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, 1.16}, false);
+      add_path(list, {p, tick_end}, FillStroke{tick_stroke, {}, true, false, look().volume_tick_stroke_pt}, false);
     }
     if (pane.z_axis().tick_labels_visible) {
       add_text(list,
@@ -6235,7 +6732,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
                x_label_rotation);
     } else {
       add_text(list,
-               {mid.x, mid.y + 58.0},
+               {mid.x, mid.y + look().volume_unparallel_label_below_pt},
                pane.x_axis().label,
                axis_font_size,
                pane.theme_tokens().foreground(),
@@ -6257,7 +6754,7 @@ void render_volume_axes(DrawList& list, const Pane& pane, const PaneLayout& layo
                y_label_rotation);
     } else {
       add_text(list,
-               {mid.x - 24.0, mid.y + 58.0},
+               {mid.x - look().volume_unparallel_y_label_left_pt, mid.y + look().volume_unparallel_label_below_pt},
                pane.y_axis().label,
                axis_font_size,
                pane.theme_tokens().foreground(),
@@ -6327,15 +6824,14 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
             });
           } else if constexpr (std::is_same_v<Payload, Cloud3Data>) {
             const auto cloud = normalize_cloud3(payload);
+            const double radius_scale = cloud.size.radius_scale(look().marker3d_radius_per_sqrt_size, look().min_marker3d_radius_pt);
             Range1d color_range{0.0, 1.0};
             if (payload.color.has_value()) {
               const Series color = flatten_f64(*payload.color);
-              color_range = trace.color_limits().has_value()
-                                ? *trace.color_limits()
-                                : Range1d{scalar_f64(color.min()), scalar_f64(color.max())};
+              color_range = color_range_for(pane, trace, scalar_f64(color.min()), scalar_f64(color.max()));
               if (!(color_range.high > color_range.low)) {
-                color_range.low -= 0.5;
-                color_range.high += 0.5;
+                color_range.low -= look().degenerate_range_half_width;
+                color_range.high += look().degenerate_range_half_width;
               }
             }
             for (std::size_t i = 0; i < cloud.count; ++i) {
@@ -6346,11 +6842,11 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
               if (cloud.color.has_values()) {
                 fill = palette_lookup(trace.palette_ramp(), color_range, cloud.color.at(i));
               }
-              const double radius = std::clamp(std::sqrt(std::max(cloud.size.at(i), 1.0)) * 0.33, 2.0, 11.0);
+              const double radius = std::max(look().min_marker3d_radius_pt, std::sqrt(std::max(cloud.size.at(i), 0.0)) * radius_scale);
               overlays.push_back(OverlayPath{
                   marker_circle(center, radius),
                   project_world(world, pane, bounds).z,
-                  FillStroke{multiply_rgb(fill, 0.55), fill, true, true, 0.8},
+                  FillStroke{multiply_rgb(fill, look().outline_shade), fill, true, true, look().spire_outline_stroke_pt},
                   true,
               });
             }
@@ -6396,7 +6892,7 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
                   polygon.push_back(map_projected_point(vertex, pane, bounds, layout.plot));
                 }
                 depth /= 4.0;
-                const Rgba lit = apply_surface_lighting(fill, trace, pane, face3);
+                const Rgba lit = apply_surface_lighting(fill, trace, pane, face3, bounds);
                 faces.push_back(SurfaceFace{
                     std::move(polygon),
                     depth,
@@ -6413,10 +6909,10 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
             if (levels.empty()) {
               return;
             }
-            Range1d color_range{levels.front(), levels.back()};
+            Range1d color_range = color_range_for(pane, trace, levels.front(), levels.back());
             if (!(color_range.high > color_range.low)) {
-              color_range.low -= 0.5;
-              color_range.high += 0.5;
+              color_range.low -= look().degenerate_range_half_width;
+              color_range.high += look().degenerate_range_half_width;
             }
             for (const IsoTriangle& triangle : extract_isoshell_triangles(*field, levels)) {
               std::vector<Point2d> polygon;
@@ -6441,7 +6937,7 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
                   triangle.vertices[2],
                   triangle.vertices[2],
               }};
-              fill = apply_surface_lighting(fill, trace, pane, tri_cell);
+              fill = apply_surface_lighting(fill, trace, pane, tri_cell, bounds);
               faces.push_back(SurfaceFace{
                   std::move(polygon),
                   depth,
@@ -6493,7 +6989,7 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
                   });
                 }
               }
-              if (trace.annotate_levels() && longest > 28.0) {
+              if (trace.annotate_levels() && longest > look().volume_contour_label_min_length_pt) {
                 std::ostringstream label;
                 label << std::setprecision(3) << level;
                 labels.push_back(OverlayLabel{label_anchor, label.str()});
@@ -6539,13 +7035,8 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
                       {grid->x[i11], grid->y[i11], grid->z[i11]},
                       {grid->x[i10], grid->y[i10], grid->z[i10]},
                   }};
-                  const Point3d normal_cam =
-                      rotate_world(normalize(cross(subtract(cell[1], cell[0]), subtract(cell[3], cell[0]))),
-                                   pane.lens(),
-                                   {0.0, 0.0, 0.0});
-                  if (normal_cam.z <= 0.0) {
-                    continue;
-                  }
+                  // A wireframe is see-through: every cell contributes its edges whichever way it faces, so the lattice
+                  // never disappears when the grid is wound the other way round or the view is turned.
                   const auto& scalar = grid->color.has_value() ? *grid->color : grid->z;
                   append_edge(i00, i01, scalar[i00], scalar[i01]);
                   append_edge(i01, i11, scalar[i01], scalar[i11]);
@@ -6603,7 +7094,7 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
                           0.5 * (u0 + u1),
                           0.5 * (v0 + v1));
                       Rgba fill = palette_lookup(trace.palette_ramp(), color_range, color_value);
-                      fill = apply_surface_lighting(fill, trace, pane, subcell);
+                      fill = apply_surface_lighting(fill, trace, pane, subcell, bounds);
                       faces.push_back(SurfaceFace{
                           std::move(polygon),
                           depth,
@@ -6639,7 +7130,7 @@ void render_volume_traces(DrawList& list, const Pane& pane, const PaneLayout& la
         list,
         label.anchor,
         label.text,
-        10.0,
+        look().volume_contour_label_font_pt,
         pane.theme_tokens().foreground(),
         TextCommand::Align::Middle);
   }
@@ -6662,14 +7153,18 @@ DrawList build_draw_list(const Studio& studio) {
       FillStroke{studio.theme_tokens().background(), studio.theme_tokens().background(), false, true, 0.0},
       true);
 
-  if (!studio.headline_text().empty()) {
-    add_text(
-        list,
-        {studio.extent().width * 0.5, 32.0},
-        studio.headline_text(),
-        18.0,
-        studio.theme_tokens().foreground(),
-        TextCommand::Align::Middle);
+  {
+    const auto lines = headline_lines(studio);
+    const HeadlineStyle headline = headline_style();
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+      add_text(
+          list,
+          {studio.extent().width * 0.5, headline.first_baseline + headline.line_height * static_cast<double>(i)},
+          lines[i],
+          headline.font_size,
+          studio.theme_tokens().foreground(),
+          TextCommand::Align::Middle);
+    }
   }
 
   const auto layouts = layout_panes(studio);
@@ -6706,7 +7201,20 @@ DrawList build_draw_list(const Studio& studio) {
       if (!wedge_only[i]) {
         render_planar_cues(list, pane, layout, bounds, radial_only[i]);
       }
+      const bool clip_traces = !radial_only[i] && !wedge_only[i];
+      if (clip_traces) {
+        // Pad the clip by the widest stroke in the pane, so a line that ends exactly on the edge keeps its full width.
+        double widest_stroke = 0.0;
+        for (const Trace& trace : pane.traces()) {
+          widest_stroke = std::max(widest_stroke, static_cast<double>(trace.stroke_width()));
+        }
+        list.commands.emplace_back(ClipCommand{true, Rect{layout.plot.x - widest_stroke, layout.plot.y - widest_stroke,
+                                                          layout.plot.width + 2.0 * widest_stroke, layout.plot.height + 2.0 * widest_stroke}});
+      }
       render_planar_traces(list, pane, layout, bounds, radial_only[i], wedge_only[i]);
+      if (clip_traces) {
+        list.commands.emplace_back(ClipCommand{false, Rect{}});
+      }
       render_scale_guide(list, pane, layout);
       render_legend(list, pane, layout, pane_command_begin);
     } else {
@@ -6827,7 +7335,7 @@ void append_math_run(std::vector<MathRun>& runs, MathRunKind kind, std::string c
 
 [[nodiscard]] double stretch_delimiter_scale_for_context(std::span<const MathRun> runs, std::size_t idx) {
   if (idx >= runs.size()) {
-    return 1.24;
+    return look().math_delimiter_scale_plain;
   }
   const std::size_t start = idx > 4 ? idx - 4 : 0;
   const std::size_t end = std::min(runs.size(), idx + 5);
@@ -6852,12 +7360,60 @@ void append_math_run(std::vector<MathRun>& runs, MathRunKind kind, std::string c
     }
   }
   if (has_fraction_hint) {
-    return 1.56;
+    return look().math_delimiter_scale_fraction;
   }
   if (has_script) {
-    return 1.40;
+    return look().math_delimiter_scale_script;
   }
-  return 1.24;
+  return look().math_delimiter_scale_plain;
+}
+
+// A share written as a percentage without trailing zeros: 0.72 is "72".
+[[nodiscard]] std::string percent_text(double share) {
+  std::ostringstream out;
+  out << std::setprecision(6) << share * 100.0;
+  return out.str();
+}
+
+// Size and baseline shift of one run of text in a line of mathematics: scripts are smaller and raised or lowered, a
+// stretched delimiter is larger and shifted so that it stays centred on the line.
+struct MathRunGeometry {
+  double size;
+  double rise;
+};
+
+[[nodiscard]] MathRunGeometry math_run_geometry(MathRunKind kind, double base_size, double stretch_scale) {
+  const bool scripted = is_script_run(kind);
+  const bool stretch_delim = is_stretch_delimiter_run(kind);
+  const double size = scripted ? base_size * look().math_script_scale : (stretch_delim ? base_size * stretch_scale : base_size);
+  double rise = 0.0;
+  if (kind == MathRunKind::Superscript) {
+    rise = base_size * look().math_superscript_rise_em;
+  } else if (kind == MathRunKind::Subscript) {
+    rise = -base_size * look().math_subscript_drop_em;
+  } else if (stretch_delim) {
+    rise = -(size - base_size) * look().math_delimiter_shift_share;
+  }
+  return {size, rise};
+}
+
+// The spacing of a stacked fraction, read from the style.
+struct FractionTuning {
+  double script_scale;
+  double numerator_rise_em;
+  double denominator_rise_em;
+  double inner_side_padding_em;
+  double min_width_em;
+  double bar_offset_em;
+  double bar_width_em;
+  double trailing_gap_em;
+};
+
+[[nodiscard]] FractionTuning fraction_tuning() {
+  const StyleOptions& s = look();
+  return {s.math_script_scale, s.math_numerator_rise_em, s.math_denominator_rise_em, s.math_fraction_side_padding_em,
+          s.math_fraction_min_width_em, s.math_fraction_bar_offset_em, s.math_fraction_bar_width_em,
+          s.math_fraction_trailing_gap_em};
 }
 
 enum class PdfFontKind : std::uint8_t {
@@ -6868,7 +7424,7 @@ enum class PdfFontKind : std::uint8_t {
 struct PdfTextChunk {
   PdfFontKind font{PdfFontKind::Helvetica};
   std::string text{};
-  double size{12.0};
+  double size{look().default_text_pt};
   double rise{0.0};
 };
 
@@ -7030,18 +7586,9 @@ void append_pdf_encoded_text(std::vector<PdfTextChunk>& chunks,
   const auto runs = split_math_runs(text);
   for (std::size_t idx = 0; idx < runs.size(); ++idx) {
     const auto& run = runs[idx];
-    const bool scripted = is_script_run(run.kind);
-    const bool stretch_delim = is_stretch_delimiter_run(run.kind);
-    const double stretch_scale = stretch_delimiter_scale_for_context(runs, idx);
-    const double run_size = scripted ? (base_size * 0.72) : (stretch_delim ? (base_size * stretch_scale) : base_size);
-    double rise = 0.0;
-    if (run.kind == MathRunKind::Superscript) {
-      rise = base_size * 0.33;
-    } else if (run.kind == MathRunKind::Subscript) {
-      rise = -base_size * 0.20;
-    } else if (stretch_delim) {
-      rise = -(run_size - base_size) * 0.36;
-    }
+    const MathRunGeometry geometry = math_run_geometry(run.kind, base_size, stretch_delimiter_scale_for_context(runs, idx));
+    const double run_size = geometry.size;
+    const double rise = geometry.rise;
     append_pdf_encoded_text(chunks, run.text, run_size, rise);
   }
   return chunks;
@@ -7219,7 +7766,7 @@ void append_pdf_encoded_text(std::vector<PdfTextChunk>& chunks,
 struct PdfPlacedChunk {
   PdfFontKind font{PdfFontKind::Helvetica};
   std::string text{};
-  double size{12.0};
+  double size{look().default_text_pt};
   double rise{0.0};
   double x_offset{0.0};
 };
@@ -7228,7 +7775,7 @@ struct PdfFractionBar {
   double x0{0.0};
   double x1{0.0};
   double y_offset{0.0};
-  double stroke_width{0.8};
+  double stroke_width{look().default_stroke_pt};
 };
 
 struct PdfTextLayout {
@@ -7268,17 +7815,7 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
 }
 
 [[nodiscard]] PdfTextLayout layout_pdf_text(std::string_view text, double base_size, bool stack_fractions) {
-  struct FractionTuning {
-    double script_scale{0.72};
-    double numerator_rise_em{0.60};
-    double denominator_rise_em{-0.54};
-    double inner_side_padding_em{0.08};
-    double min_width_em{0.74};
-    double bar_offset_em{0.03};
-    double bar_width_em{0.055};
-    double trailing_gap_em{0.10};
-  };
-  static constexpr FractionTuning kFractionTuning{};
+  const FractionTuning kFractionTuning = fraction_tuning();
 
   PdfTextLayout layout;
   layout.chunks.reserve(16);
@@ -7314,7 +7851,7 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
           cursor,
           cursor + frac_width,
           base_size * kFractionTuning.bar_offset_em,
-          std::max(0.6, base_size * kFractionTuning.bar_width_em),
+          std::max(look().math_fraction_min_bar_pt, base_size * kFractionTuning.bar_width_em),
       });
       cursor += frac_width + base_size * kFractionTuning.trailing_gap_em;
       i += 3;
@@ -7322,18 +7859,9 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
     }
 
     const auto& run = runs[i];
-    const bool scripted = is_script_run(run.kind);
-    const bool stretch_delim = is_stretch_delimiter_run(run.kind);
-    const double stretch_scale = stretch_delimiter_scale_for_context(runs, i);
-    const double run_size = scripted ? (base_size * 0.72) : (stretch_delim ? (base_size * stretch_scale) : base_size);
-    double rise = 0.0;
-    if (run.kind == MathRunKind::Superscript) {
-      rise = base_size * 0.33;
-    } else if (run.kind == MathRunKind::Subscript) {
-      rise = -base_size * 0.20;
-    } else if (stretch_delim) {
-      rise = -(run_size - base_size) * 0.36;
-    }
+    const MathRunGeometry geometry = math_run_geometry(run.kind, base_size, stretch_delimiter_scale_for_context(runs, i));
+    const double run_size = geometry.size;
+    const double rise = geometry.rise;
     std::vector<PdfTextChunk> encoded;
     append_pdf_encoded_text(encoded, run.text, run_size, rise);
     append_placed_chunks(layout.chunks, encoded, cursor);
@@ -7354,7 +7882,7 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
       if (lead < 0x80U) {
         units += pdf_glyph_width_units(PdfFontKind::Helvetica, lead);
       } else {
-        units += 600.0;
+        units += look().fallback_glyph_width_units;
       }
       i += len;
     }
@@ -7369,11 +7897,21 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
   out << "<rect x=\"0\" y=\"0\" width=\"" << format_number(list.extent.width) << "\" height=\""
       << format_number(list.extent.height) << "\" fill=\"" << svg_rgb(list.background) << "\" fill-opacity=\""
       << format_number(list.background.alpha) << "\"/>\n";
+  std::size_t clip_counter = 0;
   for (const DrawCommand& command : list.commands) {
     std::visit(
         [&](const auto& item) {
           using Item = std::decay_t<decltype(item)>;
-          if constexpr (std::is_same_v<Item, PathCommand>) {
+          if constexpr (std::is_same_v<Item, ClipCommand>) {
+            if (item.begin) {
+              ++clip_counter;
+              out << "<clipPath id=\"clip" << clip_counter << "\"><rect x=\"" << format_number(item.rect.x) << "\" y=\""
+                  << format_number(item.rect.y) << "\" width=\"" << format_number(item.rect.width) << "\" height=\""
+                  << format_number(item.rect.height) << "\"/></clipPath>\n<g clip-path=\"url(#clip" << clip_counter << ")\">\n";
+            } else {
+              out << "</g>\n";
+            }
+          } else if constexpr (std::is_same_v<Item, PathCommand>) {
             out << "<path d=\"";
             const auto& starts = item.subpath_starts.empty()
                                      ? std::vector<std::size_t>{0U}
@@ -7438,14 +7976,14 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
                   if (run.kind == MathRunKind::Normal) {
                     out << escape_xml(run.text);
                   } else if (run.kind == MathRunKind::Subscript) {
-                    out << "<tspan baseline-shift=\"sub\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
+                    out << "<tspan baseline-shift=\"sub\" font-size=\"" << percent_text(look().math_script_scale) << "%\">" << escape_xml(run.text) << "</tspan>";
                   } else if (run.kind == MathRunKind::StretchDelimiter) {
                     const double scale = stretch_delimiter_scale_for_context(runs, idx);
-                    const double dy_em = -(scale - 1.0) * 0.36;
+                    const double dy_em = -(scale - 1.0) * look().math_delimiter_shift_share;
                     out << "<tspan font-size=\"" << format_number(scale * 100.0) << "%\" dy=\""
                         << format_number(dy_em) << "em\">" << escape_xml(run.text) << "</tspan>";
                   } else {
-                    out << "<tspan baseline-shift=\"super\" font-size=\"72%\">" << escape_xml(run.text) << "</tspan>";
+                    out << "<tspan baseline-shift=\"super\" font-size=\"" << percent_text(look().math_script_scale) << "%\">" << escape_xml(run.text) << "</tspan>";
                   }
                 }
               }
@@ -7453,7 +7991,7 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
             } else {
               struct SvgPlacedText {
                 std::string text{};
-                double size{12.0};
+                double size{look().default_text_pt};
                 double rise{0.0};
                 double x_offset{0.0};
               };
@@ -7461,24 +7999,14 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
                 double x0{0.0};
                 double x1{0.0};
                 double y_offset{0.0};
-                double stroke_width{0.8};
+                double stroke_width{look().default_stroke_pt};
               };
               std::vector<SvgPlacedText> placed{};
               std::vector<SvgFractionBar> bars{};
               placed.reserve(24);
               bars.reserve(4);
 
-              struct FractionTuning {
-                double script_scale{0.72};
-                double numerator_rise_em{0.60};
-                double denominator_rise_em{-0.54};
-                double inner_side_padding_em{0.08};
-                double min_width_em{0.74};
-                double bar_offset_em{0.03};
-                double bar_width_em{0.055};
-                double trailing_gap_em{0.10};
-              };
-              static constexpr FractionTuning kFractionTuning{};
+              const FractionTuning kFractionTuning = fraction_tuning();
 
               double cursor = 0.0;
               std::size_t i = 0;
@@ -7517,7 +8045,7 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
                       cursor,
                       cursor + frac_w,
                       item.size * kFractionTuning.bar_offset_em,
-                      std::max(0.6, item.size * kFractionTuning.bar_width_em),
+                      std::max(look().math_fraction_min_bar_pt, item.size * kFractionTuning.bar_width_em),
                   });
                   cursor += frac_w + item.size * kFractionTuning.trailing_gap_em;
                   i += 3;
@@ -7525,19 +8053,9 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
                 }
 
                 const auto& run = runs[i];
-                const bool scripted = is_script_run(run.kind);
-                const bool stretch_delim = is_stretch_delimiter_run(run.kind);
-                const double stretch_scale = stretch_delimiter_scale_for_context(runs, i);
-                const double run_size =
-                    scripted ? (item.size * 0.72) : (stretch_delim ? (item.size * stretch_scale) : item.size);
-                double rise = 0.0;
-                if (run.kind == MathRunKind::Superscript) {
-                  rise = item.size * 0.33;
-                } else if (run.kind == MathRunKind::Subscript) {
-                  rise = -item.size * 0.20;
-                } else if (stretch_delim) {
-                  rise = -(run_size - item.size) * 0.36;
-                }
+                const MathRunGeometry geometry = math_run_geometry(run.kind, item.size, stretch_delimiter_scale_for_context(runs, i));
+                const double run_size = geometry.size;
+                const double rise = geometry.rise;
                 if (!run.text.empty()) {
                   placed.push_back(SvgPlacedText{std::string(run.text), run_size, rise, cursor});
                 }
@@ -7633,7 +8151,15 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
     std::visit(
         [&](const auto& item) {
           using Item = std::decay_t<decltype(item)>;
-          if constexpr (std::is_same_v<Item, PathCommand>) {
+          if constexpr (std::is_same_v<Item, ClipCommand>) {
+            if (item.begin) {
+              stream << "q " << format_number(item.rect.x) << " " << format_number(list.extent.height - item.rect.y - item.rect.height)
+                     << " " << format_number(item.rect.width) << " " << format_number(item.rect.height) << " re W n\n";
+            } else {
+              stream << "Q\n";
+              active_alpha.reset();  // the graphics state, including the alpha, was restored
+            }
+          } else if constexpr (std::is_same_v<Item, PathCommand>) {
             if (item.points.empty()) {
               return;
             }
@@ -7843,31 +8369,37 @@ void append_placed_chunks(std::vector<PdfPlacedChunk>& placed,
   return pdf.str();
 }
 
-void write_bytes(std::string_view path, const std::string& bytes) {
-  const std::filesystem::path out_path(path);
-  if (out_path.has_parent_path()) {
-    std::filesystem::create_directories(out_path.parent_path());
-  }
-  std::ofstream out(out_path, std::ios::binary);
-  if (!out) {
-    throw std::runtime_error("PlussPl export failed: unable to open output file");
-  }
-  out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
-  if (!out) {
-    throw std::runtime_error("PlussPl export failed: unable to write output file");
-  }
-}
-
 } // namespace
 
 namespace plotism::render {
 
 std::string render_svg(const Studio& studio) {
+  style::Scope scope(studio.style_options());
   return emit_svg(build_draw_list(studio));
 }
 
 std::string render_pdf(const Studio& studio) {
+  style::Scope scope(studio.style_options());
   return emit_pdf(build_draw_list(studio));
+}
+
+void write_bytes(std::string_view path, const std::string& bytes) {
+  const std::filesystem::path out_path(path);
+  if (out_path.has_parent_path()) {
+    std::error_code ec;
+    std::filesystem::create_directories(out_path.parent_path(), ec);
+    if (ec) {
+      PLUSS_FAIL("unable to create the folder for '" + std::string(path) + "': " + ec.message());
+    }
+  }
+  std::ofstream out(out_path, std::ios::binary);
+  if (!out) {
+    PLUSS_FAIL("unable to open '" + std::string(path) + "' for writing");
+  }
+  out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+  if (!out) {
+    PLUSS_FAIL("unable to write '" + std::string(path) + "'");
+  }
 }
 
 void save_svg(const Studio& studio, std::string_view path) {

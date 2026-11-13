@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::load_streams(std::string_view directory) -> Catalog
+Catalog Catalog::load_streams(std::string_view directory)
 ```
 
 ## What It Does

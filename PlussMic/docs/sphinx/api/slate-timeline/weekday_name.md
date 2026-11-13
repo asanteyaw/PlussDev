@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::weekday_name() const -> Slate
+Slate SlateTimelineAccessor::weekday_name() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::tz(std::string_view name) const -> Slate
+Slate SlateTimelineAccessor::tz(std::string_view name) const
 ```
 
 ## What It Does

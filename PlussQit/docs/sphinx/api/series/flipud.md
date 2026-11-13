@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::flipud() const -> Series
+Series Series::flipud() const
 ```
 
 ## What It Does

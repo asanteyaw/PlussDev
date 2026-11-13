@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Registry::defined() const noexcept -> bool
+bool Registry::defined() const noexcept
 ```
 
 ## What It Does

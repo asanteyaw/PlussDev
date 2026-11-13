@@ -12,172 +12,161 @@ Pane& Studio::pane2(std::string title = {})
 
 ## What It Does
 
-Creates a new 2D (`PaneKind::Planar`) pane, appends it to the figure, and returns a
-reference to it. This is the primary entry point for building an ordinary 2D figure —
-every `flash::` plotting function (`lineplot`, `scatterplot`, `barplot`, ...) takes a
-`Pane&` to draw into, and `pane2()` is how that `Pane` gets created in the first place.
+Adds a two-dimensional pane to the figure and returns it. A pane is one plot area with its own axes, title, legend and traces; the figure is the canvas that holds them. `pane2` makes a planar pane, the kind that takes `trend`, `cloud`, `columns`, `bucket`, `wedge`, `fieldmap` and the other 2D traces; [`pane3`](pane3.md) makes the volumetric kind.
 
-Each new pane automatically inherits the figure's current
-[`context_scales()`](context_scales.md) (`tick_font_scale`/`axis_label_font_scale`) at the
-moment of creation, and — if [`pane_style_defaults()`](pane_style_defaults.md) is
-currently active — also inherits its captured theme/grid/legend/axes-visible template.
-Both are creation-time snapshots: changing either setting afterward has no retroactive
-effect on panes already created. See Example 4.
+The returned reference stays valid for the life of the figure, however many panes are added after it, so it can be kept and configured later. Panes are placed in creation order: with no [`mosaic`](mosaic.md) they stack top to bottom, and with a mosaic they fill the grid row by row, or go where [`Pane::place`](../pane/place.md) puts them. The title is drawn above the pane; an empty title (the default) draws none.
 
-With no explicit call to [`mosaic()`](mosaic.md), panes render stacked top-to-bottom in
-creation order; call `mosaic(rows, cols)` to arrange multiple panes into an explicit grid.
-
-```{important} The returned Pane& is invalidated by later pane-creation calls
-Panes are stored in a `std::vector<Pane>` internally. Every `pane2()`, `pane3()`,
-`subpane2()`, or `subpane3()` call may reallocate that vector, which **invalidates every
-`Pane&` obtained from an earlier call** — using a stale reference afterward is undefined
-behavior. There is no mutable, index-based way to re-fetch a `Pane&` later either: `panes()`
-only returns `const std::vector<Pane>&`. The safe pattern, used throughout every example on
-this page and every other Studio page, is to fully configure and plot into each pane
-**immediately** after creating it, before creating the next one. If a durable *identifier*
-is needed later (not a mutable reference), capture it immediately via
-[`pane_index()`](pane_index.md) — see that page's own important callout, which shows this
-exact hazard triggering a real, observed failure.
-```
+A new pane copies the figure's settings at that moment: the figure's theme ([`theme`](theme.md)), the font scales ([`context_scales`](context_scales.md)) and, when set, the style defaults ([`pane_style_defaults`](pane_style_defaults.md)). Changing those later affects only panes created afterwards.
 
 ## Parameters
 
-**title** (`std::string`, default `{}`)
-    The pane's title, drawn above the pane's plot area. An empty title (the default) draws
-    no title text at all — see Example 1.
+**title** (`std::string`, default empty)
+    The pane's title. Empty draws none.
 
 ## Returns
 
 `Pane&`
-    A reference to the newly created pane, valid until the next pane-creation call (see the
-    important callout above).
+    The new pane, valid for the life of the figure.
 
 ## Examples
 
-Example 1. The default: no title argument, so the pane has no title text.
+Example 1. With and without a title. The first pane has none, so nothing is drawn above it; the second is titled.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("pane2_default_title");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
-
-std::cout << pane.title_text().empty() << "\n";
+auto fig = studio("pane2_title");
+fig.mosaic(1, 2);
+auto& plain = fig.pane2();
+plain.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+auto& titled = fig.pane2("Titled pane");
+titled.trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+std::cout << "first title: '" << plain.title_text() << "', second: '" << titled.title_text() << "'\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
+first title: '', second: 'Titled pane'
 ```
 
-![Output of Example 1](img/pane2-1-default-title.svg)
+![Output of Example 1](img/pane2-1-title.svg)
 
-Example 2. An explicit title.
+Example 2. Stacked by default. With no mosaic, panes stack top to bottom in creation order.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("pane2_with_title");
-auto& pane = fig.pane2("Revenue by Quarter");
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
-
-std::cout << pane.title_text() << "\n";
+auto fig = studio("pane2_stack");
+fig.pane2("first").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+std::cout << "panes: " << fig.pane_count() << ", mosaic active: " << fig.mosaic_layout().active << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-Revenue by Quarter
+panes: 2, mosaic active: 0
 ```
 
-![Output of Example 2](img/pane2-2-with-title.svg)
+![Output of Example 2](img/pane2-2-stack.svg)
 
-Example 3. Three panes, each fully configured and plotted immediately after creation —
-the safe ordering — then arranged into a `1x3` mosaic.
+Example 3. On a grid. With `mosaic(2, 2)` four panes fill the cells row by row, and the first pane is the top-left cell.
 
 ```cpp
-using namespace pluss::pl;
+auto fig = studio("pane2_grid");
+fig.mosaic(2, 2);
+for (int i = 0; i < 4; ++i) {
+  fig.pane2("cell " + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2.0 + i, 4.0, 3.0});
+}
+fig.save_svg("figure.svg");
+```
 
-auto fig = studio("pane2_multiple");
+![Output of Example 3](img/pane2-3-grid.svg)
+
+Example 4. The reference stays valid. The first pane is configured after twenty more have been created, and it is the same object `panes()` holds.
+
+```cpp
+auto fig = studio("pane2_stable");
 auto& first = fig.pane2("first");
-first.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-auto& second = fig.pane2("second");
-second.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{3.0, 5.0, 4.0});
-auto& third = fig.pane2("third");
-third.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{4.0, 6.0, 5.0});
-fig.mosaic(1, 3);
-fig.show();
-
-std::cout << fig.pane_count() << "\n";
+for (int i = 0; i < 20; ++i) fig.pane2("later " + std::to_string(i));
+first.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+first.title("configured late");
+std::cout << "same object: " << (&fig.panes()[0] == &first) << ", title: " << fig.panes()[0].title_text() << "\n";
+fig.mosaic(3, 7);
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-3
+same object: 1, title: configured late
 ```
 
-![Output of Example 3](img/pane2-3-multiple.svg)
+![Output of Example 4](img/pane2-4-stable.svg)
 
-Example 4. A [`pane_style_defaults()`](pane_style_defaults.md) template applied before
-`pane2()` — the new pane picks up the template's grid style.
+Example 5. Settings are copied at creation. The pane created before `context_scales` and `theme` keeps its old settings; the one created after takes the new ones.
 
 ```cpp
-using namespace pluss::pl;
-
-Pane style_template(PaneKind::Planar, Theme::paper());
-style_template.grid(GridStyle::MajorMinor);
-
-auto fig = studio("pane2_with_style_defaults");
-fig.pane_style_defaults(style_template);
-auto& styled = fig.pane2("styled");
-styled.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-fig.show();
-
-std::cout << static_cast<int>(styled.grid_style()) << "\n";  // GridStyle::MajorMinor == 2
+auto fig = studio("pane2_snapshots");
+fig.mosaic(1, 2);
+fig.pane2("before").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.context_scales(1.6, 1.4);
+fig.theme(Theme::ocean());
+fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+std::cout << "before: tick scale " << fig.panes()[0].tick_font_scale() << ", " << fig.panes()[0].theme_tokens().name() << "\n";
+std::cout << "after:  tick scale " << fig.panes()[1].tick_font_scale() << ", " << fig.panes()[1].theme_tokens().name() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-2
+before: tick scale 1, paper
+after:  tick scale 1.6, ocean
 ```
 
-![Output of Example 4](img/pane2-4-style-defaults.svg)
+![Output of Example 5](img/pane2-5-snapshots.svg)
+
+Example 6. More panes than cells. A third pane in a 1 by 2 mosaic is created without complaint, because the grid could still change, and rendering the figure reports it.
+
+```cpp
+auto fig = studio("pane2_too_many");
+fig.mosaic(1, 2);
+for (int i = 0; i < 3; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+try {
+  fig.to_svg();
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
+}
+auto fits = studio("pane2_fits");
+fits.mosaic(2, 2);
+for (int i = 0; i < 3; ++i) fits.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fits.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+mosaic has no free cells left for pane placement
+```
+
+![Output of Example 6](img/pane2-6-too_many.svg)
 
 ## Notes
 
-- Not `noexcept` — constructs a `Pane` and may reallocate the internal vector.
-- Creates a `PaneKind::Planar` pane; use [`pane3()`](pane3.md) for a 3D (`Volumetric`)
-  pane instead.
-- Snapshots `context_scales()` and (if enabled) `pane_style_defaults()` at creation time —
-  neither retroactively affects panes already created, nor is refreshed on panes created
-  before the setting changed. See [`theme`](theme.md) for the same timing rule applied to
-  the figure's overall theme.
-- See the important callout above: the returned `Pane&` is invalidated by any subsequent
-  `pane2()`/`pane3()`/`subpane2()`/`subpane3()` call. Configure and plot into each pane
-  before creating the next.
-- With no [`mosaic()`](mosaic.md) call, panes stack top-to-bottom in creation order.
+- Not `noexcept`. It never fails for a bad title; any text is accepted.
+- Hide a pane with [`Pane::hide`](../pane/visible.md); it keeps its place in the list and its cell in the grid.
 
 ## See Also
 
 - [`Studio::pane3`](pane3.md): the 3D counterpart.
-- [`Studio::pane_index`](pane_index.md): the only way to get a durable *identifier* (not a
-  mutable reference) for a pane after creating others.
-- [`Studio::subpane2`](subpane2.md): creates a pane occupying a sub-cell within another
-  pane's own local grid, rather than a top-level mosaic cell.
-- [`Studio::pane_style_defaults`](pane_style_defaults.md) / [`context_scales`](context_scales.md):
-  the two creation-time snapshots every new pane picks up.
-- [`Studio::mosaic`](mosaic.md): arranges panes into an explicit row/column grid.
+- [`Studio::subpane2`](subpane2.md): a pane inside another pane's grid.
+- [`Studio::panes`](panes.md), [`pane_index`](pane_index.md): find panes again.
+- [`Studio::mosaic`](mosaic.md): the grid panes are placed on.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clear_row_titles.html">
+  <a class="prev-link" href="name.html">
     <span class="label">Previous</span>
-    <span class="title">clear_row_titles</span>
+    <span class="title">name</span>
   </a>
   <a class="next-link" href="pane3.html">
     <span class="label">Next</span>

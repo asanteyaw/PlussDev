@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::grain_audit(std::string_view table) const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::grain_audit(std::string_view table) const
 ```
 
 ## What It Does

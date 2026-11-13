@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFrame::mod(double other) const -> DataFrame
-DataFrame::mod(const DataFrame& other) const -> DataFrame
-DataFrame::mod(const DataFrame& other, const AlignOptions& options) const -> DataFrame
-DataFrame::mod(const Slate& other, Axis axis = Axis::Feature) const -> DataFrame
-DataFrame::mod(const Slate& other, Axis axis, const AlignOptions& options) const -> DataFrame
-DataFrame::mod(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const -> DataFrame
+DataFrame DataFrame::mod(double other) const
+DataFrame DataFrame::mod(const DataFrame& other) const
+DataFrame DataFrame::mod(const DataFrame& other, const AlignOptions& options) const
+DataFrame DataFrame::mod(const Slate& other, Axis axis = Axis::Feature) const
+DataFrame DataFrame::mod(const Slate& other, Axis axis, const AlignOptions& options) const
+DataFrame DataFrame::mod(const Slate& other, const AlignOptions& options, Axis axis = Axis::Feature) const
 ```
 
 ## What It Does

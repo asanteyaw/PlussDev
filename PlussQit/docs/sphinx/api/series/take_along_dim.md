@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::take_along_dim(const Series& index) const -> Series
-Series::take_along_dim(const Series& index, std::int64_t dim) const -> Series
+Series Series::take_along_dim(const Series& index) const
+Series Series::take_along_dim(const Series& index, std::int64_t dim) const
 ```
 
 ## What It Does

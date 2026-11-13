@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::mode() const -> Series
-Series::mode(std::int64_t dim) const -> Series
+Series Series::mode() const
+Series Series::mode(std::int64_t dim) const
 ```
 
 ## What It Does

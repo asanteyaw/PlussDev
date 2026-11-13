@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::inner(const Series& other) const -> Series
+Series Series::inner(const Series& other) const
 ```
 
 ## What It Does

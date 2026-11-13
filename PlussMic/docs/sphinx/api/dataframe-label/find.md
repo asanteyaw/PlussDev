@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::find(const Slate& targets) const -> Slate
+Slate DataFrameLabelAccessor::find(const Slate& targets) const
 ```
 
 ## What It Does

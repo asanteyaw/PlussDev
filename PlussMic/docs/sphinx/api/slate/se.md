@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::se(ErrorTarget target = ErrorTarget::Mean, const StatisticOptions& options = {}) const -> SlateValue
+SlateValue Slate::se(ErrorTarget target = ErrorTarget::Mean, const StatisticOptions& options = {}) const
 ```
 
 ## What It Does

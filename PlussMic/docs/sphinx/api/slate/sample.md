@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-Slate::sample(std::int64_t n) const -> Slate
-Slate::sample(std::int64_t n, std::uint64_t random_state, bool replace = false) const -> Slate
+Slate Slate::sample(std::int64_t n) const
+Slate Slate::sample(std::int64_t n, std::uint64_t random_state, bool replace = false) const
 
 template <class Float> requires std::floating_point<Float>
-Slate::sample(Float frac) const -> Slate
+Slate Slate::sample(Float frac) const
 template <class Float> requires std::floating_point<Float>
-Slate::sample(Float frac, std::uint64_t random_state, bool replace = false) const -> Slate
+Slate Slate::sample(Float frac, std::uint64_t random_state, bool replace = false) const
 ```
 
 ## What It Does

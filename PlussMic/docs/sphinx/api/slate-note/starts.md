@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::starts(std::string_view prefix) const -> Slate
+Slate SlateNoteAccessor::starts(std::string_view prefix) const
 ```
 
 ## What It Does

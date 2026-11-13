@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::intersect(const Slate& other) const -> Slate
+Slate DataFrameLabelAccessor::intersect(const Slate& other) const
 ```
 
 ## What It Does

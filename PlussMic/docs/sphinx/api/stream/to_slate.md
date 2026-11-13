@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Stream::to_slate() const -> pluss::table::Slate
-Stream::to_slate(std::int64_t start, std::int64_t stop) const -> pluss::table::Slate
+pluss::table::Slate Stream::to_slate() const
+pluss::table::Slate Stream::to_slate(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does

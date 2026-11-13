@@ -7,9 +7,9 @@
 ## Signatures
 
 ```cpp
-Series::pos(std::int64_t index) const -> Series
-Series::pos(std::int64_t row, std::int64_t col) const -> Series
-Series::pos(std::int64_t i, std::int64_t j, std::int64_t k) const -> Series
+Series Series::pos(std::int64_t index) const
+Series Series::pos(std::int64_t row, std::int64_t col) const
+Series Series::pos(std::int64_t i, std::int64_t j, std::int64_t k) const
 ```
 
 ## What It Does

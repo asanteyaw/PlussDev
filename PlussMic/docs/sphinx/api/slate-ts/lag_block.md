@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::lag_block(pluss::msharp::RangeView::Int lags) const -> DataFrame
+DataFrame TimeSeriesAccessor::lag_block(pluss::msharp::RangeView::Int lags) const
 ```
 
 ## What It Does

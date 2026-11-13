@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::matmul(const DataFrame& other) const -> DataFrame
+DataFrame DataFrame::matmul(const DataFrame& other) const
 ```
 
 ## What It Does

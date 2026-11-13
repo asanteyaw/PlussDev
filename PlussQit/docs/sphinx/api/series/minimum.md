@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::minimum(const Series& rhs) const -> Series
-Series::minimum(double rhs) const -> Series
+Series Series::minimum(const Series& rhs) const
+Series Series::minimum(double rhs) const
 Series& Series::minimum_(double rhs)
 ```
 

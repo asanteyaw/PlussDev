@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::flatten() const -> Series
-Series::flatten(std::int64_t start_dim) const -> Series
-Series::flatten(std::int64_t start_dim, std::int64_t end_dim) const -> Series
+Series Series::flatten() const
+Series Series::flatten(std::int64_t start_dim) const
+Series Series::flatten(std::int64_t start_dim, std::int64_t end_dim) const
 ```
 
 ## What It Does

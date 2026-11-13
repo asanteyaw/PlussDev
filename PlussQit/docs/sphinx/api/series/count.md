@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::count(bool count_true = true) const -> Series
+Series Series::count(bool count_true = true) const
 ```
 
 ## What It Does

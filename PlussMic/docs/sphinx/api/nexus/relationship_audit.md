@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::relationship_audit(std::string_view name) const -> DataFrame
+DataFrame Nexus::relationship_audit(std::string_view name) const
 ```
 
 ## What It Does

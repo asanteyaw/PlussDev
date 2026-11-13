@@ -23,8 +23,7 @@ field is a `std::optional`, applied — in this fixed order — only when set: `
 
 Because `preset` runs first, setting both `preset` and one of the individual fields lets
 you start from a named style and override just the pieces you want changed — the same
-pattern [`flash::scene3d`](scene3d.md) uses for pane-level scene configuration. Directly
-verified: `Trace3DOptions{.preset = Surface}` alone renders byte-identical to a direct
+pattern [`flash::scene3d`](scene3d.md) uses for pane-level scene configuration. `Trace3DOptions{.preset = Surface}` alone renders identical to a direct
 `flash::trace_preset3d(trace, TracePreset3D::Surface)` call.
 
 ## Parameters
@@ -53,8 +52,8 @@ verified: `Trace3DOptions{.preset = Surface}` alone renders byte-identical to a 
 
 ## Examples
 
-Example 1 (verification, not a distinct rendering). `Trace3DOptions{.preset = Surface}`
-alone renders byte-identical to `flash::trace_preset3d(trace, TracePreset3D::Surface)`.
+Example 1 (a comparison, not a new picture). `Trace3DOptions{.preset = Surface}`
+alone renders identical to `flash::trace_preset3d(trace, TracePreset3D::Surface)`.
 
 ```cpp
 using namespace pluss::pl;
@@ -94,8 +93,8 @@ auto fig = studio("flash_trace3d_custom");
 auto& pane = fig.pane3();
 auto gx = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
 auto gy = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
-auto gz = gx.reshape({1, 24}).tile({24, 1}).mul(0.6).sin()
-            .add(gy.reshape({24, 1}).tile({1, 24}).mul(0.7).cos());
+auto gz = gx.reshape({1, 24}).repeat({24, 1}).mul(0.6).sin()
+            .add(gy.reshape({24, 1}).repeat({1, 24}).mul(0.7).cos());
 
 flash::scene_preset3d(pane, flash::ScenePreset3D::Presentation);
 auto& trace = pane.sheet(gx, gy, gz);
@@ -119,8 +118,8 @@ auto fig = studio("flash_trace3d_wireframe");
 auto& pane = fig.pane3();
 auto gx = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
 auto gy = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
-auto gz = gx.reshape({1, 24}).tile({24, 1}).mul(0.6).sin()
-            .add(gy.reshape({24, 1}).tile({1, 24}).mul(0.7).cos());
+auto gz = gx.reshape({1, 24}).repeat({24, 1}).mul(0.6).sin()
+            .add(gy.reshape({24, 1}).repeat({1, 24}).mul(0.7).cos());
 
 flash::scene_preset3d(pane, flash::ScenePreset3D::Survey);
 auto& trace = pane.lattice(gx, gy, gz);

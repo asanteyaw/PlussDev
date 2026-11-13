@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::shift(std::int64_t periods = 1) const -> Slate
+Slate Slate::shift(std::int64_t periods = 1) const
 ```
 
 ## What It Does

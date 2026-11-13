@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrameLabelAccessor::rename(pluss::msharp::RangeView::Of<DataFrame::LabelRename> renames) const -> DataFrame
-DataFrameLabelAccessor::rename(std::initializer_list<DataFrame::LabelRename> renames) const -> DataFrame
+DataFrame DataFrameLabelAccessor::rename(pluss::msharp::RangeView::Of<DataFrame::LabelRename> renames) const
+DataFrame DataFrameLabelAccessor::rename(std::initializer_list<DataFrame::LabelRename> renames) const
 ```
 
 ## What It Does

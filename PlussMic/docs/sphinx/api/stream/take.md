@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::take(std::span<const std::int64_t> indices) const -> Stream
+Stream Stream::take(std::span<const std::int64_t> indices) const
 ```
 
 ## What It Does

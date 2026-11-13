@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::head(std::int64_t n) const -> Stream
+Stream Stream::head(std::int64_t n) const
 ```
 
 ## What It Does

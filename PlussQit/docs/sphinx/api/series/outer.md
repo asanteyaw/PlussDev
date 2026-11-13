@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::outer(const Series& other) const -> Series
+Series Series::outer(const Series& other) const
 ```
 
 [`ger()`](ger.md) is an exact alias.

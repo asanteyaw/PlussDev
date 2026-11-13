@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::corr_with(const Slate& other, SlateCorrMethod method = SlateCorrMethod::Pearson, std::int64_t min_count = 1) const -> SlateValue
+SlateValue Slate::corr_with(const Slate& other, SlateCorrMethod method = SlateCorrMethod::Pearson, std::int64_t min_count = 1) const
 ```
 
 ## What It Does

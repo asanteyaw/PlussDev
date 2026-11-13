@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::nkeys() const -> std::int64_t
+std::int64_t Archive::nkeys() const
 ```
 
 ## What It Does

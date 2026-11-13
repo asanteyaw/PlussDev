@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::ncases() const -> std::int64_t
+std::int64_t DataFrame::ncases() const
 ```
 
 ## What It Does

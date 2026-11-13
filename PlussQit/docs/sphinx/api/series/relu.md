@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::relu() const -> Series
+Series Series::relu() const
 Series& Series::relu_()
 ```
 

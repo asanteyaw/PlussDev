@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::nfeatures() const -> std::int64_t
+std::int64_t DataFrame::nfeatures() const
 ```
 
 ## What It Does

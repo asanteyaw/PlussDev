@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::freq(FreqOptions options = {}) const -> Stream
+Stream Stream::freq(FreqOptions options = {}) const
 ```
 
 ### `FreqOptions` fields

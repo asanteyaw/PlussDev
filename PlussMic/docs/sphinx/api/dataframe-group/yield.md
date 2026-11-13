@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameGrouped::yield() const -> DataFrame
+DataFrame DataFrameGrouped::yield() const
 ```
 
 ## What It Does

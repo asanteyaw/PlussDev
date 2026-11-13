@@ -7,9 +7,9 @@
 ## Signatures
 
 ```cpp
-Series::index_put(pluss::RangeView<Series> indices, const Series& values, bool accumulate) const -> Series
-Series::index_put(std::initializer_list<Series> indices, const Series& values, bool accumulate) const -> Series
-Series::index_put(std::int64_t index, const Series& values) const -> Series
+Series Series::index_put(pluss::RangeView<Series> indices, const Series& values, bool accumulate) const
+Series Series::index_put(std::initializer_list<Series> indices, const Series& values, bool accumulate) const
+Series Series::index_put(std::int64_t index, const Series& values) const
 ```
 
 ## What It Does

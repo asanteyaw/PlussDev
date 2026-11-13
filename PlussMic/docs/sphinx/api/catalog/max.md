@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-Catalog::max() const -> Catalog
-Catalog::max(pluss::kindle::ReduceAxis axis) const -> Catalog
-Catalog::max(const pluss::kindle::CatalogReduceOptions& options) const -> Catalog
+Catalog Catalog::max() const
+Catalog Catalog::max(pluss::kindle::ReduceAxis axis) const
+Catalog Catalog::max(const pluss::kindle::CatalogReduceOptions& options) const
 ```
 
 ## What It Does

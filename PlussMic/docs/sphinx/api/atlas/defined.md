@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::defined() const noexcept -> bool
+bool Atlas::defined() const noexcept
 ```
 
 ## What It Does

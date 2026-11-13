@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::ger(const Series& other) const -> Series
+Series Series::ger(const Series& other) const
 ```
 
 ## What It Does

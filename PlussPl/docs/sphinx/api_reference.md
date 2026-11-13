@@ -18,6 +18,14 @@ This hub is organized by surface area.
   `color_limits`, `shade`, `lighting`, `material`, `transparent`, `annotate_levels`) and
   visibility (`visible`/`hide`/`show`).
 
+## Types and options
+
+- [Types and Options Reference](types_api_reference.md)
+  The option types the methods above take (`KeyPlace`, `GridStyle`, `ScalePolicy`, `LimitMethod`,
+  `TickFormat`, `Lens`, `LightRig`, `ShadeMode`, `LightingMode`, `MaterialProfile`, `Rgba`,
+  `PaletteRamp`, `Theme`, and more to come) — one page per type with a table of every value or
+  field, and a rendered demonstration of each value.
+
 ## flash:: high-level plotting
 
 - [flash API Reference](flash_api_reference.md)

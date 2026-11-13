@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::lower() const -> Slate
+Slate SlateNoteAccessor::lower() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::grouped_min(const Series& group_ids, std::int64_t group_count) const -> Series
+Series Series::grouped_min(const Series& group_ids, std::int64_t group_count) const
 ```
 
 ## What It Does

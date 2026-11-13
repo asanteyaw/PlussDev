@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::empty() const -> bool
+bool Atlas::empty() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::softmax(std::int64_t dim) const -> Series
+Series Series::softmax(std::int64_t dim) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::save(std::string_view directory, const StoreOptions& options = {}) const -> void
+void Nexus::save(std::string_view directory, const StoreOptions& options = {}) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::save_as(std::string_view target_type, std::string_view filename, const pluss::loader::Config& config = {}) const -> void
+void Catalog::save_as(std::string_view target_type, std::string_view filename, const pluss::loader::Config& config = {}) const
 ```
 
 ## What It Does

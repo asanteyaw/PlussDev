@@ -8,10 +8,10 @@
 ## Signature
 
 ```cpp
-DataFramePlotAccessor::andrews_curves(
+pluss::pl::Studio DataFramePlotAccessor::andrews_curves(
     pluss::msharp::RangeView::Of<std::string_view> features = {},
     std::optional<std::string_view> class_feature = std::nullopt,
-    const AndrewsCurvesPlotOptions& options = {}) const -> pluss::pl::Studio
+    const AndrewsCurvesPlotOptions& options = {}) const
 ```
 
 ## What It Does

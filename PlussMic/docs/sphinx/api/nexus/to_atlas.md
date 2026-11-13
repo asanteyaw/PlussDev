@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Nexus::to_atlas(std::initializer_list<std::string_view> keys, std::optional<Slate> labels = std::nullopt) const -> Atlas
-Nexus::to_atlas(pluss::msharp::RangeView::Of<std::string_view> keys, std::optional<Slate> labels = std::nullopt) const -> Atlas
+Atlas Nexus::to_atlas(std::initializer_list<std::string_view> keys, std::optional<Slate> labels = std::nullopt) const
+Atlas Nexus::to_atlas(pluss::msharp::RangeView::Of<std::string_view> keys, std::optional<Slate> labels = std::nullopt) const
 template <detail::StringViewNameRange NameRange>
-Nexus::to_atlas(const NameRange& keys, std::optional<Slate> labels = std::nullopt) const -> Atlas
+Atlas Nexus::to_atlas(const NameRange& keys, std::optional<Slate> labels = std::nullopt) const
 ```
 
 ## What It Does

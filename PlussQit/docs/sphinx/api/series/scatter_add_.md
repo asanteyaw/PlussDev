@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::scatter_add_(std::int64_t dim, const Series& index, const Series& src) const -> Series&
+Series& Series::scatter_add_(std::int64_t dim, const Series& index, const Series& src) const
 ```
 
 ## What It Does

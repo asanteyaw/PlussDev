@@ -8,19 +8,19 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                                    std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                                      std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
-                                    std::optional<std::string_view> x_feature,
-                                    const BarStackedPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(pluss::msharp::RangeView::Of<std::string_view> y_features,
+                                                      std::optional<std::string_view> x_feature,
+                                                      const BarStackedPlotOptions& options) const
 
-DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features,
-                                    std::optional<std::string_view> x_feature = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features,
+                                                      std::optional<std::string_view> x_feature = std::nullopt) const
 
-DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features,
-                                    std::optional<std::string_view> x_feature,
-                                    const BarStackedPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::bar_stacked(std::initializer_list<std::string_view> y_features,
+                                                      std::optional<std::string_view> x_feature,
+                                                      const BarStackedPlotOptions& options) const
 ```
 
 ## What It Does

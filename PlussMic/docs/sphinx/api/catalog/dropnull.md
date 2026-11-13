@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::dropnull() const -> Catalog
+Catalog Catalog::dropnull() const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateNoteAccessor::titlecase() const -> Slate
+Slate SlateNoteAccessor::titlecase() const
 ```
 
 ## What It Does

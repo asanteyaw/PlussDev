@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::clip(double min_value, double max_value) const -> DataFrame
+DataFrame DataFrame::clip(double min_value, double max_value) const
 ```
 
 ## What It Does

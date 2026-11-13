@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::take(pluss::msharp::RangeView::Int indices) const -> Slate
+Slate DataFrameLabelAccessor::take(pluss::msharp::RangeView::Int indices) const
 ```
 
 ## What It Does

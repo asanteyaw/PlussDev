@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::lgamma() const -> Series
+Series Series::lgamma() const
 Series& Series::lgamma_()
 Series& Series::lgamma_()
 ```

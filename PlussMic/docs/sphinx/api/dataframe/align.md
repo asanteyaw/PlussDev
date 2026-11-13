@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::align(const AlignSpec& spec) const -> DataFrame
-DataFrame::align(const Slate& new_label) const -> DataFrame
+DataFrame DataFrame::align(const AlignSpec& spec) const
+DataFrame DataFrame::align(const Slate& new_label) const
 ```
 
 ## What It Does

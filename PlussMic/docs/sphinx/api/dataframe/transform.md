@@ -9,15 +9,15 @@
 
 ```cpp
 // Whole-frame, slate-wise
-DataFrame::transform(const std::function<Slate(const Slate&)>& fn) const -> DataFrame
-DataFrame::transform(const std::function<Slate(const Slate&)>& fn, Axis axis) const -> DataFrame  // axis must be Axis::Feature
+DataFrame DataFrame::transform(const std::function<Slate(const Slate&)>& fn) const
+DataFrame DataFrame::transform(const std::function<Slate(const Slate&)>& fn, Axis axis) const  // axis must be Axis::Feature
 
 // One or several features via structured specs
-DataFrame::transform(pluss::RangeView<TransformSpec> specs) const -> DataFrame
+DataFrame DataFrame::transform(pluss::RangeView<TransformSpec> specs) const
 
 // Row-wise (Axis::Case only)
-DataFrame::transform(const std::function<SlateValue(const DataFrame&)>& fn, Axis axis) const -> Slate
-DataFrame::transform(const std::function<DataFrame(const DataFrame&)>& fn, Axis axis, ResultShape shape = ResultShape::Infer) const -> DataFrame
+Slate DataFrame::transform(const std::function<SlateValue(const DataFrame&)>& fn, Axis axis) const
+DataFrame DataFrame::transform(const std::function<DataFrame(const DataFrame&)>& fn, Axis axis, ResultShape shape = ResultShape::Infer) const
 ```
 
 ## What It Does

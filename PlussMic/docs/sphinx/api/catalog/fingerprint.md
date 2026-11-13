@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::fingerprint() -> std::uint64_t
+std::uint64_t Catalog::fingerprint()
 ```
 
 ## What It Does

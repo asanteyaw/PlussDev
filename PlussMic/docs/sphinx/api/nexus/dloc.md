@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::dloc(std::int64_t index) const -> DataFrame
+DataFrame Nexus::dloc(std::int64_t index) const
 ```
 
 ## What It Does

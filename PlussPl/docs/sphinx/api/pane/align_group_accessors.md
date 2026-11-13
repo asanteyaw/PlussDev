@@ -1,10 +1,10 @@
 <!-- pluss-hand-authored -->
 
-# Pane::x_align_group / y_align_group / z_align_group
+# Pane::x_align_group, y_align_group, z_align_group
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 const std::string& Pane::x_align_group() const noexcept
@@ -14,11 +14,9 @@ const std::string& Pane::z_align_group() const noexcept
 
 ## What It Does
 
-Three read-only accessors, one per axis, each returning the current alignment-group
-string set by [`align_x()`](align_x.md)/[`align_y()`](align_y.md)/[`align_z()`](align_z.md)
-(or the combined [`align_xy()`](align_xy.md)/[`align_xyz()`](align_xyz.md)). Empty by
-default on a fresh pane, and after [`clear_x_align()`](align_x.md)/
-[`clear_y_align()`](align_y.md)/[`clear_z_align()`](align_z.md)/[`clear_align()`](clear_align.md).
+Read the alignment group of one axis of the pane: the name set by [`align_x`](align_x.md), [`align_y`](align_y.md), [`align_z`](align_z.md), [`align_xy`](align_xy.md) or [`align_xyz`](align_xyz.md). The string is empty when the axis is in no group, which is the state of a new pane and the state after a `clear_*_align` call.
+
+Call them to check which panes share a range (a mistyped group name shows up here as a group of one), to find the panes of a group in code that builds figures from a list, and to copy one pane's grouping onto another. They report the name only; the shared range is worked out when the figure is drawn.
 
 ## Parameters
 
@@ -27,60 +25,111 @@ default on a fresh pane, and after [`clear_x_align()`](align_x.md)/
 ## Returns
 
 `const std::string&`
-    The current alignment-group string for that axis, or empty if never set (or cleared).
+    The group name of that axis, empty for none. The reference is to the pane's own string and follows later calls; copy it to keep the value.
 
 ## Examples
 
-Example 1. Reading back a mix of group assignments across all three axes.
+Example 1. A new pane is in no group on any axis.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("align_group_accessors_check");
-auto& pane = fig.pane3();
-pane.path3(std::vector<double>{1.0, 2.0}, std::vector<double>{1.0, 2.0}, std::vector<double>{1.0, 2.0});
-
-std::cout << pane.x_align_group().empty() << "\n";
-
-pane.align_x("time");
-pane.align_y("amplitude");
-pane.align_z("depth");
-
-std::cout << pane.x_align_group() << " " << pane.y_align_group() << " " << pane.z_align_group() << "\n";
-fig.show();
+auto fig = studio("accessors_new");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+std::cout << "x '" << pane.x_align_group() << "', y '" << pane.y_align_group() << "', z '" << pane.z_align_group() << "'\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
-time amplitude depth
+x '', y '', z ''
 ```
 
-![Output of Example 1](img/align_group_accessors-1-check.svg)
+![Output of Example 1](img/align_group_accessors-1-defaults.svg)
+
+Example 2. Each axis has its own name. The three setters put the axes in three groups, and each accessor returns its own axis's name.
+
+```cpp
+auto fig = studio("accessors_axes");
+auto& pane = fig.pane3("p");
+pane.path3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0}, std::vector<double>{0, 1, 2});
+pane.align_x("columns").align_y("rows").align_z("depth");
+std::cout << pane.x_align_group() << " " << pane.y_align_group() << " " << pane.z_align_group() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+columns rows depth
+```
+
+![Output of Example 2](img/align_group_accessors-2-per_axis.svg)
+
+Example 3. Finding the members of a group. Panes are listed by `Studio::panes()`, so the panes of a group are found by comparing names; this is also the quickest check that two panes really share one.
+
+```cpp
+auto fig = studio("accessors_members");
+fig.mosaic(2, 2);
+const char* groups[] = {"a", "b", "a", ""};
+for (int i = 0; i < 4; ++i) {
+  auto& pane = fig.pane2("pane " + std::to_string(i));
+  pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+  pane.align_x(groups[i]);
+}
+for (const auto& pane : fig.panes()) {
+  std::cout << pane.title_text() << ": '" << pane.x_align_group() << "'\n";
+}
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+pane 0: 'a'
+pane 1: 'b'
+pane 2: 'a'
+pane 3: ''
+```
+
+![Output of Example 3](img/align_group_accessors-3-members.svg)
+
+Example 4. Copying a grouping. The names read from one pane are given to another, which then shares the range. The accessors return references, so the values are copied into strings first.
+
+```cpp
+auto fig = studio("accessors_copy");
+fig.mosaic(1, 2);
+auto& first = fig.pane2("first");
+first.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+first.align_xy("shared");
+auto& second = fig.pane2("second");
+second.trend(std::vector<double>{0, 10, 20}, std::vector<double>{0, 10, 0});
+second.align_x(std::string(first.x_align_group())).align_y(std::string(first.y_align_group()));
+std::cout << "second: '" << second.x_align_group() << "' '" << second.y_align_group() << "'\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+second: 'shared' 'shared'
+```
+
+![Output of Example 4](img/align_group_accessors-4-copy.svg)
 
 ## Notes
 
-- All three overloads are `noexcept`, `const` — pure, cheap readbacks.
-- Empty is a well-defined default, not an error state.
-- Reflects whichever of `align_x`/`align_y`/`align_z`/`align_xy`/`align_xyz` most recently
-  wrote to that axis's group.
+- All three are `noexcept` and do not change the pane.
+- An unset group is the empty string, never an error.
 
 ## See Also
 
-- [`Pane::align_x`](align_x.md) / [`Pane::align_y`](align_y.md) / [`Pane::align_z`](align_z.md):
-  the individual setters (and their paired `clear_*_align()` methods).
-- [`Pane::align_xy`](align_xy.md) / [`Pane::align_xyz`](align_xyz.md): the multi-axis
-  convenience setters.
-- [`Pane::clear_align`](clear_align.md): clears all three at once.
+- [`Pane::align_x`](align_x.md), [`align_y`](align_y.md), [`align_z`](align_z.md): set a group.
+- [`Pane::clear_align`](clear_align.md): leave all groups.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="clear_align.html">
-    <span class="label">Previous</span>
-    <span class="title">clear_align</span>
-  </a>
-  <a class="next-link" href="visible.html">
+  <a class="next-link" href="align_x.html">
     <span class="label">Next</span>
-    <span class="title">visible</span>
+    <span class="title">align_x</span>
   </a>
 </div>

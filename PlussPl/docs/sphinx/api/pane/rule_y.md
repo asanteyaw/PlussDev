@@ -12,60 +12,178 @@ Pane& Pane::rule_y(double value, std::string label = {})
 
 ## What It Does
 
-The y-axis counterpart of [`rule_x()`](rule_x.md): draws a reference line at a fixed
-y-axis `value`. Appends to the exact same shared [`rules()`](rules.md) list as
-`rule_x()`/`rule_z()`, just tagged with `CueAxis::Y`. Every other detail carries over
-unchanged — see [`rule_x()`](rule_x.md) for the full worked-example set, including the
-accumulation and multi-axis mixing behavior.
+Adds a reference line at y = `value`: a rule drawn across the plane at that position, with an optional `label` written on it. Rules mark thresholds, targets and baselines without being data: they are not traces, they are not in the legend, and they take the colours of the pane's theme. Each call adds one rule; they are kept in the order added and listed by [`rules`](rules.md).
+
+The position must be finite; a NaN or infinite value throws `pluss::Error` and nothing is added. A rule takes part in the automatic range of its axis, so a rule outside the data widens the axis to keep it visible, while a manual range ([`y_limits`](y_limits.md)) is never changed by a rule, and a rule outside it is not drawn. The rule is drawn when the figure is rendered, so it can be added before or after the traces.
 
 ## Parameters
 
 **value** (`double`)
-    The y-axis position for the rule line. Must be finite.
+    The position of the rule, in data units. Finite.
 
-**label** (`std::string`, default `{}`)
-    Optional text drawn alongside the rule line.
+**label** (`std::string`, default empty)
+    Text written on the rule. Empty draws no text.
 
 ## Returns
 
 `Pane&`
-    A reference to the same pane, for chaining.
+    The same pane, for chaining.
 
 ## Examples
 
-Example 1. A labeled rule line on the y-axis.
+Example 1. A labelled reference line. A rule at y = 2 with the label `target`; it is stored with its axis, value and label, and the label is drawn on the line.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("rule_y_basic");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-pane.rule_y(4.5, "target");
-fig.show();
-
-std::cout << pane.rules().size() << "\n";
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.rule_y(2.0, "target");
+const auto& rule = pane.rules().front();
+std::cout << "stored: axis " << static_cast<int>(rule.axis) << ", value " << rule.value << ", label '" << rule.label << "', width " << rule.width << "\n";
+std::cout << "label drawn: " << (fig.to_svg().find(">target<") != std::string::npos) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
+stored: axis 1, value 2, label 'target', width 1.15
+label drawn: 1
 ```
 
 ![Output of Example 1](img/rule_y-1-basic.svg)
 
+Example 2. Without a label. The label is optional: the line is drawn and no extra text appears, and the figure has one more path than the one without the rule.
+
+```cpp
+auto paths = [](const std::string& svg) {
+  std::size_t n = 0;
+  for (auto at = svg.find("<path"); at != std::string::npos; at = svg.find("<path", at + 1)) ++n;
+  return n;
+};
+auto build = [&](bool with_rule) {
+  auto fig = studio("rule_y_nolabel");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  if (with_rule) pane.rule_y(2.0);
+  return fig.to_svg();
+};
+std::cout << "paths without: " << paths(build(false)) << ", with: " << paths(build(true)) << "\n";
+auto fig = studio("rule_y_nolabel_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.rule_y(2.0);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+paths without: 19, with: 20
+```
+
+![Output of Example 2](img/rule_y-2-no_label.svg)
+
+Example 3. Several rules. Each call adds a rule; they are kept in the order added and each is drawn, so a pane can carry a baseline and thresholds together.
+
+```cpp
+auto fig = studio("rule_y_several");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.rule_y(1.5, "low").rule_y(2.5, "mid").rule_y(3.5, "high");
+std::cout << "rules: " << pane.rules().size() << ":";
+for (const auto& r : pane.rules()) std::cout << " " << r.label << "@" << r.value;
+std::cout << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+rules: 3: low@1.5 mid@2.5 high@3.5
+```
+
+![Output of Example 3](img/rule_y-3-several.svg)
+
+Example 4. Rules and the y range. A rule far outside the data widens an automatic range so it stays visible; with a manual range the axis stays where it was set, and a rule outside that range is not drawn at all.
+
+```cpp
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+auto build = [&](bool manual) {
+  auto fig = studio("rule_y_range");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  pane.x_tick_labels(false);
+  pane.z_tick_labels(false);
+  if (manual) pane.y_limits(Range1d{0.0, 5.0});
+  pane.rule_y(40.0, "far");
+  return fig.to_svg();
+};
+std::cout << "automatic range: " << texts(build(false)) << "\n";
+std::cout << "manual 0 to 5:   " << texts(build(true)) << "\n";
+auto fig = studio("rule_y_range_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.rule_y(40.0, "far");
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+automatic range: p 0 10 20 30 40 far 
+manual 0 to 5:   p 0 1 2 3 4 5 
+```
+
+![Output of Example 4](img/rule_y-4-range.svg)
+
+Example 5. Only finite values. A NaN or infinite position throws `pluss::Error` and no rule is added.
+
+```cpp
+auto fig = studio("rule_y_invalid");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+for (double bad : {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()}) {
+  try {
+    pane.rule_y(bad, "never");
+  } catch (const pluss::Error& e) {
+    std::cout << bad << ": " << e.message() << "\n";
+  }
+}
+std::cout << "rules added: " << pane.rules().size() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+nan: rule_y: value must be finite
+inf: rule_y: value must be finite
+-inf: rule_y: value must be finite
+rules added: 0
+```
+
+![Output of Example 5](img/rule_y-5-invalid.svg)
+
 ## Notes
 
-See [`rule_x()`](rule_x.md)'s Notes — every detail applies identically here, including
-the "value must be finite" validation and the shared, accumulating `rules()` list.
+- Not `noexcept`: it throws for a non-finite value.
+- A rule marks one position; for a range use [`band_y`](band_y.md).
 
 ## See Also
 
-- [`Pane::rule_x`](rule_x.md): the x-axis equivalent, with the full worked-example set.
-- [`Pane::rule_z`](rule_z.md): the z-axis equivalent.
-- [`Pane::rules`](rules.md): reads back every rule added so far.
-- [`Pane::band_y`](band_y.md): a span (range) reference region on the y-axis.
+- [`Pane::band_y`](band_y.md): a shaded range.
+- [`Pane::rules`](rules.md): the rules of the pane.
+- [`Pane::pin`](pin.md): a note attached to a point.
+- [`Pane::rule_x`](rule_x.md): the same for the x axis.
+- [`Pane::rule_z`](rule_z.md): the same for the z axis.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="rule_x.html">

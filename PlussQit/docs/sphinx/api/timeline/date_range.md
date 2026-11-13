@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-pluss::timeline::date_range(const Timeline& start, const Timeline& end, std::string_view freq, std::int64_t step = 1) -> Timeline
+Timeline pluss::timeline::date_range(const Timeline& start, const Timeline& end, std::string_view freq, std::int64_t step = 1)
 ```
 
 Builds a regular temporal sequence between two scalar endpoints.

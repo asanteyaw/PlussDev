@@ -8,8 +8,8 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::indicate(std::string_view delimiter = "|",
-                                 std::string prefix = "") const -> DataFrame
+DataFrame DataFrameNoteAccessor::indicate(std::string_view delimiter = "|",
+                                           std::string prefix = "") const
 ```
 
 ## What It Does

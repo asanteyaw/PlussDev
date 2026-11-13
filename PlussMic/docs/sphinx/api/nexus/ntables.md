@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::ntables() const -> std::int64_t
+std::int64_t Nexus::ntables() const
 ```
 
 ## What It Does

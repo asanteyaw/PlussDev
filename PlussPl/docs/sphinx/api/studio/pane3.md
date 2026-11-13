@@ -12,119 +12,129 @@ Pane& Studio::pane3(std::string title = {})
 
 ## What It Does
 
-The 3D counterpart of [`pane2()`](pane2.md): creates a new `PaneKind::Volumetric` pane,
-appends it to the figure, and returns a reference to it. Everything about `pane2()`'s
-behavior carries over unchanged — the same `context_scales()`/`pane_style_defaults()`
-creation-time snapshots, the same reference-invalidation hazard on later pane-creation
-calls, the same default top-to-bottom stacking absent an explicit
-[`mosaic()`](mosaic.md) — the only difference is the pane's `kind()`, which controls
-which `flash::` functions accept it: 3D-only functions like `flash::path3`,
-`flash::scatter3D`, `flash::plot_surface`, etc. take a `Pane&` created via `pane3()`, not
-`pane2()`.
+Adds a volumetric (3D) pane and returns it. It is [`pane2`](pane2.md) for the kinds that need a third axis: `path3`, `cloud3`, `sheet`, `lattice`, `spire3`, `ridge3` and `isoshell` are added to a pane made here, while a planar pane refuses them. Everything else is the same: the returned reference stays valid for the life of the figure, panes are placed in creation order or by a [`mosaic`](mosaic.md), the title is drawn above the pane, and the figure's theme, font scales and style defaults are copied in at creation.
 
-```{important} Same reference-invalidation hazard as pane2()
-See [`pane2()`](pane2.md)'s important callout: the `Pane&` returned here is invalidated
-by any subsequent `pane2()`/`pane3()`/`subpane2()`/`subpane3()` call. Configure and plot
-into a 3D pane immediately after creating it.
-```
+A volumetric pane has x, y and z axes and a camera that is set through its [`Lens`](../types/Lens.md) (projection, viewing angles, perspective), and it takes a [`LightRig`](../types/LightRig.md) for lit surfaces. Planar and volumetric panes can share a figure.
 
 ## Parameters
 
-**title** (`std::string`, default `{}`)
-    The pane's title. An empty title (the default) draws no title text.
+**title** (`std::string`, default empty)
+    The pane's title. Empty draws none.
 
 ## Returns
 
 `Pane&`
-    A reference to the newly created 3D pane, valid until the next pane-creation call.
+    The new pane, valid for the life of the figure.
 
 ## Examples
 
-Example 1. The default: no title, a `path3` trace through a simple 3-point trajectory.
+Example 1. A 3D pane with a path. The pane reports itself as volumetric, and the path is drawn in the default view.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("pane3_default_title");
-auto& pane = fig.pane3();
-pane.path3(std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
-fig.show();
-
-std::cout << pane.title_text().empty() << "\n";
-std::cout << (pane.kind() == PaneKind::Volumetric) << "\n";
+auto fig = studio("pane3_path");
+auto& pane = fig.pane3("helix");
+std::vector<double> x, y, z;
+for (int i = 0; i < 60; ++i) {
+  const double t = i * 0.2;
+  x.push_back(std::cos(t));
+  y.push_back(std::sin(t));
+  z.push_back(0.1 * t);
+}
+pane.path3(x, y, z);
+std::cout << "volumetric: " << (pane.kind() == PaneKind::Volumetric) << ", traces: " << pane.traces().size() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
-1
+volumetric: 1, traces: 1
 ```
 
-![Output of Example 1](img/pane3-1-default-title.svg)
+![Output of Example 1](img/pane3-1-path.svg)
 
-Example 2. An explicit title.
+Example 2. Mixed with 2D. A figure can hold both kinds side by side; each pane reports its own kind.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("pane3_with_title");
-auto& pane = fig.pane3("Trajectory");
-pane.path3(std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
-fig.show();
-
-std::cout << pane.title_text() << "\n";
-```
-
-### Output
-
-```text
-Trajectory
-```
-
-![Output of Example 2](img/pane3-2-with-title.svg)
-
-Example 3. Mixing `pane2()` and `pane3()` in the same figure — a 2D pane alongside a 3D
-one, arranged side by side.
-
-```cpp
-using namespace pluss::pl;
-
-auto fig = studio("pane2_and_pane3_mixed");
-auto& planar = fig.pane2("2D View");
-planar.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-auto& volumetric = fig.pane3("3D View");
-volumetric.path3(std::vector<double>{0.0, 1.0, 2.0}, std::vector<double>{0.0, 1.0, 0.0}, std::vector<double>{0.0, 0.5, 1.0});
+auto fig = studio("pane3_mixed");
 fig.mosaic(1, 2);
-fig.show();
+fig.pane2("flat").trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 4, 3, 5});
+fig.pane3("volume").path3(std::vector<double>{0, 1, 2, 3}, std::vector<double>{0, 1, 0, 1}, std::vector<double>{0, 1, 2, 3});
+for (const Pane& pane : fig.panes()) std::cout << pane.title_text() << ": " << (pane.kind() == PaneKind::Volumetric ? "volumetric" : "planar") << "\n";
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 3](img/pane3-3-mixed.svg)
+### Output
+
+```text
+flat: planar
+volume: volumetric
+```
+
+![Output of Example 2](img/pane3-2-mixed.svg)
+
+Example 3. A surface. A sheet over a grid, in a volumetric pane with a title.
+
+```cpp
+constexpr std::int64_t n = 24;
+auto axis = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
+std::vector<double> heights(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i) {
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -2.0 + 4.0 * i / (n - 1), y = -2.0 + 4.0 * j / (n - 1);
+    heights[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y));
+  }
+}
+auto z = pluss::make_series(heights, {n, n});
+auto fig = studio("pane3_surface");
+fig.pane3("hill").sheet(axis, axis, z);
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 3](img/pane3-3-surface.svg)
+
+Example 4. A 3D trace needs a 3D pane. Adding `path3` to a planar pane throws `pluss::Error`, and the pane is left without it.
+
+```cpp
+auto fig = studio("pane3_refused");
+auto& flat = fig.pane2("flat");
+try {
+  flat.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
+}
+std::cout << "traces on the flat pane: " << flat.traces().size() << "\n";
+fig.pane2("ok").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+path3 requires a volumetric pane
+traces on the flat pane: 0
+```
+
+![Output of Example 4](img/pane3-4-refused.svg)
 
 ## Notes
 
-- Not `noexcept`.
-- Creates `PaneKind::Volumetric`; use [`pane2()`](pane2.md) for a 2D (`Planar`) pane.
-- Same creation-time snapshot rules and reference-invalidation hazard as `pane2()` — see
-  that page's Notes and important callout for the full explanation.
-- A figure can freely mix `pane2()` and `pane3()` panes — see Example 3.
+- Not `noexcept`. A planar pane cannot be turned into a volumetric one; make the pane with the kind the traces need.
+- The camera and lights are settings of the pane, reached through the returned reference.
 
 ## See Also
 
-- [`Studio::pane2`](pane2.md): the 2D counterpart, and where the shared behavioral details
-  (creation-time snapshots, reference invalidation) are documented in full.
-- [`Studio::subpane3`](subpane3.md): creates a 3D pane occupying a sub-cell within another
-  pane's own local grid.
-- [`Studio::pane_index`](pane_index.md): a durable identifier for a pane after creating
-  others.
+- [`Studio::pane2`](pane2.md): the 2D counterpart, with the shared rules.
+- [`Studio::subpane3`](subpane3.md): a 3D pane inside another pane's grid.
+- [`Lens`](../types/Lens.md), [`LightRig`](../types/LightRig.md): camera and lights.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pane2.html">
     <span class="label">Previous</span>
     <span class="title">pane2</span>
   </a>
-  <a class="next-link" href="pane_index.html">
+  <a class="next-link" href="pane_count.html">
     <span class="label">Next</span>
-    <span class="title">pane_index</span>
+    <span class="title">pane_count</span>
   </a>
 </div>

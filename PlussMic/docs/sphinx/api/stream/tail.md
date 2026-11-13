@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::tail(std::int64_t n) const -> Stream
+Stream Stream::tail(std::int64_t n) const
 ```
 
 ## What It Does

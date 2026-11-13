@@ -7,15 +7,14 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::boxenplot(Pane& pane, Values&& values)
+Trace& flash::boxenplot(Pane& pane, Series values)
 ```
 
 ## What It Does
 
 A pure alias for [`flash::boxplot`](boxplot.md)'s ungrouped overload — the implementation
-is literally `boxplot(pane, values)`, nothing more. Directly verified: identical arguments
-to both functions produce **byte-for-byte identical** SVG output.
+is literally `boxplot(pane, values)`, nothing more. Identical arguments
+to both functions produce **identical** SVG output.
 
 ```{important} Not a letter-value plot, despite the name
 The name might suggest boxenplot() draws a "letter-value
@@ -57,8 +56,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-boxenplot-1-default.svg)
 
-Example 2 (verification, not a distinct rendering). `boxenplot(values)` and
-`boxplot(values)` on identical data, confirmed to produce **byte-for-byte identical**
+Example 2 (a comparison, not a new picture). `boxenplot(values)` and
+`boxplot(values)` on identical data, produces **identical**
 output.
 
 ```cpp

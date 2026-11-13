@@ -7,9 +7,9 @@
 ## Signatures
 
 ```cpp
-Nexus::plan(const JoinPath& path, JoinHow how = JoinHow::Left) const -> JoinPlan
+JoinPlan Nexus::plan(const JoinPath& path, JoinHow how = JoinHow::Left) const
 
-Nexus::plan(std::string_view from, std::string_view to, JoinHow how = JoinHow::Left) const -> JoinPlan
+JoinPlan Nexus::plan(std::string_view from, std::string_view to, JoinHow how = JoinHow::Left) const
 ```
 
 ## What It Does

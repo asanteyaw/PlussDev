@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::audit_report() const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::audit_report() const
 ```
 
 ## What It Does

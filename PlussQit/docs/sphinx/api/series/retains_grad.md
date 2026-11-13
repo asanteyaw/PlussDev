@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::retains_grad() const -> Series
+Series Series::retains_grad() const
 ```
 
 ## What It Does

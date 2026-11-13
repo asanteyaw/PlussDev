@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::clamp_min(double min) const -> Series
+Series Series::clamp_min(double min) const
 Series& Series::clamp_min_(double min)
-Series::clamp_min(const Series& min) const -> Series
+Series Series::clamp_min(const Series& min) const
 Series& Series::clamp_min_(const Series& min)
 ```
 

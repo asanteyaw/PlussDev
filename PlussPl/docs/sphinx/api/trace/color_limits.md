@@ -4,143 +4,194 @@
 
 [Back to Trace API Reference](../../trace_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
 const std::optional<Range1d>& Trace::color_limits() const noexcept
 
-Trace& Trace::color_limits(Range1d limits) noexcept
+Trace& Trace::color_limits(Range1d limits)
 ```
 
 ## What It Does
 
-Gets/sets an explicit data range to map across this trace's [`palette()`](palette.md), for
-scalar-field-colored trace kinds. Unset (`std::nullopt`) by default, in which case the
-range is inferred automatically from the trace's own data. The getter and setter **share
-the same name** — but unlike [`Pane::visible`](../pane/visible.md)'s hazardous pair, there
-is no overload-resolution danger here: the setter always requires exactly one `Range1d`
-argument (no default), so a bare zero-argument call `trace.color_limits()` can only ever
-resolve to the `const` getter.
+Fixes the range of values that a trace's [palette](palette.md) spans. Without it the range is fitted to the trace's own colour values, the lowest value taking the first colour of the ramp and the highest the last. With `color_limits(Range1d{low, high})` the ramp spans exactly `low` to `high`: values below `low` take the first colour, values above `high` the last, and the colours of the values between are spread over the whole ramp. The getter returns an `std::optional<Range1d>` that is empty until a range is set.
 
-```{important} Invalid input is silently ignored, same as width()
-Like width(), color_limits() validates by declining to apply an invalid range and
-returning *this unchanged, rather than throwing. A range is only applied if both
-bounds are finite and high is strictly greater than low
-(std::isfinite(limits.low) && std::isfinite(limits.high) && limits.high >
-limits.low). Directly verified: calling color_limits({5.0, 5.0}) (equal
-bounds, failing the strict-inequality check) left the trace's color_limits()
-at std::nullopt afterward, exactly as if the call had never been made.
-```
+Fixing the limits is what makes colours comparable: two traces, or two panes, with the same palette and the same limits colour equal values equally even when their data have different ranges. It is also how to use a ramp's full contrast on the interesting part of the data.
+
+The range must be finite and strictly increasing (`low < high`); anything else is refused with `pluss::Error`, and the trace keeps the limits it had. The limits matter for the kinds that colour by value: `fieldmap`, `contour`, `isoband`, `ridge3`, the surface kinds (`sheet`, `lattice`, `spire3`) and a `cloud` with a colour series. For the others the call is stored and has no effect. The pane has its own colour range, [`Pane::color_limits`](../pane/color_limits.md), which a trace's range overrides.
 
 ## Parameters
 
-**limits** (`Range1d`, setter only)
-    The explicit `{low, high}` data range to map across the palette. Must satisfy
-    `low < high`, both finite, or the call is a silent no-op.
+**limits** (`Range1d`)
+    The `low` and `high` ends of the colour range. Must be finite with `low < high`.
 
 ## Returns
 
 `const std::optional<Range1d>&` (getter)
-    The current explicit range, or `std::nullopt` if none has been set (the default —
-    the range is then inferred from the data at render time).
+    The range set with the setter, or an empty optional.
 
 `Trace&` (setter)
-    A reference to `*this`, for chaining — returned even when the call was a silent no-op.
+    The same trace, for chaining.
 
 ## Examples
 
-Example 1. No explicit `color_limits()` — the palette's range is auto-inferred from the
-`fieldmap()` trace's own `z` data.
+Example 1. Fixing the range. The same field is coloured by its own range (here about -0.4 to 1) and with the range 0 to 0.3: everything above 0.3 takes the top colour, so the structure at low values is shown in full contrast.
 
 ```cpp
-using namespace pluss::pl;
-
-// `grid_n` is the single source of truth for the grid's row/col count -- the axis length,
-// z's element count, and z's reshape dimensions all derive from it.
-constexpr std::int64_t grid_n = 3;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-auto z = pluss::series::linspace(0.0, 1.0, grid_n * grid_n, pluss::ScalarType::Float64).reshape({grid_n, grid_n});
-
-auto fig = studio("trace_color_limits_auto");
-auto& pane = fig.pane2();
-pane.fieldmap(coord, coord, z);
-fig.show();
+constexpr std::int64_t n = 24;
+auto coord = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
+std::vector<double> field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -2.0 + 4.0 * i / (n - 1), y = -2.0 + 4.0 * j / (n - 1);
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) - 0.4 * std::exp(-((x - 1) * (x - 1) + (y + 1) * (y + 1)));
+  }
+auto z = pluss::make_series(field, {n, n});
+auto fig = studio("color_limits_narrow");
+fig.mosaic(1, 2);
+fig.pane2("fitted to the data").fieldmap(coord, coord, z);
+fig.pane2("limits 0 to 0.3").fieldmap(coord, coord, z).color_limits(Range1d{0.0, 0.3});
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/trace-color-limits-1-auto.svg)
+![Output of Example 1](img/color_limits-1-narrow.svg)
 
-Example 2. An explicit, narrower range — the same `z` data now maps across only its
-middle portion of the palette. Verified via direct SVG diff to render genuinely different
-from Example 1.
+Example 2. Reading the limits. A new trace has none (the optional is empty); after the call the range is stored and returned; a second call replaces it.
 
 ```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t grid_n = 3;
-auto coord = pluss::series::linspace(0.0, grid_n - 1.0, grid_n, pluss::ScalarType::Float64);
-auto z = pluss::series::linspace(0.0, 1.0, grid_n * grid_n, pluss::ScalarType::Float64).reshape({grid_n, grid_n});
-
-auto fig = studio("trace_color_limits_explicit");
-auto& pane = fig.pane2();
-pane.fieldmap(coord, coord, z).color_limits(Range1d{0.2, 0.6});
-fig.show();
-```
-
-![Output of Example 2](img/trace-color-limits-2-explicit.svg)
-
-Example 3 (edge case). An invalid range (`low == high`, failing the strict-inequality
-check) is silently rejected, leaving `color_limits()` unset.
-
-```cpp
-using namespace pluss::pl;
-
-constexpr std::int64_t point_count = 4;
-auto x = pluss::series::linspace(0.0, point_count - 1.0, point_count, pluss::ScalarType::Float64);
-auto y = pluss::series::linspace(1.0, 3.0, point_count, pluss::ScalarType::Float64);
-
-auto fig = studio("trace_color_limits_invalid");
-auto& pane = fig.pane2();
-Trace& t = pane.trend(x, y);
-std::cout << "default has_value: " << t.color_limits().has_value() << "\n";
-t.color_limits(Range1d{5.0, 5.0});
-std::cout << "after color_limits({5,5}) [invalid]: has_value=" << t.color_limits().has_value() << "\n";
+auto fig = studio("color_limits_readback");
+auto& pane = fig.pane2("Limits");
+Trace& t = pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 3, 2, 4}, std::vector<double>(4, 9.0), std::vector<double>{1, 2, 3, 4});
+std::cout << "default has a value: " << t.color_limits().has_value() << "\n";
 t.color_limits(Range1d{0.0, 10.0});
-std::cout << "after color_limits({0,10}) [valid]: has_value=" << t.color_limits().has_value()
-          << " low=" << t.color_limits()->low << " high=" << t.color_limits()->high << "\n";
+std::cout << "after color_limits(0, 10): " << t.color_limits()->low << " to " << t.color_limits()->high << "\n";
+t.color_limits(Range1d{1.0, 4.0});
+std::cout << "after color_limits(1, 4):  " << t.color_limits()->low << " to " << t.color_limits()->high << "\n";
+fig.save_svg("figure.svg");
 ```
 
-Output:
+### Output
 
 ```text
-default has_value: 0
-after color_limits({5,5}) [invalid]: has_value=0
-after color_limits({0,10}) [valid]: has_value=1 low=0 high=10
+default has a value: 0
+after color_limits(0, 10): 0 to 10
+after color_limits(1, 4):  1 to 4
 ```
+
+![Output of Example 2](img/color_limits-2-readback.svg)
+
+Example 3. Invalid ranges are refused and the previous limits are kept. An empty range (`low == high`), a reversed one and one with an infinite end each throw `pluss::Error`.
+
+```cpp
+auto fig = studio("color_limits_invalid");
+auto& pane = fig.pane2("Limits");
+Trace& t = pane.cloud(std::vector<double>{1, 2, 3, 4}, std::vector<double>{1, 3, 2, 4}, std::vector<double>(4, 9.0), std::vector<double>{1, 2, 3, 4});
+t.color_limits(Range1d{0.0, 10.0});
+for (const Range1d bad : {Range1d{2.0, 2.0}, Range1d{3.0, 1.0}, Range1d{0.0, std::numeric_limits<double>::infinity()}}) {
+  try {
+    t.color_limits(bad);
+  } catch (const pluss::Error& e) {
+    std::cout << "[" << bad.low << ", " << bad.high << "]: " << e.message() << "\n";
+  }
+}
+std::cout << "limits are still " << t.color_limits()->low << " to " << t.color_limits()->high << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+[2, 2]: Trace::color_limits: range must be finite and strictly increasing
+[3, 1]: Trace::color_limits: range must be finite and strictly increasing
+[0, inf]: Trace::color_limits: range must be finite and strictly increasing
+limits are still 0 to 10
+```
+
+![Output of Example 3](img/color_limits-3-invalid.svg)
+
+Example 4. Comparable panes. Two fields with different ranges, one twice the other, are coloured with the same limits so that equal values have equal colours; without shared limits the two would look the same although their values differ by a factor of two.
+
+```cpp
+constexpr std::int64_t n = 20;
+auto coord = pluss::series::linspace(-2.0, 2.0, n, pluss::ScalarType::Float64);
+std::vector<double> a(static_cast<std::size_t>(n * n)), b(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i)
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = -2.0 + 4.0 * i / (n - 1), y = -2.0 + 4.0 * j / (n - 1);
+    a[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y));
+    b[static_cast<std::size_t>(i * n + j)] = 2.0 * std::exp(-(x * x + y * y));
+  }
+auto za = pluss::make_series(a, {n, n}), zb = pluss::make_series(b, {n, n});
+auto fig = studio("color_limits_shared");
+fig.mosaic(2, 2);
+fig.pane2("values up to 1, own range").fieldmap(coord, coord, za);
+fig.pane2("values up to 2, own range").fieldmap(coord, coord, zb);
+fig.pane2("values up to 1, shared 0 to 2").fieldmap(coord, coord, za).color_limits(Range1d{0.0, 2.0});
+fig.pane2("values up to 2, shared 0 to 2").fieldmap(coord, coord, zb).color_limits(Range1d{0.0, 2.0});
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 4](img/color_limits-4-shared.svg)
+
+Example 5. Which kinds use the limits. Each is drawn with and without `Range1d{-100, 100}` and the SVG text compared: a field map, a contour and a coloured cloud change; a plain line does not.
+
+```cpp
+constexpr std::int64_t n = 8;
+auto coord = pluss::series::linspace(-1.0, 1.0, n, pluss::ScalarType::Float64);
+std::vector<double> hills(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n * n; ++i) hills[static_cast<std::size_t>(i)] = std::sin(0.4 * i);
+auto z = pluss::make_series(hills, {n, n});
+const std::vector<double> x{1, 2, 3, 4, 5}, y{2, 4, 3, 5, 4};
+auto changes = [&](auto make) {
+  std::string svg[2];
+  for (int i = 0; i < 2; ++i) {
+    auto fig = studio("color_limits_kinds");
+    Trace& t = make(fig.pane2("p"));
+    if (i == 1) t.color_limits(Range1d{-100.0, 100.0});
+    svg[i] = fig.to_svg();
+  }
+  return svg[0] != svg[1];
+};
+std::cout << "fieldmap: " << changes([&](Pane& p) -> Trace& { return p.fieldmap(coord, coord, z); }) << "\n";
+std::cout << "contour:  " << changes([&](Pane& p) -> Trace& { return p.contour(coord, coord, z); }) << "\n";
+std::cout << "cloud with colour: " << changes([&](Pane& p) -> Trace& { return p.cloud(x, y, std::vector<double>(5, 9.0), std::vector<double>{1, 2, 3, 4, 5}); }) << "\n";
+std::cout << "trend:    " << changes([&](Pane& p) -> Trace& { return p.trend(x, y); }) << "\n";
+auto fig = studio("color_limits_kinds_out");
+fig.pane2("contour, limits -100 to 100").contour(coord, coord, z).color_limits(Range1d{-100.0, 100.0});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+fieldmap: 1
+contour:  1
+cloud with colour: 1
+trend:    0
+```
+
+![Output of Example 5](img/color_limits-5-kinds.svg)
 
 ## Notes
 
-- Both getter and setter are `noexcept`, including the rejected-invalid-input path.
-- Unlike [`Pane::color_limits`](../pane/color_limits.md) (which throws
-  `std::invalid_argument` for the same kind of bad range), `Trace::color_limits()` never
-  throws for any input — it silently no-ops instead. Do not assume the two
-  `color_limits()` methods (one on `Pane`, one on `Trace`) share validation behavior just
-  because they share a name and a `Range1d` parameter type.
-- No danger from the shared getter/setter name — see "What It Does" above.
+- `color_limits` throws, so it is not `noexcept`; code that takes the range from data should check `low < high` first (a constant field has `low == high`).
+- Values outside the range are not dropped: they are drawn with the end colours of the ramp.
+- A trace's range wins over the pane's colour range ([`Pane::color_limits`](../pane/color_limits.md)) and the fitted range.
 
 ## See Also
 
-- [`Trace::palette`](palette.md): the gradient this range is mapped across.
-- [`Pane::color_limits`](../pane/color_limits.md): the pane-level counterpart, which
-  *does* throw on invalid input — a useful contrast when reasoning about which layer a
-  given `color_limits()` call in surrounding code is operating on.
+- [`Trace::palette`](palette.md): the ramp the limits are applied to.
+- [`Pane::color_limits`](../pane/color_limits.md): a colour range for the whole pane.
+- [`Range1d`](../types/Geometry.md): the range type.
+- [`LimitMethod`](../types/LimitMethod.md): how a fitted colour range is padded.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="palette.html">
+  <a class="prev-link" href="annotate_levels.html">
     <span class="label">Previous</span>
-    <span class="title">palette</span>
+    <span class="title">annotate_levels</span>
   </a>
-  <a class="next-link" href="shade.html">
+  <a class="next-link" href="kind.html">
     <span class="label">Next</span>
-    <span class="title">shade</span>
+    <span class="title">kind</span>
   </a>
 </div>

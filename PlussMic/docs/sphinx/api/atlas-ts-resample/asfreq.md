@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasTsResampler::asfreq(std::optional<double> fill_value = std::nullopt) const -> Atlas
+Atlas AtlasTsResampler::asfreq(std::optional<double> fill_value = std::nullopt) const
 ```
 
 ## What It Does

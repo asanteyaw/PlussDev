@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::repeat_interleave(std::int64_t repeats) const -> Series
-Series::repeat_interleave(std::int64_t repeats, std::int64_t dim) const -> Series
+Series Series::repeat_interleave(std::int64_t repeats) const
+Series Series::repeat_interleave(std::int64_t repeats, std::int64_t dim) const
 ```
 
 ## What It Does

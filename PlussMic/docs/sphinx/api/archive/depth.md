@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::depth() const -> std::int64_t
+std::int64_t Archive::depth() const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::starts(std::string_view prefix) const -> DataFrame
+DataFrame DataFrameNoteAccessor::starts(std::string_view prefix) const
 ```
 
 ## What It Does

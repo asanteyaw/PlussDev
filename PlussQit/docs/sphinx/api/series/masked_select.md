@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::masked_select(const Series& mask) const -> Series
+Series Series::masked_select(const Series& mask) const
 ```
 
 ## What It Does

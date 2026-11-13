@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::where(const pluss::Series& condition) const -> Catalog
+Catalog Catalog::where(const pluss::Series& condition) const
 ```
 
 ## What It Does

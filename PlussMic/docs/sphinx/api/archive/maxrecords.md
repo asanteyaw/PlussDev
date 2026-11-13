@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::maxrecords() const -> std::int64_t
+std::int64_t Archive::maxrecords() const
 ```
 
 ## What It Does

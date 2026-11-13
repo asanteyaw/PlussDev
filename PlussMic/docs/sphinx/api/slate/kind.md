@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::kind() const -> SlateKind
+SlateKind Slate::kind() const
 ```
 
 ## What It Does

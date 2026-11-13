@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrame::reorder(pluss::msharp::RangeView::Of<std::string_view> names) const -> DataFrame
-DataFrame::reorder(const ReorderSpec& spec) const -> DataFrame
-DataFrame::reorder(pluss::RangeView<ReorderSpec> specs) const -> DataFrame
-DataFrame::reorder(std::initializer_list<ReorderSpec> specs) const -> DataFrame
+DataFrame DataFrame::reorder(pluss::msharp::RangeView::Of<std::string_view> names) const
+DataFrame DataFrame::reorder(const ReorderSpec& spec) const
+DataFrame DataFrame::reorder(pluss::RangeView<ReorderSpec> specs) const
+DataFrame DataFrame::reorder(std::initializer_list<ReorderSpec> specs) const
 ```
 
 ## What It Does

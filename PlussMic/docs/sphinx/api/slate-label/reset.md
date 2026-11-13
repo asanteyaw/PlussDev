@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::reset() const -> Slate
+Slate SlateLabelAccessor::reset() const
 ```
 
 ## What It Does

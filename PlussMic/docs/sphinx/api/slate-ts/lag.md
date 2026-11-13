@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::lag(std::int64_t periods = 1) const -> Slate
+Slate TimeSeriesAccessor::lag(std::int64_t periods = 1) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::bmm(const Series& other) const -> Series
+Series Series::bmm(const Series& other) const
 ```
 
 ## What It Does

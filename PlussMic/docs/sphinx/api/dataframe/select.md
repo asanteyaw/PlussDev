@@ -8,15 +8,15 @@
 ## Signatures
 
 ```cpp
-static DataFrame::select(
+static DataFrame DataFrame::select(
     pluss::msharp::RangeView::Of<Slate> conditions,
     pluss::msharp::RangeView::Of<DataFrame> choices,
-    const DataFrame& default_value) -> DataFrame
+    const DataFrame& default_value)
 
-static DataFrame::select(
+static DataFrame DataFrame::select(
     std::initializer_list<Slate> conditions,
     std::initializer_list<DataFrame> choices,
-    const DataFrame& default_value) -> DataFrame
+    const DataFrame& default_value)
 ```
 
 ## What It Does

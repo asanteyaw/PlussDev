@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::auto_plot(
-    pluss::msharp::RangeView::Of<std::string_view> features = {}) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::auto_plot(
+    pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 
-DataFramePlotAccessor::auto_plot(
+pluss::pl::Studio DataFramePlotAccessor::auto_plot(
     pluss::msharp::RangeView::Of<std::string_view> features,
-    const AutoPlotOptions& options) const -> pluss::pl::Studio
+    const AutoPlotOptions& options) const
 ```
 
 ## What It Does

@@ -7,15 +7,12 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::pieplot(Pane& pane, Values&& values)
+Trace& flash::pieplot(Pane& pane, Series values)
 
-template <class Values>
-Trace& flash::pieplot(Pane& pane, Values&& values,
+Trace& flash::pieplot(Pane& pane, Series values,
                        pluss::msharp::RangeView::Of<std::string_view> labels)
 
-template <class Values>
-Trace& flash::pieplot(Pane& pane, Values&& values,
+Trace& flash::pieplot(Pane& pane, Series values,
                        std::initializer_list<std::string_view> labels)
 ```
 
@@ -88,7 +85,7 @@ fig.show();
 ![Output of Example 2](img/flash-pieplot-2-labels.svg)
 
 Example 3. The `RangeView` overload constructed directly, rather than via the
-brace-init-list convenience form — verified byte-identical to Example 2's output, since
+brace-init-list convenience form — identical to Example 2's output, since
 the brace-init-list overload does nothing but forward into this one.
 
 ```cpp

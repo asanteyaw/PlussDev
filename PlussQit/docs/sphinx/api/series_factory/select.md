@@ -7,20 +7,20 @@
 ## Signature
 
 ```cpp
-pluss::series::select(conditions,
-                      choices,
-                      const Series& default_value) -> Series
+Series pluss::series::select(conditions,
+                             choices,
+                             const Series& default_value)
 
-pluss::series::select({conditions...},
-                      {choices...},
-                      const Series& default_value) -> Series
+Series pluss::series::select({conditions...},
+                             {choices...},
+                             const Series& default_value)
 
-pluss::series::select(condition,
-                      choice,
-                      const Series& default_value) -> Series
+Series pluss::series::select(condition,
+                             choice,
+                             const Series& default_value)
 
-pluss::series::select(..., numeric_default) -> Series
-pluss::series::select(..., bool_default) -> Series
+Series pluss::series::select(..., numeric_default)
+Series pluss::series::select(..., bool_default)
 ```
 
 ## What It Builds

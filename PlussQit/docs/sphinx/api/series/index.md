@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::index(pluss::RangeView<ExtractSpec> specs) const -> Series
+Series Series::index(pluss::RangeView<ExtractSpec> specs) const
 ```
 
 ## What It Does

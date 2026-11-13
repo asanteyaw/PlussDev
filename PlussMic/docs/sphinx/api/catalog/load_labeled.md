@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::load_labeled(std::string_view filepath, std::string_view label_field, const pluss::loader::ReadCsvOptions& options = {}) -> Catalog
+Catalog Catalog::load_labeled(std::string_view filepath, std::string_view label_field, const pluss::loader::ReadCsvOptions& options = {})
 ```
 
 ## What It Does

@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::has_store(std::string_view name) const -> bool
-Locus::stores() const -> std::vector<std::string>
+bool Locus::has_store(std::string_view name) const
+std::vector<std::string> Locus::stores() const
 ```
 
 ## What It Does

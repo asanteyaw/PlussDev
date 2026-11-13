@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::hardshrink() const -> Series
-Series::hardshrink(double lambd) const -> Series
+Series Series::hardshrink() const
+Series Series::hardshrink(double lambd) const
 ```
 
 ## What It Does

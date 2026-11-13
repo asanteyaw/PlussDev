@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Stream::with_meta(std::string key, std::string value) const -> Stream
-Stream::with_meta(std::initializer_list<std::pair<std::string_view, std::string_view>> items) const -> Stream
+Stream Stream::with_meta(std::string key, std::string value) const
+Stream Stream::with_meta(std::initializer_list<std::pair<std::string_view, std::string_view>> items) const
 ```
 
 ## What It Does

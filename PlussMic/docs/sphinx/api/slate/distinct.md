@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::distinct(bool dropnull = true) const -> Slate
+Slate Slate::distinct(bool dropnull = true) const
 ```
 
 ## What It Does

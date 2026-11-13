@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::hist(std::int64_t bins = 20) const -> pluss::pl::Studio
-SlatePlotAccessor::hist(const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::hist(std::int64_t bins = 20) const
+pluss::pl::Studio SlatePlotAccessor::hist(const HistPlotOptions& options) const
 ```
 
 ## What It Does

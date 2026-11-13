@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::ndistinct(DistinctOptions options = {}) const -> Stream
+Stream Stream::ndistinct(DistinctOptions options = {}) const
 ```
 
 ## What It Does

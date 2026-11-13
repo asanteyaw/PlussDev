@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::var(Axis axis = Axis::Case, bool skipnull = true) const -> Slate
-DataFrame::var(Axis axis, const StatisticOptions& options) const -> Slate
+Slate DataFrame::var(Axis axis = Axis::Case, bool skipnull = true) const
+Slate DataFrame::var(Axis axis, const StatisticOptions& options) const
 ```
 
 ## What It Does

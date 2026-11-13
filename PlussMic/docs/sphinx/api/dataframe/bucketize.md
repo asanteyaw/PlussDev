@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::bucketize(pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const -> DataFrame
+DataFrame DataFrame::bucketize(pluss::msharp::RangeView::Double bins, pluss::msharp::RangeView::Int labels = {}, bool right = true, bool include_lowest = true) const
 ```
 
 ## What It Does

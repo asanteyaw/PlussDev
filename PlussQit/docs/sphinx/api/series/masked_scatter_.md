@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::masked_scatter_(const Series& mask, const Series& src) const -> Series&
+Series& Series::masked_scatter_(const Series& mask, const Series& src) const
 ```
 
 ## What It Does

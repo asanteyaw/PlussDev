@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-RegistryCastAccessor::duration() -> Registry
+Registry RegistryCastAccessor::duration()
 ```
 
 ## What It Does

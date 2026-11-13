@@ -7,12 +7,12 @@
 ## Signatures
 
 ```cpp
-Nexus::detect_duplicates(std::string_view table) const -> DataFrame
+DataFrame Nexus::detect_duplicates(std::string_view table) const
 
-Nexus::detect_duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const -> DataFrame
-Nexus::detect_duplicates(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const -> DataFrame
+DataFrame Nexus::detect_duplicates(std::string_view table, std::initializer_list<std::string_view> keys) const
+DataFrame Nexus::detect_duplicates(std::string_view table, pluss::msharp::RangeView::Of<std::string_view> keys) const
 template <detail::StringViewNameRange NameRange>
-Nexus::detect_duplicates(std::string_view table, const NameRange& keys) const -> DataFrame
+DataFrame Nexus::detect_duplicates(std::string_view table, const NameRange& keys) const
 ```
 
 ## What It Does

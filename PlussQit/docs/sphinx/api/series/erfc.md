@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::erfc() const -> Series
+Series Series::erfc() const
 Series& Series::erfc_()
 Series& Series::erfc_()
 ```

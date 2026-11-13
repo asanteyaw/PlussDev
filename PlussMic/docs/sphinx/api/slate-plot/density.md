@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::density(std::int64_t points = 128) const -> pluss::pl::Studio
-SlatePlotAccessor::density(const DensityPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::density(std::int64_t points = 128) const
+pluss::pl::Studio SlatePlotAccessor::density(const DensityPlotOptions& options) const
 ```
 
 ## What It Does

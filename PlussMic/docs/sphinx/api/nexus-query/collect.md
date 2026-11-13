@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusTraverse::collect() const -> DataFrame
+DataFrame NexusTraverse::collect() const
 ```
 
 ## What It Does

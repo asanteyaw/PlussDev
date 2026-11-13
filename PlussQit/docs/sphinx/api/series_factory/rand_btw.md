@@ -7,21 +7,21 @@
 ## Signature
 
 ```cpp
-pluss::series::rand_btw(double lo,
-                        double hi,
-                        sizes,
-                        std::uint64_t seed = 0) -> Series
+Series pluss::series::rand_btw(double lo,
+                               double hi,
+                               sizes,
+                               std::uint64_t seed = 0)
 
-pluss::series::rand_btw(double lo,
-                        double hi,
-                        sizes,
-                        Config config,
-                        std::uint64_t seed = 0) -> Series
+Series pluss::series::rand_btw(double lo,
+                               double hi,
+                               sizes,
+                               Config config,
+                               std::uint64_t seed = 0)
 
-pluss::series::rand_btw(double lo,
-                        double hi,
-                        std::int64_t size,
-                        std::uint64_t seed = 0) -> Series
+Series pluss::series::rand_btw(double lo,
+                               double hi,
+                               std::int64_t size,
+                               std::uint64_t seed = 0)
 ```
 
 ## What It Builds

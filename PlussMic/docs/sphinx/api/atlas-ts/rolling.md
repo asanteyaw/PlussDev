@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-AtlasTsAccessor::rolling(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> Atlas
-AtlasTsAccessor::rolling(std::string_view duration, WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> Atlas
+Atlas AtlasTsAccessor::rolling(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const
+Atlas AtlasTsAccessor::rolling(std::string_view duration, WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
 ```
 
 ## What It Does

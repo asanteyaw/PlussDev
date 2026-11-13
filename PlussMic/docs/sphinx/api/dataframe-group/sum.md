@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrameGrouped::sum() const -> DataFrame
-DataFrameGrouped::sum(std::string_view feature) const -> DataFrame
-DataFrameGrouped::sum(std::initializer_list<std::string_view> features) const -> DataFrame
-DataFrameGrouped::sum(pluss::RangeView<std::string_view> features) const -> DataFrame
+DataFrame DataFrameGrouped::sum() const
+DataFrame DataFrameGrouped::sum(std::string_view feature) const
+DataFrame DataFrameGrouped::sum(std::initializer_list<std::string_view> features) const
+DataFrame DataFrameGrouped::sum(pluss::RangeView<std::string_view> features) const
 ```
 
 ## What It Does

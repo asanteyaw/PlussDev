@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::linearalg -> Series::LinearAlgAccessor
+Series::LinearAlgAccessor Series::linearalg
 
-Series::linearalg() -> SeriesLinearAlgProxy
-Series::linearalg(const Series& other) -> SeriesLinearAlgProxy
+SeriesLinearAlgProxy Series::linearalg()
+SeriesLinearAlgProxy Series::linearalg(const Series& other)
 ```
 
 ## What It Does

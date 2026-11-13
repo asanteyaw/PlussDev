@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Series::nansum() const -> Series
-Series::nansum(std::int64_t dim) const -> Series
-Series::nansum(std::int64_t dim, bool keepdim) const -> Series
+Series Series::nansum() const
+Series Series::nansum(std::int64_t dim) const
+Series Series::nansum(std::int64_t dim, bool keepdim) const
 ```
 
 ## What It Does

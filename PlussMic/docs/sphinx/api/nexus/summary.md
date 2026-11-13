@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::summary() const -> DataFrame
+DataFrame Nexus::summary() const
 ```
 
 ## What It Does

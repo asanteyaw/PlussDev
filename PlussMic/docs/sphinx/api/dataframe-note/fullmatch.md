@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::fullmatch(std::string_view pattern) const -> DataFrame
+DataFrame DataFrameNoteAccessor::fullmatch(std::string_view pattern) const
 ```
 
 ## What It Does

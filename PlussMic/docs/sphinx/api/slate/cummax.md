@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::cummax(bool skip_nulls = true) const -> Slate
+Slate Slate::cummax(bool skip_nulls = true) const
 ```
 
 ## What It Does

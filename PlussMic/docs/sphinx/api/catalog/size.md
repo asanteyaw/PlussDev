@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::size() const -> std::int64_t
+std::int64_t Catalog::size() const
 ```
 
 ## What It Does

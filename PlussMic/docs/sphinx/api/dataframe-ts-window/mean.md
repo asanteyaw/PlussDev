@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsWindowAccessor::mean(std::string_view value_feature = {}) const -> DataFrame
+DataFrame DataFrameTsWindowAccessor::mean(std::string_view value_feature = {}) const
 ```
 
 ## What It Does

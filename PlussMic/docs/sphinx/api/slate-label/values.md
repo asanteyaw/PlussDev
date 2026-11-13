@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::values() const -> Slate
+Slate SlateLabelAccessor::values() const
 ```
 
 ## What It Does

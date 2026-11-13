@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-SlateLabelAccessor::pos(double value) const -> Slate
-SlateLabelAccessor::pos(std::string_view value) const -> Slate
+Slate SlateLabelAccessor::pos(double value) const
+Slate SlateLabelAccessor::pos(std::string_view value) const
 ```
 
 ## What It Does

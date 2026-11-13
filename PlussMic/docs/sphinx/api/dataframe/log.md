@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::log() const -> DataFrame
+DataFrame DataFrame::log() const
 ```
 
 ## What It Does

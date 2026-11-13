@@ -7,11 +7,11 @@
 ## Signatures
 
 ```cpp
-Series::extract(pluss::RangeView<ExtractSpec> specs) const -> Series
-Series::extract(ExtractSpec a0) const -> Series
-Series::extract(ExtractSpec a0, ExtractSpec a1) const -> Series
-Series::extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2) const -> Series
-Series::extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2, ExtractSpec a3) const -> Series
+Series Series::extract(pluss::RangeView<ExtractSpec> specs) const
+Series Series::extract(ExtractSpec a0) const
+Series Series::extract(ExtractSpec a0, ExtractSpec a1) const
+Series Series::extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2) const
+Series Series::extract(ExtractSpec a0, ExtractSpec a1, ExtractSpec a2, ExtractSpec a3) const
 ```
 
 ## What It Does

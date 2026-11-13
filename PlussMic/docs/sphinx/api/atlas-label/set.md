@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::set(const Slate& labels) const -> Atlas
+Atlas AtlasLabelAccessor::set(const Slate& labels) const
 ```
 
 ## What It Does

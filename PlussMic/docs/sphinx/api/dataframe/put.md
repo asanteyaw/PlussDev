@@ -8,18 +8,18 @@
 ## Signatures
 
 ```cpp
-DataFrame::put(const Slate& bool_mask, const Slate& value) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, const Slate& value, const AlignOptions& options) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, double value) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, double value, const AlignOptions& options) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, std::string_view value) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, std::string_view value, const AlignOptions& options) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, const char* value) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, const char* value, const AlignOptions& options) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, pluss::null_t value) const -> DataFrame
-DataFrame::put(const Slate& bool_mask, pluss::null_t value, const AlignOptions& options) const -> DataFrame
+DataFrame DataFrame::put(const Slate& bool_mask, const Slate& value) const
+DataFrame DataFrame::put(const Slate& bool_mask, const Slate& value, const AlignOptions& options) const
+DataFrame DataFrame::put(const Slate& bool_mask, double value) const
+DataFrame DataFrame::put(const Slate& bool_mask, double value, const AlignOptions& options) const
+DataFrame DataFrame::put(const Slate& bool_mask, std::string_view value) const
+DataFrame DataFrame::put(const Slate& bool_mask, std::string_view value, const AlignOptions& options) const
+DataFrame DataFrame::put(const Slate& bool_mask, const char* value) const
+DataFrame DataFrame::put(const Slate& bool_mask, const char* value, const AlignOptions& options) const
+DataFrame DataFrame::put(const Slate& bool_mask, pluss::null_t value) const
+DataFrame DataFrame::put(const Slate& bool_mask, pluss::null_t value, const AlignOptions& options) const
 // each Slate-mask overload above also has a pluss::Series-mask convenience:
-DataFrame::put(const pluss::Series& bool_mask, /* value as above */) const -> DataFrame
+DataFrame DataFrame::put(const pluss::Series& bool_mask, /* value as above */) const
 ```
 
 ## What It Does

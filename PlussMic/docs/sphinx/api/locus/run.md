@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Locus::run(std::string_view name, const JoinOptions& options = {}) const -> Catalog
-Locus::run(std::string_view name, const JoinPlan& plan, const JoinOptions& options = {}) const -> Catalog
+Catalog Locus::run(std::string_view name, const JoinOptions& options = {}) const
+Catalog Locus::run(std::string_view name, const JoinPlan& plan, const JoinOptions& options = {}) const
 ```
 
 ## What It Does

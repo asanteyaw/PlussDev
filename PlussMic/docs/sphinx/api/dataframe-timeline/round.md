@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::round(std::string_view unit) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::round(std::string_view unit) const
 ```
 
 ## What It Does

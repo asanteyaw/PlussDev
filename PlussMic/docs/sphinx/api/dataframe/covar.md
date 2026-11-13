@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::covar(const StatisticOptions& options = {}, bool render = false) const -> DataFrameView
+DataFrameView DataFrame::covar(const StatisticOptions& options = {}, bool render = false) const
 ```
 
 ## What It Does

@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-LocusPullAgg::mean(std::string_view feature, std::string_view alias = {}) -> LocusPullAgg&
-LocusPullAgg::mean(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields) -> LocusPullAgg&
-LocusPullAgg::mean(std::initializer_list<std::pair<std::string_view, std::string_view>> fields) -> LocusPullAgg&
+LocusPullAgg& LocusPullAgg::mean(std::string_view feature, std::string_view alias = {})
+LocusPullAgg& LocusPullAgg::mean(pluss::msharp::RangeView::Of<std::pair<std::string_view, std::string_view>> fields)
+LocusPullAgg& LocusPullAgg::mean(std::initializer_list<std::pair<std::string_view, std::string_view>> fields)
 ```
 
 ## What It Does

@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::roll(std::int64_t shift) const -> Series
-Series::roll(std::int64_t shift, std::int64_t dim) const -> Series
-Series::roll(pluss::RangeView<std::int64_t> shifts,
-             pluss::RangeView<std::int64_t> dims) const -> Series
+Series Series::roll(std::int64_t shift) const
+Series Series::roll(std::int64_t shift, std::int64_t dim) const
+Series Series::roll(pluss::RangeView<std::int64_t> shifts,
+                    pluss::RangeView<std::int64_t> dims) const
 ```
 
 ## What It Does

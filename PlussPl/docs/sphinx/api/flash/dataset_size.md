@@ -43,7 +43,7 @@ auto frame = DataFrame({
     })},
 });
 
-auto data = pluss::pl::flash::Dataset::from_frame(frame);
+auto data = pluss::pl::flash::Dataset::from_table(frame);
 const auto [rows, cols] = data.size();
 std::cout << "size=(" << rows << ", " << cols << ")\n";
 ```
@@ -76,7 +76,7 @@ try {
   const auto [rows, cols] = data.size();
   std::cout << rows << "," << cols << "\n";
 } catch (const pluss::Error& err) {
-  std::cout << err.what() << "\n";
+  std::cout << err.message() << "\n";
 }
 ```
 

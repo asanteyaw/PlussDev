@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::narrow_copy(std::int64_t dim, std::int64_t start, std::int64_t length) const -> Series
+Series Series::narrow_copy(std::int64_t dim, std::int64_t start, std::int64_t length) const
 ```
 
 ## What It Does

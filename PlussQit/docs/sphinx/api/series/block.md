@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::block(std::int64_t row_start,
-              std::int64_t row_count,
-              std::int64_t col_start,
-              std::int64_t col_count) const -> Series
+Series Series::block(std::int64_t row_start,
+                     std::int64_t row_count,
+                     std::int64_t col_start,
+                     std::int64_t col_count) const
 ```
 
 ## What It Does

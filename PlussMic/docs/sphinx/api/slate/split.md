@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-Slate::split(std::string_view delimiter,
-              std::int64_t limit = -1,
-              std::string prefix = "part") const -> DataFrame
+DataFrame Slate::split(std::string_view delimiter,
+                        std::int64_t limit = -1,
+                        std::string prefix = "part") const
 
-Slate::split(std::string_view pattern,
-              const TextOptions& options) const -> DataFrame
+DataFrame Slate::split(std::string_view pattern,
+                        const TextOptions& options) const
 ```
 
 ## What It Does

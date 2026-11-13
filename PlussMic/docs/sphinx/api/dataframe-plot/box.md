@@ -8,15 +8,15 @@
 ## Signatures
 
 ```cpp
-DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::string_view> features = {}) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::string_view> features = {}) const
 
-DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::string_view> features,
-                            const BoxPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::box(pluss::msharp::RangeView::Of<std::string_view> features,
+                                              const BoxPlotOptions& options) const
 
-DataFramePlotAccessor::box(std::initializer_list<std::string_view> features) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_view> features) const
 
-DataFramePlotAccessor::box(std::initializer_list<std::string_view> features,
-                            const BoxPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio DataFramePlotAccessor::box(std::initializer_list<std::string_view> features,
+                                              const BoxPlotOptions& options) const
 ```
 
 ## What It Does

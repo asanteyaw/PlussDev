@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-TimeSeriesAccessor::sub(const Slate& other, const Slate& left_axis, const Slate& right_axis, TsAlignMode mode = TsAlignMode::Exact) const -> Slate
+Slate TimeSeriesAccessor::sub(const Slate& other, const Slate& left_axis, const Slate& right_axis, TsAlignMode mode = TsAlignMode::Exact) const
 ```
 
 ## What It Does

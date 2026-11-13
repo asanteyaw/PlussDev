@@ -48,8 +48,8 @@ callout on that page and on [`flash::set_theme`](set_theme.md): it must be appli
 
 Example 1. Default (`Lightgrid`/`Deep`) vs `Dark`/`Bright`, applied via
 `flash::set`/`Studio::theme` **before** the pane is created (required — see the
-important callout on [`flash::set_theme`](set_theme.md)) — confirmed to render
-genuinely differently.
+important callout on [`flash::set_theme`](set_theme.md)), which renders
+differently.
 
 ```cpp
 using namespace pluss::pl;
@@ -75,7 +75,7 @@ flash_theme(default) vs flash_theme(Dark,Bright) differ: 1
 
 ![Output of Example 1](img/flash-flash-theme-dark-bright.svg)
 
-Example 2 (verification, not a distinct rendering). Inspecting the returned `Theme`
+Example 2 (a comparison, not a new picture). Inspecting the returned `Theme`
 directly, without applying it.
 
 ```cpp

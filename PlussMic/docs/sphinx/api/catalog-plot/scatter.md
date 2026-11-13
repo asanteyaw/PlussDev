@@ -8,19 +8,19 @@
 ## Signatures
 
 ```cpp
-CatalogPlotAccessor::scatter(std::string_view x_key,
-                              std::string_view y_key,
-                              std::optional<std::string_view> hue_key = std::nullopt) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter(std::string_view x_key,
+                                                std::string_view y_key,
+                                                std::optional<std::string_view> hue_key = std::nullopt) const
 
-CatalogPlotAccessor::scatter(std::string_view x_key,
-                              std::string_view y_key,
-                              std::optional<std::string_view> hue_key,
-                              const pluss::table::ScatterPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter(std::string_view x_key,
+                                                std::string_view y_key,
+                                                std::optional<std::string_view> hue_key,
+                                                const pluss::table::ScatterPlotOptions& options) const
 
-CatalogPlotAccessor::scatter(std::string_view x_key,
-                              std::string_view y_key,
-                              std::optional<std::string_view> hue_key,
-                              const CatalogScatterPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::scatter(std::string_view x_key,
+                                                std::string_view y_key,
+                                                std::optional<std::string_view> hue_key,
+                                                const CatalogScatterPlotOptions& options) const
 ```
 
 ## What It Does

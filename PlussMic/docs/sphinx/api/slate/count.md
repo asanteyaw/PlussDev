@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::count(bool count_true = true) const -> SlateValue
+SlateValue Slate::count(bool count_true = true) const
 ```
 
 ## What It Does

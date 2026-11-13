@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::rename(std::string_view from, std::string_view to) const -> Locus
+Locus Locus::rename(std::string_view from, std::string_view to) const
 Locus& Locus::rename_(std::string_view from, std::string_view to)
 ```
 

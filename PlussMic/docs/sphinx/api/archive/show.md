@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::show(std::ostream& os) const -> void
+void Archive::show(std::ostream& os) const
 ```
 
 ## What It Does

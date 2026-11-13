@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::stats(std::string_view field, std::string_view stat_type) -> Catalog
+Catalog Catalog::stats(std::string_view field, std::string_view stat_type)
 ```
 
 ## What It Does

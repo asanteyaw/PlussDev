@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::with_label_(const pluss::table::Slate& label) -> Stream&
+Stream& Stream::with_label_(const pluss::table::Slate& label)
 ```
 
 ## What It Does

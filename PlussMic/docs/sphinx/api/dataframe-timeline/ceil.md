@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::ceil(std::string_view unit) const -> DataFrame
+DataFrame DataFrameTimelineAccessor::ceil(std::string_view unit) const
 ```
 
 ## What It Does

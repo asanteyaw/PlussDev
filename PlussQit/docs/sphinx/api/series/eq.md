@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::eq(const Series& rhs) const -> Series
-Series::eq(double rhs) const -> Series
+Series Series::eq(const Series& rhs) const
+Series Series::eq(double rhs) const
 Series& Series::eq_(const Series& rhs) const
 ```
 

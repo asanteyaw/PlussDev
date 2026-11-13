@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::bitwise_and(const Series& rhs) const -> Series
+Series Series::bitwise_and(const Series& rhs) const
 Series& Series::bitwise_and_(const Series& rhs) const
 ```
 

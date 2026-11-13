@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::month_end() const -> Slate
+Slate SlateTimelineAccessor::month_end() const
 ```
 
 ## What It Does

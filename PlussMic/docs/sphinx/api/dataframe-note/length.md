@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameNoteAccessor::length() const -> DataFrame
+DataFrame DataFrameNoteAccessor::length() const
 ```
 
 ## What It Does

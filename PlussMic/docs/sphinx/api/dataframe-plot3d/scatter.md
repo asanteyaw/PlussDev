@@ -8,13 +8,13 @@
 ## Signature
 
 ```cpp
-DataFramePlot3DAccessor::scatter(
+pluss::pl::Studio DataFramePlot3DAccessor::scatter(
     std::string_view x_feature,
     std::string_view y_feature,
     std::string_view z_feature,
     std::optional<std::string_view> size_feature = std::nullopt,
     std::optional<std::string_view> color_feature = std::nullopt,
-    const Scatter3DPlotOptions& options = {}) const -> pluss::pl::Studio
+    const Scatter3DPlotOptions& options = {}) const
 ```
 
 ## What It Does

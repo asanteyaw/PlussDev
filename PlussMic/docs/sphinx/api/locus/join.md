@@ -7,12 +7,12 @@
 ## Signature
 
 ```cpp
-Locus::join(std::string_view left, std::string_view right,
-            const JoinSpec& spec = {}, const JoinOptions& options = {}) const -> Catalog
-Locus::join(const JoinPath& path, JoinHow how = JoinHow::Left,
-            const JoinOptions& options = {}) const -> Catalog
-Locus::join_detailed(std::string_view left, std::string_view right,
-                      const JoinSpec& spec = {}, const JoinOptions& options = {}) const -> LocusJoinResult
+Catalog Locus::join(std::string_view left, std::string_view right,
+                    const JoinSpec& spec = {}, const JoinOptions& options = {}) const
+Catalog Locus::join(const JoinPath& path, JoinHow how = JoinHow::Left,
+                    const JoinOptions& options = {}) const
+LocusJoinResult Locus::join_detailed(std::string_view left, std::string_view right,
+                                      const JoinSpec& spec = {}, const JoinOptions& options = {}) const
 ```
 
 ## What It Does

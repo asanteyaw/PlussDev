@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::lxor(const Slate& other) const -> Slate
+Slate Slate::lxor(const Slate& other) const
 ```
 
 ## What It Does

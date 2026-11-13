@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::ndistinct(DistinctOptions options = {}) const -> Catalog
+Catalog Catalog::ndistinct(DistinctOptions options = {}) const
 ```
 
 ## What It Does

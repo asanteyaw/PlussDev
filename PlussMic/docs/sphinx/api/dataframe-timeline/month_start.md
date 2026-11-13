@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::month_start() const -> DataFrame
+DataFrame DataFrameTimelineAccessor::month_start() const
 ```
 
 ## What It Does

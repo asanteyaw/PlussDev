@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::map_catalogs(const std::function<Catalog(const Catalog&)>& fn) const -> Archive
+Archive Archive::map_catalogs(const std::function<Catalog(const Catalog&)>& fn) const
 ```
 
 ## What It Does

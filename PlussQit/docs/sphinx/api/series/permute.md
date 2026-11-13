@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::permute(pluss::RangeView<std::int64_t> dims) const -> Series
+Series Series::permute(pluss::RangeView<std::int64_t> dims) const
 ```
 
 ## What It Does

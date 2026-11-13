@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::median(std::string_view source, std::string_view alias = {}) -> LocusPull&
+LocusPull& LocusPull::median(std::string_view source, std::string_view alias = {})
 ```
 
 ## What It Does

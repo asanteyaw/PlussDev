@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::get(std::string_view key) const -> std::optional<Stream>
+std::optional<Stream> Catalog::get(std::string_view key) const
 ```
 
 ## What It Does

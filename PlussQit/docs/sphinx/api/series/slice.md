@@ -7,14 +7,14 @@
 ## Signatures
 
 ```cpp
-Series::slice(std::int64_t dim,
-              std::int64_t start,
-              std::int64_t end,
-              std::int64_t step = 1) const -> Series
+Series Series::slice(std::int64_t dim,
+                     std::int64_t start,
+                     std::int64_t end,
+                     std::int64_t step = 1) const
 
-Series::slice(std::int64_t dim, std::int64_t start, std::int64_t end) const -> Series
-Series::slice(std::int64_t dim, std::int64_t start) const -> Series
-Series::slice(std::int64_t dim) const -> Series
+Series Series::slice(std::int64_t dim, std::int64_t start, std::int64_t end) const
+Series Series::slice(std::int64_t dim, std::int64_t start) const
+Series Series::slice(std::int64_t dim) const
 ```
 
 ## What It Does

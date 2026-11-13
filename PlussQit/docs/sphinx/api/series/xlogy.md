@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::xlogy(const Series& other) const -> Series
+Series Series::xlogy(const Series& other) const
 Series& Series::xlogy_(const Series& other)
 Series& Series::xlogy_(const Series& rhs) const
 Series& Series::xlogy_(double rhs) const

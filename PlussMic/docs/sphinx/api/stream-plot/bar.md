@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-StreamPlotAccessor::bar() const -> pluss::pl::Studio
-StreamPlotAccessor::bar(const Stream& x) const -> pluss::pl::Studio
-StreamPlotAccessor::bar(const BarPlotOptions& options) const -> pluss::pl::Studio
-StreamPlotAccessor::bar(const Stream& x, const BarPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio StreamPlotAccessor::bar() const
+pluss::pl::Studio StreamPlotAccessor::bar(const Stream& x) const
+pluss::pl::Studio StreamPlotAccessor::bar(const BarPlotOptions& options) const
+pluss::pl::Studio StreamPlotAccessor::bar(const Stream& x, const BarPlotOptions& options) const
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-pluss::series::make(data, option0 = {}, option1, option2, ...) -> Series
+Series pluss::series::make(data, option0 = {}, option1, option2, ...)
 ```
 
 ## What It Builds

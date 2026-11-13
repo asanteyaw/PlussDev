@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::pile(pluss::RangeView<Series> others,
-             std::int64_t dim = 0) const -> Series
+Series Series::pile(pluss::RangeView<Series> others,
+                    std::int64_t dim = 0) const
 ```
 
 ## What It Does

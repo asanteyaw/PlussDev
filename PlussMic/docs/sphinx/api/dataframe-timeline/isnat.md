@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTimelineAccessor::isnat() const -> DataFrame
+DataFrame DataFrameTimelineAccessor::isnat() const
 ```
 
 ## What It Does

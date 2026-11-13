@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::nrecords() const -> std::int64_t
+std::int64_t Archive::nrecords() const
 ```
 
 ## What It Does

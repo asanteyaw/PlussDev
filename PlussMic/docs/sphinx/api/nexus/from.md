@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::from(std::string_view table) const -> NexusTraverse
+NexusTraverse Nexus::from(std::string_view table) const
 ```
 
 ## What It Does

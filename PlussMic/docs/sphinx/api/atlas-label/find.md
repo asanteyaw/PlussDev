@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-AtlasLabelAccessor::find(const Slate& targets) const -> Slate
+Slate AtlasLabelAccessor::find(const Slate& targets) const
 ```
 
 ## What It Does

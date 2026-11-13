@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-LocusPull::root() const noexcept -> const std::string&
+const std::string& LocusPull::root() const noexcept
 ```
 
 ## What It Does

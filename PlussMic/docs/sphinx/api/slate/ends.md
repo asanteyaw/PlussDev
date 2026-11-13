@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::ends(std::string_view suffix) const -> Slate
+Slate Slate::ends(std::string_view suffix) const
 ```
 
 ## What It Does

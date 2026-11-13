@@ -8,21 +8,21 @@
 ## Signatures
 
 ```cpp
-CatalogPlotAccessor::hist(std::string_view key, std::int64_t bins = 20) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key, std::int64_t bins = 20) const
 
-CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys = {},
-                           std::int64_t bins = 20) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys = {},
+                                             std::int64_t bins = 20) const
 
-CatalogPlotAccessor::hist(std::initializer_list<std::string_view> keys,
-                           std::int64_t bins = 20) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::hist(std::initializer_list<std::string_view> keys,
+                                             std::int64_t bins = 20) const
 
-CatalogPlotAccessor::hist(std::string_view key, const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::hist(std::string_view key, const HistPlotOptions& options) const
 
-CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys,
-                           const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::hist(pluss::msharp::RangeView::Of<std::string_view> keys,
+                                             const HistPlotOptions& options) const
 
-CatalogPlotAccessor::hist(std::initializer_list<std::string_view> keys,
-                           const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlotAccessor::hist(std::initializer_list<std::string_view> keys,
+                                             const HistPlotOptions& options) const
 ```
 
 ## What It Does

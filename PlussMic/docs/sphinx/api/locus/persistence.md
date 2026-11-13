@@ -7,9 +7,9 @@
 ## Signature
 
 ```cpp
-Locus::save(std::string_view directory, const StoreOptions& options = {}) const -> void
-static Locus::load(std::string_view directory, const LoadOptions& options = {}) -> Locus
-static Locus::read(std::string_view directory, const StoreOptions& options = {}) -> Locus
+void Locus::save(std::string_view directory, const StoreOptions& options = {}) const
+static Locus Locus::load(std::string_view directory, const LoadOptions& options = {})
+static Locus Locus::read(std::string_view directory, const StoreOptions& options = {})
 ```
 
 ## What It Does

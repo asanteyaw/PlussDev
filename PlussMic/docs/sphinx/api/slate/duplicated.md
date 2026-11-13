@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::duplicated(bool keep_first = true, bool keep_last = false) const -> Slate
+Slate Slate::duplicated(bool keep_first = true, bool keep_last = false) const
 ```
 
 ## What It Does

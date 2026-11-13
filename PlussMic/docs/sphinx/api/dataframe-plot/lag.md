@@ -8,9 +8,9 @@
 ## Signature
 
 ```cpp
-DataFramePlotAccessor::lag(
+pluss::pl::Studio DataFramePlotAccessor::lag(
     std::string_view feature,
-    const LagPlotOptions& options = {}) const -> pluss::pl::Studio
+    const LagPlotOptions& options = {}) const
 ```
 
 ## What It Does

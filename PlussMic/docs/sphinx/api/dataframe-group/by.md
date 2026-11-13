@@ -8,9 +8,9 @@
 ## Signatures
 
 ```cpp
-DataFrameGroupBuilder::by(std::initializer_list<std::string_view> keys) const -> DataFrameGrouped
-DataFrameGroupBuilder::by(pluss::msharp::RangeView::Of<std::string_view> keys) const -> DataFrameGrouped
-DataFrameGroupBuilder::by(const DataFrame::LabelGroup& keys) const -> DataFrameGrouped
+DataFrameGrouped DataFrameGroupBuilder::by(std::initializer_list<std::string_view> keys) const
+DataFrameGrouped DataFrameGroupBuilder::by(pluss::msharp::RangeView::Of<std::string_view> keys) const
+DataFrameGrouped DataFrameGroupBuilder::by(const DataFrame::LabelGroup& keys) const
 ```
 
 ## What It Does

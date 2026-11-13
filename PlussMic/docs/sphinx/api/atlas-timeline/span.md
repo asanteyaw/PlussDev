@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-AtlasTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const -> Atlas
-AtlasTimelineAccessor::span(const Slate& other, TimeUnit unit) const -> Atlas
-AtlasTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const -> Atlas
-AtlasTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const -> Atlas
+Atlas AtlasTimelineAccessor::span(const Slate& other, const TimelineSpanOptions& options = {}) const
+Atlas AtlasTimelineAccessor::span(const Slate& other, TimeUnit unit) const
+Atlas AtlasTimelineAccessor::span(const pluss::Timeline& other, const TimelineSpanOptions& options = {}) const
+Atlas AtlasTimelineAccessor::span(const pluss::Timeline& other, TimeUnit unit) const
 ```
 
 ## What It Does

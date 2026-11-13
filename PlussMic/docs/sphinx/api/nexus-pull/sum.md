@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-NexusPull::sum(std::string_view source, std::string_view alias = {}) -> NexusPull&
+NexusPull& NexusPull::sum(std::string_view source, std::string_view alias = {})
 ```
 
 ## What It Does

@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::argsort() const -> Series
-Series::argsort(std::int64_t dim) const -> Series
-Series::argsort(std::int64_t dim, bool descending) const -> Series
-Series::argsort(std::int64_t dim, bool descending, bool stable) const -> Series
+Series Series::argsort() const
+Series Series::argsort(std::int64_t dim) const
+Series Series::argsort(std::int64_t dim, bool descending) const
+Series Series::argsort(std::int64_t dim, bool descending, bool stable) const
 ```
 
 ## What It Does

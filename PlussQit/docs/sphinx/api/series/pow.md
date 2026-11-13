@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::pow(const Series& rhs) const -> Series
+Series Series::pow(const Series& rhs) const
 Series& Series::pow_(const Series& rhs) const
 Series& Series::pow_(double rhs)
 ```

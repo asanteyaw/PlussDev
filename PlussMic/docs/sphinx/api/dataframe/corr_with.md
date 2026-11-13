@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-DataFrame::corr_with(const DataFrame& other, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const -> Slate
-DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const -> DataFrame
+Slate DataFrame::corr_with(const DataFrame& other, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const
+DataFrame DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others, CorrMethod method = CorrMethod::Pearson, std::int64_t min_count = 1) const
 ```
 
 ## What It Does

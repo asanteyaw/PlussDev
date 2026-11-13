@@ -12,133 +12,178 @@ Pane& Pane::y_label_centered(bool enable = true) noexcept
 
 ## What It Does
 
-Toggles whether the y-axis's own label (set via [`y_label()`](y_label.md)) is centered
-along the axis, as opposed to positioned at one end. This is a **y-axis-only** control —
-there is no `x_label_centered()` or `z_label_centered()`; the x- and z-axes have no
-equivalent method.
+Chooses where the y label stands. By default (`false`) it is written upright, at the top of the axis, ending at the axis: it reads like a heading for the axis and takes no sideways room beyond its own width. With `true` it is turned to run vertically and is centred on the axis, along its length, outside the tick labels.
 
-```{important} Writes to TWO fields: the value itself, and an "explicit" flag
-Calling `y_label_centered(enable)` sets both `label_centered_on_axis` (the value read by
-[`y_axis()`](axis_accessors.md)) *and* `label_centered_explicit` (a separate flag marking
-that this was deliberately set, as opposed to left at its unset default). Both fields
-start `false` on a fresh pane. Calling `y_label_centered(false)` explicitly still sets
-`label_centered_explicit` to `true` — the explicit flag distinguishes "never called" from
-"called with `false`," even though `label_centered_on_axis` reads as `false` either way.
-See Example 1 vs. Example 3.
-```
+The two suit different figures. The upright label reads easily and keeps a long label legible; the centred one takes less width and is the usual convention for a tall, narrow plot. Either way the pane keeps room for the label, so it is never cut by the figure's edge. Only the y axis has the choice; the x label is always centred below its axis.
+
+An explicit [`y_label_rotation`](y_label_rotation.md) is applied on top of either placement.
 
 ## Parameters
 
 **enable** (`bool`, default `true`)
-    `true` to center the y-axis label along the axis, `false` to position it at one end.
+    `true` to turn the label vertical and centre it on the axis; `false` for the upright label at the top.
 
 ## Returns
 
 `Pane&`
-    A reference to the same pane, for chaining.
+    The same pane, for chaining.
 
 ## Examples
 
-Example 1. The default: neither field set — `label_centered_on_axis` and
-`label_centered_explicit` both read `false`.
+Example 1. By default the label is upright, with its end at the axis.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("label_centered_default");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane.y_label("Amplitude");
-fig.show();
-
-std::cout << pane.y_axis().label_centered_on_axis << "\n";
-std::cout << pane.y_axis().label_centered_explicit << "\n";
+auto fig = studio("ycentered_default");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.y_label("measured value");
+auto look = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const std::string tag = svg.substr(open, hit - open);
+  const auto anchor = tag.find("text-anchor=\"");
+  std::string out = "anchor " + tag.substr(anchor + 13, tag.find('"', anchor + 13) - anchor - 13);
+  const auto rot = tag.find("rotate(");
+  out += rot == std::string::npos ? ", upright" : ", rotated " + tag.substr(rot + 7, tag.find(' ', rot) - rot - 7);
+  return out;
+};
+std::cout << look(fig.to_svg(), "measured value") << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0
-0
+anchor end, upright
 ```
 
-![Output of Example 1](img/label_centered-1-default.svg)
+![Output of Example 1](img/y_label_centered-1-default.svg)
 
-Example 2. `y_label_centered(true)` — both fields become `true`.
+Example 2. Centred, it is turned to run up the axis, middle-anchored on the axis.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("label_centered_true");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane.y_label("Amplitude");
-pane.y_label_centered(true);
-fig.show();
-
-std::cout << pane.y_axis().label_centered_on_axis << "\n";
-std::cout << pane.y_axis().label_centered_explicit << "\n";
+auto fig = studio("ycentered_on");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.y_label("measured value");
+auto look = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const std::string tag = svg.substr(open, hit - open);
+  const auto anchor = tag.find("text-anchor=\"");
+  std::string out = "anchor " + tag.substr(anchor + 13, tag.find('"', anchor + 13) - anchor - 13);
+  const auto rot = tag.find("rotate(");
+  out += rot == std::string::npos ? ", upright" : ", rotated " + tag.substr(rot + 7, tag.find(' ', rot) - rot - 7);
+  return out;
+};
+pane.y_label_centered();
+std::cout << look(fig.to_svg(), "measured value") << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
-1
+anchor middle, rotated -90.0000
 ```
 
-![Output of Example 2](img/label_centered-2-true.svg)
+![Output of Example 2](img/y_label_centered-2-centered.svg)
 
-Example 3. `y_label_centered(false)` — `label_centered_on_axis` reads `false`, the same as
-the never-called default, but `label_centered_explicit` is now `true`, distinguishing an
-explicit "off" from never having been touched.
+Example 3. `y_label_centered(false)` is the default again: the figure is the one that never made the call.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("label_centered_false_explicit");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane.y_label("Amplitude");
-pane.y_label_centered(false);
-fig.show();
-
-std::cout << pane.y_axis().label_centered_on_axis << "\n";
-std::cout << pane.y_axis().label_centered_explicit << "\n";
+auto build = [&](int mode) {
+  auto fig = studio("ycentered_off");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+  pane.y_label("measured value");
+  if (mode == 1) pane.y_label_centered(true);
+  if (mode == 2) pane.y_label_centered(true).y_label_centered(false);
+  return fig.to_svg();
+};
+std::cout << "off again == never set: " << (build(2) == build(0)) << ", on != off: " << (build(1) != build(0)) << "\n";
+auto fig = studio("ycentered_off_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.y_label("measured value");
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0
-1
+off again == never set: 1, on != off: 1
 ```
 
-![Output of Example 3](img/label_centered-3-false-explicit.svg)
+![Output of Example 3](img/y_label_centered-3-off.svg)
+
+Example 4. A long label stays inside the figure in both placements: the pane makes room for the upright label at its left, and the centred label sits beside the axis.
+
+```cpp
+auto fig = studio("ycentered_long");
+fig.mosaic(1, 2);
+auto& upright = fig.pane2("upright");
+upright.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+upright.y_label("a rather long measured value in arbitrary units");
+auto& centered = fig.pane2("centered");
+centered.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+centered.y_label("a rather long measured value in arbitrary units").y_label_centered();
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 4](img/y_label_centered-4-long.svg)
+
+Example 5. With an explicit rotation the label is turned by that angle, and the placement decides where it is anchored.
+
+```cpp
+auto fig = studio("ycentered_rotation");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.y_label("measured value");
+auto look = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const std::string tag = svg.substr(open, hit - open);
+  const auto anchor = tag.find("text-anchor=\"");
+  std::string out = "anchor " + tag.substr(anchor + 13, tag.find('"', anchor + 13) - anchor - 13);
+  const auto rot = tag.find("rotate(");
+  out += rot == std::string::npos ? ", upright" : ", rotated " + tag.substr(rot + 7, tag.find(' ', rot) - rot - 7);
+  return out;
+};
+pane.y_label_centered().y_label_rotation(-45.0);
+std::cout << look(fig.to_svg(), "measured value") << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+anchor middle, rotated -45.0000
+```
+
+![Output of Example 5](img/y_label_centered-5-rotation.svg)
 
 ## Notes
 
-- `noexcept`.
-- `enable` defaults to `true`.
-- Writes two fields at once — see the important callout above. There's no way to reach
-  `label_centered_explicit == true` without also setting `label_centered_on_axis` to
-  whatever `enable` was.
-- No corresponding `x_label_centered()`/`z_label_centered()` — this control exists only
-  on the y-axis.
+- `noexcept`. Only the y axis has this switch.
+- The call has no effect on a pane without a y label.
 
 ## See Also
 
-- [`Pane::y_label`](y_label.md): the label this setting positions.
-- [`Pane::y_axis`](axis_accessors.md): where both `label_centered_on_axis` and
-  `label_centered_explicit` are read back from.
+- [`Pane::y_label`](y_label.md): the label.
+- [`Pane::y_label_rotation`](y_label_rotation.md): rotate it by hand.
+- [`Pane::y_label_gap`](y_label_gap.md): the distance from the tick labels.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="z_tick_labels.html">
+  <a class="prev-link" href="y_label.html">
     <span class="label">Previous</span>
-    <span class="title">z_tick_labels</span>
+    <span class="title">y_label</span>
   </a>
-  <a class="next-link" href="x_ticks.html">
+  <a class="next-link" href="y_label_gap.html">
     <span class="label">Next</span>
-    <span class="title">x_ticks</span>
+    <span class="title">y_label_gap</span>
   </a>
 </div>

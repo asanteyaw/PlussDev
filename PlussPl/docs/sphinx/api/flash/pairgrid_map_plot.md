@@ -7,10 +7,8 @@
 ## Signature
 
 ```cpp
-template <class Mapper>
-  requires std::invocable<Mapper, Pane&, std::int64_t, std::int64_t, bool>
 Studio& flash::pairgrid_map_plot(Studio& studio, std::int64_t dimensions,
-                                  Mapper&& mapper, double gx = 14.0, double gy = 14.0)
+                                  std::function<void(Pane&, std::int64_t, std::int64_t, bool)> mapper, double gx = 14.0, double gy = 14.0)
 ```
 
 ## What It Does
@@ -32,10 +30,9 @@ diagonal (conventionally a univariate distribution of one feature) versus off-di
 **dimensions** (`std::int64_t`)
     Both the row and column count of the resulting square grid — one per feature being
     compared pairwise. Must be strictly positive, or `pairgrid_map_plot` throws
-    `std::invalid_argument("flash::pairgrid_map_plot dimensions must be positive")`.
+    `pluss::Error("flash::pairgrid_map_plot dimensions must be positive")`.
 
-**mapper** (`Mapper&&`, invocable as `(Pane&, std::int64_t row, std::int64_t col, bool
-is_diagonal) -> void`)
+**mapper** (a callable taking `(Pane&, std::int64_t row, std::int64_t col, bool is_diagonal)`)
     Called once per cell, in row-major order, after that cell's pane has already been
     created and `place(row, col)`d. `is_diagonal` is `row == col` — typically used to
     branch between drawing a univariate distribution (diagonal) and a bivariate

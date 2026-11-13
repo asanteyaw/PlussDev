@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::nrelationships() const -> std::int64_t
+std::int64_t Nexus::nrelationships() const
 ```
 
 ## What It Does

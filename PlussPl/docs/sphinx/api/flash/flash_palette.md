@@ -19,14 +19,14 @@ Returns one of six fixed, 10-color `PaletteRamp`s — a named categorical palett
 interpolates between stops — see its own header for the full public interface; this
 page describes only what each `flash::` palette-producing function returns.
 
-Two overloads: the `FlashPalette` enum form, and a `string_view` form that maps common
+Two overloads: the `FlashPalette` form, and a `string_view` form that maps common
 lowercase names (`"muted"`, `"pastel"`, `"bright"`, `"dark"`, `"colorblind"`) to the
 matching enumerator, falling back to `FlashPalette::Deep` for `"deep"` and any
-unrecognized name — verified below.
+unrecognized name.
 
 ## Parameters
 
-**palette** (`FlashPalette`, default `Deep`, enum overload)
+**palette** (`FlashPalette`, default `Deep`, `FlashPalette` overload)
     See the value table below.
 
 **name** (`std::string_view`, string overload)
@@ -54,7 +54,7 @@ sourced from established categorical color research):
 
 ## Examples
 
-Example 1. `Deep` (the default) vs `Muted` — confirmed to hold genuinely different
+Example 1. `Deep` (the default) vs `Muted` — holds different
 color stops.
 
 ```cpp
@@ -75,14 +75,14 @@ flash_palette(Muted) name=muted stops=10
 flash_palette(Deep) != flash_palette(Muted): 1
 ```
 
-Example 2. String overload matches its enum equivalent.
+Example 2. String overload matches its `FlashPalette` equivalent.
 
 ```cpp
 using namespace pluss::pl;
 
 auto muted_enum = flash::flash_palette(flash::FlashPalette::Muted);
 auto muted_str = flash::flash_palette(std::string_view("muted"));
-std::cout << "flash_palette(enum Muted) vs flash_palette(\"muted\") name match: "
+std::cout << "flash_palette(Muted) vs flash_palette(\"muted\") name match: "
           << (muted_str.name() == muted_enum.name()) << "\n";
 std::cout << "flash_palette() default name: " << flash::flash_palette().name() << "\n";
 ```
@@ -90,7 +90,7 @@ std::cout << "flash_palette() default name: " << flash::flash_palette().name() <
 Output:
 
 ```text
-flash_palette(enum Muted) vs flash_palette("muted") name match: 1
+flash_palette(Muted) vs flash_palette("muted") name match: 1
 flash_palette() default name: deep
 ```
 
@@ -111,7 +111,7 @@ flash_palette(unknown-string) falls back to: deep
 
 ## Notes
 
-- Not `noexcept` (string overload does string comparisons; enum overload is a `switch`).
+- Not `noexcept` (string overload does string comparisons; `FlashPalette` overload is a `switch`).
 - All six palettes are fixed data — nothing about them is computed at runtime beyond
   the `switch`/string-match dispatch.
 - `FlashPalette` is unrelated to [`FlashStyle`](set_style.md) — a `FlashStyle` value
@@ -124,7 +124,7 @@ flash_palette(unknown-string) falls back to: deep
   lookup this function's string overload uses), `flash_palette_colors(palette)`
   (returns just the raw 10-`Rgba` vector, no `PaletteRamp` wrapper), and
   `flash_palette_ramp(palette)` (wraps `flash_palette_colors`' result into a named
-  `PaletteRamp` — this function's enum overload is exactly `return
+  `PaletteRamp` — this function's `FlashPalette` overload is exactly `return
   flash_palette_ramp(palette);`).
 
 ## See Also

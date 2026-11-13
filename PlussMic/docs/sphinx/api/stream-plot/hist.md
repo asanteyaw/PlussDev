@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-StreamPlotAccessor::hist(std::int64_t bins = 20) const -> pluss::pl::Studio
-StreamPlotAccessor::hist(const HistPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio StreamPlotAccessor::hist(std::int64_t bins = 20) const
+pluss::pl::Studio StreamPlotAccessor::hist(const HistPlotOptions& options) const
 ```
 
 ## What It Does

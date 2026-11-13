@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-SlatePlotAccessor::area() const -> pluss::pl::Studio
-SlatePlotAccessor::area(const Slate& x) const -> pluss::pl::Studio
-SlatePlotAccessor::area(const AreaPlotOptions& options) const -> pluss::pl::Studio
-SlatePlotAccessor::area(const Slate& x, const AreaPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio SlatePlotAccessor::area() const
+pluss::pl::Studio SlatePlotAccessor::area(const Slate& x) const
+pluss::pl::Studio SlatePlotAccessor::area(const AreaPlotOptions& options) const
+pluss::pl::Studio SlatePlotAccessor::area(const Slate& x, const AreaPlotOptions& options) const
 ```
 
 ## What It Does

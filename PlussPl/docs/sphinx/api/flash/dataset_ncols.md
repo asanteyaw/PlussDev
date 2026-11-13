@@ -41,7 +41,7 @@ auto frame = DataFrame({
     })},
 });
 
-auto data = pluss::pl::flash::Dataset::from_frame(frame);
+auto data = pluss::pl::flash::Dataset::from_table(frame);
 std::cout << "ncols=" << data.ncols() << "\n";
 ```
 

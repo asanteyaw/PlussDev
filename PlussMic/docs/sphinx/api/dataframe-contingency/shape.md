@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-ContingencyTable::shape() const -> std::vector<std::int64_t>
+std::vector<std::int64_t> ContingencyTable::shape() const
 ```
 
 ## What It Does

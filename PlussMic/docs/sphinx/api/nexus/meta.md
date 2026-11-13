@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-Nexus::meta(std::string_view key) const -> std::optional<TableMeta>
+std::optional<TableMeta> Nexus::meta(std::string_view key) const
 
-Nexus::meta(std::string_view key, const TableMeta& value) const -> Nexus
-Nexus::meta(std::initializer_list<std::pair<std::string_view, TableMeta>> values) const -> Nexus
+Nexus Nexus::meta(std::string_view key, const TableMeta& value) const
+Nexus Nexus::meta(std::initializer_list<std::pair<std::string_view, TableMeta>> values) const
 
 Nexus& Nexus::meta_(std::string_view key, const TableMeta& value)
 Nexus& Nexus::meta_(std::initializer_list<std::pair<std::string_view, TableMeta>> values)

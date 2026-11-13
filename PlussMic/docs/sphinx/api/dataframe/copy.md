@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrame::copy() const -> DataFrame
+DataFrame DataFrame::copy() const
 ```
 
 ## What It Does

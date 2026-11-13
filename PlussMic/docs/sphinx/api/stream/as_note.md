@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::as_note() const -> const pluss::Note&
+const pluss::Note& Stream::as_note() const
 ```
 
 ## What It Does

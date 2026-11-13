@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-TimeSeriesAccessor::align_to(const Slate& source_axis, const Slate& target_axis, TsAlignMode mode = TsAlignMode::Exact) const -> Slate
-TimeSeriesAccessor::align_to(const Slate& source_axis, const Slate& target_axis, TsAlignMode mode, GapFillMode fill_mode, std::optional<double> constant = std::nullopt) const -> Slate
+Slate TimeSeriesAccessor::align_to(const Slate& source_axis, const Slate& target_axis, TsAlignMode mode = TsAlignMode::Exact) const
+Slate TimeSeriesAccessor::align_to(const Slate& source_axis, const Slate& target_axis, TsAlignMode mode, GapFillMode fill_mode, std::optional<double> constant = std::nullopt) const
 ```
 
 ## What It Does

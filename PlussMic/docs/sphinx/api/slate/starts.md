@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::starts(std::string_view prefix) const -> Slate
+Slate Slate::starts(std::string_view prefix) const
 ```
 
 ## What It Does

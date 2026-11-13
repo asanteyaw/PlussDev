@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::gelu() const -> Series
-Series::gelu(bool approximate) const -> Series
+Series Series::gelu() const
+Series Series::gelu(bool approximate) const
 Series& Series::gelu_() const
 ```
 

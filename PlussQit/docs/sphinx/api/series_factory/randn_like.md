@@ -7,13 +7,13 @@
 ## Signature
 
 ```cpp
-pluss::series::randn_like(const Series& like,
-                          ScalarType dtype,
-                          std::uint64_t seed = 0) -> Series
+Series pluss::series::randn_like(const Series& like,
+                                 ScalarType dtype,
+                                 std::uint64_t seed = 0)
 
-pluss::series::randn_like(const Series& like,
-                          Config cfg = {},
-                          std::uint64_t seed = 0) -> Series
+Series pluss::series::randn_like(const Series& like,
+                                 Config cfg = {},
+                                 std::uint64_t seed = 0)
 ```
 
 ## What It Builds

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::isnan() const -> Series
+Series Series::isnan() const
 Series& Series::isnan_()
 ```
 

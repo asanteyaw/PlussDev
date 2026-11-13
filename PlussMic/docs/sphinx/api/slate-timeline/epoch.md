@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateTimelineAccessor::epoch(TimeUnit unit = TimeUnit::Nanos) const -> Slate
+Slate SlateTimelineAccessor::epoch(TimeUnit unit = TimeUnit::Nanos) const
 ```
 
 ## What It Does

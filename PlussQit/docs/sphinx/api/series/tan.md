@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::tan() const -> Series
+Series Series::tan() const
 Series& Series::tan_()
 ```
 

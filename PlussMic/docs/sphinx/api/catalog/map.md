@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::map(const std::function<Stream(const Stream&)>& fn) -> Catalog
+Catalog Catalog::map(const std::function<Stream(const Stream&)>& fn)
 ```
 
 ## What It Does

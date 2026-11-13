@@ -7,8 +7,8 @@
 ## Signatures
 
 ```cpp
-TimeSeriesAccessor::rolling(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> Slate
-TimeSeriesAccessor::rolling(const Slate& axis, std::string_view duration, WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const -> Slate
+Slate TimeSeriesAccessor::rolling(std::int64_t window, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const
+Slate TimeSeriesAccessor::rolling(const Slate& axis, std::string_view duration, WindowStatistic statistic = WindowStatistic::Mean, const StatisticOptions& options = {}, WindowClosure closure = WindowClosure::Right) const
 ```
 
 ## What It Does

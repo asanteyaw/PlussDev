@@ -7,25 +7,21 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::cloud3(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::cloud3(Pane& pane, Series x, Series y, Series z)
 
-template <class X, class Y, class Z, class Size>
-Trace& flash::cloud3(Pane& pane, X&& x, Y&& y, Z&& z, Size&& size)
+Trace& flash::cloud3(Pane& pane, Series x, Series y, Series z, Series size)
 
-template <class X, class Y, class Z, class Size, class Color>
-Trace& flash::cloud3(Pane& pane, X&& x, Y&& y, Z&& z, Size&& size, Color&& color)
+Trace& flash::cloud3(Pane& pane, Series x, Series y, Series z, Series size, Series color)
 
-template <class X, class Y, class Z>
-Trace& flash::cloud3(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {})
+Trace& flash::cloud3(Studio& studio, Series x, Series y, Series z, std::string title = {})
 ```
 
 ## What It Does
 
 A thin wrapper around [`Pane::cloud3`](../pane/cloud3.md): converts every argument to
 `Series`, validates each is rank ≤ 3, then delegates to the identically-shaped native
-`Pane::cloud3` overload. Every `Pane`-overload delegation is byte-identical to calling
-`Pane::cloud3` directly — directly verified via SVG comparison. Four overloads: bare
+`Pane::cloud3` overload. Every `Pane`-overload delegation is identical to calling
+`Pane::cloud3` directly. Four overloads: bare
 `(x, y, z)`, `(x, y, z, size)`, `(x, y, z, size, color)`, and a `Studio` convenience
 overload (matching only the bare-arity `(x, y, z)` shape) that creates the
 [`Volumetric`](../studio/pane3.md) pane for you.
@@ -40,7 +36,7 @@ overload (matching only the bare-arity `(x, y, z)` shape) that creates the
 
 **x**, **y**, **z** (series-convertible, must each be rank ≤ 3)
     The point coordinates. A rank-4-or-higher input throws
-    `std::invalid_argument("flash::cloud3: expected input rank <= 3")`.
+    `pluss::Error("flash::cloud3: expected input rank <= 3")`.
 
 **size** (series-convertible, must be rank ≤ 3, three- and five-argument overloads)
     Per-point marker size — see [`Pane::cloud3`](../pane/cloud3.md) for the exact
@@ -126,8 +122,8 @@ fig.show();
 
 ![Output of Example 4](img/flash-cloud3-4-studio.svg)
 
-Example 5 (verification, not a distinct rendering). `flash::cloud3(pane, x, y, z)`
-renders byte-identical to `pane.cloud3(x, y, z)` called directly.
+Example 5 (a comparison, not a new picture). `flash::cloud3(pane, x, y, z)`
+renders identical to `pane.cloud3(x, y, z)` called directly.
 
 ```cpp
 using namespace pluss::pl;
@@ -165,7 +161,7 @@ std::vector<double> ok{1.0, 2.0};
 try {
   flash::cloud3(pane, rank4, ok, ok);
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << "cloud3(rank-4 x) threw: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```
@@ -179,11 +175,7 @@ cloud3(rank-4 x) threw: flash::cloud3: expected input rank <= 3
 ## Notes
 
 - Not `noexcept`.
-- The rank check throws via `pluss::Error` (a `std::runtime_error` subclass) with the
-  message as the first line of `e.what()`, not `std::invalid_argument` — catch
-  `pluss::Error` or `std::exception`, not `std::invalid_argument`, for this specific
-  check (contrast with [`flash::isoshell`](isoshell.md), whose deeper Pane-level
-  rank-3-exact check throws `std::invalid_argument` instead).
+- A wrong rank throws `pluss::Error`; `e.message()` is the message alone, without the traceback that `e.what()` adds.
 - See [`Pane::cloud3`](../pane/cloud3.md) for what actually gets rendered.
 
 ## See Also

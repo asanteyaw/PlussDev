@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::histc(std::int64_t bins, double min, double max) const -> Series
+Series Series::histc(std::int64_t bins, double min, double max) const
 ```
 
 ## What It Does

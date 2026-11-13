@@ -7,10 +7,10 @@
 ## Signature
 
 ```cpp
-Series::max() const -> Series
-Series::max(std::int64_t dim) const -> Series
-Series::max(std::int64_t dim, bool keepdim) const -> Series
-Series::max(const Series& other) const -> Series
+Series Series::max() const
+Series Series::max(std::int64_t dim) const
+Series Series::max(std::int64_t dim, bool keepdim) const
+Series Series::max(const Series& other) const
 ```
 
 ## What It Does

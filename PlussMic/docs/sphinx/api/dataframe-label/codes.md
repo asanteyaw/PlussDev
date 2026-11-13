@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameLabelAccessor::codes() const -> DataFrame
+DataFrame DataFrameLabelAccessor::codes() const
 ```
 
 ## What It Does

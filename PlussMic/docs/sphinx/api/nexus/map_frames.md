@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const -> Nexus
+Nexus Nexus::map_frames(const std::function<DataFrame(const DataFrame&)>& fn) const
 ```
 
 ## What It Does

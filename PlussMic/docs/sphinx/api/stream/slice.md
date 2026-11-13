@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::slice(std::int64_t start, std::int64_t stop) const -> Stream
+Stream Stream::slice(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does

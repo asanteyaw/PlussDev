@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::schema() const -> DataFrame
+DataFrame Nexus::schema() const
 ```
 
 ## What It Does

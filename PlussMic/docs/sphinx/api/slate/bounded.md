@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::bounded(const WindowBoundsFn& bounds, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const -> Slate
+Slate Slate::bounded(const WindowBoundsFn& bounds, WindowStatistic statistic = WindowStatistic::Mean, const WindowOptions& options = {}) const
 ```
 
 ## What It Does

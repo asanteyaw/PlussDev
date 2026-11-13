@@ -8,13 +8,13 @@
 ## Signatures
 
 ```cpp
-DataFrame::assign(pluss::RangeView<DeriveSpec> specs) -> DataFrame
+DataFrame DataFrame::assign(pluss::RangeView<DeriveSpec> specs)
 
-DataFrame::assign(pluss::RangeView<std::pair<std::string, Slate>> assignments) -> DataFrame
+DataFrame DataFrame::assign(pluss::RangeView<std::pair<std::string, Slate>> assignments)
 
-DataFrame::assign(std::string_view name, const Slate& value) -> DataFrame
+DataFrame DataFrame::assign(std::string_view name, const Slate& value)
 
-DataFrame::assign(std::string_view name, const std::function<Slate(const DataFrame&)>& expr) -> DataFrame
+DataFrame DataFrame::assign(std::string_view name, const std::function<Slate(const DataFrame&)>& expr)
 ```
 
 Add or replace one or more features on a DataFrame and return the resulting frame.

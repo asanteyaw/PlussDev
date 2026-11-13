@@ -5,7 +5,7 @@
 ## Signature
 
 ```cpp
-Catalog::combine(std::string_view lhs, std::string_view rhs, std::string_view op, std::string_view out_key = {}, const RaggedPolicy& policy = RaggedPolicy::defaults(OpClass::Elementwise)) -> Catalog
+Catalog Catalog::combine(std::string_view lhs, std::string_view rhs, std::string_view op, std::string_view out_key = {}, const RaggedPolicy& policy = RaggedPolicy::defaults(OpClass::Elementwise))
 ```
 
 ## What It Does

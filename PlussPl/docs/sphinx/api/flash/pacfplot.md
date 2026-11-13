@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class Values>
-Studio& flash::pacfplot(Studio& studio, Values&& values, const PacfPlotOptions& options = {})
+Studio& flash::pacfplot(Studio& studio, Series values, const PacfPlotOptions& options = {})
 ```
 
 ## What It Does
@@ -35,7 +34,7 @@ approximation — see [`flash::acfplot`](acfplot.md)'s important callout), same
 
 **values** (series-convertible)
     The sequence to compute partial autocorrelations for. Must contain at least four
-    points, or `pacfplot` throws `std::invalid_argument("flash::pacfplot requires at
+    points, or `pacfplot` throws `pluss::Error("flash::pacfplot requires at
     least four points")` — one more than [`flash::acfplot`](acfplot.md)'s three-point
     minimum, since the Durbin-Levinson recursion needs slightly more data to be
     meaningful.
@@ -47,10 +46,10 @@ approximation — see [`flash::acfplot`](acfplot.md)'s important callout), same
 
 | Field | Type and default | Description |
 |---|---|---|
-| `max_lag` | `std::int64_t`, default `40` | The largest lag computed and shown. Clamped to `[1, n - 1]`. |
+| `max_lag` | `std::int64_t`, default `40` | The largest lag computed and shown. At least `1` (fewer throws `pluss::Error`); a value above `n - 1` is reduced to `n - 1`, since a series has no longer lags. |
 | `include_zero_lag` | `bool`, default `false` | Whether lag `0` (always exactly `1.0`) is included as its own spike. |
 | `show_confidence_band` | `bool`, default `true` | Whether the `+CI`/`-CI` reference lines are drawn — same constant-width normal-approximation mechanics as [`flash::acfplot`](acfplot.md). |
-| `confidence_level` | `double`, default `0.95` | Same discrete-bucket z-score lookup as [`flash::acfplot`](acfplot.md) — see that page's field description for the exact threshold table. |
+| `confidence_level` | `double`, default `0.95` | As for [`flash::acfplot`](acfplot.md): strictly between 0 and 1, with the band at the exact normal quantile of the level. |
 | `trace_width` | `float`, default `1.2F` | Stroke width for the correlogram's spikes. |
 | `marker_area` | `double`, default `14.0` | Declared, but never read anywhere in `pacfplot`'s implementation — same inert field as [`AcfPlotOptions::marker_area`](acfplot.md). |
 
@@ -78,8 +77,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-pacfplot-1-default.svg)
 
-Example 2 (verification, not a distinct rendering). `max_lag = 10` renders genuinely
-differently from the `40`-lag default, confirmed via direct SVG comparison.
+Example 2 (a comparison, not a new picture). `max_lag = 10` renders differently from the `40`-lag default.
 
 ```cpp
 using namespace pluss::pl;
@@ -118,8 +116,8 @@ auto fig = studio("flash_pacfplot_too_few");
 std::vector<double> three{1.0, 2.0, 3.0};
 try {
   flash::pacfplot(fig, three);
-} catch (const std::invalid_argument& e) {
-  std::cout << "pacfplot(3 points) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "pacfplot(3 points) threw: " << e.message() << "\n";
 }
 ```
 
@@ -142,7 +140,7 @@ pacfplot(3 points) threw: flash::pacfplot requires at least four points
 ## See Also
 
 - [`flash::acfplot`](acfplot.md): the (non-partial) autocorrelation sibling, and the
-  source of the discrete confidence-level bucketing and constant-width band mechanics
+  source of the confidence-level and constant-width band mechanics
   this page's options share field-for-field.
 - [`flash::ccfplot`](ccfplot.md): the two-series cross-correlation sibling.
 - [`Pane::spike`](../pane/spike.md), [`Pane::rule_y`](../pane/rule_y.md): the native

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Slate::ncases() const -> std::int64_t
+std::int64_t Slate::ncases() const
 ```
 
 ## What It Does

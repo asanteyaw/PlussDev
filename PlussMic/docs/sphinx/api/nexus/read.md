@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-static Nexus::read(std::string_view directory, const StoreOptions& options = {}) -> Nexus
+static Nexus Nexus::read(std::string_view directory, const StoreOptions& options = {})
 ```
 
 ## What It Does

@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::deduce(double min_confidence = 0.5) const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::deduce(double min_confidence = 0.5) const
 ```
 
 ## What It Does

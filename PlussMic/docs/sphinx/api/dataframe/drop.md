@@ -8,10 +8,10 @@
 ## Signatures
 
 ```cpp
-DataFrame::drop(pluss::RangeView<std::string_view> names) const -> DataFrame
+DataFrame DataFrame::drop(pluss::RangeView<std::string_view> names) const
 
 template <detail::StringViewNameRange NameRange>
-DataFrame::drop(const NameRange& names) const -> DataFrame
+DataFrame DataFrame::drop(const NameRange& names) const
 ```
 
 ## What It Does

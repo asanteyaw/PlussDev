@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::set(const Slate& labels) const -> Slate
+Slate SlateLabelAccessor::set(const Slate& labels) const
 ```
 
 ## What It Does

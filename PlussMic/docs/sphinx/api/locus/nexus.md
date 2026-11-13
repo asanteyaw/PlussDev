@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::nexus(const Policy& policy = std::nullopt) const -> Nexus
+Nexus Locus::nexus(const Policy& policy = std::nullopt) const
 ```
 
 ```cpp

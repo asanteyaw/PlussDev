@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::dtype() const -> std::string
+std::string Stream::dtype() const
 ```
 
 ## What It Does

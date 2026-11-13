@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::freq() const -> Slate
-Slate::freq(SlateFreqOptions options) const -> Slate
+Slate Slate::freq() const
+Slate Slate::freq(SlateFreqOptions options) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::has(std::string_view key) const -> bool
+bool Archive::has(std::string_view key) const
 ```
 
 ## What It Does

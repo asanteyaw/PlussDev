@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::relationship(std::string_view name) const -> std::optional<Relationship>
+std::optional<Relationship> Nexus::relationship(std::string_view name) const
 ```
 
 ## What It Does

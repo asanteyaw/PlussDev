@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-DataFrameTsWindowAccessor::sum(std::string_view value_feature = {}) const -> DataFrame
+DataFrame DataFrameTsWindowAccessor::sum(std::string_view value_feature = {}) const
 ```
 
 ## What It Does

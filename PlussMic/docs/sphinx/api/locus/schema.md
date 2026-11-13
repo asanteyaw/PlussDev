@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Locus::schema() const -> pluss::table::DataFrame
+pluss::table::DataFrame Locus::schema() const
 ```
 
 ## What It Does

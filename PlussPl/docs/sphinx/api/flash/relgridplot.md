@@ -9,7 +9,6 @@
 ```cpp
 RelGridKind flash::relgrid_kind(std::string_view kind);
 
-
 Studio& flash::relgridplot(Studio& studio, pluss::msharp::RangeView::Series xs,
                             pluss::msharp::RangeView::Series ys,
                             const RelGridPlotOptions& options = {})
@@ -31,7 +30,7 @@ Draws one relational plot per facet across an auto- or explicitly-shaped grid.
 Each entry in `xs`/`ys` is one facet's complete x/y series; `relgridplot` lays out a [`flash::FacetGrid`](FacetGrid.md),
 then draws [`flash::scatterplot`](scatterplot.md), [`flash::lineplot`](lineplot.md), or
 [`flash::regplot`](regplot.md) into each cell according to `options.kind`. Four overloads
-cover every combination of "options struct vs. bare kind string" and
+cover every combination of "an options value vs. a bare kind string" and
 "`RangeView::Series` vs. `std::initializer_list<Series>`" input.
 
 ```{important} Grid shape is auto-resolved, not required
@@ -39,10 +38,10 @@ When both options.rows and options.cols are 0 (the default), the shape is comput
 via flash::resolve_grid_shape as ceil(sqrt(facet_count)) columns and enough rows to
 fit every facet. Set only rows (or only cols) to fix one dimension and let the other
 grow to fit. Set both to pick an exact shape -- but rows * cols must be at least the
-facet count, or relgridplot throws std::invalid_argument("flash grid helpers:
-rows*cols is smaller than facet count"), directly verified below. If the exact shape
+facet count, or relgridplot throws pluss::Error("flash grid helpers:
+rows*cols is smaller than facet count"). If the exact shape
 overprovisions cells (rows * cols > facet_count), the leftover cells are hidden via
-Pane::hide(), also verified below.
+Pane::hide().
 ```
 
 ```{important} Per-panel titles/labels apply positionally, and silently omit when short
@@ -58,7 +57,7 @@ short-vector-is-fine rule applies independently to x_labels and y_labels.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `kind` | `RelGridKind`, default `RelGridKind::Scatter` | Which flash function draws each panel: `Scatter` → [`scatterplot`](scatterplot.md), `Line` → [`lineplot`](lineplot.md), `Reg` → [`regplot`](regplot.md). The kind-string overloads resolve this via `flash::relgrid_kind("scatter"\|"line"\|"reg")`, which throws `std::invalid_argument("flash::relgridplot unknown kind: " + kind)` for any other string. |
+| `kind` | `RelGridKind`, default `RelGridKind::Scatter` | Which flash function draws each panel: `Scatter` → [`scatterplot`](scatterplot.md), `Line` → [`lineplot`](lineplot.md), `Reg` → [`regplot`](regplot.md). The kind-string overloads resolve this via `flash::relgrid_kind("scatter"\|"line"\|"reg")`, which throws `pluss::Error("flash::relgridplot unknown kind: " + kind)` for any other string. |
 | `rows`, `cols` | `std::int64_t`, default `0` each | Explicit grid shape hints. `0` means "auto" for that dimension — see the important callout above for the full resolution rule, including the `rows*cols < facet_count` error case. |
 | `grid_gap_x`, `grid_gap_y` | `double`, default `16.0` each | Forwarded straight to the internal [`flash::FacetGrid`](FacetGrid.md) call as its `gx`/`gy` gutter. |
 | `show_grid` | `bool`, default `true` | Whether each panel gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`), applied via `Pane::grid` before that panel is drawn. |
@@ -74,8 +73,8 @@ short-vector-is-fine rule applies independently to x_labels and y_labels.
 **xs**, **ys** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
     One entry per facet — `xs[i]`/`ys[i]` are that facet's complete x/y series. Must be
     non-empty and equal in length, or `relgridplot` throws
-    `std::invalid_argument("flash::relgridplot requires non-empty aligned x/y facet
-    vectors")`, verified below.
+    `pluss::Error("flash::relgridplot requires non-empty aligned x/y facet
+    vectors")`.
 
 **kind** (`std::string_view`, kind-string overloads only)
     `"scatter"`, `"line"`, or `"reg"` — resolved via `flash::relgrid_kind`. Equivalent to
@@ -160,7 +159,7 @@ fig.show();
 ![Output of Example 4](img/flash-relgridplot-4-initlist.svg)
 
 Example 5. `titles` shorter than the facet count — only the facets with a corresponding
-title get one; the rest stay empty, verified via `Pane::title_text()`.
+title get one; the rest stay empty, readable through `Pane::title_text()`.
 
 ```cpp
 using namespace pluss::pl;
@@ -227,8 +226,8 @@ using namespace pluss::pl;
 auto fig = studio("flash_relgridplot_empty");
 try {
   flash::relgridplot(fig, pluss::msharp::RangeView::Series{}, pluss::msharp::RangeView::Series{});
-} catch (const std::invalid_argument& e) {
-  std::cout << "relgridplot(empty) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "relgridplot(empty) threw: " << e.message() << "\n";
 }
 ```
 
@@ -253,8 +252,8 @@ opts.rows = 1;
 opts.cols = 2;
 try {
   flash::relgridplot(fig, pluss::msharp::RangeView::Series(xs), pluss::msharp::RangeView::Series(ys), opts);
-} catch (const std::invalid_argument& e) {
-  std::cout << "relgridplot(rows*cols < facets) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "relgridplot(rows*cols < facets) threw: " << e.message() << "\n";
 }
 ```
 

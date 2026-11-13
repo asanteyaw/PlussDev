@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::empty() const -> bool
+bool Archive::empty() const
 ```
 
 ## What It Does

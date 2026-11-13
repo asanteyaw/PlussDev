@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Nexus::keys() const -> const std::vector<std::string>&
+const std::vector<std::string>& Nexus::keys() const
 ```
 
 ## What It Does

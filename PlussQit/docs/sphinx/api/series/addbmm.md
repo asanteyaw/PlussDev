@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::addbmm(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const -> Series
+Series Series::addbmm(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const
 Series& Series::addbmm_(const Series& batch1, const Series& batch2, double beta=1.0, double alpha=1.0) const
 ```
 

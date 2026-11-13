@@ -8,19 +8,19 @@
 ## Signatures
 
 ```cpp
-CatalogPlot3DAccessor::scatter(std::string_view x_key,
-                                std::string_view y_key,
-                                std::string_view z_key,
-                                std::optional<std::string_view> size_key = std::nullopt,
-                                std::optional<std::string_view> color_key = std::nullopt,
-                                const pluss::table::Scatter3DPlotOptions& options = {}) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlot3DAccessor::scatter(std::string_view x_key,
+                                                  std::string_view y_key,
+                                                  std::string_view z_key,
+                                                  std::optional<std::string_view> size_key = std::nullopt,
+                                                  std::optional<std::string_view> color_key = std::nullopt,
+                                                  const pluss::table::Scatter3DPlotOptions& options = {}) const
 
-CatalogPlot3DAccessor::scatter(std::string_view x_key,
-                                std::string_view y_key,
-                                std::string_view z_key,
-                                std::optional<std::string_view> size_key,
-                                std::optional<std::string_view> color_key,
-                                const CatalogScatter3DPlotOptions& options) const -> pluss::pl::Studio
+pluss::pl::Studio CatalogPlot3DAccessor::scatter(std::string_view x_key,
+                                                  std::string_view y_key,
+                                                  std::string_view z_key,
+                                                  std::optional<std::string_view> size_key,
+                                                  std::optional<std::string_view> color_key,
+                                                  const CatalogScatter3DPlotOptions& options) const
 ```
 
 ## What It Does

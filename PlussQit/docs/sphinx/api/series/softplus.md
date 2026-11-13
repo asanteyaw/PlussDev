@@ -7,8 +7,8 @@
 ## Signature
 
 ```cpp
-Series::softplus() const -> Series
-Series::softplus(double beta, double threshold) const -> Series
+Series Series::softplus() const
+Series Series::softplus(double beta, double threshold) const
 Series& Series::softplus_() const
 ```
 

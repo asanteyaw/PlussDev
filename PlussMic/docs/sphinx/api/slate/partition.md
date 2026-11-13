@@ -8,8 +8,8 @@
 ## Signature
 
 ```cpp
-Slate::partition(std::string_view separator,
-                  std::string prefix = "part") const -> DataFrame
+DataFrame Slate::partition(std::string_view separator,
+                            std::string prefix = "part") const
 ```
 
 ## What It Does

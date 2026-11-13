@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-pluss::series::from_torch(const torch::Tensor& t) -> Series
+Series pluss::series::from_torch(const torch::Tensor& t)
 ```
 
 **Availability.** This factory exists only when the library is built with

@@ -8,12 +8,12 @@
 ## Signatures
 
 ```cpp
-ContingencyTable::slice(std::string_view dim, std::string_view value) const -> ContingencyTable
-ContingencyTable::slice(std::string_view dim, const char* value) const -> ContingencyTable
-ContingencyTable::slice(std::string_view dim, bool value) const -> ContingencyTable
-ContingencyTable::slice(std::string_view dim, std::int64_t value) const -> ContingencyTable
-ContingencyTable::slice(std::string_view dim, double value) const -> ContingencyTable
-ContingencyTable::slice(std::initializer_list<SliceSpec> specs) const -> ContingencyTable
+ContingencyTable ContingencyTable::slice(std::string_view dim, std::string_view value) const
+ContingencyTable ContingencyTable::slice(std::string_view dim, const char* value) const
+ContingencyTable ContingencyTable::slice(std::string_view dim, bool value) const
+ContingencyTable ContingencyTable::slice(std::string_view dim, std::int64_t value) const
+ContingencyTable ContingencyTable::slice(std::string_view dim, double value) const
+ContingencyTable ContingencyTable::slice(std::initializer_list<SliceSpec> specs) const
 ```
 
 ## What It Does

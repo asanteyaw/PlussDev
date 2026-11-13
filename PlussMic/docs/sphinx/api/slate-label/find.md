@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-SlateLabelAccessor::find(const Slate& targets) const -> Slate
+Slate SlateLabelAccessor::find(const Slate& targets) const
 ```
 
 ## What It Does

@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Archive::freq(FreqOptions options = {}) const -> Archive
+Archive Archive::freq(FreqOptions options = {}) const
 ```
 
 ### `FreqOptions` fields

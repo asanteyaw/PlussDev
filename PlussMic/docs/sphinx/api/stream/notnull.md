@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Stream::notnull() const -> Stream
+Stream Stream::notnull() const
 ```
 
 ## What It Does

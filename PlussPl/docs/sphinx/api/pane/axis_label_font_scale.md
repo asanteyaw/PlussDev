@@ -4,111 +4,199 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Pane& Pane::axis_label_font_scale(double scale)          // setter
-double Pane::axis_label_font_scale() const noexcept        // getter
+Pane& Pane::axis_label_font_scale(double scale)
+double Pane::axis_label_font_scale() const noexcept
 ```
 
 ## What It Does
 
-The axis-label counterpart of [`tick_font_scale()`](tick_font_scale.md): scales the font
-size used for axis labels (set via [`x_label()`](x_label.md)/etc.) on this pane,
-multiplicatively. Every new pane starts with whatever
-[`Studio::context_scales()`](../studio/context_scales.md) most recently set as the
-figure's default `axis_label_font_scale`, at the moment the pane was created. Every
-validation detail carries over unchanged from `tick_font_scale()` — finite and positive,
-same throw message shape with `"axis_label_font_scale"` in place of `"tick_font_scale"`.
+Scales the font of the axis labels ([`x_label`](x_label.md), [`y_label`](y_label.md), [`z_label`](z_label.md)) of the pane, all axes at once. The scale is a factor on the default label size: 1 is the default, 2 doubles it. The room for the labels follows the size.
 
-```{note} No overload-resolution ambiguity, same reasoning as tick_font_scale()
-The setter requires an explicit `scale` with no default, so `pane.axis_label_font_scale()`
-with zero arguments can only match the `const` getter — see
-[`tick_font_scale()`](tick_font_scale.md)'s note for the contrast with
-[`visible()`](visible.md)/[`axes_visible()`](axes_visible.md)/
-[`parallel_xy_labels()`](parallel_xy_labels.md).
-```
+The scale must be finite and positive; anything else throws. It applies to the axis labels only; the tick labels have their own scale ([`tick_font_scale`](tick_font_scale.md)), and the title and legend are unaffected. The getter takes no argument.
 
 ## Parameters
 
 **scale** (`double`, setter only)
-    The multiplicative scale factor. Must be finite and positive.
+    The factor on the default axis label size. Finite and strictly positive.
 
 ## Returns
 
-**Setter:** `Pane&` — a reference to the same pane, for chaining.
-
-**Getter:** `double` — the current scale factor.
+**Setter:** `Pane&`, the same pane.
+**Getter:** `double`, the scale in force; `1.0` for a new pane.
 
 ## Examples
 
-Example 1. A larger scale on the axis label specifically (tick labels stay their normal
-size).
+Example 1. The default is 1, and the axis labels are a little larger than the tick labels.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("axis_label_font_scale_large");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane.x_label("Time");
-pane.axis_label_font_scale(1.8);
-fig.show();
-
-std::cout << pane.axis_label_font_scale() << "\n";
+auto fig = studio("labelfont_default");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.x_label("time").y_label("level").title("scaled");
+auto size_of = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const auto k = svg.find("font-size=\"", open) + 11;
+  return svg.substr(k, svg.find('"', k) - k);
+};
+const std::string svg = fig.to_svg();
+std::cout << "scale: " << pane.axis_label_font_scale() << ", axis label size: " << size_of(svg, "time") << ", tick size: " << size_of(svg, "1.0") << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1.8
+scale: 1, axis label size: 11.0000, tick size: 10.0000
 ```
 
-![Output of Example 1](img/axis_label_font_scale-1-large.svg)
+![Output of Example 1](img/axis_label_font_scale-1-default.svg)
 
-Example 2. A non-finite value throws.
+Example 2. A scale of 2 doubles both axis labels and leaves the ticks and the title alone.
 
 ```cpp
-using namespace pluss::pl;
+auto fig = studio("labelfont_larger");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.x_label("time").y_label("level").title("scaled");
+auto size_of = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const auto k = svg.find("font-size=\"", open) + 11;
+  return svg.substr(k, svg.find('"', k) - k);
+};
+pane.axis_label_font_scale(2.0);
+const std::string svg = fig.to_svg();
+std::cout << "x label: " << size_of(svg, "time") << ", y label: " << size_of(svg, "level") << ", tick: " << size_of(svg, "1.0") << ", title: " << size_of(svg, "scaled") << "\n";
+fig.save_svg("figure.svg");
+```
 
-auto fig = studio("axis_label_font_scale_failure");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0}, std::vector<double>{1.0, 2.0});
+### Output
 
-try {
-  pane.axis_label_font_scale(std::numeric_limits<double>::quiet_NaN());
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
+```text
+x label: 22.0000, y label: 22.0000, tick: 10.0000, title: 14.0000
+```
+
+![Output of Example 2](img/axis_label_font_scale-2-larger.svg)
+
+Example 3. A scale below 1 gives quieter labels.
+
+```cpp
+auto fig = studio("labelfont_smaller");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.x_label("time").y_label("level").title("scaled");
+auto size_of = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const auto k = svg.find("font-size=\"", open) + 11;
+  return svg.substr(k, svg.find('"', k) - k);
+};
+pane.axis_label_font_scale(0.7);
+std::cout << "x label: " << size_of(fig.to_svg(), "time") << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+x label: 7.7000
+```
+
+![Output of Example 3](img/axis_label_font_scale-3-smaller.svg)
+
+Example 4. The two scales are independent. Here the tick labels are enlarged and the axis labels kept: only the tick size changes.
+
+```cpp
+auto fig = studio("labelfont_independent");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});
+pane.x_label("time").y_label("level").title("scaled");
+auto size_of = [](const std::string& svg, const std::string& text) {
+  const auto hit = svg.find(">" + text + "<");
+  if (hit == std::string::npos) return std::string("absent");
+  const auto open = svg.rfind("<text", hit);
+  const auto k = svg.find("font-size=\"", open) + 11;
+  return svg.substr(k, svg.find('"', k) - k);
+};
+pane.tick_font_scale(1.6);
+const std::string svg = fig.to_svg();
+std::cout << "axis scale " << pane.axis_label_font_scale() << ": x label " << size_of(svg, "time") << ", tick " << size_of(svg, "1.0") << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+axis scale 1: x label 11.0000, tick 16.0000
+```
+
+![Output of Example 4](img/axis_label_font_scale-4-independent.svg)
+
+Example 5. On a volumetric pane the labels of all three axes take the scale.
+
+```cpp
+auto fig = studio("labelfont_3d");
+auto& pane = fig.pane3("p");
+pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+pane.x_label("x").y_label("y").z_label("z");
+pane.axis_label_font_scale(1.6);
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 5](img/axis_label_font_scale-5-three_d.svg)
+
+Example 6. Zero, negative and non-finite scales throw, and the scale is left as it was.
+
+```cpp
+auto fig = studio("labelfont_errors");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
+for (double bad : {0.0, -2.0, std::numeric_limits<double>::quiet_NaN()}) {
+  try {
+    pane.axis_label_font_scale(bad);
+  } catch (const pluss::Error& e) {
+    std::cout << e.message() << "\n";
+  }
 }
+std::cout << "still " << pane.axis_label_font_scale() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
 axis_label_font_scale: scale must be finite and positive
+axis_label_font_scale: scale must be finite and positive
+axis_label_font_scale: scale must be finite and positive
+still 1
 ```
+
+![Output of Example 6](img/axis_label_font_scale-6-errors.svg)
 
 ## Notes
 
-- The setter is not `noexcept`; the getter **is** `noexcept`.
-- Snapshotted from [`Studio::context_scales()`](../studio/context_scales.md) at
-  pane-creation time.
-- Scales the axis *label* specifically — see [`tick_font_scale()`](tick_font_scale.md) for
-  the equivalent affecting tick labels instead.
+- The setter throws `pluss::Error` for a scale that is not finite and positive; the getter is `noexcept`.
 
 ## See Also
 
-- [`Pane::tick_font_scale`](tick_font_scale.md): the equivalent for tick labels.
-- [`Studio::context_scales`](../studio/context_scales.md): the figure-wide default this is
-  initialized from.
+- [`Pane::tick_font_scale`](tick_font_scale.md): the same for the tick labels.
+- [`Pane::x_label`](x_label.md): the labels this scales.
+- [`Pane::x_label_gap`](x_label_gap.md): the distance of a label from the ticks.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tick_font_scale.html">
+  <a class="prev-link" href="axis_accessors.html">
     <span class="label">Previous</span>
-    <span class="title">tick_font_scale</span>
+    <span class="title">axis_accessors</span>
   </a>
-  <a class="next-link" href="trend.html">
+  <a class="next-link" href="band_x.html">
     <span class="label">Next</span>
-    <span class="title">trend</span>
+    <span class="title">band_x</span>
   </a>
 </div>

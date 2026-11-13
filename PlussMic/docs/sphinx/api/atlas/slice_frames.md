@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Atlas::slice_frames(std::int64_t start, std::int64_t stop) const -> Atlas
+Atlas Atlas::slice_frames(std::int64_t start, std::int64_t stop) const
 ```
 
 ## What It Does
