@@ -8,8 +8,8 @@
 ## Signatures
 
 ```cpp
-Slate::show(const display::DisplayOptions& options = {}) const -> void
-Slate::show(std::ostream& os, const display::DisplayOptions& options = {}) const -> void
+void Slate::show(const display::DisplayOptions& options = {}) const
+void Slate::show(std::ostream& os, const display::DisplayOptions& options = {}) const
 ```
 
 ## What It Does

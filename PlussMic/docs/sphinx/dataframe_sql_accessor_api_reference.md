@@ -16,7 +16,7 @@ This page documents the public SQL accessor returned by `DataFrame::sql()`.
 #### Signature
 
 ```cpp
-DataFrameSqlAccessor::execute(std::string_view statement) -> DataFrame
+DataFrame DataFrameSqlAccessor::execute(std::string_view statement)
 ```
 
 #### What It Does
@@ -76,7 +76,7 @@ id  sales
 #### Signature
 
 ```cpp
-DataFrameSqlAccessor::prepare(std::string_view statement) -> DataFrameSqlPrepared
+DataFrameSqlPrepared DataFrameSqlAccessor::prepare(std::string_view statement)
 ```
 
 #### What It Does

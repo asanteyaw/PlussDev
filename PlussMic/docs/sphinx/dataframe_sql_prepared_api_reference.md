@@ -16,11 +16,11 @@ This page documents the public prepared-statement helper returned by `DataFrame:
 #### Signatures
 
 ```cpp
-DataFrameSqlPrepared::execute() -> DataFrame
+DataFrame DataFrameSqlPrepared::execute()
 
-DataFrameSqlPrepared::execute(std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params) -> DataFrame
+DataFrame DataFrameSqlPrepared::execute(std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params)
 
-DataFrameSqlPrepared::execute(std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params, std::unordered_map<std::string, std::string> identifier_params) -> DataFrame
+DataFrame DataFrameSqlPrepared::execute(std::unordered_map<std::string, DataFrame::SqlOptions::SqlParam> params, std::unordered_map<std::string, std::string> identifier_params)
 ```
 
 #### What It Does

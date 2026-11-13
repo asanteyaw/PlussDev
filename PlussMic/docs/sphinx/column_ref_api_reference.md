@@ -16,7 +16,7 @@ This page documents the public `ColumnRef` helper returned by DataFrame column-r
 #### Signature
 
 ```cpp
-ColumnRef::head(std::int64_t n) -> Slate
+Slate ColumnRef::head(std::int64_t n)
 ```
 
 #### What It Does
@@ -67,7 +67,7 @@ auto out = ref.head(2);
 #### Signature
 
 ```cpp
-ColumnRef::mean() -> pluss::Series
+pluss::Series ColumnRef::mean()
 ```
 
 #### What It Does
@@ -121,7 +121,7 @@ auto out = ref.mean();
 #### Signature
 
 ```cpp
-ColumnRef::name() -> const std::string&
+const std::string& ColumnRef::name()
 ```
 
 #### What It Does
@@ -175,7 +175,7 @@ sales
 #### Signature
 
 ```cpp
-ColumnRef::slate() -> const Slate&
+const Slate& ColumnRef::slate()
 ```
 
 #### What It Does
@@ -235,7 +235,7 @@ auto out = ref.slate();
 #### Signature
 
 ```cpp
-ColumnRef::value() -> SlateValue
+SlateValue ColumnRef::value()
 ```
 
 #### What It Does
@@ -293,7 +293,7 @@ auto out = ref.value();
 #### Signature
 
 ```cpp
-ColumnRef::values() -> Slate
+Slate ColumnRef::values()
 ```
 
 #### What It Does

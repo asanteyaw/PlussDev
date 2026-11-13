@@ -8,7 +8,7 @@
 ## Signature
 
 ```cpp
-Catalog::at(std::string_view key) const -> Stream
+Stream Catalog::at(std::string_view key) const
 ```
 
 ## What It Does

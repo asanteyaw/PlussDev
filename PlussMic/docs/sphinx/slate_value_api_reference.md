@@ -16,7 +16,7 @@ This page documents the public scalar-like `SlateValue` wrapper returned by slat
 #### Signature
 
 ```cpp
-SlateValue::as_duration() -> pluss::Duration
+pluss::Duration SlateValue::as_duration()
 ```
 
 #### What It Does
@@ -60,7 +60,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::as_note() -> pluss::Note
+pluss::Note SlateValue::as_note()
 ```
 
 #### What It Does
@@ -108,7 +108,7 @@ auto out = value.as_note();
 #### Signature
 
 ```cpp
-SlateValue::as_series() -> pluss::Series
+pluss::Series SlateValue::as_series()
 ```
 
 #### What It Does
@@ -156,7 +156,7 @@ auto out = value.as_series();
 #### Signature
 
 ```cpp
-SlateValue::as_timeline() -> pluss::Timeline
+pluss::Timeline SlateValue::as_timeline()
 ```
 
 #### What It Does
@@ -206,7 +206,7 @@ auto out = value.as_timeline();
 #### Signature
 
 ```cpp
-SlateValue::defined() -> bool
+bool SlateValue::defined()
 ```
 
 #### What It Does
@@ -256,7 +256,7 @@ true
 #### Signature
 
 ```cpp
-SlateValue::host() -> HostAny
+HostAny SlateValue::host()
 ```
 
 #### What It Does
@@ -306,7 +306,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::kind() -> SlateKind
+SlateKind SlateValue::kind()
 ```
 
 #### What It Does
@@ -356,7 +356,7 @@ Series
 #### Signature
 
 ```cpp
-SlateValue::payload() -> Payload
+Payload SlateValue::payload()
 ```
 
 #### What It Does
@@ -404,7 +404,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::pluss::Duration() -> operator
+SlateValue::operator pluss::Duration() const
 ```
 
 #### What It Does
@@ -452,7 +452,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::pluss::Note() -> operator
+SlateValue::operator pluss::Note() const
 ```
 
 #### What It Does
@@ -500,7 +500,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::pluss::Series() -> operator
+SlateValue::operator pluss::Series() const
 ```
 
 #### What It Does
@@ -548,7 +548,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::pluss::Timeline() -> operator
+SlateValue::operator pluss::Timeline() const
 ```
 
 #### What It Does
@@ -598,7 +598,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::slate() -> const Slate&
+const Slate& SlateValue::slate()
 ```
 
 #### What It Does
@@ -648,7 +648,7 @@ auto out = value.slate();
 #### Signature
 
 ```cpp
-SlateValue::to_dbl() -> double
+double SlateValue::to_dbl()
 ```
 
 #### What It Does
@@ -696,7 +696,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::to_int() -> std::int64_t
+std::int64_t SlateValue::to_int()
 ```
 
 #### What It Does
@@ -744,7 +744,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::to_str() -> std::string
+std::string SlateValue::to_str()
 ```
 
 #### What It Does
