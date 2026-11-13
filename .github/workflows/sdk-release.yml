@@ -10,6 +10,7 @@ on:
         options:
           - all
           - linux-arm64
+          - macos-intel
   push:
     tags:
       - "v*"
@@ -22,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(inputs.platform == 'linux-arm64' && '["ubuntu-24.04-arm"]' || '["macos-15","ubuntu-24.04","ubuntu-24.04-arm","windows-2022"]') }}
+        os: ${{ fromJSON(inputs.platform == 'linux-arm64' && '["ubuntu-24.04-arm"]' || inputs.platform == 'macos-intel' && '["macos-15-intel"]' || '["macos-15","macos-15-intel","ubuntu-24.04","ubuntu-24.04-arm","windows-2022"]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
