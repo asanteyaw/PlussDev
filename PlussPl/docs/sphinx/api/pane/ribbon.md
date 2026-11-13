@@ -4,113 +4,186 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-template <class Y>
-Trace& Pane::ribbon(Y&& y, double base = 0.0)
-
-template <class X, class Y>
-Trace& Pane::ribbon(X&& x, Y&& y, double base = 0.0)
+Trace& Pane::ribbon(Series y, double base = 0.0)
+Trace& Pane::ribbon(Series x, Series y, double base = 0.0)
 ```
 
 ## What It Does
 
-Adds a filled-band ("ribbon" / area-under-curve) trace — the region between a `base`
-baseline and each `y[i]` value, filled solid, at position `x[i]`. Two overloads, split on
-whether `x` is supplied explicitly:
+Adds a **filled band**: the region between a baseline and a curve through the values, the trace of an area chart. The baseline is `base`, 0 by default, so a positive series is filled down to the axis; a different `base` is a different floor.
 
-- **`ribbon(y, base = 0.0)`** — `x` is auto-assigned as `0, 1, 2, …`.
-- **`ribbon(x, y, base = 0.0)`** — `x` is supplied explicitly.
+| Call | Meaning |
+|---|---|
+| `ribbon(y, base = 0)` | Values at the positions 1, 2, 3, ... |
+| `ribbon(x, y, base = 0)` | Values at the positions `x`. |
 
-Both overloads share the same `base` default of `0.0` (the ribbon fills down to the y-axis
-origin unless told otherwise).
+A rank-2 `y` is read as one series per column, with a band for each, stacked one on top of the next. `x` and `y` have as many rows as each other. For the same data as vertical stems rather than a filled region use [`spike`](spike.md); for the line alone, [`trend`](trend.md).
 
 ## Parameters
 
-**y** (series-convertible)
-    The upper edge of the filled band at each point.
+**x** (`Series`-convertible, second call)
+    The positions.
 
-**x** (series-convertible, two-argument overload only)
-    The explicit horizontal position of each point. When omitted (one-argument overload),
-    positions are auto-assigned as `0, 1, 2, …`.
+**y** (`Series`-convertible)
+    The values.
 
-**base** (`double`, default `0.0`)
-    The baseline the band fills down (or up) to. `0.0` fills to the y-axis origin;
-    a non-zero `base` shifts the *bottom* edge of the filled region, not the top —
-    `y` values remain exactly where given.
+**base** (`double`, default 0)
+    The baseline the band start from.
 
 ## Returns
 
 `Trace&`
-    A reference to the newly created trace, for chaining.
+    The new trace.
 
 ## Examples
 
-Example 1. A filled band from the default `base = 0.0`, `x` auto-assigned.
+Example 1. Values only: the positions are the indices 1, 2, 3, ... The region between the values and the base (0) is filled.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("ribbon_y_only");
-auto& pane = fig.pane2();
-pane.ribbon(std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
+auto fig = studio("ribbon_y");
+auto& pane = fig.pane2("p");
+pane.ribbon(std::vector<double>{2, 4, 3, 5, 4, 6});
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/ribbon-1-y-only.svg)
+![Output of Example 1](img/ribbon-1-y.svg)
 
-Example 2. The same `y` values, with `x` given explicitly instead of auto-assigned.
-Verified via direct SVG diff to render genuinely different from Example 1.
+Example 2. Positions and values. The positions need not be evenly spaced.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("ribbon_xy");
-auto& pane = fig.pane2();
-pane.ribbon(std::vector<double>{10.0, 20.0, 30.0, 40.0, 50.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
+auto& pane = fig.pane2("p");
+pane.ribbon(std::vector<double>{0, 1, 3, 4, 8, 9}, std::vector<double>{2, 4, 3, 5, 4, 6});
+fig.save_svg("figure.svg");
 ```
 
 ![Output of Example 2](img/ribbon-2-xy.svg)
 
-Example 3. A non-zero `base` — the filled region now runs from `1.5` up to each `y[i]`
-rather than from `0.0`. Verified via direct SVG diff to render genuinely different from
-Example 1 (a visibly shifted/shortened bottom edge).
+Example 3. The base moves the baseline. With base 3 the band is drawn between 3 and each value, so values below 3 fill upward from the line to the data.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("ribbon_base");
-auto& pane = fig.pane2();
-pane.ribbon(std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}, 1.5);
-fig.show();
+auto& pane = fig.pane2("p");
+pane.ribbon(std::vector<double>{2, 4, 3, 5, 4, 6}, 3.0);
+pane.rule_y(3.0, "base");
+fig.save_svg("figure.svg");
 ```
 
 ![Output of Example 3](img/ribbon-3-base.svg)
 
+Example 4. The base with positions: the second overload takes it after the data.
+
+```cpp
+auto fig = studio("ribbon_base_xy");
+auto& pane = fig.pane2("p");
+pane.ribbon(std::vector<double>{0, 1, 3, 4, 8, 9}, std::vector<double>{2, 4, 3, 5, 4, 6}, 1.0);
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 4](img/ribbon-4-base_xy.svg)
+
+Example 5. Negative values lie below the base, which is zero by default.
+
+```cpp
+auto fig = studio("ribbon_negative");
+auto& pane = fig.pane2("p");
+pane.ribbon(std::vector<double>{2, -1, 3, -2, 4});
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 5](img/ribbon-5-negative.svg)
+
+Example 6. A rank-2 `y` makes one band for each column, **stacked**: the rows are the positions, and each band is drawn on top of the ones before it, so its upper edge is the running total. Here two columns give two bands; the upper edge of the second is the sum of the two.
+
+```cpp
+auto fig = studio("ribbon_matrix");
+auto& pane = fig.pane2("p");
+auto y = pluss::make_series(std::vector<double>{2, 1, 4, 2, 3, 3, 5, 2}, {4, 2});
+pane.ribbon(y);
+std::cout << "traces: " << pane.trace_count() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+traces: 1
+```
+
+![Output of Example 6](img/ribbon-6-matrix.svg)
+
+Example 7. Inputs that cannot be drawn are refused when the trace is added, and the message names the method and the problem. The pane keeps the traces it had.
+
+```cpp
+auto report = [](const char* what, auto&& call) {
+  auto fig = studio("ribbon_errors");
+  auto& pane = fig.pane2("p");
+  try {
+    call(pane);
+    std::cout << what << ": accepted\n";
+  } catch (const pluss::Error& e) {
+    std::cout << what << ": " << e.message() << "\n";
+  }
+};
+report("x and y differ", [](Pane& pane) { pane.ribbon(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2}); });
+auto fig = studio("ribbon_errors_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+x and y differ: ribbon: x must match the ribbon rows or the full y matrix shape
+```
+
+![Output of Example 7](img/ribbon-7-errors.svg)
+
+Example 8. `ribbon` needs a planar pane. On a volumetric pane it throws at once, naming the kind it needs, and nothing is added.
+
+```cpp
+auto fig = studio("ribbon_wrong_pane");
+auto& pane = fig.pane3("p");
+try {
+  pane.ribbon(std::vector<double>{1, 2});
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
+}
+std::cout << "traces: " << pane.trace_count() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+ribbon requires a planar pane
+traces: 0
+```
+
+![Output of Example 8](img/ribbon-8-wrong_pane.svg)
+
 ## Notes
 
-- Not `noexcept`.
-- Named-parameter style is not available in C++ — to set `base` on the auto-`x` overload
-  while keeping `x` auto-assigned, call the one-argument-plus-`base` overload
-  (`ribbon(y, base)`) rather than trying to pass a placeholder `x`.
-- `flash::areaplot` (if present) is a convenience wrapper around this exact method.
+- Returns the new [`Trace&`](../trace/label.md); the reference stays valid for the life of the pane, and the style calls of the trace ([`label`](../trace/label.md), [`stroke`](../trace/stroke.md), [`width`](../trace/width.md), ...) chain off it.
+- The data is copied into the trace when it is added, so changing the vector afterwards does not change the figure.
 
 ## See Also
 
-- [`Pane::spike`](spike.md): the discrete-stem sibling of this method — same parameter
-  shape (`y`, optional `x`, `base`), but rendered as individual vertical lines rather than
-  a continuous filled band.
-- [`Pane::trend`](trend.md): an unfilled line-only counterpart.
+- [`Pane::spike`](spike.md): the stems.
+- [`Pane::trend`](trend.md): the line.
+- [`Pane::columns`](columns.md): bars.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="whisk.html">
+  <a class="prev-link" href="radial.html">
     <span class="label">Previous</span>
-    <span class="title">whisk</span>
+    <span class="title">radial</span>
   </a>
-  <a class="next-link" href="spike.html">
+  <a class="next-link" href="ridge3.html">
     <span class="label">Next</span>
-    <span class="title">spike</span>
+    <span class="title">ridge3</span>
   </a>
 </div>

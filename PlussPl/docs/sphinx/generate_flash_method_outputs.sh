@@ -33,7 +33,7 @@ keys=(
   camera3d_topdown
   cubehelix_palette dark_palette disgrid_kind diverging_palette flash_palette
   flash_palette_kind flash_save_png flash_set flash_show flash_theme
-  get_dataset_names dataset_from_frame_pairplot dataset_from_frame_jointplot
+  get_dataset_names dataset_from_table_pairplot dataset_from_table_jointplot
   hls_palette husl_palette light_palette lighting3d
   lighting3d_rig
   make_dataset move_legend mpl_palette relgrid_kind scene_preset3d

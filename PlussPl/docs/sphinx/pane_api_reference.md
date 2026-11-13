@@ -14,7 +14,7 @@ Get a `Pane` from [`Studio::pane2`](api/studio/pane2.md) (2D, `Planar`) or
 [`Studio::subpane2`](api/studio/subpane2.md) / [`Studio::subpane3`](api/studio/subpane3.md)
 for a pane nested inside a mosaic cell. Every trace-creation method enforces its own
 `Planar`-vs-`Volumetric` requirement — calling a 3D-only method on a `pane2()` (or a
-2D-only method on a `pane3()`) throws `std::logic_error` immediately, before any rendering
+2D-only method on a `pane3()`) throws `pluss::Error` immediately, before any rendering
 is attempted.
 
 ```{important} Pane& references are invalidated by later pane-creation calls
@@ -91,6 +91,10 @@ api/pane/align_xy
 api/pane/align_xyz
 api/pane/align_y
 api/pane/align_z
+api/pane/auto_color
+api/pane/auto_x
+api/pane/auto_y
+api/pane/auto_z
 api/pane/axes_visible
 api/pane/axis_accessors
 api/pane/axis_label_font_scale
@@ -111,6 +115,7 @@ api/pane/columns_h
 api/pane/contour
 api/pane/fieldmap
 api/pane/grid
+api/pane/grid_style
 api/pane/isoband
 api/pane/isoshell
 api/pane/kind
@@ -126,6 +131,7 @@ api/pane/path3
 api/pane/pin
 api/pane/pins
 api/pane/place
+api/pane/placement
 api/pane/quartet
 api/pane/radial
 api/pane/ribbon

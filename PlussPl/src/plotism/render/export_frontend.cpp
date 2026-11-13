@@ -83,12 +83,15 @@ std::string lowercase_ascii(std::string text) {
 }
 
 void ensure_extension_match_(const std::filesystem::path& path, std::string_view expected_ext, std::string_view where) {
-  PLUSS_CHECK(!path.empty(), std::string(where) + "(): output path cannot be empty");
+  if (path.empty()) {
+    PLUSS_FAIL(std::string(where) + "(): output path cannot be empty");
+  }
   const auto actual = lowercase_ascii(path.extension().string());
   const auto expected = lowercase_ascii(std::string(expected_ext));
-  PLUSS_CHECK(actual == expected,
-              std::string(where) + "(): filename extension '" + actual + "' does not match expected '" + expected +
-                  "'");
+  if (actual != expected) {
+    PLUSS_FAIL(std::string(where) + "(): filename extension '" + actual +
+                                "' does not match expected '" + expected + "'");
+  }
 }
 
 std::string svg_embed_html(std::string_view svg_payload, std::string_view title, std::int64_t width, std::int64_t height) {
@@ -274,24 +277,6 @@ bool convert_svg_to_png_(const std::filesystem::path& svg_path,
   const auto height_s = std::to_string(std::max<std::int64_t>(height_px, 1));
   const auto dpi_s = std::to_string(std::max<std::int64_t>(dpi, 36));
 
-#if defined(__APPLE__)
-  if (command_available_("qlmanage")) {
-    const auto ql_dir = png_path.parent_path();
-    const std::string cmd = "qlmanage -t -s " + std::to_string(std::max(width_px, height_px)) + " -o " +
-                            quote_path_(ql_dir) + " " + svg_q + quiet;
-    if (run_command_(cmd)) {
-      const auto generated = ql_dir / (svg_path.stem().string() + ".png");
-      if (std::filesystem::exists(generated, ec)) {
-        std::filesystem::copy_file(generated, png_path, std::filesystem::copy_options::overwrite_existing, ec);
-        std::filesystem::remove(generated, ec);
-        if (!ec && std::filesystem::exists(png_path, ec)) {
-          return true;
-        }
-      }
-    }
-  }
-#endif
-
   if (command_available_("rsvg-convert")) {
     const std::string cmd = "rsvg-convert -w " + width_s + " -h " + height_s + " -o " + png_q + " " + svg_q + quiet;
     if (run_command_(cmd) && std::filesystem::exists(png_path, ec)) {
@@ -467,14 +452,20 @@ void Studio::save_pdf(std::string_view path, PdfEngine engine) const {
     return;
   }
 
-  throw std::runtime_error(
+  PLUSS_FAIL(
       "save_pdf(): SvgConvert engine requested, but no SVG->PDF converter was available (rsvg-convert, inkscape, magick/convert).");
 }
 
 void Studio::save_png(std::string_view path, std::int64_t dpi) const {
   ensure_extension_match_(std::filesystem::path(path), ".png", "save_png");
   if (dpi <= 0) {
-    throw std::invalid_argument("save_png(): dpi must be positive");
+    PLUSS_FAIL("save_png(): dpi must be positive");
+  }
+
+  constexpr double kMaxRasterSide = 32768.0;
+  const double scale = static_cast<double>(dpi) / 96.0;
+  if (extent_.width * scale > kMaxRasterSide || extent_.height * scale > kMaxRasterSide) {
+    PLUSS_FAIL("save_png(): dpi gives a raster larger than 32768 pixels on a side");
   }
 
   const std::filesystem::path out_path(path);
@@ -491,7 +482,6 @@ void Studio::save_png(std::string_view path, std::int64_t dpi) const {
 
   plotism::render::save_svg(*this, temp_svg.string());
 
-  const double scale = static_cast<double>(dpi) / 96.0;
   const auto width_px = std::max<std::int64_t>(64, static_cast<std::int64_t>(std::llround(extent_.width * scale)));
   const auto height_px = std::max<std::int64_t>(64, static_cast<std::int64_t>(std::llround(extent_.height * scale)));
 
@@ -499,7 +489,7 @@ void Studio::save_png(std::string_view path, std::int64_t dpi) const {
   std::filesystem::remove(temp_svg, ec);
 
   if (!converted) {
-    throw std::runtime_error(
+    PLUSS_FAIL(
         "save_png(): unable to rasterize SVG. Install one of: rsvg-convert, inkscape, or ImageMagick (magick).");
   }
 }
@@ -521,12 +511,12 @@ bool Studio::show(std::string_view title, std::int64_t width, std::int64_t heigh
 
   std::ofstream out(output_path, std::ios::out | std::ios::trunc | std::ios::binary);
   if (!out.is_open()) {
-    throw std::runtime_error("show(): unable to create temporary html file");
+    PLUSS_FAIL("show(): unable to create temporary html file");
   }
   out << html;
   out.close();
   if (!out) {
-    throw std::runtime_error("show(): failed while writing html payload");
+    PLUSS_FAIL("show(): failed while writing html payload");
   }
   if (!launch) {
     return true;
@@ -567,12 +557,12 @@ bool Studio::show(const pluss::view::HtmlWindowOptions& options, bool launch) co
 
   std::ofstream out(output_path, std::ios::out | std::ios::trunc | std::ios::binary);
   if (!out.is_open()) {
-    throw std::runtime_error("show(): unable to create temporary html file");
+    PLUSS_FAIL("show(): unable to create temporary html file");
   }
   out << html;
   out.close();
   if (!out) {
-    throw std::runtime_error("show(): failed while writing html payload");
+    PLUSS_FAIL("show(): failed while writing html payload");
   }
   if (!launch) {
     return true;

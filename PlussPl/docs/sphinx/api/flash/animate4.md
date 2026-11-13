@@ -7,20 +7,11 @@
 ## Signature
 
 ```cpp
-template <class X, class Y, class Z, class W>
-bool flash::animate4(X&& x, Y&& y, Z&& z, W&& w, const HyperAnimationOptions& options = {})
+bool flash::animate4(Series x, Series y, Series z, Series w, const HyperAnimationOptions& options = {})
 ```
 
-```{important} Same verification boundary as flash::animate3 -- window-launching was never actually invoked
-Like flash::animate3, this function hands a self-contained, JavaScript-driven HTML
-page to `pluss::view::show_html_window`, attempting to open a REAL native window.
-That call was never actually triggered while writing this page, for the same reason
-given on flash::animate3's own page: doing so from an unattended script risks a
-visible, unintended GUI window. What WAS directly verified: animate4's own pre-flight
-PLUSS_CHECK validation guards, triggered with a deliberately invalid options value,
-confirming they throw before the window-launch call is reached -- see the edge-case
-example below. The generated HTML/JavaScript and the window itself were read from
-source, not independently executed.
+```{important} Opens a window: the examples that launch it are not run when the documentation is built
+Like [`flash::animate3`](animate3.md), `animate4` hands a self-contained, JavaScript-driven HTML page to `pluss::view::show_html_window`, which opens a native window on the machine that runs it. The examples that call it are shown with the value they return and are not executed when the documentation is built; the companion block after each draws the same scene to a file. The options are checked before any window is opened: an invalid value throws `pluss::Error` at once.
 ```
 
 ## What It Does
@@ -39,7 +30,7 @@ mirroring [`flash::animate3`](animate3.md)'s play/pause/speed/PNG-snapshot contr
 
 **x**, **y**, **z**, **w** (series-convertible, must each be rank ≤ 3 and identical
 lengths)
-    The 4D point data. Unequal lengths throw `std::invalid_argument("flash::animate4:
+    The 4D point data. Unequal lengths throw `pluss::Error("flash::animate4:
     x, y, z, w must have identical lengths")`.
 
 **options** (`const HyperAnimationOptions&`, optional)
@@ -50,17 +41,17 @@ lengths)
 | Field | Type and default | Description |
 |---|---|---|
 | `title` | `std::string`, default `"PlussPl 4D Simulation"` | The HTML page's title/heading and window title. |
-| `width`, `height` | `std::int64_t`, default `1280`, `860` | The window/canvas size. Both must be at least `640`×`420`, or `animate4` throws `std::invalid_argument("flash::animate4: window size too small")` — verified below. |
+| `width`, `height` | `std::int64_t`, default `1280`, `860` | The window/canvas size. Both must be at least `640`×`420`, or `animate4` throws `pluss::Error("flash::animate4: window size too small")` — verified below. |
 | `projection` | `HyperProjection`, default `PerspectiveW` | `Orthographic` or `PerspectiveW` — same meaning as [`HyperPlotOptions::projection`](path4.md), applied live in JavaScript each frame. Note the default here is `PerspectiveW`, the opposite of `HyperPlotOptions`' own `Orthographic` default. |
 | `sweep_plane` | `HyperAnimateSweepPlane`, default `XW` | Which of the six rotation planes is continuously animated. |
 | `base_rot_xy_deg`, `base_rot_xz_deg`, `base_rot_xw_deg`, `base_rot_yz_deg`, `base_rot_yw_deg`, `base_rot_zw_deg` | `double`, default `8.0`, `0.0`, `0.0`, `15.0`, `0.0`, `24.0` | Fixed starting rotation offsets in each plane, before `sweep_plane`'s continuous sweep animates on top. |
 | `sweep_speed_deg_per_sec` | `double`, default `22.0` | Base angular sweep speed, before the in-page speed slider's multiplier. |
-| `w_perspective_distance` | `double`, default `3.6` | The `w`-axis camera distance for `PerspectiveW` projection. Must be positive, or `animate4` throws `std::invalid_argument("flash::animate4: w_perspective_distance must be positive")`. |
-| `slice_min`, `slice_max`, `slice_default` | `double`, default `0.35`, `1.0`, `0.82` | The in-page `w`-slice slider's range and starting value — points with `\|projected w\|` beyond the current slider value are hidden live, without re-fetching data. Must satisfy `slice_min > 0`, `slice_max >= slice_min`, and `slice_min <= slice_default <= slice_max`, or `animate4` throws `std::invalid_argument("flash::animate4: invalid slice range/default")`. |
-| `camera_distance`, `camera_yaw_deg`, `camera_pitch_deg` | `double`, default `5.6`, `28.0`, `-16.0` | The fixed 3D→2D projection camera. `camera_distance` must be positive, or `animate4` throws `std::invalid_argument("flash::animate4: camera_distance must be positive")`. |
-| `min_perspective_denom` | `double`, default `0.15` | A floor on the perspective-divide denominator. Must be positive, or `animate4` throws `std::invalid_argument("flash::animate4: min_perspective_denom must be positive")`. |
-| `plot_padding_fraction` | `double`, default `0.08` | Canvas border padding fraction. Must be in `[0.0, 0.45)`, or `animate4` throws `std::invalid_argument("flash::animate4: invalid plot_padding_fraction")`. |
-| `point_radius_base`, `point_radius_min`, `point_radius_max` | `double`, default `2.1`, `1.0`, `5.0` | Base marker radius (scaled per-point by projected depth) and the clamp range it's kept within. Must satisfy `point_radius_min > 0` and `point_radius_max >= point_radius_min`, or `animate4` throws `std::invalid_argument("flash::animate4: invalid point radius range")`. |
+| `w_perspective_distance` | `double`, default `3.6` | The `w`-axis camera distance for `PerspectiveW` projection. Must be positive, or `animate4` throws `pluss::Error("flash::animate4: w_perspective_distance must be positive")`. |
+| `slice_min`, `slice_max`, `slice_default` | `double`, default `0.35`, `1.0`, `0.82` | The in-page `w`-slice slider's range and starting value — points with `\|projected w\|` beyond the current slider value are hidden live, without re-fetching data. Must satisfy `slice_min > 0`, `slice_max >= slice_min`, and `slice_min <= slice_default <= slice_max`, or `animate4` throws `pluss::Error("flash::animate4: invalid slice range/default")`. |
+| `camera_distance`, `camera_yaw_deg`, `camera_pitch_deg` | `double`, default `5.6`, `28.0`, `-16.0` | The fixed 3D→2D projection camera. `camera_distance` must be positive, or `animate4` throws `pluss::Error("flash::animate4: camera_distance must be positive")`. |
+| `min_perspective_denom` | `double`, default `0.15` | A floor on the perspective-divide denominator. Must be positive, or `animate4` throws `pluss::Error("flash::animate4: min_perspective_denom must be positive")`. |
+| `plot_padding_fraction` | `double`, default `0.08` | Canvas border padding fraction. Must be in `[0.0, 0.45)`, or `animate4` throws `pluss::Error("flash::animate4: invalid plot_padding_fraction")`. |
+| `point_radius_base`, `point_radius_min`, `point_radius_max` | `double`, default `2.1`, `1.0`, `5.0` | Base marker radius (scaled per-point by projected depth) and the clamp range it's kept within. Must satisfy `point_radius_min > 0` and `point_radius_max >= point_radius_min`, or `animate4` throws `pluss::Error("flash::animate4: invalid point radius range")`. |
 | `enable_snapshot` | `bool`, default `true` | Whether a "Save PNG" button/`S` shortcut is included. |
 | `snapshot_prefix` | `std::string`, default `"plusspl_4d_frame"` | Filename prefix for exported PNG snapshots. |
 
@@ -224,7 +215,7 @@ opts.width = 100;
 try {
   flash::animate4(x, y, z, w, opts);
 } catch (const pluss::Error& e) {
-  std::string msg(e.what());
+  std::string msg(e.message());
   std::cout << "animate4(width too small) threw: " << msg.substr(0, msg.find('\n')) << "\n";
 }
 ```

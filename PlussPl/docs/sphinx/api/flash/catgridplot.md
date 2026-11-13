@@ -39,11 +39,9 @@ relgridplot and disgridplot each have a std::string_view kind overload
 (flash::relgridplot(studio, xs, ys, "line")) as a shorthand for setting
 options.kind. catgridplot has no such overload -- every one of its four
 overloads takes a full CatGridPlotOptions (or none at all, using the
-all-default struct). To pick a specific categorical kind (box, violin,
+all-default options). To pick a specific categorical kind (box, violin,
 strip, ...), set options.cat.kind explicitly, as shown in Example 1 below.
-This is a genuine, verified asymmetry in the *gridplot family's surface, not
-an oversight in this reference -- confirmed by reading every catgridplot
-overload in flash.h.
+The other gridplot functions take a kind in the same way; catgridplot is the one that does not.
 ```
 
 The grid-shape auto-resolution, the `titles`/`x_labels`/`y_labels` positional-and-
@@ -152,8 +150,8 @@ std::vector<pluss::Note> groups{g1};
 std::vector<pluss::Series> values{};
 try {
   flash::catgridplot(fig, pluss::msharp::RangeView::Note(groups), pluss::msharp::RangeView::Series(values));
-} catch (const std::invalid_argument& e) {
-  std::cout << "catgridplot(mismatched) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "catgridplot(mismatched) threw: " << e.message() << "\n";
 }
 ```
 

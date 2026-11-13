@@ -42,7 +42,7 @@ export helpers (`move_legend`, `legend`, `legend_frame`, `tight_layout`, `despin
 (`flash_palette`, `color_palette`, `flash_theme`, `blend_palette`, `hls_palette`,
 `husl_palette`, `cubehelix_palette`, `light_palette`, `dark_palette`,
 `diverging_palette`, `mpl_palette`, `xkcd_palette`, `crayon_palette`), and the bundled
-dataset family (`get_dataset_names`, `load_dataset`, `Dataset`, `Dataset::from_frame`,
+dataset family (`get_dataset_names`, `load_dataset`, `Dataset`, `Dataset::from_table`,
 `Dataset::frame`, `Dataset::nrows`, `Dataset::ncols`, `Dataset::size`) families.
 
 Every function in `pluss::pl::flash` is now documented and verified. A number of
@@ -165,7 +165,7 @@ api/flash/crayon_palette
 api/flash/get_dataset_names
 api/flash/load_dataset
 api/flash/Dataset
-api/flash/dataset_from_frame
+api/flash/dataset_from_table
 api/flash/dataset_frame
 api/flash/dataset_nrows
 api/flash/dataset_ncols

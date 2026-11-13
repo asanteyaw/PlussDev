@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280.0000" height="820.0000" viewBox="0 0 1280.0000 820.0000">
+<rect x="0" y="0" width="1280.0000" height="820.0000" fill="rgb(255,252,248)" fill-opacity="1.0000"/>
+<path d="M 0.0000 0.0000 L 1280.0000 0.0000 L 1280.0000 820.0000 L 0.0000 820.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 28.0000 28.0000 L 1252.0000 28.0000 L 1252.0000 792.0000 L 28.0000 792.0000 Z" stroke="none" fill="rgb(255,252,248)" fill-opacity="1.0000" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="640.0000" y="50.0000" font-family="Helvetica, Arial, sans-serif" font-size="14.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">p</text>
+<path d="M 133.8000 729.2000 L 1224.0000 729.2000 " stroke="rgb(25,24,23)" stroke-opacity="1.0000" stroke-width="1.0000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 133.8000 86.0000 L 133.8000 729.2000 " stroke="rgb(25,24,23)" stroke-opacity="1.0000" stroke-width="1.0000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 133.8000 729.2000 L 133.8000 741.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="133.8000" y="757.5500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">1.0</text>
+<path d="M 315.5000 729.2000 L 315.5000 741.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="315.5000" y="757.5500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">1.5</text>
+<path d="M 497.2000 729.2000 L 497.2000 741.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="497.2000" y="757.5500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">2.0</text>
+<path d="M 678.9000 729.2000 L 678.9000 741.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="678.9000" y="757.5500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">2.5</text>
+<path d="M 860.6000 729.2000 L 860.6000 741.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="860.6000" y="757.5500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">3.0</text>
+<path d="M 1042.3000 729.2000 L 1042.3000 741.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1042.3000" y="757.5500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">3.5</text>
+<path d="M 1224.0000 729.2000 L 1224.0000 741.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="1224.0000" y="757.5500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">4.0</text>
+<path d="M 121.8000 729.2000 L 133.8000 729.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="113.4000" y="734.4500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">2.0</text>
+<path d="M 121.8000 622.0000 L 133.8000 622.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="113.4000" y="627.2500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">2.5</text>
+<path d="M 121.8000 514.8000 L 133.8000 514.8000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="113.4000" y="520.0500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">3.0</text>
+<path d="M 121.8000 407.6000 L 133.8000 407.6000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="113.4000" y="412.8500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">3.5</text>
+<path d="M 121.8000 300.4000 L 133.8000 300.4000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="113.4000" y="305.6500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">4.0</text>
+<path d="M 121.8000 193.2000 L 133.8000 193.2000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="113.4000" y="198.4500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">4.5</text>
+<path d="M 121.8000 86.0000 L 133.8000 86.0000 " stroke="rgb(20,19,17)" stroke-opacity="1.0000" stroke-width="0.9000" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="113.4000" y="91.2500" font-family="Helvetica, Arial, sans-serif" font-size="15.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">5.0</text>
+<text x="678.9000" y="796.2000" font-family="Helvetica, Arial, sans-serif" font-size="17.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="middle">time</text>
+<text x="113.4000" y="71.7500" font-family="Helvetica, Arial, sans-serif" font-size="17.0000" fill="rgb(28,27,25)" fill-opacity="1.0000" text-anchor="end">value</text>
+<clipPath id="clip1"><rect x="132.3000" y="84.5000" width="1093.2000" height="646.2000"/></clipPath>
+<g clip-path="url(#clip1)">
+<path d="M 138.4476 729.2000 L 137.9873 731.2165 L 136.6977 732.8336 L 134.8342 733.7311 L 132.7658 733.7311 L 130.9023 732.8336 L 129.6127 731.2165 L 129.1524 729.2000 L 129.6127 727.1835 L 130.9023 725.5664 L 132.7658 724.6689 L 134.8342 724.6689 L 136.6977 725.5664 L 137.9873 727.1835 Z" stroke="none" fill="rgb(28,87,141)" fill-opacity="0.8200" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 501.8476 300.4000 L 501.3873 302.4165 L 500.0977 304.0336 L 498.2342 304.9311 L 496.1658 304.9311 L 494.3023 304.0336 L 493.0127 302.4165 L 492.5524 300.4000 L 493.0127 298.3835 L 494.3023 296.7664 L 496.1658 295.8689 L 498.2342 295.8689 L 500.0977 296.7664 L 501.3873 298.3835 Z" stroke="none" fill="rgb(28,87,141)" fill-opacity="0.8200" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 865.2476 514.8000 L 864.7873 516.8165 L 863.4977 518.4336 L 861.6342 519.3311 L 859.5658 519.3311 L 857.7023 518.4336 L 856.4127 516.8165 L 855.9524 514.8000 L 856.4127 512.7835 L 857.7023 511.1664 L 859.5658 510.2689 L 861.6342 510.2689 L 863.4977 511.1664 L 864.7873 512.7835 Z" stroke="none" fill="rgb(28,87,141)" fill-opacity="0.8200" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M 1228.6476 86.0000 L 1228.1873 88.0165 L 1226.8977 89.6336 L 1225.0342 90.5311 L 1222.9658 90.5311 L 1221.1023 89.6336 L 1219.8127 88.0165 L 1219.3524 86.0000 L 1219.8127 83.9835 L 1221.1023 82.3664 L 1222.9658 81.4689 L 1225.0342 81.4689 L 1226.8977 82.3664 L 1228.1873 83.9835 Z" stroke="none" fill="rgb(28,87,141)" fill-opacity="0.8200" stroke-linejoin="round" stroke-linecap="round"/>
+</g>
+</svg>

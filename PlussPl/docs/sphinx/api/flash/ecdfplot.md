@@ -7,8 +7,7 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::ecdfplot(Pane& pane, Values&& values)
+Trace& flash::ecdfplot(Pane& pane, Series values)
 ```
 
 ## What It Does
@@ -82,7 +81,7 @@ numel: 1
 - Sort order and the `(i+1)/n` fraction formula are the whole of the computation — no
   smoothing, no confidence bands, no weighting.
 - See the important callout above regarding the linear-interpolation-vs-step visual
-  distinction — the underlying math is a genuine ECDF; only the *rendering* between
+  distinction — the underlying math is a ECDF; only the *rendering* between
   observed points isn't a literal staircase.
 
 ## See Also

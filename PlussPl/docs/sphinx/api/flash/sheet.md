@@ -7,22 +7,19 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::sheet(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::sheet(Pane& pane, Series x, Series y, Series z)
 
-template <class X, class Y, class Z, class C>
-Trace& flash::sheet(Pane& pane, X&& x, Y&& y, Z&& z, C&& c)
+Trace& flash::sheet(Pane& pane, Series x, Series y, Series z, Series c)
 
-template <class X, class Y, class Z>
-Trace& flash::sheet(Studio& studio, X&& x, Y&& y, Z&& z, std::string title = {})
+Trace& flash::sheet(Studio& studio, Series x, Series y, Series z, std::string title = {})
 ```
 
 ## What It Does
 
 A thin wrapper around [`Pane::sheet`](../pane/sheet.md): converts every argument to
 `Series`, validates each is rank ≤ 3, then delegates to the identically-shaped native
-`Pane::sheet` overload. Every `Pane`-overload delegation is byte-identical to calling
-`Pane::sheet` directly — directly verified via SVG comparison. Three overloads:
+`Pane::sheet` overload. Every `Pane`-overload delegation is identical to calling
+`Pane::sheet` directly. Three overloads:
 `(x, y, z)`, `(x, y, z, c)` (a separate fill-color matrix decoupled from `z`'s own
 height), and a `Studio` convenience overload (matching only the `(x, y, z)` shape) that
 creates the [`Volumetric`](../studio/pane3.md) pane for you.
@@ -103,8 +100,8 @@ fig.show();
 
 ![Output of Example 3](img/flash-sheet-3-studio.svg)
 
-Example 4 (verification, not a distinct rendering). `flash::sheet(pane, x, y, z)`
-renders byte-identical to `pane.sheet(x, y, z)` called directly.
+Example 4 (a comparison, not a new picture). `flash::sheet(pane, x, y, z)`
+renders identical to `pane.sheet(x, y, z)` called directly.
 
 ```cpp
 using namespace pluss::pl;
@@ -134,11 +131,10 @@ flash::sheet(pane,x,y,z) == pane.sheet(x,y,z): 1
 
 - Not `noexcept`.
 - `flash::sheet`'s own validation only checks rank ≤ 3 on each argument — the stricter
-  "`z` must be rank-2 exactly" requirement (and the resulting `std::invalid_argument:
-  ... z must be a rank-2 matrix` on mismatch, per triplot's binning fix earlier this
-  session) is enforced one layer deeper, inside [`Pane::sheet`](../pane/sheet.md) itself.
-- See [`Pane::sheet`](../pane/sheet.md) for what actually gets rendered, including the
-  verified fill-vs-shape decoupling behavior of the `c` argument.
+  "`z` must be rank-2 exactly" requirement (and the resulting `pluss::Error:
+  ... z must be a rank-2 matrix` on mismatch) is enforced one layer deeper, inside [`Pane::sheet`](../pane/sheet.md) itself.
+- See [`Pane::sheet`](../pane/sheet.md) for what actually gets rendered, including how
+  the `c` argument colours the surface independently of its shape.
 
 ## See Also
 
@@ -147,8 +143,7 @@ flash::sheet(pane,x,y,z) == pane.sheet(x,y,z): 1
 - [`flash::lattice`](lattice.md): the wireframe sibling — same payload shape, filled
   surface vs. wireframe mesh.
 - [`flash::triplot`](triplot.md): a caller of `sheet()` internally, via a binned-grid
-  triplet (see that page's important callout for the genuine bug this session fixed
-  there).
+  triplet (see that page for how the grid is built).
 - [`Studio::pane3`](../studio/pane3.md): what the `Studio` overload calls internally.
 
 <div class="pluss-inline-prev-next">

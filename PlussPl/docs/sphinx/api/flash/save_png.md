@@ -15,8 +15,7 @@ void flash::save_png(Studio& studio, std::string_view path, std::int64_t dpi = 1
 A thin wrapper around [`Studio::save_png`](../studio/save_png.md) — forwards `path` and
 `dpi` unchanged, no transformation or validation of its own. Unlike
 [`flash::show`](show.md)/[`flash::animate3`](animate3.md)/[`flash::animate4`](animate4.md),
-this function writes a file to disk and opens no window, so it was directly invoked and
-verified below.
+this function writes a file to disk and opens no window.
 
 ## Parameters
 
@@ -35,7 +34,7 @@ verified below.
 
 ## Examples
 
-Example 1. A real PNG written to disk and confirmed present afterward.
+Example 1. A PNG written to disk; the program checks that the file exists afterwards.
 
 ```cpp
 using namespace pluss::pl;
@@ -46,13 +45,13 @@ auto& pane = fig.pane2();
 pane.trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 4, 9});
 const std::string out_path = "/tmp/flash_save_png_demo.png";
 flash::save_png(fig, out_path, 96);
-std::cout << "save_png wrote file exists: " << fs::exists(out_path) << ", size=" << fs::file_size(out_path) << "\n";
+std::cout << "save_png wrote file exists: " << fs::exists(out_path) << ", non-empty: " << (fs::file_size(out_path) > 0) << "\n";
 ```
 
 Output:
 
 ```text
-save_png wrote file exists: 1, size=23076
+save_png wrote file exists: 1, non-empty: 1
 ```
 
 ## Notes

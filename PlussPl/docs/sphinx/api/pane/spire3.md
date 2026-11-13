@@ -4,200 +4,181 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-template <class Z>
-Trace& Pane::spire3(Z&& z)
-
-template <class Y, class Z>
-Trace& Pane::spire3(Y&& y, Z&& z)
-
-template <class X, class Y, class Z>
-Trace& Pane::spire3(X&& x, Y&& y, Z&& z)
-
-template <class X, class Y, class Z, class C>
-Trace& Pane::spire3(X&& x, Y&& y, Z&& z, C&& c)
+Trace& Pane::spire3(Series z)
+Trace& Pane::spire3(Series y, Series z)
+Trace& Pane::spire3(Series x, Series y, Series z)
+Trace& Pane::spire3(Series x, Series y, Series z, Series c)
 ```
 
 ## What It Does
 
-Adds a 3D "spire"/bar-forest trace — one vertical bar per grid cell in `z`, at height
-`z(row, col)`. `z` is always a rank-2 grid (rows × columns); the four overloads differ only
-in how much of the `(x, y)` coordinate grid you supply explicitly versus let default to
-`0, 1, 2, …` index positions:
+Adds a **bar chart in three dimensions**: a vertical bar for each cell of a matrix `z`, standing on the grid of the coordinates with the height of the cell. It is the trace for a table of values over two categories, a histogram of two variables, or a surface shown as bars.
 
-- **`spire3(z)`** — both `x` and `y` are auto-assigned as `0, 1, 2, …` (`x` indexes `z`'s
-  columns, `y` indexes its rows).
-- **`spire3(y, z)`** — `y` supplied explicitly (must match `z`'s row count), `x` still
-  auto-indexed from `z`'s column count.
-- **`spire3(x, y, z)`** — both `x` and `y` supplied explicitly, matching `z`'s column and
-  row counts respectively.
-- **`spire3(x, y, z, c)`** — as above, plus a separate rank-2 color matrix `c`, matching
-  `z`'s shape, decoupled from `z`'s own bar-height values (the identical
-  shape-vs-color-decoupling pattern as [`Pane::fieldmap`](fieldmap.md)).
+`z` is a rank-2 matrix: its columns run along x and its rows along y. The calls differ in how much of the grid you give:
 
-```{important} z must be rank-2 in EVERY overload — and every overload validates eagerly
-All four overloads require `z` to be a genuine rank-2 matrix, and all four throw
-immediately at the `spire3()` call site (not deferred to render time) when it isn't, with
-the message `std::invalid_argument: spire3: z must be a rank-2 matrix`.
+| Call | Coordinates |
+|---|---|
+| `spire3(z)` | x and y are the indices 1, 2, 3, ... |
+| `spire3(y, z)` | y given, x the indices. |
+| `spire3(x, y, z)` | Both given. |
+| `spire3(x, y, z, c)` | Both given, and the bars are coloured by `c`, a matrix of the shape of `z`, instead of by their height. |
 
-Only the one- and two-argument overloads carry a *visible*, inline
-`if (z.dim() != 2) throw ...` check in their own source — they need `z`'s own shape to
-auto-derive the missing `x` and/or `y` axis. The three- and four-argument (fully explicit
-`x, y, z[, c]`) overloads carry no such inline check in their own body, yet were verified
-to throw the identical message at the identical eager (call-site, not render-time) point —
-the requirement is enforced uniformly by the trace-payload validation shared across all
-four overloads, just not visibly re-stated in the two overloads that don't need it for
-their own axis-inference logic. Passing a flat, one-dimensional `z` to *any* overload
-fails immediately, before any rendering is attempted.
-```
-
-```{important} Requires a Volumetric pane
-Calling `spire3()` on a `Planar` pane throws
-`std::logic_error("spire3 requires a volumetric pane")`.
-```
+`x` has as many entries as `z` has columns and `y` as many as it has rows, or both are full matrices of the shape of `z`. `z` must be rank 2 in every call: a rank-1 series throws.
 
 ## Parameters
 
-**z** (series-convertible, must be rank-2)
-    The bar-height grid — one value per `(row, col)` cell.
+**x**, **y** (`Series`-convertible, optional)
+    The coordinates of the columns and the rows.
 
-**y** (series-convertible, two-, three-, and four-argument overloads)
-    Row coordinates, matching `z`'s row count. Auto-indexed as `0, 1, 2, …` in the
-    one-argument overload.
+**z** (`Series`-convertible, rank 2)
+    The heights.
 
-**x** (series-convertible, three- and four-argument overloads)
-    Column coordinates, matching `z`'s column count. Auto-indexed as `0, 1, 2, …` in the
-    one- and two-argument overloads.
-
-**c** (series-convertible, must be rank-2 matching `z`'s shape, four-argument overload
-only)
-    A separate color value per cell, decoupled from `z`'s own bar-height values.
+**c** (`Series`-convertible, optional)
+    The values that colour the bars.
 
 ## Returns
 
 `Trace&`
-    A reference to the newly created trace, for chaining.
+    The new trace.
 
 ## Examples
 
-Example 1. `z` alone, both axes auto-indexed — a `3×4` bar grid.
+Example 1. Only the heights: one bar for each cell of a 3 by 3 matrix, standing at the positions 1, 2, 3 along x (the columns) and 1, 2, 3 along y (the rows).
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("spire3_z_only");
-auto& pane = fig.pane3();
-auto z = pluss::series::linspace(0.0, 1.0, 12, pluss::ScalarType::Float64).reshape({3, 4});
+auto fig = studio("spire3_z");
+auto& pane = fig.pane3("p");
+auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
 pane.spire3(z);
-fig.show();
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 1](img/spire3-1-z-only.svg)
+![Output of Example 1](img/spire3-1-z.svg)
 
-Example 2. `y` supplied explicitly, `x` still auto-indexed. Verified via direct SVG diff
-to render genuinely different from Example 1.
+Example 2. With `y` given, the rows stand at those positions; the columns keep the positions 1, 2, 3.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("spire3_y_z");
-auto& pane = fig.pane3();
-auto z = pluss::series::linspace(0.0, 1.0, 12, pluss::ScalarType::Float64).reshape({3, 4});
-pane.spire3(std::vector<double>{10.0, 20.0, 30.0}, z);
-fig.show();
+auto fig = studio("spire3_yz");
+auto& pane = fig.pane3("p");
+auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
+pane.spire3(std::vector<double>{0, 5, 10}, z);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 2](img/spire3-2-y-z.svg)
+![Output of Example 2](img/spire3-2-yz.svg)
 
-Example 3. Both `x` and `y` supplied explicitly — `z` is still the same `3×4` rank-2
-grid, only the coordinate labeling changes.
+Example 3. Both coordinates given: bars on a grid of your own spacing.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("spire3_xyz");
-auto& pane = fig.pane3();
-auto z = pluss::series::linspace(0.0, 1.0, 12, pluss::ScalarType::Float64).reshape({3, 4});
-pane.spire3(std::vector<double>{100.0, 200.0, 300.0, 400.0}, std::vector<double>{10.0, 20.0, 30.0}, z);
-fig.show();
+auto& pane = fig.pane3("p");
+auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
+pane.spire3(std::vector<double>{0, 1, 4}, std::vector<double>{0, 2, 3}, z);
+fig.save_svg("figure.svg");
 ```
 
 ![Output of Example 3](img/spire3-3-xyz.svg)
 
-Example 4. Explicit `x`, `y`, and a separate color matrix `c` (the reverse gradient of
-`z`) — bar heights still come from `z`, but fill color comes from `c`. Verified via direct
-SVG diff to render genuinely different from Example 3.
+Example 4. A fourth argument colours the bars by another quantity, a matrix of the same shape as `z`. Here the bars are coloured by a matrix running the other way from their heights.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("spire3_xyzc");
-auto& pane = fig.pane3();
-auto z = pluss::series::linspace(0.0, 1.0, 12, pluss::ScalarType::Float64).reshape({3, 4});
-auto c = pluss::series::linspace(1.0, 0.0, 12, pluss::ScalarType::Float64).reshape({3, 4});
-pane.spire3(std::vector<double>{100.0, 200.0, 300.0, 400.0}, std::vector<double>{10.0, 20.0, 30.0}, z, c);
-fig.show();
+auto fig = studio("spire3_color");
+auto& pane = fig.pane3("p");
+auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
+auto c = pluss::series::linspace(1.0, 0.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
+pane.spire3(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 2}, z, c);
+pane.scale_guide(true);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 4](img/spire3-4-xyzc.svg)
+![Output of Example 4](img/spire3-4-color.svg)
 
-Example 5 (failure). A flat, one-dimensional `z` fails identically on the one-argument
-overload and the fully-explicit three-argument overload — both eagerly, at the call site.
+Example 5. Bars go down from zero for negative values.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig1 = studio("spire3_flat_z_1arg");
-auto& pane1 = fig1.pane3();
-try {
-  pane1.spire3(std::vector<double>{1.0, 2.0, 3.0});
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
-}
-
-auto fig2 = studio("spire3_flat_z_3arg");
-auto& pane2 = fig2.pane3();
-try {
-  pane2.spire3(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{4.0, 5.0, 6.0}, std::vector<double>{0.1, 0.2, 0.3});
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
-}
+auto fig = studio("spire3_negative");
+auto& pane = fig.pane3("p");
+auto z = pluss::make_series(std::vector<double>{2, -1, 3, -2, 1, 2, 0, 3, -3}, {3, 3});
+pane.spire3(z);
+fig.save_svg("figure.svg");
 ```
 
-Output:
+![Output of Example 5](img/spire3-5-negative.svg)
+
+Example 6. Inputs that cannot be drawn are refused when the trace is added, and the message names the method and the problem. The pane keeps the traces it had.
+
+```cpp
+auto report = [](const char* what, auto&& call) {
+  auto fig = studio("spire3_errors");
+  auto& pane = fig.pane3("p");
+  try {
+    call(pane);
+    std::cout << what << ": accepted\n";
+  } catch (const pluss::Error& e) {
+    std::cout << what << ": " << e.message() << "\n";
+  }
+};
+report("z is not a matrix", [](Pane& pane) { pane.spire3(std::vector<double>{1, 2, 3}); });
+report("coordinates do not match z", [](Pane& pane) { auto z = pluss::series::linspace(0.0, 4.0, 9, pluss::ScalarType::Float64).reshape({3, 3}); pane.spire3(std::vector<double>{1, 2}, std::vector<double>{1, 2, 3}, z); });
+auto fig = studio("spire3_errors_out");
+auto& pane = fig.pane3("p");
+pane.path3(std::vector<double>{0, 1}, std::vector<double>{0, 1}, std::vector<double>{0, 1});
+fig.save_svg("figure.svg");
+```
+
+### Output
 
 ```text
-spire3: z must be a rank-2 matrix
-spire3: z must be a rank-2 matrix
+z is not a matrix: spire3: z must be a rank-2 matrix
+coordinates do not match z: spire3: x/y must both be vectors with extents matching z columns/rows or full matrices matching z
 ```
+
+![Output of Example 6](img/spire3-6-errors.svg)
+
+Example 7. `spire3` needs a volumetric pane. On a planar pane it throws at once, naming the kind it needs, and nothing is added.
+
+```cpp
+auto fig = studio("spire3_wrong_pane");
+auto& pane = fig.pane2("p");
+try {
+  pane.spire3(pluss::series::linspace(0.0, 1.0, 4, pluss::ScalarType::Float64).reshape({2, 2}));
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
+}
+std::cout << "traces: " << pane.trace_count() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+spire3 requires a volumetric pane
+traces: 0
+```
+
+![Output of Example 7](img/spire3-7-wrong_pane.svg)
 
 ## Notes
 
-- Not `noexcept`.
-- `Spire3Data` (the underlying payload struct) also carries `width` (default `0.8`),
-  `depth` (default `0.8`), and `base` (default `0.0`) fields — none of the four `spire3()`
-  overloads above exposes a parameter for any of them; every call constructs the payload
-  with these three fields fixed at their struct defaults. No entry point for customizing
-  bar width/depth/base was found on `Pane` for this trace kind.
-- `flash::bar3d` (if present) is a convenience wrapper around one of these overloads.
+- Returns the new [`Trace&`](../trace/label.md); the reference stays valid for the life of the pane, and the style calls of the trace ([`label`](../trace/label.md), [`stroke`](../trace/stroke.md), [`width`](../trace/width.md), ...) chain off it.
+- The data is copied into the trace when it is added, so changing the vector afterwards does not change the figure.
 
 ## See Also
 
-- [`Pane::fieldmap`](fieldmap.md): shares the identical `z`-shape/`c`-color decoupling
-  pattern and the identical `"... z must be a rank-2 matrix"` error message, on a 2D
-  `Planar` pane instead.
-- [`Pane::cloud3`](cloud3.md): a discrete, non-grid-constrained 3D point trace, for data
-  that isn't naturally laid out on a regular `(x, y)` grid.
+- [`Pane::sheet`](sheet.md): the same data as a surface.
+- [`Pane::lattice`](lattice.md): as a wire grid.
+- [`Pane::columns`](columns.md): bars in the plane.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="path3.html">
+  <a class="prev-link" href="spike.html">
     <span class="label">Previous</span>
-    <span class="title">path3</span>
+    <span class="title">spike</span>
   </a>
-  <a class="next-link" href="isoband.html">
+  <a class="next-link" href="theme_tokens.html">
     <span class="label">Next</span>
-    <span class="title">isoband</span>
+    <span class="title">theme_tokens</span>
   </a>
 </div>

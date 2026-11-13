@@ -7,8 +7,7 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Err>
-Trace& flash::pointplot(Pane& pane, X&& x, Y&& y, Err&& err)
+Trace& flash::pointplot(Pane& pane, Series x, Series y, Series err)
 ```
 
 ## What It Does
@@ -21,7 +20,7 @@ from `err`. There is only one overload.
 ```{important} Draws two traces but returns only the error-bar trace
 pointplot() calls flash::lineplot(pane, x, y) first (its return value is
 discarded), then draws and returns the Pane::whisk error-bar trace. Both traces
-land in the pane -- the line is genuinely rendered -- but you only get a
+land in the pane -- the line is rendered -- but you only get a
 Trace& handle to the whisk trace. If you need to style the connecting line
 (width, color, dash pattern), call flash::lineplot() yourself first and style
 its returned Trace& directly, then draw pointplot()'s error bars separately,
@@ -61,8 +60,8 @@ err, or use flash::whiskplot()'s 6-argument asymmetric overload directly.
 
 ## Examples
 
-Example 1. A basic point plot with a connecting line and symmetric error bars, verified to
-draw exactly two traces (one line, one whisk) and to return the whisk trace.
+Example 1. A basic point plot with a connecting line and symmetric error bars, which
+draws exactly two traces (one line, one whisk) and returns the whisk trace.
 
 ```cpp
 using namespace pluss::pl;

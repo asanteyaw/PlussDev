@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class Values>
-Studio& flash::acfplot(Studio& studio, Values&& values, const AcfPlotOptions& options = {})
+Studio& flash::acfplot(Studio& studio, Series values, const AcfPlotOptions& options = {})
 ```
 
 ## What It Does
@@ -38,7 +37,7 @@ constant-width visual guide, not a rigorous per-lag hypothesis test bound.
 
 **values** (series-convertible)
     The sequence to autocorrelate. Must contain at least three points, or `acfplot`
-    throws `std::invalid_argument("flash::acfplot requires at least three points")`.
+    throws `pluss::Error("flash::acfplot requires at least three points")`.
 
 **options** (`const AcfPlotOptions&`, optional)
     See the field table below.
@@ -47,10 +46,10 @@ constant-width visual guide, not a rigorous per-lag hypothesis test bound.
 
 | Field | Type and default | Description |
 |---|---|---|
-| `max_lag` | `std::int64_t`, default `40` | The largest lag computed and shown. Clamped to `[1, n - 1]`. |
+| `max_lag` | `std::int64_t`, default `40` | The largest lag computed and shown. At least `1` (fewer throws `pluss::Error`); a value above `n - 1` is reduced to `n - 1`, since a series has no longer lags. |
 | `include_zero_lag` | `bool`, default `false` | Whether lag `0` (always exactly `1.0`, a series correlated with itself) is included as its own spike. `false` starts the plot at lag `1`. |
 | `show_confidence_band` | `bool`, default `true` | Whether the `+CI`/`-CI` horizontal reference lines are drawn. See the important callout above for exactly how they're computed. |
-| `confidence_level` | `double`, default `0.95` | Feeds the confidence band's z-score via an internal lookup — not a continuous calculation. Only six discrete buckets exist: `≥0.995 → 2.807`, `≥0.99 → 2.576`, `≥0.975 → 2.241`, `≥0.95 → 1.96`, `≥0.90 → 1.645`, anything lower → `1.282`. Values between the documented conventional levels (e.g. `0.925`) silently round down to the next lower bucket rather than interpolating. |
+| `confidence_level` | `double`, default `0.95` | The coverage of the confidence band, strictly between 0 and 1 (anything else throws `pluss::Error`). The band is drawn at `±z/sqrt(n)`, where `z` is the exact two-sided normal quantile of the level, so every level has its own band: 0.90 gives 1.645, 0.925 gives about 1.78, 0.95 gives 1.96. |
 | `trace_width` | `float`, default `1.2F` | Stroke width for the correlogram's spikes. |
 | `marker_area` | `double`, default `14.0` | Declared, but never read anywhere in `acfplot`'s implementation — directly verified by reading the function body. `acfplot` draws only [`Pane::spike`](../pane/spike.md) traces, which take no marker-area argument; this field is inert. |
 
@@ -96,8 +95,8 @@ fig.show();
 
 ![Output of Example 2](img/flash-acfplot-2-include-zero-lag.svg)
 
-Example 3 (verification, not a distinct rendering). `show_confidence_band = false`
-renders genuinely differently, confirmed via direct SVG comparison.
+Example 3 (a comparison, not a new picture). `show_confidence_band = false`
+renders differently.
 
 ```cpp
 using namespace pluss::pl;
@@ -136,8 +135,8 @@ auto fig = studio("flash_acfplot_too_few");
 std::vector<double> two{1.0, 2.0};
 try {
   flash::acfplot(fig, two);
-} catch (const std::invalid_argument& e) {
-  std::cout << "acfplot(2 points) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "acfplot(2 points) threw: " << e.message() << "\n";
 }
 ```
 
@@ -154,7 +153,7 @@ acfplot(2 points) threw: flash::acfplot requires at least three points
   degenerate zero-variance case (which falls back to `0.0` for every non-zero lag rather
   than propagating `NaN`/`Inf`).
 - [`flash::actplot`](actplot.md) is a thin wrapper around this exact function — directly
-  verified byte-identical to `acfplot(values)` (default options), since
+  identical to `acfplot(values)` (default options), since
   `AutocorrelationPlotOptions` lacks `include_zero_lag`/`marker_area` and hard-codes
   `include_zero_lag = false` when translating to an internal `AcfPlotOptions`.
 - [`flash::resid_acfplot`](resid_acfplot.md) runs this same ACF computation over

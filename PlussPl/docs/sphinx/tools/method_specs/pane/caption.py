@@ -1,0 +1,22 @@
+PAGE = dict(
+    slug='caption',
+    title='Pane::caption',
+    signature='Pane& Pane::caption(std::string text)',
+    intro="Sets a caption for this pane: a line of text written below its plot, for a source, a unit, a note on how the data was made. An empty string removes it.\n\nA caption belongs to one pane and needs nothing else. The figure-level captions written once for a group of panes are [`Studio::x_caption`](../studio/x_caption.md) and its y and z forms, which panes join by [alignment group](align_x.md); a pane's [`title`](title.md) is above the plot and an axis label is beside an axis. The pane keeps room for its caption only while it has one.",
+    parameters='**text** (`std::string`)\n    The caption. Empty for none.',
+    returns='`Pane&`\n    The same pane, for chaining.',
+    examples=[
+        dict(id='set', text='A caption written below the plot, and read back with `caption_text()`.',
+             code='auto fig = studio("caption_set");\nauto& pane = fig.pane2("p");\npane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\npane.caption("Source: field survey, 2025");\nstd::cout << pane.caption_text() << "\\n";\nstd::cout << "drawn: " << (fig.to_svg().find(">Source: field survey, 2025<") != std::string::npos) << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='replace_clear', text='A second call replaces the caption and an empty string removes it; with it removed the figure is the figure of a pane that never had one.',
+             code='auto build = [&](int mode) {\n  auto fig = studio("caption_clear");\n  auto& pane = fig.pane2("p");\n  pane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\n  if (mode >= 1) pane.caption("first");\n  if (mode == 2) pane.caption("second").caption("");\n  return fig.to_svg();\n};\nstd::cout << "first drawn: " << (build(1).find(">first<") != std::string::npos) << "\\n";\nstd::cout << "cleared == never set: " << (build(2) == build(0)) << "\\n";\nauto fig = studio("caption_clear_out");\nauto& pane = fig.pane2("p");\npane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\npane.caption("second");\nfig.save_svg("figure.svg");'),
+        dict(id='each_pane', text='Each pane has its own caption, written under its own plot.',
+             code='auto fig = studio("caption_each");\nfig.mosaic(1, 2);\nauto& a = fig.pane2("a");\na.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\na.caption("measured in June");\nauto& b = fig.pane2("b");\nb.trend(std::vector<double>{0, 1, 2}, std::vector<double>{1, 0, 1});\nb.caption("measured in July");\nfig.save_svg("figure.svg");'),
+        dict(id='distinct', text='A caption is not a title and not an axis label; all three are drawn, each where it belongs.',
+             code='auto fig = studio("caption_distinct");\nauto& pane = fig.pane2("p");\npane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\npane.title("title").caption("caption").x_label("axis label");\nconst std::string svg = fig.to_svg();\nstd::cout << "title, caption and label all drawn: " << (svg.find(">title<") != std::string::npos && svg.find(">caption<") != std::string::npos && svg.find(">axis label<") != std::string::npos) << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='math', text='Mathematics between dollar signs is typeset.',
+             code='auto fig = studio("caption_math");\nauto& pane = fig.pane2("p");\npane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\npane.caption("Fitted with $y = a e^{-bt}$");\nfig.save_svg("figure.svg");'),
+    ],
+    notes='- Any string is accepted; the empty string clears the caption.',
+    see=['[`Pane::caption_text`](caption_text.md): read it back.', '[`Pane::title`](title.md): the text above the plot.', '[`Studio::x_caption`](../studio/x_caption.md): a caption shared by a group of panes.'],
+)

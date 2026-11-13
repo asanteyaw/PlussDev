@@ -56,15 +56,13 @@ Every cell is created and placed regardless of `triangle` -- `triangle == Lower`
 does not skip creating excluded cells, it hides them (`Pane::hide()`) after creation, the
 same overflow-cell-hiding pattern used throughout the `*gridplot` family. Only the
 outer edge of the grid gets tick labels/axis labels at all (`Pane::x_label`/`y_label` are
-set to `""` everywhere else) -- confirmed by construction: `edge_x = (row == n - 1)`,
-`edge_y = (col == 0)`. `hide_inner_ticks` (default `true`) additionally shrinks every
-non-edge pane's tick-label font to a near-invisible `0.01` scale, rather than truly
-disabling tick rendering -- set it `false` to keep full-size tick labels on inner panes too.
+set to `""` everywhere else): the bottom row and the left column. `hide_inner_ticks` (default `true`) additionally switches off the tick labels of every
+non-edge pane; set it `false` to keep them on inner panes too.
 ```
 
 ```{important} corner=true silently forces triangle to Lower when triangle is still Full
 If options.corner is true and options.triangle is still at its default (Full), pairplot
-overwrites triangle to Lower before doing anything else -- directly verified: a figure
+overwrites triangle to Lower before doing anything else: a figure
 built with only corner=true renders byte-identical to one built with explicit
 triangle=PairPlotTriangle::Lower. This silent override only fires when triangle is still
 Full; explicitly setting BOTH corner=true and triangle=Upper leaves Upper in force
@@ -90,7 +88,7 @@ size the Studio already had.
 | `kind` | `PairPlotKind`, default `Scatter` | The off-diagonal glyph: `Scatter` (a point cloud via [`Pane::cloud`](../pane/cloud.md)) or `Reg` (the same scatter plus a fit-only regression line, drawn via [`flash::regplot`](regplot.md) with `show_scatter=false`, `show_ci=false`). |
 | `diag_kind` | `PairPlotDiagKind`, default `Histogram` | The diagonal glyph: `Histogram` (via [`Pane::bucket`](../pane/bucket.md), using `diag_bins`) or `Density` (a KDE curve via [`Pane::trend`](../pane/trend.md), using `diag_density_points`, clamped to at least `32`). |
 | `corner` | `bool`, default `false` | See the important callout above — silently forces `triangle` to `Lower` when `triangle` is still at its default `Full`. |
-| `dropna` | `bool`, default `false` | Whether to drop every row where *any* feature is non-finite (`NaN`/`Inf`) before plotting, computed via a combined `isfinite()`/`logical_and()` mask across all features. When all rows are dropped, `pairplot` throws `std::invalid_argument("flash::pairplot has no rows after filtering/sampling")`. |
+| `dropna` | `bool`, default `false` | Whether to drop every row where *any* feature is non-finite (`NaN`/`Inf`) before plotting, computed via a combined `isfinite()`/`logical_and()` mask across all features. When all rows are dropped, `pairplot` throws `pluss::Error("flash::pairplot has no rows after filtering/sampling")`. |
 | `monochrome` | `bool`, default `true` | Whether every trace uses the theme's default single stroke color (`true`) or a per-panel color drawn from an internal categorical palette (`false`) — diagonal traces color by row index, off-diagonal traces color by `row + col`. |
 | `labels` | `std::vector<std::string>`, default empty | Feature names for the outer-edge axis labels. Used only when its length exactly matches the feature count; otherwise every feature falls back to an auto-generated `"x" + std::to_string(index + 1)` label (`"x1"`, `"x2"`, …). |
 
@@ -111,15 +109,15 @@ size the Studio already had.
 | Field | Type and default | Description |
 |---|---|---|
 | `max_points` | `std::int64_t`, default `2500` | Row-count cap. When a feature has more rows than this, every column is deterministically downsampled to an evenly-strided subset of at most `max_points` rows (same mechanism as [`flash::relgridplot`](relgridplot.md)'s siblings share via `detail::downsample_columns`). |
-| `diag_bins` | `std::int64_t`, default `14` | Bin count forwarded to `Pane::bucket` when `diag_kind == Histogram`. Clamped to at least `1`. |
-| `diag_density_points` | `std::int64_t`, default `128` | KDE evaluation-point count when `diag_kind == Density`. Clamped to at least `32`. |
+| `diag_bins` | `std::int64_t`, default `14` | Bin count forwarded to `Pane::bucket` when `diag_kind == Histogram`. At least `1`; fewer throws `pluss::Error`. |
+| `diag_density_points` | `std::int64_t`, default `128` | KDE evaluation-point count when `diag_kind == Density`. At least `2`; fewer throws `pluss::Error`. |
 
 ### Font, marker, and stroke tuning
 
 | Field | Type and default | Description |
 |---|---|---|
-| `tick_font_scale` | `double`, default `0.8` | The base tick-label font scale for edge panes (non-edge panes use this scaled further down by `hide_inner_ticks`). Non-finite or non-positive values fall back to `0.8`. |
-| `axis_label_font_scale` | `double`, default `0.9` | The axis-label font scale, applied to every pane. Non-finite or non-positive values fall back to `0.9`. |
+| `tick_font_scale` | `double`, default `0.8` | The base tick-label font scale for edge panes (non-edge panes use this scaled further down by `hide_inner_ticks`). A value that is not finite and positive throws `pluss::Error`. |
+| `axis_label_font_scale` | `double`, default `0.9` | The axis-label font scale, applied to every pane. A value that is not finite and positive throws `pluss::Error`. |
 | `diag_trace_width` | `float`, default `0.75F` | Stroke width for diagonal traces. |
 | `scatter_trace_width` | `float`, default `0.45F` | Stroke width for off-diagonal scatter markers (and the baseline `regplot` fit-line width is derived from this when `kind == Reg`: `max(0.8F, scatter_trace_width + 0.45F)`). |
 | `marker_area_scale`, `marker_area_min`, `marker_area_max` | `double`, default `380.0`, `7.0`, `18.0` | Off-diagonal marker area is computed as `marker_area_scale / sqrt(points * feature_count)`, then clamped to `[marker_area_min, marker_area_max]` — larger point counts and feature grids automatically shrink markers to reduce overplotting. |
@@ -143,8 +141,8 @@ size the Studio already had.
 **columns** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
     One entry per feature — `columns[i]` is that feature's complete value series. Must be
     non-empty, and every column must be the same length, or `pairplot` throws
-    `std::invalid_argument("flash::pairplot requires at least one series")` (empty case)
-    or `std::invalid_argument("flash::pairplot requires equal-length columns")` (length
+    `pluss::Error("flash::pairplot requires at least one series")` (empty case)
+    or `pluss::Error("flash::pairplot requires equal-length columns")` (length
     mismatch).
 
 **data** (`const Dataset&`, Dataset overload only)
@@ -160,7 +158,7 @@ size the Studio already had.
 
 **frame_options** (`const MatrixFrameOptions&`, one matrix overload only)
     `{ Axis feature_axis; std::vector<std::string> feature_names; }` — bundles the axis
-    orientation and feature names into one struct.
+    orientation and feature names into one value.
 
 **feature_names** (`RangeView::Of<std::string_view>`, `const std::vector<std::string>&`,
 or `std::initializer_list<std::string_view>`, three matrix overloads)
@@ -199,7 +197,7 @@ flash::Dataset flash::make_dataset(
 
 See [`flash::Dataset`](Dataset.md) for the grouped surface itself. When PlussMic is
 present, the same dataset type also supports
-[`flash::Dataset::from_frame`](dataset_from_frame.md) and
+[`flash::Dataset::from_table`](dataset_from_table.md) and
 [`flash::Dataset::frame`](dataset_frame.md).
 
 ## Examples
@@ -221,7 +219,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-pairplot-1-default.svg)
 
-Example 2. `std::initializer_list<Series>` overload — verified byte-identical to the
+Example 2. `std::initializer_list<Series>` overload — identical to the
 `RangeView::Series` form above given the same data.
 
 ```cpp
@@ -354,7 +352,7 @@ fig.show();
 
 ![Output of Example 8](img/flash-pairplot-8-triangle-upper.svg)
 
-Example 9 (verification, not a distinct rendering). `corner = true` renders byte-identical
+Example 9 (a comparison, not a new picture). `corner = true` renders identical
 to explicit `triangle = Lower`, confirming the silent-override rule from the important
 callout above.
 
@@ -445,8 +443,7 @@ fig.show();
 ![Output of Example 12](img/flash-pairplot-12-monochrome-false.svg)
 
 Example 13 and 14. `dropna` off vs. on — two features each carry one injected `NaN`;
-`dropna = true` removes those rows from every feature before plotting. Verified to
-genuinely differ via direct SVG comparison.
+`dropna = true` removes those rows from every feature before plotting. differ.
 
 ```cpp
 using namespace pluss::pl;
@@ -507,8 +504,8 @@ using namespace pluss::pl;
 auto fig = studio("flash_pairplot_empty");
 try {
   flash::pairplot(fig, pluss::msharp::RangeView::Series{});
-} catch (const std::invalid_argument& e) {
-  std::cout << "pairplot(empty) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "pairplot(empty) threw: " << e.message() << "\n";
 }
 ```
 
@@ -531,8 +528,8 @@ flash::PairPlotOptions opts;
 opts.dropna = true;
 try {
   flash::pairplot(fig, pluss::msharp::RangeView::Series(cols), opts);
-} catch (const std::invalid_argument& e) {
-  std::cout << "pairplot(all-nan, dropna) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "pairplot(all-nan, dropna) threw: " << e.message() << "\n";
 }
 ```
 
@@ -556,9 +553,7 @@ pairplot(all-nan, dropna) threw: flash::pairplot has no rows after filtering/sam
   post-filter row count.
 - The `Dataset`/matrix-with-frame-options/matrix-with-names overloads' auto-generated
   fallback label format (`"x_1"`, underscore) differs from the plain `columns`-overloads'
-  fallback (`"x1"`, no underscore) — both are genuine, verified via reading
-  `detail::default_feature_labels` vs. `detail::default_feature_labels_underscore`, not
-  a typo in this reference.
+  fallback (`"x1"`, no underscore).
 - Every leftmost-column pane additionally gets
   [`Pane::y_label_centered(true)`](../pane/y_label_centered.md) — pairplot's y-labels are
   feature names, centered on-axis so they don't collide with dense, rotated y tick labels.

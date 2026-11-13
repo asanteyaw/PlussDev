@@ -41,7 +41,7 @@ auto frame = DataFrame({
     })},
 });
 
-auto data = pluss::pl::flash::Dataset::from_frame(frame);
+auto data = pluss::pl::flash::Dataset::from_table(frame);
 std::cout << "nrows=" << data.nrows() << "\n";
 ```
 
@@ -72,7 +72,7 @@ data.numeric_validity.push_back(std::nullopt);
 try {
   std::cout << data.nrows() << "\n";
 } catch (const pluss::Error& err) {
-  std::cout << err.what() << "\n";
+  std::cout << err.message() << "\n";
 }
 ```
 

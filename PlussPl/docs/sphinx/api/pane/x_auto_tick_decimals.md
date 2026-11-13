@@ -4,164 +4,208 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Pane& Pane::x_auto_tick_decimals(int decimals)         // sets an explicit decimal count
-Pane& Pane::clear_x_auto_tick_decimals() noexcept       // clears back to automatic
+Pane& Pane::x_auto_tick_decimals(int decimals)
+Pane& Pane::clear_x_auto_tick_decimals() noexcept
 ```
 
 ## What It Does
 
-Overrides how many digits after the decimal point [`TickFormat::Auto`](x_tick_format.md)
-uses when rendering x-axis tick labels — a fine-tuning knob for `Auto`'s own formatting
-choice, distinct from switching to a different `TickFormat` entirely (like
-[`Fixed3`](x_tick_format.md)/[`Fixed6`](x_tick_format.md), which hard-code their own
-decimal count regardless of this setting). `clear_x_auto_tick_decimals()` removes the
-override, letting `Auto` choose its own decimal count again.
+Sets how many decimals the automatic tick labels of the x axis are written with, for the axis that uses plain numbers. Without a setting the renderer picks the fewest decimals that tell the ticks apart; with one, every automatic label has exactly that many, so a column of ticks lines up. The count is stored in `x_axis().auto_tick_decimals` (empty when unset), and `clear_x_auto_tick_decimals()` removes it, giving exactly the figure that never set it.
 
-```{important} decimals must be in the inclusive range [0, 8]
-Any other value throws `std::invalid_argument("x_auto_tick_decimals: decimals must be in
-[0, 8]")` — both `0` and `8` themselves are valid (inclusive on both ends); `-1` and `9`
-are the first invalid values on either side. See Example 3.
-```
+The count must be from 0 to 8; anything else throws `pluss::Error` and the stored count is kept. The setting shapes automatic labels in plain notation only. An axis whose numbers are written in scientific notation ([`x_tick_format`](x_tick_format.md) `Auto` on millions, or `Scientific`) is not changed by it, and explicit labels ([`x_ticks`](x_ticks.md)) are text.
 
 ## Parameters
 
-**decimals** (`int`, setter only)
-    The number of digits after the decimal point. Must be in `[0, 8]`.
+**decimals** (`int`)
+    The number of decimals, 0 to 8.
 
 ## Returns
 
 `Pane&`
-    A reference to the same pane, for chaining (both the setter and `clear_x_auto_tick_decimals()`).
+    The same pane, for chaining.
 
 ## Examples
 
-Example 1. The default: unset, `Auto` chooses its own decimal count.
+Example 1. Default, set, clear. A new axis has no setting (`auto_tick_decimals` is empty); the call stores the count and `clear_x_auto_tick_decimals()` removes it.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("auto_tick_decimals_default");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{0.123456, 0.654321, 0.5});
-fig.show();
-
-std::cout << pane.y_axis().auto_tick_decimals.has_value() << "\n";
-```
-
-### Output
-
-```text
-0
-```
-
-![Output of Example 1](img/auto_tick_decimals-1-default.svg)
-
-Example 2. An explicit override on the x-axis.
-
-```cpp
-using namespace pluss::pl;
-
-auto fig = studio("x_auto_tick_decimals_3");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{0.123456, 0.654321, 0.5});
-pane.x_auto_tick_decimals(3);
-fig.show();
-
-std::cout << *pane.x_axis().auto_tick_decimals << "\n";
-```
-
-### Output
-
-```text
-3
-```
-
-![Output of Example 2](img/x_auto_tick_decimals-1-set.svg)
-
-Example 3. Both out-of-range failures, and the two inclusive boundary values (`0` and
-`8`) both succeeding.
-
-```cpp
-using namespace pluss::pl;
-
-auto fig = studio("auto_tick_decimals_failures");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0}, std::vector<double>{1.0, 2.0});
-
-try {
-  pane.x_auto_tick_decimals(-1);
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
-}
-
-try {
-  pane.x_auto_tick_decimals(9);
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
-}
-
-pane.x_auto_tick_decimals(0);
-std::cout << *pane.x_axis().auto_tick_decimals << "\n";
-
-pane.x_auto_tick_decimals(8);
-std::cout << *pane.x_axis().auto_tick_decimals << "\n";
-```
-
-### Output
-
-```text
-x_auto_tick_decimals: decimals must be in [0, 8]
-x_auto_tick_decimals: decimals must be in [0, 8]
-0
-8
-```
-
-Example 4. `clear_x_auto_tick_decimals()` removes the override.
-
-```cpp
-using namespace pluss::pl;
-
-auto fig = studio("auto_tick_decimals_cleared");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{0.123456, 0.654321, 0.5});
-pane.x_auto_tick_decimals(3);
+auto fig = studio("x_decimals_readback");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+auto show = [&] { const auto& v = pane.x_axis().auto_tick_decimals; std::cout << (v ? std::to_string(*v) : std::string("none")) << "\n"; };
+std::cout << "new axis: "; show();
+pane.x_auto_tick_decimals(2);
+std::cout << "after x_auto_tick_decimals(2): "; show();
 pane.clear_x_auto_tick_decimals();
-
-std::cout << pane.x_axis().auto_tick_decimals.has_value() << "\n";
+std::cout << "after clear: "; show();
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-0
+new axis: none
+after x_auto_tick_decimals(2): 2
+after clear: none
 ```
+
+![Output of Example 1](img/x_auto_tick_decimals-1-readback.svg)
+
+Example 2. The effect. On an axis from 0 to 1 the automatic labels have one decimal by default; with 0, 1, 2 and 5 decimals they are written with that many.
+
+```cpp
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+for (int decimals : {0, 1, 2, 5}) {
+auto fig = studio("x_decimals_effect");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{0.0, 0.1234, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3, 2});
+  pane.y_tick_labels(false);
+pane.z_tick_labels(false);
+  pane.x_auto_tick_decimals(decimals);
+  std::cout << decimals << " decimals: " << texts(fig.to_svg()) << "\n";
+}
+auto fig = studio("x_decimals_effect_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0.0, 0.1234, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3, 2});
+pane.x_auto_tick_decimals(2);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+0 decimals: p 0 0 0 1 1 1 
+1 decimals: p 0.0 0.2 0.4 0.6 0.8 1.0 
+2 decimals: p 0.00 0.20 0.40 0.60 0.80 1.00 
+5 decimals: p 0.00000 0.20000 0.40000 0.60000 0.80000 1.00000 
+```
+
+![Output of Example 2](img/x_auto_tick_decimals-2-effect.svg)
+
+Example 3. Not when the axis is scientific. Values of millions are written in scientific notation by `Auto`, and a number of decimals does not change that; a plain-number format is the way to write them out.
+
+```cpp
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+auto build = [&](bool decimals) {
+  auto fig = studio("x_decimals_sci");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1200, 34000, 560000, 7800000, 9000000}, std::vector<double>{2, 5, 4, 3, 2});
+  pane.y_tick_labels(false);
+pane.z_tick_labels(false);
+  if (decimals) pane.x_auto_tick_decimals(4);
+  return fig.to_svg();
+};
+std::cout << "no setting: " << texts(build(false)) << "\n";
+std::cout << "4 decimals: " << texts(build(true)) << "\n";
+auto fig = studio("x_decimals_sci_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1200, 34000, 560000, 7800000, 9000000}, std::vector<double>{2, 5, 4, 3, 2});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+no setting: p 0 2.00e+06 4.00e+06 6.00e+06 8.00e+06 1.00e+07 
+4 decimals: p 0.0000 2000000.0000 4000000.0000 6000000.0000 8000000.0000 10000000.0000 
+```
+
+![Output of Example 3](img/x_auto_tick_decimals-3-scientific.svg)
+
+Example 4. Only 0 to 8 decimals. A negative count and a count above 8 are refused with `pluss::Error`, and the stored count is kept; 0 and 8 are valid.
+
+```cpp
+auto fig = studio("x_decimals_invalid");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.x_auto_tick_decimals(3);
+for (int bad : {-1, 9, 100}) {
+  try {
+    pane.x_auto_tick_decimals(bad);
+  } catch (const pluss::Error& e) {
+    std::cout << bad << ": " << e.message() << "\n";
+  }
+}
+pane.x_auto_tick_decimals(0);
+pane.x_auto_tick_decimals(8);
+std::cout << "0 and 8 accepted, stored: " << *pane.x_axis().auto_tick_decimals << "\n";
+pane.x_auto_tick_decimals(3);
+std::cout << "kept after errors: " << *pane.x_axis().auto_tick_decimals << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+-1: x_auto_tick_decimals: decimals must be in [0, 8]
+9: x_auto_tick_decimals: decimals must be in [0, 8]
+100: x_auto_tick_decimals: decimals must be in [0, 8]
+0 and 8 accepted, stored: 8
+kept after errors: 3
+```
+
+![Output of Example 4](img/x_auto_tick_decimals-4-invalid.svg)
+
+Example 5. Clearing restores the default exactly. After `clear_x_auto_tick_decimals()` the figure equals the one that never set a count.
+
+```cpp
+auto build = [&](bool set_then_clear) {
+  auto fig = studio("x_decimals_clear");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
+  if (set_then_clear) pane.x_auto_tick_decimals(5).clear_x_auto_tick_decimals();
+  return fig.to_svg();
+};
+std::cout << "equal: " << (build(true) == build(false)) << "\n";
+auto fig = studio("x_decimals_clear_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+equal: 1
+```
+
+![Output of Example 5](img/x_auto_tick_decimals-5-clear_restores.svg)
 
 ## Notes
 
-- The setter is not `noexcept` (validates the range); `clear_x_auto_tick_decimals()` is
-  `noexcept`.
-- Only affects rendering while [`TickFormat::Auto`](x_tick_format.md) is the active tick
-  format — under `Fixed3`/`Fixed6`/etc., each format's own hard-coded decimal count is
-  used instead, and this setting has no visible effect.
-- `decimals` is validated as an inclusive range `[0, 8]`, both ends valid.
+- `x_auto_tick_decimals` throws, so it is not `noexcept`; `clear_x_auto_tick_decimals` never throws.
 
 ## See Also
 
-- [`Pane::x_tick_format`](x_tick_format.md): the overall style choice this setting
-  fine-tunes, only relevant under `Auto`.
-- [`Pane::y_auto_tick_decimals`](y_auto_tick_decimals.md) /
-  [`Pane::z_auto_tick_decimals`](z_auto_tick_decimals.md): the y- and z-axis equivalents.
+- [`Pane::x_tick_format`](x_tick_format.md): the notation of the labels.
+- [`Pane::x_ticks`](x_ticks.md): explicit labels.
+- [`Pane::y_auto_tick_decimals`](y_auto_tick_decimals.md): the same setting for the y axis.
+- [`Pane::z_auto_tick_decimals`](z_auto_tick_decimals.md): the same setting for the z axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="z_tick_format.html">
+  <a class="prev-link" href="whisk.html">
     <span class="label">Previous</span>
-    <span class="title">z_tick_format</span>
+    <span class="title">whisk</span>
   </a>
-  <a class="next-link" href="y_auto_tick_decimals.html">
+  <a class="next-link" href="x_categories.html">
     <span class="label">Next</span>
-    <span class="title">y_auto_tick_decimals</span>
+    <span class="title">x_categories</span>
   </a>
 </div>

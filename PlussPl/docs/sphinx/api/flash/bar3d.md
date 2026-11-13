@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::bar3d(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::bar3d(Pane& pane, Series x, Series y, Series z)
 ```
 
 ## What It Does
@@ -16,7 +15,7 @@ Trace& flash::bar3d(Pane& pane, X&& x, Y&& y, Z&& z)
 A pure, one-line rename of [`flash::spire3`](spire3.md)'s three-argument `(x, y, z)`
 overload — `bar3d(pane, x, y, z)` is exactly `spire3(pane, x, y, z)`, nothing more.
 Exists purely to offer a shorter, more familiar name some callers already expect.
-Directly verified byte-identical. Note only the three-argument overload is aliased —
+Identical. Note only the three-argument overload is aliased —
 [`flash::spire3`](spire3.md)'s `(z)`-only, `(y, z)`, and `(x, y, z, c)` overloads have no
 `bar3d` equivalent.
 
@@ -53,8 +52,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-bar3d-1-basic.svg)
 
-Example 2 (verification, not a distinct rendering). `flash::bar3d` renders
-byte-identical to `flash::spire3`'s three-argument overload given the same arguments.
+Example 2 (a comparison, not a new picture). `flash::bar3d` renders
+identical to `flash::spire3`'s three-argument overload given the same arguments.
 
 ```cpp
 using namespace pluss::pl;
@@ -93,7 +92,7 @@ bar3d == spire3: 1
 
 - [`flash::spire3`](spire3.md): the function this is a pure rename of (three-argument
   overload only).
-- [`flash::hist3d`](hist3d.md): a genuinely new function in this family (not a rename),
+- [`flash::hist3d`](hist3d.md): a new function in this family (not a rename),
   built on binned histogram data.
 - [`flash::plot3D`](plot3D.md), [`flash::scatter3D`](scatter3D.md),
   [`flash::plot_surface`](plot_surface.md), [`flash::plot_wireframe`](plot_wireframe.md),

@@ -7,8 +7,7 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::rugplot(Pane& pane, Values&& values, double height = 0.08)
+Trace& flash::rugplot(Pane& pane, Series values, double height = 0.08)
 ```
 
 ## What It Does
@@ -22,7 +21,7 @@ view was computed from. There is only one overload.
 Passing height <= 0.0 does not produce zero-height (invisible) or negative-height
 ticks -- it's clamped up to a floor of 1e-4 before being used
 (std::max(height, 1e-4)), so every tick is always at least minimally visible.
-Directly verified: both height = 0.0 and height = -5.0 produced identical
+Both height = 0.0 and height = -5.0 produced identical
 tick-height data (1e-4) in the resulting trace's payload. This is a different
 validation style from most Trace-level setters documented elsewhere in this
 reference (which silently no-op and leave the PREVIOUS value unchanged) --
@@ -64,7 +63,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-rugplot-1-default-height.svg)
 
-Example 2. A taller `height`. Verified via direct SVG diff to render genuinely different
+Example 2. A taller `height`. Renders different
 tick heights from Example 1.
 
 ```cpp
@@ -111,7 +110,7 @@ height=-5.0 actual y[0]: 0.0001
 - Not `noexcept`.
 - Every tick shares the identical `height` — there is no way to vary tick height per
   observation through `rugplot()`.
-- See the important callout above for the clamping behavior — a genuinely different
+- See the important callout above for the clamping behavior — a different
   validation style from most other setters in this reference.
 
 ## See Also

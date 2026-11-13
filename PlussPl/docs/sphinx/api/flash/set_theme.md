@@ -25,23 +25,22 @@ when set_theme(Studio&, Theme) runs are left on their old theme. This is Studio:
 own documented contract, not something specific to flash::set_theme, but it is easy to
 miss since the other three set_theme overloads (Pane+Options, Pane+convenience,
 Studio+Options) all DO restyle already-existing panes, by looping over them directly
-instead of going through Studio::theme. See Example 1 below for a directly-verified
-before/after comparison.
+instead of going through Studio::theme. See Example 1 below for a before and after comparison.
 ```
 
 ## What It Does
 
 The high-level entry point of `flash::`'s theming layer — four
-overloads spread across two genuinely different jobs, all sharing the `set_theme` name:
+overloads spread across two different jobs, all sharing the `set_theme` name:
 
 - **`(Studio&, Theme)`** swaps the figure's whole [`Theme`](../studio/theme.md) object
   wholesale — a pure one-line forward to [`Studio::theme`](../studio/theme.md). This
-  overload is a plain alias of `flash::set`, verified byte-identical below.
+  overload is a plain alias of `flash::set`, identical below.
 - **`(Pane&, const FlashThemeOptions&)`** and its convenience overload
   **`(Pane&, FlashStyle, FlashContext, bool, bool)`** apply a *bundle* of
   toggles (grid style, context scaling, borderless axes, horizontal-only grid, legend
   placement/shape) to one already-existing pane, without touching its base `Theme`
-  colors. These two are verified byte-identical to each other below — the second is a
+  colors. These two are identical to each other below — the second is a
   pure convenience wrapper that builds a `FlashThemeOptions` and forwards.
 - **`(Studio&, const FlashThemeOptions&)`** applies the same bundle of toggles across
   *every* pane currently in the figure, and also stores it as the figure's
@@ -68,7 +67,7 @@ overload)
     field table below. This overload builds a `FlashThemeOptions` from exactly these
     four values (`legend_place`/`legend_dock`/`legend_shape`/`width`/`height` are left
     at their empty defaults) and forwards to the `Options`-taking overload — verified
-    byte-identical below.
+    identical below.
 
 ## `FlashThemeOptions` fields
 
@@ -90,7 +89,7 @@ overload)
 
 ## Examples
 
-Example 1. `(Studio&, Theme)` swaps the whole theme — verified byte-identical to
+Example 1. `(Studio&, Theme)` swaps the whole theme — identical to
 `flash::set`, its lower-level alias. Per `Studio::theme`'s own documented contract
 (only affects panes created *afterward*), `set`/`set_theme` is called **before**
 `pane2()` here — calling it after pane creation would have no visible effect, which
@@ -144,9 +143,9 @@ fig.show();
 
 ![Output of Example 2](img/flash-set-theme-pane-options-borderless.svg)
 
-Example 3 (verification, not a distinct rendering). The `Pane` convenience overload
+Example 3 (a comparison, not a new picture). The `Pane` convenience overload
 (`style`, `context`, `borderless`, `horizontal_grid` as individual arguments) is
-byte-identical to building the equivalent `FlashThemeOptions` directly.
+identical to building the equivalent `FlashThemeOptions` directly.
 
 ```cpp
 using namespace pluss::pl;
@@ -206,7 +205,7 @@ fig.show();
   background, foreground) — only style/context/border/grid/legend toggles. To change
   colors on a `Pane`, mutate [`Pane::theme_tokens`](../pane/theme_tokens.md) directly,
   or use `(Studio&, Theme)` at the figure level.
-- `FlashPalette` (a third small enum in this same header, alongside `FlashStyle`/
+- `FlashPalette` (a third small option type in this same header, alongside `FlashStyle`/
   `FlashContext`) is unrelated to `FlashThemeOptions` — it has no field here. It only
   appears in [`flash::flash_palette`](flash_palette.md) and
   [`flash::flash_theme`](flash_theme.md) (an unused-by-`set_theme` helper that builds

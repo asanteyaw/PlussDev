@@ -1,0 +1,20 @@
+PAGE = dict(
+    slug='title_text',
+    title='Pane::title_text',
+    signature='const std::string& Pane::title_text() const noexcept',
+    intro="Returns the pane's title: the text it was made with ([`Studio::pane2`](../studio/pane2.md), [`pane3`](../studio/pane3.md)) or the last one given to [`title`](title.md). An empty string means no title.\n\nUse it to find a pane among those of a figure ([`Studio::panes`](../studio/panes.md) lists them), to build a legend or a report from the titles, or to restore a title after changing it. The reference is to the pane's own string and follows later calls; copy it to keep the value.",
+    parameters='*(none)*',
+    returns='`const std::string&`\n    The title, empty for none.',
+    examples=[
+        dict(id='made_with', text='The title given when the pane is made.',
+             code='auto fig = studio("title_text_made");\nauto& pane = fig.pane2("Revenue");\npane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\nstd::cout << "\'" << pane.title_text() << "\'\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='untitled', text='A pane made without a title has an empty one.',
+             code='auto fig = studio("title_text_untitled");\nauto& pane = fig.pane2();\npane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\nstd::cout << "empty: " << pane.title_text().empty() << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='after_title', text='After `title()` it returns the new text.',
+             code='auto fig = studio("title_text_after");\nauto& pane = fig.pane2("old");\npane.trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 1, 0});\npane.title("new");\nstd::cout << pane.title_text() << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='listing', text='Listing the panes of a figure by title.',
+             code='auto fig = studio("title_text_listing");\nfig.mosaic(1, 3);\nfor (const char* name : {"north", "south", "east"}) {\n  fig.pane2(name).trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});\n}\nfor (const auto& pane : fig.panes()) std::cout << pane.title_text() << " ";\nstd::cout << "\\n";\nfig.save_svg("figure.svg");'),
+    ],
+    notes='- `noexcept`; reads only.',
+    see=['[`Pane::title`](title.md): set the title.', '[`Studio::panes`](../studio/panes.md): the panes of a figure.'],
+)

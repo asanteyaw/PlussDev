@@ -7,10 +7,8 @@
 ## Signature
 
 ```cpp
-template <class Mapper>
-  requires std::invocable<Mapper, Pane&, std::int64_t, std::int64_t>
 Studio& flash::facet_map_plot(Studio& studio, std::int64_t rows, std::int64_t cols,
-                               Mapper&& mapper, double gx = 18.0, double gy = 18.0)
+                               std::function<void(Pane&, std::int64_t, std::int64_t)> mapper, double gx = 18.0, double gy = 18.0)
 ```
 
 ## What It Does
@@ -39,11 +37,11 @@ draws, including empty ones (simply do nothing in the callback for those rows/co
 
 **rows**, **cols** (`std::int64_t`)
     The grid's row and column counts. Both must be strictly positive, or
-    `facet_map_plot` throws `std::invalid_argument("flash::facet_map_plot rows/cols must
+    `facet_map_plot` throws `pluss::Error("flash::facet_map_plot rows/cols must
     be positive")`, verified below. Unlike the other `*gridplot` functions, there is no
     auto-resolution here — you must supply both explicitly.
 
-**mapper** (`Mapper&&`, invocable as `(Pane&, std::int64_t row, std::int64_t col) -> void`)
+**mapper** (a callable taking `(Pane&, std::int64_t row, std::int64_t col)`)
     Called once per cell, in row-major order (`row` outer, `col` inner), after that cell's
     pane has already been created and `place(row, col)`d. Do all of that panel's drawing —
     traces, title, labels — inside this callback.
@@ -87,8 +85,8 @@ using namespace pluss::pl;
 auto fig = studio("flash_facet_map_plot_bad");
 try {
   flash::facet_map_plot(fig, 0, 2, [](Pane&, std::int64_t, std::int64_t) {});
-} catch (const std::invalid_argument& e) {
-  std::cout << "facet_map_plot(rows=0) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "facet_map_plot(rows=0) threw: " << e.message() << "\n";
 }
 ```
 

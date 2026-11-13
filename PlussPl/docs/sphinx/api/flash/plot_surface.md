@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::plot_surface(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::plot_surface(Pane& pane, Series x, Series y, Series z)
 ```
 
 ## What It Does
@@ -16,7 +15,7 @@ Trace& flash::plot_surface(Pane& pane, X&& x, Y&& y, Z&& z)
 A pure, one-line rename of [`flash::sheet`](sheet.md)'s bare `(x, y, z)` overload —
 `plot_surface(pane, x, y, z)` is exactly `sheet(pane, x, y, z)`, nothing more. Exists
 purely to offer a shorter, more familiar name some callers already expect.
-Directly verified byte-identical. Note only the bare-arity overload is aliased —
+Identical. Note only the bare-arity overload is aliased —
 [`flash::sheet`](sheet.md)'s separate-color-matrix `(x, y, z, c)` overload has no
 `plot_surface` equivalent.
 
@@ -53,8 +52,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-plot-surface-1-basic.svg)
 
-Example 2 (verification, not a distinct rendering). `flash::plot_surface` renders
-byte-identical to `flash::sheet`'s bare overload given the same arguments.
+Example 2 (a comparison, not a new picture). `flash::plot_surface` renders
+identical to `flash::sheet`'s bare overload given the same arguments.
 
 ```cpp
 using namespace pluss::pl;

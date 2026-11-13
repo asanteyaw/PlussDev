@@ -23,8 +23,7 @@ pane's [`caption`](../pane/caption.md) with every axis element hidden. `summaryp
 the `flash::` equivalent of glancing at `DataFrame.head()`: it lays every feature's first
 `max_cases` values out as monospace-aligned columns (or rows, with `transpose`), builds
 that as a plain string, then puts the whole string in one pane's caption via
-`Pane::caption(...)`, with grid/legend/axis-labels all switched off and both font scales
-shrunk to `0.01` (effectively invisible) so the caption text is the only visible content.
+`Pane::caption(...)`, with the grid, the legend, the axes and their labels all switched off so the caption text is the only visible content.
 
 Two overloads: a `RangeView::Series`/`RangeView::Of<std::string_view>` form, and an
 `std::initializer_list` convenience form that forwards to it.
@@ -42,14 +41,14 @@ want statistics, compute them yourself and pass the results in as the "features.
 | Field | Type and default | Description |
 |---|---|---|
 | `title` | `std::string`, default `"table"` | The pane's title, passed to [`Studio::pane2`](../studio/pane2.md). |
-| `precision` | `int`, default `4` | Decimal places for every formatted cell, via `std::setprecision` in fixed-point mode. Clamped to at least `0`. Non-finite values format as the literal string `"nan"` regardless of `precision`. |
+| `precision` | `int`, default `4` | Decimal places for every formatted cell, via `std::setprecision` in fixed-point mode. At least `0`; a negative value throws `pluss::Error`. Non-finite values format as the literal string `"nan"` regardless of `precision`. |
 | `include_header` | `bool`, default `true` | Whether the first line is a header row (feature names, or `"feature"`/`"case_N"` labels when `transpose` is `true`). |
 | `max_cases` | `std::int64_t`, default `10` | How many rows/cases are shown per feature. `0` or negative falls back to `10` (`options.max_cases > 0 ? options.max_cases : 10`, not clamped to `1` like most other `flash::` count fields). Cases beyond this are summarized by a trailing `"... (N more cases)"` line rather than silently dropped. |
 | `transpose` | `bool`, default `false` | `false`: cases are rows, features are columns (each feature gets a header column). `true`: features are rows, cases are columns (each case gets a header column, `"case_0"`, `"case_1"`, …) — useful when you have many features but few cases. |
 | `include_case_index` | `bool`, default `true` | Whether the non-transposed layout's leading `"case"` index column is shown. Has no effect when `transpose` is `true` (that layout's row label is always the feature name, unconditionally). |
 | `features_per_table` | `std::int64_t`, default `0` | How many features go in each table block before starting a new one. `0` means "all features in one table." A single, large feature set can be broken into several narrower tables via this field, then optionally arranged side by side via `tables_per_row`. |
 | `tables_per_row` | `std::int64_t`, default `1` | How many of the `features_per_table`-sized table blocks are laid out side by side (padded to equal column width, joined with `table_gap_spaces` of padding) before wrapping to a new row of tables. Only visibly matters when `features_per_table` actually produces more than one table. |
-| `table_gap_spaces` | `std::int64_t`, default `4` | Spaces between adjacent tables when `tables_per_row > 1`. Clamped to at least `1`. |
+| `table_gap_spaces` | `std::int64_t`, default `4` | Spaces between adjacent tables when `tables_per_row > 1`. At least `1`; fewer throws `pluss::Error`. |
 
 ## Parameters
 
@@ -58,7 +57,7 @@ want statistics, compute them yourself and pass the results in as the "features.
 
 **columns** (`pluss::msharp::RangeView::Series` or `std::initializer_list<Series>`)
     One entry per feature. Must be non-empty, or `summaryplot` throws
-    `std::invalid_argument("flash::summaryplot requires at least one column")`, and every
+    `pluss::Error("flash::summaryplot requires at least one column")`, and every
     column must be the same length (`"flash::summaryplot requires equal-length
     columns"`).
 
@@ -66,7 +65,7 @@ want statistics, compute them yourself and pass the results in as the "features.
 `std::initializer_list<std::string_view>`)
     Per-feature names. May be empty (falls back to `"x1"`, `"x2"`, …), but if non-empty
     its length must exactly match `columns`' length, or `summaryplot` throws
-    `std::invalid_argument("flash::summaryplot: labels size must match columns size")`.
+    `pluss::Error("flash::summaryplot: labels size must match columns size")`.
 
 **options** (`const SummaryOptions&`, optional)
     See the field table above.
@@ -97,16 +96,16 @@ fig.show();
 Output:
 
 ```text
-case               alpha          beta
-0                 1.2340       10.1000
-1                 2.3450       20.2000
-2                 3.4560       30.3000
-3                 4.5670       40.4000
+case      alpha     beta
+0        1.2340  10.1000
+1        2.3450  20.2000
+2        3.4560  30.3000
+3        4.5670  40.4000
 ```
 
 ![Output of Example 1](img/flash-summaryplot-1-default.svg)
 
-Example 2. `std::initializer_list` overload — verified byte-identical caption text to
+Example 2. `std::initializer_list` overload — identical caption text to
 Example 1 given the same data.
 
 ```cpp
@@ -123,11 +122,11 @@ fig.show();
 Output:
 
 ```text
-case               alpha          beta
-0                 1.2340       10.1000
-1                 2.3450       20.2000
-2                 3.4560       30.3000
-3                 4.5670       40.4000
+case      alpha     beta
+0        1.2340  10.1000
+1        2.3450  20.2000
+2        3.4560  30.3000
+3        4.5670  40.4000
 ```
 
 ![Output of Example 2](img/flash-summaryplot-2-initlist.svg)
@@ -148,11 +147,11 @@ std::cout << fig.panes()[0].caption_text();
 Output:
 
 ```text
-case                  x1            x2
-0                 1.2340       10.1000
-1                 2.3450       20.2000
-2                 3.4560       30.3000
-3                 4.5670       40.4000
+case         x1       x2
+0        1.2340  10.1000
+1        2.3450  20.2000
+2        3.4560  30.3000
+3        4.5670  40.4000
 ```
 
 Example 4. `transpose = true` — features become rows, cases become columns.
@@ -175,9 +174,9 @@ fig.show();
 Output:
 
 ```text
-feature                   case_0        case_1        case_2        case_3
-alpha                     1.2340        2.3450        3.4560        4.5670
-beta                     10.1000       20.2000       30.3000       40.4000
+feature     case_0   case_1   case_2   case_3
+alpha       1.2340   2.3450   3.4560   4.5670
+beta       10.1000  20.2000  30.3000  40.4000
 ```
 
 ![Output of Example 4](img/flash-summaryplot-3-transpose.svg)
@@ -202,9 +201,9 @@ std::cout << fig.panes()[0].caption_text();
 Output:
 
 ```text
-case               alpha          beta
-0                 1.2340       10.1000
-1                 2.3450       20.2000
+case      alpha     beta
+0        1.2340  10.1000
+1        2.3450  20.2000
 ... (2 more cases)
 ```
 
@@ -225,11 +224,11 @@ std::cout << fig.panes()[0].caption_text();
 Output:
 
 ```text
-case               alpha
-0                    1.2
-1                    2.3
-2                    3.5
-3                    4.6
+case    alpha
+0         1.2
+1         2.3
+2         3.5
+3         4.6
 ```
 
 Example 7. `include_header = false`, `include_case_index = false` — bare value columns,
@@ -253,10 +252,10 @@ std::cout << fig.panes()[0].caption_text();
 Output:
 
 ```text
-        1.2340       10.1000
-        2.3450       20.2000
-        3.4560       30.3000
-        4.5670       40.4000
+   1.2340  10.1000
+   2.3450  20.2000
+   3.4560  30.3000
+   4.5670  40.4000
 ```
 
 Example 8. `features_per_table = 1`, `tables_per_row = 3` — three features, each its own
@@ -281,14 +280,14 @@ std::cout << fig.panes()[0].caption_text();
 Output:
 
 ```text
-case               alpha    case                beta    case               gamma
-0                 1.2340    0                10.1000    0               100.0000
-1                 2.3450    1                20.2000    1               200.0000
-2                 3.4560    2                30.3000    2               300.0000
-3                 4.5670    3                40.4000    3               400.0000
+case     alpha    case       beta    case       gamma
+0       1.2340    0       10.1000    0       100.0000
+1       2.3450    1       20.2000    1       200.0000
+2       3.4560    2       30.3000    2       300.0000
+3       4.5670    3       40.4000    3       400.0000
 ```
 
-Example 9. `title` sets the pane's title, verified via `Pane::title_text`.
+Example 9. `title` sets the pane's title, readable through `Pane::title_text`.
 
 ```cpp
 using namespace pluss::pl;
@@ -316,8 +315,8 @@ using namespace pluss::pl;
 auto fig = studio("flash_summaryplot_empty");
 try {
   flash::summaryplot(fig, pluss::msharp::RangeView::Series{}, pluss::msharp::RangeView::Of<std::string_view>{});
-} catch (const std::invalid_argument& e) {
-  std::cout << "summaryplot(empty) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "summaryplot(empty) threw: " << e.message() << "\n";
 }
 ```
 
@@ -339,8 +338,8 @@ std::vector<pluss::Series> cols{
 std::vector<std::string_view> labels{"alpha"};
 try {
   flash::summaryplot(fig, pluss::msharp::RangeView::Series(cols), pluss::msharp::RangeView::Of<std::string_view>(labels));
-} catch (const std::invalid_argument& e) {
-  std::cout << "summaryplot(labels mismatch) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "summaryplot(labels mismatch) threw: " << e.message() << "\n";
 }
 ```
 
@@ -354,11 +353,8 @@ summaryplot(labels mismatch) threw: flash::summaryplot: labels size must match c
 
 - Not `noexcept`.
 - Every table cell is left-aligned for the header/index column and right-aligned for
-  every data column, at a fixed `14`-character column width (`10` for the leading case
-  index column) — genuinely fixed-width, not adaptive to the longest cell's content.
-- `Pane::tick_font_scale`/`Pane::axis_label_font_scale` are set to `0.01` (not `0`) —
-  effectively invisible rather than literally disabled, since neither accessor accepts
-  `0`.
+  every data column, each column as wide as its widest entry (header or value), with two spaces between columns, so
+  nothing overflows into the next column.
 - The pane's title comes from `options.title`, defaulting to the literal string
   `"table"` — always set, never empty, regardless of what (if anything) you pass.
 - See the important callout above: no statistics are computed anywhere in this

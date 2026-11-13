@@ -7,8 +7,10 @@
 #include <array>
 #include <cstdint>
 #include <concepts>
+#include <deque>
 #include <initializer_list>
 #include <map>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <stdexcept>
@@ -244,7 +246,7 @@ class Lens {
   Lens& target_at(Vec3d target) noexcept;
   Lens& up(Vec3d up_vector) noexcept;
   Lens& project(ProjectionKind projection) noexcept;
-  Lens& view_angle(double degrees) noexcept;
+  Lens& view_angle(double degrees);
 
   [[nodiscard]] static Lens planar() noexcept;
   [[nodiscard]] static Lens spatial() noexcept;
@@ -433,13 +435,20 @@ struct PanePlacement {
   double local_gutter_y{12.0};
 };
 
+// The gap between the cells of a mosaic is either a distance in points or `auto_gutter`: a share of the cell
+// itself, so the spacing follows the size of the figure (a proportion of the axes, as in matplotlib's wspace and
+// hspace and MATLAB's TileSpacing presets). `auto_gutter` is the default.
+inline constexpr double auto_gutter = -1.0;
+
 struct MosaicLayout {
   std::int64_t rows{0};
   std::int64_t cols{0};
-  double gutter_x{18.0};
-  double gutter_y{18.0};
+  double gutter_x{auto_gutter};
+  double gutter_y{auto_gutter};
   bool active{false};
 };
+
+class Pane;
 
 class Trace {
  public:
@@ -458,12 +467,16 @@ class Trace {
   [[nodiscard]] bool transparent() const noexcept { return transparent_; }
   [[nodiscard]] bool annotate_levels() const noexcept { return annotate_levels_; }
   [[nodiscard]] bool visible() const noexcept { return visible_; }
+  // True once `stroke` or `width` has been called on this trace. A filled kind (columns, histogram, ribbon, pie) takes its
+  // fill from the palette until its colour is set, and its outline width from the kind until its width is set.
+  [[nodiscard]] bool stroke_explicit() const noexcept { return stroke_explicit_; }
+  [[nodiscard]] bool width_explicit() const noexcept { return width_explicit_; }
 
   Trace& label(std::string label);
-  Trace& width(float width) noexcept;
+  Trace& width(float width);
   Trace& stroke(Rgba color) noexcept;
   Trace& palette(PaletteRamp palette);
-  Trace& color_limits(Range1d limits) noexcept;
+  Trace& color_limits(Range1d limits);
   Trace& shade(ShadeMode mode) noexcept;
   Trace& lighting(LightingMode mode) noexcept;
   Trace& material(MaterialProfile profile) noexcept;
@@ -473,6 +486,7 @@ class Trace {
   Trace& show() noexcept;
 
  private:
+  friend class Pane;
   TraceKind kind_{TraceKind::Trend};
   TracePayload payload_;
   std::string label_{};
@@ -486,6 +500,8 @@ class Trace {
   bool transparent_{false};
   bool annotate_levels_{false};
   bool visible_{true};
+  bool stroke_explicit_{false};
+  bool width_explicit_{false};
 };
 
 namespace detail {
@@ -574,6 +590,8 @@ inline std::vector<std::string> to_owned_labels(const Range& labels) {
 
 } // namespace detail
 
+struct StyleOptions;
+
 class Pane {
  public:
   Pane(PaneKind kind, Theme theme, std::string title = {});
@@ -594,7 +612,7 @@ class Pane {
   [[nodiscard]] Lens& lens() noexcept { return lens_; }
   [[nodiscard]] const LightRig& lights() const noexcept { return lights_; }
   [[nodiscard]] LightRig& lights() noexcept { return lights_; }
-  [[nodiscard]] const std::vector<Trace>& traces() const noexcept { return traces_; }
+  [[nodiscard]] const std::deque<Trace>& traces() const noexcept { return traces_; }
   [[nodiscard]] std::size_t trace_count() const noexcept { return traces_.size(); }
   [[nodiscard]] bool scale_guide_enabled() const noexcept { return scale_guide_; }
   [[nodiscard]] const std::string& caption_text() const noexcept { return caption_; }
@@ -1129,7 +1147,7 @@ class Pane {
     ensure_volumetric_("spire3");
     const Series z_series = detail::to_series(std::forward<Z>(z));
     if (z_series.dim() != 2) {
-      throw std::invalid_argument("spire3: z must be a rank-2 matrix");
+      PLUSS_FAIL("spire3: z must be a rank-2 matrix");
     }
     const auto rows = z_series.sizes()[0];
     const auto cols = z_series.sizes()[1];
@@ -1148,7 +1166,7 @@ class Pane {
     ensure_volumetric_("spire3");
     const Series z_series = detail::to_series(std::forward<Z>(z));
     if (z_series.dim() != 2) {
-      throw std::invalid_argument("spire3: z must be a rank-2 matrix");
+      PLUSS_FAIL("spire3: z must be a rank-2 matrix");
     }
     const auto cols = z_series.sizes()[1];
     return add_trace_(TraceKind::Spire3,
@@ -1315,7 +1333,7 @@ class Pane {
     ensure_volumetric_("isoshell");
     const Series field = detail::to_series(std::forward<Values>(values));
     if (field.dim() != 3) {
-      throw std::invalid_argument("isoshell: values must be a rank-3 field");
+      PLUSS_FAIL("isoshell: values must be a rank-3 field");
     }
     const auto nx = field.sizes()[0];
     const auto ny = field.sizes()[1];
@@ -1416,14 +1434,14 @@ class Pane {
   AxisState x_axis_{};
   AxisState y_axis_{};
   AxisState z_axis_{};
-  AxisState color_axis_{};
+  AxisState color_axis_{.limit_method = LimitMethod::Tight}; // a colour scale spans its data unless told otherwise
   KeyPlace legend_place_{KeyPlace::None};
   KeyFrame legend_frame_{KeyFrame::Soft};
   KeyShape legend_shape_{KeyShape::Auto};
   GridStyle grid_style_{GridStyle::None};
   Lens lens_{Lens::spatial()};
   LightRig lights_{};
-  std::vector<Trace> traces_{};
+  std::deque<Trace> traces_{};
   bool scale_guide_{false};
   std::string caption_{};
   std::vector<RuleCue> rules_{};
@@ -1448,7 +1466,7 @@ class Studio {
   [[nodiscard]] const std::string& headline_text() const noexcept { return headline_; }
   [[nodiscard]] const Theme& theme_tokens() const noexcept { return theme_; }
   [[nodiscard]] Theme& theme_tokens() noexcept { return theme_; }
-  [[nodiscard]] const std::vector<Pane>& panes() const noexcept { return panes_; }
+  [[nodiscard]] const std::deque<Pane>& panes() const noexcept { return panes_; }
   [[nodiscard]] std::size_t pane_count() const noexcept { return panes_.size(); }
   [[nodiscard]] const Extent2d& extent() const noexcept { return extent_; }
   [[nodiscard]] const MosaicLayout& mosaic_layout() const noexcept { return mosaic_layout_; }
@@ -1467,11 +1485,13 @@ class Studio {
   Studio& rename(std::string name);
   Studio& headline(std::string text);
   Studio& theme(Theme theme);
+  Studio& style(const StyleOptions& options);
+  [[nodiscard]] const StyleOptions& style_options() const;
   Studio& context_scales(double tick_font_scale, double axis_label_font_scale);
   Studio& pane_style_defaults(const Pane& pane);
   Studio& clear_pane_style_defaults() noexcept;
-  Studio& size(double width, double height) noexcept;
-  Studio& mosaic(std::int64_t rows, std::int64_t cols, double gutter_x = 18.0, double gutter_y = 18.0);
+  Studio& size(double width, double height);
+  Studio& mosaic(std::int64_t rows, std::int64_t cols, double gutter_x = auto_gutter, double gutter_y = auto_gutter);
   Studio& tight_layout(bool enable = true, double padding = 6.0);
   Studio& legend(KeyDock dock) noexcept;
   Studio& legend_frame(KeyFrame frame) noexcept;
@@ -1515,6 +1535,7 @@ class Studio {
   std::string name_{};
   std::string headline_{};
   Theme theme_{Theme::paper()};
+  std::shared_ptr<const StyleOptions> style_{};
   Extent2d extent_{};
   MosaicLayout mosaic_layout_{};
   bool tight_layout_enabled_{false};
@@ -1541,7 +1562,7 @@ class Studio {
   bool default_x_minor_grid_{false};
   bool default_y_minor_grid_{false};
   bool default_z_minor_grid_{false};
-  std::vector<Pane> panes_{};
+  std::deque<Pane> panes_{};
 };
 
 [[nodiscard]] Studio studio(std::string name = {});

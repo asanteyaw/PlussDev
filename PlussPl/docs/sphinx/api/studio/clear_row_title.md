@@ -12,91 +12,105 @@ Studio& Studio::clear_row_title(std::int64_t row) noexcept
 
 ## What It Does
 
-Removes the title for one specific row, if one is set — an `erase(row)` on the underlying
-map. Clearing a `row` that has no title (never set, already cleared, or simply out of
-range) is a harmless no-op; unlike [`row_title()`](row_title.md), there's no validation and
-nothing to throw.
+Removes the title of one row of the [`mosaic`](mosaic.md): the entry is deleted from [`row_titles`](row_titles.md) and the title is no longer drawn. The other rows keep their titles. Clearing a row that has no title does nothing, and so does a negative row or a row the grid does not have; the call never throws, which is why it takes a row without the check that [`row_title`](row_title.md) makes.
+
+The figure afterwards is exactly the figure that never set a title for that row.
 
 ## Parameters
 
 **row** (`std::int64_t`)
-    The 0-indexed row whose title should be removed. Any value is accepted, including
-    negative ones — a negative `row` simply never has an entry to erase.
+    The row whose title is removed. A row without a title is ignored.
 
 ## Returns
 
 `Studio&`
-    A reference to the same figure, for chaining.
+    The same figure, for chaining.
 
 ## Examples
 
-Example 1. Two rows titled, then row `0`'s title cleared — row `1`'s survives untouched.
+Example 1. Removing one title. Row 1 is cleared, row 0 keeps its title, and the figure equals one that only ever set row 0.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("row_titles_cleared_one");
-fig.mosaic(2, 1);
-fig.row_title(0, "Q1 Results").row_title(1, "Q2 Results");
-fig.clear_row_title(0);
-auto& top = fig.pane2("top");
-top.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
-auto& bottom = fig.pane2("bottom");
-bottom.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
-fig.show();
-
-std::cout << fig.row_titles().size() << "\n";
-std::cout << fig.row_titles().count(0) << " " << fig.row_titles().count(1) << "\n";
+auto build = [](bool set_second_then_clear) {
+  auto fig = studio("clear_row_title_one");
+  fig.mosaic(2, 1);
+  fig.row_title(0, "keep");
+  if (set_second_then_clear) fig.row_title(1, "temporary").clear_row_title(1);
+  for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  return fig;
+};
+auto cleared = build(true), never = build(false);
+std::cout << "entries left: " << cleared.row_titles().size() << " (row 0: " << cleared.row_titles().at(0) << ")\n";
+std::cout << "equals the figure that never set it: " << (cleared.to_svg() == never.to_svg()) << "\n";
+cleared.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
-0 1
+entries left: 1 (row 0: keep)
+equals the figure that never set it: 1
 ```
 
-![Output of Example 1](img/row_title-3-cleared-one.svg)
+![Output of Example 1](img/clear_row_title-1-one_row.svg)
 
-Example 2. Clearing a row that was never set — a harmless no-op, no exception.
+Example 2. Nothing to clear is not an error. A row without a title, a negative row and a huge row are all ignored, and the stored titles do not change.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("clear_never_set");
-fig.clear_row_title(5);  // no-op: row 5 was never titled
-std::cout << fig.row_titles().empty() << "\n";
-
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
-fig.show();
+auto fig = studio("clear_row_title_none");
+fig.mosaic(1, 1);
+fig.row_title(0, "only");
+fig.clear_row_title(3).clear_row_title(-5).clear_row_title(1000000);
+std::cout << "entries: " << fig.row_titles().size() << ", row 0: " << fig.row_titles().at(0) << "\n";
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
+entries: 1, row 0: only
 ```
 
-![Output of Example 2](img/clear_row_title-2-never-set.svg)
+![Output of Example 2](img/clear_row_title-2-nothing_to_clear.svg)
+
+Example 3. A cleared row can be set again. Clearing frees the row, and a later `row_title` stores a new title as if it were the first.
+
+```cpp
+auto fig = studio("clear_row_title_again");
+fig.mosaic(1, 1);
+fig.row_title(0, "old").clear_row_title(0);
+std::cout << "after clearing: " << fig.row_titles().size() << "\n";
+fig.row_title(0, "new");
+std::cout << "after setting again: " << fig.row_titles().at(0) << "\n";
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+after clearing: 0
+after setting again: new
+```
+
+![Output of Example 3](img/clear_row_title-3-set_again.svg)
 
 ## Notes
 
-- `noexcept`.
-- No-op (not an error) when `row` has no current title — including negative or
-  out-of-range values.
-- Leaves every other row's title untouched.
+- `noexcept`. To remove every title at once use [`clear_row_titles`](clear_row_titles.md).
+- To keep the entry but draw nothing, set an empty text with [`row_title`](row_title.md).
 
 ## See Also
 
-- [`Studio::row_title`](row_title.md): sets the titles this clears.
-- [`Studio::clear_row_titles`](clear_row_titles.md): clears every row title at once.
-- [`Studio::row_titles`](row_titles.md): reads back what remains.
+- [`Studio::row_title`](row_title.md): stores a title.
+- [`Studio::clear_row_titles`](clear_row_titles.md): removes all.
+- [`Studio::row_titles`](row_titles.md): the stored titles.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="row_titles.html">
+  <a class="prev-link" href="clear_pane_style_defaults.html">
     <span class="label">Previous</span>
-    <span class="title">row_titles</span>
+    <span class="title">clear_pane_style_defaults</span>
   </a>
   <a class="next-link" href="clear_row_titles.html">
     <span class="label">Next</span>

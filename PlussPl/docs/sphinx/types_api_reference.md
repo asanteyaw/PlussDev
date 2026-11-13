@@ -58,10 +58,11 @@ The per-method pages are in the [Studio](studio_api_reference.md), [Pane](pane_a
 | [`TraceKind`](api/types/TraceKind.md) | The kind of drawing a trace is. |
 | [`ViolinOptions`](api/types/ViolinOptions.md) | The width, smoothing, scaling, inner mark and side of a violin. |
 
-## Layout and export
+## Layout, style and export
 
 | Type | What it chooses |
 |---|---|
+| [`StyleOptions`](api/types/StyleOptions.md) | The look of a figure as numbers: sizes, spacings, strokes and colours, each with its default. |
 | [`MosaicLayout, PanePlacement`](api/types/MosaicLayout.md) | How the panes of a figure are arranged on a grid. |
 | [`PdfEngine`](api/types/PdfEngine.md) | Which writer produces a PDF file. |
 
@@ -87,6 +88,7 @@ api/types/PdfEngine
 api/types/Rgba
 api/types/ScalePolicy
 api/types/ShadeMode
+api/types/StyleOptions
 api/types/Theme
 api/types/TickFormat
 api/types/TraceKind

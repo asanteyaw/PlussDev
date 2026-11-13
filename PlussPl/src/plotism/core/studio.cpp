@@ -1,7 +1,9 @@
 #include "pluss/pl/plusspl.h"
+#include "pluss/pl/style.h"
 
 #include <algorithm>
 #include <cmath>
+#include <deque>
 #include <stdexcept>
 
 namespace pluss::pl {
@@ -24,12 +26,25 @@ Studio& Studio::theme(Theme theme) {
   return *this;
 }
 
+Studio& Studio::style(const StyleOptions& options) {
+  if (const char* bad = first_non_finite_style_value(options)) {
+    PLUSS_FAIL(std::string("style: ") + bad + " must be a finite number");
+  }
+  style_ = std::make_shared<const StyleOptions>(options);
+  return *this;
+}
+
+const StyleOptions& Studio::style_options() const {
+  static const StyleOptions defaults{};
+  return style_ ? *style_ : defaults;
+}
+
 Studio& Studio::context_scales(double tick_font_scale, double axis_label_font_scale) {
   if (!(tick_font_scale > 0.0 && std::isfinite(tick_font_scale))) {
-    throw std::invalid_argument("context_scales: tick_font_scale must be finite and positive");
+    PLUSS_FAIL("context_scales: tick_font_scale must be finite and positive");
   }
   if (!(axis_label_font_scale > 0.0 && std::isfinite(axis_label_font_scale))) {
-    throw std::invalid_argument("context_scales: axis_label_font_scale must be finite and positive");
+    PLUSS_FAIL("context_scales: axis_label_font_scale must be finite and positive");
   }
   default_tick_font_scale_ = tick_font_scale;
   default_axis_label_font_scale_ = axis_label_font_scale;
@@ -58,7 +73,10 @@ Studio& Studio::clear_pane_style_defaults() noexcept {
   return *this;
 }
 
-Studio& Studio::size(double width, double height) noexcept {
+Studio& Studio::size(double width, double height) {
+  if (!(width > 0.0 && std::isfinite(width) && height > 0.0 && std::isfinite(height))) {
+    PLUSS_FAIL("size: width and height must be finite and positive");
+  }
   extent_.width = width;
   extent_.height = height;
   return *this;
@@ -66,10 +84,11 @@ Studio& Studio::size(double width, double height) noexcept {
 
 Studio& Studio::mosaic(std::int64_t rows, std::int64_t cols, double gutter_x, double gutter_y) {
   if (rows <= 0 || cols <= 0) {
-    throw std::invalid_argument("mosaic: rows and cols must be positive");
+    PLUSS_FAIL("mosaic: rows and cols must be positive");
   }
-  if (!(gutter_x >= 0.0 && gutter_y >= 0.0 && std::isfinite(gutter_x) && std::isfinite(gutter_y))) {
-    throw std::invalid_argument("mosaic: gutters must be finite and non-negative");
+  const auto valid_gutter = [](double gutter) { return gutter == auto_gutter || (gutter >= 0.0 && std::isfinite(gutter)); };
+  if (!valid_gutter(gutter_x) || !valid_gutter(gutter_y)) {
+    PLUSS_FAIL("mosaic: gutters must be auto_gutter or finite and non-negative");
   }
   mosaic_layout_ = MosaicLayout{rows, cols, gutter_x, gutter_y, true};
   return *this;
@@ -77,7 +96,7 @@ Studio& Studio::mosaic(std::int64_t rows, std::int64_t cols, double gutter_x, do
 
 Studio& Studio::tight_layout(bool enable, double padding) {
   if (!(padding >= 0.0 && std::isfinite(padding))) {
-    throw std::invalid_argument("tight_layout: padding must be finite and non-negative");
+    PLUSS_FAIL("tight_layout: padding must be finite and non-negative");
   }
   tight_layout_enabled_ = enable;
   tight_layout_padding_ = padding;
@@ -116,7 +135,7 @@ Studio& Studio::z_caption(std::string group, std::string text) {
 
 Studio& Studio::row_title(std::int64_t row, std::string text) {
   if (row < 0) {
-    throw std::invalid_argument("row_title: row must be non-negative");
+    PLUSS_FAIL("row_title: row must be non-negative");
   }
   row_titles_[row] = std::move(text);
   return *this;
@@ -180,10 +199,37 @@ std::size_t Studio::pane_index(const Pane& pane) const {
     return &candidate == target;
   });
   if (it == panes_.end()) {
-    throw std::invalid_argument("pane_index: pane does not belong to this studio");
+    PLUSS_FAIL("pane_index: pane does not belong to this studio");
   }
   return static_cast<std::size_t>(std::distance(panes_.begin(), it));
 }
+
+namespace {
+
+// Sub-panes of one parent share a local grid: the same shape, and no two cover the same cell. Both are known
+// when the sub-pane is created, so they are refused there instead of when the figure is rendered.
+void check_subpane_siblings(const std::deque<Pane>& panes, std::size_t parent_index, std::int64_t rows, std::int64_t cols,
+                            std::int64_t row, std::int64_t col, std::int64_t row_span, std::int64_t col_span, const char* who) {
+  for (const Pane& other : panes) {
+    const PanePlacement& p = other.placement();
+    if (p.parent != static_cast<std::int64_t>(parent_index)) {
+      continue;
+    }
+    if (p.local_rows != rows || p.local_cols != cols) {
+      PLUSS_FAIL(std::string(who) + ": all sub-panes of pane " + std::to_string(parent_index) + " share one local grid, which is " +
+                 std::to_string(p.local_rows) + " x " + std::to_string(p.local_cols) + ", not " + std::to_string(rows) + " x " +
+                 std::to_string(cols));
+    }
+    const bool rows_overlap = row < p.row + p.row_span && p.row < row + row_span;
+    const bool cols_overlap = col < p.col + p.col_span && p.col < col + col_span;
+    if (rows_overlap && cols_overlap) {
+      PLUSS_FAIL(std::string(who) + ": cell (" + std::to_string(row) + ", " + std::to_string(col) + ") overlaps the sub-pane '" +
+                 other.title_text() + "' already placed there");
+    }
+  }
+}
+
+}  // namespace
 
 Pane& Studio::subpane2(
     std::size_t parent_index,
@@ -195,17 +241,18 @@ Pane& Studio::subpane2(
     std::int64_t col_span,
     std::string title) {
   if (parent_index >= panes_.size()) {
-    throw std::out_of_range("subpane2: parent_index out of range");
+    PLUSS_FAIL("subpane2: parent_index out of range");
   }
   if (rows <= 0 || cols <= 0) {
-    throw std::invalid_argument("subpane2: rows and cols must be positive");
+    PLUSS_FAIL("subpane2: rows and cols must be positive");
   }
   if (row < 0 || col < 0 || row_span <= 0 || col_span <= 0) {
-    throw std::invalid_argument("subpane2: row/col must be non-negative and spans must be positive");
+    PLUSS_FAIL("subpane2: row/col must be non-negative and spans must be positive");
   }
   if (row + row_span > rows || col + col_span > cols) {
-    throw std::invalid_argument("subpane2: requested slot exceeds local subgrid bounds");
+    PLUSS_FAIL("subpane2: requested slot exceeds local subgrid bounds");
   }
+  check_subpane_siblings(panes_, parent_index, rows, cols, row, col, row_span, col_span, "subpane2");
   Pane& pane = pane2(std::move(title));
   pane.placement_ = PanePlacement{
       row,
@@ -232,17 +279,18 @@ Pane& Studio::subpane3(
     std::int64_t col_span,
     std::string title) {
   if (parent_index >= panes_.size()) {
-    throw std::out_of_range("subpane3: parent_index out of range");
+    PLUSS_FAIL("subpane3: parent_index out of range");
   }
   if (rows <= 0 || cols <= 0) {
-    throw std::invalid_argument("subpane3: rows and cols must be positive");
+    PLUSS_FAIL("subpane3: rows and cols must be positive");
   }
   if (row < 0 || col < 0 || row_span <= 0 || col_span <= 0) {
-    throw std::invalid_argument("subpane3: row/col must be non-negative and spans must be positive");
+    PLUSS_FAIL("subpane3: row/col must be non-negative and spans must be positive");
   }
   if (row + row_span > rows || col + col_span > cols) {
-    throw std::invalid_argument("subpane3: requested slot exceeds local subgrid bounds");
+    PLUSS_FAIL("subpane3: requested slot exceeds local subgrid bounds");
   }
+  check_subpane_siblings(panes_, parent_index, rows, cols, row, col, row_span, col_span, "subpane3");
   Pane& pane = pane3(std::move(title));
   pane.placement_ = PanePlacement{
       row,

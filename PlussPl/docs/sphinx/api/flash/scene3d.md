@@ -24,11 +24,10 @@ field is a `std::optional`, applied — in this fixed order — only when set:
 Because `preset` runs before every other field, setting BOTH `preset` and one of
 `theme`/`camera_preset`/`camera`/`lighting`/`grid_style` lets you start from a named
 scene and then override just the pieces you want changed -- the preset is not
-"replaced," only partially superseded. Directly verified: `Scene3DOptions{.preset =
-Studio}` alone renders byte-identical to a direct
+"replaced," only partially superseded. `Scene3DOptions{.preset =
+Studio}` alone renders identical to a direct
 `flash::scene_preset3d(pane, ScenePreset3D::Studio)` call; adding `.camera_preset =
-CameraPreset3D::TopDown` on top of the same `preset = Studio` renders genuinely
-differently (only the camera changes, theme/lighting/grid stay Studio's).
+CameraPreset3D::TopDown` on top of the same `preset = Studio` renders differently (only the camera changes, theme/lighting/grid stay Studio's).
 ```
 
 ## Parameters
@@ -58,8 +57,8 @@ differently (only the camera changes, theme/lighting/grid stay Studio's).
 
 ## Examples
 
-Example 1 (verification, not a distinct rendering). `Scene3DOptions{.preset = Studio}`
-alone renders byte-identical to `flash::scene_preset3d(pane, ScenePreset3D::Studio)`.
+Example 1 (a comparison, not a new picture). `Scene3DOptions{.preset = Studio}`
+alone renders identical to `flash::scene_preset3d(pane, ScenePreset3D::Studio)`.
 
 ```cpp
 using namespace pluss::pl;
@@ -105,6 +104,12 @@ std::cout << "scene3d(Studio preset + TopDown camera override) rendered\n";
 fig.show();
 ```
 
+Output:
+
+```text
+scene3d(Studio preset + TopDown camera override) rendered
+```
+
 ![Output of Example 2](img/flash-scene3d-2-preset-plus-camera-override.svg)
 
 Example 3. Start from a preset, then override several pieces at once. This is the main
@@ -118,8 +123,8 @@ auto fig = studio("flash_scene3d_custom");
 auto& pane = fig.pane3();
 auto gx = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
 auto gy = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
-auto gz = gx.reshape({1, 24}).tile({24, 1}).mul(0.6).sin()
-            .add(gy.reshape({24, 1}).tile({1, 24}).mul(0.7).cos());
+auto gz = gx.reshape({1, 24}).repeat({24, 1}).mul(0.6).sin()
+            .add(gy.reshape({24, 1}).repeat({1, 24}).mul(0.7).cos());
 
 flash::Scene3DOptions opts;
 opts.preset = flash::ScenePreset3D::Studio;

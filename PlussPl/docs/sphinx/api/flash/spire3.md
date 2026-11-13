@@ -7,25 +7,21 @@
 ## Signatures
 
 ```cpp
-template <class Z>
-Trace& flash::spire3(Pane& pane, Z&& z)
+Trace& flash::spire3(Pane& pane, Series z)
 
-template <class Y, class Z>
-Trace& flash::spire3(Pane& pane, Y&& y, Z&& z)
+Trace& flash::spire3(Pane& pane, Series y, Series z)
 
-template <class X, class Y, class Z>
-Trace& flash::spire3(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::spire3(Pane& pane, Series x, Series y, Series z)
 
-template <class X, class Y, class Z, class C>
-Trace& flash::spire3(Pane& pane, X&& x, Y&& y, Z&& z, C&& c)
+Trace& flash::spire3(Pane& pane, Series x, Series y, Series z, Series c)
 ```
 
 ## What It Does
 
 A thin wrapper around [`Pane::spire3`](../pane/spire3.md): converts every argument to
 `Series`, validates each is rank ≤ 3, then delegates to the identically-shaped native
-`Pane::spire3` overload. Every delegation is byte-identical to calling `Pane::spire3`
-directly — directly verified via SVG comparison. Four overloads, mirroring
+`Pane::spire3` overload. Every delegation is identical to calling `Pane::spire3`
+directly. Four overloads, mirroring
 [`Pane::spire3`](../pane/spire3.md)'s own: `(z)` (both axes auto-indexed), `(y, z)` (`x`
 auto-indexed), `(x, y, z)` (fully explicit), and `(x, y, z, c)` (plus a separate
 color matrix).
@@ -34,9 +30,7 @@ color matrix).
 Unlike flash::path3, flash::cloud3, flash::sheet, and flash::lattice -- each of which
 has one extra Studio-taking overload that creates the Volumetric pane for you --
 flash::spire3 has no Studio overload at all. Every call needs an existing Pane&,
-obtained via Studio::pane3() yourself first. This asymmetry is genuine and verified
-by reading every overload declared for this function in flash.h -- not an
-incompleteness in this reference.
+obtained via Studio::pane3() yourself first. 
 ```
 
 ## Parameters
@@ -124,8 +118,8 @@ fig.show();
 
 ![Output of Example 4](img/flash-spire3-4-xyzc.svg)
 
-Example 5 (verification, not a distinct rendering). `flash::spire3(pane, z)` renders
-byte-identical to `pane.spire3(z)` called directly.
+Example 5 (a comparison, not a new picture). `flash::spire3(pane, z)` renders
+identical to `pane.spire3(z)` called directly.
 
 ```cpp
 using namespace pluss::pl;
@@ -165,7 +159,7 @@ flash::spire3(pane,z) == pane.spire3(z): 1
 - [`flash::ridge3`](ridge3.md): the elevated-contour sibling, also lacking a `Studio`
   convenience overload.
 - [`flash::triplot`](triplot.md): a caller of `spire3()` internally, via a binned-grid
-  triplet (see that page's important callout for the genuine bug this session fixed
+  triplet (see that page's important callout for the bug this session fixed
   there).
 
 <div class="pluss-inline-prev-next">

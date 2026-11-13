@@ -12,149 +12,156 @@ Studio& Studio::pane_style_defaults(const Pane& pane)
 
 ## What It Does
 
-Captures a snapshot of several style fields from an arbitrary `Pane` — its theme, grid
-style, legend placement/frame/shape, per-axis major/minor grid flags, and axes-visible
-flag — and stores them as the defaults every subsequently-created pane starts with. The
-source `Pane` doesn't need to belong to this (or any) `Studio`: build a throwaway "template"
-`Pane` purely to carry the desired settings, and pass it here.
+Makes the style of an example pane the starting style of every pane created from now on. The figure reads these settings from `pane` and stores them: the pane's theme, whether its axes are visible, its grid style and the major and minor grid switches of each axis, and its legend place, frame and shape. Panes created afterwards with [`pane2`](pane2.md), [`pane3`](pane3.md), [`subpane2`](subpane2.md) or [`subpane3`](subpane3.md) start with those settings, and the settings can still be changed pane by pane. It is the way to give a whole figure one consistent look without repeating the same calls on every pane.
 
-```{important} Snapshot semantics: copies values now, doesn't keep a live link
-`pane_style_defaults()` reads the passed-in `pane`'s current field values immediately and
-copies them into the `Studio`'s own defaults — it does not retain a reference to `pane`
-itself. Mutating the template `Pane` afterward has no further effect; call
-`pane_style_defaults()` again with the updated template if the defaults need to change.
-```
-
-```{important} Only affects panes created afterward — the same rule as theme()
-Exactly like [`theme()`](theme.md) and [`context_scales()`](context_scales.md), the
-captured defaults are only applied to panes created via
-[`pane2()`](pane2.md)/[`pane3()`](pane3.md) **after** this call. Panes that already exist
-keep whatever style they already had. See Example 3.
-```
-
-The fields copied are:
-
-- `theme_tokens()` — the pane's `Theme`
-- `axes_visible()`
-- `grid_style()` — `GridStyle::None` / `Major` / `MajorMinor`
-- `legend_place()`, `legend_frame()`, `legend_shape()`
-- `x_axis().major_grid`, `y_axis().major_grid`, `z_axis().major_grid`
-- `x_axis().minor_grid`, `y_axis().minor_grid`, `z_axis().minor_grid`
-
-Everything else about a `Pane` (traces, camera/lighting, axis limits, ticks, cues,
-placement, ...) is untouched by this mechanism.
+Only panes created after the call are affected; panes that already exist keep what they have. The stored settings are a snapshot of `pane` at the time of the call, so changing the example pane afterwards does nothing, and the example pane does not have to belong to the figure (a standalone `Pane` is fine). A second call replaces the stored settings, [`clear_pane_style_defaults`](clear_pane_style_defaults.md) switches the defaults off, and the figure's [`context_scales`](context_scales.md) is separate and keeps working.
 
 ## Parameters
 
 **pane** (`const Pane&`)
-    The template pane to copy defaults from. Constructing one purely for this purpose is
-    the common pattern: `Pane(PaneKind::Planar, Theme::paper())` (or any theme/kind),
-    configured with the desired grid/legend/axes-visible settings, and never added to any
-    figure's own pane list.
+    The pane whose style becomes the default for new panes. Not stored; only its style is copied.
 
 ## Returns
 
 `Studio&`
-    A reference to the same figure, for chaining.
+    The same figure, for chaining.
 
 ## Examples
 
-Example 1. A plain figure, with no style defaults set — the default `GridStyle::None`.
+Example 1. One look for every pane. The example pane has major grid lines on both axes; the two panes created afterwards both have them, and neither was configured.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("style_defaults_before");
-auto& pane = fig.pane2("first");
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
-```
-
-![Output of Example 1](img/pane_style_defaults-1-plain.svg)
-
-Example 2. A template `Pane` configured with `GridStyle::MajorMinor` and an
-outside-east legend, applied via `pane_style_defaults()` before adding the real pane.
-
-```cpp
-using namespace pluss::pl;
-
-Pane style_template(PaneKind::Planar, Theme::paper());
-style_template.grid(GridStyle::MajorMinor).legend(KeyPlace::OutsideEast);
-
-auto fig = studio("style_defaults_after");
-fig.pane_style_defaults(style_template);
-
-auto& pane = fig.pane2("first");
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
-
-std::cout << static_cast<int>(pane.grid_style()) << "\n";  // GridStyle::MajorMinor == 2
+Pane look(PaneKind::Planar, Theme::paper(), "look");
+look.x_major_grid(true).y_major_grid(true);
+auto fig = studio("defaults_grid");
+fig.pane_style_defaults(look);
+fig.mosaic(1, 2);
+fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+std::cout << "x grid on both: " << (fig.panes()[0].x_axis().major_grid && fig.panes()[1].x_axis().major_grid) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-2
+x grid on both: 1
 ```
 
-![Output of Example 2](img/pane_style_defaults-2-applied.svg)
+![Output of Example 1](img/pane_style_defaults-1-grid.svg)
 
-Example 3. A pane created **before** `pane_style_defaults()` keeps its old style; only
-panes created **after** the call pick up the new defaults.
+Example 2. Only panes created afterwards. A pane that exists when the defaults are set keeps its own style, and the next one takes the defaults.
 
 ```cpp
-using namespace pluss::pl;
-
-Pane style_template(PaneKind::Planar, Theme::paper());
-style_template.grid(GridStyle::MajorMinor).legend(KeyPlace::OutsideEast);
-
-auto fig = studio("style_defaults_too_late");
-auto& first = fig.pane2("first");
-first.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-
-fig.pane_style_defaults(style_template);
-
-auto& second = fig.pane2("second");
-second.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0});
-fig.show();
-
-std::cout << static_cast<int>(first.grid_style()) << " " << static_cast<int>(second.grid_style()) << "\n";
+Pane look(PaneKind::Planar, Theme::paper(), "look");
+look.x_major_grid(true).y_major_grid(true);
+auto fig = studio("defaults_after");
+fig.mosaic(1, 2);
+fig.pane2("before").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.pane_style_defaults(look);
+fig.pane2("after").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+std::cout << "before has the grid: " << fig.panes()[0].x_axis().major_grid << ", after has it: " << fig.panes()[1].x_axis().major_grid << "\n";
+fig.save_svg("figure.svg");
 ```
-
-`first`'s grid style is still `None` (`0`); only `second`, created after
-`pane_style_defaults()`, inherits `MajorMinor` (`2`).
 
 ### Output
 
 ```text
-0 2
+before has the grid: 0, after has it: 1
 ```
 
-![Output of Example 3](img/pane_style_defaults-3-mixed.svg)
+![Output of Example 2](img/pane_style_defaults-2-only_after.svg)
+
+Example 3. Still adjustable. A pane created with the defaults can change any of them, and the other panes are unaffected.
+
+```cpp
+Pane look(PaneKind::Planar, Theme::paper(), "look");
+look.x_major_grid(true).y_major_grid(true);
+auto fig = studio("defaults_override");
+fig.pane_style_defaults(look);
+fig.mosaic(1, 2);
+auto& plain = fig.pane2("no grid here");
+plain.trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+plain.x_major_grid(false).y_major_grid(false);
+fig.pane2("default grid").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+std::cout << "first: " << plain.x_axis().major_grid << ", second: " << fig.panes()[1].x_axis().major_grid << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+first: 0, second: 1
+```
+
+![Output of Example 3](img/pane_style_defaults-3-override.svg)
+
+Example 4. A snapshot of the example pane. Changing the example afterwards does not change the defaults, and a second call replaces them.
+
+```cpp
+Pane look(PaneKind::Planar, Theme::paper(), "look");
+look.x_major_grid(true);
+auto fig = studio("defaults_snapshot");
+fig.pane_style_defaults(look);
+look.x_major_grid(false);
+fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+std::cout << "example changed afterwards, new pane still has the grid: " << fig.panes()[0].x_axis().major_grid << "\n";
+Pane other(PaneKind::Planar, Theme::paper(), "other");
+fig.pane_style_defaults(other);
+fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+std::cout << "after a second call, new pane has no grid: " << !fig.panes()[1].x_axis().major_grid << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+example changed afterwards, new pane still has the grid: 1
+after a second call, new pane has no grid: 1
+```
+
+![Output of Example 4](img/pane_style_defaults-4-snapshot.svg)
+
+Example 5. Legend settings come along. The example pane's legend place and frame are the defaults, so every new pane shows its legend in that corner.
+
+```cpp
+Pane look(PaneKind::Planar, Theme::paper(), "look");
+look.legend(KeyPlace::NorthWest).legend_frame(KeyFrame::Framed);
+auto fig = studio("defaults_legend");
+fig.pane_style_defaults(look);
+fig.mosaic(1, 2);
+fig.pane2("a").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3}).label("series a");
+fig.pane2("b").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2}).label("series b");
+std::cout << "legend at NorthWest on both: " << (fig.panes()[0].legend_place() == KeyPlace::NorthWest && fig.panes()[1].legend_place() == KeyPlace::NorthWest) << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+legend at NorthWest on both: 1
+```
+
+![Output of Example 5](img/pane_style_defaults-5-legend.svg)
 
 ## Notes
 
-- Copies field *values* immediately, not a live reference to the source `Pane` — see the
-  important callout above.
-- Only affects panes created after the call — see Example 3.
-- The source `Pane` need not belong to any `Studio`; a throwaway template built solely to
-  carry settings is the idiomatic usage.
-- Only the specific field list above is copied — see "What It Does" for the exact set.
+- Not `noexcept`. The defaults copy the style fields listed above; the traces, title, limits and labels of the example pane are not copied.
+- The figure's headline, legend dock and captions are figure settings and are not part of a pane's defaults.
 
 ## See Also
 
-- [`Studio::clear_pane_style_defaults`](clear_pane_style_defaults.md): turns this back off.
-- [`Studio::theme`](theme.md) / [`context_scales`](context_scales.md): the other two
-  figure-wide, creation-time-only pane defaults.
-- [`Studio::pane2`](pane2.md) / [`pane3`](pane3.md): where these defaults get applied.
+- [`Studio::clear_pane_style_defaults`](clear_pane_style_defaults.md): switches the defaults off.
+- [`Studio::context_scales`](context_scales.md): default font scales for new panes.
+- [`Studio::theme`](theme.md): the theme new panes copy when no defaults are set.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="tight_layout_padding.html">
+  <a class="prev-link" href="pane_index.html">
     <span class="label">Previous</span>
-    <span class="title">tight_layout_padding</span>
+    <span class="title">pane_index</span>
   </a>
-  <a class="next-link" href="clear_pane_style_defaults.html">
+  <a class="next-link" href="panes.html">
     <span class="label">Next</span>
-    <span class="title">clear_pane_style_defaults</span>
+    <span class="title">panes</span>
   </a>
 </div>

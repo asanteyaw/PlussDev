@@ -9,8 +9,7 @@
 ```cpp
 Trace& flash::stripplot(Pane& pane, const Note& categories, const Series& values)
 
-template <class Group, class Values>
-Trace& flash::stripplot(Pane& pane, Group&& group, Values&& values)
+Trace& flash::stripplot(Pane& pane, Series group, Series values)
 ```
 
 ## What It Does
@@ -29,7 +28,7 @@ behavioral difference beyond just the parameter type:
   values, not text labels.
 
 ```{important} The numeric-group overload does not set x-axis category labels
-Directly verified: after a Note-based stripplot() call, the pane's x-axis
+After a Note-based stripplot() call, the pane's x-axis
 has real category labels (read back via Pane::x_axis().ticks->labels).
 After a numeric-group stripplot() call with the identical group structure (0/1
 positions), the x-axis has NO category labels at all -- ticks remains
@@ -123,7 +122,7 @@ x_categories count: 0
 - [`Pane::cloud`](../pane/cloud.md): the underlying method both overloads call.
 - [`Pane::x_categories`](../pane/x_categories.md): what the `Note` overload calls
   internally to label the x-axis.
-- [`flash::swarmplot`](swarmplot.md): a byte-for-byte identical alias.
+- [`flash::swarmplot`](swarmplot.md): a identical alias.
 - [`flash::boxplot`](boxplot.md), [`flash::violinplot`](violinplot.md): other categorical
   functions sharing this same `Note`-vs-numeric-group overload split.
 

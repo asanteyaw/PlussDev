@@ -12,17 +12,7 @@ Studio& Studio::clear_pane_style_defaults() noexcept
 
 ## What It Does
 
-Turns off [`pane_style_defaults()`](pane_style_defaults.md)'s captured settings for any
-panes created from this point onward — subsequent [`pane2()`](pane2.md)/
-[`pane3()`](pane3.md) calls fall back to each pane's own ordinary constructor defaults
-(`GridStyle::None`, `KeyPlace::None`, `axes_visible = true`, ...) instead of whatever
-template was last applied.
-
-```{important} Only affects panes created afterward, same as the defaults it clears
-Panes created *before* `clear_pane_style_defaults()` keep whichever style they were given
-at their own creation time — clearing the default doesn't retroactively strip anything
-already applied, mirroring `pane_style_defaults()`'s own "creation-time-only" semantics.
-```
+Switches off the defaults set by [`pane_style_defaults`](pane_style_defaults.md): panes created afterwards start with the figure's own theme and the ordinary pane settings again. Panes that already exist are not touched, whether they were created with the defaults or not. Calling it when no defaults are set does nothing, it never throws, and the defaults can be set again later. The figure's [`context_scales`](context_scales.md) are separate and unaffected.
 
 ## Parameters
 
@@ -31,63 +21,93 @@ already applied, mirroring `pane_style_defaults()`'s own "creation-time-only" se
 ## Returns
 
 `Studio&`
-    A reference to the same figure, for chaining.
+    The same figure, for chaining.
 
 ## Examples
 
-Example 1. A styled pane, then `clear_pane_style_defaults()`, then a plain one — on the
-same figure.
+Example 1. New panes stop taking the defaults. The first pane is created with the defaults and has the grid; after clearing, the next pane is a plain pane, and the first keeps its grid.
 
 ```cpp
-using namespace pluss::pl;
-
-Pane style_template(PaneKind::Planar, Theme::paper());
-style_template.grid(GridStyle::MajorMinor).legend(KeyPlace::OutsideEast);
-
-auto fig = studio("style_defaults_cleared");
-fig.pane_style_defaults(style_template);
-
-auto& styled = fig.pane2("styled");
-styled.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-
+Pane look(PaneKind::Planar, Theme::paper(), "look");
+look.x_major_grid(true).y_major_grid(true);
+auto fig = studio("clear_defaults_after");
+fig.mosaic(1, 2);
+fig.pane_style_defaults(look);
+fig.pane2("styled").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
 fig.clear_pane_style_defaults();
-
-auto& unstyled = fig.pane2("unstyled");
-unstyled.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0});
-fig.show();
-
-std::cout << static_cast<int>(styled.grid_style()) << " " << static_cast<int>(unstyled.grid_style()) << "\n";
+fig.pane2("plain").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+std::cout << "styled keeps its grid: " << fig.panes()[0].x_axis().major_grid << ", plain has none: " << !fig.panes()[1].x_axis().major_grid << "\n";
+fig.save_svg("figure.svg");
 ```
-
-`styled` (created while the default was active) keeps `GridStyle::MajorMinor` (`2`);
-`unstyled` (created after clearing) falls back to `GridStyle::None` (`0`).
 
 ### Output
 
 ```text
-2 0
+styled keeps its grid: 1, plain has none: 1
 ```
 
-![Output of Example 1](img/pane_style_defaults-4-cleared.svg)
+![Output of Example 1](img/clear_pane_style_defaults-1-after.svg)
+
+Example 2. Nothing to clear is not an error. On a figure with no defaults the call changes nothing, and the figure is the same as without it.
+
+```cpp
+auto build = [](bool clear) {
+  auto fig = studio("clear_defaults_nothing");
+  if (clear) fig.clear_pane_style_defaults();
+  fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  return fig.to_svg();
+};
+std::cout << "same figure: " << (build(true) == build(false)) << "\n";
+auto fig = studio("clear_defaults_nothing_out");
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+same figure: 1
+```
+
+![Output of Example 2](img/clear_pane_style_defaults-2-nothing.svg)
+
+Example 3. The defaults can be set again. After clearing, a new call to `pane_style_defaults` switches them back on for the panes created after it.
+
+```cpp
+Pane look(PaneKind::Planar, Theme::paper(), "look");
+look.x_major_grid(true);
+auto fig = studio("clear_defaults_again");
+fig.mosaic(1, 3);
+fig.pane_style_defaults(look);
+fig.pane2("first").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.clear_pane_style_defaults();
+fig.pane2("second").trend(std::vector<double>{1, 2, 3}, std::vector<double>{3, 1, 2});
+fig.pane_style_defaults(look);
+fig.pane2("third").trend(std::vector<double>{1, 2, 3}, std::vector<double>{1, 1, 2});
+std::cout << "grid on each: " << fig.panes()[0].x_axis().major_grid << fig.panes()[1].x_axis().major_grid << fig.panes()[2].x_axis().major_grid << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+grid on each: 101
+```
+
+![Output of Example 3](img/clear_pane_style_defaults-3-again.svg)
 
 ## Notes
 
-- `noexcept`.
-- Only affects panes created after the call — panes already created keep their style, same
-  timing rule as `pane_style_defaults()` itself.
-- Calling this when no defaults were ever set is harmless — it's a no-op in that case.
+- `noexcept`. Existing panes keep their style; to change a pane, change the pane.
 
 ## See Also
 
-- [`Studio::pane_style_defaults`](pane_style_defaults.md): sets the defaults this clears.
+- [`Studio::pane_style_defaults`](pane_style_defaults.md): sets the defaults.
+- [`Studio::context_scales`](context_scales.md): font-scale defaults, cleared by calling it again.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="pane_style_defaults.html">
-    <span class="label">Previous</span>
-    <span class="title">pane_style_defaults</span>
-  </a>
-  <a class="next-link" href="legend.html">
+  <a class="next-link" href="clear_row_title.html">
     <span class="label">Next</span>
-    <span class="title">legend</span>
+    <span class="title">clear_row_title</span>
   </a>
 </div>

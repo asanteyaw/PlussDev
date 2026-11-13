@@ -22,7 +22,7 @@ already has: `(Pane&, KeyPlace)` forwards straight to
 `KeyPlace` corners/edges or off), and `(Studio&, KeyDock)` forwards straight to
 [`Studio::legend`](../studio/legend.md) (a consolidated, figure-wide legend docked to
 one edge). `flash::legend` is an exact alias of `flash::move_legend` for both
-overloads — verified byte-identical below.
+overloads — identical below.
 
 ## Parameters
 
@@ -61,8 +61,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-move-legend-pane-southeast.svg)
 
-Example 2 (verification, not a distinct rendering). `flash::legend(Pane&, KeyPlace)` is
-byte-identical to `flash::move_legend(Pane&, KeyPlace)`.
+Example 2 (a comparison, not a new picture). `flash::legend(Pane&, KeyPlace)` is
+identical to `flash::move_legend(Pane&, KeyPlace)`.
 
 ```cpp
 using namespace pluss::pl;
@@ -85,7 +85,7 @@ Output:
 move_legend(Pane) vs legend(Pane) byte-identical: 1
 ```
 
-Example 3 (verification, not a distinct rendering). `(Studio&, KeyDock)`: `move_legend`
+Example 3 (a comparison, not a new picture). `(Studio&, KeyDock)`: `move_legend`
 vs `legend`, both docking a consolidated legend to the figure's east edge.
 
 ```cpp

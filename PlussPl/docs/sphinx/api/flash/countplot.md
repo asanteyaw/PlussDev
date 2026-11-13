@@ -7,15 +7,14 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::countplot(Pane& pane, Values&& values, int bins = 12)
+Trace& flash::countplot(Pane& pane, Series values, int bins = 12)
 
 Trace& flash::countplot(Pane& pane, const Note& categories)
 ```
 
 ## What It Does
 
-Draws an occurrence-count bar chart. The two overloads implement **genuinely different
+Draws an occurrence-count bar chart. The two overloads implement **different
 algorithms**, not just different input types:
 
 - **`countplot(pane, values, bins = 12)`** where `values` is any non-`Note`
@@ -45,7 +44,7 @@ flash::boxplot, flash::violinplot, flash::barplot) orders distinct labels by
 first appearance in the data, via the shared encode_categories() helper.
 flash::countplot(pane, categories) does not use that helper -- it accumulates
 counts into a std::map<std::string, double>, whose iteration order is
-lexicographic. Directly verified: input labels appearing in the order
+lexicographic. Input labels appearing in the order
 zebra, apple, zebra, mango, apple, zebra produced x-axis tick labels in the
 order apple, mango, zebra -- alphabetical, not first-seen (which would have
 been zebra, apple, mango).

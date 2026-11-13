@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::scatter3D(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::scatter3D(Pane& pane, Series x, Series y, Series z)
 ```
 
 ## What It Does
@@ -16,7 +15,7 @@ Trace& flash::scatter3D(Pane& pane, X&& x, Y&& y, Z&& z)
 A pure, one-line rename of [`flash::cloud3`](cloud3.md)'s bare `(x, y, z)` overload —
 `scatter3D(pane, x, y, z)` is exactly `cloud3(pane, x, y, z)`, nothing more. Exists purely
 to offer a shorter, more familiar name some callers already expect. Directly
-verified byte-identical. Note only the bare-arity overload is aliased —
+identical. Note only the bare-arity overload is aliased —
 [`flash::cloud3`](cloud3.md)'s `size` and `size`-plus-`color` overloads have no
 `scatter3D` equivalent.
 
@@ -52,8 +51,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-scatter3D-1-basic.svg)
 
-Example 2 (verification, not a distinct rendering). `flash::scatter3D` renders
-byte-identical to `flash::cloud3`'s bare overload given the same arguments.
+Example 2 (a comparison, not a new picture). `flash::scatter3D` renders
+identical to `flash::cloud3`'s bare overload given the same arguments.
 
 ```cpp
 using namespace pluss::pl;

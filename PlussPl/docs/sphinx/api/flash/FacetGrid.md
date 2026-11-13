@@ -22,7 +22,7 @@ explicitly positioned with [`Pane::place`](../pane/place.md) to land in a partic
 ```{important} Byte-identical to calling Studio::mosaic directly
 FacetGrid(studio, rows, cols) and FacetGrid(studio, rows, cols, gx, gy) produce
 exactly the same figure state as studio.mosaic(rows, cols) /
-studio.mosaic(rows, cols, gx, gy) -- directly verified via SVG comparison.
+studio.mosaic(rows, cols, gx, gy).
 FacetGrid's only purpose is a more familiar name and matching default
 gap values (18.0/18.0, identical to Studio::mosaic's own defaults).
 ```
@@ -68,8 +68,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-facetgrid-1-default.svg)
 
-Example 2 (verification, not a distinct rendering). `FacetGrid(studio, rows, cols)`
-produces byte-identical output to `studio.mosaic(rows, cols)`.
+Example 2 (a comparison, not a new picture). `FacetGrid(studio, rows, cols)`
+produces identical output to `studio.mosaic(rows, cols)`.
 
 ```cpp
 using namespace pluss::pl;

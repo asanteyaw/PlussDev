@@ -12,95 +12,159 @@ Pane& Pane::x_label(std::string label)
 
 ## What It Does
 
-Sets the x-axis label — the caption text drawn alongside the axis itself, distinct from
-the pane's own [`title()`](title.md) (drawn above the whole plot area) and from
-[`Studio`'s figure-wide captions](../studio/x_caption.md) (drawn once across multiple
-aligned panes). A plain, unconditional setter: no validation, and an empty string is a
-legitimate way to clear the label back to nothing (the constructor default).
+Sets the label of the x axis: the text drawn beside the axis that says what it measures. It is separate from the pane's own title ([`Pane::title`](title.md), drawn above the whole plot) and from the shared caption of an alignment group ([`Studio::x_caption`](../studio/x_caption.md), drawn once for several panes); the three can be used together. The text is stored in `x_axis().label`, where it can be read back; there is no separate getter.
 
-The current value is always readable back through [`x_axis().label`](axis_accessors.md) —
-there's no separate `x_label_text()` accessor, since `x_axis()`'s `AxisState` already
-carries the `label` field directly.
+The setter takes any text. An empty string clears the label and gives exactly the figure that never had one, a second call replaces the first, and text between dollar signs is typeset as math. The label is read when the figure is rendered, so it can be set before or after the traces. Its distance from the axis is [`x_label_gap`](x_label_gap.md) and its angle is [`x_label_rotation`](x_label_rotation.md); the axis tick labels are separate ([`x_tick_labels`](x_tick_labels.md)).
 
 ## Parameters
 
 **label** (`std::string`)
-    The x-axis label text. An empty string clears any existing label.
+    The label text. Empty clears the label.
 
 ## Returns
 
 `Pane&`
-    A reference to the same pane, for chaining.
+    The same pane, for chaining.
 
 ## Examples
 
-Example 1. No label set — empty by default.
+Example 1. Setting the x label. The label is stored in `x_axis().label` and drawn beside the x axis.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("labels_default");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-fig.show();
-
-std::cout << pane.x_axis().label.empty() << "\n";
+auto fig = studio("x_label_basic");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+std::cout << "before: '" << pane.x_axis().label << "'\n";
+pane.x_label("Elapsed time (s)");
+std::cout << "after: '" << pane.x_axis().label << "'\n";
+std::cout << "drawn: " << (fig.to_svg().find(">Elapsed time (s)<") != std::string::npos) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
+before: ''
+after: 'Elapsed time (s)'
+drawn: 1
 ```
 
-![Output of Example 1](img/labels-1-default.svg)
+![Output of Example 1](img/x_label-1-basic.svg)
 
-Example 2. `x_label()` chained with [`y_label()`](y_label.md) on a 2D pane.
+Example 2. Replacing and clearing. A second call replaces the text, and an empty string clears it: the figure is then exactly the figure that never had a label.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("labels_2d");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane.x_label("Time (s)").y_label("Amplitude");
-fig.show();
-
-std::cout << pane.x_axis().label << ", " << pane.y_axis().label << "\n";
+auto build = [&](const char* first, const char* second) {
+  auto fig = studio("x_label_clear");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  if (first) pane.x_label(first);
+  if (second) pane.x_label(second);
+  return fig.to_svg();
+};
+std::cout << "replaced: " << (build("old", "new").find(">new<") != std::string::npos) << ", old still drawn: " << (build("old", "new").find(">old<") != std::string::npos) << "\n";
+std::cout << "cleared == never set: " << (build("temporary", "") == build(nullptr, nullptr)) << "\n";
+auto fig = studio("x_label_clear_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.x_label("Final label");
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-Time (s), Amplitude
+replaced: 1, old still drawn: 0
+cleared == never set: 1
 ```
 
-![Output of Example 2](img/labels-2-2d.svg)
+![Output of Example 2](img/x_label-2-replace_clear.svg)
+
+Example 3. Not the title and not a shared caption. The pane's title, its x label and a figure-level caption are three separate texts; each is set by its own call and each is drawn in its own place.
+
+```cpp
+auto fig = studio("x_label_distinct");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.title("Pane title");
+pane.x_label("Axis label");
+pane.align_x("group");
+fig.x_caption("group", "Shared caption");
+const std::string svg = fig.to_svg();
+std::cout << "title: " << (svg.find(">Pane title<") != std::string::npos) << ", label: " << (svg.find(">Axis label<") != std::string::npos) << ", caption: " << (svg.find(">Shared caption<") != std::string::npos) << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+title: 1, label: 1, caption: 1
+```
+
+![Output of Example 3](img/x_label-3-distinct.svg)
+
+Example 4. Per axis. Setting the x label leaves the labels of the other axes empty, and each axis keeps its own text.
+
+```cpp
+auto fig = studio("x_label_independent");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.x_label("this axis only");
+std::cout << "x: '" << pane.x_axis().label << "', y: '" << pane.y_axis().label << "', z: '" << pane.z_axis().label << "'\n";
+pane.x_label("x text").y_label("y text").z_label("z text");
+std::cout << "all set: '" << pane.x_axis().label << "', '" << pane.y_axis().label << "', '" << pane.z_axis().label << "'\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+x: 'this axis only', y: '', z: ''
+all set: 'x text', 'y text', 'z text'
+```
+
+![Output of Example 4](img/x_label-4-independent.svg)
+
+Example 5. Math text. A label with `$...$` is typeset, so Greek letters and subscripts appear as symbols instead of the raw markup.
+
+```cpp
+auto fig = studio("x_label_math");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.x_label("$\\sigma_t$ (volatility)");
+const std::string svg = fig.to_svg();
+std::cout << "raw markup drawn: " << (svg.find("$\\sigma_t$") != std::string::npos) << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+raw markup drawn: 0
+```
+
+![Output of Example 5](img/x_label-5-math.svg)
 
 ## Notes
 
-- Not marked `noexcept`, though it only fails via `std::string`'s own allocation failure —
-  no argument validation of its own.
-- An empty string is a legitimate way to clear the label, not an error.
-- Read back through [`x_axis().label`](axis_accessors.md), not a dedicated accessor.
+- Not `noexcept`: it moves the text into the pane.
+- The label of an axis does not change the axis range or its ticks.
 
 ## See Also
 
-- [`Pane::y_label`](y_label.md) / [`Pane::z_label`](z_label.md): the y- and z-axis
-  equivalents.
-- [`Pane::title`](title.md): the pane's own title, drawn above the plot area rather than
-  alongside an axis.
-- [`Studio::x_caption`](../studio/x_caption.md): a figure-wide caption shared across
-  multiple aligned panes, a different mechanism entirely.
-- [`Pane::x_axis`](axis_accessors.md): where this label is read back from.
+- [`Pane::x_label_gap`](x_label_gap.md), [`x_label_rotation`](x_label_rotation.md): where and at what angle it is drawn.
+- [`Studio::x_caption`](../studio/x_caption.md): one caption shared by aligned panes.
+- [`Pane::title`](title.md): the title of the pane.
+- [`Pane::y_label`](y_label.md): the same setting for the y axis.
+- [`Pane::z_label`](z_label.md): the same setting for the z axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="axis_accessors.html">
+  <a class="prev-link" href="x_categories.html">
     <span class="label">Previous</span>
-    <span class="title">axis_accessors</span>
+    <span class="title">x_categories</span>
   </a>
-  <a class="next-link" href="y_label.html">
+  <a class="next-link" href="x_label_gap.html">
     <span class="label">Next</span>
-    <span class="title">y_label</span>
+    <span class="title">x_label_gap</span>
   </a>
 </div>

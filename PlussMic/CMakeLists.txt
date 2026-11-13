@@ -13,11 +13,8 @@ target_include_directories(PlussMic PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../PlussQit/include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../PlussQit/src>
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../ExLibs/fmt/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-
-target_compile_definitions(PlussMic PRIVATE FMT_HEADER_ONLY=1)
 
 target_sources(PlussMic PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/converters.cpp
@@ -38,7 +35,14 @@ target_link_libraries(PlussMic PUBLIC
     plussqit_codem
     plussqit_coden
 )
-target_link_libraries(PlussMic PRIVATE SQLite::SQLite3)
+# SDK headers are already found through -isysroot on macOS. Injecting the
+# SDK's usr/include as an explicit system path puts C headers ahead of the
+# libc++ wrappers and breaks <cstddef>/<cmath> with recent Xcode toolchains.
+if(APPLE AND SQLite3_INCLUDE_DIR STREQUAL "${CMAKE_OSX_SYSROOT}/usr/include")
+    target_link_libraries(PlussMic PRIVATE "$<LINK_ONLY:SQLite::SQLite3>")
+else()
+    target_link_libraries(PlussMic PRIVATE SQLite::SQLite3)
+endif()
 
 set_target_properties(PlussMic PROPERTIES CXX_STANDARD 20)
 

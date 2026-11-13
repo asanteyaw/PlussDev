@@ -7,15 +7,11 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::ridge3(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::ridge3(Pane& pane, Series x, Series y, Series z)
 
-template <class X, class Y, class Z, class Levels>
-  requires (!std::integral<std::remove_cvref_t<Levels>>)
-Trace& flash::ridge3(Pane& pane, X&& x, Y&& y, Z&& z, Levels&& levels)
+Trace& flash::ridge3(Pane& pane, Series x, Series y, Series z, Series levels)
 
-template <class X, class Y, class Z>
-Trace& flash::ridge3(Pane& pane, X&& x, Y&& y, Z&& z, int level_count)
+Trace& flash::ridge3(Pane& pane, Series x, Series y, Series z, int level_count)
 ```
 
 ## What It Does
@@ -23,7 +19,7 @@ Trace& flash::ridge3(Pane& pane, X&& x, Y&& y, Z&& z, int level_count)
 A thin wrapper around [`Pane::ridge3`](../pane/ridge3.md): converts every argument to
 `Series`, validates each is rank ≤ 3 (including `levels`, when supplied), then delegates
 to the identically-shaped native `Pane::ridge3` overload. Every delegation is
-byte-identical to calling `Pane::ridge3` directly — directly verified via SVG comparison.
+identical to calling `Pane::ridge3` directly.
 Three overloads, mirroring [`Pane::ridge3`](../pane/ridge3.md)'s own: `(x, y, z)`
 (automatic `8`-level spacing), `(x, y, z, levels)` (explicit threshold values — the
 non-integral `Levels` constraint is what disambiguates this from the `level_count`
@@ -109,8 +105,8 @@ fig.show();
 
 ![Output of Example 3](img/flash-ridge3-3-level-count.svg)
 
-Example 4 (verification, not a distinct rendering). `flash::ridge3(pane, x, y, z)`
-renders byte-identical to `pane.ridge3(x, y, z)` called directly.
+Example 4 (a comparison, not a new picture). `flash::ridge3(pane, x, y, z)`
+renders identical to `pane.ridge3(x, y, z)` called directly.
 
 ```cpp
 using namespace pluss::pl;
@@ -142,7 +138,7 @@ flash::ridge3(pane,x,y,z) == pane.ridge3(x,y,z): 1
 - `flash::ridge3`'s own validation only checks rank ≤ 3 — the stricter rank-2-exact
   requirement on `z` lives one layer deeper, inside [`Pane::ridge3`](../pane/ridge3.md).
 - Used internally by [`flash::triplot`](triplot.md)'s `TriplotKind::Ridge`, via a
-  binned-grid triplet (see that page's important callout for the genuine bug this
+  binned-grid triplet (see that page's important callout for the bug this
   session fixed there).
 
 ## See Also

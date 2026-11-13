@@ -24,7 +24,7 @@ side by side:
 That makes it the common hand-off type across:
 
 - persisted bundled datasets from [`flash::load_dataset`](load_dataset.md)
-- DataFrame export via [`flash::Dataset::from_frame`](dataset_from_frame.md)
+- DataFrame export via [`flash::Dataset::from_table`](dataset_from_table.md)
 - dataset-aware plot overloads such as [`flash::pairplot`](pairplot.md) and
   [`flash::jointplot`](jointplot.md)
 
@@ -68,7 +68,7 @@ That makes it the common hand-off type across:
 
 ## Bridge Surface
 
-- [`flash::Dataset::from_frame`](dataset_from_frame.md)
+- [`flash::Dataset::from_table`](dataset_from_table.md)
   Export a PlussMic `DataFrame` into flash's grouped dataset form.
 - [`flash::Dataset::frame`](dataset_frame.md)
   Rebuild a rectangular PlussMic `DataFrame` from a flash dataset.
@@ -109,7 +109,7 @@ temporal families=0
 ## See Also
 
 - [`flash::load_dataset`](load_dataset.md)
-- [`flash::Dataset::from_frame`](dataset_from_frame.md)
+- [`flash::Dataset::from_table`](dataset_from_table.md)
 - [`flash::Dataset::frame`](dataset_frame.md)
 - [`flash::pairplot`](pairplot.md)
 
@@ -118,8 +118,8 @@ temporal families=0
     <span class="label">Previous</span>
     <span class="title">Bundled Datasets<br>load_dataset</span>
   </a>
-  <a class="next-link" href="dataset_from_frame.html">
+  <a class="next-link" href="dataset_from_table.html">
     <span class="label">Next</span>
-    <span class="title">Dataset<br>from_frame</span>
+    <span class="title">Dataset<br>from_table</span>
   </a>
 </div>

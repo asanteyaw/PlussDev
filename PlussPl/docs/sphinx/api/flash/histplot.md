@@ -7,8 +7,7 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::histplot(Pane& pane, Values&& values, int bins = 12)
+Trace& flash::histplot(Pane& pane, Series values, int bins = 12)
 ```
 
 ## What It Does
@@ -52,7 +51,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-histplot-1-default-bins.svg)
 
-Example 2. A coarser, custom bin count. Verified via direct SVG diff to render genuinely
+Example 2. A coarser, custom bin count. Renders
 different bar boundaries from Example 1.
 
 ```cpp
@@ -81,7 +80,7 @@ fig.show();
 
 - [`Pane::bucket`](../pane/bucket.md): the lower-level method this wraps, including the
   explicit-range overload `histplot()` doesn't expose.
-- [`flash::displot`](displot.md): a byte-for-byte identical alias.
+- [`flash::displot`](displot.md): a identical alias.
 - [`flash::kdeplot`](kdeplot.md): a smoothed density-curve alternative to this binned-count
   view of the same kind of raw observations.
 - [`flash::rugplot`](rugplot.md): a complementary per-observation tick-mark overlay, often

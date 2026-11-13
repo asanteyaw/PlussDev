@@ -1,6 +1,7 @@
 #include "pluss/pl/plusspl.h"
 
 #include <cmath>
+#include <stdexcept>
 
 namespace pluss::pl {
 
@@ -31,7 +32,10 @@ Lens& Lens::project(ProjectionKind projection) noexcept {
   return *this;
 }
 
-Lens& Lens::view_angle(double degrees) noexcept {
+Lens& Lens::view_angle(double degrees) {
+  if (!(std::isfinite(degrees) && degrees > 0.0 && degrees < 180.0)) {
+    PLUSS_FAIL("Lens::view_angle: the angle must be strictly between 0 and 180 degrees");
+  }
   view_angle_deg_ = degrees;
   return *this;
 }
@@ -93,16 +97,18 @@ Trace& Trace::label(std::string label) {
   return *this;
 }
 
-Trace& Trace::width(float width) noexcept {
+Trace& Trace::width(float width) {
   if (!(std::isfinite(width) && width > 0.0F)) {
-    return *this;
+    PLUSS_FAIL("Trace::width: width must be finite and positive");
   }
   stroke_width_ = width;
+  width_explicit_ = true;
   return *this;
 }
 
 Trace& Trace::stroke(Rgba color) noexcept {
   stroke_color_ = color;
+  stroke_explicit_ = true;
   return *this;
 }
 
@@ -111,9 +117,9 @@ Trace& Trace::palette(PaletteRamp palette) {
   return *this;
 }
 
-Trace& Trace::color_limits(Range1d limits) noexcept {
+Trace& Trace::color_limits(Range1d limits) {
   if (!(std::isfinite(limits.low) && std::isfinite(limits.high) && limits.high > limits.low)) {
-    return *this;
+    PLUSS_FAIL("Trace::color_limits: range must be finite and strictly increasing");
   }
   color_limits_ = limits;
   return *this;

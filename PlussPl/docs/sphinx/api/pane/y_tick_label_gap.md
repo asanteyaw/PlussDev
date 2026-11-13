@@ -4,74 +4,159 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Pane& Pane::y_tick_label_gap(double points)          // sets an explicit gap
-Pane& Pane::clear_y_tick_label_gap() noexcept          // clears back to the default
+Pane& Pane::y_tick_label_gap(double points)
+Pane& Pane::clear_y_tick_label_gap() noexcept
 ```
 
 ## What It Does
 
-The y-axis counterpart of [`x_tick_label_gap()`](x_tick_label_gap.md)/
-[`clear_x_tick_label_gap()`](x_tick_label_gap.md). Every validation detail carries over
-unchanged (finite and non-negative) — see [`x_tick_label_gap()`](x_tick_label_gap.md) for
-the full worked-example set.
+Sets the gap, in drawing units, between the y axis line and its tick labels. The setting is stored in `y_axis().tick_label_gap` as an optional value: empty until a gap is set, which means the renderer chooses a gap from the font size. `y_tick_label_gap` stores an explicit gap and `clear_y_tick_label_gap()` removes it, restoring the automatic choice, so a figure that sets and then clears a gap is exactly the figure that never set one.
+
+The gap must be finite and not negative. Anything else (a negative number, infinity or NaN) is refused with `pluss::Error`, the stored value is left as it was, and zero is valid and puts the two elements as close as the renderer allows. The gap is read when the figure is rendered. It is per axis: the other axes keep their own.
 
 ## Parameters
 
-**points** (`double`, setter only)
-    The gap size in points. Must be finite and non-negative.
+**points** (`double`)
+    The gap in drawing units. Finite and not negative.
 
 ## Returns
 
 `Pane&`
-    A reference to the same pane, for chaining.
+    The same pane, for chaining.
 
 ## Examples
 
-Example 1. A wider gap on the y-axis.
+Example 1. Default, set, clear. A new pane has no override (`tick_label_gap` is empty); the call stores the value and `clear_y_tick_label_gap()` removes it again.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("y_tick_label_gap_wide");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0});
-pane.y_tick_label_gap(15.0);
-fig.show();
-
-std::cout << *pane.y_axis().tick_label_gap << "\n";
+auto fig = studio("y_tick_label_gap_readback");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+auto show = [&] { const auto& v = pane.y_axis().tick_label_gap; std::cout << (v ? std::to_string(*v) : std::string("none")) << "\n"; };
+std::cout << "new pane: "; show();
+pane.y_tick_label_gap(24.0);
+std::cout << "after y_tick_label_gap(24): "; show();
+pane.clear_y_tick_label_gap();
+std::cout << "after clear_y_tick_label_gap(): "; show();
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-15
+new pane: none
+after y_tick_label_gap(24): 24.000000
+after clear_y_tick_label_gap(): none
 ```
 
-![Output of Example 1](img/y_tick_label_gap-1-wide.svg)
+![Output of Example 1](img/y_tick_label_gap-1-readback.svg)
+
+Example 2. The effect. With a label set, a gap of 0, 14 and 60 gives three different figures; the saved figure uses 60, which pushes the y tick labels well away from the axis.
+
+```cpp
+auto build = [&](double gap) {
+  auto fig = studio("y_tick_label_gap_effect");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  pane.y_label("Axis label");
+  pane.y_tick_label_gap(gap);
+  return fig;
+};
+std::cout << "0 vs 14: " << (build(0.0).to_svg() != build(14.0).to_svg()) << ", 14 vs 60: " << (build(14.0).to_svg() != build(60.0).to_svg()) << "\n";
+build(60.0).save_svg("figure.svg");
+```
+
+### Output
+
+```text
+0 vs 14: 1, 14 vs 60: 1
+```
+
+![Output of Example 2](img/y_tick_label_gap-2-effect.svg)
+
+Example 3. Clearing restores the default exactly. After `clear_y_tick_label_gap()` the figure equals the one that never set a gap.
+
+```cpp
+auto build = [&](bool set_then_clear) {
+  auto fig = studio("y_tick_label_gap_clear");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+  pane.y_label("Axis label");
+  if (set_then_clear) pane.y_tick_label_gap(40.0).clear_y_tick_label_gap();
+  return fig.to_svg();
+};
+std::cout << "equal: " << (build(true) == build(false)) << "\n";
+auto fig = studio("y_tick_label_gap_clear_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_label("Axis label");
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+equal: 1
+```
+
+![Output of Example 3](img/y_tick_label_gap-3-clear_restores.svg)
+
+Example 4. Invalid gaps are refused and the stored value is kept. A negative number, infinity and NaN throw `pluss::Error`; zero is a valid gap.
+
+```cpp
+auto fig = studio("y_tick_label_gap_invalid");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_label("Axis label");
+pane.y_tick_label_gap(10.0);
+for (double bad : {-1.0, std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN()}) {
+  try {
+    pane.y_tick_label_gap(bad);
+  } catch (const pluss::Error& e) {
+    std::cout << bad << ": " << e.message() << "\n";
+  }
+}
+pane.y_tick_label_gap(0.0);
+std::cout << "zero accepted: " << *pane.y_axis().tick_label_gap << "\n";
+pane.y_tick_label_gap(10.0);
+std::cout << "kept after errors: " << *pane.y_axis().tick_label_gap << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+-1: y_tick_label_gap: spacing must be finite and non-negative
+inf: y_tick_label_gap: spacing must be finite and non-negative
+nan: y_tick_label_gap: spacing must be finite and non-negative
+zero accepted: 0
+kept after errors: 10
+```
+
+![Output of Example 4](img/y_tick_label_gap-4-invalid.svg)
 
 ## Notes
 
-See [`x_tick_label_gap()`](x_tick_label_gap.md)'s Notes — every detail applies identically
-here.
+- `y_tick_label_gap` throws, so it is not `noexcept`; `clear_y_tick_label_gap` never throws.
+- The related gap for the other element is [`y_label_gap`](y_label_gap.md).
 
 ## See Also
 
-- [`Pane::x_tick_label_gap`](x_tick_label_gap.md): the x-axis equivalent, with the full
-  worked-example set for validation failures.
-- [`Pane::z_tick_label_gap`](z_tick_label_gap.md): the z-axis equivalent.
-- [`Pane::y_label_gap`](y_label_gap.md): spacing for the axis label, a related but
-  independent control.
+- [`Pane::y_label`](y_label.md): the label the gap is measured to.
+- [`Pane::y_label_gap`](y_label_gap.md): the other gap.
+- [`Pane::x_tick_label_gap`](x_tick_label_gap.md): the same setting for the x axis.
+- [`Pane::z_tick_label_gap`](z_tick_label_gap.md): the same setting for the z axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="x_tick_label_gap.html">
+  <a class="prev-link" href="y_tick_format.html">
     <span class="label">Previous</span>
-    <span class="title">x_tick_label_gap</span>
+    <span class="title">y_tick_format</span>
   </a>
-  <a class="next-link" href="z_tick_label_gap.html">
+  <a class="next-link" href="y_tick_labels.html">
     <span class="label">Next</span>
-    <span class="title">z_tick_label_gap</span>
+    <span class="title">y_tick_labels</span>
   </a>
 </div>

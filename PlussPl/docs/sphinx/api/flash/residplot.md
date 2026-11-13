@@ -7,11 +7,9 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::residplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options)
+Trace& flash::residplot(Pane& pane, Series x, Series y, const RegPlotOptions& options)
 
-template <class X, class Y>
-Trace& flash::residplot(Pane& pane, X&& x, Y&& y)
+Trace& flash::residplot(Pane& pane, Series x, Series y)
 ```
 
 ## What It Does
@@ -27,7 +25,7 @@ residplot reuses RegPlotOptions purely as a container for the fit
 configuration (order, robust, lowess, lowess_frac) -- it does NOT consult
 show_scatter, show_fit, show_ci, confidence_level, or n_boot at all.
 residplot always draws exactly one Pane::cloud trace of residuals, regardless
-of what those fields are set to. If you pass an options struct configured for
+of what those fields are set to. If you pass an options value configured for
 a fit line or confidence band, those settings are silently ignored here.
 ```
 
@@ -38,7 +36,7 @@ a fit line or confidence band, those settings are silently ignored here.
 
 **x**, **y** (series-convertible)
     The raw observation pairs. Filtered to finite pairs via the same `finite_xy` helper
-    `regplot` uses; fewer than two finite pairs throws `std::invalid_argument
+    `regplot` uses; fewer than two finite pairs throws `pluss::Error
     ("flash::residplot requires at least two finite x/y pairs")`.
 
 **options** (`const RegPlotOptions&`, first overload only)
@@ -67,7 +65,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-residplot-1-default.svg)
 
-Example 2. `order = 2` — residuals of a quadratic fit against genuinely quadratic data
+Example 2. `order = 2` — residuals of a quadratic fit against quadratic data
 should look like structureless noise scattered around zero.
 
 ```cpp
@@ -89,9 +87,7 @@ fig.show();
 ## Notes
 
 - Not `noexcept`.
-- Unlike [`flash::regplot`](regplot.md), `residplot` was never exposed to the
-  reference-invalidation hazard documented there — it only ever draws a single trace, so
-  there is no earlier-captured reference at risk of dangling.
+- It draws a single trace, which is the one returned.
 - No zero-reference rule/annotation is added automatically (unlike
   [`flash::resid_histplot`](resid_histplot.md), which draws a `rule_x(0.0, "zero")`
   marker) — if you want a visual zero line here, add it yourself via `Pane::rule_y`.

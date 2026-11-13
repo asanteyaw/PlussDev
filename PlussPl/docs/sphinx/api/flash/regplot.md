@@ -7,8 +7,7 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::regplot(Pane& pane, X&& x, Y&& y, const RegPlotOptions& options = {})
+Trace& flash::regplot(Pane& pane, Series x, Series y, const RegPlotOptions& options = {})
 ```
 
 ## What It Does
@@ -21,28 +20,10 @@ algorithm, the confidence band, and which of the three possible layers (`scatter
 
 Only finite `(x, y)` pairs are used — non-finite values (NaN/Inf) in either series are
 silently dropped via `finite_xy` before fitting, not just before rendering. At least two
-finite pairs are required; fewer throws `std::invalid_argument("flash::regplot requires
+finite pairs are required; fewer throws `pluss::Error("flash::regplot requires
 at least two finite x/y pairs")`.
 
-```{important} Fixed: regplot's returned trace could dangle when show_ci was combined with show_scatter/show_fit
-Previously, regplot captured a Trace* to the scatter and/or fit trace, THEN
-drew the confidence-interval whisk trace afterward (when show_ci was true),
-THEN returned through the earlier-captured pointer. Pane::add_trace_ appends
-to a std::vector<Trace>, which can reallocate its backing storage on any
-push -- so drawing the CI trace after capturing the scatter/fit trace risked
-invalidating that earlier reference. Directly verified: calling
-regplot(pane, x, y, {.show_ci = true}) with default show_scatter/show_fit
-returned a Trace& whose label_text() came back empty and whose data no
-longer matched the fit line, instead of the expected "fit" label -- a real,
-reproducible case of undefined behavior. This affected any caller enabling
-show_ci alongside show_scatter or show_fit, including PlussMic's
-DataFramePlot scatter-plot fit-line feature whenever its fit_ci option was
-turned on. Fixed at the source: the CI whisk trace is now drawn FIRST,
-before the scatter/fit traces, so whichever of scatter/fit is ultimately
-returned is always the last trace pushed and never dangles. Verified via a
-before/after check confirming the returned trace's label and kind are now
-always correct.
-```
+The returned `Trace&` is the fit line when `show_fit` is true; with `show_fit = false` it is the scatter, and when both are off the call draws the fit line as a fallback so that there is always a trace to return. It stays valid for the life of the pane. The confidence band, when `show_ci` is true, is drawn first so that it lies behind the scatter and the fit.
 
 ## `RegPlotOptions` fields
 
@@ -51,13 +32,14 @@ always correct.
 | `show_scatter` | `bool`, default `true` | Whether to draw the raw `(x, y)` points via `Pane::cloud`. |
 | `show_fit` | `bool`, default `true` | Whether to draw the fitted curve via `Pane::trend`. |
 | `show_ci` | `bool`, default `false` | Whether to draw a confidence band around the fit, via `Pane::whisk`. Only drawn when there are more than 2 finite pairs (`sx.numel() > 2`) — with exactly 2 points there is no meaningful residual spread to estimate from, so the CI is silently skipped even if `show_ci` is `true`. |
-| `confidence_level` | `double`, default `0.95` | The nominal coverage of the CI band. Consumed differently depending on `n_boot`: for the analytic path (`n_boot == 0`) it's converted to a z-score via a **6-bucket lookup table**, not a continuous computation — see the important callout on [`catplot`](catplot.md)'s equivalent field for the exact bucket boundaries and the verified consequence (e.g. `0.90` and `0.92` currently produce an *identical* CI width, since both fall in the same "≥ 0.90" bucket). For the bootstrap path (`n_boot > 0`) it's used directly as a percentile-interval width, not quantized. |
-| `n_boot` | `std::int64_t`, default `0` | `0` (the default) computes the CI analytically from the fit's residual standard error. Any positive value switches to a **bootstrap** CI: resampling the `(x, y)` pairs with replacement `max(32, n_boot)` times, refitting each resample, and taking the `confidence_level` percentile spread of the resulting predictions at each `fit_x` point. Bootstrap CIs are typically wider and noisier-looking than the analytic ones, especially at the low end of `n_boot`. |
-| `order` | `std::int64_t`, default `1` | The polynomial degree fit to the data (clamped to a minimum of `1`). `1` is a straight-line fit; higher values fit increasingly flexible curves. Ignored when `lowess == true`. |
+| `confidence_level` | `double`, default `0.95` | The nominal coverage of the CI band, strictly between 0 and 1 (anything else throws `pluss::Error`). For the analytic path (`n_boot == 0`) the band is the fit's standard error times the exact two-sided normal quantile of the level, so every level has its own width; for the bootstrap path (`n_boot > 0`) it is the width of the percentile interval of the resampled predictions. |
+| `n_boot` | `std::int64_t`, default `0` | `0` (the default) computes the CI analytically from the fit's residual standard error. Any positive value (at least `2`) switches to a **bootstrap** CI: resampling the `(x, y)` pairs with replacement `n_boot` times, refitting each resample, and taking the `confidence_level` percentile spread of the resulting predictions at each `fit_x` point. Bootstrap CIs are typically wider and noisier-looking than the analytic ones, especially at the low end of `n_boot`. |
+| `seed` | `std::uint64_t`, default `81371` | Seed of the resampling when `n_boot > 0`: the same seed, data and `n_boot` give the same band, and a different seed gives a different resampling. |
+| `order` | `std::int64_t`, default `1` | The polynomial degree fit to the data (at least `1`; `0` or less throws `pluss::Error`). `1` is a straight-line fit; higher values fit increasingly flexible curves. Ignored when `lowess == true`. |
 | `robust` | `bool`, default `false` | When `true`, uses iteratively-reweighted least squares (3 iterations, Tukey-biweight downweighting based on the median absolute deviation of residuals) instead of plain least squares — reduces the influence of outliers on the fit. Applies to both the polynomial (`lowess == false`) and LOWESS (`lowess == true`) fit paths. |
-| `lowess` | `bool`, default `false` | When `true`, replaces the polynomial fit entirely with a local-regression (LOWESS) curve — ignores `order`. Useful for genuinely non-polynomial relationships. |
-| `lowess_frac` | `double`, default `0.35` | Only consulted when `lowess == true`. The fraction of points (clamped to `[0.05, 1.0]`) included in each local neighborhood — smaller values track the data more tightly (more wiggly), larger values smooth more aggressively. |
-| `fit_points` | `std::int64_t`, default `96` | How many x-positions (evenly spaced across the data's x-range, clamped to a minimum of `2`) the fitted curve/CI band is evaluated at. |
+| `lowess` | `bool`, default `false` | When `true`, replaces the polynomial fit entirely with a local-regression (LOWESS) curve — ignores `order`. Useful for non-polynomial relationships. |
+| `lowess_frac` | `double`, default `0.35` | Only consulted when `lowess == true`. The fraction of the points, in (0, 1] (anything else throws `pluss::Error`), included in each local neighborhood — smaller values track the data more tightly (more wiggly), larger values smooth more aggressively. A neighborhood always holds at least two points. |
+| `fit_points` | `std::int64_t`, default `96` | How many x-positions (evenly spaced across the data's x-range, at least `2`; fewer throws `pluss::Error`) the fitted curve/CI band is evaluated at. |
 | `marker_area`, `scatter_trace_width`, `fit_trace_width`, `ci_trace_width` | double / float; defaults 18.0 / 0.55F / 1.25F / 0.35F | Styling knobs forwarded directly to the corresponding trace's marker-area/width setters. |
 
 ## Parameters
@@ -67,7 +49,7 @@ always correct.
 
 **x**, **y** (series-convertible)
     The raw observation pairs. Must be the same length (enforced by `finite_xy`, which
-    throws `std::invalid_argument` on a mismatch).
+    throws `pluss::Error` on a mismatch).
 
 **options** (`const RegPlotOptions&`, optional)
     See the field table above.
@@ -98,7 +80,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-regplot-1-default.svg)
 
-Example 2. `order = 2` — a quadratic fit on genuinely quadratic data.
+Example 2. `order = 2` — a quadratic fit on quadratic data.
 
 ```cpp
 using namespace pluss::pl;
@@ -117,7 +99,7 @@ fig.show();
 ![Output of Example 2](img/flash-regplot-2-order2.svg)
 
 Example 3. Ordinary least squares versus `robust = true` on data with one extreme
-outlier — verified to produce genuinely different fitted curves.
+outlier — producing different fitted curves.
 
 ```cpp
 using namespace pluss::pl;
@@ -165,8 +147,8 @@ fig.show();
 
 ![Output of Example 4](img/flash-regplot-5-lowess.svg)
 
-Example 5. `show_ci = true`, analytic (default `n_boot = 0`) confidence band. Confirms
-the fix above: the returned trace is genuinely the fit trace, not a dangling reference.
+Example 5. `show_ci = true`, analytic (default `n_boot = 0`) confidence band. The
+returned trace is the fit line, and the band lies behind it.
 
 ```cpp
 using namespace pluss::pl;
@@ -248,8 +230,8 @@ auto fig = studio("flash_regplot_too_few");
 auto& pane = fig.pane2();
 try {
   flash::regplot(pane, std::vector<double>{1.0}, std::vector<double>{2.0});
-} catch (const std::invalid_argument& e) {
-  std::cout << "threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "threw: " << e.message() << "\n";
 }
 ```
 
@@ -268,8 +250,6 @@ threw: flash::regplot requires at least two finite x/y pairs
   (`order`, `robust`, `lowess`, `lowess_frac`) but ignores `show_scatter`/`show_fit`/
   `show_ci`/`confidence_level`/`n_boot` entirely — it always draws exactly one cloud
   trace of residuals.
-- See the important callout above for `confidence_level`'s quantized z-score behavior on
-  the analytic (non-bootstrap) CI path.
 
 ## See Also
 

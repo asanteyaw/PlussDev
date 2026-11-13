@@ -47,6 +47,7 @@ api_reference
 studio_api_reference
 pane_api_reference
 trace_api_reference
+types_api_reference
 flash_api_reference
 build_outputs
 ```

@@ -12,192 +12,219 @@ Pane& Pane::x_tick_format(TickFormat format) noexcept
 
 ## What It Does
 
-Chooses how numeric tick labels along the x-axis are rendered as text — the eight
-`TickFormat` values control everything from letting the renderer choose automatically to
-forcing scientific notation, a fixed decimal-place count, or a percent sign:
+Chooses how the numbers on the x axis ticks are written. The format is stored in `x_axis().tick_format`; `TickFormat::Auto` (the default) picks plain or scientific notation from the size of the numbers, and the other formats force one style:
 
-- **`TickFormat::Auto`** — the constructor default. Picks a reasonable representation
-  based on the data's own magnitude — plain decimal for ordinary-sized numbers,
-  automatically switching style for very large or very small ones. See the important
-  callout below.
-- **`TickFormat::Plain`** — always plain decimal notation, regardless of magnitude.
-- **`TickFormat::Fixed3`** — always exactly 3 digits after the decimal point.
-- **`TickFormat::Fixed6`** — always exactly 6 digits after the decimal point.
-- **`TickFormat::Scientific`** — scientific notation (`1.23e+06` style).
-- **`TickFormat::Engineering`** — engineering notation (exponents restricted to multiples
-  of 3, e.g. `1.23e+06` rather than `12.3e+05`).
-- **`TickFormat::Integer`** — rounds to the nearest whole number, no decimal point.
-- **`TickFormat::Percent`** — multiplies by 100 and appends a `%` sign (`0.45` → `45%`).
+| Format | Ticks are written as |
+|---|---|
+| `Auto` | chooses plain or scientific notation from the size of the numbers. |
+| `Plain` | plain decimal numbers with no trailing zeros. |
+| `Fixed3` | three decimals. |
+| `Fixed6` | six decimals. |
+| `Scientific` | scientific notation, `2.00e+06`. |
+| `Engineering` | engineering notation, exponents that are multiples of three. |
+| `Integer` | rounded to whole numbers. |
+| `Percent` | the value times 100 with a percent sign. |
 
-```{important} Auto and Plain can coincide for ordinary-magnitude data
-Because `Auto` adaptively picks a representation based on magnitude, it can render
-identically to `Plain` when the data doesn't cross whatever threshold triggers `Auto`'s
-adaptive switch — verified directly: for a y-range around `0.1`–`0.6`, `Auto` and `Plain`
-produced byte-for-byte identical SVG output, while for a y-range in the millions, they
-diverged (`Auto` switching styles, `Plain` staying in full decimal form). Don't assume
-`Plain` visibly changes anything without checking against the actual magnitude of the data
-in question — see Example 1's callout for the exact data used to demonstrate a real
-difference.
-```
+The format shapes the automatic tick labels. Labels given explicitly with [`x_ticks`](x_ticks.md) or [`x_categories`](x_categories.md) are text, and are drawn as they were written. The number of decimals of the automatic labels in `Auto` is set with [`x_auto_tick_decimals`](x_auto_tick_decimals.md). The call never throws, and is read when the figure is rendered.
 
 ## Parameters
 
 **format** (`TickFormat`)
-    One of the eight formatting styles listed above.
+    One of the eight formats; see [`TickFormat`](../types/TickFormat.md).
 
 ## Returns
 
 `Pane&`
-    A reference to the same pane, for chaining.
+    The same pane, for chaining.
 
 ## Examples
 
-Example 1. `TickFormat::Auto` (default) vs. `TickFormat::Plain`, on large-magnitude data
-deliberately chosen so the two visibly diverge (see the important callout above for why
-ordinary-magnitude data wouldn't show a difference here).
+Example 1. The default is `Auto` (0); each call is read back, and the last call wins.
 
 ```cpp
-using namespace pluss::pl;
-
-const std::vector<double> x{1.0, 2.0, 3.0, 4.0, 5.0};
-const std::vector<double> y{1234567.0, 9876543.0, 5555555.0, 3333333.0, 7654321.0};
-
-auto fig1 = studio("tick_format_auto");
-auto& pane1 = fig1.pane2();
-pane1.trend(x, y);
-fig1.show();
-std::cout << (pane1.y_axis().tick_format == TickFormat::Auto) << "\n";
-
-auto fig2 = studio("tick_format_plain");
-auto& pane2 = fig2.pane2();
-pane2.trend(x, y);
-pane2.y_tick_format(TickFormat::Plain);
-fig2.show();
-
-std::cout << (fig1.to_svg() != fig2.to_svg()) << "\n";
+auto fig = studio("x_format_readback");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+std::cout << "new axis: " << static_cast<int>(pane.x_axis().tick_format) << " (Auto = 0)\n";
+pane.x_tick_format(TickFormat::Percent);
+std::cout << "after Percent: " << static_cast<int>(pane.x_axis().tick_format) << "\n";
+pane.x_tick_format(TickFormat::Auto);
+std::cout << "back to Auto: " << static_cast<int>(pane.x_axis().tick_format) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
-1
+new axis: 0 (Auto = 0)
+after Percent: 7
+back to Auto: 0
 ```
 
-![Output of Example 1 (Auto, default)](img/tick_format-1-auto.svg)
+![Output of Example 1](img/x_tick_format-1-readback.svg)
 
-![Output of Example 1 (Plain)](img/tick_format-2-plain.svg)
-
-Example 2. `TickFormat::Fixed3` and `TickFormat::Fixed6` on the same decimal data — a
-genuine, immediately visible difference in decimal-place count.
+Example 2. Every format on the same small values. The axis runs 0 to 1, and each format writes the ticks in its own way; `Percent` multiplies by 100.
 
 ```cpp
-using namespace pluss::pl;
-
-const std::vector<double> x{1.0, 2.0, 3.0, 4.0, 5.0};
-const std::vector<double> y{0.12345, 0.4567, 0.31, 0.5891, 0.623};
-
-auto fig3 = studio("tick_format_fixed3");
-auto& pane3 = fig3.pane2();
-pane3.trend(x, y);
-pane3.y_tick_format(TickFormat::Fixed3);
-fig3.show();
-
-auto fig4 = studio("tick_format_fixed6");
-auto& pane4 = fig4.pane2();
-pane4.trend(x, y);
-pane4.y_tick_format(TickFormat::Fixed6);
-fig4.show();
-
-std::cout << (fig3.to_svg() != fig4.to_svg()) << "\n";
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+const std::pair<const char*, TickFormat> formats[] = {{"Auto", TickFormat::Auto}, {"Plain", TickFormat::Plain}, {"Fixed3", TickFormat::Fixed3}, {"Fixed6", TickFormat::Fixed6},
+                                                    {"Scientific", TickFormat::Scientific}, {"Engineering", TickFormat::Engineering}, {"Integer", TickFormat::Integer}, {"Percent", TickFormat::Percent}};
+for (const auto& [name, format] : formats) {
+auto fig = studio("x_format_small");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
+  pane.y_tick_labels(false);
+pane.z_tick_labels(false);
+  pane.x_tick_format(format);
+  std::cout << name << ": " << texts(fig.to_svg()) << "\n";
+}
+auto fig = studio("x_format_small_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
+pane.x_tick_format(TickFormat::Percent);
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
+Auto: p 0.0 0.2 0.4 0.6 0.8 1.0 
+Plain: p 0 0.2 0.4 0.6 0.8 1 
+Fixed3: p 0.000 0.200 0.400 0.600 0.800 1.000 
+Fixed6: p 0.000000 0.200000 0.400000 0.600000 0.800000 1.000000 
+Scientific: p 0.00e+00 2.00e-01 4.00e-01 6.00e-01 8.00e-01 1.00e+00 
+Engineering: p 0 200.000e-3 400.000e-3 600.000e-3 800.000e-3 1.000e0 
+Integer: p 0 0 0 1 1 1 
+Percent: p 0.0% 20.0% 40.0% 60.0% 80.0% 100.0% 
 ```
 
-![Output of Example 2 (Fixed3)](img/tick_format-3-fixed3.svg)
+![Output of Example 2](img/x_tick_format-2-small.svg)
 
-![Output of Example 2 (Fixed6)](img/tick_format-4-fixed6.svg)
-
-Example 3. `TickFormat::Scientific` and `TickFormat::Engineering`, on large-magnitude
-data.
+Example 3. Every format on large values. The axis runs to about ten million; `Plain` and `Fixed3` write every digit, `Scientific` and `Engineering` keep the labels short, and `Auto` switches to scientific notation by itself.
 
 ```cpp
-using namespace pluss::pl;
-
-const std::vector<double> x{1.0, 2.0, 3.0, 4.0, 5.0};
-const std::vector<double> y{12345.0, 45670.0, 31000.0, 58910.0, 62300.0};
-
-auto fig5 = studio("tick_format_scientific");
-auto& pane5 = fig5.pane2();
-pane5.trend(x, y);
-pane5.y_tick_format(TickFormat::Scientific);
-fig5.show();
-
-auto fig6 = studio("tick_format_engineering");
-auto& pane6 = fig6.pane2();
-pane6.trend(x, y);
-pane6.y_tick_format(TickFormat::Engineering);
-fig6.show();
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+const std::pair<const char*, TickFormat> formats[] = {{"Auto", TickFormat::Auto}, {"Plain", TickFormat::Plain}, {"Fixed3", TickFormat::Fixed3}, {"Scientific", TickFormat::Scientific}, {"Engineering", TickFormat::Engineering}, {"Integer", TickFormat::Integer}};
+for (const auto& [name, format] : formats) {
+auto fig = studio("x_format_large");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{1200, 34000, 560000, 7800000, 9000000}, std::vector<double>{2, 5, 4, 3, 2});
+  pane.y_tick_labels(false);
+pane.z_tick_labels(false);
+  pane.x_tick_format(format);
+  std::cout << name << ": " << texts(fig.to_svg()) << "\n";
+}
+auto fig = studio("x_format_large_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1200, 34000, 560000, 7800000, 9000000}, std::vector<double>{2, 5, 4, 3, 2});
+pane.x_tick_format(TickFormat::Scientific);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 3 (Scientific)](img/tick_format-5-scientific.svg)
+### Output
 
-![Output of Example 3 (Engineering)](img/tick_format-6-engineering.svg)
+```text
+Auto: p 0 2.00e+06 4.00e+06 6.00e+06 8.00e+06 1.00e+07 
+Plain: p 0 2000000 4000000 6000000 8000000 10000000 
+Fixed3: p 0.000 2000000.000 4000000.000 6000000.000 8000000.000 10000000.000 
+Scientific: p 0.00e+00 2.00e+06 4.00e+06 6.00e+06 8.00e+06 1.00e+07 
+Engineering: p 0 2.000e6 4.000e6 6.000e6 8.000e6 10.000e6 
+Integer: p 0 2000000 4000000 6000000 8000000 10000000 
+```
 
-Example 4. `TickFormat::Integer` and `TickFormat::Percent`.
+![Output of Example 3](img/x_tick_format-3-large.svg)
+
+Example 4. Eight formats, eight figures. The formats that look alike on some data differ on others; here all pairs of neighbouring formats on the small values give different figures, and setting the same format twice changes nothing.
 
 ```cpp
-using namespace pluss::pl;
-
-const std::vector<double> x{1.0, 2.0, 3.0, 4.0, 5.0};
-
-auto fig7 = studio("tick_format_integer");
-auto& pane7 = fig7.pane2();
-pane7.trend(x, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-pane7.y_tick_format(TickFormat::Integer);
-fig7.show();
-
-auto fig8 = studio("tick_format_percent");
-auto& pane8 = fig8.pane2();
-pane8.trend(x, std::vector<double>{0.12, 0.45, 0.31, 0.58, 0.62});
-pane8.y_tick_format(TickFormat::Percent);
-fig8.show();
+auto build = [&](TickFormat format) {
+  auto fig = studio("x_format_distinct");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
+  pane.x_tick_format(format);
+  return fig.to_svg();
+};
+std::cout << "Plain vs Fixed3: " << (build(TickFormat::Plain) != build(TickFormat::Fixed3)) << ", Fixed3 vs Fixed6: " << (build(TickFormat::Fixed3) != build(TickFormat::Fixed6)) << ", Scientific vs Engineering: " << (build(TickFormat::Scientific) != build(TickFormat::Engineering)) << "\n";
+std::cout << "same format twice: " << (build(TickFormat::Percent) == build(TickFormat::Percent)) << "\n";
+auto fig = studio("x_format_distinct_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0.0, 0.25, 0.5, 1.0}, std::vector<double>{2, 5, 4, 3});
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 4 (Integer)](img/tick_format-7-integer.svg)
+### Output
 
-![Output of Example 4 (Percent)](img/tick_format-8-percent.svg)
+```text
+Plain vs Fixed3: 1, Fixed3 vs Fixed6: 1, Scientific vs Engineering: 1
+same format twice: 1
+```
+
+![Output of Example 4](img/x_tick_format-4-distinct.svg)
+
+Example 5. Explicit tick labels keep their text. Labels given with `x_ticks` are drawn as written, whatever the format; the format applies to the automatic ticks.
+
+```cpp
+auto texts = [](const std::string& svg) {
+  std::string out;
+  for (std::size_t at = svg.find("<text"); at != std::string::npos; at = svg.find("<text", at + 1)) {
+    const auto gt = svg.find('>', at);
+    out += svg.substr(gt + 1, svg.find("</text>", gt) - gt - 1) + " ";
+  }
+  return out;
+};
+auto fig = studio("x_format_explicit");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{1, 2, 3, 4}, std::vector<double>{2, 5, 4, 3});
+pane.y_tick_labels(false);
+pane.z_tick_labels(false);
+pane.x_ticks(std::vector<double>{1, 2, 3}, {"low", "mid", "high"});
+pane.x_tick_format(TickFormat::Percent);
+std::cout << texts(fig.to_svg()) << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+p low mid high 
+```
+
+![Output of Example 5](img/x_tick_format-5-explicit_ticks.svg)
 
 ## Notes
 
-- `noexcept` — every `TickFormat` value is valid, nothing to reject.
-- `Auto` is `0`, `Plain` is `1`, `Fixed3` is `2`, `Fixed6` is `3`, `Scientific` is `4`,
-  `Engineering` is `5`, `Integer` is `6`, `Percent` is `7`.
-- Independent of [`x_auto_tick_decimals()`](x_auto_tick_decimals.md) — that setting
-  fine-tunes `Auto`'s own decimal-place choice, while `x_tick_format()` picks the overall
-  style. The two combine when `TickFormat::Auto` is in effect.
-- Applies to how tick *labels* are rendered as text; it has no bearing on where the ticks
-  themselves are positioned — see [`x_ticks()`](x_ticks.md) for explicit tick placement.
+- `noexcept`. A format changes only how ticks are written, never where they are.
+- The format is per axis: set it on each axis that should use it.
 
 ## See Also
 
-- [`Pane::y_tick_format`](y_tick_format.md) / [`Pane::z_tick_format`](z_tick_format.md):
-  the y- and z-axis equivalents.
-- [`Pane::x_auto_tick_decimals`](x_auto_tick_decimals.md): fine-tunes `Auto`'s decimal
-  precision specifically.
-- [`Pane::x_axis`](axis_accessors.md): where the current format is read back from.
+- [`Pane::x_auto_tick_decimals`](x_auto_tick_decimals.md): decimals of the automatic labels.
+- [`Pane::x_ticks`](x_ticks.md): explicit tick labels.
+- [`TickFormat`](../types/TickFormat.md): the values.
+- [`Pane::y_tick_format`](y_tick_format.md): the same setting for the y axis.
+- [`Pane::z_tick_format`](z_tick_format.md): the same setting for the z axis.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="z_minor_grid.html">
+  <a class="prev-link" href="x_minor_grid.html">
     <span class="label">Previous</span>
-    <span class="title">z_minor_grid</span>
+    <span class="title">x_minor_grid</span>
   </a>
-  <a class="next-link" href="y_tick_format.html">
+  <a class="next-link" href="x_tick_label_gap.html">
     <span class="label">Next</span>
-    <span class="title">y_tick_format</span>
+    <span class="title">x_tick_label_gap</span>
   </a>
 </div>

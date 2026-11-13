@@ -7,15 +7,14 @@
 ## Signatures
 
 ```cpp
-template <class Values>
-Trace& flash::displot(Pane& pane, Values&& values, int bins = 12)
+Trace& flash::displot(Pane& pane, Series values, int bins = 12)
 ```
 
 ## What It Does
 
 A pure alias for [`flash::histplot`](histplot.md) — the implementation is literally a
-call to `histplot(pane, values, bins)`, nothing more. Directly verified: identical
-arguments to both functions produce **byte-for-byte identical** SVG output.
+call to `histplot(pane, values, bins)`, nothing more. Identical
+arguments to both functions produce **identical** SVG output.
 
 ```{important} Not a kind-dispatched function
 The `displot` name might suggest a kind-dispatched wrapper choosing between
@@ -58,8 +57,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-displot-1-default.svg)
 
-Example 2 (verification, not a distinct rendering). `displot(values, 8)` and
-`histplot(values, 8)` on identical data, confirmed to produce **byte-for-byte identical**
+Example 2 (a comparison, not a new picture). `displot(values, 8)` and
+`histplot(values, 8)` on identical data, produces **identical**
 output.
 
 ```cpp

@@ -11,7 +11,7 @@ Studio& flash::andrews_curves(Studio& studio, pluss::msharp::RangeView::Series c
                                const AndrewsCurvesOptions& options = {})
 
 Studio& flash::andrews_curves(Studio& studio, pluss::msharp::RangeView::Series columns,
-                               const Note& class_labels,
+                               const Note& group_labels,
                                const AndrewsCurvesOptions& options = {})
 
 Studio& flash::andrews_curves(Studio& studio, const Dataset& data,
@@ -49,7 +49,7 @@ Fourier basis matrix (`detail::andrews_basis`) to produce its curve's `y` values
 sampled `t`, then each curve is drawn as one [`Pane::trend`](../pane/trend.md) trace.
 
 Eight overloads mirror [`flash::parallelplot`](parallelplot.md)'s exactly: a plain
-`columns` form, a `columns` + `class_labels` form, a `Dataset` form, and five matrix
+`columns` form, a `columns` + `group_labels` form, a `Dataset` form, and five matrix
 forms.
 
 ```{important} normalize defaults to true, same rule as flash::parallelplot
@@ -65,12 +65,12 @@ normalizes to a flat 0.0 rather than dividing by zero.
 |---|---|---|
 | `labels` | `std::vector<std::string>`, default empty | Per-feature labels. Unlike [`flash::parallelplot`](parallelplot.md), these never appear as visible axis tick labels (Andrews curves have no per-feature x-axis) — they only participate in the `Dataset`/matrix-overload fallback-naming plumbing, with no visible effect on the plain overloads' rendered output. |
 | `normalize` | `bool`, default `true` | See the important callout above. |
-| `points` | `std::int64_t`, default `220` | How many `t` samples span `[-π, π]` for every curve. Clamped to at least `64`. Directly verified: a curve sampled at `64` points renders visibly coarser/differently than the `220`-point default. |
+| `points` | `std::int64_t`, default `220` | How many `t` samples span `[-π, π]` for every curve. At least `2`; fewer throws `pluss::Error`. A curve sampled at `64` points renders visibly coarser/differently than the `220`-point default. |
 | `max_curves` | `std::int64_t`, default `600` | Row-count cap — rows beyond this are deterministically downsampled to an evenly-strided subset, identical mechanism to [`flash::parallelplot`](parallelplot.md)'s `max_points` (just named for curves instead of points here). |
-| `alpha` | `double`, default `0.28` | Per-curve opacity, clamped to `[0.05, 1.0]`. |
+| `alpha` | `double`, default `0.28` | Per-curve opacity, in (0, 1]; a value outside it throws `pluss::Error`. |
 | `trace_width` | `float`, default `0.9F` | Stroke width for every curve. |
 | `show_grid` | `bool`, default `true` | Whether the pane gets `GridStyle::Major` gridlines (`true`) or `GridStyle::None` (`false`). |
-| `show_legend` | `bool`, default `true` | Whether a legend is drawn — only visibly matters for the `class_labels` overload, same as [`flash::parallelplot`](parallelplot.md)'s `show_legend`. |
+| `show_legend` | `bool`, default `true` | Whether a legend is drawn — only visibly matters for the `group_labels` overload, same as [`flash::parallelplot`](parallelplot.md)'s `show_legend`. |
 
 ## Parameters
 
@@ -79,12 +79,12 @@ normalizes to a flat 0.0 rather than dividing by zero.
 
 **columns** (`pluss::msharp::RangeView::Series`)
     One entry per feature. Must contain at least two features
-    (`std::invalid_argument("flash::andrews_curves requires at least two columns")`), and
+    (`pluss::Error("flash::andrews_curves requires at least two columns")`), and
     every column must be the same length.
 
-**class_labels** (`const Note&`, class-labels overload only)
+**group_labels** (`const Note&`, group-labels overload only)
     One label per row. Its length must exactly match the row count, or
-    `andrews_curves` throws `std::invalid_argument("flash::andrews_curves: class label
+    `andrews_curves` throws `pluss::Error("flash::andrews_curves: group label
     length must match rows")`.
 
 **data** (`const Dataset&`, Dataset overload only)
@@ -119,7 +119,7 @@ fig.show();
 
 ![Output of Example 1](img/flash-andrews-1-default.svg)
 
-Example 2. `class_labels` overload — curves colored and legended by class.
+Example 2. `group_labels` overload — curves colored and legended by group.
 
 ```cpp
 using namespace pluss::pl;
@@ -134,10 +134,9 @@ flash::andrews_curves(fig, pluss::msharp::RangeView::Series(cols), classes);
 fig.show();
 ```
 
-![Output of Example 2](img/flash-andrews-2-classes.svg)
+![Output of Example 2](img/flash-andrews-2-groups.svg)
 
-Example 3 (verification, not a distinct rendering). `points = 64` renders genuinely
-differently (visibly coarser) than the `220`-point default.
+Example 3 (a comparison, not a new picture). `points = 64` renders differently (visibly coarser) than the `220`-point default.
 
 ```cpp
 using namespace pluss::pl;
@@ -215,8 +214,8 @@ auto fig = studio("flash_andrews_too_few");
 std::vector<pluss::Series> cols{pluss::make_series(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, {6})};
 try {
   flash::andrews_curves(fig, pluss::msharp::RangeView::Series(cols));
-} catch (const std::invalid_argument& e) {
-  std::cout << "andrews_curves(1 col) threw: " << e.what() << "\n";
+} catch (const pluss::Error& e) {
+  std::cout << "andrews_curves(1 col) threw: " << e.message() << "\n";
 }
 ```
 
@@ -244,13 +243,13 @@ andrews_curves(1 col) threw: flash::andrews_curves requires at least two columns
   multivariate views over the same per-row, per-feature input shape.
 - [`Pane::trend`](../pane/trend.md): the native method drawing each curve.
 
-<div class="pluss-inline-prev-next">
-  <a class="prev-link" href="parallelplot.html">
-    <span class="label">Previous</span>
-    <span class="title">parallelplot</span>
+<div group="pluss-inline-prev-next">
+  <a group="prev-link" href="parallelplot.html">
+    <span group="label">Previous</span>
+    <span group="title">parallelplot</span>
   </a>
-  <a class="next-link" href="radviz.html">
-    <span class="label">Next</span>
-    <span class="title">radviz</span>
+  <a group="next-link" href="radviz.html">
+    <span group="label">Next</span>
+    <span group="title">radviz</span>
   </a>
 </div>

@@ -7,23 +7,18 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y>
-Trace& flash::lineplot(Pane& pane, X&& x, Y&& y)
+Trace& flash::lineplot(Pane& pane, Series x, Series y)
 
-template <class X, class Y>
-Trace& flash::lineplot(Pane& pane, X&& x, Y&& y, const Note& hue)
+Trace& flash::lineplot(Pane& pane, Series x, Series y, const Note& hue)
 
-template <class X, class Y, class Hue>
-Trace& flash::lineplot(Pane& pane, X&& x, Y&& y, Hue&& hue)
+Trace& flash::lineplot(Pane& pane, Series x, Series y, Series hue)
 ```
 
 ## What It Does
 
 The high-level entry point for a connected line plot: a thin wrapper around
 [`Pane::trend`](../pane/trend.md) that adds automatic hue grouping, mirroring
-[`flash::scatterplot`](scatterplot.md)'s three-overload shape exactly — but with genuinely
-different numbers and a genuinely different overflow strategy, both directly verified
-below:
+[`flash::scatterplot`](scatterplot.md)'s three-overload shape exactly — but with different numbers and a different overflow strategy:
 
 - **`lineplot(pane, x, y)`** — a single, ungrouped line trace. Equivalent to
   `pane.trend(x, y)`.
@@ -43,7 +38,7 @@ below:
 ```{important} lineplot's numeric-hue threshold (8) and fallback (binning) both differ from scatterplot's
 flash::scatterplot(pane, x, y, hue) applies the same two-branch shape, but with a
 threshold of 10 (not 8) and a continuous-palette single-trace fallback (not
-6-way binning). Directly verified: 9 unique hue values on identical x/y data
+6-way binning). 9 unique hue values on identical x/y data
 produced 9 discrete traces under scatterplot() (9 <= 10, still discrete) but
 only 6 traces under lineplot() (9 > 8, already binned into 6 buckets). Read
 each function's own numbers -- do not assume they match just because the

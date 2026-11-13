@@ -4,150 +4,261 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& Pane::contour(X&& x, Y&& y, Z&& z)
-
-template <class X, class Y, class Z, class Levels>
-  requires (!std::integral<std::remove_cvref_t<Levels>>)
-Trace& Pane::contour(X&& x, Y&& y, Z&& z, Levels&& levels)
-
-template <class X, class Y, class Z>
-Trace& Pane::contour(X&& x, Y&& y, Z&& z, int level_count)
+Trace& Pane::contour(Series x, Series y, Series z)
+Trace& Pane::contour(Series x, Series y, Series z, std::vector<double> levels)
+Trace& Pane::contour(Series x, Series y, Series z, int level_count)
 ```
 
 ## What It Does
 
-Adds a contour-line trace over a scalar field `z(x, y)` — lines connecting points of equal
-`z` value, at either automatically or explicitly chosen levels. Three overloads control how
-many, and which, levels are drawn:
+Adds **contour lines**: curves along which a field `z(x, y)` has the same value, one curve family for each level. Together with a [heat map](fieldmap.md) it is the usual way to show a quantity over a plane.
 
-- **`contour(x, y, z)`** — automatically chooses `8` evenly-spaced levels
-  (`ContourData::auto_levels` defaults to `8`).
-- **`contour(x, y, z, levels)`** — draws contour lines at the exact `z` values listed in
-  `levels`, instead of automatically spaced ones.
-- **`contour(x, y, z, level_count)`** — automatically spaces exactly `level_count` levels,
-  overriding the default of `8` without needing to compute or list the exact values.
+`z` is a rank-2 matrix with a row for each `y` and a column for each `x`, as for [`fieldmap`](fieldmap.md). The levels are chosen by the call:
 
-```{important} Disambiguation via a requires clause
-The `levels`-taking overload is constrained with `requires (!std::integral<...>)` on the
-`Levels` template parameter specifically so that `contour(x, y, z, 4)` — a bare integer —
-unambiguously resolves to the `level_count` overload rather than attempting (and failing)
-to treat `4` as a series of explicit level values. Pass an actual container
-(`std::vector<double>{...}`) to select explicit levels instead of a level *count*.
-```
+| Call | Levels |
+|---|---|
+| `contour(x, y, z)` | 8, evenly spaced between the lowest and highest value of `z`. |
+| `contour(x, y, z, level_count)` | `level_count` (an integer, positive), evenly spaced. |
+| `contour(x, y, z, levels)` | Exactly the values in the container `levels`. |
 
-`z` must be a rank-2 matrix — `z(x[i], y[j])` at grid position `(i, j)` — matching every
-other field-valued trace kind on `Pane` (see [`Pane::fieldmap`](fieldmap.md), which shares
-this same rank-2 `z` requirement and its exact error message).
-
-```{important} Requires a Planar pane
-Calling `contour()` on a `Volumetric` pane throws
-`std::logic_error("contour requires a planar pane")`.
-```
+An integer is always a count: `4` asks for four levels, and one level at the value 4 is `std::vector<double>{4.0}`. The colours of the lines come from the palette over the range of the field (or [`color_limits`](color_limits.md)); with one level the trace's own colour is used.
 
 ## Parameters
 
-**x**, **y** (series-convertible)
-    The grid's coordinate axes.
+**x**, **y** (`Series`-convertible)
+    The coordinates of the columns and rows, or full matrices.
 
-**z** (series-convertible, must be rank-2)
-    The scalar field values over the `(x, y)` grid.
+**z** (`Series`-convertible, rank 2)
+    The field.
 
-**levels** (series-convertible, `levels`-overload only)
-    Explicit `z` values at which to draw contour lines, replacing automatic spacing
-    entirely.
-
-**level_count** (`int`, `level_count`-overload only)
-    The number of automatically, evenly spaced levels to draw, replacing the default of
-    `8` (`ContourData::auto_levels`).
+**level_count** (`int`) or **levels** (container of numbers)
+    How many levels, or which.
 
 ## Returns
 
 `Trace&`
-    A reference to the newly created trace, for chaining.
+    The new trace.
 
 ## Examples
 
-Example 1. The default automatic level count (`8`), over a small `4×4` field.
+Example 1. The default: 8 evenly spaced levels between the lowest and the highest value of the field, drawn as lines.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("contour_default");
-auto& pane = fig.pane2();
-auto z = pluss::series::linspace(0.0, 1.0, 16, pluss::ScalarType::Float64).reshape({4, 4});
-pane.contour(std::vector<double>{0.0, 1.0, 2.0, 3.0}, std::vector<double>{0.0, 1.0, 2.0, 3.0}, z);
-fig.show();
+auto& pane = fig.pane2("p");
+const std::int64_t n = 25;
+std::vector<double> axis(static_cast<std::size_t>(n)), field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i) axis[static_cast<std::size_t>(i)] = -2.0 + 4.0 * i / (n - 1);
+for (std::int64_t i = 0; i < n; ++i) {
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = axis[static_cast<std::size_t>(i)], y = axis[static_cast<std::size_t>(j)];
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) + 0.5 * std::exp(-((x - 1.0) * (x - 1.0) + (y + 1.0) * (y + 1.0)));
+  }
+}
+auto z = pluss::make_series(field, {n, n});
+pane.contour(axis, axis, z);
+fig.save_svg("figure.svg");
 ```
 
 ![Output of Example 1](img/contour-1-default.svg)
 
-Example 2. Explicit levels — only three specific `z` values are contoured, instead of
-`8` automatically spaced ones. Verified via direct SVG diff to render genuinely different
-from Example 1.
+Example 2. A count of levels, as an integer, spaces that many levels evenly. Three levels give a coarse picture.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("contour_explicit_levels");
-auto& pane = fig.pane2();
-auto z = pluss::series::linspace(0.0, 1.0, 16, pluss::ScalarType::Float64).reshape({4, 4});
-pane.contour(std::vector<double>{0.0, 1.0, 2.0, 3.0}, std::vector<double>{0.0, 1.0, 2.0, 3.0}, z,
-             std::vector<double>{0.2, 0.5, 0.8});
-fig.show();
+auto fig = studio("contour_count");
+auto& pane = fig.pane2("p");
+const std::int64_t n = 25;
+std::vector<double> axis(static_cast<std::size_t>(n)), field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i) axis[static_cast<std::size_t>(i)] = -2.0 + 4.0 * i / (n - 1);
+for (std::int64_t i = 0; i < n; ++i) {
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = axis[static_cast<std::size_t>(i)], y = axis[static_cast<std::size_t>(j)];
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) + 0.5 * std::exp(-((x - 1.0) * (x - 1.0) + (y + 1.0) * (y + 1.0)));
+  }
+}
+auto z = pluss::make_series(field, {n, n});
+pane.contour(axis, axis, z, 3);
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 2](img/contour-2-explicit-levels.svg)
+![Output of Example 2](img/contour-2-count.svg)
 
-Example 3. An explicit level *count* of `4` (fewer than the default `8`), automatically
-spaced. Verified via direct SVG diff to render genuinely different from Example 1.
+Example 3. Explicit levels, in a container, are used as given: here the levels at 0.1, 0.5 and 0.9 of a field that runs from 0 to about 1.2.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("contour_level_count");
-auto& pane = fig.pane2();
-auto z = pluss::series::linspace(0.0, 1.0, 16, pluss::ScalarType::Float64).reshape({4, 4});
-pane.contour(std::vector<double>{0.0, 1.0, 2.0, 3.0}, std::vector<double>{0.0, 1.0, 2.0, 3.0}, z, 4);
-fig.show();
+auto fig = studio("contour_levels");
+auto& pane = fig.pane2("p");
+const std::int64_t n = 25;
+std::vector<double> axis(static_cast<std::size_t>(n)), field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i) axis[static_cast<std::size_t>(i)] = -2.0 + 4.0 * i / (n - 1);
+for (std::int64_t i = 0; i < n; ++i) {
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = axis[static_cast<std::size_t>(i)], y = axis[static_cast<std::size_t>(j)];
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) + 0.5 * std::exp(-((x - 1.0) * (x - 1.0) + (y + 1.0) * (y + 1.0)));
+  }
+}
+auto z = pluss::make_series(field, {n, n});
+pane.contour(axis, axis, z, std::vector<double>{0.1, 0.5, 0.9});
+fig.save_svg("figure.svg");
 ```
 
-![Output of Example 3](img/contour-3-level-count.svg)
+![Output of Example 3](img/contour-3-levels.svg)
+
+Example 4. An integer is a count and a container is a list of levels: `4` and `std::vector<double>{4}` are different calls. The first draws four levels, the second one level at the value 4, which a field below 4 does not reach.
+
+```cpp
+auto build = [&](bool count) {
+  auto fig = studio("contour_int_or_container");
+  auto& pane = fig.pane2("p");
+  const std::int64_t n = 25;
+std::vector<double> axis(static_cast<std::size_t>(n)), field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i) axis[static_cast<std::size_t>(i)] = -2.0 + 4.0 * i / (n - 1);
+for (std::int64_t i = 0; i < n; ++i) {
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = axis[static_cast<std::size_t>(i)], y = axis[static_cast<std::size_t>(j)];
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) + 0.5 * std::exp(-((x - 1.0) * (x - 1.0) + (y + 1.0) * (y + 1.0)));
+  }
+}
+auto z = pluss::make_series(field, {n, n});
+  if (count) pane.contour(axis, axis, z, 4);
+  else pane.contour(axis, axis, z, std::vector<double>{4.0});
+  return fig.to_svg();
+};
+std::cout << "count and list differ: " << (build(true) != build(false)) << "\n";
+auto fig = studio("contour_int_or_container_out");
+auto& pane = fig.pane2("p");
+const std::int64_t n = 25;
+std::vector<double> axis(static_cast<std::size_t>(n)), field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i) axis[static_cast<std::size_t>(i)] = -2.0 + 4.0 * i / (n - 1);
+for (std::int64_t i = 0; i < n; ++i) {
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = axis[static_cast<std::size_t>(i)], y = axis[static_cast<std::size_t>(j)];
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) + 0.5 * std::exp(-((x - 1.0) * (x - 1.0) + (y + 1.0) * (y + 1.0)));
+  }
+}
+auto z = pluss::make_series(field, {n, n});
+pane.contour(axis, axis, z, 4);
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+count and list differ: 1
+```
+
+![Output of Example 4](img/contour-4-integer_or_container.svg)
+
+Example 5. Over a heat map of the same field the lines mark where the colours change. Both traces are on one pane, the lines drawn after the map.
+
+```cpp
+auto fig = studio("contour_with_map");
+auto& pane = fig.pane2("p");
+const std::int64_t n = 25;
+std::vector<double> axis(static_cast<std::size_t>(n)), field(static_cast<std::size_t>(n * n));
+for (std::int64_t i = 0; i < n; ++i) axis[static_cast<std::size_t>(i)] = -2.0 + 4.0 * i / (n - 1);
+for (std::int64_t i = 0; i < n; ++i) {
+  for (std::int64_t j = 0; j < n; ++j) {
+    const double x = axis[static_cast<std::size_t>(i)], y = axis[static_cast<std::size_t>(j)];
+    field[static_cast<std::size_t>(i * n + j)] = std::exp(-(x * x + y * y)) + 0.5 * std::exp(-((x - 1.0) * (x - 1.0) + (y + 1.0) * (y + 1.0)));
+  }
+}
+auto z = pluss::make_series(field, {n, n});
+pane.fieldmap(axis, axis, z);
+pane.contour(axis, axis, z, 6);
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 5](img/contour-5-with_map.svg)
+
+Example 6. The coordinates can be uneven: the grid is stretched to them.
+
+```cpp
+auto fig = studio("contour_uneven");
+auto& pane = fig.pane2("p");
+auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3});
+pane.contour(std::vector<double>{0, 1, 4}, std::vector<double>{0, 2, 3}, z, 4);
+fig.save_svg("figure.svg");
+```
+
+![Output of Example 6](img/contour-6-uneven.svg)
+
+Example 7. Inputs that cannot be drawn are refused when the trace is added, and the message names the method and the problem. The pane keeps the traces it had.
+
+```cpp
+auto report = [](const char* what, auto&& call) {
+  auto fig = studio("contour_errors");
+  auto& pane = fig.pane2("p");
+  try {
+    call(pane);
+    std::cout << what << ": accepted\n";
+  } catch (const pluss::Error& e) {
+    std::cout << what << ": " << e.message() << "\n";
+  }
+};
+report("no levels", [](Pane& pane) { auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}); pane.contour(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, z, 0); });
+report("negative levels", [](Pane& pane) { auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}); pane.contour(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, z, -1); });
+report("coordinates do not match z", [](Pane& pane) { auto z = pluss::series::linspace(0.0, 1.0, 9, pluss::ScalarType::Float64).reshape({3, 3}); pane.contour(std::vector<double>{1, 2}, std::vector<double>{1, 2, 3}, z); });
+report("z is not a matrix", [](Pane& pane) { pane.contour(std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}, std::vector<double>{1, 2, 3}); });
+auto fig = studio("contour_errors_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1}, std::vector<double>{0, 1});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+no levels: contour: automatic contour levels must be positive
+negative levels: contour: automatic contour levels must be positive
+coordinates do not match z: contour: x/y must both be vectors with extents matching z columns/rows or full matrices matching z
+z is not a matrix: contour: z must be a rank-2 matrix
+```
+
+![Output of Example 7](img/contour-7-errors.svg)
+
+Example 8. `contour` needs a planar pane. On a volumetric pane it throws at once, naming the kind it needs, and nothing is added.
+
+```cpp
+auto fig = studio("contour_wrong_pane");
+auto& pane = fig.pane3("p");
+try {
+  pane.contour(std::vector<double>{1, 2}, std::vector<double>{1, 2}, pluss::series::linspace(0.0, 1.0, 4, pluss::ScalarType::Float64).reshape({2, 2}));
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
+}
+std::cout << "traces: " << pane.trace_count() << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+contour requires a planar pane
+traces: 0
+```
+
+![Output of Example 8](img/contour-8-wrong_pane.svg)
 
 ## Notes
 
-- Not `noexcept`.
-- `ContourData` also carries `filled` (default `false`) and `elevated` (default `false`)
-  fields with no corresponding constructor parameter on any of the three `contour()`
-  overloads above — they remain `false` for every `contour()` call. Confirmed: these two
-  fields are the exact mechanism behind two sibling trace kinds that reuse `ContourData`
-  under different method names — [`Pane::isoband`](isoband.md) (`filled=true`,
-  `elevated=false`, same three-overload shape, `Planar`) and
-  [`Pane::ridge3`](ridge3.md) (`filled=false`, `elevated=true`, same three-overload shape,
-  `Volumetric`). There is no direct way to set `filled`/`elevated` through `contour()`
-  itself — call `isoband()` or `ridge3()` instead.
-- Building a valid rank-2 `z` from scratch (as in every example above) is most easily done
-  with `pluss::series::linspace(...).reshape({rows, cols})` — see
-  [`Pane::fieldmap`](fieldmap.md) for the identical pattern and its accompanying rank-2
-  validation failure demonstration.
-- `flash::contourplot` (if present) is a convenience wrapper around one of these overloads.
+- Returns the new [`Trace&`](../trace/label.md); the reference stays valid for the life of the pane, and the style calls of the trace ([`label`](../trace/label.md), [`stroke`](../trace/stroke.md), [`width`](../trace/width.md), ...) chain off it.
+- The data is copied into the trace when it is added, so changing the vector afterwards does not change the figure.
 
 ## See Also
 
-- [`Pane::fieldmap`](fieldmap.md): a filled-color rendering of the same kind of `(x, y, z)`
-  scalar field, rather than line contours.
-- [`Pane::isoband`](isoband.md): identical `ContourData`, identical three-overload shape,
-  with `filled=true` — draws solid bands between levels instead of lines.
-- [`Pane::ridge3`](ridge3.md): identical `ContourData`, identical three-overload shape,
-  with `elevated=true` — draws the same contours lifted onto a `Volumetric` 3D pane.
+- [`Pane::isoband`](isoband.md): the filled bands.
+- [`Pane::fieldmap`](fieldmap.md): the heat map.
+- [`Pane::ridge3`](ridge3.md): contour lines lifted into three dimensions.
+- [`Trace::annotate_levels`](../trace/annotate_levels.md): write the level on each line.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="spike.html">
+  <a class="prev-link" href="columns_h.html">
     <span class="label">Previous</span>
-    <span class="title">spike</span>
+    <span class="title">columns_h</span>
   </a>
   <a class="next-link" href="fieldmap.html">
     <span class="label">Next</span>

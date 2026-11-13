@@ -19,15 +19,15 @@ Pane& flash::camera3d(Pane& pane, double azimuth_deg, double elevation_deg,
 A convenience wrapper around [`Pane::lens`](../pane/lens.md): sets a pane's camera
 azimuth/elevation via `lens().look(...)`, its projection style via `lens().project(...)`,
 and its field-of-view via `lens().view_angle(...)`, all in one call instead of three
-chained ones. Two overloads: a `Camera3DOptions` struct, or the same four values passed
-positionally — directly verified byte-identical given equivalent values.
+chained ones. Two overloads: a `Camera3DOptions` value, or the same four values passed
+positionally — identical given equivalent values.
 
 ## Parameters
 
 **pane** (`Pane&`)
     The target pane whose `Lens` is mutated.
 
-**options** (`const Camera3DOptions&`, struct overload)
+**options** (`const Camera3DOptions&`, options overload)
     See the field table below.
 
 **azimuth_deg**, **elevation_deg** (`double`, positional overload)
@@ -70,8 +70,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-camera3d-1-options.svg)
 
-Example 2 (verification, not a distinct rendering). The positional overload renders
-byte-identical to the `Camera3DOptions` overload given equivalent values.
+Example 2 (a comparison, not a new picture). The positional overload renders
+identical to the `Camera3DOptions` overload given equivalent values.
 
 ```cpp
 using namespace pluss::pl;
@@ -105,8 +105,8 @@ auto fig = studio("flash_camera3d_topdown");
 auto& pane = fig.pane3();
 auto gx = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
 auto gy = pluss::series::linspace(-2.5, 2.5, 24, pluss::ScalarType::Float64);
-auto gz = gx.reshape({1, 24}).tile({24, 1}).mul(0.6).sin()
-            .add(gy.reshape({24, 1}).tile({1, 24}).mul(0.7).cos());
+auto gz = gx.reshape({1, 24}).repeat({24, 1}).mul(0.6).sin()
+            .add(gy.reshape({24, 1}).repeat({1, 24}).mul(0.7).cos());
 
 auto& trace = pane.sheet(gx, gy, gz);
 flash::trace_preset3d(trace, flash::TracePreset3D::Surface);

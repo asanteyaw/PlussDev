@@ -7,15 +7,14 @@
 ## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::plot3D(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::plot3D(Pane& pane, Series x, Series y, Series z)
 ```
 
 ## What It Does
 
 A pure, one-line rename of [`flash::path3`](path3.md) — `plot3D(pane, x, y, z)` is exactly
 `path3(pane, x, y, z)`, nothing more. Exists purely to offer a shorter, more
-familiar name some callers already expect. Directly verified byte-identical.
+familiar name some callers already expect. Identical.
 
 ## Parameters
 
@@ -53,8 +52,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-plot3D-1-basic.svg)
 
-Example 2 (verification, not a distinct rendering). `flash::plot3D` renders
-byte-identical to `flash::path3` given the same arguments.
+Example 2 (a comparison, not a new picture). `flash::plot3D` renders
+identical to `flash::path3` given the same arguments.
 
 ```cpp
 using namespace pluss::pl;

@@ -7,10 +7,8 @@
 ## Signature
 
 ```cpp
-template <class JointMapper, class MarginalMapper>
-  requires std::invocable<JointMapper, Pane&> && std::invocable<MarginalMapper, Pane&, bool>
-Studio& flash::jointgrid_map_plot(Studio& studio, JointMapper&& joint_mapper,
-                                   MarginalMapper&& marginal_mapper,
+Studio& flash::jointgrid_map_plot(Studio& studio, std::function<void(Pane&)> joint_mapper,
+                                   std::function<void(Pane&, bool)> marginal_mapper,
                                    double gx = 14.0, double gy = 14.0)
 ```
 
@@ -27,7 +25,7 @@ itself, in this fixed order:
 
 This is the piece [`flash::JointGrid`](JointGrid.md) itself deliberately omits: knowing
 which of its four cells is the top marginal, the joint panel, the right marginal, and the
-unused corner. Directly verified: a call always produces exactly 4 panes.
+unused corner. A call always produces exactly 4 panes.
 
 ```{important} marginal_mapper is called twice, joint_mapper once, corner gets no callback at all
 marginal_mapper(pane, true) draws the top marginal (typically feature X's own
@@ -45,11 +43,11 @@ hidden -- neither mapper ever sees it.
 **studio** (`Studio&`)
     The figure to lay out and populate.
 
-**joint_mapper** (`JointMapper&&`, invocable as `(Pane&) -> void`)
+**joint_mapper** (a callable taking `(Pane&)`)
     Called once, for the bottom-left (joint) panel — typically draws the bivariate
     relationship between the two features.
 
-**marginal_mapper** (`MarginalMapper&&`, invocable as `(Pane&, bool is_top) -> void`)
+**marginal_mapper** (a callable taking `(Pane&, bool is_top)`)
     Called twice: once for the top marginal with `is_top = true`, once for the right
     marginal with `is_top = false`.
 

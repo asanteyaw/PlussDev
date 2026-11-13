@@ -12,160 +12,174 @@ Studio& Studio::row_title(std::int64_t row, std::string text)
 
 ## What It Does
 
-Sets a title drawn once, to the left of an entire **mosaic row**, spanning every pane
-in that row. Unlike [`x_caption`](x_caption.md)/[`y_caption`](y_caption.md)/
-[`z_caption`](z_caption.md), row titles need **no per-pane opt-in** — the row index is
-inferred purely from the figure's mosaic layout (panes sorted by their y-position), so any
-multi-row figure built with [`mosaic(rows, cols)`](mosaic.md) can use `row_title()`
-immediately without touching the individual panes at all.
+Gives one row of the [`mosaic`](mosaic.md) a title, drawn centred above the row, just above the titles of the row's panes, and shared by every pane in the row. It is for labelling a whole row of a grid (a year, a region, a model) without repeating the label in each pane's own title. Rows are numbered from 0 at the top.
 
-`row` is **0-indexed from the top**: row `0` is the topmost mosaic row, row `1` the next one
-down, and so on.
+A title is stored by row number, one per row: calling again for the same row replaces the text, and different rows are independent. A title for a row the grid does not have (a row beyond the last, or any row when there is no mosaic) is stored but draws nothing and takes no room, so it can be set before the mosaic is; it appears as soon as the grid has that row. An empty string draws nothing. A negative row is refused with `pluss::Error` and the stored titles are left as they were.
 
-Calling `row_title()` again with the same `row` overwrites the previous text for that row
-(`std::map` upsert semantics, same as the caption methods).
-
-```{important} row must be non-negative
-Passing a negative `row` throws `std::invalid_argument("row_title: row must be non-negative")`
-immediately — there's no such thing as a "row -1". See Example 4.
-```
+With a [`headline`](headline.md) the first row's title sits below the headline, whatever the headline's height.
 
 ## Parameters
 
 **row** (`std::int64_t`)
-    The 0-indexed mosaic row to title. Must be `>= 0`. There's no upper-bound check at
-    call time — a `row` index beyond the figure's actual row count is simply never matched
-    at render time, drawing nothing (mirroring the caption methods' unmatched-group
-    behavior, except no layout space is reserved for a row that doesn't exist).
+    The row, counted from 0 at the top. Must not be negative.
 
 **text** (`std::string`)
-    The title text for that row.
+    The title. Empty draws nothing.
 
 ## Returns
 
 `Studio&`
-    A reference to the same figure, for chaining.
+    The same figure, for chaining.
 
 ## Examples
 
-Example 1. A two-row mosaic with no row titles set.
+Example 1. A title for each row of a 2 by 2 grid. Each title is centred above its row, shared by the two panes of that row.
 
 ```cpp
-using namespace pluss::pl;
+auto fig = studio("row_title_basic");
+fig.mosaic(2, 2);
+fig.row_title(0, "2024").row_title(1, "2025");
+const char* names[] = {"north", "south", "north", "south"};
+for (const char* name : names) fig.pane2(name).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+std::cout << "titles stored: " << fig.row_titles().size() << "\n";
+fig.save_svg("figure.svg");
+```
 
-auto fig = studio("row_titles_none");
+### Output
+
+```text
+titles stored: 2
+```
+
+![Output of Example 1](img/row_title-1-basic.svg)
+
+Example 2. One title per row. Setting the same row again replaces the text; the other rows are untouched.
+
+```cpp
+auto fig = studio("row_title_replace");
 fig.mosaic(2, 1);
-auto& top = fig.pane2("top");
-top.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
-auto& bottom = fig.pane2("bottom");
-bottom.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
-fig.show();
-
-std::cout << fig.row_titles().empty() << "\n";
+fig.row_title(0, "draft").row_title(1, "keep");
+fig.row_title(0, "final");
+std::cout << "row 0: " << fig.row_titles().at(0) << ", row 1: " << fig.row_titles().at(1) << ", entries: " << fig.row_titles().size() << "\n";
+for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
+row 0: final, row 1: keep, entries: 2
 ```
 
-![Output of Example 1](img/row_title-1-none.svg)
+![Output of Example 2](img/row_title-2-replace.svg)
 
-Example 2. The same layout, with row `0` and row `1` each given a title — no per-pane
-`align_*` opt-in required.
+Example 3. A row the grid does not have draws nothing and takes no room. With no mosaic, and with a row beyond the last, the figure is the figure without the call; the title is kept and appears when the grid grows.
 
 ```cpp
-using namespace pluss::pl;
+auto build = [](bool title, int rows) {
+  auto fig = studio("row_title_norow");
+  fig.mosaic(rows, 1);
+  if (title) fig.row_title(5, "far away");
+  for (int i = 0; i < rows; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  return fig.to_svg();
+};
+std::cout << "row 5 of a 2-row grid draws nothing: " << (build(true, 2) == build(false, 2)) << "\n";
+std::cout << "row 5 of a 6-row grid is drawn: " << (build(true, 6) != build(false, 6)) << "\n";
+auto fig = studio("row_title_norow_out");
+fig.mosaic(6, 1);
+fig.row_title(5, "far away");
+for (int i = 0; i < 6; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
+```
 
-auto fig = studio("row_titles_set");
+### Output
+
+```text
+row 5 of a 2-row grid draws nothing: 1
+row 5 of a 6-row grid is drawn: 1
+```
+
+![Output of Example 3](img/row_title-3-no_row.svg)
+
+Example 4. An empty title draws nothing. The figure equals the one that never set a title for the row, although the empty entry is stored.
+
+```cpp
+auto build = [](bool empty_title) {
+  auto fig = studio("row_title_empty");
+  fig.mosaic(1, 1);
+  if (empty_title) fig.row_title(0, "");
+  fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+  return fig;
+};
+auto with = build(true), without = build(false);
+std::cout << "same figure: " << (with.to_svg() == without.to_svg()) << ", entries stored: " << with.row_titles().size() << "\n";
+without.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+same figure: 1, entries stored: 1
+```
+
+![Output of Example 4](img/row_title-4-empty.svg)
+
+Example 5. Below a headline. A figure with a headline and row titles keeps the titles clear of the headline, including a headline that wraps onto several lines.
+
+```cpp
+auto fig = studio("row_title_headline");
+fig.size(700.0, 520.0);
+fig.headline("A headline long enough that it has to wrap onto a second line of this narrow figure, easily");
 fig.mosaic(2, 1);
-fig.row_title(0, "Q1 Results").row_title(1, "Q2 Results");
-auto& top = fig.pane2("top");
-top.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0}).label("series a");
-auto& bottom = fig.pane2("bottom");
-bottom.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{3.0, 5.0, 4.0, 6.0, 7.0}).label("series b");
-fig.show();
-
-std::cout << fig.row_titles().size() << "\n";
-std::cout << fig.row_titles().at(0) << "\n";
+fig.row_title(0, "first row").row_title(1, "second row");
+for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
 ```
 
-### Output
+![Output of Example 5](img/row_title-5-headline.svg)
 
-```text
-2
-Q1 Results
-```
-
-![Output of Example 2](img/row_title-2-set.svg)
-
-Example 3. `row_title()` chains, so both rows can be set in one statement:
-`fig.row_title(0, "Q1 Results").row_title(1, "Q2 Results")` — already used above.
-Calling it again with the same row overwrites the text.
+Example 6. A negative row is refused. The call throws `pluss::Error`, and the titles already stored are left as they were.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("row_titles_overwrite");
-fig.row_title(0, "First Draft").row_title(0, "Final Version");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0}, std::vector<double>{2.0, 4.0, 3.0}).label("series");
-fig.show();
-
-std::cout << fig.row_titles().at(0) << "\n";
-```
-
-### Output
-
-```text
-Final Version
-```
-
-![Output of Example 3](img/row_title-5-overwrite.svg)
-
-Example 4. A negative row index throws immediately.
-
-```cpp
-using namespace pluss::pl;
-
-auto fig = studio("row_titles_negative");
+auto fig = studio("row_title_invalid");
+fig.mosaic(2, 1);
+fig.row_title(0, "kept");
 try {
-  fig.row_title(-1, "Invalid");
-} catch (const std::invalid_argument& e) {
-  std::cout << e.what() << "\n";
+  fig.row_title(-1, "never stored");
+} catch (const pluss::Error& e) {
+  std::cout << e.message() << "\n";
 }
+std::cout << "entries: " << fig.row_titles().size() << ", row 0: " << fig.row_titles().at(0) << "\n";
+for (int i = 0; i < 2; ++i) fig.pane2("p" + std::to_string(i)).trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
 row_title: row must be non-negative
+entries: 1, row 0: kept
 ```
+
+![Output of Example 6](img/row_title-6-invalid.svg)
 
 ## Notes
 
-- Not `noexcept` (throws on a negative `row`; also constructs/moves a `std::string` and
-  inserts into a `std::map`).
-- No per-pane opt-in needed, unlike the caption family — row index alone determines the
-  match, inferred from mosaic layout at render time.
-- `row` is 0-indexed from the top.
-- Re-calling with the same `row` overwrites (map upsert), not appends.
-- A `row` beyond the figure's actual row count draws nothing and reserves no space —
-  different from an unmatched caption group, which still reserves layout space (see
-  [`x_caption`](x_caption.md)'s important callout).
+- Not `noexcept`: it can throw for a negative row.
+- Titles belong to the figure, not to panes; moving panes between rows moves them under different titles.
+- Remove titles with [`clear_row_title`](clear_row_title.md) and [`clear_row_titles`](clear_row_titles.md); read them with [`row_titles`](row_titles.md).
 
 ## See Also
 
-- [`Studio::row_titles`](row_titles.md): reads back the full map of registered row titles.
-- [`Studio::clear_row_title`](clear_row_title.md) / [`clear_row_titles`](clear_row_titles.md):
-  remove entries set by this method.
-- [`Studio::mosaic`](mosaic.md): defines the row/column grid that `row` indexes into.
+- [`Studio::row_titles`](row_titles.md): reads the titles back.
+- [`Studio::clear_row_title`](clear_row_title.md), [`clear_row_titles`](clear_row_titles.md): remove titles.
+- [`Studio::mosaic`](mosaic.md): the grid the rows belong to.
+- [`Studio::headline`](headline.md): the title of the whole figure.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="z_captions.html">
+  <a class="prev-link" href="rename.html">
     <span class="label">Previous</span>
-    <span class="title">z_captions</span>
+    <span class="title">rename</span>
   </a>
   <a class="next-link" href="row_titles.html">
     <span class="label">Next</span>

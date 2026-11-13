@@ -7,12 +7,10 @@
 ## Signatures
 
 ```cpp
-template <class X, class Y, class Err>
-Trace& flash::whiskplot(Pane& pane, X&& x, Y&& y, Err&& err)
+Trace& flash::whiskplot(Pane& pane, Series x, Series y, Series err)
 
-template <class X, class Y, class YNeg, class YPos, class XNeg, class XPos>
-Trace& flash::whiskplot(Pane& pane, X&& x, Y&& y, YNeg&& yneg, YPos&& ypos,
-                         XNeg&& xneg, XPos&& xpos)
+Trace& flash::whiskplot(Pane& pane, Series x, Series y, Series yneg, Series ypos,
+                         Series xneg, Series xpos)
 ```
 
 ## What It Does

@@ -164,8 +164,8 @@ fig.save_svg("figure.svg");
     <span class="label">Previous</span>
     <span class="title">ScalePolicy</span>
   </a>
-  <a class="next-link" href="Theme.html">
+  <a class="next-link" href="StyleOptions.html">
     <span class="label">Next</span>
-    <span class="title">Theme</span>
+    <span class="title">StyleOptions</span>
   </a>
 </div>

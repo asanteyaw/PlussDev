@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-template <class X, class Y, class Z>
-Trace& flash::plot_wireframe(Pane& pane, X&& x, Y&& y, Z&& z)
+Trace& flash::plot_wireframe(Pane& pane, Series x, Series y, Series z)
 ```
 
 ## What It Does
@@ -16,9 +15,8 @@ Trace& flash::plot_wireframe(Pane& pane, X&& x, Y&& y, Z&& z)
 A pure, one-line rename of [`flash::lattice`](lattice.md)'s bare `(x, y, z)` overload —
 `plot_wireframe(pane, x, y, z)` is exactly `lattice(pane, x, y, z)`, nothing more. Exists
 purely to offer a shorter, more familiar name some callers already expect.
-Directly verified byte-identical. Note only the bare-arity overload is aliased —
-[`flash::lattice`](lattice.md)'s separate-color-matrix `(x, y, z, c)` overload (which has
-no observed rendering effect anyway — see that page's important callout) has no
+Identical. Note only the bare-arity overload is aliased —
+[`flash::lattice`](lattice.md)'s separate-color-matrix `(x, y, z, c)` overload has no
 `plot_wireframe` equivalent.
 
 ## Parameters
@@ -54,8 +52,8 @@ fig.show();
 
 ![Output of Example 1](img/flash-plot-wireframe-1-basic.svg)
 
-Example 2 (verification, not a distinct rendering). `flash::plot_wireframe` renders
-byte-identical to `flash::lattice`'s bare overload given the same arguments.
+Example 2 (a comparison, not a new picture). `flash::plot_wireframe` renders
+identical to `flash::lattice`'s bare overload given the same arguments.
 
 ```cpp
 using namespace pluss::pl;

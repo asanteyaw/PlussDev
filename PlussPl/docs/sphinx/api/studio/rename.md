@@ -12,87 +12,126 @@ Studio& Studio::rename(std::string name)
 
 ## What It Does
 
-Replaces the figure's own name (the same value [`studio(name)`](studio.md)/the constructor
-set) after the fact. Like every mutator on `Studio`, it returns `*this` by reference, so
-calls chain.
+Changes the figure's name, the string [`name`](name.md) returns. The name is bookkeeping and is never drawn, so renaming a figure does not change its SVG, PDF or PNG, and it does not touch the [`headline`](headline.md), the panes or any other setting. The new name replaces the old one completely; an empty string makes the figure unnamed. It is used as the title of the viewer window ([`show`](show.md)) when none is passed, and in the temporary names the exporters create.
+
+Any text is accepted, including empty text and text with spaces or line breaks; nothing validates it and nothing requires it to be unique among figures.
 
 ## Parameters
 
 **name** (`std::string`)
-    The new name. Passing an empty string is valid and clears the name back to its default
-    state.
+    The new name. Empty makes the figure unnamed.
 
 ## Returns
 
 `Studio&`
-    A reference to the same figure, for chaining.
+    The same figure, for chaining.
 
 ## Examples
 
-Example 1. Renaming after construction.
+Example 1. Renaming. The name is replaced, an empty name is allowed, and each call is read back by `name`.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("initial");
-std::cout << fig.name() << "\n";  // "initial"
-
-fig.rename("renamed");
-std::cout << fig.name() << "\n";  // "renamed"
+auto fig = studio("draft");
+std::cout << "before: " << fig.name() << "\n";
+fig.rename("final");
+std::cout << "after: " << fig.name() << "\n";
+fig.rename("");
+std::cout << "empty allowed: '" << fig.name() << "'\n";
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-initial
-renamed
+before: draft
+after: final
+empty allowed: ''
 ```
 
-Example 2. Chaining `rename()` with `headline()` in one expression.
+![Output of Example 1](img/rename-1-basic.svg)
+
+Example 2. No effect on the picture. The SVG is identical before and after renaming, and the figure's size, panes and headline are untouched.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("chain");
-fig.rename("chained").headline("Chained calls");
-
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
-
-std::cout << fig.name() << " / " << fig.headline_text() << "\n";
+auto fig = studio("before");
+fig.headline("Visible");
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+const std::string svg = fig.to_svg();
+fig.rename("after");
+std::cout << "same SVG: " << (fig.to_svg() == svg) << "\n";
+std::cout << "headline kept: " << fig.headline_text() << ", panes: " << fig.pane_count() << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-chained / Chained calls
+same SVG: 1
+headline kept: Visible, panes: 1
 ```
 
-![Output of Example 2](img/rename-2-chain.svg)
+![Output of Example 2](img/rename-2-no_effect.svg)
+
+Example 3. Chaining. `rename` returns the figure, so it chains with the other setters in one statement, in any order.
+
+```cpp
+auto fig = studio("a");
+fig.rename("b").headline("Chained").size(900.0, 500.0).rename("c");
+std::cout << fig.name() << " / " << fig.headline_text() << " / " << fig.extent().width << " x " << fig.extent().height << "\n";
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+c / Chained / 900 x 500
+```
+
+![Output of Example 3](img/rename-3-chain.svg)
+
+Example 4. Any text. Spaces, non-ASCII characters and line breaks are stored as given; the name is not interpreted.
+
+```cpp
+auto fig = studio();
+for (const char* text : {"two words", "naïve — figure", "line one\nline two", " "}) {
+  fig.rename(text);
+  std::cout << "length " << fig.name().size() << ": " << (fig.name() == text) << "\n";
+}
+fig.pane2("p").trend(std::vector<double>{1, 2, 3}, std::vector<double>{2, 4, 3});
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+length 9: 1
+length 17: 1
+length 17: 1
+length 1: 1
+```
+
+![Output of Example 4](img/rename-4-any_text.svg)
 
 ## Notes
 
-- Returns `*this` by reference — chains with any other mutator (`headline()`, `theme()`,
-  `size()`, ...).
-- `name` is bookkeeping only, same as the constructor's `name` parameter — see
-  [`studio()`](studio.md)'s Parameters for what it's actually used for (window titles,
-  fallback export filenames) and what it isn't (nothing renders inside the SVG itself).
+- Not `noexcept`: it moves a string into the figure.
+- To change the text that is drawn, use [`headline`](headline.md); `rename` never changes the picture.
 
 ## See Also
 
-- [`studio()`](studio.md): sets the initial name at construction.
-- [`Studio::name`](name.md): reads the current name back.
-- [`Studio::headline`](headline.md): the sibling text field that **does** render inside
-  the figure.
+- [`Studio::name`](name.md): reads the name back.
+- [`Studio::headline`](headline.md): the visible title.
+- [`studio`](studio.md): the factory that takes the first name.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="studio.html">
+  <a class="prev-link" href="panes.html">
     <span class="label">Previous</span>
-    <span class="title">studio</span>
+    <span class="title">panes</span>
   </a>
-  <a class="next-link" href="theme.html">
+  <a class="next-link" href="row_title.html">
     <span class="label">Next</span>
-    <span class="title">theme</span>
+    <span class="title">row_title</span>
   </a>
 </div>

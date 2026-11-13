@@ -1,0 +1,20 @@
+PAGE = dict(
+    slug='style_options',
+    title='Studio::style_options',
+    signature='const StyleOptions& Studio::style_options() const',
+    intro="Returns the [`StyleOptions`](../types/StyleOptions.md) the figure draws with: the set it was given by [`style`](style.md), or the defaults if it was never given one. It is the way to start a restyling, by taking a copy and changing the values that should differ, and to check what a figure will use.\n\nThe reference is to the figure's own set and follows later calls to `style`; copy it to keep the values.",
+    parameters='*(none)*',
+    returns='`const StyleOptions&`\n    The values the figure draws with.',
+    examples=[
+        dict(id='defaults', text='A figure that was never styled reports the defaults.',
+             code='auto fig = studio("style_options_defaults");\nfig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});\nconst StyleOptions& options = fig.style_options();\nconst StyleOptions defaults;\nstd::cout << "tick font " << options.tick_font_pt << " pt; equal to the defaults: " << (options.tick_font_pt == defaults.tick_font_pt && options.pane_left_inset.relaxed == defaults.pane_left_inset.relaxed) << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='after_style', text='After `style` it reports the set that was given.',
+             code='auto fig = studio("style_options_after");\nfig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});\nStyleOptions given;\ngiven.tick_font_pt = 13.0;\nfig.style(given);\nstd::cout << "tick font " << fig.style_options().tick_font_pt << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='start_from', text="Starting from a figure's own values. A copy of the current set is changed and given back, which changes only the value touched.",
+             code='auto fig = studio("style_options_start");\nfig.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});\nStyleOptions options = fig.style_options();\nconst double before_label = options.axis_label_font_pt;\noptions.tick_font_pt = 15.0;\nfig.style(options);\nstd::cout << "tick font " << fig.style_options().tick_font_pt << ", axis label font unchanged: " << (fig.style_options().axis_label_font_pt == before_label) << "\\n";\nfig.save_svg("figure.svg");'),
+        dict(id='per_figure', text='Each figure has its own set: one figure styled, another not.',
+             code='auto styled = studio("style_options_styled");\nauto plain = studio("style_options_plain");\nStyleOptions options;\noptions.tick_font_pt = 20.0;\nstyled.style(options);\nplain.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});\nstyled.pane2("p").trend(std::vector<double>{0, 1, 2}, std::vector<double>{0, 10, 0});\nstd::cout << "styled " << styled.style_options().tick_font_pt << ", plain " << plain.style_options().tick_font_pt << "\\n";\nstyled.save_svg("figure.svg");'),
+    ],
+    notes='- Reads only; a reference into the figure, valid until the figure is destroyed.',
+    see=['[`Studio::style`](style.md): give the figure a set.', '[`StyleOptions`](../types/StyleOptions.md): every value, with its default.'],
+)

@@ -4,172 +4,205 @@
 
 [Back to Pane API Reference](../../pane_api_reference)
 
-## Signatures
+## Signature
 
 ```cpp
-Pane& Pane::grid(GridStyle style) noexcept   // sets all three axes uniformly
-GridStyle Pane::grid_style() const noexcept  // reads back the aggregate
+Pane& Pane::grid(GridStyle style) noexcept
+GridStyle Pane::grid_style() const noexcept
 ```
 
 ## What It Does
 
-Sets a single, uniform grid style across **all three axes at once** — `GridStyle::None`
-(no gridlines, the default), `GridStyle::Major` (gridlines at major tick positions on
-every axis), or `GridStyle::MajorMinor` (major *and* minor gridlines on every axis).
-`grid_style()` reads the value back.
+Sets the grid lines of every axis of the pane at once, and reads the overall style back.
 
-```{important} grid() and the per-axis toggles are two views onto the SAME underlying flags
-`grid()`/`grid_style()` are not independent state — internally, every axis's `major_grid`
-and `minor_grid` boolean flags (the same fields
-[`x_major_grid`](x_major_grid.md)/[`x_minor_grid`](x_minor_grid.md) and their y/z siblings
-read and write) are what actually drive rendering, and `grid_style_` is kept in sync with
-them in **both directions**:
+| `GridStyle` | Drawing |
+|---|---|
+| `None` | No grid lines. The default. |
+| `Major` | A line at every major tick, on every axis. |
+| `MajorMinor` | Major lines, and a finer line between them. |
 
-- Calling `grid(style)` **overwrites** all six per-axis flags uniformly to match the
-  requested style, discarding any prior per-axis customization. See Example 4.
-- Calling any per-axis toggle (`x_major_grid`, `y_minor_grid`, ...) instead **recomputes**
-  the aggregate `grid_style()` by OR-ing across all three axes: if *any* axis has its
-  minor flag on, the aggregate becomes `MajorMinor`; else if *any* axis has its major flag
-  on, the aggregate becomes `Major`; else `None`. One axis turning a flag off does **not**
-  necessarily drop the aggregate if another axis still has that flag on. See Example 5 on
-  [`x_major_grid`](x_major_grid.md) and Example 1 on [`x_minor_grid`](x_minor_grid.md).
+The style is a shorthand for the six per-axis switches ([`x_major_grid`](x_major_grid.md), [`x_minor_grid`](x_minor_grid.md) and the y and z ones): `grid` sets all six to match the style and so overwrites whatever they held. The reverse holds too: `grid_style()` is worked out from the switches, so it always describes what is drawn. It is `MajorMinor` if any axis has its minor grid on, otherwise `Major` if any axis has its major grid on, otherwise `None`.
 
-In short: `grid()` is a bulk "set everything the same way" convenience; the per-axis
-methods are the more granular, real underlying state, and `grid_style()` is always a
-derived summary of whatever those six flags currently say — never an independently
-stored value of its own.
-```
+Use `grid` for the same grid everywhere, and the per-axis switches for a grid on one axis only (horizontal lines on a bar chart, for instance). Call `grid` first and the switches afterwards; the other order loses the switches.
 
 ## Parameters
 
 **style** (`GridStyle`, setter only)
-    `None`, `Major`, or `MajorMinor` — applied uniformly to all three axes.
+    `None`, `Major` or `MajorMinor`, applied to all three axes.
 
 ## Returns
 
-**Setter:** `Pane&` — a reference to the same pane, for chaining.
-
-**Getter:** `GridStyle` — the current aggregate style.
+**Setter:** `Pane&`, the same pane.
+**Getter:** `GridStyle`, the summary of the six switches.
 
 ## Examples
 
-Example 1. The default: `GridStyle::None`, no gridlines.
+Example 1. The default is `None`: no grid lines on any axis.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("grid_none_default");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-fig.show();
-
-std::cout << (pane.grid_style() == GridStyle::None) << "\n";
+auto fig = studio("grid_default");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
+std::cout << "None: " << (pane.grid_style() == GridStyle::None) << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1
+None: 1
 ```
 
-![Output of Example 1](img/grid-1-none.svg)
+![Output of Example 1](img/grid-1-default.svg)
 
-Example 2. `GridStyle::Major` — major gridlines on every axis.
+Example 2. `GridStyle::Major` draws a line at every major tick of every axis.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("grid_major");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
 pane.grid(GridStyle::Major);
-fig.show();
-
-std::cout << pane.x_axis().major_grid << " " << pane.y_axis().major_grid << " " << pane.z_axis().major_grid << "\n";
-std::cout << pane.x_axis().minor_grid << " " << pane.y_axis().minor_grid << " " << pane.z_axis().minor_grid << "\n";
+std::cout << "x major: " << pane.x_axis().major_grid << ", y major: " << pane.y_axis().major_grid << ", x minor: " << pane.x_axis().minor_grid << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1 1 1
-0 0 0
+x major: 1, y major: 1, x minor: 0
 ```
 
 ![Output of Example 2](img/grid-2-major.svg)
 
-Example 3. `GridStyle::MajorMinor` — major and minor gridlines on every axis.
+Example 3. `GridStyle::MajorMinor` adds a finer line between the major ones.
 
 ```cpp
-using namespace pluss::pl;
-
 auto fig = studio("grid_majorminor");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
 pane.grid(GridStyle::MajorMinor);
-fig.show();
-
-std::cout << pane.x_axis().minor_grid << " " << pane.y_axis().minor_grid << " " << pane.z_axis().minor_grid << "\n";
+std::cout << "x major: " << pane.x_axis().major_grid << ", x minor: " << pane.x_axis().minor_grid << ", y minor: " << pane.y_axis().minor_grid << "\n";
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-1 1 1
+x major: 1, x minor: 1, y minor: 1
 ```
 
 ![Output of Example 3](img/grid-3-majorminor.svg)
 
-Example 4. `grid()` overwrites prior per-axis customization uniformly — a per-axis
-difference set up first (`x_major_grid(true)`, y left `false`) is wiped out by a
-subsequent `grid(GridStyle::Major)` call, which forces both axes to `true`.
+Example 4. Three different figures. The grid is the only difference between them.
 
 ```cpp
-using namespace pluss::pl;
-
-auto fig = studio("grid_overwrites_per_axis");
-auto& pane = fig.pane2();
-pane.trend(std::vector<double>{1.0, 2.0, 3.0, 4.0, 5.0}, std::vector<double>{2.0, 4.0, 3.0, 5.0, 6.0});
-
-pane.x_major_grid(true).y_major_grid(false);
-std::cout << "before grid(): x=" << pane.x_axis().major_grid << " y=" << pane.y_axis().major_grid << "\n";
-
-pane.grid(GridStyle::Major);
-std::cout << "after grid(Major): x=" << pane.x_axis().major_grid << " y=" << pane.y_axis().major_grid << "\n";
+auto build = [&](GridStyle style) {
+  auto fig = studio("grid_compare");
+  auto& pane = fig.pane2("p");
+  pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
+  pane.grid(style);
+  return fig.to_svg();
+};
+const auto none = build(GridStyle::None), major = build(GridStyle::Major), minor = build(GridStyle::MajorMinor);
+std::cout << "none != major: " << (none != major) << ", major != major+minor: " << (major != minor) << "\n";
+auto fig = studio("grid_compare_out");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
+pane.grid(GridStyle::MajorMinor);
+fig.save_svg("figure.svg");
 ```
 
 ### Output
 
 ```text
-before grid(): x=1 y=0
-after grid(Major): x=1 y=1
+none != major: 1, major != major+minor: 1
 ```
+
+![Output of Example 4](img/grid-4-three_styles.svg)
+
+Example 5. `grid` sets every axis the same way, so it overwrites what the per-axis calls set before it. The y axis had a major grid of its own; after `grid(GridStyle::None)` it has none.
+
+```cpp
+auto fig = studio("grid_overwrite");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
+pane.y_major_grid(true);
+std::cout << "before: y major " << pane.y_axis().major_grid << "\n";
+pane.grid(GridStyle::None);
+std::cout << "after:  y major " << pane.y_axis().major_grid << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+before: y major 1
+after:  y major 0
+```
+
+![Output of Example 5](img/grid-5-overwrites.svg)
+
+Example 6. `grid_style()` summarises the per-axis grids: `MajorMinor` if any axis has a minor grid, else `Major` if any axis has a major grid, else `None`. One axis turned off does not lower it while another still has the line.
+
+```cpp
+auto fig = studio("grid_summary");
+auto& pane = fig.pane2("p");
+pane.trend(std::vector<double>{0, 1, 2, 3, 4}, std::vector<double>{0, 2, 1, 3, 2});
+pane.x_major_grid(true).y_major_grid(true);
+std::cout << "two majors: " << static_cast<int>(pane.grid_style()) << " (Major = 1)\n";
+pane.x_major_grid(false);
+std::cout << "x off, y still on: " << static_cast<int>(pane.grid_style()) << "\n";
+pane.y_minor_grid(true);
+std::cout << "y minor added: " << static_cast<int>(pane.grid_style()) << " (MajorMinor = 2)\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+two majors: 1 (Major = 1)
+x off, y still on: 1
+y minor added: 2 (MajorMinor = 2)
+```
+
+![Output of Example 6](img/grid-6-summary.svg)
+
+Example 7. On a 3D pane the style covers all three axes, and the grid is drawn on the faces behind the data.
+
+```cpp
+auto fig = studio("grid_3d");
+auto& pane = fig.pane3("p");
+pane.path3(std::vector<double>{0, 1, 2, 1}, std::vector<double>{0, 1, 0, 2}, std::vector<double>{0, 1, 2, 3});
+pane.grid(GridStyle::Major);
+std::cout << "z major: " << pane.z_axis().major_grid << "\n";
+fig.save_svg("figure.svg");
+```
+
+### Output
+
+```text
+z major: 1
+```
+
+![Output of Example 7](img/grid-7-three_d.svg)
 
 ## Notes
 
-- Both overloads are `noexcept`.
-- `GridStyle::None` is `0`, `Major` is `1`, `MajorMinor` is `2`.
-- See the important callout above: `grid()`/`grid_style()` and the six per-axis toggles
-  are two views onto the same underlying state, kept in sync in both directions, not
-  independent settings.
-- `grid(style)` is the simplest way to apply one grid style uniformly; reach for the
-  per-axis toggles (`x_major_grid`, `y_minor_grid`, ...) when different axes need
-  different grid treatment.
+- Both forms are `noexcept`.
+- The z switches are set on a planar pane too; a planar pane has no z axis, so they draw nothing.
 
 ## See Also
 
-- [`Pane::x_major_grid`](x_major_grid.md) / [`Pane::y_major_grid`](y_major_grid.md) /
-  [`Pane::z_major_grid`](z_major_grid.md): the per-axis major-gridline toggles.
-- [`Pane::x_minor_grid`](x_minor_grid.md) / [`Pane::y_minor_grid`](y_minor_grid.md) /
-  [`Pane::z_minor_grid`](z_minor_grid.md): the per-axis minor-gridline toggles.
+- [`Pane::x_major_grid`](x_major_grid.md), [`x_minor_grid`](x_minor_grid.md): one axis at a time.
+- [`GridStyle`](../types/GridStyle.md): the values it takes.
 
 <div class="pluss-inline-prev-next">
-  <a class="prev-link" href="z_label.html">
+  <a class="prev-link" href="fieldmap.html">
     <span class="label">Previous</span>
-    <span class="title">z_label</span>
+    <span class="title">fieldmap</span>
   </a>
-  <a class="next-link" href="x_major_grid.html">
+  <a class="next-link" href="grid_style.html">
     <span class="label">Next</span>
-    <span class="title">x_major_grid</span>
+    <span class="title">grid_style</span>
   </a>
 </div>

@@ -16,12 +16,12 @@ namespace {
 
 void require_pair_compatible(const Series& first, const Series& second, std::string_view where) {
   if (first.numel() == 0 || second.numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": empty series inputs are not supported");
+    PLUSS_FAIL(std::string(where) + ": empty series inputs are not supported");
   }
   if (first.numel() == second.numel() || first.numel() == 1 || second.numel() == 1) {
     return;
   }
-  throw std::invalid_argument(std::string(where) + ": series lengths must match or broadcast from scalar");
+  PLUSS_FAIL(std::string(where) + ": series lengths must match or broadcast from scalar");
 }
 
 void require_optional_series_compatible(
@@ -33,10 +33,10 @@ void require_optional_series_compatible(
     return;
   }
   if (extra->numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": " + std::string(what) + " cannot be empty");
+    PLUSS_FAIL(std::string(where) + ": " + std::string(what) + " cannot be empty");
   }
   if (!(extra->numel() == target || extra->numel() == 1 || target == 1)) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(where) + ": " + std::string(what) + " length must match the plotted point count or be scalar");
   }
 }
@@ -45,7 +45,7 @@ void require_triplet_compatible(const Series& x, const Series& y, const Series& 
   require_pair_compatible(x, y, where);
   const std::int64_t target = std::max(x.numel(), y.numel());
   if (!(z.numel() == target || z.numel() == 1 || (target == 1 && z.numel() > 0))) {
-    throw std::invalid_argument(std::string(where) + ": z length must match broadcasted x/y length");
+    PLUSS_FAIL(std::string(where) + ": z length must match broadcasted x/y length");
   }
 }
 
@@ -65,12 +65,12 @@ void require_cloud3_compatible(const Cloud3Data& data, std::string_view where) {
 
 void require_fieldmap_compatible(const FieldmapData& data, std::string_view where) {
   if (data.z.dim() != 2) {
-    throw std::invalid_argument(std::string(where) + ": z must be a rank-2 matrix");
+    PLUSS_FAIL(std::string(where) + ": z must be a rank-2 matrix");
   }
   const auto rows = data.z.sizes()[0];
   const auto cols = data.z.sizes()[1];
   if (rows <= 0 || cols <= 0) {
-    throw std::invalid_argument(std::string(where) + ": z must be non-empty");
+    PLUSS_FAIL(std::string(where) + ": z must be non-empty");
   }
 
   const bool x_vector_ok = series_is_vector(data.x) && series_vector_extent(data.x) == cols;
@@ -78,24 +78,24 @@ void require_fieldmap_compatible(const FieldmapData& data, std::string_view wher
   const bool x_matrix_ok = data.x.dim() == 2 && data.x.sizes()[0] == rows && data.x.sizes()[1] == cols;
   const bool y_matrix_ok = data.y.dim() == 2 && data.y.sizes()[0] == rows && data.y.sizes()[1] == cols;
   if (!((x_vector_ok && y_vector_ok) || (x_matrix_ok && y_matrix_ok))) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(where) +
         ": x/y must both be vectors with extents matching z columns/rows or full matrices matching z");
   }
   if (data.color.has_value() && data.color->numel() != data.z.numel()) {
-    throw std::invalid_argument(std::string(where) + ": color data must match z element count");
+    PLUSS_FAIL(std::string(where) + ": color data must match z element count");
   }
 }
 
 void require_ribbon_compatible(const RibbonData& data, std::string_view where) {
   if (!std::isfinite(data.base)) {
-    throw std::invalid_argument(std::string(where) + ": base must be finite");
+    PLUSS_FAIL(std::string(where) + ": base must be finite");
   }
   if (!(data.y.dim() == 1 || data.y.dim() == 2)) {
-    throw std::invalid_argument(std::string(where) + ": y must be a vector or rank-2 matrix");
+    PLUSS_FAIL(std::string(where) + ": y must be a vector or rank-2 matrix");
   }
   if (data.y.numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": y cannot be empty");
+    PLUSS_FAIL(std::string(where) + ": y cannot be empty");
   }
   const std::int64_t rows = data.y.dim() == 2 ? data.y.sizes()[0] : data.y.numel();
   const bool x_vector_ok = series_is_vector(data.x) && series_vector_extent(data.x) == rows;
@@ -103,7 +103,7 @@ void require_ribbon_compatible(const RibbonData& data, std::string_view where) {
                            data.x.sizes()[0] == data.y.sizes()[0] &&
                            data.x.sizes()[1] == data.y.sizes()[1];
   if (!(x_vector_ok || x_matrix_ok)) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(where) + ": x must match the ribbon rows or the full y matrix shape");
   }
 }
@@ -111,66 +111,66 @@ void require_ribbon_compatible(const RibbonData& data, std::string_view where) {
 void require_spike_compatible(const SpikeData& data, std::string_view where) {
   require_pair_compatible(data.x, data.y, where);
   if (!std::isfinite(data.base)) {
-    throw std::invalid_argument(std::string(where) + ": base must be finite");
+    PLUSS_FAIL(std::string(where) + ": base must be finite");
   }
 }
 
 void require_wedge_compatible(const WedgeData& data, std::string_view where) {
   if (!series_is_vector(data.values) || data.values.numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": values must be a non-empty vector");
+    PLUSS_FAIL(std::string(where) + ": values must be a non-empty vector");
   }
   const Series values = data.values.to(ScalarType::Float64).reshape({data.values.numel()});
   const auto host = values.host<double>();
   bool any_positive = false;
   for (double value : host) {
     if (!std::isfinite(value)) {
-      throw std::invalid_argument(std::string(where) + ": values must be finite");
+      PLUSS_FAIL(std::string(where) + ": values must be finite");
     }
     if (value < 0.0) {
-      throw std::invalid_argument(std::string(where) + ": values must be non-negative");
+      PLUSS_FAIL(std::string(where) + ": values must be non-negative");
     }
     any_positive = any_positive || value > 0.0;
   }
   if (!any_positive) {
-    throw std::invalid_argument(std::string(where) + ": at least one value must be positive");
+    PLUSS_FAIL(std::string(where) + ": at least one value must be positive");
   }
   if (data.explode.has_value()) {
     if (!series_is_vector(*data.explode)) {
-      throw std::invalid_argument(std::string(where) + ": explode must be a vector");
+      PLUSS_FAIL(std::string(where) + ": explode must be a vector");
     }
     require_pair_compatible(*data.explode, data.values, where);
   }
   if (!data.labels.empty() && data.labels.size() != static_cast<std::size_t>(data.values.numel())) {
-    throw std::invalid_argument(std::string(where) + ": labels must match the wedge count");
+    PLUSS_FAIL(std::string(where) + ": labels must match the wedge count");
   }
 }
 
 void require_spire3_compatible(const Spire3Data& data, std::string_view where) {
   if (data.z.dim() != 2) {
-    throw std::invalid_argument(std::string(where) + ": z must be a rank-2 matrix");
+    PLUSS_FAIL(std::string(where) + ": z must be a rank-2 matrix");
   }
   const auto rows = data.z.sizes()[0];
   const auto cols = data.z.sizes()[1];
   if (rows <= 0 || cols <= 0) {
-    throw std::invalid_argument(std::string(where) + ": z must be non-empty");
+    PLUSS_FAIL(std::string(where) + ": z must be non-empty");
   }
   const bool x_vector_ok = series_is_vector(data.x) && series_vector_extent(data.x) == cols;
   const bool y_vector_ok = series_is_vector(data.y) && series_vector_extent(data.y) == rows;
   const bool x_matrix_ok = data.x.dim() == 2 && data.x.sizes()[0] == rows && data.x.sizes()[1] == cols;
   const bool y_matrix_ok = data.y.dim() == 2 && data.y.sizes()[0] == rows && data.y.sizes()[1] == cols;
   if (!((x_vector_ok && y_vector_ok) || (x_matrix_ok && y_matrix_ok))) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(where) +
         ": x/y must both be vectors with extents matching z columns/rows or full matrices matching z");
   }
   if (!(data.width > 0.0 && std::isfinite(data.width) && data.depth > 0.0 && std::isfinite(data.depth))) {
-    throw std::invalid_argument(std::string(where) + ": width and depth must be positive and finite");
+    PLUSS_FAIL(std::string(where) + ": width and depth must be positive and finite");
   }
   if (!std::isfinite(data.base)) {
-    throw std::invalid_argument(std::string(where) + ": base must be finite");
+    PLUSS_FAIL(std::string(where) + ": base must be finite");
   }
   if (data.color.has_value() && data.color->numel() != data.z.numel()) {
-    throw std::invalid_argument(std::string(where) + ": color data must match z element count");
+    PLUSS_FAIL(std::string(where) + ": color data must match z element count");
   }
 }
 
@@ -184,7 +184,14 @@ void require_whisk_component(
   }
   const Series& value = *delta;
   if (value.numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": " + std::string(what) + " cannot be empty");
+    PLUSS_FAIL(std::string(where) + ": " + std::string(what) + " cannot be empty");
+  }
+  // A whisker is a length: a negative or non-finite one has no direction to be drawn in.
+  const Series lengths = value.to(ScalarType::Float64).reshape({value.numel()});
+  for (const double length : lengths.host<double>()) {
+    if (!std::isfinite(length) || length < 0.0) {
+      PLUSS_FAIL(std::string(where) + ": " + std::string(what) + " must be finite and non-negative");
+    }
   }
   if (value.numel() == 1) {
     return;
@@ -200,16 +207,16 @@ void require_whisk_component(
   if (value.numel() == y.numel()) {
     return;
   }
-  throw std::invalid_argument(
+  PLUSS_FAIL(
       std::string(where) + ": " + std::string(what) + " must be scalar, match y rows, or match y element count");
 }
 
 void require_whisk_compatible(const WhiskData& data, std::string_view where) {
   if (!(data.y.dim() == 1 || data.y.dim() == 2)) {
-    throw std::invalid_argument(std::string(where) + ": y must be a vector or rank-2 matrix");
+    PLUSS_FAIL(std::string(where) + ": y must be a vector or rank-2 matrix");
   }
   if (data.y.numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": y cannot be empty");
+    PLUSS_FAIL(std::string(where) + ": y cannot be empty");
   }
   const std::int64_t rows = data.y.dim() == 2 ? data.y.sizes()[0] : data.y.numel();
   const bool x_vector_ok = series_is_vector(data.x) && series_vector_extent(data.x) == rows;
@@ -217,7 +224,7 @@ void require_whisk_compatible(const WhiskData& data, std::string_view where) {
                            data.x.sizes()[0] == data.y.sizes()[0] &&
                            data.x.sizes()[1] == data.y.sizes()[1];
   if (!(x_vector_ok || x_matrix_ok)) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(where) + ": x must match the whisk rows or the full y matrix shape");
   }
   require_whisk_component(data.xneg, data.y, where, "xneg");
@@ -226,77 +233,77 @@ void require_whisk_compatible(const WhiskData& data, std::string_view where) {
   require_whisk_component(data.ypos, data.y, where, "ypos");
   if (!data.xneg.has_value() && !data.xpos.has_value() &&
       !data.yneg.has_value() && !data.ypos.has_value()) {
-    throw std::invalid_argument(std::string(where) + ": at least one whisk delta must be present");
+    PLUSS_FAIL(std::string(where) + ": at least one whisk delta must be present");
   }
 }
 
 void require_columns_compatible(const ColumnsData& data, std::string_view where) {
   require_pair_compatible(data.x, data.y, where);
   if (!std::isfinite(data.base)) {
-    throw std::invalid_argument(std::string(where) + ": base must be finite");
+    PLUSS_FAIL(std::string(where) + ": base must be finite");
   }
   if (!(data.width > 0.0 && std::isfinite(data.width))) {
-    throw std::invalid_argument(std::string(where) + ": width must be positive and finite");
+    PLUSS_FAIL(std::string(where) + ": width must be positive and finite");
   }
 }
 
 void require_bucket_compatible(const BucketData& data, std::string_view where) {
   if (!series_is_vector(data.values) || data.values.numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": values must be a non-empty vector");
+    PLUSS_FAIL(std::string(where) + ": values must be a non-empty vector");
   }
   if (data.bins <= 0) {
-    throw std::invalid_argument(std::string(where) + ": bins must be positive");
+    PLUSS_FAIL(std::string(where) + ": bins must be positive");
   }
   if (data.range.has_value() && !(std::isfinite(data.range->low) && std::isfinite(data.range->high) &&
                                   data.range->high > data.range->low)) {
-    throw std::invalid_argument(std::string(where) + ": range must be finite and increasing");
+    PLUSS_FAIL(std::string(where) + ": range must be finite and increasing");
   }
 }
 
 void require_quartet_compatible(const QuartetData& data, std::string_view where) {
   if (!series_is_vector(data.values) || data.values.numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": values must be a non-empty vector");
+    PLUSS_FAIL(std::string(where) + ": values must be a non-empty vector");
   }
   if (data.group.has_value()) {
     if (!series_is_vector(*data.group)) {
-      throw std::invalid_argument(std::string(where) + ": group positions must be a vector");
+      PLUSS_FAIL(std::string(where) + ": group positions must be a vector");
     }
     require_pair_compatible(*data.group, data.values, where);
   }
   if (!(data.width > 0.0 && std::isfinite(data.width))) {
-    throw std::invalid_argument(std::string(where) + ": width must be positive and finite");
+    PLUSS_FAIL(std::string(where) + ": width must be positive and finite");
   }
 }
 
 void require_violin_compatible(const ViolinData& data, std::string_view where) {
   if (!series_is_vector(data.values) || data.values.numel() == 0) {
-    throw std::invalid_argument(std::string(where) + ": values must be a non-empty vector");
+    PLUSS_FAIL(std::string(where) + ": values must be a non-empty vector");
   }
   if (data.group.has_value()) {
     if (!series_is_vector(*data.group)) {
-      throw std::invalid_argument(std::string(where) + ": group positions must be a vector");
+      PLUSS_FAIL(std::string(where) + ": group positions must be a vector");
     }
     require_pair_compatible(*data.group, data.values, where);
   }
   if (!(data.options.width > 0.0 && std::isfinite(data.options.width))) {
-    throw std::invalid_argument(std::string(where) + ": width must be positive and finite");
+    PLUSS_FAIL(std::string(where) + ": width must be positive and finite");
   }
   if (!(data.options.bw_adjust > 0.0 && std::isfinite(data.options.bw_adjust))) {
-    throw std::invalid_argument(std::string(where) + ": bw_adjust must be positive and finite");
+    PLUSS_FAIL(std::string(where) + ": bw_adjust must be positive and finite");
   }
   if (!(data.options.cut >= 0.0 && std::isfinite(data.options.cut))) {
-    throw std::invalid_argument(std::string(where) + ": cut must be non-negative and finite");
+    PLUSS_FAIL(std::string(where) + ": cut must be non-negative and finite");
   }
 }
 
 void require_surface_compatible(const SurfaceData& data, std::string_view where) {
   if (data.z.dim() != 2) {
-    throw std::invalid_argument(std::string(where) + ": z must be a rank-2 matrix");
+    PLUSS_FAIL(std::string(where) + ": z must be a rank-2 matrix");
   }
   const auto rows = data.z.sizes()[0];
   const auto cols = data.z.sizes()[1];
   if (rows <= 1 || cols <= 1) {
-    throw std::invalid_argument(std::string(where) + ": z must be at least 2x2");
+    PLUSS_FAIL(std::string(where) + ": z must be at least 2x2");
   }
 
   const bool x_vector_ok = series_is_vector(data.x) && series_vector_extent(data.x) == cols;
@@ -305,7 +312,7 @@ void require_surface_compatible(const SurfaceData& data, std::string_view where)
   const bool y_matrix_ok = data.y.dim() == 2 && data.y.sizes()[0] == rows && data.y.sizes()[1] == cols;
 
   if (!((x_vector_ok && y_vector_ok) || (x_matrix_ok && y_matrix_ok))) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(where) +
         ": x/y must both be vectors with extents matching z columns/rows or full matrices matching z");
   }
@@ -313,19 +320,19 @@ void require_surface_compatible(const SurfaceData& data, std::string_view where)
   if (data.color.has_value()) {
     const Series& color = *data.color;
     if (color.numel() != data.z.numel()) {
-      throw std::invalid_argument(std::string(where) + ": color data must match z element count");
+      PLUSS_FAIL(std::string(where) + ": color data must match z element count");
     }
   }
 }
 
 void require_contour_compatible(const ContourData& data, std::string_view where) {
   if (data.z.dim() != 2) {
-    throw std::invalid_argument(std::string(where) + ": z must be a rank-2 matrix");
+    PLUSS_FAIL(std::string(where) + ": z must be a rank-2 matrix");
   }
   const auto rows = data.z.sizes()[0];
   const auto cols = data.z.sizes()[1];
   if (rows <= 1 || cols <= 1) {
-    throw std::invalid_argument(std::string(where) + ": z must be at least 2x2");
+    PLUSS_FAIL(std::string(where) + ": z must be at least 2x2");
   }
 
   const bool x_vector_ok = series_is_vector(data.x) && series_vector_extent(data.x) == cols;
@@ -334,47 +341,47 @@ void require_contour_compatible(const ContourData& data, std::string_view where)
   const bool y_matrix_ok = data.y.dim() == 2 && data.y.sizes()[0] == rows && data.y.sizes()[1] == cols;
 
   if (!((x_vector_ok && y_vector_ok) || (x_matrix_ok && y_matrix_ok))) {
-    throw std::invalid_argument(
+    PLUSS_FAIL(
         std::string(where) +
         ": x/y must both be vectors with extents matching z columns/rows or full matrices matching z");
   }
 
   if (data.levels.empty() && data.auto_levels <= 0) {
-    throw std::invalid_argument(std::string(where) + ": automatic contour levels must be positive");
+    PLUSS_FAIL(std::string(where) + ": automatic contour levels must be positive");
   }
 
   for (const double level : data.levels) {
     if (!std::isfinite(level)) {
-      throw std::invalid_argument(std::string(where) + ": contour levels must be finite");
+      PLUSS_FAIL(std::string(where) + ": contour levels must be finite");
     }
   }
 }
 
 void require_isoshell_compatible(const IsoShellData& data, std::string_view where) {
   if (data.values.dim() != 3) {
-    throw std::invalid_argument(std::string(where) + ": values must be a rank-3 field");
+    PLUSS_FAIL(std::string(where) + ": values must be a rank-3 field");
   }
   const auto nx = data.values.sizes()[0];
   const auto ny = data.values.sizes()[1];
   const auto nz = data.values.sizes()[2];
   if (nx <= 1 || ny <= 1 || nz <= 1) {
-    throw std::invalid_argument(std::string(where) + ": values must have at least 2 samples per axis");
+    PLUSS_FAIL(std::string(where) + ": values must have at least 2 samples per axis");
   }
   if (!series_is_vector(data.x) || series_vector_extent(data.x) != nx) {
-    throw std::invalid_argument(std::string(where) + ": x must be a vector matching values axis-0 extent");
+    PLUSS_FAIL(std::string(where) + ": x must be a vector matching values axis-0 extent");
   }
   if (!series_is_vector(data.y) || series_vector_extent(data.y) != ny) {
-    throw std::invalid_argument(std::string(where) + ": y must be a vector matching values axis-1 extent");
+    PLUSS_FAIL(std::string(where) + ": y must be a vector matching values axis-1 extent");
   }
   if (!series_is_vector(data.z) || series_vector_extent(data.z) != nz) {
-    throw std::invalid_argument(std::string(where) + ": z must be a vector matching values axis-2 extent");
+    PLUSS_FAIL(std::string(where) + ": z must be a vector matching values axis-2 extent");
   }
   if (data.levels.empty() && data.auto_levels <= 0) {
-    throw std::invalid_argument(std::string(where) + ": automatic levels must be positive");
+    PLUSS_FAIL(std::string(where) + ": automatic levels must be positive");
   }
   for (const double level : data.levels) {
     if (!std::isfinite(level)) {
-      throw std::invalid_argument(std::string(where) + ": levels must be finite");
+      PLUSS_FAIL(std::string(where) + ": levels must be finite");
     }
   }
 }
@@ -400,7 +407,7 @@ void validate_trace_payload(TraceKind kind, const TracePayload& payload) {
         } else if constexpr (std::is_same_v<Payload, WhiskData>) {
           require_whisk_compatible(data, "whisk");
         } else if constexpr (std::is_same_v<Payload, ColumnsData>) {
-          require_columns_compatible(data, "columns");
+          require_columns_compatible(data, data.horizontal ? "columns_h" : "columns");
         } else if constexpr (std::is_same_v<Payload, BucketData>) {
           require_bucket_compatible(data, "bucket");
         } else if constexpr (std::is_same_v<Payload, QuartetData>) {
@@ -410,7 +417,7 @@ void validate_trace_payload(TraceKind kind, const TracePayload& payload) {
         } else if constexpr (std::is_same_v<Payload, RadialData>) {
           require_pair_compatible(data.theta, data.radius, "radial");
         } else if constexpr (std::is_same_v<Payload, ContourData>) {
-          require_contour_compatible(data, "contour");
+          require_contour_compatible(data, kind == TraceKind::Isoband ? "isoband" : kind == TraceKind::Ridge3 ? "ridge3" : "contour");
         } else if constexpr (std::is_same_v<Payload, IsoShellData>) {
           require_isoshell_compatible(data, "isoshell");
         } else if constexpr (std::is_same_v<Payload, Path3Data>) {
@@ -468,10 +475,10 @@ void require_tick_spec(const Series& positions,
                        pluss::msharp::RangeView::Of<std::string_view> labels,
                        std::string_view axis_name) {
   if (!series_is_vector(positions) || positions.numel() == 0) {
-    throw std::invalid_argument(std::string(axis_name) + ": tick positions must be a non-empty vector");
+    PLUSS_FAIL(std::string(axis_name) + ": tick positions must be a non-empty vector");
   }
   if (labels.size() != static_cast<std::size_t>(positions.numel())) {
-    throw std::invalid_argument(std::string(axis_name) + ": tick labels must match the tick positions");
+    PLUSS_FAIL(std::string(axis_name) + ": tick labels must match the tick positions");
   }
 }
 
@@ -490,10 +497,10 @@ void require_category_spec(
     double step,
     std::string_view where) {
   if (labels.empty()) {
-    throw std::invalid_argument(std::string(where) + ": labels cannot be empty");
+    PLUSS_FAIL(std::string(where) + ": labels cannot be empty");
   }
   if (!std::isfinite(first) || !std::isfinite(step) || step == 0.0) {
-    throw std::invalid_argument(std::string(where) + ": first/step must be finite and step cannot be zero");
+    PLUSS_FAIL(std::string(where) + ": first/step must be finite and step cannot be zero");
   }
 }
 
@@ -511,7 +518,7 @@ void require_category_spec(
 
 void require_range(Range1d range, std::string_view where) {
   if (!finite_and_increasing(range)) {
-    throw std::invalid_argument(std::string(where) + ": range must be finite and strictly increasing");
+    PLUSS_FAIL(std::string(where) + ": range must be finite and strictly increasing");
   }
 }
 
@@ -520,40 +527,40 @@ void require_scale_policy(ScalePolicy scale, std::string_view where) {
     return;
   }
   if (!std::isfinite(scale.base) || scale.base <= 1.0) {
-    throw std::invalid_argument(std::string(where) + ": symlog base must be finite and greater than 1");
+    PLUSS_FAIL(std::string(where) + ": symlog base must be finite and greater than 1");
   }
   if (!std::isfinite(scale.linear_threshold) || scale.linear_threshold <= 0.0) {
-    throw std::invalid_argument(std::string(where) + ": symlog linear threshold must be finite and positive");
+    PLUSS_FAIL(std::string(where) + ": symlog linear threshold must be finite and positive");
   }
 }
 
 void require_scale_compatible_range(Range1d range, ScalePolicy scale, std::string_view where) {
   if (scale.kind == ScaleKind::Log10 && (range.low <= 0.0 || range.high <= 0.0)) {
-    throw std::invalid_argument(std::string(where) + ": log10 limits must be strictly positive");
+    PLUSS_FAIL(std::string(where) + ": log10 limits must be strictly positive");
   }
 }
 
 void require_font_scale(double scale, std::string_view where) {
   if (!std::isfinite(scale) || scale <= 0.0) {
-    throw std::invalid_argument(std::string(where) + ": scale must be finite and positive");
+    PLUSS_FAIL(std::string(where) + ": scale must be finite and positive");
   }
 }
 
 void require_rotation_angle(double degrees, std::string_view where) {
   if (!std::isfinite(degrees)) {
-    throw std::invalid_argument(std::string(where) + ": angle must be finite");
+    PLUSS_FAIL(std::string(where) + ": angle must be finite");
   }
 }
 
 void require_auto_tick_decimals(int decimals, std::string_view where) {
   if (decimals < 0 || decimals > 8) {
-    throw std::invalid_argument(std::string(where) + ": decimals must be in [0, 8]");
+    PLUSS_FAIL(std::string(where) + ": decimals must be in [0, 8]");
   }
 }
 
 void require_axis_gap(double points, std::string_view where) {
   if (!std::isfinite(points) || points < 0.0) {
-    throw std::invalid_argument(std::string(where) + ": spacing must be finite and non-negative");
+    PLUSS_FAIL(std::string(where) + ": spacing must be finite and non-negative");
   }
 }
 
@@ -1017,7 +1024,7 @@ Pane& Pane::caption(std::string text) {
 
 Pane& Pane::rule_x(double value, std::string label) {
   if (!std::isfinite(value)) {
-    throw std::invalid_argument("rule_x: value must be finite");
+    PLUSS_FAIL("rule_x: value must be finite");
   }
   rules_.push_back(make_rule(*this, CueAxis::X, value, std::move(label)));
   return *this;
@@ -1025,7 +1032,7 @@ Pane& Pane::rule_x(double value, std::string label) {
 
 Pane& Pane::rule_y(double value, std::string label) {
   if (!std::isfinite(value)) {
-    throw std::invalid_argument("rule_y: value must be finite");
+    PLUSS_FAIL("rule_y: value must be finite");
   }
   rules_.push_back(make_rule(*this, CueAxis::Y, value, std::move(label)));
   return *this;
@@ -1033,7 +1040,7 @@ Pane& Pane::rule_y(double value, std::string label) {
 
 Pane& Pane::rule_z(double value, std::string label) {
   if (!std::isfinite(value)) {
-    throw std::invalid_argument("rule_z: value must be finite");
+    PLUSS_FAIL("rule_z: value must be finite");
   }
   rules_.push_back(make_rule(*this, CueAxis::Z, value, std::move(label)));
   return *this;
@@ -1059,7 +1066,7 @@ Pane& Pane::band_z(Range1d span, std::string label) {
 
 Pane& Pane::pin(std::string text, double x, double y, double offset_x, double offset_y) {
   if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(offset_x) || !std::isfinite(offset_y)) {
-    throw std::invalid_argument("pin: anchor and offsets must be finite");
+    PLUSS_FAIL("pin: anchor and offsets must be finite");
   }
   pins_.push_back(make_pin(*this, std::move(text), Vec3d{x, y, 0.0}, offset_x, offset_y));
   return *this;
@@ -1068,7 +1075,7 @@ Pane& Pane::pin(std::string text, double x, double y, double offset_x, double of
 Pane& Pane::pin(std::string text, Vec3d anchor, double offset_x, double offset_y) {
   if (!std::isfinite(anchor.x) || !std::isfinite(anchor.y) || !std::isfinite(anchor.z) ||
       !std::isfinite(offset_x) || !std::isfinite(offset_y)) {
-    throw std::invalid_argument("pin: anchor and offsets must be finite");
+    PLUSS_FAIL("pin: anchor and offsets must be finite");
   }
   pins_.push_back(make_pin(*this, std::move(text), anchor, offset_x, offset_y));
   return *this;
@@ -1155,7 +1162,7 @@ Pane& Pane::place(std::int64_t row, std::int64_t col) {
 
 Pane& Pane::place(std::int64_t row, std::int64_t col, std::int64_t row_span, std::int64_t col_span) {
   if (row < 0 || col < 0 || row_span <= 0 || col_span <= 0) {
-    throw std::invalid_argument("place: row/col must be non-negative and spans must be positive");
+    PLUSS_FAIL("place: row/col must be non-negative and spans must be positive");
   }
   placement_ = PanePlacement{row, col, row_span, col_span, true};
   return *this;
@@ -1163,13 +1170,13 @@ Pane& Pane::place(std::int64_t row, std::int64_t col, std::int64_t row_span, std
 
 void Pane::ensure_planar_(std::string_view op) const {
   if (kind_ != PaneKind::Planar) {
-    throw std::logic_error(std::string(op) + " requires a planar pane");
+    PLUSS_FAIL(std::string(op) + " requires a planar pane");
   }
 }
 
 void Pane::ensure_volumetric_(std::string_view op) const {
   if (kind_ != PaneKind::Volumetric) {
-    throw std::logic_error(std::string(op) + " requires a volumetric pane");
+    PLUSS_FAIL(std::string(op) + " requires a volumetric pane");
   }
 }
 
@@ -1179,6 +1186,8 @@ Trace& Pane::add_trace_(TraceKind kind, TracePayload payload) {
   Trace& trace = traces_.back();
   trace.stroke(theme_.accent(traces_.size() - 1));
   trace.palette(theme_.surface_palette());
+  trace.stroke_explicit_ = false; // the theme accent is a default, not a choice
+  trace.width_explicit_ = false;
   return trace;
 }
 

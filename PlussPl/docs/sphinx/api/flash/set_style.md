@@ -28,8 +28,7 @@ Two independent overloads sharing the `set_style` name, plus an exact-alias pair
   visibility on all three axes, and (for the three gridless styles) minor-grid
   visibility too.
 
-`axes_style` is a pure alias of `set_style` for both overloads — verified
-byte-identical below.
+`axes_style` is a pure alias of `set_style` for both overloads, as the examples below show.
 
 ## Parameters
 
@@ -106,7 +105,7 @@ fig.show();
 ![Output of Example 2](img/flash-set-style-flashstyle-light.svg)
 
 Example 3. `(Pane&, FlashStyle::Darkgrid)` — same data, grid-family style — confirmed to
-render genuinely differently from Example 2's `Light` style via direct SVG comparison.
+render differently from Example 2's `Light` style.
 
 ```cpp
 using namespace pluss::pl;
@@ -133,7 +132,7 @@ set_style(Light) vs set_style(Darkgrid) differ: 1
 
 ![Output of Example 3](img/flash-set-style-flashstyle-darkgrid.svg)
 
-Example 4 (verification, not a distinct rendering). `axes_style` is byte-identical to
+Example 4 (a comparison, not a new picture). `axes_style` is identical to
 `set_style` for both overloads.
 
 ```cpp
