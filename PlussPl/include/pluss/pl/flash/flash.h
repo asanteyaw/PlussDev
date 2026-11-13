@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/error.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/codeh.h"
 #include "pluss/codeh/timeline_factory.h"

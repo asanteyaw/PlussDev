@@ -489,6 +489,20 @@ Time estimate:
 - image regression tests for every new primitive
 - every convenience wrapper must lower into one canonical implementation path
 
+### 15.1 Layout, style constants and clamps
+
+A plotting library breaks when a number that was right for one figure is wrong for the next: longer tick labels, a labels rotated to 60 or 90 degrees, a bigger font, a smaller figure. These rules keep the renderer correct across those cases and keep it maintainable.
+
+1. **Anything derived from content gets a formula, with no cap.** Distances that depend on what is drawn are computed from the measured content: the axis-label gap from the extent of the longest tick label (its width and one line of height, turned by the label rotation and projected on the direction the label is pushed), the headline wrap width from the figure width, a line height from the font size. A fixed number here is right for one case and wrong for the others.
+2. **Style defaults are named, in em or points, and live in one place.** A default that is a matter of taste (tick length, the gap between a tick and its text, the base gap to an axis label, line height, a padding) is a named constant in `src/plotism/render/style_defaults.h`, expressed relative to the font size it sits beside (em) or in points, with a comment that says what it is. Renderer code uses the name. To change the look, change the constant once and it follows everywhere, the way `rcParams` works. A bare literal inline in a layout or drawing routine is a defect: it cannot be found, and changing it means chasing every copy.
+3. **A clamp is justified only as a guard, and each guard is documented.** The legitimate ones are: validity (`alpha` in 0 to 1), numeric safety (avoiding a division by zero, a minimum visible size so a mark never vanishes), a resource limit (the largest raster a PNG export will attempt), and an explicit readability policy that is documented to the user (a cap on the number of automatic ticks). A clamp is never used to make a derived distance look right: if a formula needs a bound to behave, the formula is wrong.
+4. **No clamp may silently drop information.** A size or a count that encodes data is not capped: a marker whose size encodes a value keeps growing with it, and text is never truncated without a visible mark. Where something has to be cut, it is cut visibly (an ellipsis or a "+N more" line) and the cut is documented.
+
+When a constant is needed that is not yet in `style_defaults.h`, add it there, with its unit and a comment, and use the name. Inline-style scattering of numbers across the renderer is the failure these rules exist to prevent.
+
+
+**Runtime style (added 2026-11-12).** The named defaults are no longer compile-time constants in the renderer: they are the members of `StyleOptions` (`include/pluss/pl/style.h`), the single maintained source of every number that is a matter of taste, each with a one-line meaning. A figure draws with the defaults unless `Studio::style` gives it another set; the renderer reads the active set through `look()` for the duration of a draw (`style::Scope` in `render_svg`/`render_pdf`). Rules that follow: add a new taste number as a member with its default and meaning (the public type page is generated from the header, so an undocumented member shows up as a gap); never write the number in renderer code; a clamp stays only if it is a guard or a readability policy that matplotlib or MATLAB also apply, and then it is a named member too. Algorithmic constants with a literature meaning (Silverman's bandwidth, the IQR-to-sigma ratio) are members as well, so that they are visible and documented, not hidden in a function.
+
 ## 16. Immediate Recommendation
 
 Start with a lean, explicit v1 centered on:
