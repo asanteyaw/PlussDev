@@ -27,3 +27,17 @@ Thank you for helping improve the PlussII C++ technical computing ecosystem. Con
 5. Open a pull request against `main`. Describe the problem, your solution, platforms checked, and any limitations. Address review feedback in the pull request.
 
 The [installation guide](docs/sphinx/installation.md) covers optional dependencies and source builds. The source is available under the [BSD 3-Clause License](LICENSE).
+
+## Maintainer release checks
+
+Use a `validation/<topic>` branch while preparing a release. Each push to that
+branch automatically builds and checks the Windows distribution, including the
+built-in renderer and Atlas view checks. A newer push cancels the older run for
+the same branch. This catches Windows-specific compile and link failures before
+the final source commit.
+
+After Windows passes, merge or squash the finished change into `main`. The
+distribution verification workflow then runs on Windows, Ubuntu, and macOS.
+Tag a version only after that full check passes. The tag starts the release
+workflow, which builds and publishes the platform ZIPs only when all archive
+jobs succeed.
