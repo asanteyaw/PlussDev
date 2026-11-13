@@ -41,6 +41,7 @@ on:
         options:
           - all
           - windows
+          - unix
 
 permissions:
   contents: read
@@ -54,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON((inputs.platform == 'windows' || startsWith(github.ref, 'refs/heads/validation/')) && '["windows-2022"]' || '["ubuntu-24.04","windows-2022","macos-15"]') }}
+        os: ${{ fromJSON((inputs.platform == 'windows' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/validation/'))) && '["windows-2022"]' || (inputs.platform == 'unix' && '["ubuntu-24.04","macos-15"]' || '["ubuntu-24.04","windows-2022","macos-15"]')) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 120
 
