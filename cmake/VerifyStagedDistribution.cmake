@@ -13,6 +13,17 @@ if(NOT staged_count EQUAL 1)
 endif()
 
 list(GET staged_dirs 0 staged_dir)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+execute_process(
+  COMMAND "${Python3_EXECUTABLE}"
+      "${DISTRIBUTION_SOURCE_DIR}/tools/check_distribution_relocation.py"
+      "${staged_dir}" "${DISTRIBUTION_SOURCE_DIR}" "${DISTRIBUTION_BUILD_DIR}"
+  RESULT_VARIABLE relocation_result
+)
+if(NOT relocation_result EQUAL 0)
+  message(FATAL_ERROR "Staged PlussII distribution contains build-host paths")
+endif()
+
 get_filename_component(staged_name "${staged_dir}" NAME)
 set(DISTRIBUTION_ARCHIVE "${DISTRIBUTION_BUILD_DIR}/${staged_name}.zip")
 execute_process(

@@ -16,9 +16,7 @@ function(pluss_register_sdk_zip_link ZIP_LIBRARY)
     endif()
 
     if(NOT ZIP_LIBRARY OR NOT EXISTS "${ZIP_LIBRARY}")
-        message(WARNING
-            "pluss_register_sdk_zip_link called without a concrete libzip path. "
-            "SDK export will not package libzip automatically.")
+        message(WARNING "libzip target was requested without a library")
         return()
     endif()
 
@@ -27,13 +25,8 @@ function(pluss_register_sdk_zip_link ZIP_LIBRARY)
         $<BUILD_INTERFACE:${ZIP_LIBRARY}>
     )
 
-    get_filename_component(_pluss_zip_realpath "${ZIP_LIBRARY}" REALPATH)
-    get_filename_component(_pluss_zip_filename "${_pluss_zip_realpath}" NAME)
-    install(FILES "${_pluss_zip_realpath}"
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
     target_link_libraries(pluss_sdk_zip_link INTERFACE
-        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${_pluss_zip_filename}>
+        $<INSTALL_INTERFACE:Pluss::Zip>
     )
     install(TARGETS pluss_sdk_zip_link EXPORT PlussTargets)
 endfunction()
@@ -199,6 +192,15 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
+
+# File paths embedded by diagnostics and line tables must not identify the
+# machine that produced a downloadable distribution.
+if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang|GNU")
+    add_compile_options(
+        $<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.>
+        $<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:-ffile-prefix-map=${CMAKE_BINARY_DIR}=.>
+    )
+endif()
 
 option(
     PLUSS_TRACE_FRIENDLY_RELEASE
@@ -570,6 +572,9 @@ set(PLUSS_SDK_CONSUMER_BUILD_DIR
 add_custom_target(plussii_distribution_stage
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PLUSS_SDK_STAGING_DIR}"
     COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --prefix "${PLUSS_SDK_STAGING_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E rm -f
+        "${PLUSS_SDK_STAGING_DIR}/bin/curl-config"
+        "${PLUSS_SDK_STAGING_DIR}/lib/pkgconfig/libcurl.pc"
     DEPENDS
         pluss
         PlussPl

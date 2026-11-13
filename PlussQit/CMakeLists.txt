@@ -774,7 +774,9 @@ if(PLUSSQIT_UNISTRING_INCLUDE_DIR AND PLUSSQIT_UNISTRING_LIBRARY)
   target_compile_definitions(
     plussqit_coden PRIVATE PLUSSQIT_HAS_LIBUNISTRING=1)
   target_link_libraries(
-    plussqit_coden PUBLIC ${PLUSSQIT_UNISTRING_LIBRARY})
+    plussqit_coden PUBLIC
+      $<BUILD_INTERFACE:${PLUSSQIT_UNISTRING_LIBRARY}>
+      $<INSTALL_INTERFACE:Pluss::Unistring>)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
@@ -1440,6 +1442,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   PATTERN "optim.h" EXCLUDE
   PATTERN "optim_fwd.h" EXCLUDE
   PATTERN "parameter_pack.h" EXCLUDE
+  PATTERN "cmake_run_commands.txt" EXCLUDE
   PATTERN ".DS_Store" EXCLUDE
 )
 
