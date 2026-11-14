@@ -28,7 +28,7 @@ int main() {
   const double cov = rho * sx * sy;  // d[X, Y] / dt
   std::cout << std::fixed << std::setprecision(5);
   const auto product = x.calc.diff.ito_product(mu_x, sigma_x, y);
-  std::cout << "product:   drift " << product.drift.item<double>() << "   (X mu_y + Y mu_x + cov = "
+  std::cout << "product:   drift " << product.drift.squeeze().item<double>() << "   (X mu_y + Y mu_x + cov = "
             << xv * my + yv * mx + cov << ")\n";
   std::cout << "           diffusion (" << product.diffusion.host<double>()[0] << ", "
             << product.diffusion.host<double>()[1] << ")   (X sigma_y + Y sigma_x = (" << xv * rho * sy + yv * sx << ", "
@@ -36,14 +36,14 @@ int main() {
 
   const auto quotient = x.calc.diff.ito_quotient(mu_x, sigma_x, y);
   const double syy = sy * sy;
-  std::cout << "quotient:  drift " << quotient.drift.item<double>() << "   (mu_x/Y - X mu_y/Y^2 - cov/Y^2 + X sigma_y^2/Y^3 = "
+  std::cout << "quotient:  drift " << quotient.drift.squeeze().item<double>() << "   (mu_x/Y - X mu_y/Y^2 - cov/Y^2 + X sigma_y^2/Y^3 = "
             << mx / yv - xv * my / (yv * yv) - cov / (yv * yv) + xv * syy / (yv * yv * yv) << ")\n";
 
   // Any other function of the two processes: the squared spread (X - Y)^2.
   const auto spread = x.calc.diff.ito(
       [](const pluss::Series& a, const pluss::Series& b) { return a.sub(b).pow(2.0); }, mu_x, sigma_x, y);
   const double var_spread = sx * sx + syy - 2 * cov;
-  std::cout << "(X - Y)^2: drift " << spread.drift.item<double>() << "   (2 (X - Y)(mu_x - mu_y) + var(X - Y) = "
+  std::cout << "(X - Y)^2: drift " << spread.drift.squeeze().item<double>() << "   (2 (X - Y)(mu_x - mu_y) + var(X - Y) = "
             << 2 * (xv - yv) * (mx - my) + var_spread << ")\n";
   return 0;
 }

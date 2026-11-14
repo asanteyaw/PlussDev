@@ -1,0 +1,73 @@
+# `fluid::heat`
+
+Follows the temperature of the water through a run.
+
+## Signature
+
+```cpp
+HeatResult heat(const Network &network, const Schedule &schedule, const Heat &thermal, const RouteOptions &route_options = {}, const Options &hydraulic_options = {});
+```
+
+## What It Does
+
+A thermal specialisation of the route engine of `transport`: the same hydraulics, cells, mixing and tanks, with the exact heat exchange `T(t+Δt) = Ta + (T(t) - Ta) exp(-UA Δt / (ρ c_p V))` in every pipe and tank. Solved flow direction reverses both the boundary and the cell stencil.
+
+## Parameters
+
+`network`
+: The compiled `Network`.
+
+`schedule`
+: The `Schedule`.
+
+`thermal`
+: The `Heat` record.
+
+`route_options`
+: The `RouteOptions`.
+
+`hydraulic_options`
+: The `Options` of the hydraulic solves.
+
+## Returns
+
+A `HeatResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for invalid thermal or route options. Throws `std::runtime_error` for the failures of `run`.
+
+## Interpretation and Use
+
+Constant properties and one-way coupling are the contract: no pump heat, no temperature-dependent density or viscosity, no phase change. Solve the hydraulics at the temperature that matters.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pipe cooling for four conductances.
+
+@@example Eng/api/fluid_heat_pipe.cpp@@
+
+### Example 2
+
+A tank cooling.
+
+@@example Eng/api/fluid_heat_tank.cpp@@
+
+### Example 3
+
+Descriptions that are refused.
+
+@@example Eng/api/fluid_heat_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="HeatResult.html">
+    <span class="label">Previous</span>
+    <span class="title">HeatResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

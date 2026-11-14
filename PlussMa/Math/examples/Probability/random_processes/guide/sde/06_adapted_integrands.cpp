@@ -47,7 +47,7 @@ int main() {
   for (const auto& c : cases) {
     try {
       const auto r = sde::ito_integral(c.make, path);
-      std::cout << c.label << ": accepted, Ito integral = " << r.value.item<double>() << "\n";
+      std::cout << c.label << ": accepted, Ito integral = " << r.value.items<double>().front() << "\n";
     } catch (const std::exception& e) {
       std::string message = e.what();
       message = message.substr(0, message.find('\n'));

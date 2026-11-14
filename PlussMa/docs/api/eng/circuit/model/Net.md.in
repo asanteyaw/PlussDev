@@ -1,0 +1,73 @@
+# `circuit::Net`
+
+The complete description of a circuit.
+
+## Signature
+
+```cpp
+circuit::Net
+```
+
+## What It Does
+
+The input of `make`: the number of nodes and a group for every kind of element.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `nodes` | The number of nodes including the ground, node `0`. | required |
+| `resistors, capacitors, inductors` | Passive `Branches`. | empty |
+| `current_sources, voltage_sources` | Independent source `Branches`. | empty |
+| `vccs, vcvs` | Controlled sources, `Controls`. | empty |
+| `amps` | Ideal `Amps`. | empty |
+| `diodes` | Junction `Diodes`. | empty |
+| `transistors` | Bipolar `Transistors`. | empty |
+| `mosfets` | Enhancement `Mosfets`. | empty |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+Every inconsistency is reported by `make`.
+
+## Interpretation and Use
+
+Describe a circuit once and compile it; sweep component values through leading axes of the `value` arrays.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A divider.
+
+@@example Eng/api/circuit_divider.cpp@@
+
+### Example 2
+
+Every element kind.
+
+@@example Eng/api/circuit_all_elements.cpp@@
+
+### Example 3
+
+Rejected descriptions.
+
+@@example Eng/api/circuit_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Amps.html">
+    <span class="label">Previous</span>
+    <span class="title">Amps</span>
+  </a>
+  <a class="next-link" href="CircuitModel.html">
+    <span class="label">Next</span>
+    <span class="title">Circuit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

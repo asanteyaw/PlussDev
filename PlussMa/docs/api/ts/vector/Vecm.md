@@ -188,3 +188,16 @@ rank 4 of 3 series is rejected
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="VarOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">VarOptions</span>
+  </a>
+  <a class="next-link" href="vecm_to_var.html">
+    <span class="label">Next</span>
+    <span class="title">vecm_to_var</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

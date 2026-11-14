@@ -81,16 +81,16 @@ int main() {
   const std::vector<double> params = {3.5, 0.4};
 
   std::cout << "x:";
-  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).items<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pmf:";
-  for (double v : distr::pdf(dst::NegativeBinomial, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::NegativeBinomial, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::NegativeBinomial, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::NegativeBinomial, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpmf:";
-  for (double v : distr::logpdf(dst::NegativeBinomial, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::NegativeBinomial, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -130,7 +130,7 @@ int main() {
   const double mass_sum = as_f64(distr::pdf(dst::NegativeBinomial, grid, params).sum());
 
   const auto edges = pluss::make_series({0.0, 10.0}, f64);
-  const auto c = distr::cdf(dst::NegativeBinomial, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::NegativeBinomial, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::NegativeBinomial, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 1.0).to(pluss::ScalarType::Float64) * (draws <= 10.0).to(pluss::ScalarType::Float64)).mean());
@@ -171,16 +171,16 @@ int main() {
   const auto x = pluss::make_series({0.0, 2.0, 4.0, 6.0, 10.0, 20.0, 30.0}, f64);
 
   std::cout << "x:";
-  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).items<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "r 1  :";
-  for (double v : distr::pdf(dst::NegativeBinomial, x, {1.0, 0.4}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::NegativeBinomial, x, {1.0, 0.4}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "r 3.5:";
-  for (double v : distr::pdf(dst::NegativeBinomial, x, {3.5, 0.4}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::NegativeBinomial, x, {3.5, 0.4}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "r 20 :";
-  for (double v : distr::pdf(dst::NegativeBinomial, x, {20.0, 0.4}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::NegativeBinomial, x, {20.0, 0.4}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -203,3 +203,16 @@ Read down the rows: `r 1` peaks on this grid at x = 0 (value 0.4); `r 3.5` peaks
 - [`Binomial`](../discrete/Binomial.md)
 - [`Gamma`](../continuous_positive/Gamma.md)
 - [`distr::NegativeBinomial`](../object_based/NegativeBinomial.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Hypergeometric.html">
+    <span class="label">Previous</span>
+    <span class="title">Hypergeometric</span>
+  </a>
+  <a class="next-link" href="Poisson.html">
+    <span class="label">Next</span>
+    <span class="title">Poisson</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

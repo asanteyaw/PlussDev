@@ -31,8 +31,8 @@ int main() {
   out.writeln("Float64 argument -> dtype is Float64:", r64.scalar_type() == pluss::ScalarType::Float64 ? "yes" : "no");
   out.writeln("Float32 argument -> dtype is Float32:", r32.scalar_type() == pluss::ScalarType::Float32 ? "yes" : "no");
 
-  const auto reference = r64.pull<double>();
-  const auto single = r32.pull<float>();
+  const auto reference = r64.items<double>();
+  const auto single = r32.items<float>();
   std::vector<double> relative;
   for (std::size_t i = 0; i < reference.size(); ++i) relative.push_back(std::abs(static_cast<double>(single[i]) - reference[i]) / std::abs(reference[i]));
   out.writeln("second derivative (Float64):", reference);
@@ -101,3 +101,12 @@ This boundary also explains why a modest graph may run faster on CPU than MPS de
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sensitivity_of_a_probability.html">
+    <span class="label">Previous</span>
+    <span class="title">The sensitivity of a probability</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

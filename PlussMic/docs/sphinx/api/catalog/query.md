@@ -49,7 +49,7 @@ auto ct = pluss::kindle::Catalog({
 });
 
 auto out = ct.query([](const pluss::kindle::Catalog& c) {
-  return c.at("id").as_series() > 2.0;
+  return c.keys("id").as_series() > 2.0;
 });
 std::cout << out;
 ```
@@ -103,7 +103,7 @@ Catalog::query: query function is empty
 - [`Catalog::filter`](filter.md) / [`Catalog::where`](where.md) /
   [`Catalog::where`](where.md): the underlying row-selection mechanism this
   method builds its mask for.
-- [`Catalog::at`](at.md): the usual way to reach a stream inside the callback.
+- [`Catalog::keys`](keys.md): the usual way to reach a stream (`keys(key)`) inside the callback.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="nrows.html">

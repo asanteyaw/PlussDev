@@ -341,3 +341,12 @@ All the requirements hold at the answer. The constraint `c^2 <= 0.6` is active, 
 - **Several constraint types at once is normal.** Put them all in one `constraints()` value; the solver treats the families together.
 
 Where next: [Blocks, problems as values, and reading the result](blocks_values_and_reading_the_result.md) moves from vectors of anonymous unknowns to named quantities.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="blocks_values_and_reading_the_result.html">
+    <span class="label">Next</span>
+    <span class="title">Blocks, problems as values, gradients and reading the result</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

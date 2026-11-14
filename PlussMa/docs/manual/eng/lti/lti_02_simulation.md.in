@@ -1,0 +1,14 @@
+# Systems 2: Simulation
+
+The time response of a linear system is known exactly, so a simulation should not be an approximation. This chapter shows how to run a continuous or discrete model on an input, from any initial state, with a choice of how the input is held between samples.
+
+- [Simulating a system](lti_02_simulation/simulating_a_system.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+lti_02_simulation/simulating_a_system
+```
+<!-- apiref:toctree:end -->

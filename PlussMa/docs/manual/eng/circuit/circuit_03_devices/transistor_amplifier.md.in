@@ -1,0 +1,354 @@
+# The transistor amplifier
+
+[Back to Circuits 3: Diodes and Transistors](../circuit_03_devices.md)
+
+A bipolar transistor is a small current controlling a large one: a current `Ib` into the base makes a current of about `beta Ib` flow into the collector. This page finds the bias point of a common-emitter stage, sweeps the base resistor to move the stage from its linear region into saturation, mirrors the stage with a PNP, and then computes the small-signal gain of the stage with `ac` around its bias point.
+
+## The mental model
+
+`circuit::Transistors` holds a bipolar transistor by its three terminals, `collector`, `base` and `emitter`, its `polarity` (`+1` NPN, `-1` PNP), its `saturation` current `Is`, its `forward_gain` `beta_f` and an optional `reverse_gain` `beta_r` (default `1`). The model is the Ebers-Moll transport model: two junctions, base-emitter and base-collector, each like a diode of saturation current `Is`, coupled so that the forward junction current `Is exp(vbe / Vt)` appears at the collector and `1 / beta_f` of it at the base. It is deliberately limited: there is no stored charge and no terminal resistance, and the Early effect is optional, so the collector current is flat in `Vce` while the transistor is active unless an Early voltage is given.
+
+- **A PNP is an NPN with every voltage and current reversed.** `polarity = -1` flips the junctions; a PNP on negated supplies reproduces the NPN node voltages with the opposite sign.
+- **Result gains three arrays.** `collector_current` and `base_current` are the currents flowing *into* the collector and base terminals, `[..., transistors]`; the emitter current is `-(Ic + Ib)`.
+- **Everything else is as for diodes.** `op` solves the nonlinear equations by Newton iteration, leading axes sweep any value, and `SolveOptions` controls the iteration.
+
+## A common-emitter bias point
+
+A `10 V` supply feeds the collector through `1 kohm`, and a `5 V` source drives the base through `100 kohm`. The emitter is grounded. The base junction clamps the base near `0.7 V`, so the base current is about `(5 - 0.7) / 100k = 43 uA` and the collector current about `beta` times that. The program prints the bias point.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // nodes: 1 supply, 2 collector, 3 base drive, 4 base
+  ckt::Net net;
+  net.nodes = 5;
+  net.voltage_sources = {{1, 3}, {0, 0}, vec({10.0, 5.0})};
+  net.resistors = {{1, 3}, {2, 4}, vec({1000.0, 100000.0})};
+  net.transistors.collector = {2};
+  net.transistors.base = {4};
+  net.transistors.emitter = {0};
+  net.transistors.polarity = {1};
+  net.transistors.saturation = vec({1e-14});
+  net.transistors.forward_gain = vec({100.0});
+
+  const auto circuit = ckt::make(net);
+  const auto result = ckt::op(circuit);
+  const std::vector<double> v = flat(result.voltage);
+  const double ic = flat(result.collector_current)[0], ib = flat(result.base_current)[0];
+  out.writeln("transistors in the circuit", circuit.transistors());
+  out.writeln("base voltage      ", v[4]);
+  out.writeln("collector voltage ", v[2]);
+  out.writeln("base current      ", ib);
+  out.writeln("collector current ", ic);
+  out.writeln("current gain Ic/Ib", ic / ib);
+  out.writeln("emitter current   ", -(ic + ib));
+  out.writeln("supply current    ", flat(result.source_current)[0], " base source", flat(result.source_current)[1]);
+}
+```
+
+The base sits at `0.6925 V`, the same junction drop as the diode of the previous page. The base current is `43.08 uA`, the collector current `4.308 mA`, and their ratio `100.00001`, the transistor's `forward_gain`: while the collector is far from saturation, the collector current is `beta_f` times the base current. The collector settles at `5.69 V`, `10 - 4.308 mA x 1 kohm`. The emitter current is `-(Ic + Ib) = -4.351 mA`, leaving the transistor. The supply delivers `4.308 mA` (source current `-4.308 mA`) and the base source `43 uA`.
+
+## From the linear region into saturation
+
+Making the base resistor smaller drives more base current, and the collector current rises until the collector resistor can drop no more of the supply. The program sweeps the base resistor over a batch of five values and prints the collector voltage, the two currents and their ratio for each.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double bases[] = {1e6, 300e3, 100e3, 30e3, 10e3};
+  ckt::Net net;
+  net.nodes = 5;
+  net.voltage_sources = {{1, 3}, {0, 0}, vec({10.0, 5.0})};
+  net.resistors = {{1, 3}, {2, 4}, vec({1000.0, 1000000.0, 1000.0, 300000.0, 1000.0, 100000.0, 1000.0, 30000.0, 1000.0, 10000.0}).reshape({5, 2})};
+  net.transistors.collector = {2};
+  net.transistors.base = {4};
+  net.transistors.emitter = {0};
+  net.transistors.polarity = {1};
+  net.transistors.saturation = vec({1e-14});
+  net.transistors.forward_gain = vec({100.0});
+
+  const auto result = ckt::op(ckt::make(net));
+  const std::vector<double> vc = flat(result.voltage.select(1, 2));
+  const std::vector<double> ic = flat(result.collector_current), ib = flat(result.base_current);
+  out.writeln("  Rb (kohm)   Vc      Ib (uA)   Ic (mA)   Ic/Ib");
+  for (int k = 0; k < 5; ++k) out.writeln(bases[k] / 1e3, vc[k], ib[k] * 1e6, ic[k] * 1e3, ic[k] / ib[k]);
+}
+```
+
+For `1 Mohm`, `300 kohm` and `100 kohm` the stage is linear: the collector current is `100` times the base current and the collector voltage falls from `9.56 V` to `5.69 V`. At `30 kohm` the base current would call for `14 mA`, more than the `10 mA` the collector resistor can pass, so the collector falls to `0.14 V` and the ratio drops to `69`: the transistor is **saturated**. At `10 kohm` the base current is three times larger again, but the collector current rises by only half a percent and the ratio falls to `23`. In saturation extra base current buys almost no extra collector current.
+
+## The Early effect
+
+Real transistors do not hold their collector current exactly constant as the collector voltage rises: the effective base narrows and the current grows. `early_voltage` adds this: the transport current is scaled by `1 + vce / VA`, with `VA` the Early voltage in volts. Left undefined there is no Early effect, as above. The program raises the supply of a stage with a `100 ohm` collector resistor and a `50 V` Early voltage and prints the collector current with and without the effect.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  // the Early voltage makes the collector current grow with the collector voltage: the supply moves the current
+  for (double supply : {5.0, 10.0, 20.0}) {
+    ckt::Net net;
+    net.nodes = 5;
+    net.voltage_sources = {{1, 3}, {0, 0}, vec({supply, 5.0})};
+    net.resistors = {{1, 3}, {2, 4}, vec({100.0, 100000.0})};
+    net.transistors.collector = {2};
+    net.transistors.base = {4};
+    net.transistors.emitter = {0};
+    net.transistors.polarity = {1};
+    net.transistors.saturation = vec({1e-14});
+    net.transistors.forward_gain = vec({100.0});
+    const auto flat_model = ckt::op(ckt::make(net));
+    net.transistors.early_voltage = vec({50.0});
+    const auto early = ckt::op(ckt::make(net));
+    out.writeln("supply", supply, " collector current without and with the Early effect", flat(flat_model.collector_current)[0], flat(early.collector_current)[0]);
+  }
+}
+```
+Without the effect the collector current is `4.308 mA` whatever the supply; with it the current rises with the collector voltage, from `4.70 mA` at a `5 V` supply to `5.98 mA` at `20 V`.
+
+## A PNP is the mirror image
+
+A PNP transistor conducts when its base is below its emitter. With every supply negated, the PNP stage carries exactly the currents of the NPN stage in the opposite direction, and every node voltage changes sign. The program builds both stages from one function and prints the collector voltage and current of each.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static ckt::Net stage(std::int64_t polarity, double sign) {
+  ckt::Net net;
+  net.nodes = 5;
+  net.voltage_sources = {{1, 3}, {0, 0}, vec({10.0 * sign, 5.0 * sign})};
+  net.resistors = {{1, 3}, {2, 4}, vec({1000.0, 100000.0})};
+  net.transistors.collector = {2};
+  net.transistors.base = {4};
+  net.transistors.emitter = {0};
+  net.transistors.polarity = {polarity};
+  net.transistors.saturation = vec({1e-14});
+  net.transistors.forward_gain = vec({100.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto npn = ckt::op(ckt::make(stage(1, 1.0)));
+  const auto pnp = ckt::op(ckt::make(stage(-1, -1.0)));
+  out.writeln("NPN collector voltage and current", flat(npn.voltage)[2], flat(npn.collector_current)[0]);
+  out.writeln("PNP collector voltage and current", flat(pnp.voltage)[2], flat(pnp.collector_current)[0]);
+  // the same PNP on the positive supplies has its junctions biased the wrong way round
+  const auto cutoff = ckt::op(ckt::make(stage(-1, 1.0)));
+  out.writeln("PNP on positive supplies, collector current", flat(cutoff.collector_current)[0]);
+}
+```
+
+The PNP collector voltage and current are the NPN values with the opposite sign: `-5.692490 V` and `-4.308 mA`. The same PNP on the positive supplies has its junctions biased the wrong way round: it carries `0.087 mA` in the opposite direction instead of conducting `4.3 mA`, so a PNP stage must be powered from supplies of the opposite sign.
+
+## Small-signal gain
+
+A bias point tells you where the stage sits; the **small-signal gain** tells you how it responds to a tiny change around that point. Around the bias point the transistor behaves like a linear circuit: a transconductance `gm = Ic / Vt` from the base-emitter voltage to the collector current, and an input resistance `rpi = beta / gm` between base and emitter. The stage then has gain `-gm Rc rpi / (Rb + rpi)`: the collector current opposes the input, through the divider that the base resistor makes with `rpi`.
+
+`ac` takes the operating point as a third argument and linearises every device about it. The stored source values of the circuit you pass are the small-signal excitation, so the same topology is built twice: once with the bias values for `op` (a `10 V` supply and a `1.2 V` base drive through `10 kohm`), and once with a `1 V` signal on the base and `0 V` on the supply, since the supply is an AC ground. The program compares the computed gain with the formula.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static ckt::Circuit stage(double supply, double drive) {
+  ckt::Net net;
+  net.nodes = 5;
+  net.voltage_sources = {{1, 3}, {0, 0}, vec({supply, drive})};
+  net.resistors = {{1, 3}, {2, 4}, vec({1000.0, 10000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-9})};   // a load capacitance on the collector
+  net.transistors.collector = {2};
+  net.transistors.base = {4};
+  net.transistors.emitter = {0};
+  net.transistors.polarity = {1};
+  net.transistors.saturation = vec({1e-14});
+  net.transistors.forward_gain = vec({100.0});
+  return ckt::make(net);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto bias = ckt::op(stage(10.0, 1.2));
+  const double ic = flat(bias.collector_current)[0];
+  const double gm = ic / 0.02585, rpi = 100.0 / gm;
+  out.writeln("gm (S)", gm, " rpi (ohm)", rpi);
+
+  const auto response = ckt::ac(stage(0.0, 1.0), vec({0.0, 1e5, 1e6, 1e7}), bias);
+  const pluss::Series gain = response.voltage.select(-1, 2);   // the collector over the 1 V input
+  const std::vector<double> magnitude = flat(gain.abs()), real = flat(gain.real());
+  out.writeln("formula  -gm Rc rpi / (Rb + rpi)", -gm * 1000.0 * rpi / (10000.0 + rpi));
+  out.writeln("ac gain at 0 rad/s            ", real[0]);
+  out.writeln("magnitude at 1e5, 1e6, 1e7 rad/s", magnitude[1], magnitude[2], magnitude[3]);
+}
+```
+
+The transistor's bias gives `gm = 0.1948 S` and `rpi = 513.4 ohm`, and the formula predicts a gain of `-9.5116`. The computed response at `0 rad/s` is the same to four decimals: the stage inverts the signal and amplifies it nine and a half times, after the base resistor and `rpi` divide the input. The collector capacitance and `1 kohm` collector resistor make a low-pass with its corner at `1 / (Rc C) = 1e6 rad/s`, where the magnitude has fallen to `6.73`, `9.51 / sqrt 2`, and at `1e7 rad/s` it is `0.946`, a tenth of the low-frequency gain.
+
+## Errors
+
+A circuit with transistors cannot be analysed in AC without its bias point, and an operating point from a different circuit is refused. Descriptions the compiler rejects are named in the same way as for diodes.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+static ckt::Net stage() {
+  ckt::Net net;
+  net.nodes = 5;
+  net.voltage_sources = {{1, 3}, {0, 0}, vec({10.0, 5.0})};
+  net.resistors = {{1, 3}, {2, 4}, vec({1000.0, 100000.0})};
+  net.transistors.collector = {2};
+  net.transistors.base = {4};
+  net.transistors.emitter = {0};
+  net.transistors.polarity = {1};
+  net.transistors.saturation = vec({1e-14});
+  net.transistors.forward_gain = vec({100.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  const auto circuit = ckt::make(stage());
+  report([&] { (void)ckt::ac(circuit, vec({1.0})); });
+  auto other = stage();
+  other.nodes = 6;
+  other.resistors.positive.push_back(5);
+  other.resistors.negative.push_back(0);
+  other.resistors.value = vec({1000.0, 100000.0, 1000.0});
+  report([&] { (void)ckt::ac(circuit, vec({1.0}), ckt::op(ckt::make(other))); });
+  auto polarity = stage();
+  polarity.transistors.polarity = {2};
+  report([&] { (void)ckt::make(polarity); });
+  auto tied = stage();
+  tied.transistors.emitter = {2};
+  report([&] { (void)ckt::make(tied); });
+  auto no_gain = stage();
+  no_gain.transistors.forward_gain = pluss::Series{};
+  report([&] { (void)ckt::make(no_gain); });
+}
+```
+
+Each message names the cause: the missing bias point, the bias point of another circuit, the invalid polarity, the collector tied to the emitter, and the missing gain.
+
+## Decisions
+
+- **Where the stage sits:** `op`; read `collector_current`, `base_current` and the node voltages. Their ratio is the large-signal gain, close to `forward_gain` while the transistor is active.
+- **How it responds to a small signal:** `ac` with the `op` result as its third argument; build the excitation circuit with the supply at `0 V`.
+- **A family of bias points:** a batch on a resistor, a supply or a device value, one call.
+- **A PNP:** `polarity = -1` and supplies of the opposite sign; there is no other change.
+
+## Pitfalls
+
+The most common mistake is to leave the supply in the small-signal circuit: a supply that still carries its `10 V` is not an AC ground, so the response measures the wrong thing. The program computes the gain with the supply left at `10 V` and with it at `0 V`, and also shows that a stage driven into saturation has lost its gain.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static ckt::Circuit stage(double supply, double drive, double base_resistor = 10000.0) {
+  ckt::Net net;
+  net.nodes = 5;
+  net.voltage_sources = {{1, 3}, {0, 0}, vec({supply, drive})};
+  net.resistors = {{1, 3}, {2, 4}, vec({1000.0, base_resistor})};
+  net.transistors.collector = {2};
+  net.transistors.base = {4};
+  net.transistors.emitter = {0};
+  net.transistors.polarity = {1};
+  net.transistors.saturation = vec({1e-14});
+  net.transistors.forward_gain = vec({100.0});
+  return ckt::make(net);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto bias = ckt::op(stage(10.0, 1.2));
+  const auto correct = ckt::ac(stage(0.0, 1.0), vec({1.0}), bias);
+  const auto wrong = ckt::ac(stage(10.0, 1.0), vec({1.0}), bias);
+  out.writeln("gain with the supply at 0 V ", flat(correct.voltage.select(-1, 2))[0]);
+  out.writeln("gain with the supply at 10 V", flat(wrong.voltage.select(-1, 2))[0], "(the 10 V supply is part of the answer)");
+
+  // a stage driven into saturation has no gain left
+  const auto hard = ckt::op(stage(10.0, 1.2, 2000.0));
+  const auto saturated = ckt::ac(stage(0.0, 1.0, 2000.0), vec({1.0}), hard);
+  out.writeln("collector voltage when saturated", flat(hard.voltage)[2], " small-signal gain", flat(saturated.voltage.select(-1, 2))[0]);
+}
+```
+
+With the supply left at `10 V` the response is `0.4884`, which is `-9.5116 + 10`: the supply's `10 V` is added to the stage's own response, so the number is not the gain of anything. With the supply at `0 V` the answer is `-9.5116`, the stage's gain. Driven into saturation, with a `2 kohm` base resistor, the collector sits at `0.11 V` and the small-signal gain is `-0.087`, so a stage that is biased into saturation no longer amplifies: check the bias with `op` before trusting a gain.
+
+## Where next
+
+[The rectifier in time](rectifier_transient.md) puts a diode into a transient run. Reference pages: [`Transistors`](../../../../api/eng/circuit/model/Transistors.md), [`op`](../../../../api/eng/circuit/analysis/op.md), [`ac`](../../../../api/eng/circuit/analysis/ac.md), [`Result`](../../../../api/eng/circuit/analysis/Result.md).

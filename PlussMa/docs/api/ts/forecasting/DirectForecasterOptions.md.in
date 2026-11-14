@@ -21,3 +21,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`DirectForecaster`](DirectForecaster.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DirectForecaster.html">
+    <span class="label">Previous</span>
+    <span class="title">DirectForecaster</span>
+  </a>
+  <a class="next-link" href="DirectStepModel.html">
+    <span class="label">Next</span>
+    <span class="title">DirectStepModel</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

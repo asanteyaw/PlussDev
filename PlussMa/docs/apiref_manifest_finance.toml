@@ -38,11 +38,60 @@ maxdepth = 2
 children = ["finance_04_monte_carlo/options_and_errors", "finance_04_monte_carlo/pricing_by_simulation", "finance_04_monte_carlo/quasi_random_sequences", "finance_04_monte_carlo/simulated_paths", "finance_04_monte_carlo/variance_reduction"]
 
 [[family]]
+path = "finance/pricing/finance_05_other_volatility_models"
+page = "manual/finance/pricing/finance_05_other_volatility_models.md"
+title = "Other Volatility Models"
+maxdepth = 2
+children = ["finance_05_other_volatility_models/sabr", "finance_05_other_volatility_models/rough_volatility"]
+
+[[family]]
+path = "finance/pricing/finance_06_the_pricing_field"
+page = "manual/finance/pricing/finance_06_the_pricing_field.md"
+title = "The Pricing Field"
+maxdepth = 2
+children = ["finance_06_the_pricing_field/building_a_field", "finance_06_the_pricing_field/engines_and_greeks", "finance_06_the_pricing_field/models_and_parameters", "finance_06_the_pricing_field/losses_and_objectives", "finance_06_the_pricing_field/calibration", "finance_06_the_pricing_field/simulated_paths", "finance_06_the_pricing_field/early_exercise"]
+
+[[family]]
+path = "finance/pricing/finance_07_interest_rates"
+page = "manual/finance/pricing/finance_07_interest_rates.md"
+title = "Interest Rates"
+maxdepth = 2
+children = ["finance_07_interest_rates/short_rate_models", "finance_07_interest_rates/zero_coupon_bonds", "finance_07_interest_rates/forward_rate_models", "finance_07_interest_rates/rate_objects"]
+
+[[family]]
+path = "finance/pricing/finance_08_delta_hedging"
+page = "manual/finance/pricing/finance_08_delta_hedging.md"
+title = "Delta Hedging"
+maxdepth = 2
+children = ["finance_08_delta_hedging/the_hedging_portfolio", "finance_08_delta_hedging/hedging_error"]
+
+[[family]]
+path = "finance/pricing/finance_09_filtering"
+page = "manual/finance/pricing/finance_09_filtering.md"
+title = "Filtering"
+maxdepth = 2
+children = ["finance_09_filtering/the_kalman_filter", "finance_09_filtering/yield_curve_filtering", "finance_09_filtering/particle_filters", "finance_09_filtering/volatility_filtering"]
+
+[[family]]
+path = "finance/pricing/finance_10_volatility_bridge"
+page = "manual/finance/pricing/finance_10_volatility_bridge.md"
+title = "The Volatility Bridge"
+maxdepth = 2
+children = ["finance_10_volatility_bridge/returns_and_variance_forecasts", "finance_10_volatility_bridge/ngarch_for_pricing"]
+
+[[family]]
+path = "finance/pricing/finance_11_several_assets"
+page = "manual/finance/pricing/finance_11_several_assets.md"
+title = "Several assets"
+maxdepth = 2
+children = ["finance_11_several_assets/pricing_a_book", "finance_11_several_assets/building_a_chord", "finance_11_several_assets/batching", "finance_11_several_assets/correlated_assets"]
+
+[[family]]
 path = "finance/pricing"
 page = "manual/finance/pricing.md"
 title = "pricing"
 maxdepth = 2
-children = ["pricing/finance_01_black_scholes", "pricing/finance_02_implied_volatility", "pricing/finance_03_heston_and_bates", "pricing/finance_04_monte_carlo"]
+children = ["pricing/finance_01_black_scholes", "pricing/finance_02_implied_volatility", "pricing/finance_03_heston_and_bates", "pricing/finance_04_monte_carlo", "pricing/finance_05_other_volatility_models", "pricing/finance_06_the_pricing_field", "pricing/finance_07_interest_rates", "pricing/finance_08_delta_hedging", "pricing/finance_09_filtering", "pricing/finance_10_volatility_bridge", "pricing/finance_11_several_assets"]
 
 [[symbol]]
 qualname = "finance::finance_01_black_scholes::Prices and put-call parity"
@@ -162,3 +211,178 @@ kind = "page"
 family = "finance/pricing/finance_04_monte_carlo"
 page = "manual/finance/pricing/finance_04_monte_carlo/variance_reduction.md"
 summary = "Variance reduction"
+
+[[symbol]]
+qualname = "finance::finance_05_other_volatility_models::SABR"
+kind = "page"
+family = "finance/pricing/finance_05_other_volatility_models"
+page = "manual/finance/pricing/finance_05_other_volatility_models/sabr.md"
+summary = "SABR"
+
+[[symbol]]
+qualname = "finance::finance_05_other_volatility_models::Rough volatility"
+kind = "page"
+family = "finance/pricing/finance_05_other_volatility_models"
+page = "manual/finance/pricing/finance_05_other_volatility_models/rough_volatility.md"
+summary = "Rough volatility"
+
+[[symbol]]
+qualname = "finance::finance_06_the_pricing_field::Building a Field"
+kind = "page"
+family = "finance/pricing/finance_06_the_pricing_field"
+page = "manual/finance/pricing/finance_06_the_pricing_field/building_a_field.md"
+summary = "Building a Field"
+
+[[symbol]]
+qualname = "finance::finance_06_the_pricing_field::Engines and Greeks"
+kind = "page"
+family = "finance/pricing/finance_06_the_pricing_field"
+page = "manual/finance/pricing/finance_06_the_pricing_field/engines_and_greeks.md"
+summary = "Engines and Greeks"
+
+[[symbol]]
+qualname = "finance::finance_06_the_pricing_field::Models and parameters"
+kind = "page"
+family = "finance/pricing/finance_06_the_pricing_field"
+page = "manual/finance/pricing/finance_06_the_pricing_field/models_and_parameters.md"
+summary = "Models and parameters"
+
+[[symbol]]
+qualname = "finance::finance_06_the_pricing_field::Losses and objectives"
+kind = "page"
+family = "finance/pricing/finance_06_the_pricing_field"
+page = "manual/finance/pricing/finance_06_the_pricing_field/losses_and_objectives.md"
+summary = "Losses and objectives"
+
+[[symbol]]
+qualname = "finance::finance_06_the_pricing_field::Calibration"
+kind = "page"
+family = "finance/pricing/finance_06_the_pricing_field"
+page = "manual/finance/pricing/finance_06_the_pricing_field/calibration.md"
+summary = "Calibration"
+
+[[symbol]]
+qualname = "finance::finance_06_the_pricing_field::Simulated paths"
+kind = "page"
+family = "finance/pricing/finance_06_the_pricing_field"
+page = "manual/finance/pricing/finance_06_the_pricing_field/simulated_paths.md"
+summary = "Simulated paths"
+
+[[symbol]]
+qualname = "finance::finance_06_the_pricing_field::Early exercise: American and Bermudan options"
+kind = "page"
+family = "finance/pricing/finance_06_the_pricing_field"
+page = "manual/finance/pricing/finance_06_the_pricing_field/early_exercise.md"
+summary = "Early exercise: American and Bermudan options"
+
+[[symbol]]
+qualname = "finance::finance_07_interest_rates::Short-rate models"
+kind = "page"
+family = "finance/pricing/finance_07_interest_rates"
+page = "manual/finance/pricing/finance_07_interest_rates/short_rate_models.md"
+summary = "Short-rate models"
+
+[[symbol]]
+qualname = "finance::finance_07_interest_rates::Zero-coupon bonds and yield curves"
+kind = "page"
+family = "finance/pricing/finance_07_interest_rates"
+page = "manual/finance/pricing/finance_07_interest_rates/zero_coupon_bonds.md"
+summary = "Zero-coupon bonds and yield curves"
+
+[[symbol]]
+qualname = "finance::finance_07_interest_rates::Forward-rate models"
+kind = "page"
+family = "finance/pricing/finance_07_interest_rates"
+page = "manual/finance/pricing/finance_07_interest_rates/forward_rate_models.md"
+summary = "Forward-rate models"
+
+[[symbol]]
+qualname = "finance::finance_07_interest_rates::Rate model objects"
+kind = "page"
+family = "finance/pricing/finance_07_interest_rates"
+page = "manual/finance/pricing/finance_07_interest_rates/rate_objects.md"
+summary = "Rate model objects"
+
+[[symbol]]
+qualname = "finance::finance_08_delta_hedging::The hedging portfolio"
+kind = "page"
+family = "finance/pricing/finance_08_delta_hedging"
+page = "manual/finance/pricing/finance_08_delta_hedging/the_hedging_portfolio.md"
+summary = "The hedging portfolio"
+
+[[symbol]]
+qualname = "finance::finance_08_delta_hedging::The hedging error"
+kind = "page"
+family = "finance/pricing/finance_08_delta_hedging"
+page = "manual/finance/pricing/finance_08_delta_hedging/hedging_error.md"
+summary = "The hedging error"
+
+[[symbol]]
+qualname = "finance::finance_09_filtering::The Kalman filter"
+kind = "page"
+family = "finance/pricing/finance_09_filtering"
+page = "manual/finance/pricing/finance_09_filtering/the_kalman_filter.md"
+summary = "The Kalman filter"
+
+[[symbol]]
+qualname = "finance::finance_09_filtering::Filtering the short rate from bond prices"
+kind = "page"
+family = "finance/pricing/finance_09_filtering"
+page = "manual/finance/pricing/finance_09_filtering/yield_curve_filtering.md"
+summary = "Filtering the short rate from bond prices"
+
+[[symbol]]
+qualname = "finance::finance_09_filtering::Particle filters"
+kind = "page"
+family = "finance/pricing/finance_09_filtering"
+page = "manual/finance/pricing/finance_09_filtering/particle_filters.md"
+summary = "Particle filters"
+
+[[symbol]]
+qualname = "finance::finance_09_filtering::Filtering volatility from returns"
+kind = "page"
+family = "finance/pricing/finance_09_filtering"
+page = "manual/finance/pricing/finance_09_filtering/volatility_filtering.md"
+summary = "Filtering volatility from returns"
+
+[[symbol]]
+qualname = "finance::finance_10_volatility_bridge::From returns to variance forecasts"
+kind = "page"
+family = "finance/pricing/finance_10_volatility_bridge"
+page = "manual/finance/pricing/finance_10_volatility_bridge/returns_and_variance_forecasts.md"
+summary = "From returns to variance forecasts"
+
+[[symbol]]
+qualname = "finance::finance_10_volatility_bridge::The NGARCH model for pricing"
+kind = "page"
+family = "finance/pricing/finance_10_volatility_bridge"
+page = "manual/finance/pricing/finance_10_volatility_bridge/ngarch_for_pricing.md"
+summary = "The NGARCH model for pricing"
+
+[[symbol]]
+qualname = "finance::finance_11_several_assets::Pricing a book of assets"
+kind = "page"
+family = "finance/pricing/finance_11_several_assets"
+page = "manual/finance/pricing/finance_11_several_assets/pricing_a_book.md"
+summary = "Pricing a book of assets"
+
+[[symbol]]
+qualname = "finance::finance_11_several_assets::Building a Chord"
+kind = "page"
+family = "finance/pricing/finance_11_several_assets"
+page = "manual/finance/pricing/finance_11_several_assets/building_a_chord.md"
+summary = "Building a Chord"
+
+[[symbol]]
+qualname = "finance::finance_11_several_assets::Batching"
+kind = "page"
+family = "finance/pricing/finance_11_several_assets"
+page = "manual/finance/pricing/finance_11_several_assets/batching.md"
+summary = "Batching"
+
+[[symbol]]
+qualname = "finance::finance_11_several_assets::Correlated assets"
+kind = "page"
+family = "finance/pricing/finance_11_several_assets"
+page = "manual/finance/pricing/finance_11_several_assets/correlated_assets.md"
+summary = "Correlated assets"

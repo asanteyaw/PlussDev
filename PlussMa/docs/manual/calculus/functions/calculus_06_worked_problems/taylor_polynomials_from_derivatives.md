@@ -33,11 +33,11 @@ int main() {
   out.writeln("Taylor coefficients about 0:", coefficients);
 
   const auto x = pluss::make_series({0.1, 0.5, 1.0});
-  out.writeln("f(x)          ", f({x}).pull<double>(), " at x", x.pull<double>());
+  out.writeln("f(x)          ", f({x}).items<double>(), " at x", x.items<double>());
   for (const std::int64_t degree : {1, 2, 3, 4, 6}) {
     auto polynomial = pluss::series::zeros_like(x);
     for (std::int64_t k = 0; k <= degree; ++k) polynomial = polynomial.add(x.pow(static_cast<double>(k)).mul(coefficients[static_cast<std::size_t>(k)]));
-    out.writeln("degree", degree, " error", f({x}).sub(polynomial).abs().pull<double>());
+    out.writeln("degree", degree, " error", f({x}).sub(polynomial).abs().items<double>());
   }
 }
 ```
@@ -58,3 +58,16 @@ The seven derivatives at 0 give the coefficients 1, 1, ½, 0, −⅛, −1/15 an
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="cumulants_from_a_generating_function.html">
+    <span class="label">Previous</span>
+    <span class="title">Cumulants from a generating function</span>
+  </a>
+  <a class="next-link" href="sensitivity_of_a_probability.html">
+    <span class="label">Next</span>
+    <span class="title">The sensitivity of a probability</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

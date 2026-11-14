@@ -352,7 +352,7 @@ nodej::StatusOr<std::vector<std::string>> ContextualEmbedder::generate(const Doc
   const auto prompt_length = prompt_batch.max_length;
   auto sequence = prompt_batch.token_ids.to(pluss::pCPU, ScalarType::Int64)
                       .reshape({prompt_length})
-                      .pull<std::int64_t>();
+                      .items<std::int64_t>();
   sequence.pop_back();
 
   const auto width = options_.width;
@@ -384,7 +384,7 @@ nodej::StatusOr<std::vector<std::string>> ContextualEmbedder::generate(const Doc
     } else {
       const auto flat_logits = logits.to(pluss::pCPU, ScalarType::Float64)
                                    .reshape({vocab_size})
-                                   .pull<double>();
+                                   .items<double>();
       const auto probs = next_token_probs(flat_logits, options.top_k);
       const Series sampled = pluss::series::multinomial(std::span<const double>(probs), 1, /*replacement=*/true, sample_seed);
       ++sample_seed;

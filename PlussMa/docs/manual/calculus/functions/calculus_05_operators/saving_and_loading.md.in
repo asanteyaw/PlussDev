@@ -50,12 +50,12 @@ int main() {
   const auto y = pluss::make_series({1.0, 2.0});
 
   const math::Function restored = through_a_stream(dfdx);
-  out.writeln("original df/dx ", dfdx({x, y}).pull<double>());
-  out.writeln("restored df/dx ", restored({x, y}).pull<double>());
+  out.writeln("original df/dx ", dfdx({x, y}).items<double>());
+  out.writeln("restored df/dx ", restored({x, y}).items<double>());
   out.writeln("variables:", restored.variables()[0], restored.variables()[1], " arity", restored.arity(), " exact:", restored.provenance() == math::Provenance::Structural ? "yes" : "no");
 
   // A restored function can be differentiated further.
-  out.writeln("d/dy of the restored function ", operators::differential("y")(restored)({x, y}).pull<double>());
+  out.writeln("d/dy of the restored function ", operators::differential("y")(restored)({x, y}).items<double>());
 
   // Array constants and assumptions are kept.
   const auto weights = pluss::make_series({{1.0, 2.0}, {3.0, 4.0}});
@@ -68,7 +68,7 @@ int main() {
   // The same through a file.
   const std::string path = (std::filesystem::temp_directory_path() / "calculus_guide_function.bin").string();
   math::io::save(dfdx, path);
-  out.writeln("from a file    ", math::io::load_function(path)({x, y}).pull<double>());
+  out.writeln("from a file    ", math::io::load_function(path)({x, y}).items<double>());
   std::filesystem::remove(path);
 }
 ```
@@ -176,8 +176,8 @@ int main() {
   const math::Function quartic = math::function({"x"}, [](math::Function x) { return x.pow(4); });
   const auto x = pluss::make_series({1.0, 2.0, 3.0});
   out.writeln("restored key", restored.key(), " version", restored.version());
-  out.writeln("original pipeline  ", plan(quartic)({x}).pull<double>(), " = 30 x^2:", x.pow(2).mul(30.0).pull<double>());
-  out.writeln("restored pipeline  ", restored(quartic)({x}).pull<double>());
+  out.writeln("original pipeline  ", plan(quartic)({x}).items<double>(), " = 30 x^2:", x.pow(2).mul(30.0).items<double>());
+  out.writeln("restored pipeline  ", restored(quartic)({x}).items<double>());
 
   // Operators that hold a function are refused, with a message that names the operator.
   try {
@@ -246,7 +246,7 @@ int main() {
   std::istringstream input(output.str(), std::ios::binary);
   const operators::Operator restored = math::io::load_operator(input);
   out.writeln("restored: key", restored.key(), " version", restored.version(), " serializable", restored.capabilities().serializable);
-  out.writeln("restored(f)", restored(quartic)({x}).pull<double>(), " = 3 x^4:", x.pow(4).mul(3.0).pull<double>());
+  out.writeln("restored(f)", restored(quartic)({x}).items<double>(), " = 3 x^4:", x.pow(4).mul(3.0).items<double>());
 }
 ```
 
@@ -254,3 +254,16 @@ Saving succeeded because the operator declared itself serializable and carries a
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="custom_operators.html">
+    <span class="label">Previous</span>
+    <span class="title">Custom operators</span>
+  </a>
+  <a class="next-link" href="stochastic_operators.html">
+    <span class="label">Next</span>
+    <span class="title">Stochastic operators</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

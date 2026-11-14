@@ -170,6 +170,19 @@ int main() {
   expect_error(
       [&] { (void)structure::buckling(beam, compression(-1.0), fixed_root()); },
       "buckling accepted a purely tensile reference state");
+  {
+    bool explained = false;
+    try {
+      (void)structure::buckling(beam, compression(-1.0), fixed_root());
+    } catch (const std::exception &error) {
+      explained =
+          std::string(error.what()).find("no member in compression") !=
+          std::string::npos;
+    }
+    expect(explained,
+           "a tensile reference load was not explained as having no "
+           "compression");
+  }
 
   std::cout << "eng structure spectral checks passed\n";
   return 0;

@@ -21,3 +21,12 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`Ssm`](Ssm.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SsmSimResult.html">
+    <span class="label">Previous</span>
+    <span class="title">SsmSimResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

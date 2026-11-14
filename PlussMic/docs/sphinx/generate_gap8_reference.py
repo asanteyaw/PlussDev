@@ -60,13 +60,13 @@ METHODS = {
 
 SIGNATURE_OVERRIDES = {
     "combine": [
-        "DataFrame::combine(other: const DataFrame&) -> DataFrame",
-        "DataFrame::combine(other: const DataFrame&, spec: const CombineSpec&) -> DataFrame",
+        "DataFrame DataFrame::combine(other: const DataFrame&)",
+        "DataFrame DataFrame::combine(other: const DataFrame&, spec: const CombineSpec&)",
     ],
     "unify": [
-        "DataFrame::unify(left_on: string_view, right: const DataFrame&, right_on: string_view = \"\", how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\") -> DataFrame",
-        "DataFrame::unify(left_on: RangeView<string_view>, right: const DataFrame&, right_on: RangeView<string_view> = {}, how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\") -> DataFrame",
-        "DataFrame::unify(left_on: initializer_list<string_view>, right: const DataFrame&, right_on: initializer_list<string_view> = {}, how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\") -> DataFrame",
+        "DataFrame DataFrame::unify(left_on: string_view, right: const DataFrame&, right_on: string_view = \"\", how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\")",
+        "DataFrame DataFrame::unify(left_on: RangeView<string_view>, right: const DataFrame&, right_on: RangeView<string_view> = {}, how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\")",
+        "DataFrame DataFrame::unify(left_on: initializer_list<string_view>, right: const DataFrame&, right_on: initializer_list<string_view> = {}, how: string_view = \"common\", right_suffix: string = \"_right\", validate: string_view = \"many_to_many\")",
     ],
 }
 
@@ -461,7 +461,7 @@ def render() -> str:
     ]
     for name, (args, result, note) in METHODS.items():
         signatures = SIGNATURE_OVERRIDES.get(
-            name, [f"DataFrame::{name}({args}) -> {result}"]
+            name, [f"{result} DataFrame::{name}({args})"]
         )
         lines.extend([
             f"## `{name}`",

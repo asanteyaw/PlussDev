@@ -42,7 +42,7 @@ Construct and inspect a second-order continuous state-space model.
 
 #include <iostream>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -80,7 +80,7 @@ Compute `Reach` and `Observe` Gramians and compare continuous and discrete resul
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -121,7 +121,7 @@ Exercise matrix-shape and sample-time validation before analysis begins.
 #include <exception>
 #include <string>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {

@@ -1,0 +1,29 @@
+# Power systems
+
+A power system is a network of buses joined by lines and transformers, with generators supplying and loads drawing power. The analysis finds the voltages and flows the network settles into, how they respond to outages and changes of load, and how to run it at least cost.
+
+1. **What are the voltages and flows?** Describing a network in per-unit, solving it with the linear DC approximation and with the full AC Newton power flow.
+2. **What happens when injections change or a line is lost?** Power transfer distribution factors and line outage distribution factors, and N-1 screening of a whole network at once.
+3. **How should it be run, and what is it really doing?** Least-cost generation by economic dispatch, with and without security against line outages, and by the exact AC optimal power flow.
+4. **How do we know the state, and how far can it be pushed?** Weighted least-squares state estimation with bad-data evidence, and the continuation power flow through the voltage-collapse point.
+
+Chapters, in reading order:
+
+- [Power 1: Networks and Power Flow](power/power_01_networks_and_power_flow.md)
+- [Power 2: Sensitivities and Contingencies](power/power_02_sensitivities_and_contingencies.md)
+- [Power 3: Dispatch and Optimal Power Flow](power/power_03_dispatch_and_opf.md)
+- [Power 4: Estimation and Continuation](power/power_04_estimation_and_continuation.md)
+
+Every chapter follows the same format: a mental model, complete programs, and output produced by those programs.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+power/power_01_networks_and_power_flow
+power/power_02_sensitivities_and_contingencies
+power/power_03_dispatch_and_opf
+power/power_04_estimation_and_continuation
+```
+<!-- apiref:toctree:end -->

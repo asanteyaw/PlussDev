@@ -39,7 +39,7 @@ int main() {
     const auto y = pluss::make_series(values, {10}, as_f64());
     const auto ols = reg::ols_fit(y, x);
     const auto median = reg::quantile_fit(y, x);
-    out.writeln(outlier, "  ", ols.coefficients.pull<double>(), "  ", median.coefficients.pull<double>(), "  ", median.converged, median.iterations);
+    out.writeln(outlier, "  ", ols.coefficients.items<double>(), "  ", median.coefficients.items<double>(), "  ", median.converged, median.iterations);
   }
 }
 ```
@@ -66,7 +66,7 @@ int main() {
   const auto x = pluss::make_series(xs, {10}, as_f64());
   const auto y = pluss::make_series(values, {10}, as_f64());
   const auto fit = reg::quantile_fit(y, x);
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
 
   // The check-function loss of a line with the given intercept and slope.
   auto loss = [&](double intercept, double slope, double tau) {
@@ -84,10 +84,10 @@ int main() {
     }
   }
   out.writeln("smallest loss on the surrounding ring", smallest_ring_loss, " (at least the objective)");
-  const auto ols = reg::ols_fit(y, x).coefficients.pull<double>();
+  const auto ols = reg::ols_fit(y, x).coefficients.items<double>();
   out.writeln("loss at the least-squares line       ", loss(ols[0], ols[1], 0.5));
 
-  const auto r = fit.residuals.pull<double>();
+  const auto r = fit.residuals.items<double>();
   int below = 0, above = 0, near = 0;
   for (double v : r) {
     (v < -1e-4 ? below : v > 1e-4 ? above : near)++;
@@ -99,3 +99,12 @@ int main() {
 ```
 
 The reported `objective` equals the check-function loss computed by hand, 19.75. The nearest perturbed lines all have a larger loss (the smallest is 19.80), and the least-squares line, with its loss of 36.12, is far worse as a median line. Of the ten residuals, two are below the line, four are on it (the four points just named, to within 10⁻⁴) and four are above: neither side holds more than half of the observations, which is the median condition. The fitted values plus the residuals give back the response, and the pseudo R² of 0.5557 is the loss removed relative to a constant at the sample median (44.45).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="several_quantiles.html">
+    <span class="label">Next</span>
+    <span class="title">Several quantiles</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

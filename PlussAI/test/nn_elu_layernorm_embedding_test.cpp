@@ -25,7 +25,7 @@ Config float_cfg() { return Config{}.with_dtype(ScalarType::Float32).with_platfo
 std::vector<double> pull_flat(const Series& x) {
   return x.to(pluss::pCPU, ScalarType::Float64)
       .reshape({x.numel()})
-      .pull<double>();
+      .items<double>();
 }
 
 bool run_elu_checks(std::ostream* err = nullptr) {

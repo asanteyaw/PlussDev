@@ -2,8 +2,6 @@
 #include <pluss/tils.h>
 #include <pluss/nn.h>
 #include <pluss/mic.h>
-#include <fmt/format.h>
-#include <fmt/ranges.h>
 
 #include <algorithm>
 #include <cmath>
@@ -13,6 +11,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <pluss/tils/kit/output.h>
 
 namespace {
 
@@ -94,7 +93,7 @@ int main() {
   df = df.rename("Price", "Date");
   std::cout << "source=" << csv_path << "\n";
   std::cout << "raw rows=" << df.ncases() << " features=" << df.nfeatures() << "\n";
-  std::cout << fmt::format("feature names=[{}]\n", fmt::join(df.features(), ", "));
+  std::cout << pluss::tils::OutputEngine::format("feature names=[{}]\n", pluss::tils::OutputEngine::join(df.features(), ", "));
 
   auto work = df.features({"Date", "Adj Close", "High", "Low", "Volume"});
   work.set("Ret1D") = work.features("Adj Close") / work.features("Adj Close").shift( 1) - 1.0;
@@ -103,7 +102,7 @@ int main() {
       (work.features("High") - work.features("Low")) / work.features("Adj Close"),
       (work.features("Volume") + 1.0).log(),
   };
-  work = work.dropnull().label().set("Date", true);
+  work = work.dropnull().labels().set("Date", true);
   // Full-history mode: keep all available rows for stress coverage.
   work.head(10);
   std::cout << "prepared rows=" << work.ncases() << " features=" << work.nfeatures() << "\n";

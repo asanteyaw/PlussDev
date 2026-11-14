@@ -1,0 +1,58 @@
+# `thermal::Tip`
+
+The condition at the tip of a fin.
+
+## Signature
+
+```cpp
+thermal::Tip
+```
+
+## What It Does
+
+Selects how a fin ends. The condition changes the heat the fin carries and the temperature at its tip.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Adiabatic` | No heat leaves the tip: `q = M tanh(m L)`. The default of `fin`. | The default of `fin`. |
+| `Convective` | The tip loses heat to the fluid with the same coefficient as the sides: `q = M (sinh mL + (h / m k) cosh mL) / (cosh mL + (h / m k) sinh mL)`. |  |
+| `Infinite` | The fin is so long that its tip is at the ambient temperature: `q = M`. The length does not enter the heat. |  |
+
+## Returns
+
+A choice of three conditions, read by `fin`.
+
+## Errors
+
+None: all three values are always valid.
+
+## Interpretation and Use
+
+With `m = sqrt(h P / (k A))` and `M = sqrt(h P k A) (T_base - T_ambient)`. A convective tip is a few percent above an adiabatic one on a short fin and the same on a long one. An infinite fin is the limit a long fin approaches: after `m L` of about three the three conditions agree.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The three conditions at two lengths.
+
+@@example Eng/api/thermal_fin_tips.cpp@@
+
+### Example 2
+
+An adiabatic tip.
+
+@@example Eng/api/thermal_fin_basic.cpp@@
+
+### Example 3
+
+Heat as the fin gets longer.
+
+@@example Eng/api/thermal_fin_length.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

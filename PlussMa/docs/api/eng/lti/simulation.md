@@ -24,7 +24,7 @@ Run a stable first-order system under constant input on an irregular time grid.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -58,7 +58,7 @@ Compare zero-order and linearly interpolated ramp inputs while starting from the
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -98,7 +98,7 @@ Show rejection of repeated timestamps and an input missing its required trailing
 #include <exception>
 #include <string>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {

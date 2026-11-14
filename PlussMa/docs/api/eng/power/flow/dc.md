@@ -46,7 +46,7 @@ A ring with flows that can be found by hand.
 #include <cmath>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -100,7 +100,7 @@ Linearity: a sweep of load levels.
 #include <cmath>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -154,7 +154,7 @@ Compared with the AC solution, and its lack of losses.
 #include <cmath>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }

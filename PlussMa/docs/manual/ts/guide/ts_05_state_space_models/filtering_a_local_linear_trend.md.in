@@ -100,8 +100,8 @@ int main() {
   std::cout << std::setw(5) << "t" << std::setw(10) << "y" << std::setw(10) << "level" << std::setw(10) << "slope" << std::setw(10) << "error" << "\n";
   for (int t : {0, 1, 2, 5, 10, 20, 40, 79}) {
     const auto x = fit.filtered_states.select(0, t).host<double>();
-    std::cout << std::setw(5) << t << std::setw(10) << y.select(0, t).item<double>() << std::setw(10) << x[0] << std::setw(10) << x[1] << std::setw(10)
-              << fit.forecast_obs_error.select(0, t).item<double>() << "\n";
+    std::cout << std::setw(5) << t << std::setw(10) << y.select(0, t).squeeze().item<double>() << std::setw(10) << x[0] << std::setw(10) << x[1] << std::setw(10)
+              << fit.forecast_obs_error.select(0, t).squeeze().item<double>() << "\n";
   }
   std::cout << "log-likelihood " << fit.loglik << "\n";
 }
@@ -172,3 +172,12 @@ The two parameters are not equally well determined. The observation noise is pin
 - **Filtered is not smoothed.** The filtered state uses only the past and is what you have in real time; use the smoother to look back ([next page](smoothing_across_a_gap_and_forecasting.md)).
 
 Where next: [Smoothing across a gap, and forecasting](smoothing_across_a_gap_and_forecasting.md) handles missing observations and uses the model to look ahead.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="smoothing_across_a_gap_and_forecasting.html">
+    <span class="label">Next</span>
+    <span class="title">Smoothing across a gap, and forecasting</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

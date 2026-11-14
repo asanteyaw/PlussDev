@@ -1,0 +1,59 @@
+# `thermal::enth`
+
+The specific enthalpy of moist air.
+
+## Signature
+
+```cpp
+Series thermal::enth(const Series& temperature,
+                      const Series& w);
+```
+
+## What It Does
+
+Returns `1006 t + w (2501000 + 1860 t)` in joules per kilogram of dry air. The reference state is dry air at 0 degrees Celsius and saturated liquid water at 0 degrees Celsius, both with zero enthalpy; `2501000` J/kg is the latent heat of vaporisation at 0 degrees and `1006` and `1860` J/(kg K) the specific heats of dry air and of water vapour.
+
+## Parameters
+
+`temperature`
+: The dry-bulb temperature in degrees Celsius.
+
+`w`
+: The humidity ratio in kg/kg, not negative.
+
+## Returns
+
+The enthalpy in J per kg of dry air with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for a temperature outside -60 to 150 or a negative humidity ratio.
+
+## Interpretation and Use
+
+A cooling load is the difference of enthalpies times the dry-air mass flow. The first term of the enthalpy is the sensible part and the term in `w` the latent part, so a load splits cleanly into both.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Enthalpy at 25 degrees.
+
+@@example Eng/api/thermal_enth_basic.cpp@@
+
+### Example 2
+
+Sensible and latent parts of a cooling load.
+
+@@example Eng/api/thermal_enth_split.cpp@@
+
+### Example 3
+
+Rejected inputs.
+
+@@example Eng/api/thermal_enth_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

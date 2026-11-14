@@ -1,0 +1,44 @@
+# Robot dynamics
+
+This branch relates joint motion to joint forces. `torques` gives the torques of a motion, `inertia` and `bias` its parts, `accel` the accelerations under torques, and `ke` and `pe` the energies. `DynamicsOptions` sets gravity.
+
+## Choosing A Surface
+
+Use `torques` to find the torques that produce a planned motion, `accel` to find the motion that torques produce, and `inertia` with `bias` when the equations of motion are needed in parts, for example to design a controller.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Torques of a planar arm.
+
+@@example Eng/api/robot_dyn_inverse.cpp@@
+
+### Example 2
+
+The inertia matrix.
+
+@@example Eng/api/robot_dyn_mass.cpp@@
+
+### Example 3
+
+A simulation that conserves energy.
+
+@@example Eng/api/robot_dyn_simulate.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dynamics/DynamicsOptions
+dynamics/torques
+dynamics/inertia
+dynamics/bias
+dynamics/accel
+dynamics/ke
+dynamics/pe
+```
+<!-- apiref:toctree:end -->

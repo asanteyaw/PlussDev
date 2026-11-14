@@ -29,4 +29,11 @@ All four return a `BlackboxAdvancedOutcome`, and divide the evaluation budget of
 5. Run a few seeds and keep the best when the function is rugged.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_12_mads_variants/decomposition_variants
+dfo_12_mads_variants/failures_and_several_basins
+```
 <!-- apiref:toctree:end -->

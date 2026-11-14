@@ -102,3 +102,16 @@ int main() {
 
 - [`expanding_mean`](expanding_mean.md): the same with a window that grows
 - [`zscore_rolling`](zscore_rolling.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rolling_mean.html">
+    <span class="label">Previous</span>
+    <span class="title">rolling_mean</span>
+  </a>
+  <a class="next-link" href="rolling_std.html">
+    <span class="label">Next</span>
+    <span class="title">rolling_std</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

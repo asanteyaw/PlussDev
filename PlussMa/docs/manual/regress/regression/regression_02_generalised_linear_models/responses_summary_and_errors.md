@@ -31,9 +31,9 @@ int main() {
   reg::GLMOptions options;
   options.family = reg::GLMFamily::Binomial;
   const auto fit = reg::glm_fit(defective, temperature, options);
-  out.writeln("coefficients", fit.coefficients.pull<double>(), " converged", fit.converged, " iterations", fit.iterations);
-  out.writeln("fitted proportions", fit.fitted_values.pull<double>());
-  out.writeln("residuals (y - fitted)", fit.residuals.pull<double>());
+  out.writeln("coefficients", fit.coefficients.items<double>(), " converged", fit.converged, " iterations", fit.iterations);
+  out.writeln("fitted proportions", fit.fitted_values.items<double>());
+  out.writeln("residuals (y - fitted)", fit.residuals.items<double>());
 
   auto attempt = [&](const char *label, reg::GLMFamily family, const std::vector<double> &values) {
     reg::GLMOptions o;
@@ -252,3 +252,12 @@ predict, empty result -> subsp::stats::regression::glm_predict: fit.coefficients
 ```
 
 Each of the thirteen conditions is rejected with the message shown, preceded by the qualified name of the function that raised it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="weights_and_offsets.html">
+    <span class="label">Previous</span>
+    <span class="title">Weights and offsets</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

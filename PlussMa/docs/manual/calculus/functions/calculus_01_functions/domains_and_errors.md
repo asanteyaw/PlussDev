@@ -17,7 +17,7 @@ Four primitives test their input on every evaluation and raise a `pluss::Error` 
 | `sqrt(a)` | `a >= 0` | every finite value, principal square root |
 | `a / b` | `b != 0` | `b != 0` |
 
-A `NaN` is neither positive nor non-negative, so a `NaN` reaching `log` or `sqrt` is also reported. The other primitives are not checked, and follow floating-point arithmetic: `exp` overflows to infinity, a negative number to a fractional power is `NaN`, zero to a negative power is infinity, and `tan` is finite near its poles. The program evaluates a function at one point at a time and prints either the value or the error, so each case can be seen.
+A `NaN` is neither positive nor non-negative, so a `NaN` reaching `log` or `sqrt` is also reported. The other primitives are not checked, and follow floating-point arithmetic: `exp` overflows to infinity, a negative number to a fractional power is an error (a real power of a negative base exists only for an integer exponent), zero to a negative power is infinity, and `tan` is finite near its poles. The program evaluates a function at one point at a time and prints either the value or the error, so each case can be seen.
 
 ```cpp
 #include <pluss/ma.h>
@@ -71,26 +71,26 @@ Output
 
 ```text
 -- checked --
-log(1)            -> 0.000000
-log(0)            -> error: log domain excludes zero and requires positive real values
-log(-1)           -> error: log domain excludes zero and requires positive real values
-log(nan)          -> error: log domain excludes zero and requires positive real values
+0.000000 log(1)
+error: log domain excludes zero and requires positive real values log(0)
+error: log domain excludes zero and requires positive real values log(-1)
+error: log domain excludes zero and requires positive real values log(nan)
 log1p(-0.5)       -> -0.693147
 log1p(-1)         -> error: log1p domain excludes -1 and requires real values greater than -1
-sqrt(4)           -> 2.000000
-sqrt(-1)          -> error: sqrt domain requires nonnegative values
+2.000000 sqrt(4)
+error: sqrt domain requires nonnegative values sqrt(-1)
 1 / x at x = 2    -> 0.500000
 1 / x at x = 0    -> error: division domain excludes zero denominators
 -- not checked: ordinary floating-point arithmetic --
-exp(1000)         -> inf
-(-1)^0.5          -> nan
+inf exp(1000)
+(-1)^0.5          -> error: pow domain requires a nonnegative base unless the exponent is an integer
 (-2)^3            -> -8.000000
 0^(-1)            -> inf
-tan(pi/2)         -> 16331239353195370.000000
+16331239353195370.000000 tan(pi/2)
 x + 1 at nan      -> nan
 ```
 
-The checked group matches the table: the boundary values 0 for `log`, −1 for `log1p` and 0 for division are errors, interior values are not, and `log(nan)` is reported. The unchecked group is what the underlying arithmetic does. In particular `(-1)^0.5` is `NaN`, not an error, because a power with a fractional exponent has no inexpensive exact domain test; if the base of such a power can be negative, constrain it yourself. `tan(π/2)` is about 1.6 × 10¹⁶, a large finite number, because π/2 is not exactly representable.
+The checked group matches the table: the boundary values 0 for `log`, −1 for `log1p` and 0 for division are errors, interior values are not, and `log(nan)` is reported. The unchecked group is what the underlying arithmetic does (the power is checked, as the next sentence says). `(-1)^0.5` is reported as an error, because a real power of a negative base exists only for an integer exponent. `tan(π/2)` is about 1.6 × 10¹⁶, a large finite number, because π/2 is not exactly representable.
 
 The check is applied to every element of the argument, so one bad point in an array fails the whole evaluation, and the message does not say which element. If a few points of a batch may be invalid, filter them out first, or evaluate where the function is defined.
 
@@ -155,8 +155,8 @@ building, two variables but one parameter  -> math::function: variable count 2 d
 building, shapes [2] and [3]                -> math::Function: output shapes are not broadcast-compatible
 building, log of the constant 0             -> no error
 calling with a name that does not exist     -> math::Function: unknown variable binding 'y'
-evaluating log(1)                           -> no error
-evaluating log(-1)                          -> math::Function: log domain excludes zero and requires positive real values
+evaluating log(1)
+evaluating log(-1)
 evaluating log of the constant 0            -> math::Function: log domain excludes zero and requires positive real values
 an undefined Function                       -> math::Function: operation requires a defined function
 ```
@@ -169,3 +169,16 @@ Every error described here is a `pluss::Error` (a `std::exception`), so one hand
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="simplification_and_assumptions.html">
+    <span class="label">Previous</span>
+    <span class="title">Simplification and assumptions</span>
+  </a>
+  <a class="next-link" href="functions_from_series_code.html">
+    <span class="label">Next</span>
+    <span class="title">Functions from Series code</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

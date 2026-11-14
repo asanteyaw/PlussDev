@@ -56,7 +56,7 @@ int main() {
   std::cout << "rank chosen " << fit.rank << ", sample size " << fit.sample_size << "\n";
   out.writeln("beta (long run)", (fit.beta.select(1, 0)).reshape({(fit.beta.select(1, 0)).numel()}).host<double>());
   out.writeln("alpha (loadings)", (fit.alpha.select(1, 0)).reshape({(fit.alpha.select(1, 0)).numel()}).host<double>());
-  out.writeln("constant", (fit.constant).reshape({(fit.constant).numel()}).pull<double>());
+  out.writeln("constant", (fit.constant).reshape({(fit.constant).numel()}).items<double>());
   std::cout << std::setprecision(2) << "log-likelihood " << fit.loglik(y) << "\n";
 }
 ```
@@ -219,3 +219,12 @@ The ranking at the long horizon is the point. At ten steps the true rank has the
 - **Do not force a relation.** If the test does not find one, fit the VAR in differences (`rank = 0`) rather than an error-correction model with an invented relation.
 
 That completes the vector-model chapter. [Chapter 5](../ts_05_state_space_models.md) turns to state-space models, which describe a series by an unobserved state that evolves in time.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_rank_of_a_cointegrated_system.html">
+    <span class="label">Previous</span>
+    <span class="title">The rank of a cointegrated system</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

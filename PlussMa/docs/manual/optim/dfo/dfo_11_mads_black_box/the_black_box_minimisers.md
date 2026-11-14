@@ -53,7 +53,7 @@ minimizer          : 0.0000, 0.0000
 objectives         : 1.0000, 1.0000
 scalarized minimum : 1.0000  (equal weights)
 status             : Converged
-evaluations        : 281 (total 283, cache hits 2)
+evaluations        : 281 (total 287, cache hits 6)
 objective / constraint dimension: 2 / 1
 Pareto archive     : 251 points, 251 x 2 matrix
 ```
@@ -241,7 +241,7 @@ int main() {
       return e;
     };
     const auto o = dfo::mads_blackbox_minimizer(blackbox, vec({5.0}), c);
-    const auto p = o.pareto_points.reshape({o.pareto_points.numel()}).pull<double>();
+    const auto p = o.pareto_points.reshape({o.pareto_points.numel()}).host<double>();
     
     double lo = 1e300, hi = -1e300;
     for (double v : p) { lo = std::min(lo, v); hi = std::max(hi, v); }
@@ -269,3 +269,8 @@ The archive is a record of the search, not a computed front: it holds non-domina
 - **Read both objectives at the minimiser, not only the scalar.** The scalar depends on your weights; the vector is the trade-off.
 
 Where next: [Chapter 12](../dfo_12_mads_variants.md) covers the specialised variants.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

@@ -20,8 +20,8 @@ Solve a constrained scalar tracking problem and inspect the planned trajectories
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -72,8 +72,8 @@ Compile a reusable plan and warm-start the next receding-horizon solve.
 
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -123,8 +123,8 @@ Reject a continuous plant and a non-positive prediction horizon.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {

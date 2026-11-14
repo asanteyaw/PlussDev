@@ -23,7 +23,7 @@ Build a plane and a space truss and a batch of heights.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -86,7 +86,7 @@ Build a portal frame with and without density.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -149,7 +149,7 @@ Pins, rollers, prescribed displacements and a repeated degree of freedom.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -211,19 +211,6 @@ pin and roller: right foot slides (mm) 0.1125, tie force (N) 3750.0000
 two pins:       right foot slides (mm) 0.0000, tie force (N) 0.0000
 prescribed 1 mm: right foot moves (mm) 1.0000, tie force (N) 33333.3333
 a degree of freedom named twice: eng::structure::solve: constrained degrees of freedom must be unique
-```
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-model/Mesh
-model/Bars
-model/Sections
-model/Fix
-model/TrussModel
-model/FrameModel
-model/truss
-model/frame
 ```
 
 <!-- apiref:toctree:start -->

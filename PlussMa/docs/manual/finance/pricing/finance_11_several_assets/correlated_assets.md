@@ -1,0 +1,338 @@
+<!-- generated from correlated_assets.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Correlated assets
+
+[Back to Several assets](../finance_11_several_assets.md)
+
+The options of the previous pages each depend on one asset, so each asset's own `Field` prices them and the assets need no relationship. A payoff on several assets at once, a basket or a spread, does depend on how the assets move together. A `Chord` carries that relationship as correlation matrices and simulates all its assets in one pass, whatever their model. [Building a Chord](building_a_chord.md) shows how the matrices are set from a table of model parameters and what is implied when only some are given.
+
+```cpp
+module::Chord::Paths module::Chord::simulate_paths(Config cfg = {}) const;
+pluss::Series module::Chord::price_corr = pluss::series::undefined();
+pluss::Series module::Chord::var_corr = pluss::series::undefined();
+pluss::Series module::Chord::price_var_cross = pluss::series::undefined();
+```
+
+| `Chord` member | Shape | Meaning |
+|---|---|---|
+| `price_corr` | `[assets, assets]` | the correlation of the price shocks, in the order the assets were added |
+| `var_corr` | `[assets, assets]` | the correlation of the variance shocks of the assets (optional) |
+| `price_var_cross` | `[assets, assets]` | the cross correlation of the price shock of asset *a* with the variance shock of asset *b* (optional; built from the other two and each `rho` when not given) |
+
+| `Chord::Paths` | Shape | Meaning |
+|---|---|---|
+| `names` | one per asset | the asset names, in the order added |
+| `asset`, `variance` | `[paths, steps + 1, assets]` | the simulated prices and variances; the first column is the starting value |
+| `asset_shocks`, `vol_shocks` | `[paths, steps, assets]` | the standard normal shocks that drove them |
+| `horizon` | scalar | the time of the last column, in years |
+
+An undefined matrix means independent. Within an asset the price and variance shocks keep the correlation `rho` of its model: the variance shock is `rho` times its price shock plus an independent remainder. Setting `price_corr` and each asset's own `rho` already fixes every correlation between the shocks: the variance shocks of assets *a* and *b* then correlate at ρₐρ_b R_s[a,b] and the price shock of *a* with the variance shock of *b* at ρ_b R_s[a,b]. Giving `var_corr` as well makes the variance shocks correlate by exactly R_v: the cross terms are still ρ_b R_s[a,b], and the remainders are correlated at (R_v − ρₐρ_b R_s)/(√(1−ρₐ²)√(1−ρ_b²)), so R_v must be one that R_s and the `rho` allow, or `simulate_paths` refuses it. An explicit `price_var_cross` matrix replaces the built cross terms when the data say a variance responds differently to another asset's price; the whole set must then be a valid correlation matrix. Each asset's own law does not change; only the joint law does. Every asset must have the `MonteCarlo` engine and the same `controls.mc`, and the matrices must be symmetric, positive definite and have a unit diagonal.
+
+## The correlation is in the shocks
+
+The program simulates three assets with price correlations 0.6, −0.3 and 0.2 and reads the correlation back from the shocks that drove them, and checks that each asset's average terminal price is its forward whatever the correlation.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field asset(double spot, std::vector<double> params) {
+  mod::Field f{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(spot, 0.03, 0.01),
+               .model = fin::model::make(fin::model::Kind::Heston, params), .controls = {.engine = mod::Engine::MonteCarlo}};
+  f.controls.mc.paths = 40000;
+  f.controls.mc.steps = 50;
+  f.controls.mc.seed = 5;
+  return f;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Chord chord;
+  chord.add("a", asset(100.0, {1.5, 0.04, 0.3, -0.7, 0.09})).add("b", asset(50.0, {2.0, 0.06, 0.4, 0.0, 0.03})).add("c", asset(80.0, {1.0, 0.05, 0.25, -0.4, 0.05}));
+  chord.price_corr = pluss::make_series({1.0, 0.6, -0.3, 0.6, 1.0, 0.2, -0.3, 0.2, 1.0}, {3, 3});
+  const auto paths = chord.simulate_paths();
+  const auto corr = [&](int i, int j) {
+    const Series x = paths.asset_shocks.select(2, i).reshape({40000 * 50}), y = paths.asset_shocks.select(2, j).reshape({40000 * 50});
+    return (x * y).mean().item<double>() / std::sqrt(x.square().mean().item<double>() * y.square().mean().item<double>());
+  };
+  out.writeln("requested 0.6, -0.3, 0.2; read back", corr(0, 1), corr(0, 2), corr(1, 2));
+  const double growth = std::exp(0.02);
+  out.writeln("average terminal price", paths.asset.select(1, 50).mean(0).items<double>(), " forwards", 100.0 * growth, 50.0 * growth, 80.0 * growth);
+}
+```
+
+Output
+
+```text
+requested 0.6, -0.3, 0.2; read back 0.599 -0.302 0.200
+average terminal price [101.737, 50.983, 81.815]  forwards 102.020 51.010 81.616
+```
+
+The correlations read back from the shocks are 0.599, −0.302 and 0.200 against the requested 0.6, −0.3 and 0.2. The average terminal prices (101.7, 51.0 and 81.8) are the forwards (102.0, 51.0 and 81.6) to within about two standard errors of 40 000 paths, and a correlation of 0.9 instead leaves them the same: correlation reshapes the joint law and not the marginals.
+
+## A basket option
+
+A basket call pays `max(average of the assets − K, 0)`. It depends on the correlation: when the assets move together the average is as dispersed as one asset, and when they move against each other the movements cancel. The program prices a call on the average of two identical assets with correlations −0.5, 0 and 0.8, with the same seed for each.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field asset() {
+  mod::Field f{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(100.0, 0.03, 0.0),
+               .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = mod::Engine::MonteCarlo}};
+  f.controls.mc.paths = 100000;
+  f.controls.mc.steps = 50;
+  f.controls.mc.seed = 7;
+  return f;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Chord chord;
+  chord.add("x", asset()).add("y", asset());
+  // the price of a single option on one asset, for comparison
+  out.writeln("one asset, strike 100:", asset().price().price.items<double>()[0]);
+  for (const double r : {-0.5, 0.0, 0.8}) {
+    chord.price_corr = pluss::make_series({1.0, r, r, 1.0}, {2, 2});
+    chord.var_corr = chord.price_corr;
+    const Series basket = chord.simulate_paths().asset.select(1, 50).mean(1);   // the average of the two assets at maturity
+    out.writeln("correlation", r, " basket call", std::exp(-0.03) * basket.sub(100.0).clamp_min(0.0).mean().item<double>());
+  }
+}
+```
+
+Output
+
+```text
+one asset, strike 100: 9.149
+correlation -0.500  basket call 5.684
+correlation 0.000  basket call 6.976
+correlation 0.800  basket call 8.741
+```
+
+The basket call is worth 5.68 at a correlation of −0.5, 6.98 at zero and 8.74 at 0.8, rising towards the 9.15 of a call on a single asset, which is the limit of perfect correlation: a diversified basket is a less risky underlying, so its option is cheaper. The same seed is used for every correlation, so the differences are the correlation and not sampling noise.
+
+## Mixed models and Bates jumps
+
+Heston and Bates assets share one simulation, a Heston asset being a Bates asset without jumps. The jumps of different assets are independent; only the diffusions are correlated. The program puts a Heston asset and a Bates asset together at a correlation of 0.7 and prices a spread call `max(S₁ − S₂, 0)` on them; setting the correlation to zero raises the value of the spread, because the two prices then move apart more.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field asset(fin::model::Kind kind, std::vector<double> params) {
+  mod::Field f{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(100.0, 0.03, 0.0),
+               .model = fin::model::make(kind, params), .controls = {.engine = mod::Engine::MonteCarlo}};
+  f.controls.mc.paths = 100000;
+  f.controls.mc.steps = 50;
+  f.controls.mc.seed = 11;
+  return f;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  mod::Chord chord;
+  chord.add("heston", asset(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}))
+      .add("bates", asset(fin::model::Kind::Bates, {1.5, 0.04, 0.3, -0.7, 0.04, 0.3, -0.1, 0.15}));
+  for (const double r : {0.7, 0.0}) {
+    chord.price_corr = pluss::make_series({1.0, r, r, 1.0}, {2, 2});
+    const auto paths = chord.simulate_paths();
+    const Series spread = paths.asset.select(1, 50).select(1, 0) - paths.asset.select(1, 50).select(1, 1);
+    out.writeln("correlation", r, " spread call", std::exp(-0.03) * spread.clamp_min(0.0).mean().item<double>());
+  }
+}
+```
+
+Output
+
+```text
+correlation 0.700  spread call 7.169
+correlation 0.000  spread call 11.235
+```
+
+The spread call is worth 7.17 when the two assets are correlated at 0.7 and 11.24 when they are independent: highly correlated assets keep a small spread, independent ones let it open in either direction and the option pays when it opens in the right one.
+
+## Different models together
+
+The assets of a `Chord` need not share a model. Every model the simulation supports has the same shape, **a price factor and, except for Black-Scholes, a second factor**, so one set of matrices describes them all:
+
+| Model | The path of the asset | Its second factor | `variance` in the result |
+|---|---|---|---|
+| Black-Scholes | exact lognormal step | none | the constant {math}`\sigma^2` |
+| Heston, Bates | the spot, with the variance process (and, for Bates, independent jumps) | the variance shock | the variance |
+| Rough Heston, rough Bergomi | the spot, with a variance built from the whole past of its shocks | the variance shock | the variance |
+| SABR | the forward, {math}`dF=\alpha F^{\beta}dW^S` | the shock of the volatility {math}`\alpha`, {math}`d\alpha=\nu\alpha\,dW^{\alpha}` | {math}`\alpha^2` |
+
+Each asset's second-factor shock is {math}`dW=\rho\,dW^{S}+\sqrt{1-\rho^{2}}\,dW^{\perp}` with the {math}`\rho` of its own model, and the three matrices relate the assets exactly as before: `price_corr` the price shocks, `var_corr` the second-factor shocks and `price_var_cross` the cross terms, built when not given. A Black-Scholes asset has no second factor, so its row and column of `var_corr` must be the identity's and the cross terms that name its second factor must be zero. Only the settings that drive the simulation must agree, `controls.mc`; the assets keep their own engines. The rough models depend on the whole past of their shocks, so each keeps a history of one column per step for every path, which costs memory in proportion to paths times steps; they are correlated through the same matrices as the others.
+
+The program simulates four assets whose kinds are interleaved, Heston, Black-Scholes, SABR and Bates, with a price correlation and a correlation between the second factors of the three that have one, and reads the correlations and the marginal laws back.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field mc_field(double spot, mod::Model model) {
+  mod::Field f{.instrument = fin::instrument::make(fin::pricing::Call, spot, 1.0), .market = fin::market::make(spot, 0.02, 0.01), .model = model,
+               .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  f.controls.mc.paths = 40000;
+  f.controls.mc.steps = 20;
+  f.controls.mc.seed = 5;
+  return f;
+}
+static double corr(const pluss::Series &a, const pluss::Series &b) { return a.mul(b).mean().item<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  mod::Chord chord{{"heston", mc_field(100.0, fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}))},
+                   {"bs", mc_field(80.0, fin::model::BlackScholes{.volatility = pluss::make_series({0.2})})},
+                   {"sabr", mc_field(120.0, fin::model::make(fin::model::Kind::Sabr, {0.3, 0.7, 0.5, -0.3}))},
+                   {"bates", mc_field(90.0, fin::model::make(fin::model::Kind::Bates, {1.0, 0.05, 0.25, -0.4, 0.05, 0.3, -0.1, 0.15}))}};
+  chord.price_corr = pluss::make_series({1.0, 0.5, 0.4, 0.3,
+                                         0.5, 1.0, 0.2, 0.1,
+                                         0.4, 0.2, 1.0, 0.25,
+                                         0.3, 0.1, 0.25, 1.0}, {4, 4}, f64);
+  chord.var_corr = pluss::make_series({1.0, 0.0, 0.3, 0.2,
+                                       0.0, 1.0, 0.0, 0.0,
+                                       0.3, 0.0, 1.0, 0.1,
+                                       0.2, 0.0, 0.1, 1.0}, {4, 4}, f64);
+  const auto p = chord.simulate_paths();
+  const auto z = [&](int a) { return p.asset_shocks.select(2, a); };
+  const auto w = [&](int a) { return p.vol_shocks.select(2, a); };
+  out.writeln("assets", p.names, " paths", p.asset.sizes());
+  out.writeln("price shocks, requested 0.5 (heston, bs) and 0.25 (sabr, bates):", corr(z(0), z(1)), corr(z(2), z(3)));
+  out.writeln("second factors, requested 0.3 (heston, sabr), 0.2 (heston, bates), 0.1 (sabr, bates):", corr(w(0), w(2)), corr(w(0), w(3)), corr(w(2), w(3)));
+  out.writeln("black-scholes second factor with heston's, none, so 0:", corr(w(1), w(0)));
+  out.writeln("price of bs with heston's variance shock, built as -0.7 x 0.5 = -0.35:", corr(z(1), w(0)));
+  for (int a = 0; a < 4; ++a) {
+    const pluss::Series terminal = p.asset.select(2, a).select(1, 20);
+    out.writeln(p.names[a], " mean terminal", terminal.mean().item<double>(), " forward", std::vector<double>{100.0, 80.0, 120.0, 90.0}[a] * std::exp(0.01));
+  }
+  out.writeln("variance of the bs asset", p.variance.select(2, 1).min().item<double>(), p.variance.select(2, 1).max().item<double>(), " mean alpha of sabr at T", p.variance.select(2, 2).select(1, 20).sqrt().mean().item<double>(), "(alpha0 = 0.3)");
+}
+```
+
+Output
+
+```text
+assets [heston, bs, sabr, bates]  paths [40000, 21, 4]
+price shocks, requested 0.5 (heston, bs) and 0.25 (sabr, bates): 0.499 0.248
+second factors, requested 0.3 (heston, sabr), 0.2 (heston, bates), 0.1 (sabr, bates): 0.300 0.200 0.099
+black-scholes second factor with heston's, none, so 0: 0.001
+price of bs with heston's variance shock, built as -0.7 x 0.5 = -0.35: -0.350
+heston  mean terminal 100.858  forward 101.005
+bs  mean terminal 80.843  forward 80.804
+sabr  mean terminal 121.249  forward 121.206
+bates  mean terminal 91.016  forward 90.905
+variance of the bs asset 0.040 0.040  mean alpha of sabr at T 0.299 (alpha0 = 0.3)
+```
+
+The correlations come out as asked. The price shocks read back at 0.499 and 0.248 against the requested 0.5 and 0.25. The second-factor shocks of the Heston, SABR and Bates assets correlate at 0.300, 0.200 and 0.099 against 0.3, 0.2 and 0.1, exactly the `var_corr` given, although one is a variance shock, one the shock of a volatility and one a variance shock with jumps. The Black-Scholes asset has no second factor: the correlation of its (dummy) second-factor shock with the Heston one is 0.001, zero to sampling error, and its price shock is related to the Heston variance shock only through the Heston `rho`, as built: −0.7 times 0.5 gives −0.350. Each asset keeps its own law whatever it is simulated with: the mean terminal prices (100.86, 80.84, 121.25 and 91.02) are within sampling error of the forwards (101.01, 80.80, 121.21 and 90.91), the Black-Scholes variance is the constant 0.04, and the SABR volatility factor, a martingale, averages 0.299 at the horizon against its starting 0.3.
+
+## What is refused
+
+A correlation matrix that cannot belong to any set of random variables is refused, naming the matrix; so are assets whose `controls.mc` differ and a `var_corr` entry for a Black-Scholes asset that has no second factor.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  mod::Field f{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0), .market = fin::market::make(100.0, 0.03, 0.0),
+               .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}), .controls = {.engine = mod::Engine::MonteCarlo}};
+  f.controls.mc.paths = 1000;
+  f.controls.mc.steps = 10;
+  const auto attempt = [&](const char *label, mod::Chord &chord) {
+    try {
+      (void)chord.simulate_paths();
+      out.writeln(label, "-> accepted");
+    } catch (const std::exception &e) {
+      const std::string message = e.what();
+      out.writeln(label, "->", message.substr(0, message.find('\n')));
+    }
+  };
+  mod::Chord impossible;
+  impossible.add("a", f).add("b", f).add("c", f);
+  impossible.price_corr = pluss::make_series({1.0, 0.9, 0.9, 0.9, 1.0, -0.9, 0.9, -0.9, 1.0}, {3, 3});
+  attempt("not positive definite", impossible);
+
+  mod::Chord asymmetric;
+  asymmetric.add("a", f).add("b", f);
+  asymmetric.price_corr = pluss::make_series({1.0, 0.5, 0.2, 1.0}, {2, 2});
+  attempt("not symmetric", asymmetric);
+
+  mod::Chord different;
+  mod::Field g = f;
+  g.controls.mc.paths = 2000;
+  different.add("a", f).add("b", g);
+  attempt("different controls.mc", different);
+
+  mod::Chord fine;
+  fine.add("a", f).add("b", f);
+  fine.price_corr = pluss::make_series({1.0, -0.99, -0.99, 1.0}, {2, 2});
+  attempt("correlation -0.99", fine);
+}
+```
+
+Output
+
+```text
+not positive definite -> subsp::math::finance::module::Chord::simulate_paths: price_corr must be positive definite
+not symmetric -> subsp::math::finance::module::Chord::simulate_paths: price_corr must be symmetric
+different controls.mc -> subsp::math::finance::module::Chord::simulate_paths: asset 'b' must have the same controls.mc (paths, steps, scheme, random numbers, seed) as the first asset
+correlation -0.99 -> accepted
+```
+
+The two impossible matrices are refused with the matrix named, a mismatch of `controls.mc` names the asset that differs, and a strongly negative but valid correlation of −0.99 is accepted.
+
+## Checklist
+
+1. Give every asset the same `controls.mc`; the assets are simulated together, so they share paths, steps and seed.
+2. A correlation of the price shocks does not change any single-asset price; it matters only for payoffs on several assets.
+3. Use `var_corr` as well when the volatilities of the assets should move together (the volatility of equity indices does).
+4. Assets of different models are fine: only `controls.mc` must agree. A Black-Scholes asset has no second factor, so its `var_corr` row is the identity's.
+4. The horizon is the longest maturity: read the date you need with `select(1, t)`, where `t = steps · maturity / horizon`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="batching.html">
+    <span class="label">Previous</span>
+    <span class="title">Batching</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

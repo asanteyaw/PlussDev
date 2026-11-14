@@ -235,9 +235,9 @@ int main() {
   const auto s = ts::Ssm::smooth(y, trend_model(0.2, 0.05, 0.3));
   std::cout << std::fixed << std::setprecision(3) << "   t   used   filtered   smoothed   smoothed sd   truth\n";
   for (int t = 13; t < 22; ++t) {
-    const double sd = std::sqrt(s.smoothed_states_cov.select(0, t).select(0, 0).select(0, 0).item<double>());
-    std::cout << std::setw(4) << t << std::setw(7) << (s.filter.data_used.select(0, t).item<double>() > 0 ? "yes" : "no") << std::setw(11) << s.filter.filtered_states.select(0, t).select(0, 0).item<double>() << std::setw(11)
-              << s.smoothed_states.select(0, t).select(0, 0).item<double>() << std::setw(13) << sd << std::setw(9) << 1.0 + 0.3 * t << "\n";
+    const double sd = std::sqrt(s.smoothed_states_cov.select(0, t).select(0, 0).select(0, 0).squeeze().item<double>());
+    std::cout << std::setw(4) << t << std::setw(7) << (s.filter.data_used.select(0, t).squeeze().item<double>() > 0 ? "yes" : "no") << std::setw(11) << s.filter.filtered_states.select(0, t).select(0, 0).squeeze().item<double>() << std::setw(11)
+              << s.smoothed_states.select(0, t).select(0, 0).squeeze().item<double>() << std::setw(13) << sd << std::setw(9) << 1.0 + 0.3 * t << "\n";
   }
 }
 ```
@@ -296,7 +296,7 @@ int main() {
   const Series y = pluss::make_series(trending(40), {40, 1}, f64);
   const auto f = ts::Ssm::forecast(5, y, trend_model(0.2, 0.05, 0.3));
   for (int h = 0; h < 5; ++h)
-    std::cout << std::fixed << std::setprecision(3) << "t = " << 40 + h << "   " << f.observations.select(0, h).item<double>() << "  +/- " << 1.96 * std::sqrt(f.observations_cov.select(0, h).select(0, 0).select(0, 0).item<double>()) << "   truth " << 1.0 + 0.3 * (40 + h) << "\n";
+    std::cout << std::fixed << std::setprecision(3) << "t = " << 40 + h << "   " << f.observations.select(0, h).squeeze().item<double>() << "  +/- " << 1.96 * std::sqrt(f.observations_cov.select(0, h).select(0, 0).select(0, 0).squeeze().item<double>()) << "   truth " << 1.0 + 0.3 * (40 + h) << "\n";
 }
 ```
 
@@ -364,7 +364,7 @@ int main() {
   for (int t = 0; t < 5; ++t) {
     const Series x = sim.observations.select(1, t).reshape({20000});
     const double variance = (x * x).mean().item<double>() - x.mean().item<double>() * x.mean().item<double>();
-    std::cout << std::setw(4) << t << std::setw(12) << variance << std::setw(12) << predicted.observations_cov.select(0, t).select(0, 0).select(0, 0).item<double>() << "\n";
+    std::cout << std::setw(4) << t << std::setw(12) << variance << std::setw(12) << predicted.observations_cov.select(0, t).select(0, 0).select(0, 0).squeeze().item<double>() << "\n";
   }
 }
 ```
@@ -379,3 +379,16 @@ int main() {
 - [`SsmModel`](SsmModel.md)
 - [`SsmFilterResult`](SsmFilterResult.md)
 - [`SsmSmoothResult`](SsmSmoothResult.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="SsmFilterResult.html">
+    <span class="label">Next</span>
+    <span class="title">SsmFilterResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

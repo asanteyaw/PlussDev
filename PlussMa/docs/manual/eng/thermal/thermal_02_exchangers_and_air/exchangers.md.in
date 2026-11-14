@@ -1,0 +1,92 @@
+# Heat exchangers
+
+[Back to Thermal 2: Exchangers and Air](../thermal_02_exchangers_and_air.md)
+
+Two streams pass on either side of a wall and one warms the other. You want to know what comes out, or how large the exchanger must be for a required outlet. This page rates an exchanger of given size, sizes one for a given duty, and relates both to the log-mean temperature difference.
+
+## The mental model
+
+The most heat a perfect, infinitely large exchanger could move is `Cmin (T_hot_in - T_cold_in)`, where `C = m cp` is the capacity rate of a stream and `Cmin` the smaller of the two. The **effectiveness** is the fraction a real exchanger achieves. It depends on only two numbers, the number of transfer units `NTU = UA / Cmin` (how big, in units of the weaker stream) and the capacity ratio `cr = Cmin / Cmax` (how unequal the streams are), and on the flow arrangement: parallel, counter, cross, shell-and-tube, or one stream boiling. `eff` evaluates the relation, `ntu` inverts it, and `rate` applies it to real streams.
+
+## Effectiveness of the arrangements
+
+At one operating point (`NTU = 2`, `cr = 0.5`) the five arrangements:
+
+@@example Eng/api/thermal_eff_flows.cpp@@
+
+Counter flow is the best of the flow arrangements and parallel flow the worst; cross flow and shell-and-tube lie between. A boiling stream stays at one temperature, so `cr` has no effect and the effectiveness is `1 - exp(-NTU)`.
+
+Counter flow with equal capacity rates, `cr = 1`, is the awkward limit of the textbook formula (`0 / 0`). It is evaluated without a special case:
+
+@@example Eng/api/thermal_eff_balanced.cpp@@
+
+At `cr = 1` the result is `NTU / (1 + NTU)`, the neighbouring `cr = 0.9999` differs by a part in ten thousand, and at `cr = 0` every arrangement gives `1 - exp(-NTU)`. A grid of `NTU` against `cr` is one call, because the inputs broadcast:
+
+@@example Eng/api/thermal_eff_batch.cpp@@
+
+## Rating an exchanger
+
+`rate` takes the capacity rates, the inlet temperatures and `UA`, and returns the duty, both outlet temperatures, the effectiveness and `NTU`. Hot water at 1000 W/K, cold water at 2000 W/K, counter flow, `UA = 1500 W/K`:
+
+@@example Eng/api/thermal_rate_basic.cpp@@
+
+The cold stream has the larger capacity rate, so it changes less; the energy balance closes to rounding error. The same exchanger in four arrangements:
+
+@@example Eng/api/thermal_rate_flows.cpp@@
+
+Counter flow transfers 16 % more heat than parallel flow here. Duty as a function of `UA`:
+
+@@example Eng/api/thermal_rate_ua_sweep.cpp@@
+
+The duty rises quickly at first and saturates at `Cmin (T_hot - T_cold) = 70 kW`: a tenfold increase from 5000 to 50 000 W/K buys only about 4 % more. A boiler or condenser, where one stream stays at one temperature, is `Flow::Boil` with a very large capacity rate on that stream:
+
+@@example Eng/api/thermal_rate_boil.cpp@@
+
+## Sizing for a required effectiveness
+
+Sizing runs the relation the other way. Choose the effectiveness the process needs; `ntu` returns the transfer units, `UA` is `NTU Cmin`, and the area is `UA / U`.
+
+@@example Eng/api/thermal_ntu_roundtrip.cpp@@
+
+For the same effectiveness a counter-flow exchanger needs 2.20 units and a cross-flow one 2.61. Parallel flow and shell-and-tube arrangements have ceilings on effectiveness; `ntu` refuses a request beyond them instead of returning a nonsense number:
+
+@@example Eng/api/thermal_ntu_limits.cpp@@
+
+Cross flow has no closed-form inverse; it is found by a root search over the whole batch, and the round trip through `eff` closes:
+
+@@example Eng/api/thermal_ntu_cross.cpp@@
+
+## Log-mean temperature difference
+
+When you know all four terminal temperatures, the log-mean difference gives `duty = UA LMTD`. It is the mean of the end differences, weighted logarithmically, and equal end differences give their common value.
+
+@@example Eng/api/thermal_lmtd_counter.cpp@@
+
+The arrangement matters through the pairing of the ends:
+
+@@example Eng/api/thermal_lmtd_parallel.cpp@@
+
+And the two methods agree, which is a useful check on any exchanger data:
+
+@@example Eng/api/thermal_lmtd_duty.cpp@@
+
+## Decisions
+
+- **Rate or size:** `rate` when `UA` is known; `ntu` when the effectiveness is the requirement.
+- **Effectiveness-NTU or LMTD:** use effectiveness when outlets are unknown (rating, simulation); use `lmtd` when all four temperatures are known (a measurement, a specification) and only parallel or counter flow is involved.
+- **Phase change:** `Flow::Boil`, giving the boiling stream a very large capacity rate.
+- **Cross flow:** the closed form is the standard approximation to the exact series and is the least precise of the five.
+
+## Pitfalls
+
+An effectiveness that the arrangement cannot reach, a temperature cross (the hot stream colder than the cold one at an end), and an arrangement without a plain log mean are all refused:
+
+@@example Eng/api/thermal_lmtd_errors.cpp@@
+
+@@example Eng/api/thermal_eff_errors.cpp@@
+
+@@example Eng/api/thermal_rate_errors.cpp@@
+
+## Where next
+
+Reference pages: [`Flow`](../../../../api/eng/thermal/exchangers/Flow.md), [`eff`](../../../../api/eng/thermal/exchangers/eff.md), [`ntu`](../../../../api/eng/thermal/exchangers/ntu.md), [`rate`](../../../../api/eng/thermal/exchangers/rate.md), [`Exchange`](../../../../api/eng/thermal/exchangers/Exchange.md), [`lmtd`](../../../../api/eng/thermal/exchangers/lmtd.md). Next: [Moist air](moist_air.md).

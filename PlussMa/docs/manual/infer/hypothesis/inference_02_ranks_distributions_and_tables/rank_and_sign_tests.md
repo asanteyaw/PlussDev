@@ -163,7 +163,7 @@ int main() {
   const auto cfg = as_f64();
   const auto g1 = pluss::series::randn({12}, cfg, 11).add(1.6);
   const auto clean = pluss::series::randn({12}, cfg, 12);
-  auto values = clean.pull<double>();
+  auto values = clean.items<double>();
   auto dirty_values = values;
   dirty_values[3] = 45.0;
   const auto g2 = pluss::make_series(values, {12}, cfg);
@@ -194,3 +194,12 @@ On the clean data both tests find the difference: t-test p = 0.0047, rank-sum p 
 - **Force `Exact` or `Approximate` only to check.** The default has the right trade-off for each sample size.
 
 Where next: [Tests of a distribution](tests_of_a_distribution.md) tests whether data follow a stated distribution.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="tests_of_a_distribution.html">
+    <span class="label">Next</span>
+    <span class="title">Tests of a distribution</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

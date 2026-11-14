@@ -247,3 +247,16 @@ The formula and `distr::cdf` agree to 2.78e-17 over the grid, so the library imp
 - [`Semicircle`](../continuous_bounded/Semicircle.md)
 - [`Cosine`](../continuous_bounded/Cosine.md)
 - [`Uniform`](../continuous_bounded/Uniform.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="NormalTrunc.html">
+    <span class="label">Previous</span>
+    <span class="title">NormalTrunc</span>
+  </a>
+  <a class="next-link" href="Semicircle.html">
+    <span class="label">Next</span>
+    <span class="title">Semicircle</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

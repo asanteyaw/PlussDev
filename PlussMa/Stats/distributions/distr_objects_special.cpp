@@ -796,13 +796,13 @@ GaussianMixtureFit GaussianMixture::MLE(const Series& x) const {
   const auto xvals = fit_data_f64_(x, "GaussianMixture::MLE");
   const std::size_t k = static_cast<std::size_t>(weights.numel());
   PLUSS_CHECK(k > 0, "GaussianMixture::MLE: need at least one component");
-  auto w = normalized_mixture_weights(weights).pull<double>();
+  auto w = normalized_mixture_weights(weights).items<double>();
   auto m = means.to(ScalarType::Float64)
                .reshape({means.numel()})
-               .pull<double>();
+               .items<double>();
   auto s = stddevs.to(ScalarType::Float64)
                .reshape({stddevs.numel()})
-               .pull<double>();
+               .items<double>();
 
   if (m.size() != k) m.assign(k, 0.0);
   if (s.size() != k) s.assign(k, 1.0);

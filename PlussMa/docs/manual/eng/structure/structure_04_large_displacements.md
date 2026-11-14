@@ -1,0 +1,18 @@
+<!-- generated from structure_04_large_displacements.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Structures 4: Large Displacements
+
+The analyses so far assume small displacements: the structure's geometry is the original geometry. A fishing rod, a slender arm, a flexible pendulum or a cantilever bent through a large angle break that assumption, since the load changes direction relative to the member as it turns and the member shortens as it bends. This chapter solves frames whose members turn through large rotations while staying elastic, in statics by load stepping and in time, against the exact solutions of the elastica and of the finite-amplitude pendulum.
+
+- [Large-displacement statics](structure_04_large_displacements/nonlinear_statics.md)
+- [Large-amplitude motion](structure_04_large_displacements/large_amplitude_motion.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+structure_04_large_displacements/nonlinear_statics
+structure_04_large_displacements/large_amplitude_motion
+```
+<!-- apiref:toctree:end -->

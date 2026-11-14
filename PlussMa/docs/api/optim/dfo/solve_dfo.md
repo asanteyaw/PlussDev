@@ -19,7 +19,7 @@ To add bounds, constraints, a black box or a chosen method, fill in a [`DfoProbl
 ## Parameters
 
 `Fn &&objective`
-: A callable `Series -> Series` (a real scalar) or `Series -> number`.
+: A callable `Series (Series)` (a real scalar) or `Series -> number`.
 
 `const pluss::Series &initial`
 : The starting point, a real floating-point `Series` with at least one element.

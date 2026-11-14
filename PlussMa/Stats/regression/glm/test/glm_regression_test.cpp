@@ -232,6 +232,17 @@ int main() {
       expect(std::abs(fp.coefficients.host<double>().front() - std::log(2.0)) < 1e-7, "intercept-only Poisson gives log of the mean");
     }
 
+    {
+      // a default-constructed fit has nothing to report: the summary names the missing coefficients instead of failing inside the formatter
+      bool threw = false;
+      try {
+        (void)reg::glm_summary(reg::GLMFitResult{});
+      } catch (const std::exception& e) {
+        threw = std::string(e.what()).find("print_glm_summary: fit.coefficients is undefined") != std::string::npos;
+      }
+      expect(threw, "glm_summary of an undefined fit reports the undefined coefficients");
+    }
+
     std::cout << "glm_regression_test passed\n";
     return 0;
   } catch (const std::exception& e) {

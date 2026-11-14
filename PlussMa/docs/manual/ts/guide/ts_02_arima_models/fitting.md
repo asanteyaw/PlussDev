@@ -206,3 +206,12 @@ The gap shrinks as the sample grows; for 25 observations the choice matters, for
 - **Weak identification inflates standard errors.** When an AR and an MA coefficient are both present and similar, expect large standard errors; try the smaller model.
 
 Where next: [Forecasting](forecasting.md) uses a fit to predict ahead, with the intervals that come from the innovation variance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="forecasting.html">
+    <span class="label">Next</span>
+    <span class="title">Forecasting</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

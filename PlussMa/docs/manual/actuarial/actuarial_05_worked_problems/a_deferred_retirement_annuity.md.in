@@ -1,0 +1,262 @@
+# A Deferred Retirement Annuity
+
+[Back to Worked Problems](../actuarial_05_worked_problems.md)
+
+**The problem.** A 55-year-old wants an income of 20,000 a year for life from age 65, paid annually in advance. She will pay for it with level annual premiums, also in advance, for the ten years until retirement. If she dies before 65 nothing is paid. Mortality follows a Makeham law with {math}`a=0.0005`, {math}`b=0.00003` and {math}`c=1.105`, tabulated from age 55 to 119, and money earns 3% a year. The insurer must find the **single premium** (what the annuity is worth today), the **level annual premium**, the cost of a **refund of premiums on early death**, the effect of **retiring earlier or later**, and the sensitivity to **longevity** and interest.
+
+The new idea in this problem is **deferral**. A deferred annuity pays nothing for a while and then a life annuity, so its value factors into two familiar pieces: the probability-weighted discount to the start of payments, and the value of a life annuity at that age.
+
+## The plan
+
+Let {math}`n=10` years be the deferral. Payments of {math}`B` begin at age 65 and continue while she lives. Her chance of reaching 65, discounted, is the pure endowment {math}`{}_{10}E_{55}=v^{10}\,{}_{10}p_{55}`, and once there she holds an annuity-due worth {math}`\ddot a_{65}`. The two multiply, because the later survival is conditional on the earlier:
+
+```{math}
+\text{single premium}=B\;{}_{10}E_{55}\;\ddot a_{65}
+=B\sum_{t\ge 10}v^{t}\,{}_tp_{55} .
+```
+
+The two forms are the same sum grouped differently, and the first is the useful one: it separates the cost of waiting from the cost of the income, so each can be seen and stressed on its own. The level premium is the single premium divided by the ten-year premium annuity {math}`\ddot a_{55:\overline{10}\vert}`.
+
+## Step 1: the single premium, two ways
+
+The first program values the annuity as the product above, using `pure_endowment` for the first factor and `annuity_due` on the death probabilities from age 65 onward for the second. It then builds the benefit directly as a cashflow, 20,000 at times 10 to 64 and nothing before or after, and values it. The two agree; the cashflow also gives the expected number of payments by valuing the same payments at a zero rate.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> age_list;
+  for (int x = 55; x < 120; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0005, 0.00003, 1.105);
+  const double benefit = 20000.0;
+  const double i = 0.03;
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(i)});
+  const double endow = actuarial::pure_endowment(qx.slice(0, 0, 10, 1), i).item<double>();
+  const double a65 = actuarial::annuity_due(qx.slice(0, 10, 65, 1), i).item<double>();
+  out.writeln("10E55 (chance of reaching 65, discounted) =", endow);
+  out.writeln("annuity-due at 65                        =", a65);
+  out.writeln("single premium = B x 10E55 x a65          =", benefit * endow * a65);
+
+  std::vector<double> alive(66, 0.0);
+  for (int t = 10; t < 65; ++t) alive[t] = benefit;
+  const actuarial::Cashflow annuity = actuarial::cashflow::make(pluss::make_series(alive), pluss::series::zeros({65}));
+  out.writeln("as a cashflow                            =", value(annuity).item<double>());
+  const actuarial::Valuation undiscounted = actuarial::operators::value({mortality, actuarial::discount::flat(0.0)});
+  out.writeln("expected number of payments              =", undiscounted(actuarial::cashflow::make(pluss::make_series(std::vector<double>(alive.begin(), alive.end())).div(benefit), pluss::series::zeros({65}))).item<double>());
+}
+```
+
+## Step 2: the annual premium
+
+Premiums of {math}`G` are paid at the start of each of the ten years while she lives, so the premium annuity is the ten-year annuity-due, and equating values gives {math}`G=\text{single premium}/\ddot a_{55:\overline{10}\vert}`. The program prints the annuity, the premium, and the premium as a fraction of the single premium. A tenth of the single premium would be the answer with no interest and no mortality; instalments are paid only while she lives and arrive later than the lump sum, so each must be somewhat larger than that tenth.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> age_list;
+  for (int x = 55; x < 120; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0005, 0.00003, 1.105);
+  const double benefit = 20000.0;
+  const double i = 0.03;
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(i)});
+  const double endow = actuarial::pure_endowment(qx.slice(0, 0, 10, 1), i).item<double>();
+  const double a65 = actuarial::annuity_due(qx.slice(0, 10, 65, 1), i).item<double>();
+  const double single = benefit * endow * a65;
+  const double a_prem = actuarial::annuity_due(qx.slice(0, 0, 10, 1), i).item<double>();
+  const double G = single / a_prem;
+  out.writeln("ten-year premium annuity-due =", a_prem);
+  out.writeln("level annual premium         =", G);
+  out.writeln("ten premiums paid, undiscounted and surviving =", 10.0 * G);
+  out.writeln("annual premium as a fraction of the single premium =", G / single, " (1/10 would be no interest and no mortality)");
+}
+```
+
+## Step 3: refunding the premiums on early death
+
+The policy as written pays nothing if she dies before 65, so premiums paid are lost. Many buyers want them back. If the premiums paid so far, with no interest, are returned at the end of the year of death, the death benefit in year {math}`k` is {math}`kG`, and the balance becomes
+
+```{math}
+G\,\ddot a_{55:\overline{10}\vert}=\text{single premium}+G\,R,\qquad
+R=\sum_{k=1}^{10}k\,v^{k}\,{}_{k-1}p_{55}\,q_{55+k-1},
+```
+
+so that
+
+```{math}
+G=\frac{\text{single premium}}{\ddot a_{55:\overline{10}\vert}-R} .
+```
+
+The refund is linear in {math}`G`, so one unit of it is valued once, as a cashflow of death payments 1, 2, ..., 10, and the premium follows by division. This is the standard way to price a benefit that depends on the premium itself: value it per unit of premium and solve the linear equation.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  std::vector<double> age_list;
+  for (int x = 55; x < 120; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0005, 0.00003, 1.105);
+  const double benefit = 20000.0;
+  const double i = 0.03;
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(i)});
+  const double endow = actuarial::pure_endowment(qx.slice(0, 0, 10, 1), i).item<double>();
+  const double a65 = actuarial::annuity_due(qx.slice(0, 10, 65, 1), i).item<double>();
+  const double single = benefit * endow * a65;
+  const double a_prem = actuarial::annuity_due(qx.slice(0, 0, 10, 1), i).item<double>();
+  std::vector<double> refund(65, 0.0);
+  for (int k = 1; k <= 10; ++k) refund[k - 1] = k;
+  const double R = value(actuarial::cashflow::make(pluss::series::zeros({66}), pluss::make_series(refund))).item<double>();
+  const double G_plain = single / a_prem;
+  const double G_refund = single / (a_prem - R);
+  out.writeln("value of one unit of refunds R =", R);
+  out.writeln("premium without refund         =", G_plain);
+  out.writeln("premium with refund            =", G_refund);
+  out.writeln("extra cost of the refund       =", G_refund / G_plain - 1.0);
+  out.writeln("check: premiums value - benefit - refunds =", G_refund * a_prem - single - G_refund * R);
+}
+```
+
+## Step 4: when she retires
+
+The same formula prices any retirement age: for payments to start after {math}`d` years the price is {math}`B\,{}_dE_{55}\,\ddot a_{55+d}`. Retiring later makes the annuity both cheaper to buy, because payments start later, and shorter, because fewer years remain. The program prices retirement at 60, 65 and 70 and shows the two factors separately.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> age_list;
+  for (int x = 55; x < 120; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0005, 0.00003, 1.105);
+  const double benefit = 20000.0;
+  const double i = 0.03;
+  out.writeln("retire at   deferral   chance of reaching it (discounted)   annuity-due there   single premium");
+  for (const int d : {5, 10, 15}) {
+    const double endow = actuarial::pure_endowment(qx.slice(0, 0, d, 1), i).item<double>();
+    const double a = actuarial::annuity_due(qx.slice(0, d, 65, 1), i).item<double>();
+    out.writeln(55 + d, "      ", d, "        ", endow, "      ", a, "      ", benefit * endow * a);
+  }
+}
+```
+
+## Step 5: longevity and interest
+
+The risk in an annuity is that it is paid for longer than assumed. The program scales every death probability, capped at 1, which is mortality improvement when the factor is below 1, and prices at three interest rates. Scaling every probability by 0.8, for example, means that at each age 20% fewer people die than the table says.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(0));
+  std::vector<double> age_list;
+  for (int x = 55; x < 120; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0005, 0.00003, 1.105);
+  const double benefit = 20000.0;
+  const double i = 0.03;
+  out.writeln("single premium by interest rate (rows) and mortality level (columns 120%, 100%, 80%)");
+  for (const char *label : {"2%", "3%", "4%"}) {
+    const double rate = std::stod(std::string(label)) / 100.0;
+    out.write("i =", label, " :");
+    for (const double scale : {1.2, 1.0, 0.8}) {
+      const pluss::Series q = qx.mul(scale).clamp_max(1.0);
+      const double endow = actuarial::pure_endowment(q.slice(0, 0, 10, 1), rate).item<double>();
+      const double a = actuarial::annuity_due(q.slice(0, 10, 65, 1), rate).item<double>();
+      out.write(" ", benefit * endow * a);
+    }
+    out.writeln();
+  }
+}
+```
+
+## Reading the results
+
+The **single premium is 160,801**, about 8.0 times the annual income. The two factors explain it. The chance of reaching 65, discounted ten years at 3%, is 0.6574; dividing it by the ten-year discount factor, 0.7441, shows an 88.3% chance of surviving to 65, and the discount takes it down to two thirds. At 65 an annuity-due is worth 12.23 payments, below the roughly sixteen payments she can expect to receive because later payments are discounted and less likely to be made. The valuation of the explicit cashflow gives the same 160,800.6186 to the printed digit, and valuing the same payments at a zero rate shows she can expect to receive 13.97 payments counted from today, which is the 88% chance of reaching 65 times about sixteen payments from then on.
+
+The **level annual premium is 19,101**, which is 11.9% of the single premium and not a tenth. The ten premiums add to 191,006 if she lives through them, more than the 160,801 lump sum, because instalments arrive later, so earn the insurer less interest, and stop if she dies before they are all paid; the level premium is scaled up to make up for both.
+
+Refunding premiums on early death raises the premium to **20,510, an increase of 7.4%**. The refund is valued as a cashflow of death payments 1, 2, ..., 10, and one unit of it is worth 0.578: the expected number of premiums returned. The check line is zero, which confirms that the solved premium really balances benefit and refund. The refund looks cheap because the chance of dying before 65 is only about 12%, but each such death returns several premiums, and refunds are tied to the premium itself, which is why the equation is solved rather than added.
+
+Retirement age moves the price a great deal. Each five years of deferral cuts it by roughly a third: **236,380 for retirement at 60, 160,801 at 65, 101,383 at 70**. Two things work together: the wait is longer and the discounted chance of reaching the starting age falls from 0.8227 to 0.5008, and the annuity itself is worth less (14.37, 12.23, 10.12 payments) because fewer years remain.
+
+The sensitivity table is the mirror image of the term policy. **Interest dominates**: at 2% the premium is 192,146, 19.5% above the base case, and at 4% it is 135,333, 15.8% below, because the benefit is paid far in the future. **Longevity matters too, in one direction that hurts the insurer**: 20% fewer deaths at every age raises the premium by 10.9% to 178,395, while 20% more lowers it by 9.0% to 146,396. An insurer that has sold annuities on an assumption of lighter mortality than the one that proves true loses money for decades, which is why annuity reserves are the classic setting for margins on mortality improvement.
+
+## What to carry forward
+
+- A deferred annuity factors as the pure endowment to the start date times the annuity at that age: separate the cost of waiting from the cost of the income and stress each.
+- Any benefit that is a payment pattern is a `Cashflow`; build it with `cashflow::make` and value it, and use the zero-rate valuation of the same payments to count expected payments.
+- A benefit that depends on the premium is linear in the premium: value one unit of it and solve the equation for the premium.
+- For long-dated benefits stress interest first, and for annuities stress longevity in the direction that costs the insurer.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pricing_a_term_life_policy.html">
+    <span class="label">Previous</span>
+    <span class="title">Pricing a Term Life Policy</span>
+  </a>
+  <a class="next-link" href="designing_a_reinsurance_programme.html">
+    <span class="label">Next</span>
+    <span class="title">Designing a Reinsurance Programme</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

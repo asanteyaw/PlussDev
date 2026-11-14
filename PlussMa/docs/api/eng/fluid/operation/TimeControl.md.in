@@ -1,0 +1,67 @@
+# `fluid::TimeControl`
+
+An action that fires at a given second of the run.
+
+## Signature
+
+```cpp
+fluid::TimeControl
+```
+
+## What It Does
+
+Applies an `Action` at an exact elapsed time. The hydraulic clock lands on `at`, so the change takes effect at that second.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `at` | Seconds from the start of the run. | 0 |
+| `action` | The `Action` to apply. |  |
+
+## Returns
+
+A value; carried by `Schedule::time`.
+
+## Errors
+
+A time outside the run interval is rejected by `run`.
+
+## Interpretation and Use
+
+Use a time control for a known program, an off-peak tariff or a flushing sequence. The action persists after it fires.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Set, close and open at fixed times.
+
+@@example Eng/api/fluid_controls_actions.cpp@@
+
+### Example 2
+
+Closing a pump from a level rule instead.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 3
+
+An action before the run starts.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Action.html">
+    <span class="label">Previous</span>
+    <span class="title">Action</span>
+  </a>
+  <a class="next-link" href="StateControl.html">
+    <span class="label">Next</span>
+    <span class="title">StateControl</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

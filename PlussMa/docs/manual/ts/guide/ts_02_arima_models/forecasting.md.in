@@ -201,3 +201,16 @@ The overall coverage is 0.942 against the nominal 0.950, and the per-step fracti
 - **Use out-of-sample checks to choose between models**, not in-sample fit: see Chapter 6.
 
 Where next: [Choosing the orders](choosing_the_orders.md) compares candidate models before you fit and forecast with one of them.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fitting.html">
+    <span class="label">Previous</span>
+    <span class="title">Fitting</span>
+  </a>
+  <a class="next-link" href="choosing_the_orders.html">
+    <span class="label">Next</span>
+    <span class="title">Choosing the orders</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

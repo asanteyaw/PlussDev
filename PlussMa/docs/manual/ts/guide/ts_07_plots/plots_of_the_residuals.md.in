@@ -48,7 +48,7 @@ int main() {
   g.omega = 0.05;
   g.alpha = 0.3;
   g.beta = 0.65;
-  const auto shocks = g.simulate(n, f64, /*seed=*/9).host<double>();
+  const auto shocks = g.simulate(n, f64, /*seed=*/9).items<double>();
   std::vector<double> clustered(n);
   double carry = 0.0;
   for (int t = 0; t < n; ++t) { carry = 0.6 * carry + shocks[t]; clustered[t] = carry; }
@@ -161,7 +161,7 @@ int main() {
   ts::ArimaFit truth;
   truth.ar = {0.6};
   const int n = 300;
-  auto data = truth.simulate(n, f64, /*seed=*/23).host<double>();
+  auto data = truth.simulate(n, f64, /*seed=*/23).items<double>();
   data[80] += 6.0;    // planted outliers
   data[210] -= 7.0;
   const Series y = pluss::make_series(data, f64);
@@ -197,3 +197,12 @@ The two planted dates stand out at 3.7 and 5.9 standard deviations. Look at the 
 - **Differenced models start with `NaN` residuals.** The observations used up by differencing have no residual; drop them before computing summaries.
 
 This completes the time-series guide. The API reference documents every function and type used here, family by family.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="autocorrelation_and_partial_autocorrelation.html">
+    <span class="label">Previous</span>
+    <span class="title">Autocorrelation and partial autocorrelation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

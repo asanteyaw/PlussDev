@@ -1,0 +1,58 @@
+# `comms::shuffle`
+
+A pseudo-random interleaver.
+
+## Signature
+
+```cpp
+pluss::Series comms::shuffle(std::int64_t length, std::uint64_t seed);
+```
+
+## What It Does
+
+Returns a permutation of `0 .. length - 1` (the order of a random sort), reproducible from `seed`. The second constituent encoder reads the information bits in this order.
+
+## Parameters
+
+`length`
+: The block length `N`, at least `2`.
+
+`seed`
+: The seed.
+
+## Returns
+
+An `Int64` vector of length `N`.
+
+## Errors
+
+Throws `pluss::Error` for a length below `2`.
+
+## Interpretation and Use
+
+Transmitter and receiver must use the same interleaver. A random interleaver is a good default; longer blocks give a better code.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+An interleaver and a codeword.
+
+@@example Eng/api/comms_turbo_codeword.cpp@@
+
+### Example 2
+
+The effect of iterations.
+
+@@example Eng/api/comms_turbo_iterations.cpp@@
+
+### Example 3
+
+Rejected lengths.
+
+@@example Eng/api/comms_turbo_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

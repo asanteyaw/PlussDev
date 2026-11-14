@@ -1,0 +1,69 @@
+# `thermal::props`
+
+The properties of a fluid.
+
+## Signature
+
+```cpp
+thermal::Properties thermal::props(thermal::Fluid fluid,
+                               const Series& temperature,
+                               const Series& pressure = {});
+```
+
+## What It Does
+
+Evaluates density, specific heat, conductivity, viscosity and the Prandtl number at a temperature. Water is the saturated liquid: its density is the Kell polynomial and the other properties are interpolated tabulated values; the pressure does not enter. Air is an ideal gas: its density is `p / (R T)` with `R = 287.05 J/(kg K)` and the other properties are interpolated tabulated values that do not depend on pressure. Nothing is extrapolated.
+
+## Parameters
+
+`fluid`
+: The fluid.
+
+`temperature`
+: The temperature in kelvin, within the range of the fluid.
+
+`pressure`
+: The pressure in Pa, used by air only; undefined means 101325 Pa.
+
+## Returns
+
+A `Properties` with the shape of the temperature.
+
+## Errors
+
+Throws `pluss::Error` for a temperature that is not a real floating array or not finite, a temperature outside the range of the fluid (the message gives the range), and, for air, a pressure that is not positive.
+
+## Interpretation and Use
+
+Properties are taken from one place so that every thermal calculation shares the same reference values and the same provenance, available from `source`. Use the provider rather than typing a specific heat into a program: the range check will tell you when a model is outside its validity.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Liquid water.
+
+@@example Eng/api/thermal_props_water.cpp@@
+
+### Example 2
+
+Dry air.
+
+@@example Eng/api/thermal_props_air.cpp@@
+
+### Example 3
+
+The effect of pressure.
+
+@@example Eng/api/thermal_props_pressure.cpp@@
+
+### Example 4
+
+Rejected inputs.
+
+@@example Eng/api/thermal_props_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

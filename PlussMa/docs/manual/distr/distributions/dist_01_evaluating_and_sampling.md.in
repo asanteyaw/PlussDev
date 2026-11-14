@@ -99,4 +99,12 @@ The `params` lists of the kind-based functions (a list with fewer entries select
 5. Use Series parameters to evaluate one distribution per point in a single call.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dist_01_evaluating_and_sampling/densities_distribution_functions_and_tails
+dist_01_evaluating_and_sampling/random_draws
+dist_01_evaluating_and_sampling/families_by_kind
+```
 <!-- apiref:toctree:end -->

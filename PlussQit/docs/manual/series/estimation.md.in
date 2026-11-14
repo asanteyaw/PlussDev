@@ -1,0 +1,48 @@
+# Estimation and uncertainty
+
+[Back to Series by example](../series.md)
+
+An estimate without an error bar is half a result. This page fits a line to noisy data with the linear-algebra accessor and reports how uncertain the coefficients are, then quantifies the uncertainty of an average by resampling, and ends with the numeric pitfalls that make estimates quietly wrong.
+
+## The mental model
+
+Everything is array arithmetic. A regression is a few matrix products; a bootstrap is a table in which each row is one resample, reduced along its axis. Random numbers come from factory functions that take a **seed**, so a result can be reproduced exactly. Matrix routines live behind an accessor: `x.linearalg().inverse()`.
+
+## Fitting a line
+
+Two hundred points scatter around `y = 3 + 2x` with noise of standard deviation 1.5. The program builds the design matrix, solves the normal equations, and then checks the fit.
+
+@@example series/fit_a_line.cpp@@
+
+The fitted intercept and slope are `3.36` and `1.94`, within two standard errors of the true `3` and `2` (the standard errors are `0.20` and `0.035`). The residual standard deviation of `1.42` is close to the `1.5` that generated the noise, and R squared is `0.94`: the line explains 94 % of the variance of `y`. The design matrix has a column of ones next to the column of `x`; `unite` places the two side by side along dimension 1. The last line predicts at new points with the same matrix product.
+
+## How sure are we of an average?
+
+Fifty delivery times, skewed to the right. The mean tells you a number; the **bootstrap** tells you how much to believe it. The program draws 2000 resamples at once and reduces each.
+
+@@example series/bootstrap.cpp@@
+
+Each row of `pick` is one resample of positions drawn with replacement, `index_select` turns the positions into values, and `reshape` lays the resamples out as a `2000 x 50` table. The mean of each row gives 2000 means; their standard deviation, `1.44`, is the standard error of the mean, and the 2.5 % and 97.5 % quantiles give a 95 % interval of `[19.8, 25.3]`. The median, which is robust to the long right tail, has a lower and slightly wider interval `[17.3, 23.0]`. All of it is one table of random numbers and a few reductions, with no loop over resamples.
+
+## Decisions
+
+- **Reproducibility:** pass a seed to every random factory (`randn`, `randint`, `rand`) in a program you want to repeat.
+- **Direct inverse or a solver:** the normal equations are fine for a handful of well-scaled columns; for ill-conditioned problems use the accessor's `pinverse` or `qr` routines.
+- **Parametric or bootstrap:** use the standard error formulas when the model assumptions hold; use the bootstrap when they do not or when the statistic has no formula (a median, a ratio).
+- **Precision:** compute in `Float64` unless you have a reason not to (below).
+
+## Pitfalls
+
+Two surprises concern the host boundary and precision. `item<T>()` reads one value from a rank-zero `Series`; given a vector it refuses and names the right call.
+
+@@example series/pitfall_item.cpp@@
+
+And the dtype carries the precision. A million readings of `0.1` summed in `Float32` drift by 22 units, and the mean of integers is a `Float32`, which cannot hold `100000001.5`.
+
+@@example series/pitfall_dtype.cpp@@
+
+Convert with `to(ScalarType::Float64)` before reducing whenever the answer needs more than about seven digits.
+
+## Where next
+
+Reference pages: [`linearalg`](../../sphinx/api/series/linearalg.md), [`randn`](../../sphinx/api/series_factory/randn.md), [`randint`](../../sphinx/api/series_factory/randint.md), [`unite`](../../sphinx/api/series/unite.md), [`unsqueeze`](../../sphinx/api/series/unsqueeze.md), [`index_select`](../../sphinx/api/series/index_select.md), [`quantile`](../../sphinx/api/series/quantile.md), [`median`](../../sphinx/api/series/median.md), [`std`](../../sphinx/api/series/std.md), [`to`](../../sphinx/api/series/to.md). Next: [Simulation](simulation.md).

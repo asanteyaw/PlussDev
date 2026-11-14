@@ -31,8 +31,8 @@ int main() {
   const auto y = pluss::make_series(0.75);
 
   out.writeln("arity", f.arity(), " rank", f.rank(), " variables", f.variables()[0], f.variables()[1]);
-  out.writeln("by position", f({x, y}).pull<double>());
-  out.writeln("by name    ", f({{"y", y}, {"x", x}}).pull<double>());
+  out.writeln("by position", f({x, y}).items<double>());
+  out.writeln("by name    ", f({{"y", y}, {"x", x}}).items<double>());
   out.writeln("the callable ran", traced, "time; the function was evaluated twice");
 }
 ```
@@ -157,10 +157,10 @@ int main() {
   const std::function<math::Function(math::Function)> erased = [](math::Function v) { return v.exp(); };
   const math::Function from_std_function = math::function({"t"}, erased);
 
-  out.writeln("lambda       ", from_lambda({t}).pull<double>());
-  out.writeln("pointer      ", from_pointer({t, t}).pull<double>());
-  out.writeln("object       ", from_object({t}).pull<double>());
-  out.writeln("std::function", from_std_function({t}).pull<double>());
+  out.writeln("lambda       ", from_lambda({t}).items<double>());
+  out.writeln("pointer      ", from_pointer({t, t}).items<double>());
+  out.writeln("object       ", from_object({t}).items<double>());
+  out.writeln("std::function", from_std_function({t}).items<double>());
 
   // Names held in a std::vector<std::string>, and a sum over however many variables there are.
   std::vector<std::string> names;
@@ -171,7 +171,7 @@ int main() {
     return sum;
   });
   std::vector<pluss::Series> args(6, t);
-  out.writeln("arity", total.arity(), " sum of six copies of t", total(pluss::RangeView<pluss::Series>(args)).pull<double>());
+  out.writeln("arity", total.arity(), " sum of six copies of t", total(pluss::RangeView<pluss::Series>(args)).items<double>());
 }
 ```
 
@@ -198,3 +198,12 @@ The next page lists everything the body may do with a placeholder.
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_expression_vocabulary.html">
+    <span class="label">Next</span>
+    <span class="title">The expression vocabulary</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

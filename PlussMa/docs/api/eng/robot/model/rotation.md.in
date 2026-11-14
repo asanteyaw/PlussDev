@@ -1,0 +1,58 @@
+# `robot::rotation`
+
+The rotation matrix of a turn about an axis.
+
+## Signature
+
+```cpp
+pluss::Series robot::rotation(const pluss::Series& axis, const pluss::Series& angle);
+```
+
+## What It Does
+
+Builds the rotation matrix of a turn by `angle` radians about `axis` (the right-hand rule), by Rodrigues' formula. The axis need not be a unit vector. Leading axes of `axis` and `angle` broadcast, so one call builds the rotations of a whole batch of angles, axes or both.
+
+## Parameters
+
+`axis`
+: The turning axis, a real floating `[..., 3]` array; every axis must be non-zero.
+
+`angle`
+: The turning angle in radians, a real floating array whose leading axes broadcast against those of `axis`.
+
+## Returns
+
+A real `[..., 3, 3]` array: row `i`, column `j` of the rotation matrix of each turn. It maps a column vector `v` to `R v`.
+
+## Errors
+
+Throws `pluss::Error` when `axis` is not a real floating `[..., 3]` array, when `angle` is not real floating, or when an axis has zero length.
+
+## Interpretation and Use
+
+The matrices are orthonormal with determinant one, to rounding. Multiply them to compose turns: `rotation(a, x).matmul(rotation(b, y))` turns about `b` by `y` first, then about `a` by `x`. The result carries reverse sensitivity to `angle` and `axis`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A quarter turn about z, and a non-unit axis.
+
+@@example Eng/api/robot_rotation_axis.cpp@@
+
+### Example 2
+
+Batches of angles and of axes.
+
+@@example Eng/api/robot_rotation_batch.cpp@@
+
+### Example 3
+
+Rejected axes.
+
+@@example Eng/api/robot_rotation_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

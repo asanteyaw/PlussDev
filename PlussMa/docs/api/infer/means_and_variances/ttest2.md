@@ -76,7 +76,7 @@ int main() {
 
   const auto r = hyp::ttest2(a, b);
   std::cout << "difference " << r.mean_x - r.mean_y << ", t " << r.stat << " on " << r.dof << " df, p " << r.pvalue << "\n";
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }
 ```
@@ -111,7 +111,7 @@ int main() {
   options.equal_variance = false;
   const auto r = hyp::ttest2(a, b, options);
   std::cout << "t " << r.stat << " on " << r.dof << " df, p " << r.pvalue << ", standard error " << r.std_err << "\n";
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }
 ```
@@ -163,4 +163,17 @@ The one-sided test of whether A is larger gives p 0.0064 against the critical va
 - [`ttest`](ttest.md)
 - [`ttest_paired`](ttest_paired.md)
 - [`vartest2`](vartest2.md)
-- [`ranksum`](ranksum.md)
+- [`ranksum`](../ranks_and_signs/ranksum.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ttest_paired.html">
+    <span class="label">Previous</span>
+    <span class="title">ttest_paired</span>
+  </a>
+  <a class="next-link" href="ztest.html">
+    <span class="label">Next</span>
+    <span class="title">ztest</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

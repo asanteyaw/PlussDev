@@ -8,3 +8,12 @@
 @@example Probability/random_processes/guide/sde/41_malliavin_derivative.cpp@@
 
 For `F = W_T²` the derivative is −1.73370 on every increment, equal to `2 W_T` with `W_T = −0.86685`. For `F = max(W)` the maximum of the sampled path is the second sample, 0.35760, so only the first increment moves it: the derivative is 1 there and 0 on the rest.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_skorokhod_integral.html">
+    <span class="label">Next</span>
+    <span class="title">The Skorokhod integral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

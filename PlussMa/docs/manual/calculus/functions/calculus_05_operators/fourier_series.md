@@ -48,9 +48,9 @@ int main() {
   // staged: build the operators once, apply them to the same function
   const operators::Operator sine = fourier::sine_coefficients("x", 0.0, pi, 6);
   const operators::Operator cosine = fourier::cosine_coefficients("x", 0.0, pi, 6);
-  out.writeln("B_1..B_6  ", sine(identity)().pull<double>());
+  out.writeln("B_1..B_6  ", sine(identity)().items<double>());
   out.writeln("closed    ", std::vector<double>{2.0, -1.0, 2.0 / 3, -0.5, 0.4, -1.0 / 3});
-  out.writeln("A_0..A_5  ", cosine(identity)().pull<double>());
+  out.writeln("A_0..A_5  ", cosine(identity)().items<double>());
   out.writeln("closed    ", std::vector<double>{pi, -4.0 / pi, 0.0, -4.0 / (9 * pi), 0.0, -4.0 / (25 * pi)});
 
   // compact: partial sums are Functions of x
@@ -90,8 +90,8 @@ int main() {
   const math::Function odd = math::function({"x"}, [](math::Function x) { return x; });
   const math::Function even = math::function({"x"}, [](math::Function x) { return x * x; });
 
-  const std::vector<double> c = fourier::coefficients("x", pi, 8)(even)().pull<double>();  // a_0..a_7, b_1..b_7
-  out.writeln("x   : ", fourier::coefficients("x", pi, 8)(odd)().pull<double>());
+  const std::vector<double> c = fourier::coefficients("x", pi, 8)(even)().items<double>();  // a_0..a_7, b_1..b_7
+  out.writeln("x   : ", fourier::coefficients("x", pi, 8)(odd)().items<double>());
   out.writeln("x^2 : ", c);
 
   double energy = 0.5 * c[0] * c[0];
@@ -116,3 +116,16 @@ The six operators hold names and numbers and save with `math::io::save` ([Saving
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="taylor_and_power_series.html">
+    <span class="label">Previous</span>
+    <span class="title">Taylor operators and power series</span>
+  </a>
+  <a class="next-link" href="geometry_operators.html">
+    <span class="label">Next</span>
+    <span class="title">Geometry operators</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

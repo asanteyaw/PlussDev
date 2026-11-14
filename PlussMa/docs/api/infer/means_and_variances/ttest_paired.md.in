@@ -72,7 +72,7 @@ int main() {
 
   const auto r = hyp::ttest_paired(first, second);
   std::cout << "mean difference " << r.mean << ", t " << r.stat << " on " << r.dof << " df, p " << r.pvalue << "\n";
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }
 ```
@@ -110,5 +110,18 @@ Treating the same data as two independent samples gives p 0.465: the cup-to-cup 
 
 - [`ttest`](ttest.md)
 - [`ttest2`](ttest2.md)
-- [`signrank`](signrank.md)
-- [`signtest`](signtest.md)
+- [`signrank`](../ranks_and_signs/signrank.md)
+- [`signtest`](../ranks_and_signs/signtest.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ttest.html">
+    <span class="label">Previous</span>
+    <span class="title">ttest</span>
+  </a>
+  <a class="next-link" href="ttest2.html">
+    <span class="label">Next</span>
+    <span class="title">ttest2</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

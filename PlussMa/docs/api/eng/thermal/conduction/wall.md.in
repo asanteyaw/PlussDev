@@ -1,0 +1,63 @@
+# `thermal::wall`
+
+The conduction resistance of a plane wall.
+
+## Signature
+
+```cpp
+Series thermal::wall(const Series& conductivity,
+                     const Series& thickness,
+                     const Series& area);
+```
+
+## What It Does
+
+Returns `thickness / (conductivity * area)` in kelvin per watt, the resistance to heat that flows through a plane layer from one face to the other. Inputs broadcast, so a vector of thicknesses with a scalar conductivity gives a vector of resistances.
+
+## Parameters
+
+`conductivity`
+: The thermal conductivity `k` in W/(m K), positive.
+
+`thickness`
+: The thickness in m, positive.
+
+`area`
+: The area normal to the flow in m^2, positive.
+
+## Returns
+
+The resistance in K/W with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array, is not finite, or is not positive.
+
+## Interpretation and Use
+
+Layers in series add resistances; layers in parallel add conductances. For a network use the reciprocal as a `Links::conductance`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A concrete wall and a sweep of thickness.
+
+@@example Eng/api/thermal_wall_basic.cpp@@
+
+### Example 2
+
+Layers in series, checked against a network.
+
+@@example Eng/api/thermal_wall_composite.cpp@@
+
+### Example 3
+
+Rejected inputs.
+
+@@example Eng/api/thermal_wall_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

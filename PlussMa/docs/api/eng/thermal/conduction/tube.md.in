@@ -1,0 +1,67 @@
+# `thermal::tube`
+
+The conduction resistance of a cylindrical shell.
+
+## Signature
+
+```cpp
+Series thermal::tube(const Series& conductivity,
+                     const Series& r_in,
+                     const Series& r_out,
+                     const Series& length);
+```
+
+## What It Does
+
+Returns `ln(r_out / r_in) / (2 pi k L)` in kelvin per watt: radial conduction through a pipe wall or its insulation, from the inner radius to the outer one, along a length `L` with no axial flow.
+
+## Parameters
+
+`conductivity`
+: The conductivity in W/(m K), positive.
+
+`r_in`
+: The inner radius in m, positive.
+
+`r_out`
+: The outer radius in m, larger than `r_in`.
+
+`length`
+: The length of the tube in m, positive.
+
+## Returns
+
+The resistance in K/W with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array, not finite or not positive, and when `r_out` does not exceed `r_in`.
+
+## Interpretation and Use
+
+Insulating a thin pipe can raise heat loss until the outer radius passes the critical radius `k / h`, because the film outside shrinks faster than the wall grows.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Insulation on a pipe.
+
+@@example Eng/api/thermal_tube_basic.cpp@@
+
+### Example 2
+
+The critical radius of insulation.
+
+@@example Eng/api/thermal_tube_critical.cpp@@
+
+### Example 3
+
+Rejected radii and lengths.
+
+@@example Eng/api/thermal_tube_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

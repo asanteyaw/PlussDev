@@ -71,7 +71,7 @@ Construct a continuous filtered PID.
 #include <complex>
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -105,7 +105,7 @@ Construct a sampled controller with explicit rules.
 #include <complex>
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -148,7 +148,7 @@ Reject a negative derivative-filter constant.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -182,7 +182,6 @@ Output
 uncontrollable plant rejected = eng::control::place: B must have non-zero numerical rank
 negative filter rejected = eng::control::pid: filter must be non-negative
 ```
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="place.html">

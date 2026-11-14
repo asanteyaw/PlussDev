@@ -1,0 +1,60 @@
+# `thermal::Flow`
+
+The flow arrangement of a heat exchanger.
+
+## Signature
+
+```cpp
+thermal::Flow
+```
+
+## What It Does
+
+Selects the flow arrangement for `eff`, `ntu` and `rate`. The arrangement fixes how effectiveness depends on `NTU = UA / Cmin` and the capacity ratio `cr = Cmin / Cmax`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Parallel` | Both streams enter at the same end. `(1 - exp(-NTU (1 + cr))) / (1 + cr)`; the least effective arrangement. |  |
+| `Counter` | The streams enter at opposite ends. `(1 - e) / (1 - cr e)` with `e = exp(-NTU (1 - cr))`, and `NTU / (1 + NTU)` for `cr = 1`; the most effective. |  |
+| `Cross` | Cross flow with both streams unmixed, by the standard closed-form approximation `1 - exp(NTU^0.22 (exp(-cr NTU^0.78) - 1) / cr)`. |  |
+| `Shell` | One shell pass and any even number of tube passes: `2 / (1 + cr + sqrt(1 + cr^2) (1 + e) / (1 - e))` with `e = exp(-NTU sqrt(1 + cr^2))`. |  |
+| `Boil` | One stream changes phase at a constant temperature, so `cr = 0` whatever the values given: `1 - exp(-NTU)`. |  |
+
+## Returns
+
+A choice of five arrangements, read by `eff`, `ntu` and `rate`.
+
+## Errors
+
+None: all values are always valid.
+
+## Interpretation and Use
+
+For `cr` near zero every arrangement agrees; they separate as `cr` approaches one. Counter flow beats parallel flow at the same `UA`, and shell-and-tube and cross flow lie between.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+All five arrangements at one operating point.
+
+@@example Eng/api/thermal_eff_flows.cpp@@
+
+### Example 2
+
+A rated exchanger in every arrangement.
+
+@@example Eng/api/thermal_rate_flows.cpp@@
+
+### Example 3
+
+A boiler.
+
+@@example Eng/api/thermal_rate_boil.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

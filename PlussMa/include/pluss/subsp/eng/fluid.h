@@ -170,7 +170,7 @@ struct Quality {
   Series tank_rate; // optional first-order rate [..., tank], 1/s
 };
 
-struct QualityOptions {
+struct RouteOptions {
   double step{300.0};
   double courant{0.9};
   double flow_tolerance{1e-12};
@@ -184,6 +184,25 @@ struct TransportResult {
   Series tank;         // [sample, ..., tank]
   Series mass;         // [sample, ...], stored concentration-volume
   Series mass_error;   // [sample, ...], cumulative conservation residual
+};
+
+struct Heat {
+  Series initial;      // [..., node], K
+  Series source;       // optional fixed reservoir/injection temperature, K
+  Series ambient;      // optional [..., pipe], K; required where ua > 0
+  Series ua;           // optional [..., pipe], W/K; defaults to zero
+  Series tank_ambient; // optional [..., tank], K; required where tank_ua > 0
+  Series tank_ua;      // optional [..., tank], W/K; defaults to zero
+  double cp{4180.0};   // J/(kg K), constant over this call
+};
+
+struct HeatResult {
+  RunResult hydraulic;
+  Series node;         // [sample, ..., node], K
+  Series link;         // [sample, ..., link], K
+  Series tank;         // [sample, ..., tank], K
+  Series energy;       // [sample, ...], stored sensible energy, J
+  Series energy_error; // [sample, ...], cumulative energy residual, J
 };
 
 class Network final {
@@ -319,7 +338,12 @@ private:
 
 [[nodiscard]] TransportResult
 transport(const Network &network, const Schedule &schedule,
-          const Quality &quality, const QualityOptions &quality_options = {},
+          const Quality &quality, const RouteOptions &route_options = {},
           const Options &hydraulic_options = {});
+
+[[nodiscard]] HeatResult
+heat(const Network &network, const Schedule &schedule, const Heat &thermal,
+     const RouteOptions &route_options = {},
+     const Options &hydraulic_options = {});
 
 } // namespace pluss::subsp::eng::fluid

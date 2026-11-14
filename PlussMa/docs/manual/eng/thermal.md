@@ -1,0 +1,26 @@
+<!-- generated from thermal.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Thermal engineering
+
+Heat moves by conduction, convection and the flow of fluids. The thermal guides model bodies as networks of nodes and conductances, follow temperatures through time, rate and size heat exchangers, compute the state of moist air, and take fluid properties from one provider that records where its numbers come from.
+
+1. **How does heat move through bodies, and where does it settle?** Networks of conductances, steady state and transient response, the resistances of walls, tubes, spheres and films, the Biot number that decides whether a body may be treated as one lump, fins, and layered walls divided into cells.
+
+2. **How do streams exchange heat, and what does moist air cost to condition?** The effectiveness-NTU method for five arrangements, rating and sizing, the log-mean difference, the state of moist air with its dew point and wet bulb, mixing, and the property provider with its provenance.
+
+Chapters, in reading order:
+
+- [Thermal 1: Conduction](thermal/thermal_01_conduction.md)
+- [Thermal 2: Exchangers and Air](thermal/thermal_02_exchangers_and_air.md)
+
+Every chapter follows the same format: a mental model, complete programs, and output produced by those programs.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+thermal/thermal_01_conduction
+thermal/thermal_02_exchangers_and_air
+```
+<!-- apiref:toctree:end -->

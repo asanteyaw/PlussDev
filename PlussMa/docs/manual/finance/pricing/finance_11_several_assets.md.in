@@ -1,0 +1,47 @@
+# Finance 11: Several assets
+
+A `Field` prices options on one asset. Real books hold options on many, each with its own market, its own model and often its own engine. A `module::Chord` coordinates several `Field`s: each asset keeps every property of a `Field`, and the `Chord` adds the names, one `price` call across all of them, and the batching that makes pricing many assets cost little more than pricing one. After this chapter you can build a `Chord`, price assets with different models together, read each asset's result by name, see which assets were merged into one call, and take the implied-volatility smile of all of them.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **A `Chord` is a collection of `Field`s, not a bigger `Field`.** A `Field` stays one asset on one continuous process, so its methods are unambiguous; the `Chord` adds only what is about several.
+- **Every operation is the `Field`'s own operation, applied to each asset.** Each asset keeps its model and engine, and the result for an asset equals pricing it alone.
+- **The calls run concurrently.** What cannot be merged is priced on several threads at once, with identical numbers.
+- **Assets that can share a call are merged.** Same engine, controls and model family, with European exercise (Black-Scholes on the analytic engine and Heston and Bates on the COS engine even with different parameters; the FFT needs equal parameters): their strips are priced once and split back.
+
+| Entry point | Purpose |
+|---|---|
+| `Chord{{name, field}, ...}`, `Chord::add`, `at`, `contains` | build the collection from a dictionary of assets and reach an asset |
+| `Chord::from_model_params` | build a Chord of assets of any model from a table of model parameters |
+| `Chord::price` | price every asset, returning a `Chord::Result` |
+| `Chord::implied_vol` | the implied volatilities of every asset's own prices |
+| `Chord::batches`, `validate` | how many calls a price makes; check every asset at once |
+| `Chord::simulate_paths`, `price_corr`, `var_corr` | correlated paths of all assets, whatever their model (Black-Scholes, Heston, Bates, SABR), for baskets and spreads |
+
+## Programs
+
+- [Pricing a book of assets](finance_11_several_assets/pricing_a_book.md)
+- [Building a Chord](finance_11_several_assets/building_a_chord.md)
+- [Batching](finance_11_several_assets/batching.md)
+- [Correlated assets](finance_11_several_assets/correlated_assets.md)
+
+## Checklist
+
+1. Give each asset a name that means something to you; results are read by name. Write many assets as a dictionary, not as a long chain of `add` calls, or build them from a table of parameters.
+2. Change one asset with `chord.at(name)` and price again; the others are untouched.
+3. Prefer the COS engine for Heston and Bates assets: any number of them, with any parameters, cost one call.
+4. Lattice, PDE and American assets, and Monte Carlo assets with different controls or a control variate, make a call each, but the calls run on several threads at once; `chord.parallel = false` prices on one thread with identical results.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_11_several_assets/pricing_a_book
+finance_11_several_assets/building_a_chord
+finance_11_several_assets/batching
+finance_11_several_assets/correlated_assets
+```
+<!-- apiref:toctree:end -->

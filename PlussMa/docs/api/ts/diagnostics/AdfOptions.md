@@ -21,3 +21,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`adf_test`](adf_test.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="adf_test.html">
+    <span class="label">Previous</span>
+    <span class="title">adf_test</span>
+  </a>
+  <a class="next-link" href="AdfResult.html">
+    <span class="label">Next</span>
+    <span class="title">AdfResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

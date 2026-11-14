@@ -113,4 +113,13 @@ With 4 positive and 3 negative differences among 7 used, the data say nothing: p
 ## See Also
 
 - [`signrank`](signrank.md)
-- [`ttest_paired`](ttest_paired.md)
+- [`ttest_paired`](../means_and_variances/ttest_paired.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="signrank.html">
+    <span class="label">Previous</span>
+    <span class="title">signrank</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

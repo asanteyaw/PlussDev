@@ -51,3 +51,12 @@ cumulative            : 0.5000 3.0000 9.5000 22.0000   (exact x^3/3: 0.3333 2.66
 two rows at once      : 9.5000, 12.5000
 ```
 The trapezoid rule joins samples by straight lines, so it overestimates a convex function such as `x²` (22 against 21.33); a finer grid cuts the error. `x` need not be equally spaced, and a 2-D `y` is integrated along its last axis, one row at a time. `cumulative_trapezoid` returns one value per interval (n-1 values for n samples).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="integrating_a_function.html">
+    <span class="label">Next</span>
+    <span class="title">Integrating a function</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

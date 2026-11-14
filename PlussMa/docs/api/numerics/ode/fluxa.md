@@ -25,7 +25,7 @@ The solve is built from ordinary `Series` operations, so a parameter or initial 
 ## Parameters
 
 `const ode::OdeFn &f`
-: `(double t, const Series &y, const Series &theta) -> Series`: the derivative, shaped like `y`.
+: `Series (double t, const Series &y, const Series &theta)`: the derivative, shaped like `y`.
 
 `const pluss::Series &y0`
 : The initial state, a one-dimensional `Series`.

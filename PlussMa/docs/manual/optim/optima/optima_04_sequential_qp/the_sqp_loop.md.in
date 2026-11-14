@@ -28,7 +28,7 @@ The same problem, with each line-search setting varied on its own.
 
 @@example Numerical/optimization/guide/optima/53_line_search.cpp@@
 
-Three facts stand out. The default backtracking factor of 0.5 is the cheapest here, 14 evaluations against 17 for 0.8 and 18 for 0.2. A loose `armijo` of 0.1 demands so much decrease that 21 evaluations are spent, while 1e-6 and 1e-4 behave exactly like the default. The trial-step budget barely matters on this problem: one trial step per iteration still converges (11 iterations, 16 evaluations), and so do 3 and 20 (10 iterations, 14 evaluations); Program 5 shows a problem where a budget of one fails. The setting that decides whether the run works at all is `initial_step_size`: 0.1 leaves the run unconverged after 100 iterations at objective 164.546, and 0.5 stops with flag `-6` at 8.14438 after 55 iterations. Keep the full initial step: a Newton-type method gets its fast local convergence from it.
+Three facts stand out. The default backtracking factor of 0.5 is the cheapest here, 14 evaluations against 17 for 0.8 and 18 for 0.2. A loose `armijo` of 0.1 demands so much decrease that 21 evaluations are spent, while 1e-6 and 1e-4 behave exactly like the default. The trial-step budget barely matters on this problem: one trial step per iteration still converges (11 iterations, 16 evaluations), and so do 3 and 20 (10 iterations, 14 evaluations); Program 5 shows a problem where a budget of one fails. The setting that decides whether the run works at all is `initial_step_size`: 0.1 leaves the run unconverged after 100 iterations at objective 164.537, and 0.5 stops with flag `-6` at 8.99486 after 57 iterations. Keep the full initial step: a Newton-type method gets its fast local convergence from it.
 
 ## Program 4: Curved constraints and the second-order correction
 
@@ -47,3 +47,12 @@ All three runs reach the minimum, `-1` at `x = 1`. With the correction off the r
 - **Count evaluations as well as iterations.** Line-search backtracking raises the evaluations without raising the iterations.
 
 Where next: [Subproblems, restoration and stopping](subproblems_restoration_and_stopping.md) covers what happens when the loop struggles and when it should stop.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="subproblems_restoration_and_stopping.html">
+    <span class="label">Next</span>
+    <span class="title">Subproblems, restoration and stopping</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

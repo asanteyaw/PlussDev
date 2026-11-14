@@ -1,0 +1,57 @@
+# `circuit::Scheme`
+
+Selects the time-stepping rule of a transient run.
+
+## Signature
+
+```cpp
+circuit::Scheme
+```
+
+## What It Does
+
+The two rules differ in how they treat a response that changes faster than the step can follow. Both are second order: halving the step divides the error of a smooth response by about four.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Trapezoid` | Averages the equations at the two ends of each step. Exact for a straight-line response; conserves the energy of a lossless oscillation to rounding error; overshoots and rings when the step exceeds twice the fastest time constant. | The default of `TranOptions::scheme`. |
+| `Gear2` | Extends the equations backwards over the two previous steps, starting with one backward-Euler step. Removes the fast part of a response within a few steps, overshooting by a few per cent at most; damps oscillations, more the fewer samples per period. |  |
+
+## Returns
+
+A choice of two rules, stored in `TranOptions::scheme`.
+
+## Errors
+
+None: both values are always valid.
+
+## Interpretation and Use
+
+Use `Trapezoid` for oscillators and resonant circuits, with at least twenty samples per period. Use `Gear2` for circuits whose time constants are far apart or when a long step cannot be avoided. When unsure, run both: agreement means either is right; a rule that rings or decays has told you the step is too long.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The energy of a lossless oscillator under each rule.
+
+@@example Eng/api/circuit_tran_schemes.cpp@@
+
+### Example 2
+
+The error of each rule as the step is halved.
+
+@@example Eng/api/circuit_scheme_order.cpp@@
+
+### Example 3
+
+A step of ten time constants: the trapezoid rule rings and Gear2 does not.
+
+@@example Eng/api/circuit_scheme_stiff.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

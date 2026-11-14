@@ -1,0 +1,71 @@
+# `fluid::HeatResult`
+
+The temperatures at every hydraulic event, with the energy balance.
+
+## Signature
+
+```cpp
+fluid::HeatResult
+```
+
+## What It Does
+
+The result of `heat`: the hydraulic `RunResult` that drove it, the temperatures sampled at the same event times and the stored energy.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `hydraulic` | The `RunResult` used. |  |
+| `node` | Mixed temperature, K, `[sample, ..., node]`. |  |
+| `link` | Volume mean temperature of a pipe, upstream temperature of a pump or valve, K, `[sample, ..., link]`. |  |
+| `tank` | Temperature of each fully mixed tank, K, `[sample, ..., tank]`. |  |
+| `energy` | Stored sensible energy `ρ c_p Σ V T` in the pipes and tanks, J, `[sample, ...]`. |  |
+| `energy_error` | Storage change minus the ambient exchange and boundary flux, J, `[sample, ...]`. |  |
+
+## Returns
+
+Returned by `heat`.
+
+## Errors
+
+Reading a field does not run again.
+
+## Interpretation and Use
+
+The stored energy is counted from absolute zero so that boundary flows are unambiguous. `energy_error` should stay at rounding level; an exact exponential, not `UA (T - Ta) dt`, is used for the ambient exchange.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pipe cooling, with the energy fields.
+
+@@example Eng/api/fluid_heat_pipe.cpp@@
+
+### Example 2
+
+Shapes and the flow-weighted mixture.
+
+@@example Eng/api/fluid_heat_mix.cpp@@
+
+### Example 3
+
+A tank cooling.
+
+@@example Eng/api/fluid_heat_tank.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Heat.html">
+    <span class="label">Previous</span>
+    <span class="title">Heat</span>
+  </a>
+  <a class="next-link" href="heat_fn.html">
+    <span class="label">Next</span>
+    <span class="title">heat</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

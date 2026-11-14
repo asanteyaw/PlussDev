@@ -47,7 +47,7 @@ The following programs isolate this symbol's normal contract, a materially diffe
 
 ### Example 1
 
-A sweep with stiffness and mass damping, and an undamped resonance.
+A sweep with stiffness and mass damping, and the approach to an undamped resonance.
 
 @@example Eng/api/structure_harmonic.cpp@@
 

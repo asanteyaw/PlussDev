@@ -38,14 +38,14 @@ int main() {
   const auto y = pluss::make_series({{1.5, 2.0}, {3.0, 4.0}});
   const auto g = gradient({x, y});
   out.writeln("grid of points {2, 2}  -> gradient", g.sizes(), " Hessian", hessian({x, y}).sizes());
-  out.writeln("point (1, 0) is x = 2, y = 3; its gradient:", g.select(0, 1).select(0, 0).pull<double>());
+  out.writeln("point (1, 0) is x = 2, y = 3; its gradient:", g.select(0, 1).select(0, 0).items<double>());
 
   // A vector of x against one fixed y.
   const auto line = pluss::make_series({1.0, 2.0, 3.0});
   const auto fixed = pluss::make_series(1.0, as_f64());
   const auto h = gradient({line, fixed});
   out.writeln("three x against y = 1 -> gradient", h.sizes());
-  out.writeln("  dP/dx", h.select(1, 0).pull<double>(), " dP/dy", h.select(1, 1).pull<double>());
+  out.writeln("  dP/dx", h.select(1, 0).items<double>(), " dP/dy", h.select(1, 1).items<double>());
 
   // A column against a row: a 2 x 3 grid of points.
   const auto column = pluss::make_series({1.0, 2.0}, {2, 1});
@@ -92,7 +92,7 @@ int main() {
   const auto g32 = gradient({x32, y32});
   out.writeln("Float32 arguments -> Float32 gradient:", g32.scalar_type() == pluss::ScalarType::Float32 ? "yes" : "no");
   out.writeln("on the CPU:", g32.platform() == pluss::pCPU ? "yes" : "no");
-  out.writeln("dP/dx", g32.select(1, 0).pull<float>(), " dP/dy", g32.select(1, 1).pull<float>());
+  out.writeln("dP/dx", g32.select(1, 0).items<float>(), " dP/dy", g32.select(1, 1).items<float>());
 }
 ```
 
@@ -108,3 +108,16 @@ The gradient inherits the precision of the arguments, and the values match the d
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="jacobians_and_hessians.html">
+    <span class="label">Previous</span>
+    <span class="title">Jacobians and Hessians</span>
+  </a>
+  <a class="next-link" href="a_newton_step_from_the_hessian.html">
+    <span class="label">Next</span>
+    <span class="title">Worked problem: Newton's method on a batch of starts</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

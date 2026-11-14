@@ -55,3 +55,16 @@ lane    converged   relative residual   x at the midpoint
 3       1           0.0e+00             465000.00
 ```
 Four right-hand sides are solved together with the same operator and the same array operations; `converged` and `relative_residual` come back per lane, and the loop ends when every lane has converged. Lanes finish at different iteration counts in general, and the reported count is the batch's.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="preconditioning.html">
+    <span class="label">Previous</span>
+    <span class="title">Preconditioning</span>
+  </a>
+  <a class="next-link" href="a_sparse_matrix_as_an_operator.html">
+    <span class="label">Next</span>
+    <span class="title">A sparse matrix as an operator</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -59,6 +59,13 @@ Method to_rng_method_(RandMethod method) {
   return Method::Pseudo;
 }
 
+// A low-discrepancy sequence has one point per path and one dimension per time step; a sequence whose points were the time steps would have
+// thousands of dimensions and a handful of points. The draw is returned as {steps, paths}.
+template <typename Sequence>
+Series quasi_(Sequence&& sequence, std::int64_t rows, std::int64_t points) {
+  return sequence({points, rows}).transpose(0, 1).contiguous();
+}
+
 Series draw_normals_(std::int64_t rows,
                      std::int64_t cols,
                      const SimOptions& options,
@@ -84,7 +91,7 @@ Series draw_normals_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      return pluss::subsp::stats::rng::sobol({rows, cols}, o, out_cfg);
+      return quasi_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::sobol(sz, o, out_cfg); }, rows, cols);
     }
     case RandMethod::Halton: {
       HaltonOptions o;
@@ -94,7 +101,7 @@ Series draw_normals_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      return pluss::subsp::stats::rng::halton({rows, cols}, o, out_cfg);
+      return quasi_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::halton(sz, o, out_cfg); }, rows, cols);
     }
     case RandMethod::Torus: {
       TorusOptions o;
@@ -104,7 +111,7 @@ Series draw_normals_(std::int64_t rows,
       o.start = off + 1U;
       o.seed = seed;
       o.seed_set = true;
-      return pluss::subsp::stats::rng::torus({rows, cols}, o, out_cfg);
+      return quasi_([&](std::initializer_list<std::int64_t> sz) { return pluss::subsp::stats::rng::torus(sz, o, out_cfg); }, rows, cols);
     }
     case RandMethod::Pseudo:
       break;
@@ -232,22 +239,35 @@ Series cir_transition_step_(const Series& rt,
   return pluss::make_series(out, {1, paths}, cpu_cfg).to(cfg.platform, cfg.dtype);
 }
 
-std::vector<double> hjm_alpha_(const std::vector<double>& tenors, const std::vector<double>& vol) {
-  const std::size_t n = tenors.size();
-  std::vector<double> alpha(n, 0.0);
-  for (std::size_t j = 0; j < n; ++j) {
-    double tail = 0.0;
-    const double base_t = (j == 0 ? 0.0 : tenors[j - 1]);
-    for (std::size_t k = j; k < n; ++k) {
-      const double prev_t = (k == 0 ? 0.0 : tenors[k - 1]);
-      const double dtau = tenors[k] - std::max(prev_t, base_t);
-      if (dtau > 0.0) {
-        tail += vol[k] * dtau;
-      }
-    }
-    alpha[j] = vol[j] * tail;
+// Heath-Jarrow-Morton in the Musiela parametrisation: the state is the forward curve f(t, tau) on a grid of times to maturity, and under the
+// pricing measure it moves by
+//     df(t, tau) = [ d f / d tau + sigma(tau) * int_0^tau sigma(u) du ] dt + sigma(tau) dW.
+// The first term is the transport of the curve along the tenor axis as calendar time passes, the second the no-arbitrage drift; without
+// both, bond prices are not martingales after discounting. The grid carries an extra node at tau = 0 (the short rate r_t = f(t, 0)),
+// whose volatility is that of the first tenor; sigma is taken piecewise constant on each tenor interval, equal to the value at its right end.
+struct HjmGrid_ {
+  std::vector<double> tau;     // K + 1 nodes, tau[0] = 0
+  std::vector<double> sigma;   // volatility at each node
+  std::vector<double> alpha;   // no-arbitrage drift sigma(tau) * int_0^tau sigma
+  std::vector<double> spacing; // tau[j + 1] - tau[j], K entries
+};
+
+HjmGrid_ hjm_grid_(const std::vector<double>& tenors, const std::vector<double>& vol) {
+  HjmGrid_ g;
+  g.tau.push_back(0.0);
+  g.sigma.push_back(vol.front());
+  for (std::size_t j = 0; j < tenors.size(); ++j) {
+    g.tau.push_back(tenors[j]);
+    g.sigma.push_back(vol[j]);
   }
-  return alpha;
+  g.alpha.assign(g.tau.size(), 0.0);
+  double cumulative = 0.0;
+  for (std::size_t j = 1; j < g.tau.size(); ++j) {
+    cumulative += g.sigma[j] * (g.tau[j] - g.tau[j - 1]);
+    g.alpha[j] = g.sigma[j] * cumulative;
+    g.spacing.push_back(g.tau[j] - g.tau[j - 1]);
+  }
+  return g;
 }
 
 RatePaths finalize_rate_paths_(const Series& rate, const Series& innovation, const SimOptions& options, Config out_cfg) {
@@ -448,12 +468,13 @@ RatePaths hull_white_paths(std::int64_t steps,
 
     Series r_next = pluss::series::undefined();
     if (options.scheme == Scheme::Transition) {
-      r_next = pluss::series::full({1, paths}, theta_t, out_cfg)
-                   .add(rt.sub(theta_t).mul(exp_kdt))
-                   .add(eps.mul(std::sqrt(std::max(var_scale, 0.0))));
+      // Exact for a level that is linear in time: r(t+dt) = r e^{-k dt} + int_0^dt k e^{-k (dt - u)} (theta_t + slope u) du + noise, and the
+      // integral is theta_t (1 - e^{-k dt}) + slope (dt - (1 - e^{-k dt}) / k).
+      const double level_gain = theta_t * (1.0 - exp_kdt) + params.theta_slope * (dt - (1.0 - exp_kdt) / params.kappa);
+      r_next = rt.mul(exp_kdt).add(level_gain).add(eps.mul(std::sqrt(std::max(var_scale, 0.0))));
     } else {
       r_next = rt.add(rt.mul(-params.kappa * dt))
-                   .add(theta_t * dt)
+                   .add(params.kappa * theta_t * dt)
                    .add(eps.mul(params.sigma * std::sqrt(dt)));
     }
     rt = r_next;
@@ -491,26 +512,34 @@ HjmPaths hjm_paths(std::int64_t steps,
   const auto out_cfg = f64_cfg_(cfg);
   const std::int64_t n = steps + 1;
   const std::int64_t k = static_cast<std::int64_t>(params.tenors.size());
-  const std::vector<double> alpha = hjm_alpha_(params.tenors, params.vol);
+  const HjmGrid_ grid = hjm_grid_(params.tenors, params.vol);
+  const double smallest_spacing = *std::min_element(grid.spacing.begin(), grid.spacing.end());
+  PLUSS_CHECK(dt <= smallest_spacing,
+              "subsp::math::finance::rates::hjm_paths: dt must not exceed the smallest spacing of the tenor grid (" +
+                  std::to_string(smallest_spacing) + "), or the transport of the forward curve along the tenor axis is unstable");
 
   const Series z = draw_normals_(steps, paths, options, out_cfg, seed, 0x5719ULL);
 
-  Series f_state = pluss::series::full({paths, k}, params.r0, out_cfg);
-  const Series alpha_row = pluss::make_series(alpha, {1, k}, out_cfg).mul(dt);
-  const Series vol_row = pluss::make_series(params.vol, {1, k}, out_cfg).mul(std::sqrt(dt));
+  Series f_state = pluss::series::full({paths, k + 1}, params.r0, out_cfg);
+  const Series alpha_row = pluss::make_series(grid.alpha, {1, k + 1}, out_cfg).mul(dt);
+  const Series vol_row = pluss::make_series(grid.sigma, {1, k + 1}, out_cfg).mul(std::sqrt(dt));
+  const Series spacing_row = pluss::make_series(grid.spacing, {1, k}, out_cfg);
 
   std::vector<Series> forward_rows;
   std::vector<Series> rate_rows;
   forward_rows.reserve(static_cast<std::size_t>(n));
   rate_rows.reserve(static_cast<std::size_t>(n));
-  forward_rows.push_back(f_state);
+  forward_rows.push_back(f_state.slice(1, 1, k + 1, 1));
   rate_rows.push_back(f_state.select(1, 0).reshape({paths}));
 
   for (std::int64_t t = 0; t < steps; ++t) {
     const Series eps = z.select(0, t).reshape({paths, 1});
-    f_state = f_state.add(alpha_row).add(eps.mul(vol_row));
+    // transport: the slope of the curve along the tenor axis (forward difference; the last node reuses the slope of the last interval)
+    const Series slope = f_state.slice(1, 1, k + 1, 1).sub(f_state.slice(1, 0, k, 1)).div(spacing_row);
+    const Series slope_full = slope.unite({slope.select(1, k - 1).reshape({paths, 1})}, 1);
+    f_state = f_state.add(slope_full.mul(dt)).add(alpha_row).add(eps.mul(vol_row));
 
-    forward_rows.push_back(f_state);
+    forward_rows.push_back(f_state.slice(1, 1, k + 1, 1));
     rate_rows.push_back(f_state.select(1, 0).reshape({paths}));
   }
 
@@ -584,13 +613,15 @@ double hull_white_zcb(double maturity, double short_rate, const HullWhiteParams&
     return 1.0;
   }
 
-  const VasicekParams approx{
-      .kappa = params.kappa,
-      .theta = params.theta0,
-      .sigma = params.sigma,
-      .r0 = params.r0,
-  };
-  return vasicek_zcb(maturity, short_rate, approx);
+  // dr = kappa (theta0 + theta_slope t - r) dt + sigma dW is Gaussian: ln P = -E[int r] + Var[int r] / 2, with
+  // E[int_0^T r] = r B + theta0 (T - B) + theta_slope (T^2 / 2 - (T - B) / kappa) and B = (1 - exp(-kappa T)) / kappa.
+  const double k = params.kappa;
+  const double s2 = params.sigma * params.sigma;
+  const double b = (1.0 - std::exp(-k * maturity)) / k;
+  const double mean_integral = short_rate * b + params.theta0 * (maturity - b) +
+                               params.theta_slope * (0.5 * maturity * maturity - (maturity - b) / k);
+  const double half_variance = (s2 / (2.0 * k * k)) * (maturity - b) - (s2 * b * b) / (4.0 * k);
+  return std::exp(-mean_integral + half_variance);
 }
 
 double hjm_zcb_mc(double maturity,

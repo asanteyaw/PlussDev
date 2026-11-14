@@ -1,0 +1,63 @@
+# `circuit::Drive`
+
+Time-varying values of the independent sources.
+
+## Signature
+
+```cpp
+circuit::Drive
+```
+
+## What It Does
+
+Supplies the value of each independent source at each instant of a `tran` run. A source that has no entry in the drive keeps the value stored in the circuit for the whole run, so a step needs no drive at all.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `voltage` | The voltage of each voltage source at each instant, `[..., time, voltage sources]`, in the order the sources were given to the net. | Undefined: every voltage source keeps its stored value. |
+| `current` | The current of each current source at each instant, `[..., time, current sources]`. | Undefined: every current source keeps its stored value. |
+
+## Returns
+
+A value; validated by `tran`.
+
+## Errors
+
+A member must be a real floating, finite array on the circuit's platform with one row per time sample and one column per source. Leading axes must either be absent, so that every lane shares the drive, or equal the circuit's parameter batch. A member for a kind of source the circuit does not have is rejected.
+
+## Interpretation and Use
+
+The source is known only at the samples; between them the integrator treats it as the straight line joining the neighbouring values. A waveform that is piecewise linear between samples is therefore exact, a sinusoid needs enough samples per period (twenty or more), and a jump that falls on a sample is best given the average of the levels on either side. A drive with leading axes needs a circuit whose parameters have the same leading axes; give a source a batched stored value to create them, since the stored value is replaced by the drive.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A voltage drive and a current drive.
+
+@@example Eng/api/circuit_tran_drive.cpp@@
+
+### Example 2
+
+One member driven, the other held, and no drive at all.
+
+@@example Eng/api/circuit_drive_defaults.cpp@@
+
+### Example 3
+
+A drive with a lane per amplitude, and one drive shared by every lane of a swept circuit.
+
+@@example Eng/api/circuit_drive_batch.cpp@@
+
+### Example 4
+
+Rejected drives.
+
+@@example Eng/api/circuit_drive_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

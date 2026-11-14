@@ -23,7 +23,7 @@ The engine, so the call chains.
 
 ## Errors
 
-A pattern whose placeholder count disagrees with the arguments is refused in strict mode.
+A string-literal pattern is checked against its arguments while compiling. A pattern built at run time must be wrapped in [`runtime_format`](../core-runtime-format.md); one whose placeholder count disagrees with the arguments is refused in strict mode with a `pluss::Error`.
 
 ## Practical Examples
 

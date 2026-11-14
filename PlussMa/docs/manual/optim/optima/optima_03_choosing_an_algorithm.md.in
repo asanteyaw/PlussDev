@@ -47,4 +47,12 @@ Programs 1, 3 and 7 each show a run that exits with flag `1` at a point that is 
 Chapter 4 looks inside sequential QP: the quadratic subproblem, the merit function it searches along, and what its restoration step does when the linearized constraints are inconsistent.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima_03_choosing_an_algorithm/four_algorithms_on_one_problem
+optima_03_choosing_an_algorithm/curvature_scaling_and_size
+optima_03_choosing_an_algorithm/options_and_presets
+```
 <!-- apiref:toctree:end -->

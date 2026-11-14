@@ -48,7 +48,7 @@ A generator on a voltage-controlled bus.
 #include <pluss/tils/kit/output.h>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -91,6 +91,70 @@ converged true in 3 iterations
 ```
 ### Example 2
 
+A generator taken out of service with `active`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static power::Net three_bus() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PV, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -0.2, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.2});
+  net.buses.vm = vec({1.04, 1.02, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.gens.bus = {1};
+  net.gens.p = vec({0.6});
+  net.gens.q = vec({0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.015});
+  net.lines.x = vec({0.1, 0.2, 0.25});
+  net.lines.charge = vec({0.02, 0.05, 0.04});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const auto report = [&](const char *label, const power::Net &net) {
+    const auto r = power::ac(power::make(net));
+    out.writeln(label, ": slack output (p.u.) ", flat(r.injection.real())[0], ", flow on line 0-1 (p.u.) ", flat(r.from_power.real())[0], ", load-bus voltage ", flat(r.magnitude)[2]);
+  };
+  report("as described              ", three_bus());
+
+  power::Net unit_out = three_bus();
+  unit_out.gens.active = {false};              // the generator at bus 1 is out of service
+  report("generator out of service  ", unit_out);
+
+  power::Net conductance = three_bus();
+  conductance.buses.g = vec({0.0, 0.0, 0.2});  // a resistive shunt at the load bus
+  report("conductance 0.2 at bus 2  ", conductance);
+
+  power::Net shifted = three_bus();
+  shifted.lines.shift = vec({0.05, 0.0, 0.0}); // a phase shifter on line 0-1
+  report("phase shift 0.05 on line 0", shifted);
+}
+```
+
+Output
+
+```text
+as described              : slack output (p.u.) 0.10314, flow on line 0-1 (p.u.) -0.09867, load-bus voltage 1.00575
+generator out of service  : slack output (p.u.) 0.70407, flow on line 0-1 (p.u.) 0.39463, load-bus voltage 1.00609
+conductance 0.2 at bus 2  : slack output (p.u.) 0.30611, flow on line 0-1 (p.u.) -0.00692, load-bus voltage 1.00250
+phase shift 0.05 on line 0: slack output (p.u.) 0.10317, flow on line 0-1 (p.u.) -0.19275, load-bus voltage 1.00608
+```
+### Example 3
+
 Generator-off-grid validation.
 
 ```cpp
@@ -100,7 +164,7 @@ Generator-off-grid validation.
 #include <functional>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -153,9 +217,9 @@ two slack buses       : eng::power::make: exactly one slack bus is required
 an isolated bus       : eng::power::make: every bus must connect to the slack island
 zero line impedance   : eng::power::make: line series impedance cannot be zero
 generator off the grid: eng::power::make: generator bus lies outside the network
-a load of 50 per unit (meant 0.5): accepted, converged 0, load-bus voltage 4.48327
+a load of 50 per unit (meant 0.5): accepted, converged 0, load-bus voltage -4.45537
 ```
-### Example 3
+### Example 4
 
 Generation moved from the slack to a generator in the DC flow.
 
@@ -166,7 +230,7 @@ Generation moved from the slack to a generator in the DC flow.
 #include <cmath>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }

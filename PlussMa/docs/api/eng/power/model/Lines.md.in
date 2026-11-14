@@ -49,11 +49,17 @@ Tap, charging and shunt effects on a load-bus voltage.
 
 ### Example 2
 
+A phase shift on one line.
+
+@@example Eng/api/power_gens_shunt_shift.cpp@@
+
+### Example 3
+
 A line taken out of service.
 
 @@example Eng/api/power_scenarios.cpp@@
 
-### Example 3
+### Example 4
 
 Validation of lines.
 

@@ -194,3 +194,16 @@ last observed    4.8885   4.8833   2.5779
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="vecm_to_var.html">
+    <span class="label">Previous</span>
+    <span class="title">vecm_to_var</span>
+  </a>
+  <a class="next-link" href="VecmOptions.html">
+    <span class="label">Next</span>
+    <span class="title">VecmOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

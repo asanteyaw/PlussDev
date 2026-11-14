@@ -27,3 +27,12 @@ The defaults are a sensible starting point; change a field only for the reason i
 
 - [`Sarima`](Sarima.md)
 - [`ArimaOptions`](ArimaOptions.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SarimaFit.html">
+    <span class="label">Previous</span>
+    <span class="title">SarimaFit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

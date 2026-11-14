@@ -26,7 +26,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/Errors.h"
@@ -37,6 +36,7 @@
 #include "table/Slate.h"
 #include "table/io/CsvSchemaConvert.h"
 #include "loader/parallel_csv_reader.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::loader {
 
@@ -397,13 +397,13 @@ std::vector<std::size_t> resolve_usefeats(const std::vector<std::string>& names,
   }
 
   for (const auto idx : options.usefeats_idx) {
-    PLUSS_CHECK(idx < names.size(), fmt::format("load_csv: usefeats_idx {} out of range", idx));
+    PLUSS_CHECK(idx < names.size(), pluss::tils::OutputEngine::format("load_csv: usefeats_idx {} out of range", idx));
     out.push_back(idx);
   }
 
   for (const auto& name : options.usefeats) {
     const auto it = std::find(names.begin(), names.end(), name);
-    PLUSS_CHECK(it != names.end(), "load_csv: unknown usefeats name '" + name + "'");
+    PLUSS_CHECK(it != names.end(), "load_csv: unknown usefeats name '" + name + "'", name, names);
     out.push_back(static_cast<std::size_t>(std::distance(names.begin(), it)));
   }
 
@@ -425,50 +425,50 @@ std::string scalar_for_csv(const pluss::Series& s, std::int64_t row, const Write
     case pluss::codem::ScalarType::Bool:
       return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
     case pluss::codem::ScalarType::Int8:
-      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
     case pluss::codem::ScalarType::Int16:
-      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
     case pluss::codem::ScalarType::Int32:
-      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
     case pluss::codem::ScalarType::Int64:
-      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt8:
-      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
     case pluss::codem::ScalarType::UInt16:
-      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt32:
-      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt64:
-      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16:
-      return maybe_replace_decimal(fmt::format("{:.6g}",
+      return maybe_replace_decimal(pluss::tils::OutputEngine::format("{:.6g}",
                                                pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row])));
     case pluss::codem::ScalarType::BFloat16:
-      return maybe_replace_decimal(fmt::format("{:.6g}",
+      return maybe_replace_decimal(pluss::tils::OutputEngine::format("{:.6g}",
                                                pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row])));
     case pluss::codem::ScalarType::Float32:
     {
       const auto v = reinterpret_cast<const float*>(base)[row];
       if (options.float_format.has_value()) {
-        return maybe_replace_decimal(fmt::format(fmt::runtime(*options.float_format), v));
+        return maybe_replace_decimal(pluss::tils::OutputEngine::format(pluss::tils::runtime_format(*options.float_format), v));
       }
-      return maybe_replace_decimal(fmt::format("{:.8g}", v));
+      return maybe_replace_decimal(pluss::tils::OutputEngine::format("{:.8g}", v));
     }
     case pluss::codem::ScalarType::Float64:
     {
       const auto v = reinterpret_cast<const double*>(base)[row];
       if (options.float_format.has_value()) {
-        return maybe_replace_decimal(fmt::format(fmt::runtime(*options.float_format), v));
+        return maybe_replace_decimal(pluss::tils::OutputEngine::format(pluss::tils::runtime_format(*options.float_format), v));
       }
-      return maybe_replace_decimal(fmt::format("{:.12g}", v));
+      return maybe_replace_decimal(pluss::tils::OutputEngine::format("{:.12g}", v));
     }
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     case pluss::codem::ScalarType::Complex128: {
       const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     default:
       return "";
@@ -486,9 +486,9 @@ std::string slate_value_for_csv(const pluss::table::Slate& t, std::int64_t row, 
     case pluss::table::SlateKind::Note:
       return std::string(t.as_note().at(row));
     case pluss::table::SlateKind::Timeline:
-      return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
+      return pluss::tils::OutputEngine::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case pluss::table::SlateKind::Duration:
-      return fmt::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
+      return pluss::tils::OutputEngine::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
   }
   PLUSS_FAIL("write_csv: unsupported Slate kind");
 }
@@ -608,7 +608,7 @@ std::optional<ColumnarRawResult> try_build_raw_batch_serial(const ReadCsvOptions
       names.clear();
       names.reserve(first_row_ncol);
       for (std::size_t i = 0; i < first_row_ncol; ++i) {
-        names.push_back(fmt::format("feat_{}", i));
+        names.push_back(pluss::tils::OutputEngine::format("feat_{}", i));
       }
     }
 
@@ -690,13 +690,13 @@ std::optional<ColumnarRawResult> try_build_raw_batch_serial(const ReadCsvOptions
     if (row.size() != names.size()) {
       ++bad_lines;
       if (options.on_bad_lines == BadLinePolicy::Error) {
-        PLUSS_FAIL(fmt::format("load_csv: bad line at data row {} (expected {} fields, got {})",
+        PLUSS_FAIL(pluss::tils::OutputEngine::format("load_csv: bad line at data row {} (expected {} fields, got {})",
                                data_rows_seen - 1,
                                names.size(),
                                row.size()));
       }
       if (options.on_bad_lines == BadLinePolicy::Warn) {
-        ::pluss::codem::warn(fmt::format("load_csv: skipping malformed row {}", data_rows_seen - 1));
+        ::pluss::codem::warn(pluss::tils::OutputEngine::format("load_csv: skipping malformed row {}", data_rows_seen - 1));
       }
       continue;
     }
@@ -726,7 +726,7 @@ std::optional<ColumnarRawResult> try_build_raw_batch_serial(const ReadCsvOptions
   }
 
   if (options.on_bad_lines == BadLinePolicy::Warn && bad_lines > 0) {
-    ::pluss::codem::warn(fmt::format("load_csv: skipped {} malformed rows", bad_lines));
+    ::pluss::codem::warn(pluss::tils::OutputEngine::format("load_csv: skipped {} malformed rows", bad_lines));
   }
 
   ColumnarRawResult result;
@@ -794,7 +794,7 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
     const auto ncol = records[kept_rows.front()].size();
     names.reserve(ncol);
     for (std::size_t i = 0; i < ncol; ++i) {
-      names.push_back(fmt::format("feat_{}", i));
+      names.push_back(pluss::tils::OutputEngine::format("feat_{}", i));
     }
     data_start_pos = 0;
   }
@@ -878,13 +878,13 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
     if (rec.size() != names.size()) {
       ++bad_lines;
       if (options.on_bad_lines == BadLinePolicy::Error) {
-        PLUSS_FAIL(fmt::format("load_csv: bad line at data row {} (expected {} fields, got {})",
+        PLUSS_FAIL(pluss::tils::OutputEngine::format("load_csv: bad line at data row {} (expected {} fields, got {})",
                                pos - data_start_pos,
                                names.size(),
                                rec.size()));
       }
       if (options.on_bad_lines == BadLinePolicy::Warn) {
-        ::pluss::codem::warn(fmt::format("load_csv: skipping malformed row {}", pos - data_start_pos));
+        ::pluss::codem::warn(pluss::tils::OutputEngine::format("load_csv: skipping malformed row {}", pos - data_start_pos));
       }
       continue;
     }
@@ -909,7 +909,7 @@ CsvRawBatch build_raw_batch_from_records(const std::vector<std::vector<std::stri
   }
 
   if (options.on_bad_lines == BadLinePolicy::Warn && bad_lines > 0) {
-    ::pluss::codem::warn(fmt::format("load_csv: skipped {} malformed rows", bad_lines));
+    ::pluss::codem::warn(pluss::tils::OutputEngine::format("load_csv: skipped {} malformed rows", bad_lines));
   }
 
   CsvRawBatch out;
@@ -993,7 +993,7 @@ CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options) {
     serial_raw = try_build_raw_batch_serial(resolved, &build_profile);
     if (!serial_raw.has_value()) {
       ::pluss::codem::warn(
-          fmt::format("load_csv: serial parser fallback to row parser for '{}'", resolved.filepath));
+          pluss::tils::OutputEngine::format("load_csv: serial parser fallback to row parser for '{}'", resolved.filepath));
     }
   }
 
@@ -1027,7 +1027,7 @@ CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options) {
           throw;
         }
         ::pluss::codem::warn(
-            fmt::format("load_csv: parallel parse fallback to serial for '{}' ({})", resolved.filepath, e.what()));
+            pluss::tils::OutputEngine::format("load_csv: parallel parse fallback to serial for '{}' ({})", resolved.filepath, e.what()));
         records = parse_serial();
       }
     } else {
@@ -1051,8 +1051,7 @@ CsvRawBatch read_csv_raw_batch(const ReadCsvOptions& options) {
   profile_stats.columns = out.features.size();
 
   if (csv_profile_enabled(resolved)) {
-    fmt::print(
-        stderr,
+    pluss::tils::OutputEngine(std::cerr).writef(
         "load_csv(raw) profile [{}]: total={:.2f} ms, detect_sep={:.2f} ms, parse_records={:.2f} ms, "
         "build_batch={:.2f} ms, case_filter={:.2f} ms, scan_cells={:.2f} ms, "
         "cases(raw/selected)={}/{}, features={}\n",
@@ -1117,7 +1116,7 @@ CsvBatch read_csv_batch(const ReadCsvOptions& options) {
     serial_raw = try_build_raw_batch_serial(resolved, &build_profile);
     if (!serial_raw.has_value()) {
       ::pluss::codem::warn(
-          fmt::format("load_csv: serial parser fallback to row parser for '{}'", resolved.filepath));
+          pluss::tils::OutputEngine::format("load_csv: serial parser fallback to row parser for '{}'", resolved.filepath));
     }
   }
 
@@ -1152,7 +1151,7 @@ CsvBatch read_csv_batch(const ReadCsvOptions& options) {
           throw;
         }
         ::pluss::codem::warn(
-            fmt::format("load_csv: parallel parse fallback to serial for '{}' ({})", resolved.filepath, e.what()));
+            pluss::tils::OutputEngine::format("load_csv: parallel parse fallback to serial for '{}' ({})", resolved.filepath, e.what()));
         records = parse_serial();
       }
     } else {
@@ -1173,8 +1172,7 @@ CsvBatch read_csv_batch(const ReadCsvOptions& options) {
   profile_stats.columns = out.features.size();
 
   if (csv_profile_enabled(resolved)) {
-    fmt::print(
-        stderr,
+    pluss::tils::OutputEngine(std::cerr).writef(
         "load_csv profile [{}]: total={:.2f} ms, detect_sep={:.2f} ms, parse_records={:.2f} ms, "
         "build_dataframe={:.2f} ms, case_filter={:.2f} ms, scan_cells={:.2f} ms, infer_columns={:.2f} ms, "
         "cases(raw/selected)={}/{}, features={}\n",

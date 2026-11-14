@@ -21,7 +21,7 @@ double as_f64_scalar(const Series& x) {
     throw std::runtime_error("expected scalar Series");
   }
   const Series cpu = x.to(pluss::pCPU, ScalarType::Float64);
-  return cpu.reshape({1}).pull<double>().front();
+  return cpu.reshape({1}).items<double>().front();
 }
 
 bool as_bool_scalar(const Series& x) {
@@ -29,7 +29,7 @@ bool as_bool_scalar(const Series& x) {
     throw std::runtime_error("expected scalar Series");
   }
   const Series cpu = x.to(pluss::pCPU, ScalarType::Bool);
-  return cpu.reshape({1}).pull<bool>().front();
+  return cpu.reshape({1}).items<bool>().front();
 }
 
 std::vector<double> as_f64_vec(const Series& x) {
@@ -37,7 +37,7 @@ std::vector<double> as_f64_vec(const Series& x) {
     throw std::runtime_error("expected defined Series");
   }
   const Series cpu = x.to(pluss::pCPU, ScalarType::Float64);
-  return cpu.reshape({cpu.numel()}).pull<double>();
+  return cpu.reshape({cpu.numel()}).items<double>();
 }
 
 void expect(bool cond, const std::string& msg, int* failures) {
@@ -169,6 +169,11 @@ int main() {
       &failures);
   expect(approx(as_f64_scalar(zero.stat.logcdf()), std::log(0.5), 1e-12), "Series logcdf() standard normal shortcut", &failures);
   expect(approx(as_f64_scalar(zero.stat.cdf()), 0.5, 1e-12), "Series cdf() standard normal shortcut", &failures);
+  const auto probabilities = pluss::make_series({0.025, 0.5, 0.975}, f64);
+  const auto normal_quantiles = probabilities.stat.icdf();
+  expect(approx(as_f64_scalar(normal_quantiles.stat.cdf().sub(probabilities).abs().max()),
+                0.0, 2e-10),
+         "Series icdf() standard normal shortcut", &failures);
   expect(
       approx(as_f64_scalar(zero.stat.pdf(1.5)),
              as_f64_scalar(pdf(dst::Normal, zero, {0.0, 1.5})),
@@ -1278,6 +1283,37 @@ int main() {
     const double series_cdf =
         as_f64_scalar(mixture_normal_cdf(x0, mix_pdf_weights, mix_pdf_means, mix_pdf_stds));
     expect(approx(native_cdf, series_cdf, 1e-12), "mixture_normal_cdf native params parity", &failures);
+  }
+
+  {  // real degrees of freedom are kept, not truncated to an integer (central and noncentral chi-square)
+    const double nc = 3.0, df = 2.67;
+    const Series grid = pluss::make_series({0.5, 1.0, 2.0, 4.0, 8.0, 16.0}, {6}, f64);
+    // lambda = 0 reduces the noncentral law to the central one, which is a gamma law with shape df/2 and scale 2
+    const auto central = as_f64_vec(cdf(dst::ChiSquare, grid, {df}));
+    const auto as_gamma = as_f64_vec(cdf(dst::Gamma, grid, {0.0, 2.0, 0.5 * df}));
+    const auto nc_zero = as_f64_vec(cdf(dst::ChiSquareNoncentral, grid, {0.0, df}));
+    for (std::size_t i = 0; i < central.size(); ++i) {
+      expect(approx(central[i], as_gamma[i], 1e-12), "chisq cdf keeps a real df", &failures);
+      expect(approx(nc_zero[i], as_gamma[i], 1e-10), "chisqnc cdf with zero noncentrality is the central law at real df", &failures);
+    }
+    // the cdf is the integral of the pdf (trapezoid rule on a fine grid)
+    const int m = 20000;
+    const double top = 16.0;
+    std::vector<double> xs(static_cast<std::size_t>(m) + 1);
+    for (int i = 0; i <= m; ++i) xs[static_cast<std::size_t>(i)] = top * i / m;
+    const auto pdfs = as_f64_vec(pdf(dst::ChiSquareNoncentral, pluss::make_series(xs, {m + 1}, f64), {nc, df}));
+    double integral = 0.0;
+    for (int i = 0; i < m; ++i) integral += 0.5 * (pdfs[static_cast<std::size_t>(i)] + pdfs[static_cast<std::size_t>(i) + 1]) * top / m;
+    expect(approx(integral, as_f64_scalar(cdf(dst::ChiSquareNoncentral, pluss::make_series(top, f64), {nc, df})), 1e-4), "chisqnc pdf integrates to its cdf at real df", &failures);
+    // the sample has the mean df + nc and variance 2 (df + 2 nc)
+    const auto draws = as_f64_vec(sample(dst::ChiSquareNoncentral, {nc, df}, {200000}, f64, 5ULL));
+    double mean = 0.0, var = 0.0;
+    for (const double d : draws) mean += d;
+    mean /= static_cast<double>(draws.size());
+    for (const double d : draws) var += (d - mean) * (d - mean);
+    var /= static_cast<double>(draws.size());
+    expect(approx(mean, df + nc, 0.04), "chisqnc sample mean at real df", &failures);
+    expect(approx(var, 2.0 * (df + 2.0 * nc), 0.6), "chisqnc sample variance at real df", &failures);
   }
 
   if (failures != 0) {

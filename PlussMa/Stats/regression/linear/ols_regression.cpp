@@ -102,12 +102,12 @@ double t_quantile_(double p, double dof, Config cfg) {
 
 double f_cdf_(double x, double dof1, double dof2, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, cfg);
-  return clamp01_(pluss::subsp::stats::distr::FDistribution{dof1, dof2}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::FDistribution{dof1, dof2}.cdf(q).items<double>().front());
 }
 
 double chi2_cdf_(double x, std::int64_t dof, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{x}, {1}, cfg);
-  return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::ChiSquare{dof}.cdf(q).items<double>().front());
 }
 
 std::string fmt_value_(double x, int precision = 4) {
@@ -500,6 +500,7 @@ std::string ols_summary(const OLSFitResult& fit) {
 }
 
 std::ostream& print_ols_summary(std::ostream& os, const OLSFitResult& fit) {
+  PLUSS_CHECK(fit.coefficients.defined(), "subsp::stats::regression::print_ols_summary: fit.coefficients is undefined");
   auto row = [&](const std::string& l1, const std::string& v1, const std::string& l2, const std::string& v2) {
     os << std::left << std::setw(18) << l1 << std::right << std::setw(22) << v1
        << "   "

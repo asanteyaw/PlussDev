@@ -278,3 +278,16 @@ seasonal terms without s are rejected
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ArimaOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">ArimaOptions</span>
+  </a>
+  <a class="next-link" href="SarimaFit.html">
+    <span class="label">Next</span>
+    <span class="title">SarimaFit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

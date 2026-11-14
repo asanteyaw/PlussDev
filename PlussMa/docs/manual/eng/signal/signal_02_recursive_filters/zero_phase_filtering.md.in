@@ -1,0 +1,311 @@
+# Zero-phase filtering
+
+[Back to Signals 2: Recursive Filters](../signal_02_recursive_filters.md)
+
+A causal filter delays what it smooths. A peak in the input comes out later, and different frequencies are delayed by different amounts, which distorts the shape of a pulse. When you have the whole record in hand and the timing of features matters, you can remove the delay completely by filtering twice: forwards, then backwards. This page shows `zero_phase`, what it does to the amplitude, and how it treats the two ends of the record, where the filter has nothing to run on.
+
+## The mental model
+
+Filtering a record forwards with a filter `H` multiplies its spectrum by `H(w)`, which has a magnitude and a phase. Reversing the output and filtering again, then reversing back, multiplies the spectrum by the *conjugate* `H*(w)`. The two together give `|H(w)|^2`: a real, non-negative factor with **zero phase**. A feature at sample 60 stays at sample 60.
+
+Two things change as a result:
+
+- **The magnitude is squared.** A filter whose gain at the cutoff is `0.7071` (half power) has a gain of `0.5` after the double pass. The pass-band is as flat as before and the stop-band attenuation doubles in decibels; the transition is steeper.
+- **The ends need care.** The filter needs a starting state at each pass, and a start from zero would create a transient at the edge. `zero_phase` extends the record at each end by `edge` samples before filtering and starts each pass from the filter's steady state for the first sample, then trims the extension.
+
+`zero_phase` is an offline tool: it needs the whole record. A real-time filter cannot look ahead, so it cannot be zero-phase.
+
+## Delay removed
+
+The first program smooths a Gaussian bump centred at sample 60 of 121 with a second-order low-pass at `0.1` of Nyquist. It compares where the maximum falls after an ordinary forward pass (`sos`) and after `zero_phase`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+static int peak_index(const pluss::Series &s) {
+  const std::vector<double> v = s.items<double>();
+  int best = 0;
+  for (int i = 1; i < static_cast<int>(v.size()); ++i) {
+    if (v[i] > v[best]) best = i;
+  }
+  return best;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series t = pluss::series::arange(0, 121, f64);
+  const pluss::Series bump = ((t - 60.0) * (1.0 / 8.0)).square().neg().exp();
+  const pluss::Series sections = lti::to_sos(sig::butter(2, 0.1));
+
+  const pluss::Series forward = sig::sos(bump, sections).values;
+  const pluss::Series both = sig::zero_phase(bump, sections);
+  out.writeln("peak position: input", peak_index(bump), " forward pass", peak_index(forward), " zero-phase", peak_index(both));
+  out.writeln("peak height  : input", bump.max().item<double>(), " forward pass", forward.max().item<double>(), " zero-phase", both.max().item<double>());
+}
+```
+
+The forward pass moves the peak from sample 60 to sample 65, a delay of five samples, and lowers it from `1` to `0.929`. `zero_phase` keeps the peak at 60. It lowers it more, to `0.881`, because the bump is attenuated twice; this is the squared magnitude at work.
+
+## Gain at the cutoff
+
+The cutoff of a Butterworth design is its half-power point: the single pass has gain `1/sqrt(2) = 0.7071` there, and two passes have gain `0.5`. The program checks both with a sine at the cutoff frequency, `0.1` of Nyquist, which is `0.1 pi` radians per sample, measured in the middle of a long record where the start-up transient has gone.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series t = pluss::series::arange(0, 121, f64);
+  const pluss::Series tone = (t * (M_PI * 0.1)).sin();
+  const pluss::Series sections = lti::to_sos(sig::butter(2, 0.1));
+
+  out.writeln("single pass, amplitude late in the record  ", sig::sos(tone, sections).values.slice(0, 80, 120).abs().max().item<double>());
+  out.writeln("zero-phase, amplitude in the middle        ", sig::zero_phase(tone, sections).slice(0, 40, 80).abs().max().item<double>());
+  out.writeln("1 / sqrt(2) and its square                 ", 1.0 / std::sqrt(2.0), 0.5);
+}
+```
+
+The single pass reproduces `0.70711`, the half-power gain, and `zero_phase` gives `0.50000`.
+
+## Transfer-function form and sections
+
+`zero_phase` has two forms, like `filter`. One takes a `numerator` and a `denominator`; the other takes a section matrix. They give the same answer for the same filter, and for the same reason as in [Second-order sections](second_order_sections.md) the section form is the one to use above a low order. For a section matrix the record is filtered section by section, each section forwards and backwards.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series t = pluss::series::arange(0, 121, f64);
+  const pluss::Series bump = ((t - 60.0) * (1.0 / 8.0)).square().neg().exp();
+  const pluss::Series sections = lti::to_sos(sig::butter(2, 0.1));
+  const pluss::Series b = sections.slice(1, 0, 3).reshape({3});
+  const pluss::Series a = sections.slice(1, 3, 6).reshape({3});
+
+  const pluss::Series with_sections = sig::zero_phase(bump, sections);
+  const pluss::Series with_coefficients = sig::zero_phase(bump, b, a);
+  out.writeln("largest difference between the two forms:", (with_sections - with_coefficients).abs().max().item<double>());
+}
+```
+
+## How the ends are treated
+
+The record has a first and a last sample but the filter has no past before the first. `PhaseOpts::pad` chooses what the record is extended with, `edge` how many samples are added (the default is three times the filter order, at least one), and `dim` which axis holds the samples. With `None` the record is not extended, and each pass starts from the steady state of its first sample.
+
+The four modes of `PadMode` extend a record `x` of length `N` by `edge` samples at the left like this:
+
+| Mode | Extension | Good for |
+|---|---|---|
+| `Odd` (default) | `2 x[0] - x[1..edge]` reflected: an odd reflection through the end point | records with a trend, because the extension continues the slope |
+| `Even` | `x[1..edge]` reflected: a mirror image | records without a trend; a trend is bent at the end |
+| `Constant` | `x[0]` repeated | records that are flat near their ends |
+| `None` | nothing | when the ends are known to be quiet, or when you are matching another implementation |
+
+The program smooths a ramp `1 + 0.01 n` of 121 samples. A good smoother should leave a straight line alone, so the output at the ends should stay close to `1.00` at the start and `2.20` at the end. It prints the first three outputs, and the last, for each mode.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <utility>
+#include <vector>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series t = pluss::series::arange(0, 121, f64);
+  const pluss::Series ramp = t * 0.01 + 1.0;
+  const pluss::Series sections = lti::to_sos(sig::butter(2, 0.1));
+
+  out.writeln("input: first", ramp.select(0, 0).item<double>(), " last", ramp.select(0, 120).item<double>());
+  const std::vector<std::pair<const char *, sig::PadMode>> modes = {{"Odd     ", sig::PadMode::Odd}, {"Even    ", sig::PadMode::Even},
+                                                                    {"Constant", sig::PadMode::Constant}, {"None    ", sig::PadMode::None}};
+  for (const auto &[name, mode] : modes) {
+    sig::PhaseOpts options;
+    options.pad = mode;
+    const pluss::Series y = sig::zero_phase(ramp, sections, options);
+    out.writeln(name, "first three", y.slice(0, 0, 3).items<double>(), " last", y.select(0, 120).item<double>());
+  }
+  sig::PhaseOpts wide;
+  wide.edge = 30;
+  out.writeln("Odd, edge 30 first three", sig::zero_phase(ramp, sections, wide).slice(0, 0, 3).items<double>());
+}
+```
+
+`Odd` is closest to the ramp at both ends: `0.99775` against `1` on the left and `2.19748` against `2.2` on the right, an error of about `0.002`. A longer extension (`edge = 30`) improves the left end to `1.00001, 1.01, 1.02`, the ramp to the digits shown. `Constant` is off by about `0.01` at each end, and `Even` by about `0.02`: its first outputs sit above the line, because a mirror image turns the slope around. `None` matches `Constant` on the left, since starting from the steady state of the first sample is the same as extending it by a constant, and is the worst on the right (`2.15536`), where nothing continues the ramp.
+
+## Lanes and the sample axis
+
+`PhaseOpts::dim` selects the sample axis. All other axes are lanes, each filtered independently. The program filters two series stored as columns and as rows and compares.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series t = pluss::series::arange(0, 121, f64);
+  const pluss::Series first = ((t - 60.0) * (1.0 / 8.0)).square().neg().exp();
+  const pluss::Series second = (t * 0.2).sin();
+  const pluss::Series sections = lti::to_sos(sig::butter(2, 0.1));
+
+  const pluss::Series rows = first.unsqueeze(0).unite({second.unsqueeze(0)}, 0);
+  const pluss::Series by_rows = sig::zero_phase(rows, sections);
+  sig::PhaseOpts down_columns;
+  down_columns.dim = 0;
+  const pluss::Series by_columns = sig::zero_phase(rows.transpose(0, 1), sections, down_columns);
+  out.writeln("shapes", by_rows.sizes(), by_columns.sizes());
+  out.writeln("columns against rows, largest difference:", (by_columns.transpose(0, 1) - by_rows).abs().max().item<double>());
+  out.writeln("lane 0 against the single-series result:", (by_rows.select(0, 0) - sig::zero_phase(first, sections)).abs().max().item<double>());
+}
+```
+
+## Errors
+
+A record not longer than the extension cannot be extended with reflection, so `zero_phase` refuses it and names the cause; a negative `edge` other than the default `-1` is refused. Each pass starts from the filter's steady state for a constant input, which exists only if the denominator coefficients do not sum to zero, so a filter with a pole at `z = 1` (a pure integrator) is refused.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series sections = lti::to_sos(sig::butter(2, 0.1));
+  report([&] { (void)sig::zero_phase(pluss::series::make(std::vector<double>{1, 2, 3}), sections); });
+  sig::PhaseOpts bad_edge;
+  bad_edge.edge = -5;
+  report([&] { (void)sig::zero_phase(pluss::series::zeros({50}), sections, bad_edge); });
+  report([&] {
+    (void)sig::zero_phase(pluss::series::zeros({50}), pluss::series::make(std::vector<double>{1.0}), pluss::series::make(std::vector<double>{1.0, -1.0}));
+  });
+}
+```
+
+## Decisions
+
+- **Offline analysis where timing of features matters:** `zero_phase`.
+- **Real-time filtering, or when you must preserve causality:** a forward pass, and accept the delay.
+- **A record with a trend near its ends:** the default `Odd` extension. For a record that is flat at its ends, `Constant` is as good and cheaper to reason about.
+- **Very short records:** reduce `edge`; the default is three times the order and the record must be longer than it.
+
+## Pitfalls
+
+The program makes three mistakes with zero-phase filtering: expecting the gain of the design after the double pass, using the output where only a causal filter will do, and giving it a filter that is not stable.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series sections = lti::to_sos(sig::butter(2, 0.1));
+
+  // 1. the magnitude is squared: a Butterworth filter has gain 0.70711 at its cutoff, and the double pass 0.5
+  const pluss::Series t = pluss::series::arange(0, 121, f64);
+  const pluss::Series tone = (t * (M_PI * 0.1)).sin();
+  out.writeln("gain at the cutoff, one pass: ", sig::sos(tone, sections).values.slice(0, 80, 120).abs().max().item<double>(), "   zero-phase: ", sig::zero_phase(tone, sections).slice(0, 40, 80).abs().max().item<double>());
+
+  // 2. zero-phase is non-causal: an impulse at sample 60 is felt before it arrives
+  std::vector<double> impulse(121, 0.0);
+  impulse[60] = 1.0;
+  const pluss::Series pulse = pluss::make_series(impulse, {121}, f64);
+  const auto causal = flat(sig::sos(pulse, sections).values), symmetric = flat(sig::zero_phase(pulse, sections));
+  out.writeln("output at samples 56, 58, 60 and 62 for an impulse at sample 60:");
+  out.writeln("  one pass:   ", std::vector<double>{causal[56], causal[58], causal[60], causal[62]}, "   nothing before the impulse");
+  out.writeln("  zero-phase: ", std::vector<double>{symmetric[56], symmetric[58], symmetric[60], symmetric[62]}, "   the output starts before the input");
+
+  // 3. an unstable filter is not refused: the forward and backward passes both grow
+  const pluss::Series b = pluss::series::make(std::vector<double>{1.0}), a = pluss::series::make(std::vector<double>{1.0, -1.05});
+  const pluss::Series bump = ((t - 60.0) * (1.0 / 8.0)).square().neg().exp();
+  const double unstable = sig::zero_phase(bump, b, a).abs().max().item<double>();
+  const pluss::Series a_stable = pluss::series::make(std::vector<double>{1.0, -0.5});
+  const double stable = sig::zero_phase(bump, b, a_stable).abs().max().item<double>();
+  out.writeln("largest output for a bump of height 1: pole at 0.5 ", stable, "   pole at 1.05 ", unstable);
+}
+```
+
+The forward and backward passes each apply the magnitude, so the gain at the cutoff of a Butterworth filter is `0.70711` for one pass and `0.50000` for `zero_phase`; to specify the response after the double pass, design for the square root of the magnitude you want. The result is also non-causal: for an impulse at sample `60` the single pass is `0` before the impulse, while `zero_phase` already has `0.06485` at sample `56`, the output starting before the input, so do not use it where the output feeds a decision made at that time. And `zero_phase` does not check stability, as a forward-backward filter of a stable and of an unstable recursion shows: a pole at `0.5` gives a largest output of `3.78764` for a bump of height `1`, and a pole at `1.05` gives `1.32e6`.
+
+Reference: [`to_sos`](../../../../api/eng/lti/response/to_sos.md), [`butter`](../../../../api/eng/signal/design/butter.md), [`sos`](../../../../api/eng/signal/filtering/sos.md), [`zero_phase`](../../../../api/eng/signal/filtering/zero_phase.md), [`PadMode`](../../../../api/eng/signal/filtering/PadMode.md), [`PhaseOpts`](../../../../api/eng/signal/filtering/PhaseOpts.md).
+
+Where next: [Frequency response](../signal_03_frequency_response_and_design/frequency_response.md) evaluates a filter's gain and phase directly, which is how you check designs like the ones used here.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="second_order_sections.html">
+    <span class="label">Previous</span>
+    <span class="title">Second-order sections</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

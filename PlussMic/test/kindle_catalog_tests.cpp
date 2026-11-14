@@ -1328,7 +1328,7 @@ void test_catalog_label_alignment() {
   policy.align = pluss::kindle::Align::Inner;
   const auto inner = labeled.tabelize(policy);
   expect(inner.ncases() == 2, "Catalog::tabelize(label, inner) should keep intersecting labels");
-  expect(note_values(inner.label().values().cast().note().as_note())
+  expect(note_values(inner.labels().values().cast().note().as_note())
              == std::vector<std::string>({"A", "C"}),
          "Catalog::tabelize(label, inner) should preserve anchor label order");
   expect(inner.features("right").as_series().host<double>() == std::vector<double>({10.0, 30.0}),
@@ -1337,7 +1337,7 @@ void test_catalog_label_alignment() {
   policy.align = pluss::kindle::Align::Outer;
   const auto outer = labeled.tabelize(policy);
   expect(outer.ncases() == 4, "Catalog::tabelize(label, outer) should take label union");
-  expect(note_values(outer.label().values().cast().note().as_note())
+  expect(note_values(outer.labels().values().cast().note().as_note())
              == std::vector<std::string>({"A", "B", "C", "D"}),
          "Catalog::tabelize(label, outer) should keep anchor labels then append new labels");
 

@@ -42,4 +42,11 @@ There are two methods, chosen with `options.method`. **Interior point** (the def
 - `dual_objective` equal to `objective` proves optimality.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog_01_first_programs/stating_a_linear_program
+linprog_01_first_programs/results_and_endings
+```
 <!-- apiref:toctree:end -->

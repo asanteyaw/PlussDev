@@ -8,12 +8,26 @@ C = S e^(−qT) N(d₁) − K e^(−rT) N(d₂), with d₁ = [ln(S/K) + (r − q
 
 and the put is P = K e^(−rT) N(−d₂) − S e^(−qT) N(−d₁), where N is the standard normal distribution function.
 
+A `Field` holds the three things a price depends on, side by side: the **instrument** (call or put, strike, maturity), the **market** (spot, rate, dividend yield) and the **model** (here `BlackScholes`, whose only parameter is the volatility). The **controls** choose the engine that does the work; for Black-Scholes the `Analytic` engine evaluates the closed form. Pricing is `field.price()`, which returns a result whose `price` is a `Series` with one entry per option.
+
 ```cpp
-double prc::black_scholes_price(prc::OptionType type, double spot, double strike, double rate,
-                                double dividend_yield, double maturity, double volatility);
+instrument::Vanilla instrument::make(pricing::OptionType type, double strike, double maturity, Config cfg = f64_default());
+market::State market::make(double spot, double rate, double dividend_yield, Config cfg = f64_default());
+module::Model model::make(model::Kind kind, std::initializer_list<double> params, Config cfg = f64_default());
+module::Field::Result module::Field::price(Config cfg = {}) const;
 ```
 
-`type` is `prc::Call` or `prc::Put`. Rates and yields are annual and continuously compounded, `maturity` is in years, and `volatility` is annual. The rate and the dividend yield may be negative; the spot, strike and volatility must be positive and every input finite.
+The same four calls price one option, and the price is read from the `Series` that `price` returns:
+
+```cpp
+mod::Field field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                 .market = fin::market::make(spot, rate, dividend_yield),
+                 .model = fin::model::make(fin::model::Kind::BlackScholes, {volatility}),
+                 .controls = {.engine = mod::Engine::Analytic}};
+const double price = field.price().price.items<double>()[0];
+```
+
+`fin` stands for `pluss::subsp::math::finance`, `mod` for `fin::module` and `prc` for `fin::pricing`. `prc::Call` and `prc::Put` are the two option types. Rates and yields are annual and continuously compounded, `maturity` is in years, and `volatility` is annual. The rate and the dividend yield may be negative; the spot, strike and volatility must be positive and every input finite. The programs below wrap these few lines in a helper, `bs_price`, so that each one is about the finance rather than the construction.
 
 ## The formula, checked
 
@@ -28,6 +42,20 @@ namespace prc = pluss::subsp::math::finance::pricing;
 namespace distr = pluss::subsp::stats::distr;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(6));
@@ -36,13 +64,13 @@ int main() {
   const double d1 = (std::log(spot / strike) + (rate - dividend + 0.5 * vol * vol) * maturity) / (vol * std::sqrt(maturity));
   const double d2 = d1 - vol * std::sqrt(maturity);
   const distr::Normal standard(0.0, 1.0);
-  auto N = [&](double x) { return standard.cdf(pluss::make_series(std::vector<double>{x}, {1}, as_f64())).pull<double>()[0]; };
+  auto N = [&](double x) { return standard.cdf(pluss::make_series(std::vector<double>{x}, {1}, as_f64())).items<double>()[0]; };
   const double call = spot * std::exp(-dividend * maturity) * N(d1) - strike * std::exp(-rate * maturity) * N(d2);
   const double put = strike * std::exp(-rate * maturity) * N(-d2) - spot * std::exp(-dividend * maturity) * N(-d1);
 
   out.writeln("d1", d1, " d2", d2);
-  out.writeln("call", prc::black_scholes_price(prc::Call, spot, strike, rate, dividend, maturity, vol), " by hand", call);
-  out.writeln("put ", prc::black_scholes_price(prc::Put, spot, strike, rate, dividend, maturity, vol), " by hand", put);
+  out.writeln("call", bs_price(prc::Call, spot, strike, rate, dividend, maturity, vol), " by hand", call);
+  out.writeln("put ", bs_price(prc::Put, spot, strike, rate, dividend, maturity, vol), " by hand", put);
 }
 ```
 
@@ -60,6 +88,20 @@ A call bought and a put sold at the same strike and maturity replicate a forward
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(8));
@@ -68,8 +110,8 @@ int main() {
   out.writeln("strike   vol    call - put     S e^-qT - K e^-rT     difference");
   for (double strike : {70.0, 90.0, 100.0, 110.0, 140.0}) {
     for (double vol : {0.10, 0.40}) {
-      const double c = prc::black_scholes_price(prc::Call, spot, strike, rate, dividend, maturity, vol);
-      const double p = prc::black_scholes_price(prc::Put, spot, strike, rate, dividend, maturity, vol);
+      const double c = bs_price(prc::Call, spot, strike, rate, dividend, maturity, vol);
+      const double p = bs_price(prc::Put, spot, strike, rate, dividend, maturity, vol);
       const double forward = spot * std::exp(-dividend * maturity) - strike * std::exp(-rate * maturity);
       out.writeln(strike, vol, c - p, forward, c - p - forward);
     }
@@ -91,6 +133,20 @@ The price must lie between the discounted forward intrinsic value and the discou
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(6));
@@ -102,15 +158,24 @@ int main() {
     const double lower = std::max(discounted_spot - strike * std::exp(-rate * maturity), 0.0);
     out.writeln("strike", strike, " lower bound", lower);
     for (double vol : {1e-4, 0.05, 0.2, 1.0, 10.0, 100.0}) {
-      out.writeln("   vol", vol, " call", prc::black_scholes_price(prc::Call, spot, strike, rate, dividend, maturity, vol));
+      out.writeln("   vol", vol, " call", bs_price(prc::Call, spot, strike, rate, dividend, maturity, vol));
     }
   }
 
   out.writeln("maturity shrinking to zero, strike 95 (intrinsic value 5):");
   for (double t : {1.0, 0.25, 0.05, 0.01, 0.0001, 0.0}) {
-    out.writeln("   maturity", t, " call", prc::black_scholes_price(prc::Call, spot, 95.0, 0.0, 0.0, t, 0.2));
+    out.writeln("   maturity", t, " call", bs_price(prc::Call, spot, 95.0, 0.0, 0.0, t, 0.2));
   }
 }
 ```
 
 At the in-the-money strike (80), the price at a volatility of 10⁻⁴ is the lower bound 21.9215, the discounted forward intrinsic value, and it rises to 98.0199 at a volatility of 100, the discounted spot. The at-the-money and out-of-the-money strikes rise between the same bounds, from 2.8969 and 0 to 98.0199. The bounds are never crossed. As the maturity shrinks the call at strike 95 falls from 10.52 toward the intrinsic value of 5: it is 5.0032 at 0.01 years and 5.0000 at 0.0001, and exactly 5 at zero.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_greeks.html">
+    <span class="label">Next</span>
+    <span class="title">The Greeks</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

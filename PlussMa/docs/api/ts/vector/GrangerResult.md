@@ -26,3 +26,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`GrangerOptions`](GrangerOptions.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GrangerOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">GrangerOptions</span>
+  </a>
+  <a class="next-link" href="IrfOptions.html">
+    <span class="label">Next</span>
+    <span class="title">IrfOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

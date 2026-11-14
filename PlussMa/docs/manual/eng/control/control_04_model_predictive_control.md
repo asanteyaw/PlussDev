@@ -1,0 +1,18 @@
+<!-- generated from control_04_model_predictive_control.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Control 4: Model-Predictive Control
+
+When the inputs and the states have limits, the best law is no longer a linear gain. Model-predictive control solves a small optimisation over a finite horizon at every step, with the limits as constraints, and applies the first move. This chapter sets up the optimisation, shows that it contains LQR as the unconstrained case, and runs it as a receding-horizon loop.
+
+- [The finite-horizon problem](control_04_model_predictive_control/condensed_mpc.md)
+- [Receding-horizon control](control_04_model_predictive_control/receding_horizon_control.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+control_04_model_predictive_control/condensed_mpc
+control_04_model_predictive_control/receding_horizon_control
+```
+<!-- apiref:toctree:end -->

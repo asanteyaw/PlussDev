@@ -49,7 +49,7 @@ Build a portal frame with and without density.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -112,7 +112,7 @@ Every validation error `frame` raises.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -176,7 +176,7 @@ Solve the compiled frame.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }

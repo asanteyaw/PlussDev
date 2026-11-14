@@ -18,4 +18,10 @@ Every program is complete and its output is the output of that program.
 - Always: count evaluations, fix the seed when reporting, and verify the answer from outside.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_05_worked_problems/a_fit_and_how_to_check_it
+```
 <!-- apiref:toctree:end -->

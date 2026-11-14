@@ -27,7 +27,7 @@ Construct a stable discrete system, evaluate two frequencies, and convert it to 
 #include <complex>
 #include <iostream>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -68,7 +68,7 @@ Evaluate equivalent continuous state-space and pole-zero systems on the same ang
 
 #include <complex>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -107,7 +107,7 @@ Demonstrate rejection of an integer frequency grid and an attempt to realize a c
 #include <exception>
 #include <string>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {

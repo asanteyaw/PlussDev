@@ -1,0 +1,18 @@
+<!-- generated from signal_01_windows_and_convolution.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Signals 1: Windows and Convolution
+
+A finite record has abrupt ends, and most operations on it are weighted sums along its length. This chapter covers the weights that fade the ends of a record, and the sliding weighted sum that underlies smoothing, differencing, finite-impulse-response filtering and the search for a delay.
+
+- [Windows](signal_01_windows_and_convolution/windows.md)
+- [Convolution and correlation](signal_01_windows_and_convolution/convolution_and_correlation.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+signal_01_windows_and_convolution/windows
+signal_01_windows_and_convolution/convolution_and_correlation
+```
+<!-- apiref:toctree:end -->

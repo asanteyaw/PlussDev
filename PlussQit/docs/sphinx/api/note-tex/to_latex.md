@@ -64,7 +64,7 @@ Note(shape=[4], dim=1, numel=4, encoding=utf8)
 ```
 
 At mode 0, only the special characters are escaped — `alpha`, `<=`, and
-`sqrt(x) -> infty` are untouched. At mode 1, the words and operators map to
+`infty sqrt(x)` are untouched. At mode 1, the words and operators map to
 commands. At mode 2, every cell whose mapped text contains `\` or one of
 `=+-*/^_<>` gets wrapped in `$...$` — three of the four do; `"plain words"`
 has neither and stays bare even though it went through the same mode-2

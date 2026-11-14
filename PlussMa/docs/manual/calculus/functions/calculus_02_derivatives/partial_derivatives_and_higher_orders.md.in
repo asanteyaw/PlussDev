@@ -45,10 +45,10 @@ int main() {
   const auto by_hand_x = envelope.mul(x.mul(2.0).mul(xy.sin()).add(x.pow(2).mul(y).mul(xy.cos())).sub(x.pow(2).mul(x.sin()).mul(xy.sin())));
   const auto by_hand_y = x.pow(3).mul(xy.cos()).mul(envelope);
 
-  out.writeln("df/dx  ", dfdx({x, y}).pull<double>());
-  out.writeln("by hand", by_hand_x.pull<double>());
-  out.writeln("df/dy  ", dfdy({x, y}).pull<double>());
-  out.writeln("by hand", by_hand_y.pull<double>());
+  out.writeln("df/dx  ", dfdx({x, y}).items<double>());
+  out.writeln("by hand", by_hand_x.items<double>());
+  out.writeln("df/dy  ", dfdy({x, y}).items<double>());
+  out.writeln("by hand", by_hand_y.items<double>());
   out.writeln("variables of df/dx:", dfdx.variables()[0], dfdx.variables()[1], " arity", dfdx.arity());
 }
 ```
@@ -80,15 +80,15 @@ int main() {
   const math::Function gyx = operators::differential("x")(operators::differential("y")(g));
   const math::Function gxx = operators::differential("x", 2)(g);
 
-  out.writeln("g_xy        ", gxy({x, y}).pull<double>());
-  out.writeln("g_yx        ", gyx({x, y}).pull<double>());
-  out.writeln("6 x y^2     ", x.mul(y.pow(2)).mul(6.0).pull<double>());
-  out.writeln("g_xx        ", gxx({x, y}).pull<double>());
-  out.writeln("2 y^3       ", y.pow(3).mul(2.0).pull<double>());
+  out.writeln("g_xy        ", gxy({x, y}).items<double>());
+  out.writeln("g_yx        ", gyx({x, y}).items<double>());
+  out.writeln("6 x y^2     ", x.mul(y.pow(2)).mul(6.0).items<double>());
+  out.writeln("g_xx        ", gxx({x, y}).items<double>());
+  out.writeln("2 y^3       ", y.pow(3).mul(2.0).items<double>());
 
   // A variable the formula does not use has derivative zero, with the shape of the evaluation.
   const math::Function unused = operators::differential("y")(math::function({"x", "y"}, [](math::Function x, math::Function) { return x * x; }));
-  out.writeln("d/dy of x*x ", unused({x, y}).pull<double>());
+  out.writeln("d/dy of x*x ", unused({x, y}).items<double>());
 }
 ```
 
@@ -117,15 +117,15 @@ int main() {
   const math::Function fifth = operators::differential("x", 5)(p);
   const math::Function sixth = operators::differential("x", 6)(p);
 
-  out.writeln("x         ", x.pull<double>());
-  out.writeln("p'''      ", third({x}).pull<double>());
-  out.writeln("60x^2 - 12", x.pow(2).mul(60.0).sub(12.0).pull<double>());
-  out.writeln("p(5)      ", fifth({x}).pull<double>());
-  out.writeln("p(6)      ", sixth({x}).pull<double>());
+  out.writeln("x         ", x.items<double>());
+  out.writeln("p'''      ", third({x}).items<double>());
+  out.writeln("60x^2 - 12", x.pow(2).mul(60.0).sub(12.0).items<double>());
+  out.writeln("p(5)      ", fifth({x}).items<double>());
+  out.writeln("p(6)      ", sixth({x}).items<double>());
 
   // Three steps of order one give the same function as one step of order three.
   const math::Function stepwise = operators::differential("x")(operators::differential("x")(operators::differential("x")(p)));
-  out.writeln("three first derivatives", stepwise({x}).pull<double>());
+  out.writeln("three first derivatives", stepwise({x}).items<double>());
 }
 ```
 
@@ -207,3 +207,12 @@ The order and the name are checked when the operator is made, with no function i
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_differentiation_rules.html">
+    <span class="label">Next</span>
+    <span class="title">The differentiation rules</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

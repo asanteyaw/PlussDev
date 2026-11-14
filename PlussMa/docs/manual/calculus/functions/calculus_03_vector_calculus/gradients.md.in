@@ -43,11 +43,11 @@ int main() {
 
   const auto g = grad({x, y});
   out.writeln("gradient shape for three points:", g.sizes());
-  out.writeln("column 0 = dP/dx   ", g.select(1, 0).pull<double>(), " by hand", dx.pull<double>());
-  out.writeln("column 1 = dP/dy   ", g.select(1, 1).pull<double>(), " by hand", dy.pull<double>());
+  out.writeln("column 0 = dP/dx   ", g.select(1, 0).items<double>(), " by hand", dx.items<double>());
+  out.writeln("column 1 = dP/dy   ", g.select(1, 1).items<double>(), " by hand", dy.items<double>());
   const auto r = grad_yx({x, y});
-  out.writeln("reversed: column 0 ", r.select(1, 0).pull<double>(), " column 1", r.select(1, 1).pull<double>());
-  out.writeln("only y:   shape", grad_y({x, y}).sizes(), " values", grad_y({x, y}).select(1, 0).pull<double>());
+  out.writeln("reversed: column 0 ", r.select(1, 0).items<double>(), " column 1", r.select(1, 1).items<double>());
+  out.writeln("only y:   shape", grad_y({x, y}).sizes(), " values", grad_y({x, y}).select(1, 0).items<double>());
 }
 ```
 
@@ -80,18 +80,18 @@ int main() {
 
   const auto full = operators::gradient()(f)({w, x, y, z});
   out.writeln("full gradient, shape", full.sizes());
-  out.writeln("  df/dw = x + 2w", full.select(1, 0).pull<double>());
-  out.writeln("  df/dx = w     ", full.select(1, 1).pull<double>());
-  out.writeln("  df/dy = z     ", full.select(1, 2).pull<double>());
-  out.writeln("  df/dz = y     ", full.select(1, 3).pull<double>());
+  out.writeln("  df/dw = x + 2w", full.select(1, 0).items<double>());
+  out.writeln("  df/dx = w     ", full.select(1, 1).items<double>());
+  out.writeln("  df/dy = z     ", full.select(1, 2).items<double>());
+  out.writeln("  df/dz = y     ", full.select(1, 3).items<double>());
 
   const auto subset = operators::gradient({"z", "w", "x"})(f)({w, x, y, z});
   out.writeln("gradient in (z, w, x), shape", subset.sizes());
-  out.writeln("  first column (dz)", subset.select(1, 0).pull<double>());
+  out.writeln("  first column (dz)", subset.select(1, 0).items<double>());
 
   const math::Function only_x = math::function({"x", "y"}, [](math::Function x, math::Function) { return x * x; });
   const auto g = operators::gradient()(only_x)({pluss::make_series(3.0, as_f64()), pluss::make_series(5.0, as_f64())});
-  out.writeln("a function that ignores y: gradient", g.pull<double>());
+  out.writeln("a function that ignores y: gradient", g.items<double>());
 }
 ```
 
@@ -111,3 +111,12 @@ The last row is a rule about shape: the gradient of a vector-valued function is 
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="jacobians_and_hessians.html">
+    <span class="label">Next</span>
+    <span class="title">Jacobians and Hessians</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

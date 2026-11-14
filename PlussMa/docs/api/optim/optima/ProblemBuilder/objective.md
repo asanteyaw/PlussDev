@@ -22,7 +22,7 @@ template <typename Fn> optim::ProblemBuilder &optim::ProblemBuilder::objective(F
 ## Parameters
 
 `Fn &&fn`
-: A callable `Pack -> Series` or `Series -> Series` returning a scalar.
+: A callable `Pack -> Series` or `Series (Series)` returning a scalar.
 
 ## Returns
 

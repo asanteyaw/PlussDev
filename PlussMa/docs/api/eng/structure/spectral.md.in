@@ -28,18 +28,6 @@ Four end conditions against Euler's loads.
 
 @@example Eng/api/structure_buckling_cases.cpp@@
 
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-spectral/EigOptions
-spectral/ModeResult
-spectral/BuckResult
-spectral/mass
-spectral/modes
-spectral/buckling
-```
-
 <!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 2

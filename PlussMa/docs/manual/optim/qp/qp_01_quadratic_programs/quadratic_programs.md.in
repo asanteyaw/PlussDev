@@ -42,3 +42,8 @@ A `q` of shape `[B, n]` solves `B` problems that share `P`, `A` and the bounds. 
 - **Reuse the factorisation.** When only `q` or the bounds change between solves, `qp::prepare` does the setup once.
 
 Where next: That completes the optimization guide. The API reference documents the solvers' types and options.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

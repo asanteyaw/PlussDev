@@ -40,7 +40,7 @@ int main() {
     options.tau = tau;
     options.predictor_names = {"age", "age^2"};
     const auto fit = reg::quantile_fit(y, x, options);
-    const auto b = fit.coefficients.pull<double>();
+    const auto b = fit.coefficients.items<double>();
     const double share = y.le(fit.fitted_values.add(1e-6)).to(pluss::ScalarType::Float64).mean().item<double>();
     double worst = 0.0;
     for (double a = 2.0; a <= 14.0; a += 0.5) {
@@ -89,7 +89,7 @@ int main() {
     curves.push_back(reg::quantile_fit(y, x, options));
   }
   auto curve_at = [&](std::size_t k, double a) {
-    return reg::quantile_predict(curves[k], pluss::make_series(std::vector<double>{a, a * a}, {1, 2}, as_f64())).pull<double>()[0];
+    return reg::quantile_predict(curves[k], pluss::make_series(std::vector<double>{a, a * a}, {1, 2}, as_f64())).items<double>()[0];
   };
 
   out.writeln("height by percentile at ages 3, 9 and 14:");
@@ -121,3 +121,16 @@ int main() {
 ```
 
 The 3rd to 97th percentile band is 4.95 cm wide at age 3, 9.84 cm at age 9 and 13.26 cm at age 14: the fan that a growth chart shows. A child aged 9 who is 118 cm tall is below the 3rd percentile curve, one of 131 cm lies between the 50th and 75th, and one of 142 cm is above the 97th. The least-squares band (mean ± 1.96 residual standard deviations) is 11.91 cm wide at every age, which is 2.4 times too wide at age 3 and about 10% too narrow at age 14.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="comparing_two_event_rates.html">
+    <span class="label">Previous</span>
+    <span class="title">Comparing two event rates</span>
+  </a>
+  <a class="next-link" href="the_same_data_four_ways.html">
+    <span class="label">Next</span>
+    <span class="title">The same data, four ways</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

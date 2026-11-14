@@ -172,3 +172,20 @@ int main() {
 
 - [`Sarima`](Sarima.md)
 - [`ArimaFit`](ArimaFit.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Sarima.html">
+    <span class="label">Previous</span>
+    <span class="title">Sarima</span>
+  </a>
+  <a class="next-link" href="SarimaOptions.html">
+    <span class="label">Next</span>
+    <span class="title">SarimaOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

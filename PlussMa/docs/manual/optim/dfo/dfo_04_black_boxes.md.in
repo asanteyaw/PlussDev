@@ -43,4 +43,11 @@ The options live in `DfoOptions::mads`:
 5. Verify constraints at the returned point.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_04_black_boxes/failing_and_expensive_functions
+dfo_04_black_boxes/several_objectives_and_constraint_policies
+```
 <!-- apiref:toctree:end -->

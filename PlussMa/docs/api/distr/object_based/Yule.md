@@ -89,13 +89,13 @@ int main() {
   const auto x = pluss::make_series({1.0, 2.0, 3.0, 5.0, 8.0, 13.0}, f64);
 
   std::cout << "pdf:";
-  for (double v : d.pdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.pdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : d.cdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.cdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : d.logpdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.logpdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 
   const auto draws = d.sample({400000}, f64, 5ULL);
@@ -142,7 +142,7 @@ int main() {
 
   const auto t = pluss::make_series({-1.0, -0.5, 0.0}, f64);
   std::cout << "cgf at -1, -0.5, 0:";
-  for (double v : distr::Yule{5.0}.cgf(t).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::Yule{5.0}.cgf(t).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   try {
     (void)d.cgf(pluss::make_series(0.5, f64));
@@ -181,7 +181,7 @@ int main() {
   const auto x = distr::Yule{3.0}.sample({20000}, f64, 3ULL);
   const auto fit = distr::Yule{3.0}.MLE(x, {2.0});
 
-  const auto se = fit.std_err(x).pull<double>();
+  const auto se = fit.std_err(x).items<double>();
   const auto ci = fit.confint(x, 0.95).host<double>().array().data;
   std::cout << "p: " << fit.p << "  stderr " << se[0] << "  95% [" << ci[0] << ", " << ci[1] << "]\n";
   std::cout << "loglik: " << as_f64(fit.loglik(x)) << '\n';
@@ -207,3 +207,16 @@ loglik: -24200.9667
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Weibull.html">
+    <span class="label">Previous</span>
+    <span class="title">Weibull</span>
+  </a>
+  <a class="next-link" href="Zeta.html">
+    <span class="label">Next</span>
+    <span class="title">Zeta</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -9,13 +9,13 @@
 #include <type_traits>
 #include <utility>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/series_factory.h"
 #include "pluss/coden/note_factory.h"
 #include "pluss/codeh/timeline_factory.h"
 #include "kindle/Stream.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::scribble {
 
@@ -156,10 +156,10 @@ std::string value_to_json(const Slot::Value& value) {
       [](const auto& v) -> std::string {
         using T = std::decay_t<decltype(v)>;
         if constexpr (std::is_same_v<T, std::monostate>) return "null";
-        if constexpr (std::is_same_v<T, pluss::Series>) return fmt::format("\"Series[{}]\"", v.dtype().name);
-        if constexpr (std::is_same_v<T, pluss::Note>) return fmt::format("\"Note[numel={}]\"", v.numel());
-        if constexpr (std::is_same_v<T, pluss::Timeline>) return fmt::format("\"Timeline[numel={}]\"", v.numel());
-        if constexpr (std::is_same_v<T, pluss::Duration>) return fmt::format("\"Duration[numel={}]\"", v.numel());
+        if constexpr (std::is_same_v<T, pluss::Series>) return pluss::tils::OutputEngine::format("\"Series[{}]\"", v.dtype().name);
+        if constexpr (std::is_same_v<T, pluss::Note>) return pluss::tils::OutputEngine::format("\"Note[numel={}]\"", v.numel());
+        if constexpr (std::is_same_v<T, pluss::Timeline>) return pluss::tils::OutputEngine::format("\"Timeline[numel={}]\"", v.numel());
+        if constexpr (std::is_same_v<T, pluss::Duration>) return pluss::tils::OutputEngine::format("\"Duration[numel={}]\"", v.numel());
         return "\"unknown\"";
       },
       value);

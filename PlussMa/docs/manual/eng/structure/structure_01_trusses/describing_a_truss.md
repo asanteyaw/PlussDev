@@ -1,0 +1,238 @@
+<!-- generated from describing_a_truss.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Describing a truss
+
+[Back to Structures 1: Trusses](../structure_01_trusses.md)
+
+You have a framework of straight bars pinned together and you want to know how it behaves under load. `structure::truss` takes the geometry and the bar properties, checks that they describe a real structure, and compiles them into a `Truss` that the solvers analyse. This page explains how a truss is written down: the nodes and the bars between them, the cross-section and material of each bar, what the compiled `Truss` reports, and the checks that reject a description that cannot be a structure.
+
+## The mental model
+
+A truss has **nodes** (the pins) and **bars** (the straight members between two nodes). It is described by two small structures:
+
+| Structure | Member | Shape | Meaning |
+|---|---|---|---|
+| `Mesh` | `position` | `[..., node, axis]` | coordinates of every node; the last axis has 2 entries (plane truss) or 3 (space truss) |
+| `Mesh` | `from` | one index per bar | the node at the start of each bar |
+| `Mesh` | `to` | one index per bar | the node at the end of each bar |
+| `Bars` | `area` | `[..., bar]` | cross-sectional area of each bar |
+| `Bars` | `modulus` | `[..., bar]` | Young's modulus of each bar |
+
+Bar `i` joins node `from[i]` to node `to[i]`; the order of the two ends only fixes the sign convention for the bar's direction, and the bar force is positive in tension either way. A bar of length `L`, area `A` and modulus `E` behaves as a spring along its axis with stiffness `E A / L`. Use one consistent system of units: the programs here use newtons, metres and pascals, so a modulus of steel is `200e9` and an area of ten square centimetres is `1e-3`.
+
+`truss(mesh, bars)` returns an immutable `Truss`. It has three accessors: `nodes()`, `bars()` and `dim()`, the number of nodes, bars and spatial axes. Everything else about the structure is held inside it for the solvers.
+
+## A plane truss and a space truss
+
+The first program builds a plane triangle of two bars, 6 m wide and 4 m high with a pin at each foot and one at the apex, and a three-legged space tripod: three legs from a ring of radius 1.5 m on the ground to an apex 2 m above its centre. The tripod's legs are `sqrt(1.5^2 + 2^2) = 2.5 m` long.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.with_sep(""));
+
+  // plane truss: feet at (0, 0) and (6, 0), apex at (3, 4); bars foot-apex
+  const st::Mesh plane{grid({0, 0, 6, 0, 3, 4}, 2), {0, 1}, {2, 2}};
+  const auto triangle = st::truss(plane, {vec({1e-3, 1e-3}), vec({200e9, 200e9})});
+  out.writeln("plane truss: nodes ", triangle.nodes(), ", bars ", triangle.bars(), ", axes ", triangle.dim());
+
+  // space truss: three feet on a ring of radius 1.5 m, apex 2 m above the centre
+  const st::Mesh space{grid({1.5, 0, 0, -0.75, 1.299038105676658, 0, -0.75, -1.299038105676658, 0, 0, 0, 2}, 3), {0, 1, 2}, {3, 3, 3}};
+  const auto tripod = st::truss(space, {vec({1e-3, 1e-3, 1e-3}), vec({200e9, 200e9, 200e9})});
+  out.writeln("space truss: nodes ", tripod.nodes(), ", bars ", tripod.bars(), ", axes ", tripod.dim());
+}
+```
+
+Output
+
+```text
+plane truss: nodes 3, bars 2, axes 2
+space truss: nodes 4, bars 3, axes 3
+```
+
+The number of axes is read from the last axis of `position`: two gives a plane truss, three a space truss. Loads, supports and results then use the same number of axes at every node.
+
+## Bars of different size
+
+`area` and `modulus` list one value per bar, so a truss with thick and thin bars, or with steel and aluminium bars, is described by different entries. The program gives the left foot-to-apex bar twice the area of the right one, and prints each bar's axial stiffness `E A / L` from its length `L = 5 m`, area and modulus, which is what the solver assembles.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const double length = 5.0;
+  const std::vector<double> area = {2e-3, 1e-3};
+  const std::vector<double> modulus = {200e9, 70e9};   // steel, then aluminium
+
+  const st::Mesh mesh{grid({0, 0, 6, 0, 3, 4}, 2), {0, 1}, {2, 2}};
+  const auto truss = st::truss(mesh, {vec(area), vec(modulus)});
+  for (std::size_t bar = 0; bar < area.size(); ++bar)
+    out.writeln("bar ", bar, ": E A / L = ", modulus[bar] * area[bar] / length, " N/m");
+
+  // a load of 10 kN down at the apex, both feet pinned
+  const st::Fix feet{{0, 0, 1, 1}, {0, 1, 0, 1}, {}};
+  const auto result = st::solve(truss, grid({0, 0, 0, 0, 0, -10000}, 2), feet);
+  out.writeln("bar forces (N): ", flat(result.force));
+
+  // the apex drops by the sum over bars of F f L / (E A), with f = -0.625 the force in each bar per unit of load
+  double drop = 0.0;
+  for (std::size_t bar = 0; bar < area.size(); ++bar) drop += (-6250.0) * (-0.625) * length / (modulus[bar] * area[bar]);
+  out.writeln("apex drop from the formula (mm): ", 1000.0 * drop);
+  out.writeln("apex drop from the solver  (mm): ", -1000.0 * flat(result.displacement)[5]);
+}
+```
+
+Output
+
+```text
+bar 0: E A / L = 80000000.0000 N/m
+bar 1: E A / L = 14000000.0000 N/m
+bar forces (N): [-6250.0000, -6250.0000]
+apex drop from the formula (mm): 0.3278
+apex drop from the solver  (mm): 0.3278
+```
+
+The stiffnesses are `E A / L = 8.0e7` and `1.4e7 N/m`. The two bar forces are both `-6250 N`, the same whatever the stiffnesses: with two bars and two unknown forces, the equilibrium of the apex alone fixes them. The stiffnesses decide how far the apex moves, and the solver's drop agrees with the formula `delta = sum(F f L / (E A))`. Forces that do depend on stiffness appear in the indeterminate truss of the [next page](static_analysis.md).
+
+## What the checks reject
+
+`truss` refuses a description that cannot be a structure and says why. The program prints the message for each of six mistakes: a negative area, a bar from a node to itself, a bar whose two ends coincide, a node index that does not exist, a list of areas of the wrong length, and coordinates given as a single list instead of a node-by-axis grid.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <functional>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+static void report(const char *what, const std::function<void()> &build) {
+  try {
+    build();
+    std::cout << what << ": accepted\n";
+  } catch (const std::exception &e) {
+    std::cout << what << ": " << e.what() << "\n";
+  }
+}
+
+int main() {
+  const auto line = grid({0, 0, 2, 0}, 2);
+  const st::Bars good{vec({1e-3}), vec({200e9})};
+  report("negative area      ", [&] { (void)st::truss({line, {0}, {1}}, {vec({-1e-3}), vec({200e9})}); });
+  report("bar to itself      ", [&] { (void)st::truss({line, {0}, {0}}, good); });
+  report("coincident ends    ", [&] { (void)st::truss({grid({0, 0, 0, 0}, 2), {0}, {1}}, good); });
+  report("missing node       ", [&] { (void)st::truss({line, {0}, {5}}, good); });
+  report("wrong area count   ", [&] { (void)st::truss({line, {0}, {1}}, {vec({1e-3, 1e-3}), vec({200e9})}); });
+  report("coordinates not a grid", [&] { (void)st::truss({vec({0, 2}), {0}, {1}}, good); });
+}
+```
+
+Output
+
+```text
+negative area      : eng::structure::truss: area and modulus must be positive
+bar to itself      : eng::structure::truss: an element cannot connect a node to itself
+coincident ends    : eng::structure::truss: every bar must have positive length
+missing node       : eng::structure::truss: connectivity contains an invalid node
+wrong area count   : eng::structure::truss: area and modulus must end in the bar count
+coordinates not a grid: eng::structure::truss: position must be real floating [..., node, axis]
+```
+
+Every message starts with the function that raised it and names the property that is wrong, so a description error is found at `truss`, before any analysis runs.
+
+## Decisions
+
+- **Plane or space:** give two coordinates per node for a structure in a plane and three for a structure in space; nothing else changes in the description.
+- **Different bars:** list a value per bar in `area` and `modulus`; a uniform truss repeats one value.
+- **Many structures:** a leading axis on `position`, `area` or `modulus` describes a batch of structures that the solver handles together, as the [last page of the chapter](supports_loads_and_sweeps.md) shows.
+
+## Pitfalls
+
+Each mistake here gives an answer or an error that is easy to misread. The program makes three: a modulus in megapascals used with lengths in metres and loads in newtons, a diameter given where an area was meant, and a node that no bar touches. The reference is the two-bar triangle of the first example under a `10 kN` load, whose apex drops `0.1953 mm` with `E = 200e9 Pa` and `A = 1e-3 m^2`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const st::Fix feet{{0, 0, 1, 1}, {0, 1, 0, 1}, {}};
+  const auto load = grid({0, 0, 0, 0, 0, -10000}, 2);
+  const auto apex_drop_mm = [&](double area, double modulus) {
+    const auto truss = st::truss({grid({0, 0, 6, 0, 3, 4}, 2), {0, 1}, {2, 2}}, {vec({area, area}), vec({modulus, modulus})});
+    return -1000.0 * flat(st::solve(truss, load, feet).displacement)[5];
+  };
+
+  out.writeln("correct units (Pa, m^2):                   apex drop (mm) ", apex_drop_mm(1e-3, 200e9));
+  out.writeln("modulus in MPa with metres and newtons:    apex drop (mm) ", apex_drop_mm(1e-3, 200e3));
+  const double diameter = 0.0357;   // the round bar whose area is 1e-3 m^2
+  out.writeln("diameter 35.7 mm given as the area (m^2):  apex drop (mm) ", apex_drop_mm(diameter, 200e9));
+  out.writeln("the area pi d^2 / 4 of that bar (m^2):     apex drop (mm) ", apex_drop_mm(M_PI * diameter * diameter / 4.0, 200e9));
+
+  // a node that no bar touches
+  try {
+    const auto stray = st::truss({grid({0, 0, 6, 0, 3, 4, 9, 9}, 2), {0, 1}, {2, 2}}, {vec({1e-3, 1e-3}), vec({200e9, 200e9})});
+    (void)st::solve(stray, grid({0, 0, 0, 0, 0, -10000, 0, 0}, 2), feet);
+  } catch (const std::exception &e) {
+    std::cout << "a node with no bar: " << e.what() << "\n";
+  }
+}
+```
+
+Output
+
+```text
+correct units (Pa, m^2):                   apex drop (mm) 0.1953
+modulus in MPa with metres and newtons:    apex drop (mm) 195312.5000
+diameter 35.7 mm given as the area (m^2):  apex drop (mm) 0.0055
+the area pi d^2 / 4 of that bar (m^2):     apex drop (mm) 0.1951
+a node with no bar: eng::structure::solve: a free degree of freedom has no stiffness; add a support or load-bearing element
+```
+
+The wrong modulus makes the structure a million times too flexible and the apex drops `195 m` rather than `0.1953 mm`; a diameter in place of an area gives a drop of `0.0055 mm`, thirty-six times too small and no warning, while the true area `pi d^2 / 4` of that bar reproduces the reference (`0.1951 mm`, the small difference being the rounding of the diameter); and a node that no bar touches is accepted by `truss` and rejected by `solve` with an error naming the missing stiffness. Check units on the first solve by comparing against a hand value, as the programs here do.
+
+Reference: [`Mesh`](../../../../api/eng/structure/model/Mesh.md), [`Bars`](../../../../api/eng/structure/model/Bars.md), [`Truss`](../../../../api/eng/structure/model/TrussModel.md), [`truss`](../../../../api/eng/structure/model/truss.md), [`Fix`](../../../../api/eng/structure/model/Fix.md), [`solve`](../../../../api/eng/structure/statics/solve.md).
+
+Where next: [Static analysis](static_analysis.md) solves a truss under load for its displacements, member forces and reactions, and checks the result against hand calculations.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="static_analysis.html">
+    <span class="label">Next</span>
+    <span class="title">Static analysis</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

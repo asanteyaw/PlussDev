@@ -46,4 +46,13 @@ Inputs are read as for least squares ([Shapes and inputs](regression_01_least_sq
 5. `poly_predict` takes the original predictors, with the same number of columns as the fit.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+regression_04_polynomial_regression/fitting_a_curve
+regression_04_polynomial_regression/the_expanded_design
+regression_04_polynomial_regression/choosing_the_degree
+regression_04_polynomial_regression/prediction_summary_and_options
+```
 <!-- apiref:toctree:end -->

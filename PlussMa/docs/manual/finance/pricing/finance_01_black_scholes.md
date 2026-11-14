@@ -1,29 +1,36 @@
 <!-- generated from finance_01_black_scholes.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
 
-# Finance 1: Black-Scholes
+# Finance 1: Black-Scholes in the field
 
-The Black-Scholes model prices a European option on an asset with constant volatility. It is the reference that every richer model in this guide reduces to, and the basis of the quoting convention of implied volatility. After this chapter you can price calls and puts, read and check the five Greeks, price whole surfaces with `Series` inputs, and know exactly which inputs are rejected.
+The Black-Scholes model prices a European option on an asset with constant volatility. It is the reference that every richer model in this guide reduces to, and the basis of the quoting convention of implied volatility. After this chapter you can build a `Field` for a Black-Scholes option, price calls and puts, read and check the five Greeks, price whole strips with `Series` inputs, and know exactly which inputs are rejected.
 
 Every program is complete, and its output is the output of that program.
 
-## The calls
+## The object
 
 ```cpp
-double prc::black_scholes_price(prc::OptionType type, double spot, double strike, double rate, double dividend_yield, double maturity, double volatility);
-Series prc::black_scholes_price(type, const Series &spot, double strike, double rate, double dividend_yield, double maturity, double volatility, Config cfg = {});
-Series prc::black_scholes_price(type, const Series &spot, const Series &time_to_maturity, double strike, double rate, double dividend_yield, double volatility, Config cfg = {});
-
-prc::BlackScholesGreeks       prc::black_scholes_greeks(type, spot, strike, rate, dividend_yield, maturity, volatility);        // delta, gamma, vega, theta, rho
-prc::BlackScholesSeriesGreeks prc::black_scholes_greeks(type, const Series &spot, ...);                                         // the same two Series forms
-double prc::black_scholes_delta(...);  prc::black_scholes_gamma(...);  prc::black_scholes_vega(...);  prc::black_scholes_theta(...);  prc::black_scholes_rho(...);
+instrument::Vanilla instrument::make(pricing::OptionType type, double strike, double maturity, Config cfg = f64_default());
+market::State market::make(double spot, double rate, double dividend_yield, Config cfg = f64_default());
+module::Model model::make(model::Kind kind, std::initializer_list<double> params, Config cfg = f64_default());
+module::Field::Result module::Field::price(Config cfg = {}) const;
 ```
 
-`prc` stands for `pluss::subsp::math::finance::pricing`. `OptionType` is `prc::Call` or `prc::Put` (`Auto` belongs to the object API). Rates and yields are annual and continuously compounded, `maturity` and `time_to_maturity` are in years, and `volatility` is annual.
+The three factories build the instrument, the market and the model, and `price` prices the field. Assembled into a `Field`:
+
+```cpp
+mod::Field field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                 .market = fin::market::make(spot, rate, dividend_yield),
+                 .model = fin::model::make(fin::model::Kind::BlackScholes, {volatility}),
+                 .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::All}};
+mod::Result result = field.price();     // result.price, result.greeks.{delta,gamma,vega,theta,rho}
+```
+
+`fin` is `pluss::subsp::math::finance`, `mod` is `fin::module` and `prc` is `fin::pricing`. A `Field` is **instrument + market + model + controls**: what is bought, the market it is bought in, the stochastic model that values it, and the engine that computes the value. Changing the model or the engine changes nothing else: the later chapters price the same instrument under Heston, Bates and SABR, and by Fourier transform, simulation and finite differences, by editing one line.
 
 | Input | Constraint |
 |---|---|
 | `spot`, `strike`, `volatility` | finite and positive |
-| `maturity`, `time_to_maturity` | finite and non-negative; zero gives the intrinsic value |
+| `maturity` | finite and non-negative; zero gives the intrinsic value |
 | `rate`, `dividend_yield` | finite; may be negative |
 
 ## Programs
@@ -37,8 +44,9 @@ double prc::black_scholes_delta(...);  prc::black_scholes_gamma(...);  prc::blac
 
 1. Quote `vega` and `rho` per unit, `theta` per year: scale them before comparing with a market convention.
 2. A call minus a put must equal `S e^(−qT) − K e^(−rT)` whatever the volatility; use it to test any pricer.
-3. Two `Series` arguments are paired element by element, not combined into a grid.
+3. `Series` inputs of length *n* are paired element by element, not combined into a grid; a single value applies to all.
 4. A zero volatility is an error: use a small positive one, or the discounted forward intrinsic value.
+5. A field reports every invalid input at once, naming each.
 
 <!-- apiref:toctree:start -->
 ```{toctree}

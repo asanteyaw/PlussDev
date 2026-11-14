@@ -1,0 +1,41 @@
+# Economic dispatch
+
+This branch chooses generator outputs that meet the demand at least cost. `dispatch` solves the DC problem as a quadratic program, with line ratings and, on request, security against every single-line outage.
+
+## Choosing A Surface
+
+Use `dispatch` for planning, many scenarios, security-constrained studies and market work, where losses and voltages are not the question. Use `opf` when they are.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+The optimum of a ring against its hand value.
+
+@@example Eng/api/power_dispatch_hand.cpp@@
+
+### Example 2
+
+A line rating that binds.
+
+@@example Eng/api/power_dispatch_rating.cpp@@
+
+### Example 3
+
+Security against outages on a square network.
+
+@@example Eng/api/power_dispatch_square.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dispatch/GenCost
+dispatch/DispatchOptions
+dispatch/DispatchResult
+dispatch/dispatch
+```
+<!-- apiref:toctree:end -->

@@ -210,28 +210,28 @@ Output
 
 ```text
 setup                           exit          iters   evals   objective
-no line search, history 1       NoProgress    214     214     1.4e-08
-no line search, history 3       NoProgress    155     155     6.7e-09
-no line search, history 10      NoProgress    137     137     9.5e-10
-no line search, history 30      NoProgress    144     144     6.3e-11
-strong Wolfe, history 1         NoProgress    176     508     2.3e-09
-strong Wolfe, history 3         NoProgress    97      259     7.2e-09
-strong Wolfe, history 10        NoProgress    94      248     7.8e-11
-strong Wolfe, history 30        NoProgress    89      231     1.0e-10
+no line search, history 1       Converged     248     248     9.2e-16
+no line search, history 3       Converged     162     162     1.3e-15
+no line search, history 10      Converged     132     132     1.7e-21
+no line search, history 30      Converged     134     134     1.6e-20
+strong Wolfe, history 1         Converged     194     630     4.7e-19
+strong Wolfe, history 3         Converged     129     414     1.9e-19
+strong Wolfe, history 10        Converged     83      281     4.0e-20
+strong Wolfe, history 30        Converged     71      237     3.6e-21
 
 learning rate, no line search, default history (20)
-  0.1     NoProgress            iterations 413   4.6e-10
-  0.5     NoProgress            iterations 150   1.5e-10
-  1       NoProgress            iterations 124   3.3e-10
+  0.1     Converged             iterations 470   8.5e-18
+  0.5     Converged             iterations 140   1.5e-19
+  1       Converged             iterations 108   5.3e-20
   2       NonFiniteEvaluation   iterations 32    inf
 ```
-The history size matters at the short end. With a history of 1 the method uses only the last step pair and needs 214 iterations; with 3 it needs 155, with 10 it needs 137, and beyond that there is no gain (144 at a history of 30). The default of 20 is comfortably in the flat part.
+The history size matters at the short end. With a history of 1 the method uses only the last step pair and needs 248 iterations; with 3 it needs 162, with 10 it needs 132, and beyond that there is no gain (134 at a history of 30). The default of 20 is comfortably in the flat part.
 
-(With equality or inequality constraints, chapter 2, L-BFGS always protects each step with a backtracking test on the augmented function, whatever this setting says.) The line search buys fewer iterations and costs more evaluations. With a history of 10, no line search needs 137 iterations and 137 evaluations; the strong-Wolfe search needs 94 iterations but 248 evaluations. When an evaluation is expensive, the run that uses fewer evaluations is the one without the line search. The line search earns its cost when a full step is not safe: with constraints (chapter 2), or on an objective with sharp changes in curvature.
+(With equality or inequality constraints, chapter 2, L-BFGS protects each step with a backtracking test on the augmented function when no line search is selected.) The strong-Wolfe line search buys fewer iterations and costs more evaluations. With a history of 10, no line search needs 132 iterations and 132 evaluations; the strong-Wolfe search needs 83 iterations but 281 evaluations. With a history of 1 the saving is smaller (194 iterations against 248) and the evaluations more than double (630), so the search pays most when the memory is long enough to give it a good direction. When an evaluation is expensive, count evaluations, not iterations. The line search earns its cost when a full step is not safe: with constraints (chapter 2), or on an objective with sharp changes in curvature.
 
-The learning rate is the length of the first trial step. Values from 0.1 to 1 all work, and 1 needs the fewest iterations (124), 0.1 the most (413); at 2 the steps become so long that the run reaches non-finite values and ends with `NonFiniteEvaluation` after 32 iterations. Without a line search, keep it at or below 1.
+The learning rate is the length of the first trial step. Values from 0.1 to 1 all work, and 1 needs the fewest iterations (108), 0.1 the most (470); at 2 the steps become so long that the run reaches non-finite values and ends with `NonFiniteEvaluation` after 32 iterations. Without a line search, keep it at or below 1.
 
-All the L-BFGS runs here end with `NoProgress` at an objective near 1e-10. As in chapter 1, that is the method reaching the limit of what it can do with these tolerances, at a very good point.
+Every L-BFGS run that finished here ends with `Converged`, at objectives between 1e-14 and 1e-21.
 
 ## Decisions and pitfalls
 
@@ -243,3 +243,12 @@ All the L-BFGS runs here end with `NoProgress` at an objective near 1e-10. As in
 - **The line search trades iterations for evaluations.** Choose by which is expensive in your objective.
 
 Where next: [Robustness and stopping](robustness_and_stopping.md) covers objectives that are undefined in places, stopping rules and precision.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="robustness_and_stopping.html">
+    <span class="label">Next</span>
+    <span class="title">Robustness, stopping rules and precision</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -47,3 +47,16 @@ Output
 3-D Monte Carlo: 0.12500787 +- 0.00032820, 200000 samples
 ```
 The 2-D rule is exact for this polynomial with 625 evaluations and the 3-D rule with 15625; the Monte Carlo estimate with 200000 samples is accurate to about 1e-5 with a standard error of 3e-4, which it reports. For a smooth integrand in few dimensions quadrature wins by orders of magnitude; the balance reverses as the dimension grows.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="batches_and_derivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">Batches and derivatives</span>
+  </a>
+  <a class="next-link" href="monte_carlo.html">
+    <span class="label">Next</span>
+    <span class="title">Monte Carlo</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

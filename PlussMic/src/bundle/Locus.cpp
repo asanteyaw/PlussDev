@@ -12,7 +12,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "MSharp/Parallel.h"
@@ -21,6 +20,7 @@
 #include "relational/Links.h"
 #include "table/io/SnapshotCsv.h"
 #include "table/DataFrame.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::bundle {
 
@@ -56,6 +56,9 @@ public:
   // table (or only the links) re-pads just what changed.
   std::shared_ptr<FrameCache> frame_cache_{std::make_shared<FrameCache>()};
   mutable std::string nexus_cache_key_{};
+
+  // The catalog names this Locus holds, offered to errors ("unknown catalog 'sale'") for as long as it lives.
+  pluss::exception::names::Scope names_scope_{"catalog", [this] { return keys_; }};
 };
 
 } // namespace detail
@@ -79,7 +82,7 @@ using Views = pluss::msharp::RangeView::Of<std::string_view>;
 std::int64_t normalize_index(std::int64_t index, std::int64_t size, std::string_view where) {
   const auto idx = index < 0 ? index + size : index;
   PLUSS_CHECK(idx >= 0 && idx < size,
-              fmt::format("{}: index {} out of range for {} tables", where, index, size));
+              pluss::tils::OutputEngine::format("{}: index {} out of range for {} tables", where, index, size));
   return idx;
 }
 
@@ -320,8 +323,8 @@ Locus& Locus::link_(const locus::Relationship& rel) {
   const auto& left = impl.catalogs_[impl.name_to_pos_.at(rel.left_table)];
   const auto& right = impl.catalogs_[impl.name_to_pos_.at(rel.right_table)];
   for (const auto& [lk, rk] : rel.keys) {
-    PLUSS_CHECK(left.has(lk), fmt::format("Locus::link: catalog '{}' has no key '{}'", rel.left_table, lk));
-    PLUSS_CHECK(right.has(rk), fmt::format("Locus::link: catalog '{}' has no key '{}'", rel.right_table, rk));
+    PLUSS_CHECK(left.has(lk), pluss::tils::OutputEngine::format("Locus::link: catalog '{}' has no key '{}'", rel.left_table, lk));
+    PLUSS_CHECK(right.has(rk), pluss::tils::OutputEngine::format("Locus::link: catalog '{}' has no key '{}'", rel.right_table, rk));
   }
 
   auto stored = rel;
@@ -429,10 +432,10 @@ LinkAudit audit_link(const detail::LocusImpl& src, const Relationship& rel, cons
     rk.push_back(b);
   }
   for (const auto& k : lk) {
-    if (!left.has(k)) return invalid(fmt::format("catalog '{}' has no key '{}'", rel.left_table, k));
+    if (!left.has(k)) return invalid(pluss::tils::OutputEngine::format("catalog '{}' has no key '{}'", rel.left_table, k));
   }
   for (const auto& k : rk) {
-    if (!right.has(k)) return invalid(fmt::format("catalog '{}' has no key '{}'", rel.right_table, k));
+    if (!right.has(k)) return invalid(pluss::tils::OutputEngine::format("catalog '{}' has no key '{}'", rel.right_table, k));
   }
 
   pluss::kindle::CatalogKeyAudit measured;
@@ -472,13 +475,13 @@ LinkAudit audit_link(const detail::LocusImpl& src, const Relationship& rel, cons
   // left_optional / right_optional: rows on that side may lack a counterpart.
   std::string warning;
   if (out.left_orphans > 0 && !rel.left_optional) {
-    warning += fmt::format("{} left record(s) have no match on the right", out.left_orphans);
-    if (measured.left_unkeyed > 0) warning += fmt::format(" ({} have no key)", measured.left_unkeyed);
+    warning += pluss::tils::OutputEngine::format("{} left record(s) have no match on the right", out.left_orphans);
+    if (measured.left_unkeyed > 0) warning += pluss::tils::OutputEngine::format(" ({} have no key)", measured.left_unkeyed);
   }
   if (out.right_orphans > 0 && !rel.right_optional) {
     if (!warning.empty()) warning += "; ";
-    warning += fmt::format("{} right record(s) have no match on the left", out.right_orphans);
-    if (measured.right_unkeyed > 0) warning += fmt::format(" ({} have no key)", measured.right_unkeyed);
+    warning += pluss::tils::OutputEngine::format("{} right record(s) have no match on the left", out.right_orphans);
+    if (measured.right_unkeyed > 0) warning += pluss::tils::OutputEngine::format(" ({} have no key)", measured.right_unkeyed);
   }
   if (!warning.empty()) {
     out.status = RelationshipValidationStatus::Warning;
@@ -510,7 +513,7 @@ void Locus::validate(const locus::JoinOptions& options) const {
   std::string report;
   for (const auto& entry : audit(options)) {
     if (entry.status == RelationshipValidationStatus::Invalid) {
-      report += fmt::format("\n  {}: {}", entry.relationship, entry.message);
+      report += pluss::tils::OutputEngine::format("\n  {}: {}", entry.relationship, entry.message);
     }
   }
   PLUSS_CHECK(report.empty(), "Locus::validate: invalid relationship(s):" + report);
@@ -565,7 +568,7 @@ pluss::kindle::Catalog Locus::join(const locus::JoinPath& path,
   std::string at = path.from;
   for (const auto& step : path.steps) {
     PLUSS_CHECK(step.from_table == at,
-                fmt::format("Locus::join: path is not contiguous at '{}' (step starts at '{}')", at,
+                pluss::tils::OutputEngine::format("Locus::join: path is not contiguous at '{}' (step starts at '{}')", at,
                             step.from_table));
     PLUSS_CHECK(has(step.to_table), "Locus::join: unknown catalog '" + step.to_table + "'");
 
@@ -577,7 +580,7 @@ pluss::kindle::Catalog Locus::join(const locus::JoinPath& path,
     const auto resolved = relational::resolve_join(src.relationships_, step.from_table, step.to_table, hop,
                                                    "Locus::join");
     for (const auto& k : resolved.left_keys) {
-      PLUSS_CHECK(current.has(k), fmt::format("Locus::join: the accumulated result has no key '{}' for the hop "
+      PLUSS_CHECK(current.has(k), pluss::tils::OutputEngine::format("Locus::join: the accumulated result has no key '{}' for the hop "
                                               "from '{}' (a column may have been renamed by an earlier suffix)",
                                               k, step.from_table));
     }
@@ -594,7 +597,7 @@ pluss::kindle::Catalog Locus::join(const locus::JoinPath& path,
 namespace {
 
 std::string policy_key(const TabelizePolicy& p) {
-  return fmt::format("{}|{}|{}|{}|{}|{}|{}|{}|{}", static_cast<int>(p.align), static_cast<int>(p.align_by),
+  return pluss::tils::OutputEngine::format("{}|{}|{}|{}|{}|{}|{}|{}|{}", static_cast<int>(p.align), static_cast<int>(p.align_by),
                      static_cast<int>(p.fill), p.fill_scalar.value_or(0.0), p.fill_scalar.has_value(),
                      static_cast<int>(p.dtype), static_cast<int>(p.collision), p.anchor.value_or(""),
                      p.include_label_feature ? p.label_feature : std::string());
@@ -611,7 +614,7 @@ Nexus build_nexus(const detail::LocusImpl& src, const TabelizePolicy& policy) {
   {
     std::lock_guard<std::mutex> lock(cache.mutex);
     for (std::size_t i = 0; i < src.keys_.size(); ++i) {
-      const auto key = fmt::format("{}|{}", src.catalogs_[i].fingerprint(), pkey);
+      const auto key = pluss::tils::OutputEngine::format("{}|{}", src.catalogs_[i].fingerprint(), pkey);
       used.insert(key);
       const auto it = cache.entries.find(key);
       if (it != cache.entries.end()) {
@@ -632,7 +635,7 @@ Nexus build_nexus(const detail::LocusImpl& src, const TabelizePolicy& policy) {
   {
     std::lock_guard<std::mutex> lock(cache.mutex);
     for (const auto i : todo) {
-      const auto key = fmt::format("{}|{}", src.catalogs_[i].fingerprint(), pkey);
+      const auto key = pluss::tils::OutputEngine::format("{}|{}", src.catalogs_[i].fingerprint(), pkey);
       cache.entries.insert_or_assign(key, detail::FrameCache::Entry{src.catalogs_[i], frames[i]});
       ++cache.misses;
     }
@@ -934,7 +937,7 @@ Catalog Locus::materialize(const locus::JoinPlan& plan, const locus::JoinOptions
                                                    step.spec, "Locus::materialize");
     if (resolved.how != JoinHow::Cross) {
       for (const auto& k : resolved.left_keys) {
-        PLUSS_CHECK(current.has(k), fmt::format("Locus::materialize: the accumulated result has no key '{}' for "
+        PLUSS_CHECK(current.has(k), pluss::tils::OutputEngine::format("Locus::materialize: the accumulated result has no key '{}' for "
                                                 "the step from '{}' (a column may have been renamed by an "
                                                 "earlier suffix)", k, step.left_table));
       }
@@ -969,7 +972,7 @@ Locus Locus::store(std::string_view name, const locus::JoinPlan& plan) const {
 Catalog Locus::run(std::string_view name, const locus::JoinOptions& options) const {
   const auto& plans = impl_ref_().plans_;
   const auto it = plans.find(std::string(name));
-  PLUSS_CHECK(it != plans.end(), "Locus::run: unknown saved plan '" + std::string(name) + "'");
+  PLUSS_CHECK(it != plans.end(), "Locus::run: unknown saved plan '" + std::string(name) + "'", std::string(name), pluss::exception::map_keys(plans));
   return materialize(it->second, options);
 }
 Catalog Locus::run(std::string_view name, const locus::JoinPlan& plan, const locus::JoinOptions& options) const {

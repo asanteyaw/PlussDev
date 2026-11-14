@@ -71,7 +71,7 @@ Solve the cross-weight overload and inspect its stabilizing solution.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -106,8 +106,8 @@ Use the equivalent state-space route for a standard continuous regulator.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -145,7 +145,7 @@ See the exact failures for singular `R` and non-Hermitian `Q`.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {

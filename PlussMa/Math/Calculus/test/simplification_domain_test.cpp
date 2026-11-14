@@ -100,6 +100,28 @@ TEST_CASE("assumptions enable only mathematically justified rewrites",
                   pluss::Error);
 }
 
+TEST_CASE("nonpositive assumptions mirror the nonnegative rewrites",
+          "[calculus][simplification][assumption]") {
+  const math::Function magnitude =
+      math::function({"x"}, [](math::Function x) { return x.abs(); });
+  const math::Function root =
+      math::function({"x"}, [](math::Function x) { return x.pow(2).sqrt(); });
+  const pluss::Series x = pluss::make_series({-3.0, -1.0, 0.0});
+  const pluss::Series flipped = pluss::make_series({3.0, 1.0, 0.0});
+
+  for (const math::Assumption assumption :
+       {math::Assumption::NonPositive, math::Assumption::Negative}) {
+    const math::Function abs_assumed = magnitude.assume("x", assumption);
+    const math::Function root_assumed = root.assume("x", assumption);
+    CHECK(close(abs_assumed({x}), flipped));
+    CHECK(close(root_assumed({x}), flipped));
+    CHECK(impl(abs_assumed).plan().size() <= impl(magnitude).plan().size());
+    CHECK(impl(root_assumed).plan().size() < impl(root).plan().size());
+  }
+  const math::Function zero = magnitude.assume("x", math::Assumption::Zero);
+  CHECK(close(zero({pluss::make_series({0.0, 0.0})}), pluss::make_series({0.0, 0.0})));
+}
+
 TEST_CASE("function evaluation enforces real-valued primitive domains",
           "[calculus][domain]") {
   const math::Function logarithm =
@@ -117,6 +139,18 @@ TEST_CASE("function evaluation enforces real-valued primitive domains",
   CHECK_THROWS_AS(reciprocal({pluss::make_series({1.0, 0.0})}), pluss::Error);
   CHECK(close(logarithm({pluss::make_series({1.0, std::exp(1.0)})}),
               pluss::make_series({0.0, 1.0})));
+
+  // A real power of a negative base exists only for an integer exponent.
+  const math::Function half =
+      math::function({"x"}, [](math::Function x) { return x.pow(0.5); });
+  const math::Function square =
+      math::function({"x"}, [](math::Function x) { return x.pow(2.0); });
+  const math::Function variable_exponent =
+      math::function({"x", "p"}, [](math::Function x, math::Function p) { return x.pow(p); });
+  CHECK_THROWS_AS(half({pluss::make_series({4.0, -4.0})}), pluss::Error);
+  CHECK(close(square({pluss::make_series({-3.0, 3.0})}), pluss::make_series({9.0, 9.0})));
+  CHECK_THROWS_AS(variable_exponent({pluss::make_series(-2.0), pluss::make_series(0.5)}), pluss::Error);
+  CHECK(close(variable_exponent({pluss::make_series(-2.0), pluss::make_series(3.0)}), pluss::make_series(-8.0)));
 }
 
 TEST_CASE("absolute-value derivatives expose explicit non-smooth policies",

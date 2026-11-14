@@ -105,6 +105,18 @@ def _is_ignored(path: Path) -> bool:
     return False
 
 
+def _is_ignored_in_docs_tree(rel_dir: Path) -> bool:
+    """Ignore rule for a path *inside* a docs tree. A page group may legitimately be named `build` or `builder`
+    (api/procedure/build/, api/lymph/models/builder/), so only build outputs count: `build`/`build-*`/`build_*` at the top of the tree and
+    `_build`/caches/`_local` anywhere."""
+    for i, part in enumerate(rel_dir.parts):
+        if part in IGNORED_PATH_PARTS - {"build"}:
+            return True
+        if i == 0 and "." not in part and (part == "build" or part.startswith(("build-", "build_"))):
+            return True
+    return False
+
+
 def _slugify(rel_parts: tuple[str, ...]) -> str:
     cleaned = [p for p in rel_parts if p not in (".", "")]
     return "__".join(cleaned) if cleaned else "root"
@@ -152,11 +164,15 @@ def plan_docs_tree(source: Path, slug: str) -> list[tuple[Path, Path]]:
         if not source_file.is_file():
             continue
         rel = source_file.relative_to(source)
-        if _is_ignored(rel.parent):
+        if _is_ignored_in_docs_tree(rel.parent):
             continue
         if source_file.suffix.lower() not in MIRRORED_DOC_SUFFIXES:
             continue
         plan.append((source_file, Path(slug) / rel))
+    # Each hub's index lists its own `_local/MANIFEST` in a toctree, so the one `_local` file the mirror keeps is that manifest.
+    manifest = source / "_local" / "MANIFEST.md"
+    if manifest.is_file():
+        plan.append((manifest, Path(slug) / "_local" / "MANIFEST.md"))
     return plan
 
 
@@ -322,7 +338,7 @@ def main() -> int:
         return 1
 
     removed_orphans, failed_removals = sync_local_dir(local_dir, full_plan)
-    (local_dir / "MANIFEST.md").write_text("\n".join(manifest_lines) + "\n")
+    (local_dir / "MANIFEST.md").write_text("---\norphan: true\n---\n\n" + "\n".join(manifest_lines) + "\n")
 
     static_notes = sync_static_assets(into)
     for note in static_notes:

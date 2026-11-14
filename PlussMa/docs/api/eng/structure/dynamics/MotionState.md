@@ -48,7 +48,7 @@ A damped free vibration started from the first mode shape.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -144,7 +144,7 @@ A swing started from a rigid rotation.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -234,7 +234,7 @@ default spectral radius 0.90000: every step converged true, at most 3.00000 Newt
 tip rotation at 0, 0.3 and 0.6 s (rad): 1.00000 0.48006 -0.56304
 shapes: displacement [121, 9, 3], kinetic [121]
 spectral_radius 0.5: tip rotation at 0.6 s (rad) -0.56293
-stiffness_damping 1e-4: tip rotation at 0.6 s (rad) -0.56242
+stiffness_damping 1e-4: tip rotation at 0.6 s (rad) 0.99901
 ```
 ### Example 3
 
@@ -247,7 +247,7 @@ Rejected states.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }

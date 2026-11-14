@@ -1,0 +1,59 @@
+# `robot::IkResult`
+
+The result of inverse kinematics.
+
+## Signature
+
+```cpp
+robot::IkResult
+```
+
+## What It Does
+
+Holds the joint values found, how far the link still is from the target, how many iterations were used and whether every member of the batch converged.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `q` | The joint values, `[..., links]`. |  |
+| `error` | The norm of the remaining task error of each target, `[...]`; the position error in metres, with the weighted orientation error appended when an orientation was requested. |  |
+| `iterations` | The number of iterations used, an `Int64` vector of one element. The batch iterates together until every member has converged. |  |
+| `converged` | Whether the error of each target is within the tolerance, a Bool array `[...]`. |  |
+
+## Returns
+
+Returned by `ik`.
+
+## Errors
+
+Reading a field does not iterate again.
+
+## Interpretation and Use
+
+Check `converged` before using `q`: an unreachable target (or one excluded by joint limits) returns the nearest configuration the iteration reached, with `converged` false: the error never grows from the start. The solution is one of possibly many; it is generally not the configuration the target was generated from.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of a solution.
+
+@@example Eng/api/robot_ikresult_fields.cpp@@
+
+### Example 2
+
+A batch of targets.
+
+@@example Eng/api/robot_ik_batch.cpp@@
+
+### Example 3
+
+An unreachable target.
+
+@@example Eng/api/robot_ik_unreachable.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

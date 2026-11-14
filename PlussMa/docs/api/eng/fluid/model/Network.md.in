@@ -1,0 +1,106 @@
+# `fluid::Network`
+
+The compiled, immutable pipe network.
+
+## Signature
+
+```cpp
+fluid::Network
+```
+
+## What It Does
+
+The result of `network`: a validated, immutable network whose topology maps and physical arrays are ready for `steady`, `run`, `transport` and `heat`. It cannot be built directly, and it preserves the precision and platform of its source arrays.
+
+## Methods
+
+`nodes()`
+: The number of nodes.
+
+`junctions()`
+: The number of junctions.
+
+`reservoirs()`
+: The number of reservoirs.
+
+`tanks()`
+: The number of tanks.
+
+`pipes()`
+: The number of pipes.
+
+`pumps()`
+: The number of pumps.
+
+`valves()`
+: The number of valves.
+
+`links()`
+: Pipes plus pumps plus valves; the order of the link axis of every result.
+
+`batch_shape()`
+: The leading scenario axes shared by the physical arrays.
+
+`dtype()`
+: The precision, `Float32` or `Float64`.
+
+`platform()`
+: The platform of the arrays.
+
+`liquid()`
+: The `Liquid` it was compiled with.
+
+## Returns
+
+Returned by `network`.
+
+## Errors
+
+Accessors do not throw.
+
+## Changelog
+
+- **0.1** — Initial public contract.
+
+## Interpretation and Use
+
+Link results are ordered pipes first, then pumps, then valves. A `Network` is a value that can be solved many times: `steady` once, `run` over a schedule, and `transport` or `heat` on top of a run.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The counts and liquid of a compiled network.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 2
+
+The batch shape of a scenario network.
+
+@@example Eng/api/fluid_net_batch.cpp@@
+
+### Example 3
+
+Counts by node kind.
+
+@@example Eng/api/fluid_nodekind.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Liquid.html">
+    <span class="label">Previous</span>
+    <span class="title">Liquid</span>
+  </a>
+  <a class="next-link" href="network_fn.html">
+    <span class="label">Next</span>
+    <span class="title">network</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

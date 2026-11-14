@@ -1,0 +1,63 @@
+# `power::LodfResult`
+
+Line outage distribution factors and their validity.
+
+## Signature
+
+```cpp
+power::LodfResult
+```
+
+## What It Does
+
+The result of `lodf`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `factor` | The factor of every monitored line for every outage, `[..., monitored line, outage line]`. A line monitored against its own outage has factor `-1`; the column of an invalid outage is `NaN`. |  |
+| `valid` | True for each outage line that is a single-line contingency of a connected network, `[..., outage line]`. |  |
+
+## Returns
+
+Returned by `lodf`.
+
+## Errors
+
+Reading a field does not compute again.
+
+## Interpretation and Use
+
+The flow on line `m` after the loss of line `k` is `flow[m] + factor[m, k] * flow[k]`. An outage is invalid when the line is already out of service or its loss splits the network.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The factors of a ring and the flows they give.
+
+@@example Eng/api/power_lodf_ring.cpp@@
+
+### Example 2
+
+A spur line whose outage is invalid.
+
+@@example Eng/api/power_lodf_spur.cpp@@
+
+### Example 3
+
+Reading the factors next to the validity.
+
+@@example Eng/api/power_n1_nan.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="OutageResult.html">
+    <span class="label">Next</span>
+    <span class="title">OutageResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

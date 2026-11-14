@@ -63,7 +63,7 @@ Compare convolution, correlation, FIR filtering, and frequency response.
 #include <cmath>
 #include <complex>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -101,7 +101,7 @@ Continue a recursive filter across blocks and apply forward-backward filtering.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -150,7 +150,7 @@ Observe validation of signal dtype and recurrence coefficients.
 #include <exception>
 #include <string>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {

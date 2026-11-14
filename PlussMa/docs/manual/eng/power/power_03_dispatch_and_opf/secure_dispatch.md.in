@@ -1,0 +1,430 @@
+# Secure dispatch
+
+[Back to Power 3: Dispatch and Optimal Power Flow](../power_03_dispatch_and_opf.md)
+
+An economic dispatch that keeps every line within its rating at the planned operating point can still leave the system one fault from an overload: when a line trips, its flow moves onto the others. **Preventive security-constrained dispatch** chooses the generation so that, with that same generation, no line is overloaded after the loss of any single line either. `DispatchOptions::secure` adds those constraints to `power::dispatch`. This page explains the formulation, shows a network where the secure answer differs from the plain one and checks it by hand, reads the post-outage flows, handles the lines whose loss splits the network, and shows the cases the security constraints cannot satisfy.
+
+## The mental model
+
+For every valid single-line outage `k` and every monitored line `m`, the flow after the outage is `F_m + LODF[m, k] F_k`, as in the [line outages](../power_02_sensitivities_and_contingencies/line_outages.md) page, and both are linear functions of the generation. The secure dispatch requires that flow, in both directions, to stay within the rating of line `m`, for all valid `(k, m)`, in addition to the base-case constraints. The generation is the same before and after the outage: it is **preventive** security, with no corrective redispatch after the fault.
+
+An outage that splits the network, or of a line already out of service, is not a valid contingency, and contributes no constraint. With `secure` true the result carries two more members: `post_flow`, the flows after each outage with shape `[..., outage line, monitored line]` (`NaN` rows for invalid outages), and `outage_valid` for each outage line. `outage_tolerance` is the validity threshold of `lodf`.
+
+## A network where security changes the answer
+
+The square has generator `A` at bus `0` (cost `0.25 g^2 + 10 g`) and generator `B` at bus `2` (cost `0.25 g^2 + 10.5 g`), loads of `1` per unit at buses `1` and `3`, and four equal lines. The plain dispatch has equal incremental costs, `0.5 g_A + 10 = 0.5 g_B + 10.5`, which with `g_A + g_B = 2` gives `g_A = 1.5` and `g_B = 0.5`, at a cost of `20.875`, with the flow on every line at most `0.75`. But if line `3` (from `3` to `0`) is lost, all of generator `A`'s output must leave through line `0`, so that line carries `g_A`, and a rating of `R` on the lines requires `g_A <= R`. For `R = 1.4` the secure dispatch is `g_A = 1.4`, `g_B = 0.6`, at a cost of `0.49 + 14 + 0.09 + 6.3 = 20.88`. The program solves the square with and without security for four ratings.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a square of four buses: generator A at bus 0 and generator B at bus 2, loads of 1 per unit at buses 1 and 3.
+// Lines: 0 joins 0-1, 1 joins 1-2, 2 joins 2-3, 3 joins 3-0, each with x = 0.1.
+static power::Net square() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PV, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -1.0, 0.0, -1.0});
+  net.buses.q = vec({0.0, -0.2, 0.0, -0.2});
+  net.buses.vm = vec({1.0, 1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0, 0.0});
+  net.gens.bus = {0, 2};
+  net.gens.p = vec({1.0, 1.0});
+  net.gens.q = vec({0.0, 0.0});
+  net.lines.from = {0, 1, 2, 3};
+  net.lines.to = {1, 2, 3, 0};
+  net.lines.r = vec({0.01, 0.01, 0.01, 0.01});
+  net.lines.x = vec({0.1, 0.1, 0.1, 0.1});
+  return net;
+}
+
+// generator A: 0.25 g^2 + 10 g; generator B: 0.25 g^2 + 10.5 g; each between 0 and 3 per unit
+static power::GenCost costs() {
+  power::GenCost c;
+  c.lower = vec({0.0, 0.0});
+  c.upper = vec({3.0, 3.0});
+  c.linear = vec({10.0, 10.5});
+  c.quadratic = vec({0.25, 0.25});
+  return c;
+}
+
+static power::DispatchOptions tight(bool secure) {
+  power::DispatchOptions options;
+  options.secure = secure;
+  options.qp.abs_tol = 1e-10;
+  options.qp.rel_tol = 1e-10;
+  options.qp.max_iters = 50000;
+  return options;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const power::Grid grid = power::make(square());
+  for (double rating : {2.0, 1.4, 1.3, 1.2}) {
+    const auto limits = vec({rating, rating, rating, rating});
+    const auto plain = power::dispatch(grid, costs(), limits, tight(false));
+    const auto secure = power::dispatch(grid, costs(), limits, tight(true));
+    const double a = rating, b = 2.0 - rating;
+    out.writeln("rating ", rating, ": plain ", flat(plain.generation), " cost ", flat(plain.objective)[0], "   secure ", flat(secure.generation), " cost ", flat(secure.objective)[0], " (converged ", secure.converged, ")");
+    if (rating < 1.5) out.writeln("          by hand: g_A = rating: ", a, " ", b, " cost ", 0.25 * a * a + 10 * a + 0.25 * b * b + 10.5 * b);
+  }
+}
+```
+
+With a rating of `2.0` the plain optimum is already secure and both agree, `1.5` and `0.5`. For `1.4`, `1.3` and `1.2` the secure dispatch pins generator `A` at the rating, the by-hand values, and the cost rises, `20.88`, `20.895`, `20.92`: the price of being able to lose any line without an overload. The plain dispatch does not change, since the rating does not bind at the planned operating point.
+
+## Reading the post-outage flows
+
+The program asks for the secure dispatch at `R = 1.3` and prints the flows after each outage, as a matrix, and the largest post-outage flow. The largest, `1.3`, equals the rating: the outage of line `3` (with generator `A` feeding through line `0`), and the symmetric outage of line `0` (feeding through line `3`), are binding.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a square of four buses: generator A at bus 0 and generator B at bus 2, loads of 1 per unit at buses 1 and 3.
+// Lines: 0 joins 0-1, 1 joins 1-2, 2 joins 2-3, 3 joins 3-0, each with x = 0.1.
+static power::Net square() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PV, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -1.0, 0.0, -1.0});
+  net.buses.q = vec({0.0, -0.2, 0.0, -0.2});
+  net.buses.vm = vec({1.0, 1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0, 0.0});
+  net.gens.bus = {0, 2};
+  net.gens.p = vec({1.0, 1.0});
+  net.gens.q = vec({0.0, 0.0});
+  net.lines.from = {0, 1, 2, 3};
+  net.lines.to = {1, 2, 3, 0};
+  net.lines.r = vec({0.01, 0.01, 0.01, 0.01});
+  net.lines.x = vec({0.1, 0.1, 0.1, 0.1});
+  return net;
+}
+
+// generator A: 0.25 g^2 + 10 g; generator B: 0.25 g^2 + 10.5 g; each between 0 and 3 per unit
+static power::GenCost costs() {
+  power::GenCost c;
+  c.lower = vec({0.0, 0.0});
+  c.upper = vec({3.0, 3.0});
+  c.linear = vec({10.0, 10.5});
+  c.quadratic = vec({0.25, 0.25});
+  return c;
+}
+
+static power::DispatchOptions tight(bool secure) {
+  power::DispatchOptions options;
+  options.secure = secure;
+  options.qp.abs_tol = 1e-10;
+  options.qp.rel_tol = 1e-10;
+  options.qp.max_iters = 50000;
+  return options;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const power::Grid grid = power::make(square());
+  const auto result = power::dispatch(grid, costs(), vec({1.3, 1.3, 1.3, 1.3}), tight(true));
+  out.writeln("generation ", flat(result.generation), ", valid outages ", flat(result.outage_valid));
+  const auto after = flat(result.post_flow);   // [outage line][monitored line]
+  for (int k = 0; k < 4; ++k) out.writeln("flows after losing line ", k, ": ", after[4 * k], " ", after[4 * k + 1], " ", after[4 * k + 2], " ", after[4 * k + 3]);
+  double worst = 0.0;
+  for (int k = 0; k < 4; ++k)
+    for (int m = 0; m < 4; ++m)
+      if (m != k) worst = std::max(worst, std::abs(after[4 * k + m]));
+  out.writeln("largest post-outage flow: ", worst, " (rating 1.3)");
+  out.writeln("base flows ", flat(result.flow));
+}
+```
+
+The rows are the outages, and each shows the remaining lines carrying the redistributed power; the flow on the lost line itself is zero. The binding outages carry exactly the rating, and the base flows remain well inside it.
+
+## A line whose loss splits the network
+
+A spur, a line that is the only connection to a bus, cannot be redistributed, and its loss is not a contingency the dispatch can survive by re-routing. The program adds a bus `4` to the square, joined to bus `1` by a line, with a load of `0.2`, and solves the secure dispatch. The spur line is flagged invalid in `outage_valid`, its post-outage row is `NaN`, and it imposes no constraint; the rest of the network is secured as before.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a square of four buses: generator A at bus 0 and generator B at bus 2, loads of 1 per unit at buses 1 and 3.
+// Lines: 0 joins 0-1, 1 joins 1-2, 2 joins 2-3, 3 joins 3-0, each with x = 0.1.
+static power::Net square() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PV, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -1.0, 0.0, -1.0});
+  net.buses.q = vec({0.0, -0.2, 0.0, -0.2});
+  net.buses.vm = vec({1.0, 1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0, 0.0});
+  net.gens.bus = {0, 2};
+  net.gens.p = vec({1.0, 1.0});
+  net.gens.q = vec({0.0, 0.0});
+  net.lines.from = {0, 1, 2, 3};
+  net.lines.to = {1, 2, 3, 0};
+  net.lines.r = vec({0.01, 0.01, 0.01, 0.01});
+  net.lines.x = vec({0.1, 0.1, 0.1, 0.1});
+  return net;
+}
+
+// generator A: 0.25 g^2 + 10 g; generator B: 0.25 g^2 + 10.5 g; each between 0 and 3 per unit
+static power::GenCost costs() {
+  power::GenCost c;
+  c.lower = vec({0.0, 0.0});
+  c.upper = vec({3.0, 3.0});
+  c.linear = vec({10.0, 10.5});
+  c.quadratic = vec({0.25, 0.25});
+  return c;
+}
+
+static power::DispatchOptions tight(bool secure) {
+  power::DispatchOptions options;
+  options.secure = secure;
+  options.qp.abs_tol = 1e-10;
+  options.qp.rel_tol = 1e-10;
+  options.qp.max_iters = 50000;
+  return options;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  power::Net spur = square();
+  spur.buses.kind.push_back(power::BusKind::PQ);
+  spur.buses.p = vec({0.0, -1.0, 0.0, -1.0, -0.2});
+  spur.buses.q = vec({0.0, -0.2, 0.0, -0.2, -0.04});
+  spur.buses.vm = vec({1.0, 1.0, 1.0, 1.0, 1.0});
+  spur.buses.va = vec({0.0, 0.0, 0.0, 0.0, 0.0});
+  spur.lines.from.push_back(1);
+  spur.lines.to.push_back(4);
+  spur.lines.r = vec({0.01, 0.01, 0.01, 0.01, 0.01});
+  spur.lines.x = vec({0.1, 0.1, 0.1, 0.1, 0.1});
+  const power::Grid grid = power::make(spur);
+  const auto result = power::dispatch(grid, costs(), vec({1.6, 1.6, 1.6, 1.6, 1.6}), tight(true));
+  out.writeln("generation ", flat(result.generation), ", converged ", result.converged);
+  out.writeln("valid outages (one per line) ", flat(result.outage_valid));
+  const auto after = flat(result.post_flow);
+  out.writeln("flows after losing the spur line: ", after[4 * 5], " ", after[4 * 5 + 1], " ", after[4 * 5 + 2], " ", after[4 * 5 + 3], " ", after[4 * 5 + 4]);
+
+  // the outage tolerance: a large one declares every outage invalid, and the problem reduces to the plain dispatch
+  power::DispatchOptions strict = tight(true);
+  strict.outage_tolerance = 0.9;
+  const auto none = power::dispatch(grid, costs(), vec({1.6, 1.6, 1.6, 1.6, 1.6}), strict);
+  out.writeln("with outage_tolerance 0.9, valid outages: ", flat(none.outage_valid), ", generation ", flat(none.generation));
+}
+```
+
+The spur outage is invalid, `0`, and its row of post-outage flows is `NaN`: no re-routing exists. With a tolerance of `0.9` every outage is declared invalid and the dispatch reduces to the plain one, so the security constraints vanish.
+
+## When security cannot be met
+
+If the ratings are too low for the network to survive an outage whatever the generation, the secure problem is infeasible, and the dispatch returns with `converged` false. The program asks the square for a rating of `0.9`: the loss of line `3` pushes every unit of generator `A`'s output through line `0`, and while generator `B` could take everything, `g_B = 2` puts `2` per unit through its own lines. No dispatch has every post-outage flow within `0.9`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a square of four buses: generator A at bus 0 and generator B at bus 2, loads of 1 per unit at buses 1 and 3.
+// Lines: 0 joins 0-1, 1 joins 1-2, 2 joins 2-3, 3 joins 3-0, each with x = 0.1.
+static power::Net square() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PV, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -1.0, 0.0, -1.0});
+  net.buses.q = vec({0.0, -0.2, 0.0, -0.2});
+  net.buses.vm = vec({1.0, 1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0, 0.0});
+  net.gens.bus = {0, 2};
+  net.gens.p = vec({1.0, 1.0});
+  net.gens.q = vec({0.0, 0.0});
+  net.lines.from = {0, 1, 2, 3};
+  net.lines.to = {1, 2, 3, 0};
+  net.lines.r = vec({0.01, 0.01, 0.01, 0.01});
+  net.lines.x = vec({0.1, 0.1, 0.1, 0.1});
+  return net;
+}
+
+// generator A: 0.25 g^2 + 10 g; generator B: 0.25 g^2 + 10.5 g; each between 0 and 3 per unit
+static power::GenCost costs() {
+  power::GenCost c;
+  c.lower = vec({0.0, 0.0});
+  c.upper = vec({3.0, 3.0});
+  c.linear = vec({10.0, 10.5});
+  c.quadratic = vec({0.25, 0.25});
+  return c;
+}
+
+static power::DispatchOptions tight(bool secure) {
+  power::DispatchOptions options;
+  options.secure = secure;
+  options.qp.abs_tol = 1e-10;
+  options.qp.rel_tol = 1e-10;
+  options.qp.max_iters = 50000;
+  return options;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const power::Grid grid = power::make(square());
+  const auto limits = vec({0.9, 0.9, 0.9, 0.9});
+  const auto plain = power::dispatch(grid, costs(), limits, tight(false));
+  const auto secure = power::dispatch(grid, costs(), limits, tight(true));
+  out.writeln("plain dispatch at rating 0.9:  converged ", plain.converged, ", generation ", flat(plain.generation));
+  out.writeln("secure dispatch at rating 0.9: converged ", secure.converged, ", primal residual ", secure.primal_residual);
+}
+```
+
+The plain dispatch is feasible at this rating, since the base flows are at most `0.75`, but the secure one is not, and its residual says by how much the constraints are violated. A failed secure dispatch is a statement about the network: it must be reinforced, or the demand reduced, or the rating raised.
+
+## Decisions
+
+- **Plan with security:** `secure` true whenever the system must survive a line outage without operator action.
+- **Corrective action is acceptable:** use the plain dispatch with a screening of the outages, as in [line outages](../power_02_sensitivities_and_contingencies/line_outages.md), and plan the recourse separately.
+- **Generator outages:** the secure dispatch covers line outages only; a lost generator needs reserves, which this model does not have.
+
+## Pitfalls
+
+The program makes the mistake of trusting a plain dispatch. It solves the square at `R = 1.3` without security, checks the result with `outages`, and finds a line overloaded by an outage.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a square of four buses: generator A at bus 0 and generator B at bus 2, loads of 1 per unit at buses 1 and 3.
+// Lines: 0 joins 0-1, 1 joins 1-2, 2 joins 2-3, 3 joins 3-0, each with x = 0.1.
+static power::Net square() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PV, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -1.0, 0.0, -1.0});
+  net.buses.q = vec({0.0, -0.2, 0.0, -0.2});
+  net.buses.vm = vec({1.0, 1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0, 0.0});
+  net.gens.bus = {0, 2};
+  net.gens.p = vec({1.0, 1.0});
+  net.gens.q = vec({0.0, 0.0});
+  net.lines.from = {0, 1, 2, 3};
+  net.lines.to = {1, 2, 3, 0};
+  net.lines.r = vec({0.01, 0.01, 0.01, 0.01});
+  net.lines.x = vec({0.1, 0.1, 0.1, 0.1});
+  return net;
+}
+
+// generator A: 0.25 g^2 + 10 g; generator B: 0.25 g^2 + 10.5 g; each between 0 and 3 per unit
+static power::GenCost costs() {
+  power::GenCost c;
+  c.lower = vec({0.0, 0.0});
+  c.upper = vec({3.0, 3.0});
+  c.linear = vec({10.0, 10.5});
+  c.quadratic = vec({0.25, 0.25});
+  return c;
+}
+
+static power::DispatchOptions tight(bool secure) {
+  power::DispatchOptions options;
+  options.secure = secure;
+  options.qp.abs_tol = 1e-10;
+  options.qp.rel_tol = 1e-10;
+  options.qp.max_iters = 50000;
+  return options;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const double rating = 1.3;
+  const auto limits = vec({rating, rating, rating, rating});
+
+  // the plain dispatch fits the base-case ratings
+  power::Net planned = square();
+  const power::Grid grid = power::make(planned);
+  const auto plain = power::dispatch(grid, costs(), limits, tight(false));
+  out.writeln("plain dispatch: generation ", flat(plain.generation), ", base flows ", flat(plain.flow));
+
+  // put that generation into the network and screen every outage
+  planned.gens.p = plain.generation.reshape({2});
+  const auto screened = power::outages(power::make(planned));
+  const auto after = flat(screened.flow);
+  double worst = 0.0;
+  int outage = -1, line = -1;
+  for (int k = 0; k < 4; ++k)
+    for (int m = 0; m < 4; ++m)
+      if (m != k && std::abs(after[4 * k + m]) > worst) {
+        worst = std::abs(after[4 * k + m]);
+        outage = k;
+        line = m;
+      }
+  out.writeln("worst post-outage flow of the plain dispatch: ", worst, " on line ", line, " after losing line ", outage, "   rating ", rating);
+}
+```
+
+The plain dispatch respects the rating at the planned operating point, with flows of at most `0.75`, but losing a line pushes `1.5` per unit through its neighbour, above the rating of `1.3`. A dispatch that passes the base-case check is not thereby secure.
+
+Reference: [`DispatchOptions`](../../../../api/eng/power/dispatch/DispatchOptions.md), [`DispatchResult`](../../../../api/eng/power/dispatch/DispatchResult.md), [`dispatch`](../../../../api/eng/power/dispatch/dispatch.md), [`outages`](../../../../api/eng/power/security/outages.md), [`lodf`](../../../../api/eng/power/security/lodf.md).
+
+Where next: [Optimal power flow](optimal_power_flow.md) replaces the lossless DC model by the full AC network, with losses, reactive power and voltage limits.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="economic_dispatch.html">
+    <span class="label">Previous</span>
+    <span class="title">Economic dispatch</span>
+  </a>
+  <a class="next-link" href="optimal_power_flow.html">
+    <span class="label">Next</span>
+    <span class="title">Optimal power flow</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

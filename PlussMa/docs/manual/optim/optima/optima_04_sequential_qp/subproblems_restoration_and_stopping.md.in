@@ -20,7 +20,7 @@ Each subproblem is reduced to a symmetric positive-definite system in the variab
 
 @@example Numerical/optimization/guide/optima/56_subproblem_solvers.cpp@@
 
-All six choices reach 17.014017 in 4 iterations. The conjugate-gradient row reports 324 Krylov iterations; every other row reports 0. For a problem with a handful of variables the factorization is the right choice and `Auto` picks it. Conjugate gradients pay off when the number of variables passes `iterative_dimension_threshold` (3000 by default), where forming and factoring the matrix costs more than a modest number of matrix-vector products. The solver keeps the interior iteration accurate by capping the inner relative tolerance at 1e-8, and if the reduced system stalls, whatever the solver, it re-solves the subproblem on the unreduced system with a pivoted factorization, so a solver choice cannot turn a solvable subproblem into a failure.
+All six choices reach 17.014017 in 4 iterations. The conjugate-gradient row reports 323 Krylov iterations; every other row reports 0. For a problem with a handful of variables the factorization is the right choice and `Auto` picks it. Conjugate gradients pay off when the number of variables passes `iterative_dimension_threshold` (3000 by default), where forming and factoring the matrix costs more than a modest number of matrix-vector products. The solver keeps the interior iteration accurate by capping the inner relative tolerance at 1e-8, and if the reduced system stalls, whatever the solver, it re-solves the subproblem on the unreduced system with a pivoted factorization, so a solver choice cannot turn a solvable subproblem into a failure.
 
 ## Program 7: Stopping tolerances
 
@@ -37,3 +37,12 @@ Tightening the optimality and constraint tolerances together from 1e-3 to 1e-9 m
 - **Check which stopping test fired.** The message tells you whether the run ended on optimality or on a predicted-improvement test.
 
 Where next: [Chapter 5](../optima_05_working_set_and_interior.md) turns to the other two methods.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_sqp_loop.html">
+    <span class="label">Previous</span>
+    <span class="title">The sequential QP loop</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

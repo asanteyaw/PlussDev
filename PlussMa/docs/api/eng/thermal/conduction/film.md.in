@@ -1,0 +1,59 @@
+# `thermal::film`
+
+The resistance of a convection film.
+
+## Signature
+
+```cpp
+Series thermal::film(const Series& coefficient,
+                     const Series& area);
+```
+
+## What It Does
+
+Returns `1 / (h A)` in kelvin per watt: the resistance between a surface and the fluid that passes over it, for a film coefficient `h` in W/(m^2 K) over an area `A`.
+
+## Parameters
+
+`coefficient`
+: The film coefficient `h` in W/(m^2 K), positive.
+
+`area`
+: The surface area in m^2, positive.
+
+## Returns
+
+The resistance in K/W with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array, not finite or not positive.
+
+## Interpretation and Use
+
+The overall coefficient of a wall is `U = 1 / (A * (R_inside + R_wall + R_outside))`; build the three resistances with `film` and `wall`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A film and a sweep of the coefficient.
+
+@@example Eng/api/thermal_film_basic.cpp@@
+
+### Example 2
+
+The overall coefficient of a wall.
+
+@@example Eng/api/thermal_film_uvalue.cpp@@
+
+### Example 3
+
+Rejected inputs.
+
+@@example Eng/api/thermal_film_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

@@ -562,7 +562,7 @@ std::vector<std::string> EmbeddingTable::dump_state_lines() const {
   lines.push_back("weight_cols=" + std::to_string(weight_shape.size() < 2 ? 0 : weight_shape[1]));
   lines.push_back("weights=" +
                   (weights_cpu.defined()
-                       ? join_numbers(weights_cpu.pull<double>())
+                       ? join_numbers(weights_cpu.items<double>())
                        : std::string{}));
 
   const Series pos_cpu = position_weights_.defined()
@@ -572,7 +572,7 @@ std::vector<std::string> EmbeddingTable::dump_state_lines() const {
   lines.push_back("pos_rows=" + std::to_string(pos_shape.empty() ? 0 : pos_shape[0]));
   lines.push_back("pos_cols=" + std::to_string(pos_shape.size() < 2 ? 0 : pos_shape[1]));
   lines.push_back("positions=" +
-                  (pos_cpu.defined() ? join_numbers(pos_cpu.pull<double>())
+                  (pos_cpu.defined() ? join_numbers(pos_cpu.items<double>())
                                      : std::string{}));
   return lines;
 }

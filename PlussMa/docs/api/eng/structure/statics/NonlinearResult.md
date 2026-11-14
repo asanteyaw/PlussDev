@@ -56,7 +56,7 @@ Every field on a cantilever bent through a large angle.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -143,7 +143,7 @@ The linear result of the same frame.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -208,7 +208,7 @@ Member loads on the linear solve.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }

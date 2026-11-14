@@ -284,3 +284,12 @@ The two largest differences are 2.78e-17 for the density and 2.22e-16 for the di
 - [`Normal`](../continuous_real_line/Normal.md)
 - [`Laplace`](../continuous_real_line/Laplace.md)
 - [`Logistic`](../continuous_real_line/Logistic.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ExtremeValue.html">
+    <span class="label">Next</span>
+    <span class="title">ExtremeValue</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

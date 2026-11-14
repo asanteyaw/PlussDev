@@ -1,0 +1,399 @@
+# Receding-horizon control
+
+[Back to Control 4: Model-Predictive Control](../control_04_model_predictive_control.md)
+
+The optimisation on the previous page gives a whole sequence of inputs, but the model is only approximate and the world moves, so MPC uses just the first move. At the next step it measures the state again and re-optimises over a horizon that has moved forward: the **receding horizon**. This page runs that loop, prepares the problem once with `mpc::build` so that each step is cheap, shows what constraints on the states do, and explains the solver settings and the diagnostics that tell you when to trust a step.
+
+## The mental model
+
+At each time step `k`:
+
+1. measure the state `x_k`;
+2. solve the finite-horizon problem from `x_k`; call `solve(plan, x_k, reference)`;
+3. apply the first move `result.control`;
+4. advance the plant one step, and repeat.
+
+Everything that does not depend on the state is computed once. The quadratic-program matrices depend only on `A`, `B`, the weights, the bounds and the horizon, so `build` assembles and factorises them into a `Plan`. Each `solve(plan, ...)` then only forms the linear term from the new state and runs the solver. A `Plan` knows its `horizon()`, `states()` and `inputs()`, and its element type and platform.
+
+## Closing the loop
+
+The program runs the bounded problem of the previous page for 40 steps, with the plan built once: at each step it solves from the current state, applies the first move to the plant and records the position and the control. The mass starts at position 1 at rest and the force is limited to `0.5`, so the controller pushes at the limit for as long as it can: the position reaches `0.9375` after 5 steps, `0.75` after 10 and `0.0374` after 40.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 0.1, 0, 1}, 2, 2), matrix({0.005, 0.1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 0.1);
+  const pluss::Series q = pluss::series::eye(2, f64);
+  const pluss::Series r = matrix({0.1}, 1, 1);
+  const auto lqr = ctl::dare(plant.a(), plant.b(), q, r);
+
+  mpc::Options options;
+  options.horizon = 20;
+  const auto plan = mpc::build(plant, mpc::Weights{.state = q, .input = r, .terminal = lqr.value},
+                               mpc::Bounds{.input_lower = vec({-0.5}), .input_upper = vec({0.5})}, options);
+  out.writeln("plan: horizon", plan.horizon(), " states", plan.states(), " inputs", plan.inputs());
+
+  pluss::Series x = vec({1.0, 0.0});
+  std::vector<double> position, force;
+  bool all_converged = true;
+  for (int step = 0; step < 40; ++step) {
+    const auto result = mpc::solve(plan, x, vec({0.0, 0.0}));
+    all_converged = all_converged && result.optimization.converged;
+    force.push_back(result.control.reshape({1}).items<double>()[0]);
+    x = (plant.a().matmul(x.unsqueeze(-1)) + plant.b().matmul(result.control.unsqueeze(-1))).reshape({2});
+    position.push_back(x.items<double>()[0]);
+  }
+  out.writeln("every solve converged:", all_converged);
+  out.writeln("position after 5, 10, 20, 40 steps:", position[4], position[9], position[19], position[39]);
+  out.writeln("largest force applied", -*std::min_element(force.begin(), force.end()), " (limit 0.5)");
+}
+```
+
+## Compared with clipped LQR
+
+The simplest way to respect an actuator limit is to compute the LQR input and clip it. For a limit on the input alone, that is hard to beat, and the program shows it on this plant: over 120 steps the accumulated cost `sum (x^T Q x + u^T R u)` is `15.87399` for MPC and `15.87398` for clipped LQR. Both are above the unconstrained optimum `x0^T P x0 = 13.31722`, the price of the limit.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 0.1, 0, 1}, 2, 2), matrix({0.005, 0.1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 0.1);
+  const pluss::Series q = pluss::series::eye(2, f64);
+  const pluss::Series r = matrix({0.1}, 1, 1);
+  const auto lqr = ctl::dare(plant.a(), plant.b(), q, r);
+
+  mpc::Options options;
+  options.horizon = 20;
+  const auto plan = mpc::build(plant, mpc::Weights{.state = q, .input = r, .terminal = lqr.value},
+                               mpc::Bounds{.input_lower = vec({-0.5}), .input_upper = vec({0.5})}, options);
+
+  double mpc_cost = 0.0, clipped_cost = 0.0;
+  pluss::Series x = vec({1.0, 0.0});
+  for (int step = 0; step < 120; ++step) {
+    const auto result = mpc::solve(plan, x, vec({0.0, 0.0}));
+    const double u = result.control.reshape({1}).items<double>()[0];
+    const std::vector<double> s = x.items<double>();
+    mpc_cost += s[0] * s[0] + s[1] * s[1] + 0.1 * u * u;
+    x = (plant.a().matmul(x.unsqueeze(-1)) + plant.b().matmul(result.control.unsqueeze(-1))).reshape({2});
+  }
+  x = vec({1.0, 0.0});
+  for (int step = 0; step < 120; ++step) {
+    const double u = std::clamp(-lqr.gain.matmul(x.unsqueeze(-1)).squeeze().item<double>(), -0.5, 0.5);
+    const std::vector<double> s = x.items<double>();
+    clipped_cost += s[0] * s[0] + s[1] * s[1] + 0.1 * u * u;
+    x = (plant.a().matmul(x.unsqueeze(-1)) + plant.b() * u).reshape({2});
+  }
+  out.writeln("closed-loop cost over 120 steps: MPC", mpc_cost, " clipped LQR", clipped_cost);
+  out.writeln("unconstrained optimum x0' P x0  :", lqr.value.select(0, 0).select(0, 0).squeeze().item<double>());
+}
+```
+
+MPC earns its place when the problem has more than an input limit: limits on the states, references that change, and costs that vary along the horizon.
+
+## Limits on the states
+
+A limit on the states cannot be enforced by clipping the input, because it constrains the consequences of the whole input sequence. MPC puts it in the optimisation, so the predictions respect it. The program asks the mass to move from the origin to position 1 but keeps the position at or below `0.8` (the velocity limit is loose). Without the state bound the predicted position reaches `0.81473`; with it, the maximum predicted position is `0.8` to within the solver tolerance.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 0.1, 0, 1}, 2, 2), matrix({0.005, 0.1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 0.1);
+  const pluss::Series q = pluss::series::eye(2, f64);
+  const pluss::Series r = matrix({0.1}, 1, 1);
+  const auto lqr = ctl::dare(plant.a(), plant.b(), q, r);
+  const mpc::Weights weights{.state = q, .input = r, .terminal = lqr.value};
+  const pluss::Series rest = vec({0.0, 0.0});
+  const pluss::Series target = vec({1.0, 0.0});
+
+  mpc::Options options;
+  options.horizon = 20;
+  const auto free = mpc::solve(plant, rest, target, weights, mpc::Bounds{.input_lower = vec({-100.0}), .input_upper = vec({100.0})}, options);
+  out.writeln("no state bound: largest predicted position", free.states.select(1, 0).max().item<double>());
+
+  const mpc::Bounds limited{.input_lower = vec({-100.0}), .input_upper = vec({100.0}), .state_lower = vec({-10.0, -10.0}), .state_upper = vec({0.8, 10.0})};
+  for (const double tolerance : {1e-5, 1e-7, 1e-9}) {
+    options.qp.abs_tol = tolerance;
+    options.qp.rel_tol = tolerance;
+    options.qp.max_iters = 20000;
+    const auto result = mpc::solve(plant, rest, target, weights, limited, options);
+    out.writeln("tolerance", tolerance, " largest predicted position - 0.8 =", result.states.select(1, 0).max().item<double>() - 0.8, " iterations", result.optimization.iterations);
+  }
+}
+```
+
+The unconstrained optimum overshoots the limit by `0.0147`; with the bound, the excess is `0.000089` at the default tolerance of `1e-5`, `0.00000095` at `1e-7` and `0.00000001` at `1e-9`. The price of the tighter tolerance is iterations: `120`, `220` and `320`.
+
+## Solver settings and diagnostics
+
+The quadratic program is solved by an operator-splitting method, which converges to a given tolerance rather than exactly. The `Options::qp` settings are:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `max_iters` | 4000 | the iteration limit; the solve stops there with `converged` false |
+| `abs_tol`, `rel_tol` | `1e-5` | the primal and dual residual tolerances, absolute and relative |
+| `check_every` | 10 | the residuals are tested every this many iterations, which is also the granularity of `iterations` |
+| `adaptive_rho` | true | rebalance the penalty parameter as the solve runs, which usually speeds convergence |
+| `rho`, `sigma`, `alpha` | `0.1`, `1e-6`, `1.6` | the splitting parameters; `rho` is the starting penalty |
+
+After the solve, `result.optimization` reports `converged`, `iterations`, `primal_residual`, `dual_residual` and the `objective`. The program restricts a hard problem to 10 iterations and shows what a failure looks like: `converged` is false and the residuals are large. **A step that did not converge must not be applied blindly**: fall back to the previous plan, or to a simpler controller.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 0.1, 0, 1}, 2, 2), matrix({0.005, 0.1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 0.1);
+  const pluss::Series q = pluss::series::eye(2, f64);
+  const pluss::Series r = matrix({0.1}, 1, 1);
+  const auto lqr = ctl::dare(plant.a(), plant.b(), q, r);
+  const mpc::Weights weights{.state = q, .input = r, .terminal = lqr.value};
+  const mpc::Bounds bounds{.input_lower = vec({-0.5}), .input_upper = vec({0.5})};
+
+  for (const long limit : {10L, 4000L}) {
+    mpc::Options options;
+    options.horizon = 20;
+    options.qp.max_iters = limit;
+    const auto result = mpc::solve(plant, vec({1.0, 0.0}), vec({0.0, 0.0}), weights, bounds, options);
+    out.writeln("max_iters", limit, " converged", result.optimization.converged, " iterations", result.optimization.iterations,
+                " primal residual", result.optimization.primal_residual, " dual residual", result.optimization.dual_residual);
+  }
+}
+```
+
+## Reusing a plan, and warm starts
+
+`build` is the expensive part; the plan can be reused for every state, reference and step. The solver also accepts a **warm start**: the previous result's `optimization.warm()` as a starting point. For a plan the next state is close to the last one, so the previous solution is a good guess. The program solves two consecutive states cold, then warm. On this problem both take the same 40 iterations, because the solver tests convergence every 10 iterations and the first test already succeeds; the warm start pays when the problem needs many more.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 0.1, 0, 1}, 2, 2), matrix({0.005, 0.1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 0.1);
+  const pluss::Series q = pluss::series::eye(2, f64);
+  const pluss::Series r = matrix({0.1}, 1, 1);
+  const auto lqr = ctl::dare(plant.a(), plant.b(), q, r);
+  mpc::Options options;
+  options.horizon = 20;
+  const auto plan = mpc::build(plant, mpc::Weights{.state = q, .input = r, .terminal = lqr.value},
+                               mpc::Bounds{.input_lower = vec({-0.5}), .input_upper = vec({0.5})}, options);
+  const pluss::Series rest = vec({0.0, 0.0});
+
+  const pluss::Series first_state = vec({1.0, 0.0});
+  const auto first = mpc::solve(plan, first_state, rest);
+  const pluss::Series next_state = (plant.a().matmul(first_state.unsqueeze(-1)) + plant.b().matmul(first.control.unsqueeze(-1))).reshape({2});
+  const auto cold = mpc::solve(plan, next_state, rest);
+  const auto warm = mpc::solve(plan, next_state, rest, first.optimization.warm());
+  out.writeln("second step, cold start: iterations", cold.optimization.iterations, " warm start:", warm.optimization.iterations);
+  out.writeln("same first move:", (cold.control - warm.control).abs().max().item<double>() < 1e-4);
+}
+```
+
+## A batch of states
+
+`initial_state` may carry leading batch axes. The solver then solves all the problems at once, and every member of the result gains the same leading axes. The program solves from three states at the same time: the first two start on the positive side of the origin and need negative force, the third starts on the negative side and needs positive force.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 0.1, 0, 1}, 2, 2), matrix({0.005, 0.1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 0.1);
+  const pluss::Series q = pluss::series::eye(2, f64);
+  const pluss::Series r = matrix({0.1}, 1, 1);
+  const auto lqr = ctl::dare(plant.a(), plant.b(), q, r);
+  mpc::Options options;
+  options.horizon = 20;
+  const auto plan = mpc::build(plant, mpc::Weights{.state = q, .input = r, .terminal = lqr.value},
+                               mpc::Bounds{.input_lower = vec({-0.5}), .input_upper = vec({0.5})}, options);
+
+  const pluss::Series starts = matrix({1.0, 0.0, 0.5, 0.0, -1.0, 0.2}, 3, 2);
+  const auto result = mpc::solve(plan, starts, vec({0.0, 0.0}));
+  out.writeln("control shape", result.control.sizes(), " controls shape", result.controls.sizes(), " states shape", result.states.sizes());
+  out.writeln("first moves", result.control.reshape({3}).items<double>());
+}
+```
+
+The first two moves are `-0.5`, pinned at the lower limit, and the third `+0.5`, at the upper limit.
+
+## Decisions
+
+- **How often to re-solve:** every step is the standard; if solving is too slow, solve every few steps and apply the stored sequence `controls` in between.
+- **Tolerance:** the default `1e-5` suits input limits. When a state limit is a hard physical limit, tighten it, or put a margin in the bound.
+- **When to prefer MPC over clipped LQR:** state limits, changing references, limits that vary with time. When the only limit is an input saturation and the plant is well behaved, clipped LQR is comparable.
+
+## Pitfalls
+
+The program makes three mistakes with a receding-horizon controller: expecting a bound to hold exactly, asking for limits that cannot be met from the current state, and running the stored sequence instead of re-measuring.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+namespace mpc = pluss::subsp::eng::control::mpc;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 0.1, 0, 1}, 2, 2), matrix({0.005, 0.1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 0.1);
+  const pluss::Series q = pluss::series::eye(2, f64), r = matrix({0.1}, 1, 1);
+  const auto lqr = ctl::dare(plant.a(), plant.b(), q, r);
+  const mpc::Weights weights{.state = q, .input = r, .terminal = lqr.value};
+  const pluss::Series rest = vec({0.0, 0.0}), target = vec({1.0, 0.0});
+  mpc::Options options;
+  options.horizon = 20;
+
+  // 1. a bound is respected to the solver tolerance, not exactly
+  const mpc::Bounds limited{.input_lower = vec({-100.0}), .input_upper = vec({100.0}), .state_lower = vec({-10.0, -10.0}), .state_upper = vec({0.8, 10.0})};
+  for (const double tolerance : {1e-5, 1e-9}) {
+    options.qp.abs_tol = tolerance;
+    options.qp.rel_tol = tolerance;
+    options.qp.max_iters = 20000;
+    const auto result = mpc::solve(plant, rest, target, weights, limited, options);
+    out.writeln("tolerance ", tolerance, ": largest predicted position - 0.8 = ", result.states.select(1, 0).max().item<double>() - 0.8);
+  }
+  options = mpc::Options{};
+  options.horizon = 20;
+
+  // 2. a state that is already outside its limit, with a small force, has no feasible recovery
+  const mpc::Bounds trapped{.input_lower = vec({-0.5}), .input_upper = vec({0.5}), .state_lower = vec({-10.0, -10.0}), .state_upper = vec({0.8, 10.0})};
+  const auto stuck = mpc::solve(plant, vec({1.5, 2.0}), rest, weights, trapped, options);
+  const auto fine = mpc::solve(plant, vec({0.5, 0.0}), rest, weights, trapped, options);
+  out.writeln("from [1.5, 2.0], position limit 0.8, force limit 0.5: converged ", stuck.optimization.converged, ", primal residual ", stuck.optimization.primal_residual);
+  out.writeln("from [0.5, 0.0] (inside the limit):                   converged ", fine.optimization.converged, ", primal residual ", fine.optimization.primal_residual);
+
+  // 3. model error: the real force gain is 40 percent larger than the model's
+  const mpc::Bounds input_only{.input_lower = vec({-100.0}), .input_upper = vec({100.0})};
+  const auto plan = mpc::build(plant, weights, input_only, options);
+  const auto a = flat(plant.a()), b = flat(plant.b());
+  const auto advance = [&](std::vector<double> x, double u) {
+    return std::vector<double>{a[0] * x[0] + a[1] * x[1] + 1.4 * b[0] * u, a[2] * x[0] + a[3] * x[1] + 1.4 * b[1] * u};
+  };
+  const auto planned = flat(mpc::solve(plan, rest, target).controls);
+  std::vector<double> open_loop{0.0, 0.0}, closed_loop{0.0, 0.0};
+  for (int k = 0; k < 40; ++k) open_loop = advance(open_loop, k < 20 ? planned[k] : 0.0);
+  for (int k = 0; k < 40; ++k) closed_loop = advance(closed_loop, flat(mpc::solve(plan, vec(closed_loop), target).control)[0]);
+  out.writeln("target [1, 0]; after 40 steps, the 20 stored moves and then none: [", open_loop[0], ", ", open_loop[1], "]   re-measuring every step: [", closed_loop[0], ", ", closed_loop[1], "]");
+}
+```
+
+A bound holds to the solver tolerance: with the position limit `0.8` the largest predicted position exceeds it by `0.000089` at the default tolerance of `1e-5`, and by less than `1e-6` at `1e-9`, at the cost of more iterations. A state that is already beyond its limit, `[1.5, 2.0]` with a force limited to `0.5`, cannot be brought back in time: the solver does not converge and the primal residual, `2.580648`, is how far the constraints are violated; from inside the limit, `[0.5, 0.0]`, it converges with a residual of `0.000017`. Soften the limits, or test `converged` and fall back. And the model error does its damage in the stored sequence: with a real force gain `40` percent above the model's, the `20` stored moves followed by none leave the mass at position `1.6835` still moving at `0.2714`, while the controller that re-measures and re-solves every step has it at `0.9692` and `0.0283`, near the target `[1, 0]`.
+
+Reference: [`state`](../../../../api/eng/lti/state/state.md), [`dare`](../../../../api/eng/control/optimal/dare.md).
+
+Where next: the [control reference](../../../../api/eng/control.md) lists every call used in this chapter.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="condensed_mpc.html">
+    <span class="label">Previous</span>
+    <span class="title">The finite-horizon problem</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

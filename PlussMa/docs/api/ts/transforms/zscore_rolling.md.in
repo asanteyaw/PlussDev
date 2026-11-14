@@ -105,3 +105,12 @@ int main() {
 
 - [`rolling_mean`](rolling_mean.md)
 - [`rolling_std`](rolling_std.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rolling_var.html">
+    <span class="label">Previous</span>
+    <span class="title">rolling_var</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -30,7 +30,7 @@ The selected payload follows rank:
 
 Rank—not `numel()`—selects the state. A shape `[1]` Series remains a vector,
 whereas shape `[]` is scalar. This distinction is why `host()` is appropriate
-for generic boundaries and why [`item()`](item.md) and [`pull()`](pull.md) can
+for generic boundaries and why [`item()`](item.md) and [`items()`](items.md) can
 enforce narrower contracts.
 
 For an N-D result, `array().data` is contiguous row-major logical data.
@@ -135,7 +135,7 @@ std::cout << host.array().data[0] << ' '
 ```
 
 The Series dtype is unchanged; the host payload contains `double` values.
-`host()` does not expose a second vector-extraction method: use `pull<double>()`
+`host()` does not expose a second vector-extraction method: use `items<double>()`
 when rank one is part of the contract, and inspect `array().data` when generic
 code is already handling arbitrary rank and metadata.
 
@@ -161,7 +161,7 @@ choosing a conversion type at the call site.
 ## See Also
 
 - [`item()`](item.md): require rank zero and return one native scalar.
-- [`pull()`](pull.md): require rank one and return `std::vector<T>` directly.
+- [`items()`](items.md): require rank one and return `std::vector<T>` directly.
 - [`sizes()`](sizes.md): inspect shape without materializing values.
 - [`strides()`](strides.md): inspect source layout without a host transfer.
 - [`contiguous()`](contiguous.md): produce a dense Series while remaining in

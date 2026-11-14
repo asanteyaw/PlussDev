@@ -6,4 +6,11 @@ Chapters, in reading order:
 - [Integration 2: Beyond One Interval](integration/integration_02_beyond_one_interval.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+integration/integration_01_data_and_functions
+integration/integration_02_beyond_one_interval
+```
 <!-- apiref:toctree:end -->

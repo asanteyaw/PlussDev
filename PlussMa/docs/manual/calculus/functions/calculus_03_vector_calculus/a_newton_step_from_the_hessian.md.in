@@ -34,7 +34,7 @@ int main() {
     const auto det = a.mul(d).sub(b.mul(b));
     const auto dx = d.mul(gx).sub(b.mul(gy)).div(det);   // H^{-1} g, by Cramer's rule
     const auto dy = a.mul(gy).sub(b.mul(gx)).div(det);
-    out.writeln("step", step, " f", rosenbrock({x, y}).pull<double>(), " x", x.pull<double>(), " y", y.pull<double>());
+    out.writeln("step", step, " f", rosenbrock({x, y}).items<double>(), " x", x.items<double>(), " y", y.items<double>());
     x = x.sub(dx);
     y = y.sub(dy);
   }
@@ -47,3 +47,12 @@ The derivatives are exact because they were derived from the formula, not estima
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="batches_and_broadcasting.html">
+    <span class="label">Previous</span>
+    <span class="title">Batches and broadcasting</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

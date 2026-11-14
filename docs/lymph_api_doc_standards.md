@@ -81,8 +81,9 @@ These carry the same weight as the rest of the file.
   `predicted_labels`, `model`, `batch`, or similar names appear, the example
   must show how they were created on the same page unless it is explicitly a
   follow-up example reusing earlier page-local context.
-- Every object and options page must contain several examples whenever the
-  surface has more than one meaningful operation or decision. Cover normal
+- Every object, method, function, and options page must contain at least three
+  practical examples. Add more when overloads, toggles, or materially different
+  behaviors need separate treatment. Cover normal
   use and relevant edge behavior. Most explanation should come from end-to-end
   examples: construct realistic inputs, configure the object, run it, and
   inspect the result. Short follow-up examples are encouraged for individual

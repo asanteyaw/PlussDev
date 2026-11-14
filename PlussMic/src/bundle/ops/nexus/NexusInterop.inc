@@ -75,7 +75,7 @@ pluss::table::Atlas Nexus::to_atlas(pluss::msharp::RangeView::Of<std::string_vie
   out_keys.reserve(owned.size());
   for (const auto& key : owned) {
     const auto it = src.name_to_pos_.find(key);
-    PLUSS_CHECK(it != src.name_to_pos_.end(), "Nexus::to_atlas: unknown key '" + key + "'");
+    PLUSS_CHECK(it != src.name_to_pos_.end(), "Nexus::to_atlas: unknown key '" + key + "'", key, pluss::exception::map_keys(src.name_to_pos_));
     out.push_back(src.frames_[static_cast<std::size_t>(it->second)]);
     out_keys.push_back(key);
   }

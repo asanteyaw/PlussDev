@@ -1,0 +1,55 @@
+# `thermal::source`
+
+Where the properties of a fluid come from.
+
+## Signature
+
+```cpp
+thermal::Origin thermal::source(thermal::Fluid fluid);
+```
+
+## What It Does
+
+Returns the provenance of a fluid: its name, the correlations and published tables it is built from, the state it describes and its range of validity.
+
+## Parameters
+
+`fluid`
+: The fluid.
+
+## Returns
+
+An `Origin`.
+
+## Errors
+
+None: both fluids are always valid.
+
+## Interpretation and Use
+
+Quote the origin in a report: a number from `props` is only as good as its source and its range.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Water.
+
+@@example Eng/api/thermal_source_water.cpp@@
+
+### Example 2
+
+Air.
+
+@@example Eng/api/thermal_source_air.cpp@@
+
+### Example 3
+
+The valid ranges.
+
+@@example Eng/api/thermal_source_range.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

@@ -68,7 +68,7 @@ through them so each is visible:
 ```cpp
 std::cout << pluss::note::print(n) << "\n";  // print(n) -> std::string
 std::cout << n << "\n";                       // operator<< (default options)
-pluss::note::print(std::cout, n) << "\n";     // print(os, n) -> the stream
+the stream pluss::note::print(std::cout, n) << "\n";     // print(os, n)
 ```
 
 `pluss::note::print(n, opt)` takes a `NotePrintOptions` for control over the

@@ -1,0 +1,68 @@
+# `power::DispatchOptions`
+
+Security switch and quadratic-programming controls of `dispatch`.
+
+## Signature
+
+```cpp
+power::DispatchOptions
+```
+
+## What It Does
+
+Controls for `dispatch`: whether line outages must be survived, how the outage factors decide validity, and the options of the quadratic-programming solver.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `secure` | Require every post-outage flow to stay within the ratings, with the same generation before and after the outage. | false |
+| `outage_tolerance` | The validity threshold of `lodf` for the outages. | 1e-10 |
+| `qp` | The options of the quadratic-programming solver: `abs_tol`, `rel_tol`, `max_iters` and others. | solver defaults |
+
+## Returns
+
+A value; validated by `dispatch`.
+
+## Errors
+
+A non-positive or non-finite `outage_tolerance` is rejected.
+
+## Interpretation and Use
+
+The default solver tolerance is about `1e-5`, which is generous for planning. Tighten `qp.abs_tol` and `qp.rel_tol` and raise `qp.max_iters` to compare with an exact value.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Default and tight solver tolerances.
+
+@@example Eng/api/power_dispatch_hand.cpp@@
+
+### Example 2
+
+Security on and off for four ratings.
+
+@@example Eng/api/power_dispatch_square.cpp@@
+
+### Example 3
+
+An outage tolerance that invalidates every outage.
+
+@@example Eng/api/power_dispatch_spur.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GenCost.html">
+    <span class="label">Previous</span>
+    <span class="title">GenCost</span>
+  </a>
+  <a class="next-link" href="DispatchResult.html">
+    <span class="label">Next</span>
+    <span class="title">DispatchResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -6,3 +6,12 @@
 @@example Numerical/interpolation/guide/804_accuracy.cpp@@
 
 The error of linear interpolation of a smooth function falls by a factor of 4 each time the spacing halves: second order, proportional to h² and to the function's curvature. Choose the table spacing from the accuracy you need and the curvature of the quantity; where the function bends more, use closer points there.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="batches_complex_values_and_gradients.html">
+    <span class="label">Previous</span>
+    <span class="title">Batches, complex values and gradients</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

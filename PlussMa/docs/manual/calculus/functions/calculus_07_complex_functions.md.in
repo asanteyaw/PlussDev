@@ -32,4 +32,12 @@ Every program is complete and its output is the output of that program.
 4. `real`, `imag`, `abs` and `angle` return real values stored with a zero imaginary part.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_07_complex_functions/complex_values
+calculus_07_complex_functions/wirtinger_derivatives
+calculus_07_complex_functions/real_parameters_and_integrals
+```
 <!-- apiref:toctree:end -->

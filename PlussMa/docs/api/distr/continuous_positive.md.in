@@ -31,4 +31,32 @@ Families for positive quantities: lifetimes, waiting times, sizes, amplitudes an
 | [`Weibull`](continuous_positive/Weibull.md) | The Weibull distribution: the standard model of lifetimes and failure times, with a hazard that can fall, stay constant or rise. |
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+continuous_positive/Alpha
+continuous_positive/Burr
+continuous_positive/Chi
+continuous_positive/ChiSquare
+continuous_positive/ChiSquareNoncentral
+continuous_positive/Erlang
+continuous_positive/Exponential
+continuous_positive/F
+continuous_positive/FNoncentral
+continuous_positive/Gamma
+continuous_positive/Gig
+continuous_positive/Gompertz
+continuous_positive/InverseGaussian
+continuous_positive/Lognormal
+continuous_positive/Lomax
+continuous_positive/Maxwell
+continuous_positive/Nakagami
+continuous_positive/Pareto
+continuous_positive/Planck
+continuous_positive/Rayleigh
+continuous_positive/Rice
+continuous_positive/Wald
+continuous_positive/Weibull
+```
 <!-- apiref:toctree:end -->

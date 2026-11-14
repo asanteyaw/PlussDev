@@ -20,8 +20,8 @@ Filter a short scalar observation sequence and inspect predicted observations an
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -60,8 +60,8 @@ Run backward smoothing and compare its trajectory with the forward filter.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -104,8 +104,8 @@ Reject a continuous-time filtering model and a singular estimator noise covarian
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {

@@ -81,7 +81,7 @@ auto ct = pluss::kindle::Catalog({
 
 auto first = ct.sample(2, 42);
 auto second = ct.sample(2, 42);
-std::cout << std::boolalpha << (first.at("id").to_string() == second.at("id").to_string());
+std::cout << std::boolalpha << (first.keys("id").to_string() == second.keys("id").to_string());
 ```
 
 ### Output

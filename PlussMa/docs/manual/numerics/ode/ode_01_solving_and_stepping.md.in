@@ -44,4 +44,11 @@ ode::OdeResult ode::fluxa(const ode::OdeFn& f, const Series& y0, double t0, doub
 5. Read `rejected_steps` and `function_evaluations` when judging cost.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ode_01_solving_and_stepping/a_first_solve_and_the_order_of_the_method
+ode_01_solving_and_stepping/letting_the_solver_choose_the_steps
+```
 <!-- apiref:toctree:end -->

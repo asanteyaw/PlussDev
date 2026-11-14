@@ -70,7 +70,7 @@ Inspect and evaluate a continuous PID controller.
 #include <complex>
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -104,7 +104,7 @@ Inspect timebase and rule accessors on a sampled controller.
 #include <complex>
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -147,7 +147,7 @@ See invalid construction rejected before an object exists.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -181,11 +181,6 @@ Output
 uncontrollable plant rejected = eng::control::place: B must have non-zero numerical rank
 negative filter rejected = eng::control::pid: filter must be non-negative
 ```
-
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="PidRule.html">
@@ -198,3 +193,7 @@ negative filter rejected = eng::control::pid: filter must be non-negative
   </a>
 </div>
 <!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

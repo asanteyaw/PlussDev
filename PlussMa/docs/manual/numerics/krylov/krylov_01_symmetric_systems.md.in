@@ -45,4 +45,13 @@ The matrix must be symmetric positive definite. A breakdown means a direction of
 5. For a sparse matrix you hold as triplets, use `linear_operator::coo`.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+krylov_01_symmetric_systems/conjugate_gradients_with_an_operator
+krylov_01_symmetric_systems/preconditioning
+krylov_01_symmetric_systems/batches
+krylov_01_symmetric_systems/a_sparse_matrix_as_an_operator
+```
 <!-- apiref:toctree:end -->

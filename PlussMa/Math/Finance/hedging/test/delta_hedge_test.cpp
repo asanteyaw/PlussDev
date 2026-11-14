@@ -48,7 +48,7 @@ void test_delta_hedge_shapes_and_sanity() {
   const double k = 100.0;
   const Series spot = make_gbm_path_(n, 100.0, r, sigma, t, 20260311ULL, cfg);
 
-  const DeltaHedgeResult out = hedging::delta_hedge(spot, OptionType::Call, k, r, q, t, sigma, cfg);
+  const DeltaHedgeResult out = hedging::detail::delta_hedge(spot, OptionType::Call, k, r, q, t, sigma, cfg);
 
   expect(out.option_value.sizes().size() == 1 && out.option_value.sizes()[0] == n, "option_value shape mismatch");
   expect(out.delta.sizes().size() == 1 && out.delta.sizes()[0] == n, "delta shape mismatch");
@@ -68,11 +68,63 @@ void test_delta_hedge_shapes_and_sanity() {
   expect(std::abs(out.terminal_pnl) < 50.0, "terminal_pnl sanity bound breached");
 }
 
+// A hedge priced with the model's own volatility replicates the option on average: the mean terminal error is zero, with or without dividends, and its
+// spread shrinks like 1 / sqrt(steps). A hedger who ignored the dividends earned on the stock position would lose q * int S Delta dt (about 1.5 here).
+void test_delta_hedge_is_unbiased_with_dividends() {
+  const auto cfg = f64_cpu();
+  const double r = 0.02, q = 0.03, sigma = 0.2, k = 100.0, t = 1.0;
+  const std::int64_t paths = 1200;
+  double spread[2] = {0.0, 0.0};
+  int slot = 0;
+  for (const std::int64_t n : {51, 201}) {
+    double sum = 0.0, sum2 = 0.0;
+    for (std::int64_t i = 0; i < paths; ++i) {
+      const Series spot = make_gbm_path_(n, 100.0, r - q, sigma, t, 1000ULL + static_cast<std::uint64_t>(i), cfg);
+      const double pnl = hedging::detail::delta_hedge(spot, OptionType::Call, k, r, q, t, sigma, cfg).terminal_pnl;
+      sum += pnl;
+      sum2 += pnl * pnl;
+    }
+    const double mean = sum / static_cast<double>(paths);
+    spread[slot] = std::sqrt(sum2 / static_cast<double>(paths) - mean * mean);
+    expect(std::abs(mean) < 4.0 * spread[slot] / std::sqrt(static_cast<double>(paths)), "delta hedge with dividends must be unbiased");
+    ++slot;
+  }
+  expect(spread[1] < 0.65 * spread[0], "hedging error must shrink as the rebalancing gets finer");
+}
+
+// The field-based hedge of a Black-Scholes field is the Black-Scholes hedge; a Heston field (bump-and-reprice delta) must give a finite, near-replicating hedge.
+void test_field_delta_hedge() {
+  namespace fin = pluss::subsp::math::finance;
+  const auto cfg = f64_cpu();
+  const std::int64_t n = 101;
+  const double r = 0.02, q = 0.01, sigma = 0.2, k = 100.0, t = 1.0;
+  const Series spot = make_gbm_path_(n, 100.0, r, sigma, t, 7ULL, cfg);
+  fin::module::Field f{
+      .instrument = fin::instrument::Vanilla{.type = OptionType::Call, .strike = pluss::series::full({1}, k, cfg), .maturity = pluss::series::full({1}, t, cfg)},
+      .market = fin::market::State{.spot = pluss::series::full({1}, 100.0, cfg), .rate = pluss::series::full({1}, r, cfg), .dividend_yield = pluss::series::full({1}, q, cfg)},
+      .model = fin::model::BlackScholes{.volatility = pluss::series::full({1}, sigma, cfg)},
+      .controls = fin::module::Controls{.engine = fin::module::Engine::Analytic},
+  };
+  const auto viaField = hedging::delta_hedge(f, spot, cfg);
+  const auto direct = hedging::detail::delta_hedge(spot, OptionType::Call, k, r, q, t, sigma, cfg);
+  expect(std::abs(viaField.terminal_pnl - direct.terminal_pnl) < 1e-6, "field hedge must match the Black-Scholes hedge");
+  expect((viaField.delta - direct.delta).abs().max().item<double>() < 1e-8, "field delta must match the closed form");
+
+  f.model = fin::model::Heston{.kappa = pluss::series::full({1}, 1.5, cfg), .theta = pluss::series::full({1}, 0.04, cfg),
+                               .sigma = pluss::series::full({1}, 0.30, cfg), .rho = pluss::series::full({1}, -0.70, cfg),
+                               .v0 = pluss::series::full({1}, 0.04, cfg)};
+  f.controls.engine = fin::module::Engine::Cos;
+  const auto heston = hedging::delta_hedge(f, spot, cfg);
+  expect(heston.hedge_error.isfinite().all().item<double>() == 1.0 && std::abs(heston.terminal_pnl) < 15.0, "heston field hedge must be finite and bounded");
+}
+
 } // namespace
 
 int main() {
   try {
     test_delta_hedge_shapes_and_sanity();
+    test_delta_hedge_is_unbiased_with_dividends();
+    test_field_delta_hedge();
     std::cout << "delta_hedge_test passed\n";
     return 0;
   } catch (const std::exception& e) {

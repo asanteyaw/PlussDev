@@ -55,4 +55,10 @@ Leading dimensions of `q`, the bounds, and optionally `P` and `A` are batch dime
 5. Set the tolerances to the accuracy you need; the defaults give about four digits.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+qp_01_quadratic_programs/quadratic_programs
+```
 <!-- apiref:toctree:end -->

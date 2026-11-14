@@ -21,7 +21,7 @@ The interval is divided into `options.steps` equal steps and advanced by the cho
 ## Parameters
 
 `const sde::DriftFn &mu`
-: `(double t, const Series &y, const Series &theta) -> Series`, the drift, shaped like `y`.
+: `Series (double t, const Series &y, const Series &theta)`, the drift, shaped like `y`.
 
 `const sde::DiffusionFn &sigma`
 : The same signature; the diffusion, shaped like `y`, one independent noise per entry.

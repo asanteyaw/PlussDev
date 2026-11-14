@@ -43,4 +43,12 @@ and the quantities specific to the test (degrees of freedom, means, standard err
 5. These tests assume (near) normal data; for small samples that are not, use the rank tests of Chapter 2.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+inference_01_means_and_variances/tests_of_means
+inference_01_means_and_variances/a_known_standard_deviation_and_tests_of_variance
+inference_01_means_and_variances/one_sided_alternatives_and_the_level
+```
 <!-- apiref:toctree:end -->

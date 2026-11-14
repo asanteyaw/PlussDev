@@ -140,22 +140,22 @@ int main() {
   const auto t = pluss::make_series({0.1, 0.2, 0.3}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : d.pdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.pdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : d.logpdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.logpdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : d.cdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.cdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logcdf:";
-  for (double v : d.logcdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.logcdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cgf at t = 0.1 0.2 0.3:";
-  for (double v : d.cgf(t).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.cgf(t).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 
   std::cout << "cumulants 1 to 4:";
@@ -241,3 +241,16 @@ variance of 200000 draws 0.52265 (cumulant(2) = 0.51976)
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Normal.html">
+    <span class="label">Previous</span>
+    <span class="title">Normal</span>
+  </a>
+  <a class="next-link" href="Pareto.html">
+    <span class="label">Next</span>
+    <span class="title">Pareto</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -20,3 +20,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`residuals`](plot_residuals.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="plot_residuals_payload.html">
+    <span class="label">Previous</span>
+    <span class="title">plot_residuals_payload</span>
+  </a>
+  <a class="next-link" href="ResidualPlotPayload.html">
+    <span class="label">Next</span>
+    <span class="title">ResidualPlotPayload</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

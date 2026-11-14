@@ -14,7 +14,7 @@ std::optional<Stream> Catalog::get(std::string_view key) const
 ## What It Does
 
 Fetches the named stream, returning `std::nullopt` instead of throwing if the key is
-missing — the non-throwing counterpart to [`at()`](at.md). Also tolerant of an undefined
+missing — the non-throwing counterpart to [`keys(key)`](keys.md). Also tolerant of an undefined
 catalog: calling `get()` on one returns `std::nullopt` rather than throwing
 `"Catalog: undefined handle"`, unlike almost every other `Catalog` method.
 
@@ -58,7 +58,7 @@ std::cout << std::boolalpha << out.has_value();
 true
 ```
 
-Example 2. A missing key returns `std::nullopt` — no throw, unlike [`at()`](at.md).
+Example 2. A missing key returns `std::nullopt` — no throw, unlike [`keys(key)`](keys.md).
 
 ```cpp
 auto ct = pluss::kindle::Catalog({
@@ -99,7 +99,7 @@ false
 
 ## See Also
 
-- [`Catalog::at`](at.md): the throwing counterpart — use it when a missing key should be
+- [`Catalog::keys`](keys.md): `keys(key)` is the throwing counterpart — use it when a missing key should be
   treated as an error.
 - [`Catalog::has`](has.md): check presence without fetching the stream at all.
 - [`Catalog::defined`](defined.md): the general undefined-handle check that most other

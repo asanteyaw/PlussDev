@@ -47,11 +47,11 @@ Output
 ```text
 solver          status                    objective   violation   evals
 PatternSearch   ReachedIterationBudget    3.3432      0.0e+00     814
-OrthoMads       Converged                 3.3487      0.0e+00     214
-LtMads          Converged                 3.3534      0.0e+00     271
+OrthoMads       ReachedEvaluationBudget   3.3432      0.0e+00     1000
+LtMads          ReachedEvaluationBudget   3.3431      0.0e+00     1000
 exact objective 3.3431
 ```
-All three return feasible points. The mesh methods use fewer evaluations and stop with `Converged` but end a little above the exact objective (3.3487 and 3.3534 against 3.3431): when the optimum is on a curved boundary, their polls land just inside it. If you need more digits, give the problem more budget, use `PatternSearch`, or enable `MadsAdvanced`'s search step (Chapter 4).
+All three return feasible points that reach the exact objective to four digits (3.3432, 3.3432 and 3.3431 against 3.3431). None ends `Converged`: they are still creeping along the curved boundary in ever smaller steps when they reach their default limits (pattern search 200 iterations, the mesh methods 1000 evaluations). The mesh methods follow a boundary by polling along it as well as around the point, using the constraint values the failed poll has just computed. For more digits, give the problem more budget.
 
 ## Program 5: No feasible point
 
@@ -99,9 +99,18 @@ With a roomy budget the run ends in `InfeasibleStationary`: it reached a point w
 
 ## Decisions and pitfalls
 
-- **Mesh methods end a little above the exact objective on a curved boundary.** Their polls land just inside it; give the problem more evaluations or polish with pattern search if you need more digits.
+- **On a curved boundary a search ends at its budget, not `Converged`.** It is still gaining digits in small steps along the boundary; the point is feasible and accurate to about four digits, and a larger budget buys more.
 - **A returned point after an infeasible solve is the least-violating one, not a solution.** Always read the status and the violation before using it.
 - **An infeasible verdict needs budget.** With the default budget a hopeless problem may end on a budget status; raise it if you suspect infeasibility and want a clear answer.
 - **Mesh methods reject equalities.** They fail with an error rather than ignore them; use pattern search for equalities.
 
 Where next: [Chapter 4](../dfo_04_black_boxes.md) covers black-box functions that fail, cost a lot or return several objectives.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="bounds_and_constraint_types.html">
+    <span class="label">Previous</span>
+    <span class="title">Bounds, inequalities and equalities</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

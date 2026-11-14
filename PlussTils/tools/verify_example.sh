@@ -7,9 +7,10 @@ SRC="$1"
 OUT="$2"
 BUILD="${PLUSSDEV_BUILD:-/Users/yawasante/software/cxx/PlussDev/build-nn-optim-f64}"
 DEV="${PLUSSDEV_ROOT:-/Users/yawasante/software/cxx/PlussDev}"
+SDKROOT="${SDKROOT:-$(xcrun --sdk macosx --show-sdk-path)}"
 /usr/bin/clang++ \
   -DACCELERATE_NEW_LAPACK=1 -DCODEH_ENABLE_DURATION_SURFACE -DCODEH_ENABLE_INDEX_ACCESSOR_SURFACE \
-  -DCODEH_ENABLE_TIMELINE_SURFACE -DFMT_HEADER_ONLY=1 -DPLUSSQIT_HAS_FMT=1 \
+  -DCODEH_ENABLE_TIMELINE_SURFACE \
   -DPLUSSTILS_VIEW_HAVE_GTK_WEBKIT=0 -DPLUSSTILS_VIEW_HAVE_MAC_WEBKIT=1 \
   -DPLUSSTILS_VIEW_HAVE_WIN_WEBVIEW2=0 -DPLUSSTILS_VIEW_HAVE_X11_SHELL=0 \
   -DPLUSS_HAS_ACCELERATE=1 -DPLUSS_HAS_CUDA=0 -DPLUSS_HAS_MPS=1 \
@@ -19,12 +20,11 @@ DEV="${PLUSSDEV_ROOT:-/Users/yawasante/software/cxx/PlussDev}"
   -I"$DEV/PlussMa/include" -I"$DEV/PlussMa/Math/Numerical/optimization" \
   -I"$BUILD/generated" \
   -I"$DEV/PlussQit/include" -I"$DEV/PlussQit/src" \
-  -I"$DEV/PlussQit/../ExLibs/fmt/include" \
   -I"$DEV/PlussMic" \
   -I"$DEV/PlussTils/src/PlussBI/../../include" -I"$DEV/PlussTils/src/PlussBI/../../third_party/httplib" \
   -isystem /Users/yawasante/software/miniconda3/envs/cpp_env/include \
   -O1 -std=c++20 -arch arm64 \
-  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk \
+  -isysroot "$SDKROOT" \
   -mmacosx-version-min=26.6 \
   -o "$OUT" "$SRC" ${PLUSSDEV_EXTRA_SRCS:-} \
   -Wl,-search_paths_first -Wl,-headerpad_max_install_names \

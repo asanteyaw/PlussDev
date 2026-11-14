@@ -1,0 +1,16 @@
+# Signals 3: Frequency Response and Design
+
+A filter is specified by what it does to each frequency. This chapter shows how to measure that response for any filter, and how to design Butterworth and Chebyshev filters of the four band types from a cutoff and an order.
+
+- [Frequency response](signal_03_frequency_response_and_design/frequency_response.md)
+- [IIR design](signal_03_frequency_response_and_design/iir_design.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+signal_03_frequency_response_and_design/frequency_response
+signal_03_frequency_response_and_design/iir_design
+```
+<!-- apiref:toctree:end -->

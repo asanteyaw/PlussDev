@@ -116,7 +116,8 @@ NgarchCore ngarch_core_(const Series& returns, const Ngarch11Params& params, Con
     const Series idx_t = scalar_index_(t, out_cfg);
     const Series ht = variance.select(0, t);
     const Series sig_t = ht.sqrt();
-    const Series mu_t = sig_t.mul(params.lambda).add(params.r).add(ht.mul(0.5));
+    // log-return of the NGARCH-in-mean model: r + lambda sqrt(h) - h / 2 (the convexity term makes exp(R) a martingale when lambda = 0)
+    const Series mu_t = sig_t.mul(params.lambda).add(params.r).sub(ht.mul(0.5));
     const Series z_t = y.select(0, t).sub(mu_t).div(sig_t);
     const Series ll_t = z_t.square().add(ht.log()).add(kLog2Pi).mul(-0.5);
 

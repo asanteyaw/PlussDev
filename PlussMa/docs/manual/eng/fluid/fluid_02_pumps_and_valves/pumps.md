@@ -1,0 +1,247 @@
+<!-- generated from pumps.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Pumps
+
+[Back to Fluid 2: Pumps and Valves](../fluid_02_pumps_and_valves.md)
+
+A pump puts head into the water. Where it sits in the network, how fast it turns and what it is pushing against decide how much water it delivers, and that last point is the whole difficulty: a pump does not deliver a flow you choose, it settles at the flow where its curve meets the demand of the system. This page explains the pump curve and the speed law, finds the operating point of a pump lifting water between two reservoirs and checks it against an independent solution of the curve, sweeps the speed, differentiates the result with respect to the speed, and shows the pump that cannot do its job.
+
+## The mental model
+
+A pump is a link from its suction node to its discharge node. Its **curve** says how much head it adds at a flow `q`:
+
+```{math}
+\text{gain}(q, s) = s^2 H_0 - R \, s^{2-n} \, q^{n} ,
+```
+
+with a shutoff head `H0` (the head at zero flow and unit speed), a resistance `R` and an exponent `n`, all in metres and cubic metres per second, and a relative speed `s` (`1` is the rated speed). The gain falls as the flow rises, from `H0` at closed valve to nothing where the curve meets the axis. The factor `s²` and the exponent `2 - n` on the speed are the affinity laws: head scales with the square of the speed and flow with its first power.
+
+The solver treats the gain as a head loss of `-gain`. The head across a pump is therefore negative loss, which is how `SteadyResult::head_loss` reports it, and a pump has no velocity (it is reported as `0`). Nothing fixes the flow through the pump except the rest of the network: the **operating point** is the flow at which the gain equals the head the water must climb plus the friction it loses on the way.
+
+A pump is one-way. The curve is defined for forward flow only, and if the network would push water backwards through a pump the solve is refused rather than extended to a turbine.
+
+Pumps are described by `Net::pumps`: the `from` and `to` node indices, and `shutoff_head`, `resistance` and `exponent` per pump, and an optional `speed`, which defaults to `1`. Links are numbered pipes first, then pumps, then valves, so in a network with one pipe and one pump the pipe is link `0` and the pump is link `1`.
+
+## Operating point of a pump lifting water
+
+A pump with `H0 = 60` m, `R = 4000` and `n = 2` draws from a reservoir at `10` m and discharges into a pipe, `500` m long and `0.20` m in diameter, that ends in a second reservoir at `40` m. The water has to climb `30` m and overcome the friction of the pipe, so the flow is set where the curve meets that system. The program solves the network at three speeds, and then recovers the same flows independently by bisection on the system curve: the gain minus `30` m minus the pipe's friction loss, computed from the Darcy-Weisbach law and the Swamee-Jain factor.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <iostream>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a pump lifts water from a reservoir at 10 m to a reservoir at 40 m through a 500 m pipe
+static fluid::Net transfer(double speed) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Reservoir};
+  net.nodes.elevation = vec({0.0, 5.0, 0.0});
+  net.nodes.demand = vec({0.0, 0.0, 0.0});
+  net.nodes.head = vec({10.0, 40.0, 40.0});
+  net.pumps.from = {0};
+  net.pumps.to = {1};
+  net.pumps.shutoff_head = vec({60.0});
+  net.pumps.resistance = vec({4000.0});
+  net.pumps.exponent = vec({2.0});
+  net.pumps.speed = vec({speed});
+  net.pipes.from = {1};
+  net.pipes.to = {2};
+  net.pipes.length = vec({500.0});
+  net.pipes.diameter = vec({0.20});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const double kPi = 3.14159265358979323846, nu = 1.0038e-6, g = 9.80665;
+
+  // the system curve: what the pump must supply at flow q, less what it supplies at speed s
+  auto surplus = [&](double q, double s) {
+    const double v = 4.0 * q / (kPi * 0.2 * 0.2), Re = v * 0.2 / nu;
+    const double lg = std::log10(1e-4 / (3.7 * 0.2) + 5.74 / std::pow(Re, 0.9));
+    const double f = 0.25 / (lg * lg);
+    return s * s * 60.0 - 4000.0 * q * q - 30.0 - f * 500.0 / 0.2 * v * v / (2.0 * g);
+  };
+
+  for (double s : {0.8, 1.0, 1.2}) {
+    const auto r = fluid::steady(fluid::network(transfer(s)));
+    double lo = 1e-6, hi = 0.5;
+    for (int i = 0; i < 200; ++i) {
+      const double mid = 0.5 * (lo + hi);
+      (surplus(mid, s) > 0 ? lo : hi) = mid;
+    }
+    out.writeln("speed ", s, ": flow ", flat(r.flow)[0], " m3/s (bisection ", 0.5 * (lo + hi), "), pump gain ", -flat(r.head_loss)[1], " m, pipe loss ", flat(r.head_loss)[0], " m, junction head ", flat(r.head)[1], " m");
+  }
+}
+```
+
+Output
+
+```text
+speed 0.800000: flow 0.036182 m3/s (bisection 0.036182), pump gain 33.163338 m, pipe loss 3.163338 m, junction head 43.163338 m
+speed 1.000000: flow 0.068941 m3/s (bisection 0.068941), pump gain 40.988681 m, pipe loss 10.988681 m, junction head 50.988681 m
+speed 1.200000: flow 0.094797 m3/s (bisection 0.094797), pump gain 50.454030 m, pipe loss 20.454030 m, junction head 60.454030 m
+```
+
+At full speed the pump delivers `0.068941` m³/s and adds `40.988681` m: `30` m of lift and `10.988681` m of friction. Running it at `0.8` of the speed cuts the flow nearly in half, to `0.036182`, and at `1.2` it rises to `0.094797`, and each flow equals the independent bisection to every printed digit. The junction on the discharge side sits at `50.99` m at full speed: it is not the reservoir's `40` m, because the pipe's friction loss is what the pump head has to overcome on top of it. The flow responds to the speed much more than the speed alone suggests, since the head available grows with its square.
+
+## A pump feeding a demand
+
+When a pump feeds a junction with a fixed demand the flow is no longer the pump's to settle: it is the demand, and the pump adjusts the head. The same pump, delivering `0.03` m³/s to a junction through the same pipe, now shows the affinity law instead. The program solves it at four speeds, checks the gain against `s² H0 - R q²` evaluated at the solved flow, and asks for the derivative of the junction head with respect to the pump speed, which it compares with a finite difference.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a low reservoir (head 10 m), a pump, a pipe, and a junction at 30 m elevation that draws q
+static fluid::Net lift(double q, double speed) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0, 30.0});
+  net.nodes.demand = vec({0.0, 0.0, q});
+  net.nodes.head = vec({10.0, 40.0, 40.0});
+  net.pumps.from = {0};
+  net.pumps.to = {1};
+  net.pumps.shutoff_head = vec({60.0});
+  net.pumps.resistance = vec({4000.0});
+  net.pumps.exponent = vec({2.0});
+  net.pumps.speed = vec({speed});
+  net.pipes.from = {1};
+  net.pipes.to = {2};
+  net.pipes.length = vec({500.0});
+  net.pipes.diameter = vec({0.20});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const auto r = fluid::steady(fluid::network(lift(0.03, 1.0)));
+  const auto head = flat(r.head), flow = flat(r.flow), loss = flat(r.head_loss);
+  out.writeln("flow in the pipe and the pump ", flow, ", pump head loss ", loss[1], " m, pump velocity ", flat(r.velocity)[1]);
+  out.writeln("pump curve at the solved flow: 60 - 4000 q^2 = ", 60.0 - 4000.0 * flow[1] * flow[1], ", head across the pump ", head[1] - head[0]);
+
+  for (double s : {0.6, 0.8, 1.0, 1.2}) {
+    const auto rs = fluid::steady(fluid::network(lift(0.03, s)));
+    const double q = flat(rs.flow)[1];
+    out.writeln("speed ", s, ": gain ", -flat(rs.head_loss)[1], ", s^2 H0 - R q^2 = ", s * s * 60.0 - 4000.0 * q * q, ", junction head ", flat(rs.head)[2]);
+  }
+
+  auto net = lift(0.03, 1.0);
+  net.pumps.speed.tracks_slope_(true);
+  const auto tracked = fluid::steady(fluid::network(net));
+  tracked.head.select(-1, 2).reverse();
+  const double numeric = (flat(fluid::steady(fluid::network(lift(0.03, 1.0 + 1e-6))).head)[2] - flat(fluid::steady(fluid::network(lift(0.03, 1.0 - 1e-6))).head)[2]) / 2e-6;
+  out.writeln("d junction head / d speed ", flat(net.pumps.speed.sensitivity())[0], ", finite difference ", numeric);
+}
+```
+
+Output
+
+```text
+flow in the pipe and the pump [0.030000, 0.030000], pump head loss -56.400000 m, pump velocity 0.000000
+pump curve at the solved flow: 60 - 4000 q^2 = 56.400000, head across the pump 56.400000
+speed 0.600000: gain 18.000000, s^2 H0 - R q^2 = 18.000000, junction head 25.789243
+speed 0.800000: gain 34.800000, s^2 H0 - R q^2 = 34.800000, junction head 42.589243
+speed 1.000000: gain 56.400000, s^2 H0 - R q^2 = 56.400000, junction head 64.189243
+speed 1.200000: gain 82.800000, s^2 H0 - R q^2 = 82.800000, junction head 90.589243
+d junction head / d speed 120.000000, finite difference 120.000000
+```
+
+The flow is `0.03` m³/s in both links, fixed by the demand, and the pump adds `56.4` m: exactly `60 - 4000 × 0.03² = 56.4`, with the head across the pump equal to it. The gain follows the affinity law at every speed, `18.0` m at `0.6` and `82.8` m at `1.2`, and the junction head follows it up from `25.79` m to `90.59` m. At unit speed the head rises `120` m per unit of relative speed, `2 H0 s` at `s = 1`, because the flow through the pump does not change with the speed here, and the derivative agrees with the finite difference.
+
+## Decisions
+
+- **Fix the flow or fix the head.** A demand fixes the flow, and the pump's job is then to supply the head: its gain is whatever the curve gives at that flow. A reservoir on each side fixes the head, and the pump finds its flow. Describe the system you have.
+- **The curve.** Take two or three points of the manufacturer's curve and fit `H0`, `R` and `n`. The exponent is positive; `2` is the common choice and gives a parabolic curve.
+- **Speed.** Set `speed` for a variable-speed drive, and use a batch of speeds to sweep a duty range, as in [Scenarios and sensitivities](../fluid_01_pipe_networks/scenarios_and_sensitivities.md). Changing the speed during a simulation is done with schedules and controls, in [Fluid 3](../fluid_03_storage_and_operation.md).
+
+## Pitfalls
+
+The mistake is to ask a pump for more than its curve allows. At half speed the pump of the transfer above cannot reach the `30` m that the water has to climb, because `0.5² × 60 = 15` m. The solver would have to push water backwards through the pump to find a balance, and it refuses.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+static fluid::Net transfer(double speed) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Reservoir};
+  net.nodes.elevation = vec({0.0, 5.0, 0.0});
+  net.nodes.demand = vec({0.0, 0.0, 0.0});
+  net.nodes.head = vec({10.0, 40.0, 40.0});
+  net.pumps.from = {0};
+  net.pumps.to = {1};
+  net.pumps.shutoff_head = vec({60.0});
+  net.pumps.resistance = vec({4000.0});
+  net.pumps.exponent = vec({2.0});
+  net.pumps.speed = vec({speed});
+  net.pipes.from = {1};
+  net.pipes.to = {2};
+  net.pipes.length = vec({500.0});
+  net.pipes.diameter = vec({0.20});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  for (double speed : {0.8, 0.6, 0.5}) {
+    try {
+      const auto r = fluid::steady(fluid::network(transfer(speed)));
+      std::cout << "speed " << speed << ": solved, flow " << r.flow.reshape({r.flow.numel()}).items<double>()[0] << "\n";
+    } catch (const std::exception &e) {
+      std::cout << "speed " << speed << ": " << e.what() << "\n";
+    }
+  }
+}
+```
+
+Output
+
+```text
+speed 0.8: solved, flow 0.0361824
+speed 0.6: eng::fluid::steady: an active pump requires reverse flow
+speed 0.5: eng::fluid::steady: an active pump requires reverse flow
+```
+
+A speed of `0.8` is above the minimum and solves; below it the answer would be a flow that runs backwards, and the error says so. The boundary is where the shutoff head `s² H0` falls to the static lift of `30` m, a speed of `0.707`. Read the message as "this pump, at this speed, cannot deliver against this lift": raise the speed, choose a larger pump, or lower the lift.
+
+Reference: [`Pumps`](../../../../api/eng/fluid/model/Pumps.md), [`steady`](../../../../api/eng/fluid/steady/steady.md), [`SteadyResult`](../../../../api/eng/fluid/steady/SteadyResult.md), [`network`](../../../../api/eng/fluid/model/network_fn.md).
+
+Where next: [Control valves](control_valves.md) adds the device that takes head out of the water on purpose.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="control_valves.html">
+    <span class="label">Next</span>
+    <span class="title">Control valves</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

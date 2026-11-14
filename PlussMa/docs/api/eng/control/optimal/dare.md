@@ -71,8 +71,8 @@ Solve `dare` directly and verify parity with discrete `lqr`.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -110,7 +110,7 @@ Contrast the continuous cross-cost convention shared by the Riccati family.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -148,7 +148,7 @@ Review cost-matrix validation that also governs discrete synthesis.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {

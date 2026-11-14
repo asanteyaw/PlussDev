@@ -1,0 +1,73 @@
+# `power::estimate`
+
+Weighted least-squares state estimation from redundant measurements.
+
+## Signature
+
+```cpp
+power::EstimateResult power::estimate(const power::Grid& grid, const power::Measurements& measurements, const power::EstimateOptions& options = {});
+```
+
+## What It Does
+
+Finds the bus voltages that minimise `J(x) = sum(((z_i - h_i(x)) / sigma_i)^2)` over the measurements by Gauss-Newton iteration, with a fraction-to-boundary limiter on the step. The unknowns are the angles of every bus but the reference and every magnitude.
+
+## Parameters
+
+`grid`
+: The compiled network.
+
+`measurements`
+: The measurement set.
+
+`options`
+: Tolerance, budget and observability threshold.
+
+## Returns
+
+An `EstimateResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for fewer measurements than the `2n - 1` unknowns, non-positive standard deviations, an index outside its family, or an unobservable measurement set.
+
+## Interpretation and Use
+
+Use redundancy: more measurements than unknowns lets the covariance shrink and the residuals expose bad data. Read `objective` and `normalized_residual` after every estimate.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Ten measurements of a three-bus network.
+
+@@example Eng/api/power_est_state.cpp@@
+
+### Example 2
+
+Detecting a gross error.
+
+@@example Eng/api/power_est_residuals.cpp@@
+
+### Example 3
+
+Options.
+
+@@example Eng/api/power_est_options.cpp@@
+
+### Example 4
+
+Refused and misleading inputs.
+
+@@example Eng/api/power_est_pitfalls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="EstimateResult.html">
+    <span class="label">Previous</span>
+    <span class="title">EstimateResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

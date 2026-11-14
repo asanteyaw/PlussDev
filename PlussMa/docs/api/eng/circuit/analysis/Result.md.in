@@ -1,0 +1,98 @@
+# `circuit::Result`
+
+Voltages and currents of an operating point, an AC response or a transient run.
+
+## Signature
+
+```cpp
+circuit::Result
+```
+
+## What It Does
+
+The result of `op`, `ac` and `tran`. For `ac` the arrays are complex phasors and gain a frequency axis immediately before the final element axis: `[..., frequency, nodes]`. For `tran` they are real and gain a time axis in the same place: `[..., time, nodes]`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `voltage` | Node voltages, `[..., nodes]`; the entry for node `0` is zero. |  |
+| `source_current` | Current through each voltage source, positive to negative; a delivering source has a negative current. |  |
+| `inductor_current` | Current through each inductor, positive to negative. |  |
+| `vccs_current` | Current each VCCS carries, positive to negative. |  |
+| `vcvs_current` | Current through each VCVS, positive to negative. |  |
+| `amp_current` | Current each op amp supplies from its output node to its reference node. |  |
+| `diode_current` | Current through each diode from anode to cathode, `[..., diodes]`. |  |
+| `collector_current` | Current into the collector terminal of each transistor, `[..., transistors]`. |  |
+| `base_current` | Current into the base terminal of each transistor, `[..., transistors]`; the emitter current is `-(collector + base)`. |  |
+| `drain_current` | Current into the drain terminal of each MOSFET, `[..., mosfets]`. |  |
+| `iterations` | The Newton iterations used, as an `Int64` vector: `[1]` for `op`, `[time]` for `tran`; zero for a circuit without devices. |  |
+| `refinements` | The sub-steps a `tran` sample needed where its step was subdivided, an `Int64` vector `[time]`; zero elsewhere and for circuits without devices. |  |
+| `residual` | The largest error of the solved equations, per circuit (per frequency for `ac`, per time sample for `tran`). |  |
+
+## Returns
+
+Returned by `op`, `ac` and `tran`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+A group with no elements gives an axis of length zero. Read `residual` as a check on the solution.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of a divider.
+
+@@example Eng/api/circuit_dc_divider.cpp@@
+
+### Example 2
+
+Phasors of an RC low-pass.
+
+@@example Eng/api/circuit_rc.cpp@@
+
+### Example 3
+
+Power balance from the result.
+
+@@example Eng/api/circuit_power_balance.cpp@@
+
+### Example 4
+
+The shape of every field of a transient result.
+
+@@example Eng/api/circuit_tran_all_elements.cpp@@
+
+### Example 5
+
+The device fields of a diode circuit.
+
+@@example Eng/api/circuit_diode_divider.cpp@@
+
+### Example 6
+
+The device fields of a transistor stage.
+
+@@example Eng/api/circuit_transistor_bias.cpp@@
+
+### Example 7
+
+The device fields of a MOSFET stage.
+
+@@example Eng/api/circuit_mosfet_bias.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="op.html">
+    <span class="label">Next</span>
+    <span class="title">op</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

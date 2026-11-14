@@ -81,16 +81,16 @@ int main() {
   const std::vector<double> params = {5.0, 10.0};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::F, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::F, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::F, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::F, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::F, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::F, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -130,7 +130,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::F, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({0.5, 4.0}, f64);
-  const auto c = distr::cdf(dst::F, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::F, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::F, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 0.5).to(pluss::ScalarType::Float64) * (draws <= 4.0).to(pluss::ScalarType::Float64)).mean());
@@ -171,16 +171,16 @@ int main() {
   const auto x = pluss::make_series({0.25, 0.5, 1.0, 2.0, 4.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "df2 5  :";
-  for (double v : distr::pdf(dst::F, x, {5.0, 5.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::F, x, {5.0, 5.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "df2 10 :";
-  for (double v : distr::pdf(dst::F, x, {5.0, 10.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::F, x, {5.0, 10.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "df2 100:";
-  for (double v : distr::pdf(dst::F, x, {5.0, 100.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::F, x, {5.0, 100.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -203,3 +203,16 @@ Read down the rows: `df2 5` peaks on this grid at x = 0.5 (value 0.6323); `df2 1
 - [`FNoncentral`](../continuous_positive/FNoncentral.md)
 - [`Beta`](../continuous_bounded/Beta.md)
 - [`distr::FDistribution`](../object_based/FDistribution.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Exponential.html">
+    <span class="label">Previous</span>
+    <span class="title">Exponential</span>
+  </a>
+  <a class="next-link" href="FNoncentral.html">
+    <span class="label">Next</span>
+    <span class="title">FNoncentral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

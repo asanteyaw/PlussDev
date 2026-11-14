@@ -1,0 +1,98 @@
+# `circuit::op`
+
+Solves the DC operating point of a circuit.
+
+## Signature
+
+```cpp
+circuit::Result circuit::op(const circuit::Circuit& circuit, const circuit::SolveOptions& options = {});
+```
+
+## What It Does
+
+Solves the DC equations: capacitors are open circuits and inductors are ideal shorts. A circuit of resistors, controlled sources and ideal sources is solved in one linear solve for all members of a batch. A circuit with diodes or transistors is solved by Newton iteration from a start with every voltage at zero: each iteration solves the circuit linearised about the previous junction voltages, with the change of each junction voltage limited so the exponential cannot overflow, until the update is below `options.tolerance`; a failed solve is retried with gmin stepping and source stepping. A batch iterates together until every member has converged.
+
+## Parameters
+
+`circuit`
+: The compiled circuit.
+
+`options`
+: The controls of the Newton iteration; see `SolveOptions`. Circuits without diodes or transistors ignore them.
+
+## Returns
+
+A `Result` of real arrays. For a circuit with devices, `diode_current`, `collector_current` and `base_current` carry the device currents and `iterations` holds the number of Newton iterations, `[1]`; `residual` is the largest error of the nonlinear circuit equations, evaluated with the exact device currents. A circuit without devices has zero-width device arrays and `iterations` is zero.
+
+## Errors
+
+Throws `pluss::Error` when the equations are singular: the message names a node with no path to ground and a loop of ideal voltage sources and inductors, or two sources fixing the same voltage; for a circuit with devices, throws when the Newton iteration does not converge within `options.max_iterations` even with the fallbacks, when a device carries more than `options.max_current`, and for an invalid control.
+
+## Interpretation and Use
+
+Check the power balance, `residual`, and a hand value for a sub-circuit. The bias point of a circuit with devices is the starting point of `ac` around it. `residual` is absolute: read it against the size of the currents. A device current above `options.max_current` is refused: an ideal source directly across a junction has nothing to limit its current.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A divider and its result.
+
+@@example Eng/api/circuit_dc_divider.cpp@@
+
+### Example 2
+
+A bridge, current sources and an op amp.
+
+@@example Eng/api/circuit_bridge.cpp@@
+
+### Example 3
+
+Singular circuits.
+
+@@example Eng/api/circuit_singular.cpp@@
+
+### Example 4
+
+A diode behind a resistor.
+
+@@example Eng/api/circuit_diode_divider.cpp@@
+
+### Example 5
+
+A transistor stage.
+
+@@example Eng/api/circuit_transistor_bias.cpp@@
+
+### Example 6
+
+Controls of the iteration and the iteration count they produce.
+
+@@example Eng/api/circuit_solver_iterations.cpp@@
+
+### Example 7
+
+A swept source solved as a batch.
+
+@@example Eng/api/circuit_diode_curve.cpp@@
+
+### Example 8
+
+An iteration that cannot converge, and invalid controls.
+
+@@example Eng/api/circuit_solver_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Result.html">
+    <span class="label">Previous</span>
+    <span class="title">Result</span>
+  </a>
+  <a class="next-link" href="ac.html">
+    <span class="label">Next</span>
+    <span class="title">ac</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -55,3 +55,16 @@ implicit midpoint (GMRES) 352       7           1.03e-05
 explicit RK45             30276     764         5.16e-15
 ```
 The explicit method is stable only for steps below about 3e-5 here, so it needs about 30,000 steps; the implicit method steps by the accuracy of the slow mode and needs about 350, nearly a hundred times fewer. The price is accuracy per step: the implicit midpoint rule is second order, and its final error (1e-5) is larger than the explicit run's. Use it for systems that are linear in the state and stiff; for a nonlinear stiff problem, linearise or choose the step budget accordingly.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="stopping_at_an_event.html">
+    <span class="label">Previous</span>
+    <span class="title">Stopping at an event</span>
+  </a>
+  <a class="next-link" href="gradients_through_a_solve.html">
+    <span class="label">Next</span>
+    <span class="title">Gradients through a solve</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

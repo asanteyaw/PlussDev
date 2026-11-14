@@ -166,3 +166,16 @@ step 3  var0 0.516  var1 0.747  cov 0.380
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MvGarch.html">
+    <span class="label">Previous</span>
+    <span class="title">MvGarch</span>
+  </a>
+  <a class="next-link" href="MvGarchOptions.html">
+    <span class="label">Next</span>
+    <span class="title">MvGarchOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

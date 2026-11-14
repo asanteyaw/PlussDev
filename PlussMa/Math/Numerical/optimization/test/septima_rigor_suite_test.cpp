@@ -241,7 +241,7 @@ int main() {
     const Series target = make_vec({1.0, -2.0}, cfg);
     SeptimaSolveOptions opts = make_base_options();
     opts.max_iterations = 80;
-    opts.progress_hook = [](const pluss::subsp::math::optim::SeptimaProgressSnapshot& s) { return s.iteration < 7; };
+    opts.progress_hook = [](const pluss::subsp::math::optim::SeptimaProgressSnapshot& s) { return s.iteration >= 7; };
 
     const auto fit = pluss::subsp::math::optim::septima(
         [target](const Series& x) -> Series { return ((x - target).square()).sum() * 0.5; },

@@ -1,12 +1,11 @@
 #include "pattern_search_minimizer.h"
 
+#include <pluss/tils/kit/output.h>
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <deque>
-#if __has_include(<fmt/format.h>)
-#include <fmt/format.h>
-#endif
 #include <iostream>
 #include <limits>
 #include <numeric>
@@ -1455,8 +1454,7 @@ std::string iter_line(
     double cv,
     double mesh,
     std::string_view phase) {
-#if __has_include(<fmt/format.h>)
-  return fmt::format(
+  return pluss::tils::OutputEngine::format(
       "iter={} evals={} f={:.6g} merit={:.6g} cv={:.3g} mesh={:.3g} step={}",
       iter,
       evals,
@@ -1465,17 +1463,6 @@ std::string iter_line(
       cv,
       mesh,
       phase);
-#else
-  std::ostringstream oss;
-  oss << "iter=" << iter
-      << " evals=" << evals
-      << " f=" << f
-      << " merit=" << merit
-      << " cv=" << cv
-      << " mesh=" << mesh
-      << " step=" << phase;
-  return oss.str();
-#endif
 }
 
 void maybe_print_iteration(
@@ -2027,7 +2014,13 @@ PSOutcome pattern_search_minimizer(
       }
       if (config.constraint_policy == PSConstraintPolicy::MeritPenalty &&
           incumbent_eval.max_violation > config.constraint_tolerance) {
+        // A larger weight is a different merit function, so the incumbent's merit is recomputed with it (the cache
+        // answers, no new evaluation). Comparing trial merits at the new weight against the incumbent's merit at the
+        // old one made every poll fail and drove the weight to 1e21, stalling at the start whenever initial_penalty
+        // was smaller than the constraint's multiplier.
         penalty *= config.penalty_growth;
+        incumbent_eval = evaluate_candidate(objective, config, setup, bounds, linear, incumbent, penalty, cache_ptr,
+                                            &evaluations, &cache_hits, op);
       }
     }
 

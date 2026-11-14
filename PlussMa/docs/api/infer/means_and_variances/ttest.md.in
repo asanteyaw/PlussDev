@@ -75,7 +75,7 @@ int main() {
   const auto r = hyp::ttest(a, 5.0);
   std::cout << "mean " << r.mean << ", t " << r.stat << " on " << r.dof << " df, p " << r.pvalue << (r.reject ? " (reject)" : " (keep)") << "\n";
   std::cout << "standard error " << r.std_err << ", critical value " << r.critical << ", observations " << r.effective_n << "\n";
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }
 ```
@@ -105,7 +105,7 @@ int main() {
   options.alpha = 0.01;
   const auto r = hyp::ttest(a, 5.0, options);
   std::cout << "t " << r.stat << ", p " << r.pvalue << ", critical " << r.critical << (r.reject ? " (reject)" : " (keep)") << "\n";
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "99% one-sided interval [" << ci[0] << ", " << ci[1] << "]\n";
 }
 ```
@@ -142,4 +142,13 @@ Missing values are dropped, and `effective_n` reports the 6 observations used; t
 - [`ttest_paired`](ttest_paired.md)
 - [`ttest2`](ttest2.md)
 - [`ztest`](ztest.md)
-- [`signrank`](signrank.md)
+- [`signrank`](../ranks_and_signs/signrank.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ttest_paired.html">
+    <span class="label">Next</span>
+    <span class="title">ttest_paired</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

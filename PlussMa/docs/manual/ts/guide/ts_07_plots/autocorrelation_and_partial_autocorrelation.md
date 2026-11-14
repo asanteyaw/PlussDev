@@ -201,3 +201,12 @@ With white noise, a 95% band lets through about one bar in twenty, so the expect
 - **Use the payloads for tables.** The `*_payload` functions return the same numbers without drawing.
 
 Where next: [Plots of the residuals](plots_of_the_residuals.md) applies the same pictures to the output of a fitted model.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="plots_of_the_residuals.html">
+    <span class="label">Next</span>
+    <span class="title">Plots of the residuals</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

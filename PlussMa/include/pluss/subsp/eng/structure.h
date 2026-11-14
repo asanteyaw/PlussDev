@@ -34,8 +34,24 @@ struct Fix {
   Series value{};
 };
 
+namespace detail {
+// Conjugate gradients needs about as many iterations as the stiffness matrix has dimension at worst, and slender or long structures are
+// poorly conditioned, so the structural solvers start from a larger budget than the generic Krylov default.
+inline pluss::subsp::math::krylov::CgOptions structural_cg() {
+  pluss::subsp::math::krylov::CgOptions options;
+  options.max_iterations = 8192;
+  return options;
+}
+} // namespace detail
+
+// Uniform loads along the members, in each member's local axes. Intensities are force per length; either may be left undefined.
+struct MemberLoad {
+  Series transverse{}; // [..., member], along local y (a quarter turn counterclockwise from the member direction)
+  Series axial{};      // [..., member], along local x (from the first node to the second)
+};
+
 struct SolveOptions {
-  pluss::subsp::math::krylov::CgOptions cg{};
+  pluss::subsp::math::krylov::CgOptions cg{detail::structural_cg()};
   bool fail_on_nonconvergence{true};
 };
 
@@ -44,7 +60,7 @@ struct EigOptions {
   std::int64_t max_iterations{64};
   double relative_tolerance{1e-8};
   double absolute_tolerance{1e-10};
-  pluss::subsp::math::krylov::CgOptions solve{};
+  pluss::subsp::math::krylov::CgOptions solve{detail::structural_cg()};
 };
 
 struct MotionState {
@@ -58,7 +74,7 @@ struct MotionOptions {
   double spectral_radius{1.0};
   double mass_damping{0.0};
   double stiffness_damping{0.0};
-  pluss::subsp::math::krylov::CgOptions solve{};
+  pluss::subsp::math::krylov::CgOptions solve{detail::structural_cg()};
   bool fail_on_nonconvergence{true};
 };
 
@@ -79,12 +95,16 @@ struct NonlinearOptions {
   double line_search_shrink{0.5};
   double armijo{1e-4};
   double min_load_step{1e-6};
-  pluss::subsp::math::krylov::CgOptions solve{};
+  pluss::subsp::math::krylov::CgOptions solve{detail::structural_cg()};
   bool fail_on_nonconvergence{true};
 };
 
 struct NonlinearMotionOptions {
-  double spectral_radius{1.0};
+  // Generalized-alpha high-frequency spectral radius in [0, 1]. The default of
+  // 0.9 damps the poorly resolved high modes that large rotations of stiff
+  // members excite; the energy-conserving value of 1 is unconditionally stable
+  // only for linear structures and can diverge here.
+  double spectral_radius{0.9};
   double mass_damping{0.0};
   double stiffness_damping{0.0};
   std::int64_t max_iterations{20};
@@ -93,7 +113,7 @@ struct NonlinearMotionOptions {
   double absolute_tolerance{1e-10};
   double line_search_shrink{0.5};
   double armijo{1e-4};
-  pluss::subsp::math::krylov::CgOptions solve{};
+  pluss::subsp::math::krylov::CgOptions solve{detail::structural_cg()};
   bool fail_on_nonconvergence{true};
 };
 
@@ -258,6 +278,8 @@ private:
   friend Frame frame(const Mesh &, const Sections &);
   friend FrameResult solve(const Frame &, const Series &, const Fix &,
                            const SolveOptions &);
+  friend FrameResult solve(const Frame &, const Series &, const MemberLoad &,
+                           const Fix &, const SolveOptions &);
   friend NonlinearResult solve(const Frame &, const Series &, const Fix &,
                                const NonlinearOptions &);
   friend Series mass(const Frame &, const Series &);
@@ -284,6 +306,13 @@ private:
 
 [[nodiscard]] FrameResult solve(const Frame &frame, const Series &load,
                                 const Fix &fix,
+                                const SolveOptions &options = {});
+
+// Solve a frame carrying uniform member loads as well as nodal loads. The
+// member loads are carried exactly (consistent nodal loads), and `end_force`
+// includes each member's own load, so it is the true action at the member ends.
+[[nodiscard]] FrameResult solve(const Frame &frame, const Series &load,
+                                const MemberLoad &member_load, const Fix &fix,
                                 const SolveOptions &options = {});
 
 // Solve large-displacement, elastic corotational frame equilibrium.

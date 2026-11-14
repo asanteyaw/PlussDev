@@ -88,3 +88,12 @@ I^1/2 exp(x) at 1.3   3.2771820    series  3.2771820
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="vector_variational_and_adjoint.html">
+    <span class="label">Previous</span>
+    <span class="title">Vector, variational and adjoint operators</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

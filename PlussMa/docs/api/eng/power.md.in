@@ -8,6 +8,11 @@ Transmission networks described in per unit, compiled into an immutable grid, an
 |---|---|
 | Describe a network, convert units and compile a grid | [Network model](power/model.md) |
 | DC and AC power flow | [Power flow](power/flow.md) |
+| Power transfer and line outage distribution factors | [Sensitivity and outage factors](power/security.md) |
+| Least-cost generation, with and without security | [Economic dispatch](power/dispatch.md) |
+| Exact AC least-cost operation | [Optimal power flow](power/opf.md) |
+| Voltages from noisy measurements | [State estimation](power/estimation.md) |
+| Voltage collapse and loading margin | [Continuation power flow](power/continuation.md) |
 
 ## Practical Examples
 
@@ -31,14 +36,6 @@ Solve a three-bus network with the AC power flow and check it against its defini
 
 @@example Eng/api/power_ac_solve.cpp@@
 
-```{toctree}
-:maxdepth: 3
-:hidden:
-
-power/model
-power/flow
-```
-
 <!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 3
@@ -46,5 +43,10 @@ power/flow
 
 power/model
 power/flow
+power/security
+power/dispatch
+power/opf
+power/estimation
+power/continuation
 ```
 <!-- apiref:toctree:end -->

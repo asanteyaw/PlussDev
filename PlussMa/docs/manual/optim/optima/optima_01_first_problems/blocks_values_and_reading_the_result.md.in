@@ -63,3 +63,16 @@ The objective must reduce to a single number. Returning a vector of residuals, i
 - **Read the flag, not just the point.** `converged` is true exactly when the exit flag is `Converged`; the next chapter covers what every other flag means.
 
 Where next: [Chapter 2](../optima_02_reading_results.md) reads results in depth: every exit flag, every field of the report, and how to watch a run.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="stating_a_constrained_problem.html">
+    <span class="label">Previous</span>
+    <span class="title">Stating a constrained problem</span>
+  </a>
+  <a class="next-link" href="complex_parameters.html">
+    <span class="label">Next</span>
+    <span class="title">Complex parameters</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

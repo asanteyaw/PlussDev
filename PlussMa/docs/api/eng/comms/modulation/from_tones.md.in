@@ -1,0 +1,61 @@
+# `comms::from_tones`
+
+An OFDM waveform to subcarrier symbols.
+
+## Signature
+
+```cpp
+pluss::Series comms::from_tones(const pluss::Series& signal, std::int64_t fft_size, std::int64_t cyclic_prefix);
+```
+
+## What It Does
+
+Drops the cyclic prefix of every block and takes the unitary FFT of the rest: the inverse of `to_tones`.
+
+## Parameters
+
+`signal`
+: A complex `[..., F * (fft_size + cyclic_prefix)]` waveform.
+
+`fft_size`
+: The number of subcarriers per block.
+
+`cyclic_prefix`
+: The prefix length in samples.
+
+## Returns
+
+A complex `[..., F * fft_size]` array of subcarrier symbols.
+
+## Errors
+
+Throws `pluss::Error` for a signal whose last length is not a whole number of blocks, or an invalid `fft_size` or `cyclic_prefix`.
+
+## Interpretation and Use
+
+After a channel with a short impulse response the result is `H[k] X[k]` for subcarrier `k`; divide by the channel's frequency response (`fft` of the zero-padded impulse response) to equalise.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A round trip.
+
+@@example Eng/api/comms_ofdm_roundtrip.cpp@@
+
+### Example 2
+
+A multipath channel and one-tap equalisation.
+
+@@example Eng/api/comms_ofdm_multipath.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_ofdm_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

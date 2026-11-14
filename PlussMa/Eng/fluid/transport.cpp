@@ -53,7 +53,7 @@ Series matvec(const Series &matrix, const Series &vector) {
       vector_shape_text += std::to_string(size) + ",";
     vector_shape_text += "]";
     throw std::logic_error(
-        "eng::fluid::transport: internal matrix/vector dtype mismatch: " +
+        "eng::fluid route: internal matrix/vector dtype mismatch: " +
         std::string(dtype_of(matrix.scalar_type()).name) + " matrix versus " +
         std::string(dtype_of(vector.scalar_type()).name) + " vector; shapes " +
         matrix_shape + " x " + vector_shape_text);
@@ -63,7 +63,7 @@ Series matvec(const Series &matrix, const Series &vector) {
 
 Series matmul(const Series &left, const Series &right, const char *role) {
   if (left.scalar_type() != right.scalar_type())
-    throw std::logic_error(std::string("eng::fluid::transport: ") + role +
+    throw std::logic_error(std::string("eng::fluid route: ") + role +
                            " dtype mismatch");
   return left.matmul(right);
 }
@@ -76,7 +76,7 @@ Series batch_diag(const Series &vector) {
 
 Series stack0(const std::vector<Series> &values) {
   if (values.empty())
-    throw std::logic_error("eng::fluid::transport: empty trajectory");
+    throw std::logic_error("eng::fluid route: empty trajectory");
   Series out = values.front().unsqueeze(0);
   for (std::size_t index = 1; index < values.size(); ++index)
     out = out.unite({values[index].unsqueeze(0)}, 0);
@@ -85,32 +85,33 @@ Series stack0(const std::vector<Series> &values) {
 
 Series expand_field(const Series &value, const Shape &batch,
                     std::int64_t width, ScalarType dtype, Platform platform,
-                    const char *role, bool required, double fallback) {
+                    const char *operation, const char *role, bool required,
+                    double fallback) {
   if (!value.defined()) {
     if (required)
-      throw std::invalid_argument(std::string("eng::fluid::transport: ") +
+      throw std::invalid_argument(std::string(operation) + ": " +
                                   role + " is required");
     return pluss::series::full(vector_shape(batch, width), fallback,
                                config(dtype, platform));
   }
   if (value.dim() < 1 || value.size(-1) != width ||
       !value.dtype().is_floating())
-    throw std::invalid_argument(std::string("eng::fluid::transport: ") +
+    throw std::invalid_argument(std::string(operation) + ": " +
                                 role + " must be real floating [..., " +
                                 std::to_string(width) + "]");
   if (value.scalar_type() != dtype || value.platform() != platform)
-    throw std::invalid_argument(std::string("eng::fluid::transport: ") +
+    throw std::invalid_argument(std::string(operation) + ": " +
                                 role +
                                 " must share the network dtype and platform");
   if (!value.isfinite().all().item<bool>())
-    throw std::invalid_argument(std::string("eng::fluid::transport: ") +
+    throw std::invalid_argument(std::string(operation) + ": " +
                                 role + " must be finite");
 
   const Shape leading = leading_shape(value);
   if (leading == batch)
     return value;
   if (!leading.empty())
-    throw std::invalid_argument(std::string("eng::fluid::transport: ") +
+    throw std::invalid_argument(std::string(operation) + ": " +
                                 role +
                                 " must be unbatched or match the network batch");
   Shape aligned(batch.size(), 1);
@@ -146,19 +147,36 @@ struct MixState {
 
 namespace detail {
 
+enum class RouteKind { Constituent, Age, Heat };
+
+struct RouteSpec {
+  const char *operation{"eng::fluid::transport"};
+  RouteKind kind{RouteKind::Constituent};
+  Series initial;
+  Series source;
+  Series pipe_rate;
+  Series tank_rate;
+  Series pipe_ambient;
+  Series pipe_ua;
+  Series tank_ambient;
+  Series tank_ua;
+  double cp{4180.0};
+};
+
 struct TransportEngine {
   static TransportResult run(const Network &network, const Schedule &schedule,
-                             const Quality &quality,
-                             const QualityOptions &quality_options,
+                             const RouteSpec &route,
+                             const RouteOptions &route_options,
                              const Options &hydraulic_options) {
-    if (!std::isfinite(quality_options.step) || quality_options.step <= 0.0 ||
-        !std::isfinite(quality_options.courant) ||
-        quality_options.courant <= 0.0 || quality_options.courant > 1.0 ||
-        !std::isfinite(quality_options.flow_tolerance) ||
-        quality_options.flow_tolerance < 0.0 || quality_options.cells <= 0)
+    if (!std::isfinite(route_options.step) || route_options.step <= 0.0 ||
+        !std::isfinite(route_options.courant) ||
+        route_options.courant <= 0.0 || route_options.courant > 1.0 ||
+        !std::isfinite(route_options.flow_tolerance) ||
+        route_options.flow_tolerance < 0.0 || route_options.cells <= 0)
       throw std::invalid_argument(
-          "eng::fluid::transport: quality step, Courant number, flow "
-          "tolerance, and cell count are invalid");
+          std::string(route.operation) +
+          ": route step, Courant number, flow tolerance, and cell count are "
+          "invalid");
 
     const auto dtype = network.dtype_;
     const auto platform = network.head_.platform();
@@ -167,61 +185,60 @@ struct TransportEngine {
     const auto links = network.links();
     const auto pipes = network.pipes_;
     const auto tanks = network.tanks_;
-    const auto cells = quality_options.cells;
+    const auto cells = route_options.cells;
     const auto cfg = config(dtype, platform);
 
-    const bool age = quality.mode == QualityMode::Age;
-    Series node = expand_field(quality.initial, batch, nodes, dtype, platform,
-                               "initial quality", !age, 0.0);
+    const bool age = route.kind == RouteKind::Age;
+    const bool thermal = route.kind == RouteKind::Heat;
+    if (thermal && (!std::isfinite(route.cp) || route.cp <= 0.0))
+      throw std::invalid_argument(
+          std::string(route.operation) + ": cp must be finite and positive");
+
+    Series node = expand_field(route.initial, batch, nodes, dtype, platform,
+                               route.operation,
+                               thermal ? "initial temperature"
+                                       : "initial quality",
+                               !age, 0.0);
     if (!node.ge(0.0).all().item<bool>())
       throw std::invalid_argument(
-          "eng::fluid::transport: initial quality must be nonnegative");
+          std::string(route.operation) +
+          (thermal ? ": initial temperature must be nonnegative"
+                   : ": initial quality must be nonnegative"));
 
     Series source = age
                         ? pluss::series::zeros(vector_shape(batch, nodes), cfg)
-                        : expand_field(quality.source, batch, nodes, dtype,
-                                       platform, "source quality", false, 0.0);
-    if (!age && !quality.source.defined())
+                        : expand_field(route.source, batch, nodes, dtype,
+                                       platform, route.operation,
+                                       thermal ? "source temperature"
+                                               : "source quality",
+                                       false, 0.0);
+    if (!age && !route.source.defined())
       source = node;
     if (!source.ge(0.0).all().item<bool>())
       throw std::invalid_argument(
-          "eng::fluid::transport: source quality must be nonnegative");
-    if (age && (quality.source.defined() || quality.pipe_rate.defined() ||
-                quality.tank_rate.defined()))
+          std::string(route.operation) +
+          (thermal ? ": source temperature must be nonnegative"
+                   : ": source quality must be nonnegative"));
+    if (age && (route.source.defined() || route.pipe_rate.defined() ||
+                route.tank_rate.defined()))
       throw std::invalid_argument(
-          "eng::fluid::transport: Age supplies its zero boundary and unit "
-          "growth law; source and reaction fields are not accepted");
-
-    Series pipe_rate = expand_field(
-        quality.pipe_rate, batch, pipes, dtype, platform, "pipe reaction rate",
-        false, 0.0);
-    if (links > pipes) {
-      const Series device_rate = pluss::series::zeros(
-          vector_shape(batch, links - pipes), cfg);
-      pipe_rate = pipe_rate.unite({device_rate}, -1);
-    }
-    Series tank_rate = expand_field(
-        quality.tank_rate, batch, tanks, dtype, platform, "tank reaction rate",
-        false, 0.0);
+          std::string(route.operation) +
+          ": Age supplies its zero boundary and unit growth law; source and "
+          "reaction fields are not accepted");
 
     std::vector<double> junction_values(static_cast<std::size_t>(nodes), 0.0);
     std::vector<double> reservoir_values(static_cast<std::size_t>(nodes), 0.0);
-    std::vector<double> tank_values(static_cast<std::size_t>(nodes), 0.0);
     for (std::int64_t index = 0; index < nodes; ++index) {
       const auto kind = network.node_kind_[static_cast<std::size_t>(index)];
       junction_values[static_cast<std::size_t>(index)] =
           kind == NodeKind::Junction ? 1.0 : 0.0;
       reservoir_values[static_cast<std::size_t>(index)] =
           kind == NodeKind::Reservoir ? 1.0 : 0.0;
-      tank_values[static_cast<std::size_t>(index)] =
-          kind == NodeKind::Tank ? 1.0 : 0.0;
     }
     const Series junction_mask =
         pluss::series::make(junction_values).to(dtype).to(platform);
     const Series reservoir_mask =
         pluss::series::make(reservoir_values).to(dtype).to(platform);
-    const Series tank_node_mask =
-        pluss::series::make(tank_values).to(dtype).to(platform);
     const Series pipe_mask =
         pluss::series::ones({links}, cfg)
             .sub(network.pump_mask_)
@@ -236,6 +253,59 @@ struct TransportEngine {
     const Series link_volume =
         network.length_.mul(network.diameter_.square()).mul(pi / 4.0).mul(pipe_mask);
     const Series cell_volume = link_volume.div(static_cast<double>(cells));
+
+    Series pipe_rate;
+    Series pipe_equilibrium;
+    Series tank_rate;
+    Series tank_equilibrium;
+    Series tank_ua = pluss::series::zeros(vector_shape(batch, tanks), cfg);
+    if (thermal) {
+      Series physical_ua = expand_field(
+          route.pipe_ua, batch, pipes, dtype, platform, route.operation,
+          "pipe ua", false, 0.0);
+      Series physical_ambient = expand_field(
+          route.pipe_ambient, batch, pipes, dtype, platform, route.operation,
+          "pipe ambient temperature",
+          pipes > 0 && physical_ua.gt(0.0).any().item<bool>(), 0.0);
+      tank_ua = expand_field(route.tank_ua, batch, tanks, dtype, platform,
+                             route.operation, "tank ua", false, 0.0);
+      tank_equilibrium = expand_field(
+          route.tank_ambient, batch, tanks, dtype, platform, route.operation,
+          "tank ambient temperature",
+          tanks > 0 && tank_ua.gt(0.0).any().item<bool>(), 0.0);
+      if (!physical_ua.ge(0.0).all().item<bool>() ||
+          !tank_ua.ge(0.0).all().item<bool>())
+        throw std::invalid_argument(std::string(route.operation) +
+                                    ": ua values must be nonnegative");
+      if (!physical_ambient.ge(0.0).all().item<bool>() ||
+          !tank_equilibrium.ge(0.0).all().item<bool>())
+        throw std::invalid_argument(
+            std::string(route.operation) +
+            ": ambient temperatures must be nonnegative");
+
+      const Series physical_volume = link_volume.slice(-1, 0, pipes);
+      pipe_rate = physical_ua.neg().div(
+          physical_volume.mul(network.liquid_.density * route.cp));
+      pipe_equilibrium = physical_ambient;
+      tank_rate = pluss::series::zeros(vector_shape(batch, tanks), cfg);
+    } else {
+      pipe_rate = expand_field(route.pipe_rate, batch, pipes, dtype, platform,
+                               route.operation, "pipe reaction rate", false,
+                               0.0);
+      pipe_equilibrium = pluss::series::zeros(vector_shape(batch, pipes), cfg);
+      tank_rate = expand_field(route.tank_rate, batch, tanks, dtype, platform,
+                               route.operation, "tank reaction rate", false,
+                               0.0);
+      tank_equilibrium =
+          pluss::series::zeros(vector_shape(batch, tanks), cfg);
+    }
+    if (links > pipes) {
+      const Series device_values = pluss::series::zeros(
+          vector_shape(batch, links - pipes), cfg);
+      pipe_rate = pipe_rate.unite({device_values}, -1);
+      pipe_equilibrium = pipe_equilibrium.unite({device_values}, -1);
+    }
+
     const Series initial_downstream = matvec(to_map, node);
     Series field = repeat_cells(initial_downstream, cells);
     Series tank_quality = matvec(network.tank_pick_, node);
@@ -244,10 +314,11 @@ struct TransportEngine {
                                       network.head_.sub(network.elevation_)));
 
     RunResult hydraulic = fluid::run(network, schedule, hydraulic_options);
-    const auto times = hydraulic.time.pull<double>();
+    const auto times = hydraulic.time.items<double>();
     if (times.empty())
       throw std::logic_error(
-          "eng::fluid::transport: hydraulic run returned no samples");
+          std::string(route.operation) +
+          ": hydraulic run returned no samples");
 
     auto put_tanks = [&](const Series &base, const Series &values) {
       if (tanks == 0)
@@ -292,7 +363,7 @@ struct TransportEngine {
           "reverse device transfer");
       const Series matrix = batch_diag(total).sub(forward.add(reverse));
       const Series active = junction_mask.eq(1.0).logical_and(
-          total.gt(quality_options.flow_tolerance));
+          total.gt(route_options.flow_tolerance));
       const Series system = active.unsqueeze(-1).where(matrix, identity);
       const Series mixed_rhs = pipe_inflow_mass.mul(junction_mask)
                                    .add(injection.mul(source));
@@ -300,7 +371,8 @@ struct TransportEngine {
       const Series rhs = active.where(mixed_rhs, fixed);
       if (system.scalar_type() != rhs.scalar_type())
         throw std::logic_error(
-            "eng::fluid::transport: junction system dtype mismatch");
+            std::string(route.operation) +
+            ": junction system dtype mismatch");
       const Series mixed =
           system.linearalg.lu_solve(rhs.unsqueeze(-1)).squeeze(-1).to(dtype);
       const Series solved_node = fixed_nodes(mixed);
@@ -370,7 +442,7 @@ struct TransportEngine {
             abs_flow, std::numeric_limits<double>::infinity());
         const Series active_pipe =
             pipe_mask.eq(1.0).logical_and(
-                abs_flow.gt(quality_options.flow_tolerance));
+                abs_flow.gt(route_options.flow_tolerance));
         const double pipe_limit =
             active_pipe.where(cell_volume.div(abs_flow.clamp_min(1e-30)), inf)
                 .amin()
@@ -388,31 +460,44 @@ struct TransportEngine {
           const Series tank_inf = pluss::series::full_like(
               tank_out, std::numeric_limits<double>::infinity());
           tank_limit =
-              tank_out.gt(quality_options.flow_tolerance)
+              tank_out.gt(route_options.flow_tolerance)
                   .where(tank_volume.div(tank_out.clamp_min(1e-30)), tank_inf)
                   .amin()
                   .item<double>();
         }
 
-        double dt = std::min(quality_options.step, end - time);
-        dt = std::min(dt, quality_options.courant * pipe_limit);
-        dt = std::min(dt, quality_options.courant * tank_limit);
+        double dt = std::min(route_options.step, end - time);
+        dt = std::min(dt, route_options.courant * pipe_limit);
+        dt = std::min(dt, route_options.courant * tank_limit);
         if (!std::isfinite(dt) || dt <= 0.0)
-          dt = std::min(quality_options.step, end - time);
+          dt = std::min(route_options.step, end - time);
         if (!std::isfinite(dt) || dt <= 0.0)
           throw std::runtime_error(
-              "eng::fluid::transport: quality clock failed to advance");
+              std::string(route.operation) +
+              ": route clock failed to advance");
 
         const Series before =
             inventory(field, cell_volume, tank_quality, tank_volume);
+        Series pipe_step_factor = pluss::series::ones_like(pipe_rate);
         if (age) {
           field = field.add(pipe_mask.unsqueeze(-1).mul(dt));
           if (tanks > 0)
             tank_quality = tank_quality.add(dt);
         } else {
-          field = field.mul(pipe_rate.mul(dt).exp().unsqueeze(-1));
-          if (tanks > 0)
-            tank_quality = tank_quality.mul(tank_rate.mul(dt).exp());
+          pipe_step_factor = pipe_rate.mul(dt).exp();
+          const Series pipe_decay = pipe_step_factor.unsqueeze(-1);
+          field = pipe_equilibrium.unsqueeze(-1).add(
+              field.sub(pipe_equilibrium.unsqueeze(-1)).mul(pipe_decay));
+          if (tanks > 0) {
+            const Series effective_tank_rate =
+                thermal
+                    ? tank_ua.neg().div(tank_volume.clamp_min(1e-30).mul(
+                          network.liquid_.density * route.cp))
+                    : tank_rate;
+            const Series tank_decay = effective_tank_rate.mul(dt).exp();
+            tank_quality = tank_equilibrium.add(
+                tank_quality.sub(tank_equilibrium).mul(tank_decay));
+          }
         }
         node = fixed_nodes(node);
         const Series reacted =
@@ -423,19 +508,25 @@ struct TransportEngine {
         node = state.node;
         const Series boundary = sample_flow.ge(0.0).where(
             matvec(from_map, node), matvec(to_map, node));
+        const Series routed_boundary =
+            age ? boundary.add(pipe_mask.mul(dt))
+                : pipe_equilibrium.add(
+                      boundary.sub(pipe_equilibrium).mul(pipe_step_factor));
+        cumulative_reaction = cumulative_reaction.add(
+            routed_boundary.sub(boundary).mul(abs_flow).mul(dt).sum(-1, false));
         const Series safe_cell = pipe_mask.eq(1.0).where(
             cell_volume, pluss::series::ones_like(cell_volume));
         const Series cfl = abs_flow.mul(dt).div(safe_cell).mul(pipe_mask);
         const Series left =
             cells == 1
-                ? boundary.unsqueeze(-1)
-                : boundary.unsqueeze(-1).unite(
+                ? routed_boundary.unsqueeze(-1)
+                : routed_boundary.unsqueeze(-1).unite(
                       {field.slice(-1, 0, cells - 1)}, -1);
         const Series right =
             cells == 1
-                ? boundary.unsqueeze(-1)
+                ? routed_boundary.unsqueeze(-1)
                 : field.slice(-1, 1, cells).unite(
-                      {boundary.unsqueeze(-1)}, -1);
+                      {routed_boundary.unsqueeze(-1)}, -1);
         const Series forward = field.add(
             left.sub(field).mul(cfl.unsqueeze(-1)));
         const Series reverse = field.add(
@@ -494,10 +585,40 @@ struct TransportEngine {
 
 TransportResult transport(const Network &network, const Schedule &schedule,
                           const Quality &quality,
-                          const QualityOptions &quality_options,
+                          const RouteOptions &route_options,
                           const Options &hydraulic_options) {
-  return detail::TransportEngine::run(network, schedule, quality,
-                                      quality_options, hydraulic_options);
+  detail::RouteSpec route;
+  route.kind = quality.mode == QualityMode::Age
+                   ? detail::RouteKind::Age
+                   : detail::RouteKind::Constituent;
+  route.initial = quality.initial;
+  route.source = quality.source;
+  route.pipe_rate = quality.pipe_rate;
+  route.tank_rate = quality.tank_rate;
+  return detail::TransportEngine::run(network, schedule, route, route_options,
+                                      hydraulic_options);
+}
+
+HeatResult heat(const Network &network, const Schedule &schedule,
+                const Heat &thermal, const RouteOptions &route_options,
+                const Options &hydraulic_options) {
+  detail::RouteSpec route;
+  route.operation = "eng::fluid::heat";
+  route.kind = detail::RouteKind::Heat;
+  route.initial = thermal.initial;
+  route.source = thermal.source;
+  route.pipe_ambient = thermal.ambient;
+  route.pipe_ua = thermal.ua;
+  route.tank_ambient = thermal.tank_ambient;
+  route.tank_ua = thermal.tank_ua;
+  route.cp = thermal.cp;
+  TransportResult routed = detail::TransportEngine::run(
+      network, schedule, route, route_options, hydraulic_options);
+  const double energy_scale = network.liquid().density * thermal.cp;
+  return {std::move(routed.hydraulic), std::move(routed.node),
+          std::move(routed.link), std::move(routed.tank),
+          routed.mass.mul(energy_scale),
+          routed.mass_error.mul(energy_scale)};
 }
 
 } // namespace pluss::subsp::eng::fluid

@@ -43,4 +43,13 @@ All inputs must be finite and on the same platform; violations throw `std::inval
 4. Expect second-order accuracy; halve the spacing for four times the accuracy.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+interp_01_linear/reading_a_table
+interp_01_linear/queries_outside_the_table
+interp_01_linear/batches_complex_values_and_gradients
+interp_01_linear/accuracy
+```
 <!-- apiref:toctree:end -->

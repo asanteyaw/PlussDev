@@ -1,0 +1,64 @@
+# `comms::delay`
+
+A fractional delay of a waveform.
+
+## Signature
+
+```cpp
+pluss::Series comms::delay(const pluss::Series& signal, const pluss::Series& samples);
+```
+
+## What It Does
+
+Delays the signal by `samples` (real, fractional or negative) by multiplying its spectrum by a linear phase. The shift is circular, so a whole-sample delay is an exact rotation of the samples.
+
+## Parameters
+
+`signal`
+: A real or complex `[..., L]` array with `L >= 2`.
+
+`samples`
+: The delay in samples: a scalar, or `[...]` with one delay per frame; finite.
+
+## Returns
+
+An array of the shape and kind of `signal`.
+
+## Errors
+
+Throws `pluss::Error` for a signal that is not a real or complex array, or a `samples` that is not finite real values.
+
+## Interpretation and Use
+
+Pad the ends of a waveform when the circular wrap-around matters. For a band-limited waveform sampled above the Nyquist rate the fractional shift is exact up to the wrap.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Delay and its inverse.
+
+@@example Eng/api/comms_delay_fraction.cpp@@
+
+### Example 2
+
+Removing an estimated delay.
+
+@@example Eng/api/comms_timing_chain.cpp@@
+
+### Example 3
+
+A delay for each frame.
+
+@@example Eng/api/comms_timing_batch.cpp@@
+
+### Example 4
+
+Rejected arguments.
+
+@@example Eng/api/comms_timing_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

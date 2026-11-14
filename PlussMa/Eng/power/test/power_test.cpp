@@ -617,8 +617,8 @@ int main() {
                  std::vector<std::int64_t>{2, 3, 3},
          "state-estimation scenario axes were not retained");
   close(batch_estimate.magnitude,
-        batch_truth.magnitude.flatten().pull<double>(), 3e-9);
-  close(batch_estimate.angle, batch_truth.angle.flatten().pull<double>(),
+        batch_truth.magnitude.flatten().items<double>(), 3e-9);
+  close(batch_estimate.angle, batch_truth.angle.flatten().items<double>(),
         3e-9);
 
   auto tracked_measurements = complete_measurements;
@@ -716,7 +716,7 @@ int main() {
                  std::vector<std::int64_t>{2, batch_trace.points},
          "batched continuation lost scenario or point axes");
   close(batch_trace.magnitude.select(-2, batch_trace.points - 1),
-        batch.magnitude.flatten().pull<double>(), 3e-9);
+        batch.magnitude.flatten().items<double>(), 3e-9);
 
   const auto batch_nose =
       power::trace(power::make(empty_batch), batch_path, nose_options);

@@ -65,7 +65,7 @@ The intended end state is:
 ```text
 Public
   Timeline
-  Timeline::index() -> Timeline::TimelineIndexAccessor
+  Timeline::TimelineIndexAccessor Timeline::index()
 
 Internal
   pluss::codeh::detail::TimeIndexEngine

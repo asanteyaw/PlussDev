@@ -304,6 +304,13 @@ CODEM_API pluss::codem::Series cdf(dst::Kind kind,
                                    const pluss::codem::Series& x,
                                    const pluss::StackArray<pluss::Series>& params);
 
+CODEM_API pluss::codem::Series icdf(dst::Kind kind,
+                                    const pluss::codem::Series& probability,
+                                    std::span<const double> params = {});
+CODEM_API pluss::codem::Series icdf(dst::Kind kind,
+                                    const pluss::codem::Series& probability,
+                                    std::initializer_list<double> params);
+
 CODEM_API pluss::codem::Series logcdf(dst::Kind kind,
                                       const pluss::codem::Series& x,
                                       std::span<const double> params = {});

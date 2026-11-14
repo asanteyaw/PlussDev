@@ -66,8 +66,8 @@ Design a continuous steady-state estimator.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -107,8 +107,8 @@ Reject a singular measurement covariance.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -153,8 +153,8 @@ Contrast the design result with finite-trajectory filtering.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {

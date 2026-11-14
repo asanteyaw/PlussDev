@@ -136,4 +136,17 @@ int main() {
     infinite_time = true;
   }
   expect(infinite_time, "non-finite sample time was accepted");
+
+  // an unstable system has no Gramian; the error says why instead of reporting a singular matrix
+  {
+    bool described = false;
+    try {
+      const auto unstable = lti::state(pluss::series::make({1.0}).reshape({1, 1}), pluss::series::make({1.0}).reshape({1, 1}),
+                                       pluss::series::make({1.0}).reshape({1, 1}), pluss::series::make({0.0}).reshape({1, 1}));
+      (void)lti::gram(unstable, lti::Gram::Reach);
+    } catch (const pluss::Error &error) {
+      described = std::string(error.what()).find("exists only for a stable system") != std::string::npos;
+    }
+    expect(described, "the Gramian of an unstable system was not refused with an explanation");
+  }
 }

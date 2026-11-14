@@ -1,0 +1,71 @@
+# `fluid::Valves`
+
+The kinds, bores, losses and settings of the control valves.
+
+## Signature
+
+```cpp
+fluid::Valves
+```
+
+## What It Does
+
+Describes the valves of a `Net`. Each valve is a link from `from` to `to` whose equation is chosen by its `ValveKind`. A valve never adds head.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `kind` | One `ValveKind` per valve, a plain `std::vector`. | required |
+| `from` | The upstream node index of each valve. | required |
+| `to` | The downstream node index of each valve. | required |
+| `diameter` | The bore, m, `[..., valve]`; it turns the flow into a velocity for the throttle loss. | required |
+| `minor` | The loss coefficient `K` of a throttle valve, `[..., valve]`. | required |
+| `setting` | A flow in m³/s for `Flow`, a pressure head in m for `Reduce` and `Sustain`; unused by `Throttle`, `[..., valve]`. | required |
+
+## Returns
+
+A value; validated by `network` and `steady`.
+
+## Errors
+
+An endpoint outside the node range, a non-positive diameter, and a pressure valve that does not regulate a junction are rejected. A setting the network cannot satisfy is rejected by `steady` with "cannot add head" or "requires reverse flow".
+
+## Interpretation and Use
+
+A reducing valve belongs on the only path into the zone it protects. A sustaining valve needs a junction that has another way to be supplied and a setting above the pressure the junction would have without it. A flow valve needs a setting the head difference can pass.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+All four kinds solved against their equations.
+
+@@example Eng/api/fluid_valves_build.cpp@@
+
+### Example 2
+
+A throttle valve against its loss law.
+
+@@example Eng/api/fluid_valves_throttle.cpp@@
+
+### Example 3
+
+Settings that are refused.
+
+@@example Eng/api/fluid_valves_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Pumps.html">
+    <span class="label">Previous</span>
+    <span class="title">Pumps</span>
+  </a>
+  <a class="next-link" href="Net.html">
+    <span class="label">Next</span>
+    <span class="title">Net</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

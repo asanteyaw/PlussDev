@@ -1,0 +1,471 @@
+<!-- generated from channel_coding.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Channel coding
+
+[Back to Communications 1: Modulation and Detection](../comms_01_modulation.md)
+
+Noise flips bits. A **channel code** adds redundancy before transmission so that the receiver can find and correct the flips. This page encodes with a convolutional code, decodes with the Viterbi algorithm, shows what it corrects, and measures the coding gain against uncoded BPSK.
+
+## The mental model
+
+A **convolutional code** of rate `1 / n` turns every information bit into `n` coded bits, each the parity of the current bit and the previous `constraint_length - 1` bits selected by a generator. `ConvolutionalCode` holds the constraint length `K` and the generators (integers written in octal); the default is the standard rate-1/2, `K = 7` code with generators `0171` and `0133`. `encode` appends `K - 1` zero bits so that the encoder ends in the zero state, which the decoder uses.
+
+`decode` finds the most likely information bits with the **Viterbi algorithm**: it keeps, for every one of the `2^(K - 1)` encoder states, the best path to it so far, and traces back from the zero state at the end. It takes a soft value per coded bit, the **log-likelihood ratio** that `llr` returns (positive favours zero); for hard decisions pass `+1` and `-1`. Soft values carry how sure each bit is and decode considerably better.
+
+## Encoding by hand
+
+The textbook code of constraint length `3` with generators `7` and `5` (octal) turns the input `1 0 1 1` plus its two-bit tail into the pairs `11 10 00 01 01 11`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+static std::vector<std::int64_t> ints_of(const pluss::Series &s) { return s.reshape({s.numel()}).items<std::int64_t>(); }
+
+int main() {
+  OutputEngine out;
+  // the textbook rate-1/2 code of constraint length 3 with generators 7 and 5 (octal)
+  cm::ConvolutionalCode code;
+  code.constraint_length = 3;
+  code.generators = {07, 05};
+  const pluss::Series bits = pluss::series::make(std::vector<std::int64_t>{1, 0, 1, 1});
+  const pluss::Series word = cm::encode(code, bits);
+  out.writeln("information bits", ints_of(bits));
+  out.writeln("codeword (pairs, with the 2-bit zero tail)", ints_of(word), " length", word.sizes());
+  out.writeln("the pairs are 11 10 00 01 01 11");
+}
+```
+
+Output
+
+```text
+information bits [1, 0, 1, 1]
+codeword (pairs, with the 2-bit zero tail) [1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1]  length [12]
+the pairs are 11 10 00 01 01 11
+```
+
+The codeword matches the pairs, `[1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1]`. The default code and a rate-1/3 code follow the same rule.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+static std::vector<std::int64_t> ints_of(const pluss::Series &s) { return s.reshape({s.numel()}).items<std::int64_t>(); }
+
+int main() {
+  OutputEngine out;
+  // the default code is the rate-1/2 constraint-length-7 code with generators 171 and 133 (octal)
+  const cm::ConvolutionalCode code;
+  out.writeln("constraint length", code.constraint_length, " generators 0171 and 0133 octal, stored as", code.generators);
+  const pluss::Series bits = random_bits(2 * 100, 3).reshape({2, 100});
+  const pluss::Series word = cm::encode(code, bits);
+  out.writeln("bits", bits.sizes(), " codeword", word.sizes(), " = (100 + 6) x 2 per frame");
+  // a rate-1/3 code from three generators
+  cm::ConvolutionalCode third;
+  third.constraint_length = 3;
+  third.generators = {07, 07, 05};
+  out.writeln("rate 1/3 codeword length for 100 bits", cm::encode(third, random_bits(100, 1)).sizes());
+}
+```
+
+Output
+
+```text
+constraint length 7  generators 0171 and 0133 octal, stored as [121, 91]
+bits [2, 100]  codeword [2, 212]  = (100 + 6) x 2 per frame
+rate 1/3 codeword length for 100 bits [306]
+```
+
+Frames of `100` bits become `(100 + 6) x 2 = 212` coded bits with the default code and `306` with three generators.
+
+## Decoding
+
+With no noise the decoder returns every bit, for a batch of frames.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+static std::vector<std::int64_t> ints_of(const pluss::Series &s) { return s.reshape({s.numel()}).items<std::int64_t>(); }
+
+static pluss::Series soft_of(const pluss::Series &bits) { return pluss::series::make(std::vector<double>{1.0}).add(bits.to(pluss::ScalarType::Float64).mul(-2.0)); }
+
+int main() {
+  OutputEngine out;
+  // hard decisions are +1 for a zero and -1 for a one
+  const cm::ConvolutionalCode code;
+  const pluss::Series bits = random_bits(2 * 200, 9).reshape({2, 200});
+  const pluss::Series decoded = cm::decode(code, soft_of(cm::encode(code, bits)));
+  out.writeln("decoded", decoded.sizes(), " dtype Int64", decoded.scalar_type() == pluss::ScalarType::Int64);
+  out.writeln("every bit recovered", decoded.sub(bits).abs().amax().item<double>() == 0.0);
+}
+```
+
+Output
+
+```text
+decoded [2, 200]  dtype Int64 true
+every bit recovered true
+```
+
+The code has a free distance of `10`: any `4` scattered errors in the codeword are corrected for certain, and in practice many more, but a long burst defeats it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+static std::vector<std::int64_t> ints_of(const pluss::Series &s) { return s.reshape({s.numel()}).items<std::int64_t>(); }
+
+static pluss::Series soft_of(const pluss::Series &bits) { return pluss::series::make(std::vector<double>{1.0}).add(bits.to(pluss::ScalarType::Float64).mul(-2.0)); }
+
+int main() {
+  OutputEngine out;
+  // the code has free distance 10: isolated bit errors in the codeword are corrected, a burst is not
+  const cm::ConvolutionalCode code;
+  const pluss::Series bits = random_bits(300, 12);
+  const pluss::Series coded = cm::encode(code, bits).to(pluss::ScalarType::Float64);
+  for (int errors : {4, 8, 12}) {
+    std::vector<double> mask(static_cast<std::size_t>(coded.numel()), 0.0);
+    for (int e = 0; e < errors; ++e) mask[static_cast<std::size_t>(40 + 53 * e)] = 1.0;
+    const pluss::Series flipped = coded.sub(pluss::series::make(mask).mul(2.0).mul(coded.sub(0.5)));
+    const pluss::Series decoded = cm::decode(code, soft_of(flipped));
+    out.writeln(errors, "scattered coded-bit errors: information bit errors", cm::ber(bits, decoded).item<double>() * 300.0);
+  }
+  std::vector<double> burst(static_cast<std::size_t>(coded.numel()), 0.0);
+  for (int e = 100; e < 112; ++e) burst[static_cast<std::size_t>(e)] = 1.0;
+  const pluss::Series flipped = coded.sub(pluss::series::make(burst).mul(2.0).mul(coded.sub(0.5)));
+  out.writeln("a burst of 12 adjacent coded bits: information bit errors", cm::ber(bits, cm::decode(code, soft_of(flipped))).item<double>() * 300.0);
+}
+```
+
+Output
+
+```text
+4 scattered coded-bit errors: information bit errors 0
+8 scattered coded-bit errors: information bit errors 0
+12 scattered coded-bit errors: information bit errors 0
+a burst of 12 adjacent coded bits: information bit errors 3
+```
+
+Four, eight and twelve scattered coded-bit errors leave no information-bit errors at all; a burst of twelve adjacent coded bits leaves `3`.
+
+## Coding gain
+
+The program sends `20000` bits over BPSK with and without the code at the same energy per information bit (each coded bit has half the energy per bit, because the rate is one half), and decodes the coded stream from the log-likelihood ratios of `llr`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+static std::vector<std::int64_t> ints_of(const pluss::Series &s) { return s.reshape({s.numel()}).items<std::int64_t>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  // BPSK with the rate-1/2 code against uncoded BPSK at the same Eb/N0 (each coded bit carries half the energy per bit)
+  const cm::ConvolutionalCode code;
+  const cm::Constellation bpsk = cm::psk(2);
+  const pluss::Series bits = random_bits(20000, 5);
+  const pluss::Series sent = cm::encode(code, bits);
+  out.writeln("Eb/N0   uncoded     coded");
+  for (double ebn0 : {2.0, 3.0, 4.0}) {
+    const double n0_coded = cm::n0(ebn0, bpsk) / 0.5;
+    const pluss::Series received = cm::noise(cm::modulate(bpsk, sent), n0_coded, 7);
+    const pluss::Series decoded = cm::decode(code, cm::llr(bpsk, received, n0_coded));
+    const pluss::Series raw = cm::noise(cm::modulate(bpsk, bits), cm::n0(ebn0, bpsk), 8);
+    out.writeln(ebn0, cm::ber(bits, cm::demod(bpsk, raw)).item<double>(), cm::ber(bits, decoded).item<double>());
+  }
+}
+```
+
+Output
+
+```text
+Eb/N0   uncoded     coded
+2.00000 0.03595 0.00625
+3.00000 0.02160 0.00075
+4.00000 0.01150 0.00000
+```
+
+At `3 dB` the uncoded error rate is `2.2 %` and the coded one `0.075 %`, thirty times lower; at `4 dB` the coded stream has no errors in `20000` bits while the uncoded one has `1.2 %`.
+
+## Soft against hard
+
+Hard decisions of the same received symbols throw away the confidence. The soft decoder is far better at the same noise.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+static std::vector<std::int64_t> ints_of(const pluss::Series &s) { return s.reshape({s.numel()}).items<std::int64_t>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  // soft values (log-likelihood ratios) decode better than hard decisions of the same received symbols
+  const cm::ConvolutionalCode code;
+  const cm::Constellation bpsk = cm::psk(2);
+  const pluss::Series bits = random_bits(20000, 15);
+  const double n0 = cm::n0(3.0, bpsk) / 0.5;
+  const pluss::Series received = cm::noise(cm::modulate(bpsk, cm::encode(code, bits)), n0, 16);
+  const pluss::Series soft = cm::decode(code, cm::llr(bpsk, received, n0));
+  const pluss::Series hard_bits = cm::demod(bpsk, received);
+  const pluss::Series hard = cm::decode(code, pluss::series::make(std::vector<double>{1.0}).add(hard_bits.to(pluss::ScalarType::Float64).mul(-2.0)));
+  out.writeln("bit error rate with soft decisions", cm::ber(bits, soft).item<double>(), " with hard decisions", cm::ber(bits, hard).item<double>());
+}
+```
+
+Output
+
+```text
+bit error rate with soft decisions 0.00075  with hard decisions 0.03490
+```
+
+At `3 dB` the soft decoder has `0.075 %` errors against `3.5 %` for the hard one.
+
+## Errors
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+static std::vector<std::int64_t> ints_of(const pluss::Series &s) { return s.reshape({s.numel()}).items<std::int64_t>(); }
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  const pluss::Series bits = random_bits(8, 1);
+  report([&] { (void)cm::encode(cm::ConvolutionalCode{1, {1, 1}}, bits); });
+  report([&] { (void)cm::encode(cm::ConvolutionalCode{3, {07}}, bits); });
+  report([&] { (void)cm::encode(cm::ConvolutionalCode{3, {07, 011}}, bits); });
+  report([&] { (void)cm::encode(cm::ConvolutionalCode{3, {07, 0}}, bits); });
+  report([&] { (void)cm::encode(cm::ConvolutionalCode{}, vec({0, 1, 2})); });
+}
+```
+
+Output
+
+```text
+eng::comms::encode: constraint_length must lie in [2, 12]
+eng::comms::encode: a code needs at least two generators
+eng::comms::encode: every generator must be non-zero and fit in constraint_length bits
+eng::comms::encode: every generator must be non-zero and fit in constraint_length bits
+eng::comms::encode: bits must be zeros and ones
+```
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+static std::vector<std::int64_t> ints_of(const pluss::Series &s) { return s.reshape({s.numel()}).items<std::int64_t>(); }
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  const cm::ConvolutionalCode code;
+  report([&] { (void)cm::decode(code, pluss::series::zeros({5}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64))); });
+  report([&] { (void)cm::decode(code, random_bits(40, 1)); });
+  report([&] { (void)cm::decode(code, pluss::Series{}); });
+  report([&] { (void)cm::decode(cm::ConvolutionalCode{20, {1, 1}}, pluss::series::zeros({40}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64))); });
+}
+```
+
+Output
+
+```text
+eng::comms::decode: soft must be a real [..., (N + constraint_length - 1) * generators] array
+eng::comms::decode: soft must be a real [..., (N + constraint_length - 1) * generators] array
+eng::comms::decode: soft must be a real [..., (N + constraint_length - 1) * generators] array
+eng::comms::decode: constraint_length must lie in [2, 12]
+```
+
+## Decisions
+
+- **A rate-1/2 code for general use:** the default `K = 7`; a longer constraint length corrects more but the decoder's work grows as `2^(K - 1)`.
+- **Soft or hard input:** soft (`llr`) whenever the demapper can supply it.
+- **Frame length:** longer frames amortise the `K - 1` tail bits; frames of a few hundred bits lose a percent or two of rate.
+- **Bursts:** interleave the coded bits (permute them before modulating and back before decoding) so that a burst becomes scattered errors.
+
+## Pitfalls
+
+The program makes three mistakes: decoding with the wrong code, passing bits instead of soft values, and getting the sign of the ratio backwards. The second is caught for you; the other two give plausible numbers and are not.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace cm = pluss::subsp::eng::comms;
+
+static pluss::Series random_bits(std::int64_t n, std::uint64_t seed) {
+  return pluss::series::randn({n}, pluss::ScalarType::Float64, seed).gt(0.0).to(pluss::ScalarType::Int64);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const cm::ConvolutionalCode strong;
+  cm::ConvolutionalCode weak;
+  weak.constraint_length = 3;
+  weak.generators = {07, 05};
+  const cm::Constellation bpsk = cm::psk(2);
+  const pluss::Series bits = random_bits(20000, 5);
+  const double n0 = cm::n0(3.0, bpsk) / 0.5;
+  const pluss::Series received = cm::noise(cm::modulate(bpsk, cm::encode(strong, bits)), n0, 7);
+  const pluss::Series soft = cm::llr(bpsk, received, n0);
+
+  // 1. decoding a K = 7 codeword with the K = 3 trellis: the lengths disagree or the answer is wrong
+  try {
+    (void)cm::decode(weak, soft.slice(-1, 0, 41));
+  } catch (const pluss::Error &e) {
+    out.writeln(e.message());
+  }
+  out.writeln("bit error rate decoding with the right code", cm::ber(bits, cm::decode(strong, soft)).item<double>());
+  out.writeln("bit error rate decoding with the weak code on its own codeword at the same Eb/N0",
+              cm::ber(bits, cm::decode(weak, cm::llr(bpsk, cm::noise(cm::modulate(bpsk, cm::encode(weak, bits)), n0, 7), n0))).item<double>());
+
+  // 2. hard bits (zeros and ones) are not soft values: the decoder refuses them instead of decoding towards zero
+  const pluss::Series hard = cm::demod(bpsk, received).to(pluss::ScalarType::Float64);
+  try {
+    (void)cm::decode(strong, hard);
+  } catch (const pluss::Error &e) {
+    out.writeln(e.message());
+  }
+  // hard decisions are +1 for a zero and -1 for a one
+  const pluss::Series signs = pluss::series::make(std::vector<double>{1.0}).add(hard.mul(-2.0));
+  out.writeln("bit error rate with the decisions as +1 / -1", cm::ber(bits, cm::decode(strong, signs)).item<double>());
+
+  // 3. the sign convention: positive favours zero, so a negated llr decodes the complement
+  out.writeln("bit error rate with the llr negated", cm::ber(bits, cm::decode(strong, soft.neg())).item<double>());
+}
+```
+
+Output
+
+```text
+eng::comms::decode: soft must be a real [..., (N + constraint_length - 1) * generators] array
+bit error rate decoding with the right code 0.00075
+bit error rate decoding with the weak code on its own codeword at the same Eb/N0 0.00405
+eng::comms::decode: every soft value is exactly 0 or 1, which are bits, not log-likelihood ratios; pass the output of llr (positive favours zero) or +1 / -1 for hard decisions
+bit error rate with the decisions as +1 / -1 0.03440
+bit error rate with the llr negated 0.99910
+```
+
+Giving the decoder a codeword of another length than its trellis expects is refused with a message that names the layout. Decoding with the right code gives `0.075 %` errors at `3 dB`, while the weaker `K = 3` code on its own codeword at the same `Eb/N0` gives `0.41 %`. Bits used as soft values are refused (they are not log-likelihood ratios); the hard decisions as `+1` and `-1` decode, but at `3.4 %` errors instead of the `0.075 %` the soft values give. And a negated ratio decodes the complement: `0.999` of the bits are wrong, which nothing can detect.
+
+## Where next
+
+[Synchronisation](synchronisation.md) recovers timing and carrier. Reference pages: [`ConvolutionalCode`](../../../../api/eng/comms/coding/ConvolutionalCode.md), [`encode`](../../../../api/eng/comms/coding/encode.md), [`decode`](../../../../api/eng/comms/coding/decode.md).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ofdm.html">
+    <span class="label">Previous</span>
+    <span class="title">OFDM and multipath</span>
+  </a>
+  <a class="next-link" href="iterative_codes.html">
+    <span class="label">Next</span>
+    <span class="title">LDPC and turbo codes</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

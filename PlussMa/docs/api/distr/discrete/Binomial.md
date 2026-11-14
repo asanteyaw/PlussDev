@@ -81,16 +81,16 @@ int main() {
   const std::vector<double> params = {12.0, 0.35};
 
   std::cout << "x:";
-  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).items<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pmf:";
-  for (double v : distr::pdf(dst::Binomial, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Binomial, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Binomial, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Binomial, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpmf:";
-  for (double v : distr::logpdf(dst::Binomial, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Binomial, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -130,7 +130,7 @@ int main() {
   const double mass_sum = as_f64(distr::pdf(dst::Binomial, grid, params).sum());
 
   const auto edges = pluss::make_series({1.0, 6.0}, f64);
-  const auto c = distr::cdf(dst::Binomial, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Binomial, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Binomial, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 2.0).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean());
@@ -171,16 +171,16 @@ int main() {
   const auto x = pluss::make_series({0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0}, f64);
 
   std::cout << "x:";
-  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).items<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "p 0.1:";
-  for (double v : distr::pdf(dst::Binomial, x, {12.0, 0.1}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Binomial, x, {12.0, 0.1}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "p 0.35:";
-  for (double v : distr::pdf(dst::Binomial, x, {12.0, 0.35}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Binomial, x, {12.0, 0.35}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "p 0.8:";
-  for (double v : distr::pdf(dst::Binomial, x, {12.0, 0.8}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Binomial, x, {12.0, 0.8}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -241,3 +241,16 @@ The two largest differences are 1.11e-16 for the density and 0 for the distribut
 - [`Hypergeometric`](../discrete/Hypergeometric.md)
 - [`Normal`](../continuous_real_line/Normal.md)
 - [`distr::Binomial`](../object_based/Binomial.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Bessel.html">
+    <span class="label">Previous</span>
+    <span class="title">Bessel</span>
+  </a>
+  <a class="next-link" href="Geometric.html">
+    <span class="label">Next</span>
+    <span class="title">Geometric</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

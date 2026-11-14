@@ -104,13 +104,13 @@ int main() {
   const auto x = pluss::make_series({0.0, 0.25, 0.5, 1.0, 1.5, 2.5}, f64);
 
   std::cout << "pdf:";
-  for (double v : d.pdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.pdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : d.cdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.cdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : d.logpdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.logpdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 
   const auto draws = d.sample({200000}, f64, 5ULL);
@@ -232,7 +232,7 @@ int main() {
 
   const distr::Distribution many(dst::Normal, std::vector<pluss::Series>{mean, stddev});
   std::cout << "one object:";
-  for (double v : many.pdf(points).pull<double>()) std::cout << ' ' << v;
+  for (double v : many.pdf(points).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 
   const double means[3] = {0.0, 1.0, 2.0}, sds[3] = {1.0, 2.0, 0.5};
@@ -300,3 +300,16 @@ loglik: -2746.8500   converged: true
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ChiSquare.html">
+    <span class="label">Previous</span>
+    <span class="title">ChiSquare</span>
+  </a>
+  <a class="next-link" href="Exponential.html">
+    <span class="label">Next</span>
+    <span class="title">Exponential</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

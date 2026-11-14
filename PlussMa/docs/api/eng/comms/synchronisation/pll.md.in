@@ -1,0 +1,61 @@
+# `comms::pll`
+
+A phase-locked loop for PSK carriers.
+
+## Signature
+
+```cpp
+comms::CarrierResult comms::pll(const pluss::Series& symbols, std::int64_t order, double loop_bandwidth);
+```
+
+## What It Does
+
+Runs a second-order phase-locked loop (a Costas loop with an M-th power detector) over the symbols: at every symbol the phase error is `arg(y^M) / M` of the corrected symbol `y`, and a proportional-plus-integral filter with damping `1 / sqrt(2)` updates the phase and the frequency. The loop runs over the symbols and is vectorized over the frames.
+
+## Parameters
+
+`symbols`
+: Received PSK symbols at one sample per symbol, a complex `[..., N]` array.
+
+`order`
+: The PSK order: `2`, `4` or `8`.
+
+`loop_bandwidth`
+: The normalised noise bandwidth of the loop, in `(0, 0.5)`; about `0.005` to `0.05` of the symbol rate is typical.
+
+## Returns
+
+A `CarrierResult` with the corrected symbols and the tracked phase.
+
+## Errors
+
+Throws `pluss::Error` for an order other than `2`, `4` or `8`, a `loop_bandwidth` outside `(0, 0.5)`, or symbols that are not a complex array with at least two symbols.
+
+## Interpretation and Use
+
+A wider loop locks faster and tracks larger offsets but passes more noise. The lock leaves a phase ambiguity of a multiple of `2 pi / order`: resolve it with a known preamble or differential coding. Remove a large offset first with `cfo` and `derot`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Lock onto an offset carrier.
+
+@@example Eng/api/comms_carrier_lock.cpp@@
+
+### Example 2
+
+Loop bandwidth against noise.
+
+@@example Eng/api/comms_carrier_bandwidth.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_carrier_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

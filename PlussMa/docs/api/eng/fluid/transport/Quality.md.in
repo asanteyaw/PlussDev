@@ -1,0 +1,70 @@
+# `fluid::Quality`
+
+The quantity transported, its sources and its reactions.
+
+## Signature
+
+```cpp
+fluid::Quality
+```
+
+## What It Does
+
+Describes what `transport` follows through the network.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `mode` | Constituent or Age. | Constituent |
+| `initial` | The starting quality at every node, `[..., node]`; required for a constituent. Pipes and tanks start at the values implied by their end nodes. | required for a constituent |
+| `source` | The quality held at a reservoir and of an injection (negative demand), `[..., node]`. | `initial` |
+| `pipe_rate` | A first-order rate, 1/s, `[..., pipe]`: the quality changes as `c e^{k Δt}`, so a decay is negative. | undefined (none) |
+| `tank_rate` | The same for each tank, `[..., tank]`. | undefined (none) |
+
+## Returns
+
+A value; validated by `transport`.
+
+## Errors
+
+A constituent without `initial`, negative or non-finite values, the wrong width, mixed precision, and source or reaction fields for `Age` are rejected.
+
+## Interpretation and Use
+
+A decay written with a positive sign is a growth rate and is accepted. Reactions are exact exponentials, not approximations of the derivative. Pumps and valves hold no water and cannot react.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Two sources mixing.
+
+@@example Eng/api/fluid_transport_mix.cpp@@
+
+### Example 2
+
+A decay reaction against its exact value.
+
+@@example Eng/api/fluid_transport_decay.cpp@@
+
+### Example 3
+
+Age.
+
+@@example Eng/api/fluid_transport_age.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="QualityMode.html">
+    <span class="label">Previous</span>
+    <span class="title">QualityMode</span>
+  </a>
+  <a class="next-link" href="RouteOptions.html">
+    <span class="label">Next</span>
+    <span class="title">RouteOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

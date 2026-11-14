@@ -21,7 +21,7 @@
 #include <sqlite3.h>
 
 #include "CodeM/core/Errors.h"
-#include <fmt/format.h>
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::table {
 
@@ -552,7 +552,7 @@ std::string sql_identifier(std::string_view value) {
 }
 
 std::string source_internal_table_name(std::size_t index) {
-  return fmt::format("__pluss_src_{}__", index);
+  return pluss::tils::OutputEngine::format("__pluss_src_{}__", index);
 }
 
 bool has_feature_named(const DataFrame& frame, std::string_view name) {
@@ -577,38 +577,38 @@ std::string series_scalar_text(const pluss::Series& s, std::int64_t row) {
     case pluss::codem::ScalarType::Bool:
       return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
     case pluss::codem::ScalarType::Int8:
-      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
     case pluss::codem::ScalarType::Int16:
-      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
     case pluss::codem::ScalarType::Int32:
-      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
     case pluss::codem::ScalarType::Int64:
-      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt8:
-      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
     case pluss::codem::ScalarType::UInt16:
-      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt32:
-      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt64:
-      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16:
-      return fmt::format("{:.6g}",
+      return pluss::tils::OutputEngine::format("{:.6g}",
                          pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
     case pluss::codem::ScalarType::BFloat16:
-      return fmt::format("{:.6g}",
+      return pluss::tils::OutputEngine::format("{:.6g}",
                          pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
     case pluss::codem::ScalarType::Float32:
-      return fmt::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
     case pluss::codem::ScalarType::Float64:
-      return fmt::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     case pluss::codem::ScalarType::Complex128: {
       const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     default:
       return "";
@@ -828,7 +828,7 @@ Slate build_column_slate(const ColumnCollector& collector) {
       if (const auto* p = std::get_if<std::string>(&cell)) {
         values.push_back(*p);
       } else if (const auto* p = std::get_if<double>(&cell)) {
-        values.push_back(fmt::format("{:.17g}", *p));
+        values.push_back(pluss::tils::OutputEngine::format("{:.17g}", *p));
       } else if (const auto* p = std::get_if<std::int64_t>(&cell)) {
         values.push_back(std::to_string(*p));
       } else {
@@ -966,10 +966,10 @@ void load_source(sqlite3* db,
           case_text = std::string(labels.as_note().at(row));
           break;
         case SlateKind::Timeline:
-          case_text = fmt::format("{}", labels.as_timeline().ticks()[static_cast<std::size_t>(row)]);
+          case_text = pluss::tils::OutputEngine::format("{}", labels.as_timeline().ticks()[static_cast<std::size_t>(row)]);
           break;
         case SlateKind::Duration:
-          case_text = fmt::format(
+          case_text = pluss::tils::OutputEngine::format(
               "{}", labels.as_duration().host()[static_cast<std::size_t>(row)]);
           break;
       }
@@ -1075,7 +1075,7 @@ std::vector<ColumnCollector> collect_sqlite_rows(sqlite3* db,
     const auto* raw_name = sqlite3_column_name(stmt.get(), i);
     const auto* raw_decl = sqlite3_column_decltype(stmt.get(), i);
     collectors.push_back(ColumnCollector{
-        .name = raw_name != nullptr ? std::string(raw_name) : fmt::format("column_{}", i),
+        .name = raw_name != nullptr ? std::string(raw_name) : pluss::tils::OutputEngine::format("column_{}", i),
         .declared_type = raw_decl != nullptr ? std::optional<std::string>(raw_decl) : std::nullopt,
         .values = {},
     });
@@ -1161,10 +1161,10 @@ DataFrame build_result_frame(std::vector<ColumnCollector> collectors,
           continue;
         case DataFrame::SqlOptions::CollisionPolicy::Suffix: {
           std::size_t k = 2;
-          std::string candidate = fmt::format("{}_{}", out_name, k);
+          std::string candidate = pluss::tils::OutputEngine::format("{}_{}", out_name, k);
           while (name_to_pos.find(candidate) != name_to_pos.end()) {
             ++k;
-            candidate = fmt::format("{}_{}", out_name, k);
+            candidate = pluss::tils::OutputEngine::format("{}_{}", out_name, k);
           }
           out_name = std::move(candidate);
           break;
@@ -1289,7 +1289,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
   auto out = build_result_frame(std::move(collectors), options_, projection_hints);
 
   if (options_.result_mode == DataFrame::SqlOptions::ResultMode::Chunked) {
-    ::pluss::codem::warn(fmt::format("sql.result_mode=Chunked requested (chunk_rows={}) but execute() "
+    ::pluss::codem::warn(pluss::tils::OutputEngine::format("sql.result_mode=Chunked requested (chunk_rows={}) but execute() "
                                      "returns a materialized DataFrame",
                                      options_.chunk_rows));
   }
@@ -1298,7 +1298,7 @@ DataFrame DataFrameSqlAccessor::execute(std::string_view statement) const {
     const auto total_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - t0).count();
     ::pluss::codem::warn(
-        fmt::format("sql.profile: total={}ms rows={}", total_ms, out.ncases()));
+        pluss::tils::OutputEngine::format("sql.profile: total={}ms rows={}", total_ms, out.ncases()));
   }
 
   return out;

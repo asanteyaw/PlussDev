@@ -20,7 +20,7 @@ Swarms are cheap per particle and scale well to many variables, which is why [`A
 ## Parameters
 
 `Fn &&objective`
-: A callable `Series -> Series` (real scalar) or `Series -> number`.
+: A callable `Series (Series)` (real scalar) or `Series -> number`.
 
 `const pluss::Series &initial`
 : The starting point.

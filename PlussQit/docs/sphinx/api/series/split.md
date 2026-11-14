@@ -7,7 +7,7 @@
 ## Signatures
 
 ```cpp
-Series::split(std::int64_t split_size, std::int64_t dim = 0) const
+std::vector<Series> Series::split(std::int64_t split_size, std::int64_t dim = 0) const
     -> std::vector<Series>
 
 ```

@@ -45,3 +45,16 @@ I(k) = k/3   : 0.333333 0.666667 1.000000 1.333333   (shape 4)
 dI/dk each   : 0.333333 0.333333 0.333333 0.333333   (exact 0.333333)
 ```
 This is how an integral enters a model that is being fitted: a distribution's parameters inside a likelihood integral, for example, are differentiated through the quadrature with no extra code.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="infinite_limits.html">
+    <span class="label">Previous</span>
+    <span class="title">Infinite limits</span>
+  </a>
+  <a class="next-link" href="integrals_over_a_box.html">
+    <span class="label">Next</span>
+    <span class="title">Integrals over a box</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

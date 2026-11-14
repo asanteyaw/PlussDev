@@ -176,3 +176,16 @@ count            1.0000   0.0000   0.0000   1.0000
 
 - [`fill_gaps`](fill_gaps.md)
 - [`rolling_mean`](rolling_mean.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="log_returns.html">
+    <span class="label">Previous</span>
+    <span class="title">log_returns</span>
+  </a>
+  <a class="next-link" href="returns.html">
+    <span class="label">Next</span>
+    <span class="title">returns</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

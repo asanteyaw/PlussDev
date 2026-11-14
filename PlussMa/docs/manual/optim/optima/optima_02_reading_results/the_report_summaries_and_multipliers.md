@@ -277,3 +277,16 @@ Sequential QP was stopped after three iterations, so the flag is `MaxIterations`
 - **Log the compact summary, show the detailed one.** The field names of the detailed summary match the `output` table above.
 
 Where next: [Watching a run](watching_a_run.md) shows the progress hooks that let you see these quantities as the run proceeds.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="exit_flags_and_stall_categories.html">
+    <span class="label">Previous</span>
+    <span class="title">Exit flags and stall categories</span>
+  </a>
+  <a class="next-link" href="watching_a_run.html">
+    <span class="label">Next</span>
+    <span class="title">Watching a run</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

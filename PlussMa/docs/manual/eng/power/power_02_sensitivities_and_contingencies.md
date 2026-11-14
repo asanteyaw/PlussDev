@@ -1,0 +1,18 @@
+<!-- generated from power_02_sensitivities_and_contingencies.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Power 2: Sensitivities and Contingencies
+
+A network is rarely operated at the case that was studied. Loads change, generators trip and lines are lost, and each time the flows move. This chapter uses the linear DC model to answer those questions without re-solving: how the flows respond to a change of injection, and what happens to every line when any one line is lost.
+
+- [Sensitivity factors](power_02_sensitivities_and_contingencies/sensitivity_factors.md)
+- [Line outages](power_02_sensitivities_and_contingencies/line_outages.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+power_02_sensitivities_and_contingencies/sensitivity_factors
+power_02_sensitivities_and_contingencies/line_outages
+```
+<!-- apiref:toctree:end -->

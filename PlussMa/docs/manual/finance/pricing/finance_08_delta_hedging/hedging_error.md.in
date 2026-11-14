@@ -1,0 +1,291 @@
+# The hedging error
+
+[Back to Delta Hedging](../finance_08_delta_hedging.md)
+
+A discrete delta hedge does not replicate the option. This page measures what is left over: the distribution of the terminal profit {math}`\text{P\&L}`, how it depends on the frequency of rebalancing, how it changes if the hedger's volatility is not the true one, what it costs to trade, and what a dividend does to it.
+
+## Where the error comes from
+
+Between two dates the option's value changes by
+
+```{math}
+dV=\Theta\,dt+\Delta\,dS+\tfrac12\Gamma\,(dS)^2,
+```
+
+and the Black-Scholes equation says that {math}`\Theta=-\tfrac12\sigma^2S^2\Gamma` apart from the terms of the cash account. The hedge removes {math}`\Delta\,dS`. What is left, because {math}`(dS)^2` is random and not the {math}`\sigma^2S^2\,dt` that the equation assumes, is the profit of the seller in the step, the **gamma profit**,
+
+```{math}
+\pi_i\;=\;\tfrac12\,\Gamma_iS_i^2\Big(\sigma^2\Delta t-\Big(\tfrac{\Delta S_i}{S_i}\Big)^2\Big)\;=\;-\tfrac12\,\Gamma_iS_i^2\sigma^2\Delta t\,\big(Z_i^2-1\big),
+\qquad Z_i\sim\mathcal N(0,1).
+```
+
+A seller of the option is short gamma: a calm step ({math}`Z^2<1`) earns the time decay and a violent one loses. It has mean zero, and since {math}`\operatorname{Var}(Z^2-1)=2`, variance {math}`\tfrac12(\Gamma_iS_i^2\sigma^2\Delta t)^2`. The errors of different steps are uncorrelated, so the variance of the terminal profit is approximately
+
+```{math}
+\operatorname{Var}(\text{P\&L})\;\approx\;\tfrac12\sum_{i}\mathbb{E}\big[(\Gamma_iS_i^2\sigma^2\Delta t)^2\big].
+```
+
+Each term is proportional to {math}`\Delta t^2`, and there are {math}`n=T/\Delta t` terms, so the variance is of order {math}`1/n` and the standard deviation of order {math}`1/\sqrt n`: four times as many rebalances halve the error.
+
+## Program 1: the error against the number of rebalances
+
+The program simulates 3,000 paths of the asset with a Monte Carlo field (whose drift is the risk-free rate), so that a hedge at the true volatility replicates the option on average, and hedges a one-year at-the-money call with 5, 20, 80 and 320 rebalances. It prints the mean and the standard deviation of the profit, the product {math}`\text{std}\times\sqrt n`, which should be roughly constant, and the estimate of the standard deviation from the formula above, evaluated with the gamma of each simulated path.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace hdg = fin::hedging;
+using namespace pluss::tils;
+
+// The option being hedged, as a Black-Scholes field: the volatility is the one the hedge is computed with.
+mod::Field option(double strike, double maturity, double rate, double yield, double sigma) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity),
+                    .market = fin::market::make(100.0, rate, yield),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({sigma})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+// Paths of the asset at the real volatility, growing at rate - yield: a Monte Carlo field simulates them, one row per path.
+pluss::Series simulate(double strike, double maturity, double rate, double yield, double real_sigma, std::int64_t steps, std::int64_t paths, std::uint64_t seed) {
+  mod::Field world = option(strike, maturity, rate, yield, real_sigma);
+  world.controls.engine = mod::Engine::MonteCarlo;
+  world.controls.mc.paths = paths;
+  world.controls.mc.steps = steps;
+  world.controls.mc.seed = seed;
+  return world.simulate_paths(as_f64()).asset;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double spot0 = 100.0, strike = 100.0, rate = 0.02, sigma = 0.2, maturity = 1.0;
+  const std::int64_t paths = 3000;
+  out.writeln("rebalances  mean P&L   std of P&L   std * sqrt(rebalances)   gamma-based estimate of the std");
+  for (const std::int64_t steps : {5, 20, 80, 320}) {
+    // the asset grows at the risk-free rate, so a hedge at the true volatility replicates the option on average
+    const auto sim = simulate(strike, maturity, rate, 0.0, sigma, steps, paths, 11);
+    std::vector<double> pnl;
+    for (std::int64_t i = 0; i < paths; ++i) {
+      pnl.push_back(hdg::delta_hedge(option(strike, maturity, rate, 0.0, sigma), sim.select(0, i), as_f64()).terminal_pnl);
+    }
+    double mean = 0.0, sum2 = 0.0;
+    for (const double x : pnl) mean += x;
+    mean /= static_cast<double>(paths);
+    for (const double x : pnl) sum2 += (x - mean) * (x - mean);
+    const double sd = std::sqrt(sum2 / (paths - 1));
+    // each step leaves a gamma profit of 1/2 Gamma S^2 sigma^2 (Z^2 - 1) dt, whose variance is (Gamma S^2 sigma^2 dt)^2 / 2
+    const double dt = maturity / static_cast<double>(steps);
+    const auto before_expiry = sim.slice(1, 0, steps);
+    const auto tau = pluss::series::linspace(maturity, dt, steps, as_f64());
+    const auto all_spot = before_expiry.reshape({steps * paths});
+    const auto all_tau = (pluss::series::ones({paths, 1}, as_f64()) * tau.unsqueeze(0)).reshape({steps * paths});
+    // one field holding every (spot, time to maturity) pair gives the gamma of the whole set in one call
+    mod::Field every = option(strike, maturity, rate, 0.0, sigma);
+    every.market.spot = all_spot;
+    every.instrument.maturity = all_tau;
+    const auto gamma = every.price().greeks.gamma;
+    const auto term = gamma * all_spot * all_spot * (sigma * sigma * dt);
+    const double estimate = std::sqrt(0.5 * term.square().sum().item<double>() / static_cast<double>(paths));
+    out.writeln(steps, mean, sd, sd * std::sqrt(static_cast<double>(steps)), estimate);
+  }
+}
+```
+
+The mean profit is within sampling error of zero at every frequency (0.029, 0.015, −0.027, −0.004, against sampling errors of {math}`\text{std}/\sqrt{3000}` from 0.053 down to 0.007): hedging at the true volatility makes the seller break even on average. The spread is the risk. It falls from 2.88 with 5 rebalances to 1.46 with 20, 0.76 with 80 and 0.40 with 320: each time the number of rebalances is multiplied by 4 the standard deviation is divided by about 2, and the product {math}`\text{std}\times\sqrt n` is nearly constant, 6.4 to 7.1. The gamma formula reproduces it: 2.74, 1.460, 0.757 and 0.387 against the simulated 2.88, 1.463, 0.761 and 0.395, within 5% at 5 rebalances and 2% at 320. The product drifts up a little because the gamma of an at-the-money option grows without bound as expiry approaches, so the asymptotic behaviour is reached only slowly.
+
+## Program 2: hedging with the wrong volatility
+
+The hedger does not know the volatility the asset will have. Suppose the real volatility is 20% and the hedge uses {math}`\sigma_h`. The gamma profit of a step becomes {math}`\tfrac12\Gamma_hS^2(\sigma_h^2-\sigma_{\text{real}}^2Z^2)\,\Delta t`, whose mean is
+
+```{math}
+\mathbb{E}[\pi_i]=\tfrac12\,\Gamma_hS^2\big(\sigma_h^2-\sigma_{\text{real}}^2\big)\,\Delta t,
+```
+
+so a hedger who hedges with a volatility above the real one earns the difference in variance times the gamma, and one who hedges below it loses. Summed over the life, and with the asset growing at the risk-free rate, the expectation has a closed form. The discounted hedge portfolio is a martingale, so the expected profit equals what the seller received from selling at the hedge volatility, minus the true value, grown to maturity:
+
+```{math}
+\mathbb{E}[\text{P\&L}]=e^{rT}\big(V(\sigma_h)-V(\sigma_{\text{real}})\big).
+```
+
+The program simulates 2,000 paths with 252 daily rebalances at a real volatility of 20% and hedges at 10%, 15%, 20%, 25% and 30%. It prints the mean and the standard deviation of the profit and the closed form.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace hdg = fin::hedging;
+using namespace pluss::tils;
+
+// The option being hedged, as a Black-Scholes field: the volatility is the one the hedge is computed with.
+mod::Field option(double strike, double maturity, double rate, double yield, double sigma) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity),
+                    .market = fin::market::make(100.0, rate, yield),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({sigma})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+// Paths of the asset at the real volatility, growing at rate - yield: a Monte Carlo field simulates them, one row per path.
+pluss::Series simulate(double strike, double maturity, double rate, double yield, double real_sigma, std::int64_t steps, std::int64_t paths, std::uint64_t seed) {
+  mod::Field world = option(strike, maturity, rate, yield, real_sigma);
+  world.controls.engine = mod::Engine::MonteCarlo;
+  world.controls.mc.paths = paths;
+  world.controls.mc.steps = steps;
+  world.controls.mc.seed = seed;
+  return world.simulate_paths(as_f64()).asset;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double spot0 = 100.0, strike = 100.0, rate = 0.02, realised = 0.2, maturity = 1.0;
+  const std::int64_t steps = 252, paths = 2000;
+  const auto sim = simulate(strike, maturity, rate, 0.0, realised, steps, paths, 23);
+  const auto price = [&](double sigma) { return option(strike, maturity, rate, 0.0, sigma).price().price.items<double>()[0]; };
+  out.writeln("hedge vol   mean P&L   std     expected e^{rT}(V(hedge) - V(realised))   hedge P&L / option price");
+  for (const double hedge_vol : {0.10, 0.15, 0.20, 0.25, 0.30}) {
+    double sum = 0.0, sum2 = 0.0;
+    for (std::int64_t i = 0; i < paths; ++i) {
+      const double pnl = hdg::delta_hedge(option(strike, maturity, rate, 0.0, hedge_vol), sim.select(0, i), as_f64()).terminal_pnl;
+      sum += pnl;
+      sum2 += pnl * pnl;
+    }
+    const double mean = sum / paths, sd = std::sqrt(sum2 / paths - mean * mean);
+    out.writeln(hedge_vol, mean, sd, std::exp(rate * maturity) * (price(hedge_vol) - price(realised)), mean / price(hedge_vol));
+  }
+}
+```
+
+The simulated means match the closed form: −4.018 against −3.978 for a hedge at 10%, −2.011 against −1.994 at 15%, 0.009 against 0 at 20%, 2.024 against 1.994 at 25%, and 4.031 against 3.984 at 30%, the differences being the sampling error of about 0.01 to 0.05 and a little discretisation. A hedge at 30% earns 31% of the option's premium on average, and a hedge at 10% loses 80% of it. The profit is the difference in vega terms, and no hedge is risk-free: the standard deviation is smallest at the true volatility, 0.44, and rises to 1.3 at 30% and 2.1 at 10%, because the gamma profit then has a mean as well as a spread. The hedge at the right volatility is the one with the least risk, and the one at a wrong volatility has a deterministic bias on top of that.
+
+## Program 3: transaction costs
+
+Each rebalance trades shares, and trades cost money. With a proportional cost of rate {math}`k` on the value traded, the total cost of a hedge is {math}`k\big(\Delta_0S_0+\sum_i|\Delta_i-\Delta_{i-1}|S_i\big)`. The program computes it from the `delta` that the hedge returns, for a cost of 0.1%, with the same four frequencies, and prints the spread of the profit, the average cost and the average profit after costs.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace hdg = fin::hedging;
+using namespace pluss::tils;
+
+// The option being hedged, as a Black-Scholes field: the volatility is the one the hedge is computed with.
+mod::Field option(double strike, double maturity, double rate, double yield, double sigma) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity),
+                    .market = fin::market::make(100.0, rate, yield),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({sigma})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+// Paths of the asset at the real volatility, growing at rate - yield: a Monte Carlo field simulates them, one row per path.
+pluss::Series simulate(double strike, double maturity, double rate, double yield, double real_sigma, std::int64_t steps, std::int64_t paths, std::uint64_t seed) {
+  mod::Field world = option(strike, maturity, rate, yield, real_sigma);
+  world.controls.engine = mod::Engine::MonteCarlo;
+  world.controls.mc.paths = paths;
+  world.controls.mc.steps = steps;
+  world.controls.mc.seed = seed;
+  return world.simulate_paths(as_f64()).asset;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double spot0 = 100.0, strike = 100.0, rate = 0.02, sigma = 0.2, maturity = 1.0, cost_rate = 0.001;
+  const std::int64_t paths = 2000;
+  out.writeln("rebalances  std of P&L   mean trading cost (0.1% of traded value)   mean P&L after costs");
+  for (const std::int64_t steps : {5, 20, 80, 320}) {
+    const auto sim = simulate(strike, maturity, rate, 0.0, sigma, steps, paths, 31);
+    double sum = 0.0, sum2 = 0.0, cost_sum = 0.0;
+    for (std::int64_t i = 0; i < paths; ++i) {
+      const auto spot = sim.select(0, i);
+      const auto h = hdg::delta_hedge(option(strike, maturity, rate, 0.0, sigma), spot, as_f64());
+      // shares traded at each date, times the price, times the cost rate; the first date buys the whole initial position
+      const auto traded = (h.delta.slice(0, 1, steps + 1) - h.delta.slice(0, 0, steps)).abs();
+      const double cost = cost_rate * (traded * spot.slice(0, 1, steps + 1)).sum().item<double>() + cost_rate * h.delta.select(0, 0).item<double>() * spot0;
+      sum += h.terminal_pnl;
+      sum2 += h.terminal_pnl * h.terminal_pnl;
+      cost_sum += cost;
+    }
+    const double mean = sum / paths, sd = std::sqrt(sum2 / paths - mean * mean), cost = cost_sum / paths;
+    out.writeln(steps, sd, cost, mean - cost);
+  }
+}
+```
+
+The two effects pull in opposite directions. The risk falls as the hedge gets finer, from 2.87 to 0.39, but the cost rises, from 0.139 to 0.622: each trade is of size {math}`|\Delta_i-\Delta_{i-1}|\sim\Gamma S\sigma\sqrt{\Delta t}`, so the total traded over {math}`n` trades grows like {math}`\sqrt n`, in the table 0.14, 0.21, 0.35, 0.62 as {math}`n` is multiplied by 4 each time. The average profit after costs is negative and falls with frequency (−0.064 to −0.614). A hedger therefore chooses the frequency that balances the risk against the cost, for example by minimising the cost plus a multiple of the standard deviation; the hedge gives both ingredients, the delta path and the profit.
+
+## Program 4: dividends
+
+An asset that pays a dividend yield {math}`q` loses value on average by {math}`q` per unit time, and the stock held by the hedger earns that dividend, which has to be counted in the cash account. If the dividends were forgotten the hedge would lose on average, {math}`q\int\Delta S\,dt`, about 1.5 for these parameters with {math}`q=3\%`. The program simulates assets with drift {math}`r-q` (the field's drift, with its dividend yield set to `q`) and hedges with a field whose `dividend_yield` is `q`, for yields of 0, 3% and 6%.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace hdg = fin::hedging;
+using namespace pluss::tils;
+
+// The option being hedged, as a Black-Scholes field: the volatility is the one the hedge is computed with.
+mod::Field option(double strike, double maturity, double rate, double yield, double sigma) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity),
+                    .market = fin::market::make(100.0, rate, yield),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({sigma})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+// Paths of the asset at the real volatility, growing at rate - yield: a Monte Carlo field simulates them, one row per path.
+pluss::Series simulate(double strike, double maturity, double rate, double yield, double real_sigma, std::int64_t steps, std::int64_t paths, std::uint64_t seed) {
+  mod::Field world = option(strike, maturity, rate, yield, real_sigma);
+  world.controls.engine = mod::Engine::MonteCarlo;
+  world.controls.mc.paths = paths;
+  world.controls.mc.steps = steps;
+  world.controls.mc.seed = seed;
+  return world.simulate_paths(as_f64()).asset;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double spot0 = 100.0, strike = 100.0, rate = 0.02, sigma = 0.2, maturity = 1.0;
+  const std::int64_t steps = 100, paths = 3000;
+  out.writeln("dividend yield   mean P&L   std of P&L");
+  for (const double q : {0.0, 0.03, 0.06}) {
+    const auto sim = simulate(strike, maturity, rate, q, sigma, steps, paths, 41);
+    double sum = 0.0, sum2 = 0.0;
+    for (std::int64_t i = 0; i < paths; ++i) {
+      const double pnl = hdg::delta_hedge(option(strike, maturity, rate, q, sigma), sim.select(0, i), as_f64()).terminal_pnl;
+      sum += pnl;
+      sum2 += pnl * pnl;
+    }
+    const double mean = sum / paths;
+    out.writeln(q, mean, std::sqrt(sum2 / paths - mean * mean));
+  }
+}
+```
+
+The mean profit is within sampling error of zero for every yield (0.029, 0.028, 0.024 against a sampling error of 0.013), and the standard deviation (about 0.69) does not depend on {math}`q`: a hedger who passes the yield of the asset and earns it on the stock position is hedged as well as one with no dividend.
+
+## Checklist
+
+1. A hedge at the true volatility has mean profit zero; its spread falls like {math}`1/\sqrt n` in the number of rebalances. Use {math}`\tfrac12\sum(\Gamma S^2\sigma^2\Delta t)^2` to estimate it.
+2. A hedge at a wrong volatility has a mean profit of {math}`e^{rT}(V(\sigma_h)-V(\sigma_{\text{real}}))`, in addition to the spread.
+3. Trading costs grow like {math}`\sqrt n`; weigh them against the spread to choose the frequency.
+4. Pass the dividend yield of the asset; the stock earns it.
+5. Hedge one path (one row of the simulated array) per call, and use the `delta` series for any cost model of your own.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_hedging_portfolio.html">
+    <span class="label">Previous</span>
+    <span class="title">The hedging portfolio</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

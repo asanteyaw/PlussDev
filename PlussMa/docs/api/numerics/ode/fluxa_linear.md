@@ -23,7 +23,7 @@ The tolerance and step controls are those of [`OdeOptions`](OdeOptions.md) (see 
 ## Parameters
 
 `const ode::LinearOdeFn &action`
-: `(double t, const Series &y) -> Series`: the product `A(t) y`.
+: `Series (double t, const Series &y)`: the product `A(t) y`.
 
 `const pluss::Series &y0`
 : The initial state; leading axes are independent lanes.

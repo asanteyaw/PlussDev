@@ -1,0 +1,28 @@
+# Moist air
+
+The state of moist air in degrees Celsius and pascals, with the enthalpy referenced to dry air and liquid water at 0 degrees: saturation pressure, humidity ratio, relative humidity, enthalpy, volume, dew point, wet bulb and adiabatic mixing.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Humidity ratio of air at 25 degrees and 50 %.
+
+@@example Eng/api/thermal_ratio_basic.cpp@@
+
+### Example 2
+
+Dew point, wet bulb and dry bulb.
+
+@@example Eng/api/thermal_wet_saturated.cpp@@
+
+### Example 3
+
+Mixing outdoor and return air.
+
+@@example Eng/api/thermal_mix_ratio.cpp@@
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

@@ -109,7 +109,7 @@ namespace {
 [[nodiscard]] std::vector<double> pull_series_row(const Series& row) {
   return row.to(pluss::pCPU, pluss::ScalarType::Float64)
       .reshape({row.numel()})
-      .pull<double>();
+      .items<double>();
 }
 
 } // namespace

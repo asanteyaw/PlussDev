@@ -14,8 +14,8 @@ std::string Slate::to_string(const display::DisplayOptions& options = {}) const
 ## What It Does
 
 Renders the slate's actual row values — index, values, and the trailing `ptype:` footer —
-as a plain `std::string`, using the same rendering [`show()`](show.md) and `operator<<`
-use, just returned instead of written to a stream. This is the render-to-string counterpart
+as a plain `std::string`, using the same rendering `operator<<` uses, just returned
+instead of written to a stream. This is the render-to-string counterpart
 of [`info_string()`](info_string.md), which returns *metadata* instead of row values.
 
 ```{important} No trailing newline — unlike show()/operator<<
@@ -107,14 +107,11 @@ ptype: Series
 - Renders row values, not metadata — use [`info_string()`](info_string.md) instead for a
   name/kind/dtype/null-count summary.
 - No trailing newline in the returned string — see the important callout above.
-- `to_string()`, [`show()`](show.md), and `operator<<` all share the same underlying
-  renderer and accept the same `DisplayOptions`; the only difference is destination
-  (string vs. stream) and the trailing-newline detail above.
+- `to_string()` and `operator<<` share the same underlying renderer; the only difference
+  is destination (string vs. stream) and the trailing-newline detail above.
 
 ## See Also
 
-- [`Slate::show`](show.md): render straight to a stream instead of returning a string —
-  ends with a trailing newline, unlike this method.
 - [`Slate::info_string`](info_string.md): the metadata-summary counterpart — name, kind,
   dtype, and null counts, not row values.
 

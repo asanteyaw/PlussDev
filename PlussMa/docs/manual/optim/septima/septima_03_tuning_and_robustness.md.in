@@ -49,4 +49,11 @@ Septima has two independent groups of settings. The **step** settings, in `optio
 - Single and double precision, real and complex parameters all work; a complex parameter needs a real loss and no bounds.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+septima_03_tuning_and_robustness/tuning_adam_and_lbfgs
+septima_03_tuning_and_robustness/robustness_and_stopping
+```
 <!-- apiref:toctree:end -->

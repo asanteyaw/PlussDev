@@ -1,9 +1,8 @@
-// What stops a run, and why asking for more accuracy than the method can deliver changes the exit flag, not the answer.
+// What stops a run, and what asking for more accuracy costs.
 // The chained Rosenbrock function of the previous program is solved with L-BFGS and three gradient tolerances. A run is
 // converged when the gradient, the step and the constraint violation are all within tolerance; with no constraints that is
-// the first two. When the gradient cannot get below a tolerance (L-BFGS without a line search stalls at a gradient of a few
-// 1e-4 here), the run ends with `NoProgress` after `max_no_progress_iterations` flat iterations, at the same point it would
-// have reached anyway. The second block shows the conditioning of the problem: a quadratic whose curvature differs by a
+// the first two. The run stops at the first iteration where both are within tolerance, so a looser and a tighter tolerance can
+// stop at the same iteration, and a much tighter one costs a few more iterations. The second block shows the conditioning of the problem: a quadratic whose curvature differs by a
 // factor of 10^4 between its two variables. Adam rescales each coordinate by the size of its own gradients, so a stretch along the
 // axes costs it little; L-BFGS learns the curvature itself and needs five iterations.
 #include <pluss/ma.h>

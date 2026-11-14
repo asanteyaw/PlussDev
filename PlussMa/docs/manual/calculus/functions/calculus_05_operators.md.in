@@ -47,4 +47,21 @@ Every program is complete and its output is the output of that program.
 6. Open streams for artifacts in binary mode, and treat any load error as a refusal of the whole artifact.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_05_operators/operators_are_values
+calculus_05_operators/composing_and_combining
+calculus_05_operators/custom_operators
+calculus_05_operators/saving_and_loading
+calculus_05_operators/stochastic_operators
+calculus_05_operators/taylor_and_power_series
+calculus_05_operators/fourier_series
+calculus_05_operators/geometry_operators
+calculus_05_operators/integral_transforms
+calculus_05_operators/measures
+calculus_05_operators/vector_variational_and_adjoint
+calculus_05_operators/fractional_calculus
+```
 <!-- apiref:toctree:end -->

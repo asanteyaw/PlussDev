@@ -1,0 +1,16 @@
+# Control 1: Optimal Feedback
+
+A feedback law `u = -K x` can be chosen to minimise a cost that trades the size of the states against the size of the input. This chapter solves the Riccati equation that gives the optimal gain, and then closes the loop and simulates it, so that every claim about the design is checked on a trajectory.
+
+- [Riccati equations and LQR](control_01_optimal_feedback/riccati_equations_and_lqr.md)
+- [Closed-loop behaviour](control_01_optimal_feedback/closed_loop_behaviour.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+control_01_optimal_feedback/riccati_equations_and_lqr
+control_01_optimal_feedback/closed_loop_behaviour
+```
+<!-- apiref:toctree:end -->

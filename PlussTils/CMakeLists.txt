@@ -93,6 +93,19 @@ if(BUILD_TESTING)
     target_link_libraries(plusstils_scalar_cast_compat_tests PRIVATE PlussTils)
     target_compile_features(plusstils_scalar_cast_compat_tests PRIVATE cxx_std_20)
     add_test(NAME plusstils_scalar_cast_compat COMMAND plusstils_scalar_cast_compat_tests)
+
+    add_executable(plusstils_format_parity_tests
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/format_parity_tests.cpp
+    )
+    target_link_libraries(plusstils_format_parity_tests PRIVATE PlussTils)
+    target_compile_features(plusstils_format_parity_tests PRIVATE cxx_std_20)
+    add_test(NAME plusstils_format_parity COMMAND plusstils_format_parity_tests)
+
+    add_test(NAME plusstils_format_compile_checks
+        COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test/format_compile_checks.sh
+                ${CMAKE_CXX_COMPILER} ${CMAKE_CURRENT_SOURCE_DIR}/include
+                ${CMAKE_SOURCE_DIR}/PlussQit/include ${CMAKE_SOURCE_DIR}/PlussQit/src ${CMAKE_BINARY_DIR}/generated
+                ${CMAKE_OSX_SYSROOT})
 endif()
 
 install(TARGETS PlussTilsCore PlussTils

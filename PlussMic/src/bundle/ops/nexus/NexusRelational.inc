@@ -201,7 +201,7 @@ std::unordered_map<std::string, std::string> simulate_pull_projection_map(
         out_name = base + resolved.right_suffix;
         std::size_t k = 2;
         while (used.find(out_name) != used.end()) {
-          out_name = fmt::format("{}{}_{}", base, resolved.right_suffix, k++);
+          out_name = pluss::tils::OutputEngine::format("{}{}_{}", base, resolved.right_suffix, k++);
         }
       }
       used.insert(out_name);

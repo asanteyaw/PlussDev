@@ -4,7 +4,7 @@
 
 [Back to Black-Scholes](../finance_01_black_scholes.md)
 
-The Greeks are the sensitivities of the price to its inputs. Pluss returns the five that Black-Scholes defines in closed form, with these conventions:
+The Greeks are the sensitivities of the price to its inputs. A `Field` priced with `Risk::All` (the default) returns the five that Black-Scholes defines in closed form, with these conventions:
 
 | Greek | Meaning | Definition |
 |---|---|---|
@@ -17,13 +17,25 @@ The Greeks are the sensitivities of the price to its inputs. Pluss returns the f
 Divide `vega` and `rho` by 100 for the change per percentage point, and `theta` by 365 (or 252) for the change per day.
 
 ```cpp
-prc::BlackScholesGreeks prc::black_scholes_greeks(prc::OptionType type, double spot, double strike, double rate,
-                                                  double dividend_yield, double maturity, double volatility);
-double prc::black_scholes_delta(type, ...);   double prc::black_scholes_gamma(spot, ...);   double prc::black_scholes_vega(spot, ...);
-double prc::black_scholes_theta(type, ...);   double prc::black_scholes_rho(type, ...);
+module::Field::Result module::Field::price(Config cfg = {}) const;
+module::Risk module::Controls::risk = module::Risk::All;
+Series module::Field::Result::price;
+pricer::Greeks module::Field::Result::greeks;
+Series pricer::Greeks::delta;
+Series pricer::Greeks::gamma;
+Series pricer::Greeks::vega;
+Series pricer::Greeks::theta;
+Series pricer::Greeks::rho;
 ```
 
-`gamma` and `vega` are the same for a call and a put, so their single functions take no option type.
+With `Risk::All`, the default, `price` fills every Greek alongside the price. Read them from the result:
+
+```cpp
+const auto result = field.price();            // Risk::All is the default
+result.greeks.delta; result.greeks.gamma; result.greeks.vega; result.greeks.theta; result.greeks.rho;   // each a Series, one entry per option
+```
+
+`gamma` and `vega` are the same for a call and a put. With `Risk::PriceOnly` the Greeks are skipped and only `result.price` is filled. For Black-Scholes the Greeks are the closed forms below; for the other models of this guide a field computes them by bumping the inputs and repricing.
 
 ## Closed forms, checked
 
@@ -35,7 +47,7 @@ With n the standard normal density, the call and put Greeks are
 - theta (call): −S e^(−qT) n(d₁) σ / (2√T) − r K e^(−rT) N(d₂) + q S e^(−qT) N(d₁), and for the put −S e^(−qT) n(d₁) σ / (2√T) + r K e^(−rT) N(−d₂) − q S e^(−qT) N(−d₁);
 - rho: K T e^(−rT) N(d₂) for the call and −K T e^(−rT) N(−d₂) for the put.
 
-The program computes all ten values from these formulas and prints them beside the library's, together with the single-Greek functions.
+The program computes all ten values from these formulas and prints them beside the field's, together with the whole result read in one go.
 
 ```cpp
 #include <pluss/ma.h>
@@ -45,14 +57,35 @@ namespace prc = pluss::subsp::math::finance::pricing;
 namespace distr = pluss::subsp::stats::distr;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+struct BsGreeks {
+  double delta, gamma, vega, theta, rho;
+};
+BsGreeks bs_greeks(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  const auto g = bs_field(type, S, K, r, q, T, vol).price().greeks;
+  return {g.delta.items<double>()[0], g.gamma.items<double>()[0], g.vega.items<double>()[0], g.theta.items<double>()[0], g.rho.items<double>()[0]};
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(6));
   const double S = 100.0, K = 105.0, r = 0.05, q = 0.02, T = 0.75, v = 0.25;
   const distr::Normal standard(0.0, 1.0);
   auto at = [](double x) { return pluss::make_series(std::vector<double>{x}, {1}, as_f64()); };
-  auto N = [&](double x) { return standard.cdf(at(x)).pull<double>()[0]; };
-  auto n = [&](double x) { return standard.pdf(at(x)).pull<double>()[0]; };
+  auto N = [&](double x) { return standard.cdf(at(x)).items<double>()[0]; };
+  auto n = [&](double x) { return standard.pdf(at(x)).items<double>()[0]; };
 
   const double sqrt_t = std::sqrt(T);
   const double d1 = (std::log(S / K) + (r - q + 0.5 * v * v) * T) / (v * sqrt_t);
@@ -66,17 +99,18 @@ int main() {
   const double theta_p = -S * eq * n(d1) * v / (2.0 * sqrt_t) + r * K * er * N(-d2) - q * S * eq * N(-d1);
   const double rho_c = K * T * er * N(d2), rho_p = -K * T * er * N(-d2);
 
-  const auto call = prc::black_scholes_greeks(prc::Call, S, K, r, q, T, v);
-  const auto put = prc::black_scholes_greeks(prc::Put, S, K, r, q, T, v);
-  out.writeln("        library (call, put)            closed form (call, put)");
+  const auto call = bs_greeks(prc::Call, S, K, r, q, T, v);
+  const auto put = bs_greeks(prc::Put, S, K, r, q, T, v);
+  out.writeln("        field (call, put)              closed form (call, put)");
   out.writeln("delta ", call.delta, put.delta, "  ", delta_c, delta_p);
   out.writeln("gamma ", call.gamma, put.gamma, "  ", gamma, gamma);
   out.writeln("vega  ", call.vega, put.vega, "  ", vega, vega);
   out.writeln("theta ", call.theta, put.theta, "  ", theta_c, theta_p);
   out.writeln("rho   ", call.rho, put.rho, "  ", rho_c, rho_p);
 
-  out.writeln("single functions:", prc::black_scholes_delta(prc::Call, S, K, r, q, T, v), prc::black_scholes_gamma(S, K, r, q, T, v), prc::black_scholes_vega(S, K, r, q, T, v),
-              prc::black_scholes_theta(prc::Call, S, K, r, q, T, v), prc::black_scholes_rho(prc::Call, S, K, r, q, T, v));
+  const auto whole = bs_field(prc::Call, S, K, r, q, T, v).price();
+  out.writeln("whole result:", whole.price.items<double>(), whole.greeks.delta.items<double>(), whole.greeks.gamma.items<double>(), whole.greeks.vega.items<double>(),
+              whole.greeks.theta.items<double>(), whole.greeks.rho.items<double>());
   out.writeln("per percentage point of volatility:", call.vega / 100.0, " per day of time (365):", call.theta / 365.0);
 }
 ```
@@ -84,21 +118,21 @@ int main() {
 Output
 
 ```text
-        library (call, put)            closed form (call, put)
+        field (call, put)              closed form (call, put)
 delta  0.487378 -0.497734    0.487378 -0.497734
 gamma  0.018150 0.018150    0.018150 0.018150
 vega   34.032087 34.032087    34.032087 34.032087
 theta  -6.766334 -3.679787    -6.766334 -3.679787
 rho    31.036133 -44.815427    31.036133 -44.815427
-single functions: 0.487378 0.018150 34.032087 -6.766334 31.036133
+whole result: [7.356284] [0.487378] [0.018150] [34.032087] [-6.766334] [31.036133]
 per percentage point of volatility: 0.340321  per day of time (365): -0.018538
 ```
 
-All ten Greeks agree with the closed forms, and the single functions return the same values. For this option the delta of the call, 0.487, and of the put, −0.498, differ by e^(−qT) = 0.985, a relation checked below. A one-percentage-point rise in volatility adds 0.34 to the price, and a day of time costs 0.0185.
+All ten Greeks agree with the closed forms, and the whole result carries the same values. For this option the delta of the call, 0.487, and of the put, −0.498, differ by e^(−qT) = 0.985, a relation checked below. A one-percentage-point rise in volatility adds 0.34 to the price, and a day of time costs 0.0185.
 
 ## Greeks as derivatives of the price
 
-Each Greek can be recovered from prices alone, by bumping one input. The program prices the option at inputs moved by a small amount and compares central differences with the Greeks: delta from the spot, gamma from three spots, vega from the volatility, rho from the rate, and theta from the maturity (theta is minus the derivative with respect to the time to maturity).
+Each Greek can be recovered from prices alone, by bumping one input. The program prices the option at inputs moved by a small amount and compares central differences with the field's Greeks: delta from the spot, gamma from three spots, vega from the volatility, rho from the rate, and theta from the maturity (theta is minus the derivative with respect to the time to maturity).
 
 ```cpp
 #include <pluss/ma.h>
@@ -107,12 +141,33 @@ Each Greek can be recovered from prices alone, by bumping one input. The program
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+struct BsGreeks {
+  double delta, gamma, vega, theta, rho;
+};
+BsGreeks bs_greeks(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  const auto g = bs_field(type, S, K, r, q, T, vol).price().greeks;
+  return {g.delta.items<double>()[0], g.gamma.items<double>()[0], g.vega.items<double>()[0], g.theta.items<double>()[0], g.rho.items<double>()[0]};
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(8));
   const double S = 100.0, K = 105.0, r = 0.05, q = 0.02, T = 0.75, v = 0.25;
-  auto price = [&](double s, double rate, double t, double vol) { return prc::black_scholes_price(prc::Call, s, K, rate, q, t, vol); };
-  const auto g = prc::black_scholes_greeks(prc::Call, S, K, r, q, T, v);
+  auto price = [&](double s, double rate, double t, double vol) { return bs_price(prc::Call, s, K, rate, q, t, vol); };
+  const auto g = bs_greeks(prc::Call, S, K, r, q, T, v);
 
   const double h = 1e-3;
   const double delta = (price(S + h, r, T, v) - price(S - h, r, T, v)) / (2.0 * h);
@@ -158,21 +213,42 @@ The program checks both for several spots and for a call and a put.
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+struct BsGreeks {
+  double delta, gamma, vega, theta, rho;
+};
+BsGreeks bs_greeks(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  const auto g = bs_field(type, S, K, r, q, T, vol).price().greeks;
+  return {g.delta.items<double>()[0], g.gamma.items<double>()[0], g.vega.items<double>()[0], g.theta.items<double>()[0], g.rho.items<double>()[0]};
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(10));
   const double K = 100.0, r = 0.04, q = 0.015, T = 1.5, v = 0.3;
   out.writeln("spot    call-put delta - e^-qT   gamma difference   vega difference   rho difference - K T e^-rT");
   for (double S : {60.0, 90.0, 100.0, 120.0, 180.0}) {
-    const auto c = prc::black_scholes_greeks(prc::Call, S, K, r, q, T, v);
-    const auto p = prc::black_scholes_greeks(prc::Put, S, K, r, q, T, v);
+    const auto c = bs_greeks(prc::Call, S, K, r, q, T, v);
+    const auto p = bs_greeks(prc::Put, S, K, r, q, T, v);
     out.writeln(S, c.delta - p.delta - std::exp(-q * T), c.gamma - p.gamma, c.vega - p.vega, c.rho - p.rho - K * T * std::exp(-r * T));
   }
   out.writeln("residual of the Black-Scholes equation, theta + (r - q) S delta + v^2 S^2 gamma / 2 - r V:");
   for (auto type : {prc::Call, prc::Put}) {
     for (double S : {60.0, 100.0, 180.0}) {
-      const auto g = prc::black_scholes_greeks(type, S, K, r, q, T, v);
-      const double V = prc::black_scholes_price(type, S, K, r, q, T, v);
+      const auto g = bs_greeks(type, S, K, r, q, T, v);
+      const double V = bs_price(type, S, K, r, q, T, v);
       out.writeln(type == prc::Call ? "call" : "put ", S, g.theta + (r - q) * S * g.delta + 0.5 * v * v * S * S * g.gamma - r * V);
     }
   }
@@ -210,13 +286,34 @@ At zero maturity the price is the intrinsic value, delta is the indicator that t
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+struct BsGreeks {
+  double delta, gamma, vega, theta, rho;
+};
+BsGreeks bs_greeks(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  const auto g = bs_field(type, S, K, r, q, T, vol).price().greeks;
+  return {g.delta.items<double>()[0], g.gamma.items<double>()[0], g.vega.items<double>()[0], g.theta.items<double>()[0], g.rho.items<double>()[0]};
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
   out.writeln("spot   call price   delta   gamma   vega   theta   rho    (maturity 0, strike 100)");
   for (double spot : {90.0, 100.0, 110.0}) {
-    const auto g = prc::black_scholes_greeks(prc::Call, spot, 100.0, 0.05, 0.02, 0.0, 0.2);
-    out.writeln(spot, prc::black_scholes_price(prc::Call, spot, 100.0, 0.05, 0.02, 0.0, 0.2), g.delta, g.gamma, g.vega, g.theta, g.rho);
+    const auto g = bs_greeks(prc::Call, spot, 100.0, 0.05, 0.02, 0.0, 0.2);
+    out.writeln(spot, bs_price(prc::Call, spot, 100.0, 0.05, 0.02, 0.0, 0.2), g.delta, g.gamma, g.vega, g.theta, g.rho);
   }
 }
 ```
@@ -231,3 +328,16 @@ spot   call price   delta   gamma   vega   theta   rho    (maturity 0, strike 10
 ```
 
 At maturity the call is worth its intrinsic value (0 at 90, 0 at 100, 10 at 110), delta is 0, 0.5 and 1, and every other Greek is zero.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="prices_and_parity.html">
+    <span class="label">Previous</span>
+    <span class="title">Prices and put-call parity</span>
+  </a>
+  <a class="next-link" href="batches_of_spots_and_maturities.html">
+    <span class="label">Next</span>
+    <span class="title">Batches of spots and maturities</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

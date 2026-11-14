@@ -89,8 +89,8 @@ int main() {
   const auto counts = pluss::make_series(std::vector<double>{12, 8, 15,
                                                             20, 25, 9}, {2, 3}, as_f64());
   const auto r = hyp::chisq_indep(counts);
-  const auto top = r.expected.select(0, 0).pull<double>();
-  const auto bottom = r.expected.select(0, 1).pull<double>();
+  const auto top = r.expected.select(0, 0).items<double>();
+  const auto bottom = r.expected.select(0, 1).items<double>();
   std::cout << "row 1 expected " << top[0] << ", " << top[1] << ", " << top[2] << "\n";
   std::cout << "row 2 expected " << bottom[0] << ", " << bottom[1] << ", " << bottom[2] << "\n";
   std::cout << "table " << r.rows << " x " << r.cols << "\n";
@@ -126,3 +126,12 @@ At the 1% level the critical value is 9.21, above the statistic 8.59, so the sam
 
 - [`chisq_gof`](chisq_gof.md)
 - [`anova_1w`](anova_1w.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="chisq_gof.html">
+    <span class="label">Previous</span>
+    <span class="title">chisq_gof</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

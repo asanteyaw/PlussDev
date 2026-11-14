@@ -1,0 +1,63 @@
+# `circuit::TranOptions`
+
+Choices of the transient solver.
+
+## Signature
+
+```cpp
+circuit::TranOptions
+```
+
+## What It Does
+
+Selects the time-stepping rule of `tran` and the controls of its Newton iteration.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `scheme` | The time-stepping rule, `Scheme::Trapezoid` or `Scheme::Gear2`. | `Scheme::Trapezoid` |
+| `solver` | The `SolveOptions` of the Newton iteration used when the circuit has diodes or transistors: `thermal_voltage`, `tolerance`, `max_iterations` and `gmin`. | `SolveOptions` defaults |
+
+## Returns
+
+A value; read by `tran`.
+
+## Errors
+
+Every value of `scheme` is accepted; an invalid `solver` control is reported by `tran`.
+
+## Interpretation and Use
+
+The trapezoid rule keeps the energy of an oscillation and is the more accurate rule at a given step; `Scheme::Gear2` damps the fast part of a response that a long step cannot resolve, at the price of damping oscillations. See `Scheme` for the choice.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Omitted options are the trapezoid rule.
+
+@@example Eng/api/circuit_options_default.cpp@@
+
+### Example 2
+
+Each rule on an oscillator that must keep its energy.
+
+@@example Eng/api/circuit_tran_schemes.cpp@@
+
+### Example 3
+
+The error of each rule as the step is halved.
+
+@@example Eng/api/circuit_scheme_order.cpp@@
+
+### Example 4
+
+The iteration controls on a rectifier.
+
+@@example Eng/api/circuit_options_solver.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

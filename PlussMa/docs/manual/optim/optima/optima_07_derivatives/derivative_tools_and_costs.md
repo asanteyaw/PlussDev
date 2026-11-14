@@ -265,3 +265,12 @@ Both modes give the same fit: 11 iterations, an objective of 0.433348, parameter
 - **The answer does not depend on the mode.** Both modes gave the same fit in the loop example; the choice is about memory and time.
 
 Where next: [Chapter 8](../optima_08_worked_problems.md) puts everything together on five worked problems.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="automatic_analytic_and_audited_derivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">Automatic, analytic and audited derivatives</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -33,16 +33,6 @@ Find the lowest modes of a cantilever against the closed formula.
 
 @@example Eng/api/structure_mass_modes.cpp@@
 
-```{toctree}
-:maxdepth: 3
-:hidden:
-
-structure/model
-structure/statics
-structure/spectral
-structure/dynamics
-```
-
 <!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 3

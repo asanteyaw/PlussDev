@@ -9,7 +9,7 @@
 
 ```cpp
 std::unordered_map<std::string, pluss::table::DataFrame>
-CatalogNoteAccessor::partition(std::string_view separator, std::string prefix = "part") const
+std::unordered_map<std::string, pluss::table::DataFrame> CatalogNoteAccessor::partition(std::string_view separator, std::string prefix = "part") const
 ```
 
 ## What It Does

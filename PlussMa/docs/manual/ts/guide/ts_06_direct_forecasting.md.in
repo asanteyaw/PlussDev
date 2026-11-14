@@ -71,4 +71,12 @@ The Diebold–Mariano test compares two sets of forecast errors `e_A`, `e_B` by 
 5. Remember that NaN marks rows that cannot be predicted; the loss functions ignore them.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ts_06_direct_forecasting/partitions
+ts_06_direct_forecasting/direct_forecasts
+ts_06_direct_forecasting/comparing_models_out_of_sample
+```
 <!-- apiref:toctree:end -->

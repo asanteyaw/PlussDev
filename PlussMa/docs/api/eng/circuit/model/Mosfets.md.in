@@ -1,0 +1,115 @@
+# `circuit::Mosfets`
+
+Enhancement MOSFETs of a circuit.
+
+## Signature
+
+```cpp
+circuit::Mosfets
+```
+
+## What It Does
+
+Describes MOSFETs by their three terminals (the body is tied to the source unless a `bulk` node is given) and the level-1 square-law model. In the effective frame (a PMOS is the NMOS equations on negated voltages) with overdrive `vov = vgs - Vth`: no current for `vov <= 0`; in the triode region (`vds < vov`) `id = kp (vov vds - vds^2 / 2) (1 + lambda vds)`; in saturation `id = kp vov^2 / 2 (1 + lambda vds)`. A negative drain-source voltage swaps the roles of drain and source. Circuits with MOSFETs are solved by Newton iteration in `op`, `ac` (around an operating point) and `tran`. The optional gate capacitances are constant linear capacitors.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `drain` | The drain node of each MOSFET. | empty |
+| `gate` | The gate node of each MOSFET. | empty |
+| `source` | The source node of each MOSFET; it must differ from the drain. | empty |
+| `polarity` | `1` for an NMOS and `-1` for a PMOS, one per MOSFET. | required |
+| `transconductance` | `kp = mu Cox W / L` in A/V^2, `[..., mosfets]`; positive and finite. | required |
+| `threshold` | The magnitude of the threshold voltage `Vth` in volts, `[..., mosfets]`; positive and finite, the same convention for NMOS and PMOS. | required |
+| `channel_modulation` | The channel-length modulation `lambda` in 1/V, `[..., mosfets]`; non-negative and finite. | undefined: zero |
+| `bulk` | The bulk node of each MOSFET, one per MOSFET, or empty to tie the body to the source. | empty |
+| `body_effect` | The body-effect coefficient `gamma` in sqrt(V), `[..., mosfets]`; non-negative. With a `bulk`, `Vth = Vth0 + gamma (sqrt(phi + vsb) - sqrt(phi))`. | undefined: zero |
+| `surface_potential` | The surface potential `phi` in volts, `[..., mosfets]`; positive. | `0.6` |
+| `gate_source_capacitance` | A constant gate-source capacitance in farads, `[..., mosfets]`; non-negative. | undefined: none |
+| `gate_drain_capacitance` | A constant gate-drain capacitance in farads, `[..., mosfets]`; non-negative. | undefined: none |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+`make` throws `pluss::Error` for a terminal outside the circuit, a drain tied to the source, lists of different lengths, a polarity other than `1` or `-1`, a missing, non-positive or non-finite `transconductance` or `threshold`, a negative `channel_modulation` or capacitance, a capacitance across a node and itself, values of a different dtype or platform than the other groups, or incompatible batch axes.
+
+## Interpretation and Use
+
+The gate draws no DC current, so a gate needs a DC path to a defined voltage like any other node. `Result::drain_current` holds the current into each drain terminal; the capacitances are appended to the net's capacitors (in the order diodes, transistors, MOSFETs) for `Start`. A sweep of gate voltages is a batch on the gate source.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A common-source bias point.
+
+@@example Eng/api/circuit_mosfet_bias.cpp@@
+
+### Example 2
+
+The triode region.
+
+@@example Eng/api/circuit_mosfet_triode.cpp@@
+
+### Example 3
+
+A swept gate voltage.
+
+@@example Eng/api/circuit_mosfet_sweep.cpp@@
+
+### Example 4
+
+A PMOS mirrors an NMOS.
+
+@@example Eng/api/circuit_mosfet_pmos.cpp@@
+
+### Example 5
+
+Channel-length modulation.
+
+@@example Eng/api/circuit_mosfet_modulation.cpp@@
+
+### Example 6
+
+Small-signal gain.
+
+@@example Eng/api/circuit_mosfet_gain.cpp@@
+
+### Example 7
+
+Gate capacitance in a transient.
+
+@@example Eng/api/circuit_mosfet_gate_charge.cpp@@
+
+### Example 8
+
+The body effect lowers a source follower.
+
+@@example Eng/api/circuit_mosfet_body.cpp@@
+
+### Example 9
+
+A batch of body-effect coefficients and surface potentials.
+
+@@example Eng/api/circuit_mosfet_body_sweep.cpp@@
+
+### Example 10
+
+Rejected body parameters.
+
+@@example Eng/api/circuit_mosfet_body_errors.cpp@@
+
+### Example 11
+
+Rejected MOSFETs.
+
+@@example Eng/api/circuit_mosfet_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

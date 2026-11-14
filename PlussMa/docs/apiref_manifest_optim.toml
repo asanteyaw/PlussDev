@@ -14,7 +14,7 @@ path = "optim/optima/optima_01_first_problems"
 page = "manual/optim/optima/optima_01_first_problems.md"
 title = "Your First Constrained Problems"
 maxdepth = 2
-children = ["optima_01_first_problems/stating_a_constrained_problem", "optima_01_first_problems/blocks_values_and_reading_the_result"]
+children = ["optima_01_first_problems/stating_a_constrained_problem", "optima_01_first_problems/blocks_values_and_reading_the_result", "optima_01_first_problems/complex_parameters"]
 
 [[family]]
 path = "optim/optima/optima_02_reading_results"
@@ -302,6 +302,13 @@ kind = "page"
 family = "optim/optima/optima_01_first_problems"
 page = "manual/optim/optima/optima_01_first_problems/blocks_values_and_reading_the_result.md"
 summary = "Blocks, problems as values, gradients and reading the result"
+
+[[symbol]]
+qualname = "optim::optima_01_first_problems::Complex parameters"
+kind = "page"
+family = "optim/optima/optima_01_first_problems"
+page = "manual/optim/optima/optima_01_first_problems/complex_parameters.md"
+summary = "Complex parameters"
 
 [[symbol]]
 qualname = "optim::optima_02_reading_results::Exit flags and stall categories"

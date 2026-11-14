@@ -297,30 +297,35 @@ The invoice total and the discount both use the house style. The tax line overri
 
 ## Example 7: Strict and forgiving format strings
 
-A format string in a configuration file can drift from the values it is given, and a silent mismatch is hard to find. Strict mode turns an extra value into an error. A missing value can instead show a visible marker, so the mistake is seen but the program keeps going.
+A format string in a configuration file can drift from the values it is given, and a silent mismatch is hard to find. A string literal cannot drift: with too few arguments, an unmatched brace, or a malformed spec it does not compile. A pattern that arrives at run time is wrapped in `runtime_format` and is checked when the call runs. Strict mode turns an extra value into an error, and a missing value can show a visible marker, so the mistake is seen but the program keeps going.
 
 ```cpp
-// Format strings in a configuration file can drift from the values they are given. Strict mode
-// turns a mismatch into an error, and a missing argument can be shown as a visible marker instead.
+// Format strings in a configuration file can drift from the values they are given. A pattern that
+// arrives at run time is checked when the call runs: strict mode turns a mismatch into an error, and a
+// missing argument can be shown as a visible marker instead. (A string literal with too few arguments
+// does not compile at all.)
 #include <pluss/tils/kit/output.h>
 
 #include <iostream>
-#include <stdexcept>
+#include <string>
 
 using namespace pluss::tils;
 
 int main() {
   OutputEngine out{std::cout};
+  const std::string shipped = "order {} shipped to {}";             // as read from a configuration file
+  const std::string dated = "order {} shipped to {} on {}";
 
   // A pattern with two placeholders is given three values. Strict mode refuses the extra one.
   try {
-    out.writelnf("order {} shipped to {}", 1001, "Lagos", "express", PrintOptions{.strict_args = true});
-  } catch (const std::runtime_error& error) {
-    out.writeln("strict mode refused the line:", error.what());
+    out.writelnf(runtime_format(shipped), 1001, "Lagos", "express", PrintOptions{.strict_args = true});
+  } catch (const pluss::Error& error) {
+    const std::string text = error.what();
+    out.writeln("strict mode refused the line:", text.substr(0, text.find('\n')));
   }
 
   // A pattern with three placeholders is given two values. The missing one shows the marker.
-  out.writelnf("order {} shipped to {} on {}", 1001, "Lagos", PrintOptions{.missing_arg = "<?>"});
+  out.writelnf(runtime_format(dated), 1001, "Lagos", PrintOptions{.missing_arg = "<?>"});
   return 0;
 }
 ```
@@ -383,6 +388,52 @@ notes: plain text
 
 The escape sequences wrap the text, and the line with color off has none. In a real terminal you would leave the color mode on automatic, which colors only when the output is a terminal, so pipes and log files stay clean.
 
+## Example 9: Building text before writing it
+
+Some text is not printed: it goes into an error message, a column label, or a file name. `OutputEngine::format` returns the formatted text as a string with the same patterns as `writelnf`, and `OutputEngine::join` turns a range into one string. A spec can set the fill, alignment, sign, base, zero padding, width, and precision, and the width or precision can come from another argument with a nested `{}`.
+
+```cpp
+// Building text before writing it: a message for an error, a label for a column, a file name.
+// format returns a string, join turns a range into one, and a string-literal pattern is checked
+// against its arguments while compiling.
+#include <pluss/tils/kit/output.h>
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace pluss::tils;
+
+int main() {
+  const std::vector<std::string> columns{"id", "city", "sales"};
+  const std::string missing = "revenue";
+
+  // An error message that lists what exists.
+  const std::string message = OutputEngine::format("unknown column '{}'; available: [{}]", missing, OutputEngine::join(columns, ", "));
+
+  // A zero-padded file name and a right-aligned amount with a sign and two decimals.
+  const std::string file = OutputEngine::format("report_{:04d}.csv", 7);
+  const std::string amount = OutputEngine::format("[{:>+10.2f}]", 1234.5);
+
+  // The width itself comes from a value.
+  const std::string padded = OutputEngine::format("[{:<{}}]", "id", 6);
+
+  OutputEngine out{std::cout};
+  out.writeln(message);
+  out.writeln(file, amount, padded);
+  return 0;
+}
+```
+
+Output
+
+```text
+unknown column 'revenue'; available: [id, city, sales]
+report_0007.csv [  +1234.50] [id    ]
+```
+
+The error message lists the columns that exist, the file name is zero-padded, the amount is aligned and signed, and the last width came from a value. None of these wrote anything until the engine printed them.
+
 ## Decisions
 
 | You want | Use | Notes |
@@ -392,7 +443,9 @@ The escape sequences wrap the text, and the line with color off has none. In a r
 | A message that has a severity | `info`, `warn`, `error` and friends | A level below the minimum is dropped. |
 | A format that applies to one call | a trailing `PrintOptions` | It applies to every value on that call. |
 | A format that applies to every call | `print_defaults` | Any call can still override it. |
-| Text you need as a string | an `OutputEngine` over an `std::ostringstream` | The capture is the text the engine would have printed. |
+| Text you need as a string | `OutputEngine::format` and `OutputEngine::join` | A literal pattern is checked while compiling. |
+| The text a call would have printed | an `OutputEngine` over an `std::ostringstream` | The capture is the text the engine would have printed. |
+| A pattern that arrives at run time | `runtime_format(text)` | It is checked when the call runs. |
 
 ## Pitfalls
 
@@ -400,7 +453,9 @@ The escape sequences wrap the text, and the line with color off has none. In a r
 
 **Expecting a debug line to print after a minimum level is set above it.** o01 shows the debug line is dropped without a trace.
 
-**Expecting a format mismatch to be silent.** o07 shows strict mode refuses an extra value, and a missing value shows the marker only when you ask for it.
+**Expecting a format mismatch to be silent.** A literal pattern with too few arguments does not compile. o07 shows that a run-time pattern behaves differently: strict mode refuses an extra value, and a missing value shows the marker only when you ask for it.
+
+**Passing a pattern held in a variable straight to a formatting call.** The call wants a string literal it can check while compiling, so wrap the variable in `runtime_format(pattern)`.
 
 **Expecting color to appear in a pipe.** o08 turns color on explicitly. The default automatic mode colors only in a terminal.
 

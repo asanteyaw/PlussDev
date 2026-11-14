@@ -97,3 +97,16 @@ int main() {
 ```
 
 The twenty parameters are the constant and 19 expanded columns, in the order of the printed names: the powers of a, then of b, then of c, and then the cross terms, ordered by total degree (the degree-2 products b*c, a*c and a*b first, then those of degree 3). The count agrees with C(*p* + *d*, *d*) − 1 for the three settings shown. The number of terms grows quickly with the degree and the number of predictors (14 for four predictors at degree 2, 19 for three at degree 3), so the number of rows must exceed it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fitting_a_curve.html">
+    <span class="label">Previous</span>
+    <span class="title">Fitting a curve</span>
+  </a>
+  <a class="next-link" href="choosing_the_degree.html">
+    <span class="label">Next</span>
+    <span class="title">Choosing the degree</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

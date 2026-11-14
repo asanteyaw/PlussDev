@@ -1,0 +1,210 @@
+# Particle filters
+
+[Back to Filtering](../finance_09_filtering.md)
+
+When the model is not Gaussian, or not nearly linear, the posterior of the state is not described by a mean and a covariance, and a particle filter represents it by a cloud. It carries {math}`N` **particles** {math}`x^{(i)}_t` with weights {math}`w^{(i)}_t`, and at each date repeats three steps:
+
+1. **Propagate.** Move each particle through the model, {math}`x^{(i)}_t\sim p(x_t\mid x^{(i)}_{t-1})`, drawing its own noise.
+2. **Weight.** Multiply each weight by the likelihood of the observation under that particle, {math}`w^{(i)}_t\propto w^{(i)}_{t-1}\,p(y_t\mid x^{(i)}_t)`, and normalise them to sum to 1.
+3. **Resample** when the weights have concentrated on a few particles: draw {math}`N` new particles from the weighted cloud, and reset the weights to {math}`1/N`.
+
+The weighted cloud estimates anything about the state, for example the filtered mean {math}`\sum_iw^{(i)}x^{(i)}`, and the sum of the logarithms of the average likelihoods estimates the likelihood of the data. The concentration of the weights is measured by the **effective sample size**,
+
+```{math}
+\text{ESS}_t=\frac{1}{\sum_i\big(w^{(i)}_t\big)^2},
+```
+
+which is {math}`N` for equal weights and 1 when one particle carries everything. A filter that never resamples ends with an ESS of about 1 and a useless estimate; the usual rule resamples when ESS falls below a fraction of {math}`N`.
+
+```cpp
+filtering::ParticleFilterResult filtering::particle_filter(const Series &observations, const filtering::ParticleFilterModel &model, Config cfg = {});
+```
+
+| `ParticleFilterModel` member | Meaning |
+|---|---|
+| `initial_particles` | `[N, n]`, a sample of the state before the first observation |
+| `initial_weights` | `[N]`, optional; uniform if undefined |
+| `transition` | a function of the particles `[N, n]` and the date index returning the propagated particles `[N, n]`, **including their noise** |
+| `loglik` | a function of the particles `[N, n]`, the observation `[m]` and the date index returning the log-density of the observation for each particle, `[N]` |
+| `options` | the resampling settings, below |
+
+| `ParticleFilterOptions` | Meaning | Default |
+|---|---|---|
+| `resample` | resample at all | `true` |
+| `resample_trigger` | `Ratio`: when the ESS falls below `ess_threshold`·N; `Interval`: every `resample_interval` dates | `Ratio` |
+| `ess_threshold` | the fraction of N that triggers `Ratio` | 0.5 |
+| `resample_interval` | the number of dates between two resamplings, for `Interval` | 1 |
+| `resample_method` | `Systematic`, `Multinomial`, `Stratified` or `Residual`: how the new particles are drawn from the weights | `Systematic` |
+| `resample_seed` | seed of the resampling | 0 |
+| `store_particles` | keep every date's particles in the result | `true` |
+
+| `ParticleFilterResult` member | Shape | Contents |
+|---|---|---|
+| `filtered_mean` | `[T, n]` | the weighted mean of the particles at each date |
+| `particle_weights` | `[T, N]` | the normalised weights at each date |
+| `particles` | `[T, N, n]` | the particles, when `store_particles` is true |
+| `ess` | `[T]` | the effective sample size at each date, before resampling |
+| `loglik` | number | the estimate of the log-likelihood of the observations |
+
+The random numbers belong to your `transition`: draw them with a seed that depends on the date, as the programs do, so that a run is reproducible.
+
+## Program 1: checking the particle filter against the exact answer
+
+A particle filter needs a test, and the linear Gaussian model provides it: the Kalman filter is exact there. The program uses the local-level model of the last page, filters 200 observations with 4,000 particles under each option, and prints the largest difference of the filtered mean from the Kalman filter, the log-likelihood (the exact one is −29.556), and the mean and the minimum of the ESS. The likelihood function includes its normalising constant, so that the log-likelihood is comparable.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using namespace pluss::tils;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 200, N = 4000;
+  const auto x = (pluss::series::randn({T}, as_f64(), 1) * std::sqrt(q)).cumsum(0, false);
+  const auto y = x + pluss::series::randn({T}, as_f64(), 2) * std::sqrt(r);
+
+  // the exact answer, for comparison
+  flt::KalmanModel kalman;
+  kalman.transition = pluss::series::full({1, 1}, 1.0, as_f64());
+  kalman.observation = pluss::series::full({1, 1}, 1.0, as_f64());
+  kalman.process_cov = pluss::series::full({1, 1}, q, as_f64());
+  kalman.observation_cov = pluss::series::full({1, 1}, r, as_f64());
+  kalman.initial_mean = pluss::series::full({1}, 0.0, as_f64());
+  kalman.initial_cov = pluss::series::full({1, 1}, 1.0, as_f64());
+  const auto exact = flt::kalman_filter(y, kalman, as_f64());
+
+  const auto make_model = [&](flt::ParticleFilterOptions options) {
+    flt::ParticleFilterModel model;
+    model.initial_particles = pluss::series::randn({N, 1}, as_f64(), 5);  // x_0 ~ N(0, 1), as in the Kalman model
+    model.options = options;
+    model.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, as_f64(), 1000 + t) * std::sqrt(q); };
+    model.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+      const auto residual = observation.reshape({1, 1}) - particles;
+      return ((residual.square() / (2.0 * r)) * -1.0 - 0.5 * std::log(2.0 * M_PI * r)).reshape({N});
+    };
+    return model;
+  };
+  const auto compare = [&](const std::string &label, flt::ParticleFilterOptions options) {
+    const auto result = flt::particle_filter(y, make_model(options), as_f64());
+    out.writeln(label, (result.filtered_mean.reshape({T}) - exact.filtered_mean.reshape({T})).abs().max().item<double>(), result.loglik, result.ess.mean().item<double>(), result.ess.min().item<double>());
+  };
+  out.writeln("exact Kalman log-likelihood", exact.loglik, " (particles: 4000)");
+  out.writeln("setting                      max |mean - Kalman|  log-likelihood  mean ESS   minimum ESS");
+  const flt::ParticleFilterOptions defaults;
+  compare("defaults (systematic, 0.5)    ", defaults);
+  for (const auto [name, method] : std::vector<std::pair<const char *, flt::ParticleResampleMethod>>{{"multinomial                  ", flt::ParticleResampleMethod::Multinomial},
+                                                                                                      {"stratified                   ", flt::ParticleResampleMethod::Stratified},
+                                                                                                      {"residual                     ", flt::ParticleResampleMethod::Residual}}) {
+    auto options = defaults;
+    options.resample_method = method;
+    compare(name, options);
+  }
+  auto interval = defaults;
+  interval.resample_trigger = flt::ParticleResampleTrigger::Interval;
+  interval.resample_interval = 5;
+  compare("every 5 dates               ", interval);
+  auto eager = defaults;
+  eager.ess_threshold = 0.9;
+  compare("ESS threshold 0.9           ", eager);
+  auto never = defaults;
+  never.resample = false;
+  compare("no resampling               ", never);
+}
+```
+
+With any resampling method the filtered mean is within 0.013 to 0.028 of the exact one, where the standard deviation of the state estimate is about 0.12, and the log-likelihood is within 0.3 of −29.556: the particle estimate of the likelihood has a random error of that size. The options matter less than the principle. **Without resampling** the filter collapses: the mean ESS is 25 of 4,000 and the minimum is 1, the mean differs from the exact one by 0.67, and the log-likelihood is −92. Resampling every 5 dates still works (the ESS minimum is 75), and an ESS threshold of 0.9 resamples more often and keeps a mean ESS of 2,831; the four methods have the same accuracy to within the noise of the run (0.0128 to 0.0203), and in this run `Multinomial` and `Residual` give a higher minimum ESS than `Systematic`. For most problems the default is fine; raise the number of particles first.
+
+## Program 2: a model with outliers
+
+The Gaussian filter assumes the observation noise is Gaussian, and a single wild observation then moves the estimate a great deal. A particle filter can use any likelihood. The program tracks a local level whose observations are wrong, by about one unit, with probability 6% (18 of 300 observations; the normal noise has standard deviation 0.2). It compares the Gaussian Kalman filter with a particle filter whose likelihood is a Student t with 3 degrees of freedom and scale 0.2, which expects occasional large errors,
+
+```{math}
+\ln p(y\mid x)=-\tfrac{\nu+1}{2}\ln\Big(1+\tfrac1\nu\Big(\tfrac{y-x}{s}\Big)^2\Big)+\text{constant},
+```
+
+and prints the root-mean-square and the largest error of the state estimates.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using namespace pluss::tils;
+using pluss::Series;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 300, N = 4000;
+  const auto x = (pluss::series::randn({T}, as_f64(), 21) * std::sqrt(q)).cumsum(0, false);
+  // 6% of the observations are wrong by about one unit, an error of five standard deviations
+  auto noise = (pluss::series::randn({T}, as_f64(), 22) * std::sqrt(r)).items<double>();
+  const auto flags = pluss::series::rand({T}, as_f64(), 23).items<double>();
+  const auto jumps = pluss::series::randn({T}, as_f64(), 24).items<double>();
+  for (std::int64_t t = 0; t < T; ++t) {
+    if (flags[t] < 0.06) noise[t] += 1.0 + 0.2 * jumps[t];
+  }
+  const auto y = x + pluss::make_series(noise, {T}, as_f64());
+
+  flt::KalmanModel kalman;
+  kalman.transition = pluss::series::full({1, 1}, 1.0, as_f64());
+  kalman.observation = pluss::series::full({1, 1}, 1.0, as_f64());
+  kalman.process_cov = pluss::series::full({1, 1}, q, as_f64());
+  kalman.observation_cov = pluss::series::full({1, 1}, r, as_f64());
+  kalman.initial_mean = pluss::series::full({1}, 0.0, as_f64());
+  kalman.initial_cov = pluss::series::full({1, 1}, 1.0, as_f64());
+  const auto gaussian = flt::kalman_filter(y, kalman, as_f64());
+
+  // a particle filter whose likelihood has heavier tails: Student t with 3 degrees of freedom and scale 0.2
+  flt::ParticleFilterModel heavy;
+  heavy.initial_particles = pluss::series::randn({N, 1}, as_f64(), 5);
+  heavy.transition = [&](const Series &particles, std::int64_t t) { return particles + pluss::series::randn({N, 1}, as_f64(), 7000 + t) * std::sqrt(q); };
+  heavy.loglik = [&](const Series &particles, const Series &observation, std::int64_t) {
+    const double scale = 0.2, nu = 3.0;
+    const auto z = (observation.reshape({1, 1}) - particles) / scale;
+    return ((z.square() / nu + 1.0).log() * (-(nu + 1.0) / 2.0)).reshape({N});
+  };
+  const auto robust = flt::particle_filter(y, heavy, as_f64());
+
+  const auto rmse = [&](const Series &estimate) { return (estimate.reshape({T}) - x).square().mean().sqrt().item<double>(); };
+  out.writeln("rmse of the state   observations alone", (y - x).square().mean().sqrt().item<double>(), " Gaussian Kalman filter", rmse(gaussian.filtered_mean), " Student-t particle filter", rmse(robust.filtered_mean));
+  const auto bad = (flags.begin(), pluss::make_series(flags, {T}, as_f64()) < 0.06);
+  out.writeln("number of bad observations", bad.to(pluss::ScalarType::Float64).sum().item<double>());
+  const auto worst_gaussian = (gaussian.filtered_mean.reshape({T}) - x).abs().max().item<double>(), worst_robust = (robust.filtered_mean.reshape({T}) - x).abs().max().item<double>();
+  out.writeln("largest error of the state: Gaussian", worst_gaussian, " Student-t", worst_robust);
+}
+```
+
+The raw observations have an error of 0.306. The Gaussian Kalman filter, which cannot tell a wild observation from a real jump, reduces it to 0.178. The Student-t particle filter reaches 0.149, a further 16% lower, and its largest error is 0.554 against 0.665: the likelihood of a Student t falls off as a power of the miss rather than as an exponential, so an outlier does not make the weights of the particles collapse onto the few that sit near it. The price is the simulation: the particle filter is a random algorithm, and its answer carries a Monte Carlo error that a Kalman filter does not have. Note that the likelihood here omits its constant; the constant does not affect the filtered mean, only the reported log-likelihood.
+
+## Checklist
+
+1. Put the noise of the state in `transition` and the density of the observation in `loglik`; draw the noise with a date-dependent seed.
+2. Test the filter on a linear Gaussian model against the Kalman filter before trusting it on yours.
+3. Watch `ess`: if it falls to a handful the likelihood is too informative for the number of particles; use more particles.
+4. Leave resampling on; `Systematic` with the 0.5 threshold is a sound default.
+5. Include the normalising constant of the observation density if you need the log-likelihood.
+6. Use a particle filter when the noise is not Gaussian or the model is strongly nonlinear; otherwise the Kalman filters are exact or cheaper.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="yield_curve_filtering.html">
+    <span class="label">Previous</span>
+    <span class="title">Filtering the short rate from bond prices</span>
+  </a>
+  <a class="next-link" href="volatility_filtering.html">
+    <span class="label">Next</span>
+    <span class="title">Filtering volatility from returns</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

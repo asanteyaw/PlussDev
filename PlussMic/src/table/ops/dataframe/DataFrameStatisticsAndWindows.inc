@@ -542,7 +542,7 @@ DataFrame DataFrame::percentiles(pluss::msharp::RangeView::Double points,
   for (const auto point : points) {
     PLUSS_CHECK(point >= 0.0 && point <= 1.0,
                 "DataFrame::percentiles: points must be in [0, 1]");
-    labels.push_back(fmt::format("{}%", point * 100.0));
+    labels.push_back(pluss::tils::OutputEngine::format("{}%", point * 100.0));
   }
 
   const auto& src = impl_ref_();
@@ -586,7 +586,7 @@ DataFrame DataFrame::mode(bool drop_nulls) const {
   std::vector<std::string> case_labels;
   case_labels.reserve(output_size);
   for (std::int64_t i = 0; i < output_size; ++i) {
-    case_labels.push_back(fmt::format("mode_{}", i));
+    case_labels.push_back(pluss::tils::OutputEngine::format("mode_{}", i));
   }
   return DataFrame(std::move(columns), make_note_slate(case_labels));
 }
@@ -831,7 +831,7 @@ DataFrame DataFrame::corr_with(pluss::msharp::RangeView::Of<DataFrame> others,
   std::vector<std::pair<std::string, Slate>> columns;
   columns.reserve(others.size());
   for (std::size_t i = 0; i < others.size(); ++i) {
-    columns.emplace_back(fmt::format("frame_{}", i), corr_with(others[i], method, min_count));
+    columns.emplace_back(pluss::tils::OutputEngine::format("frame_{}", i), corr_with(others[i], method, min_count));
   }
   return DataFrame(std::move(columns));
 }

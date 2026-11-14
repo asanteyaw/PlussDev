@@ -1,0 +1,57 @@
+# `thermal::Fixed`
+
+Nodes held at prescribed temperatures.
+
+## Signature
+
+```cpp
+thermal::Fixed
+```
+
+## What It Does
+
+Holds nodes at a given temperature whatever heat flows through them: the surroundings, a thermostat, the ground. Every node of a network must reach at least one fixed node through links for `steady` to have an answer. The heat a fixed node delivers into the network is reported in `Result::fixed_flow`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `node` | The node of each fixed temperature, an integer in `0 .. nodes - 1`. | empty |
+| `temperature` | The temperature of each fixed node. The last axis has one value per fixed node; leading axes are batches. | undefined (no fixed nodes) |
+
+## Returns
+
+A value; read by `steady` and `tran`.
+
+## Errors
+
+`steady` and `tran` throw `pluss::Error` for a node index outside the network, a temperature array whose last axis does not have one value per fixed node, or a temperature that is not finite. `steady` also throws when there is no fixed node, or when a node has no conduction path to a fixed node.
+
+## Interpretation and Use
+
+Any temperature scale that is linear in kelvin works, because conduction depends only on differences; stay with one scale for the whole network. A fixed temperature that changes in time is a `Drive::temperature`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Two fixed boundaries around a chain.
+
+@@example Eng/api/thermal_steady_series.cpp@@
+
+### Example 2
+
+Surroundings that step to a higher temperature.
+
+@@example Eng/api/thermal_tran_drive.cpp@@
+
+### Example 3
+
+Rejected fixed temperatures.
+
+@@example Eng/api/thermal_errors_fixed.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

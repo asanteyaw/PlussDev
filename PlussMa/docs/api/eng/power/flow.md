@@ -23,7 +23,7 @@ DC power flow on a ring against hand values.
 #include <cmath>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -78,7 +78,7 @@ AC power flow checked against its defining equation.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -156,7 +156,7 @@ The loadability limit against its closed form.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -220,16 +220,6 @@ load 1.00000: converged true, load-bus voltage 0.94169, residual 0.00000
 load 3.00000: converged true, load-bus voltage 0.69325, residual 0.00000
 load 3.15975: converged true, load-bus voltage 0.58482, residual 0.00000
 load 3.20000: converged false, load-bus voltage 0.47115, residual 0.20591
-```
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-flow/Options
-flow/DcResult
-flow/AcResult
-flow/dc
-flow/ac
 ```
 
 <!-- apiref:toctree:start -->

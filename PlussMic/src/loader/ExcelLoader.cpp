@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Complex.h"
 #include "CodeM/core/Errors.h"
@@ -25,6 +24,7 @@
 #include "loader/SourceResolver.h"
 #include "table/DataFrame.h"
 #include "table/Slate.h"
+#include <pluss/tils/kit/output.h>
 
 #if defined(PLUSSMIC_HAS_LIBZIP) && PLUSSMIC_HAS_LIBZIP
 #include <zip.h>
@@ -156,38 +156,38 @@ std::string scalar_for_excel(const pluss::Series& s, std::int64_t row) {
     case pluss::codem::ScalarType::Bool:
       return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
     case pluss::codem::ScalarType::Int8:
-      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
     case pluss::codem::ScalarType::Int16:
-      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
     case pluss::codem::ScalarType::Int32:
-      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
     case pluss::codem::ScalarType::Int64:
-      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt8:
-      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
     case pluss::codem::ScalarType::UInt16:
-      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt32:
-      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt64:
-      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16:
-      return fmt::format("{:.6g}",
+      return pluss::tils::OutputEngine::format("{:.6g}",
                          pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
     case pluss::codem::ScalarType::BFloat16:
-      return fmt::format("{:.6g}",
+      return pluss::tils::OutputEngine::format("{:.6g}",
                          pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
     case pluss::codem::ScalarType::Float32:
-      return fmt::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
     case pluss::codem::ScalarType::Float64:
-      return fmt::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     case pluss::codem::ScalarType::Complex128: {
       const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     default:
       return "";
@@ -205,9 +205,9 @@ std::string slate_value_for_excel(const pluss::table::Slate& t, std::int64_t row
     case pluss::table::SlateKind::Note:
       return std::string(t.as_note().at(row));
     case pluss::table::SlateKind::Timeline:
-      return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
+      return pluss::tils::OutputEngine::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case pluss::table::SlateKind::Duration:
-      return fmt::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
+      return pluss::tils::OutputEngine::format("{}", t.as_duration().host()[static_cast<std::size_t>(row)]);
   }
   PLUSS_FAIL("save_excel: unsupported Slate kind");
 }
@@ -527,7 +527,7 @@ std::vector<std::string> flattened_header_names(const CellTable& table,
       name += token;
     }
     if (name.empty()) {
-      name = fmt::format("feat_{}", c);
+      name = pluss::tils::OutputEngine::format("feat_{}", c);
     }
     names[c] = std::move(name);
   }
@@ -538,7 +538,7 @@ std::vector<std::string> flattened_header_names(const CellTable& table,
   for (std::size_t c = 0; c < names.size(); ++c) {
     auto base = trim_ascii(names[c]);
     if (base.empty()) {
-      base = fmt::format("feat_{}", c);
+      base = pluss::tils::OutputEngine::format("feat_{}", c);
     }
     auto [it, inserted] = seen.emplace(base, 1);
     if (inserted) {
@@ -546,7 +546,7 @@ std::vector<std::string> flattened_header_names(const CellTable& table,
       continue;
     }
     const auto nth = ++(it->second);
-    names[c] = fmt::format("{}_{}", base, nth);
+    names[c] = pluss::tils::OutputEngine::format("{}_{}", base, nth);
   }
 
   return names;
@@ -603,7 +603,7 @@ std::string read_zip_entry(zip_t* archive, std::string_view path) {
 }
 
 std::optional<std::string> xml_attr(std::string_view tag, std::string_view attr_name) {
-  const std::string pattern = fmt::format("{}=\"", attr_name);
+  const std::string pattern = pluss::tils::OutputEngine::format("{}=\"", attr_name);
   const auto p = tag.find(pattern);
   if (p == std::string_view::npos) {
     return std::nullopt;
@@ -905,7 +905,7 @@ ExcelRawBatchWorkbook read_excel_workbook_raw_batch(std::string_view filepath,
       auto it = std::find_if(sheets.begin(), sheets.end(), [&](const SheetRef& s) {
         return normalize_sheet_name(s.name) == wanted;
       });
-      PLUSS_CHECK(it != sheets.end(), "read_excel_workbook_raw_batch: unknown sheet name '" + wanted_name + "'");
+      PLUSS_CHECK(it != sheets.end(), "read_excel_workbook_raw_batch: unknown sheet name '" + wanted_name + "'", wanted_name, pluss::exception::map_keys(sheets));
       selected_sheets.push_back(*it);
     }
   } else if (!options.sheet_indices.empty()) {
@@ -1020,7 +1020,7 @@ ExcelBatchWorkbook read_excel_workbook_batch(
       auto it = std::find_if(sheets.begin(), sheets.end(), [&](const SheetRef& s) {
         return normalize_sheet_name(s.name) == wanted;
       });
-      PLUSS_CHECK(it != sheets.end(), "read_excel_workbook_batch: unknown sheet name '" + wanted_name + "'");
+      PLUSS_CHECK(it != sheets.end(), "read_excel_workbook_batch: unknown sheet name '" + wanted_name + "'", wanted_name, pluss::exception::map_keys(sheets));
       selected_sheets.push_back(*it);
     }
   } else if (!options.sheet_indices.empty()) {
@@ -1108,10 +1108,10 @@ void save_excel(const pluss::table::DataFrame& frame,
 
   std::int64_t row_num = 1;
   auto emit_row = [&](const std::vector<std::string>& cells) {
-    sheet_xml += fmt::format(R"(<row r="{}">)", row_num);
+    sheet_xml += pluss::tils::OutputEngine::format(R"(<row r="{}">)", row_num);
     for (std::size_t i = 0; i < cells.size(); ++i) {
-      const auto ref = fmt::format("{}{}", column_letters(static_cast<std::int64_t>(i)), row_num);
-      sheet_xml += fmt::format(R"(<c r="{}" t="inlineStr"><is><t>{}</t></is></c>)", ref, xml_escape(cells[i]));
+      const auto ref = pluss::tils::OutputEngine::format("{}{}", column_letters(static_cast<std::int64_t>(i)), row_num);
+      sheet_xml += pluss::tils::OutputEngine::format(R"(<c r="{}" t="inlineStr"><is><t>{}</t></is></c>)", ref, xml_escape(cells[i]));
     }
     sheet_xml += "</row>";
     ++row_num;
@@ -1156,7 +1156,7 @@ void save_excel(const pluss::table::DataFrame& frame,
       R"(</Relationships>)";
 
   const std::string workbook_xml =
-      fmt::format(R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)"
+      pluss::tils::OutputEngine::format(R"(<?xml version="1.0" encoding="UTF-8" standalone="yes"?>)"
                   R"(<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" )"
                   R"(xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">)"
                   R"(<sheets><sheet name="{}" sheetId="1" r:id="rId1"/></sheets></workbook>)",

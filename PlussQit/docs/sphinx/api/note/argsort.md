@@ -145,12 +145,12 @@ The leading bytes are `0x01`, `0x7F`, and `0xFF`; no text decoding occurs.
 ```cpp
 std::cout << "Bool\n"
           << pluss::note::print(
-                 pluss::note::make({true, false, true, false}).argsort())
+                              pluss::note::make({true, false, true, false}).argsort())
           << '\n';
 std::cout << "Int64\n"
           << pluss::note::print(
-                 pluss::note::make(
-                     std::vector<std::int64_t>{10, -2, 10, 0}).argsort())
+                              pluss::note::make(
+                                  std::vector<std::int64_t>{10, -2, 10, 0}).argsort())
           << '\n';
 ```
 
@@ -203,7 +203,7 @@ std::cout << "scalar\n"
           << pluss::note::print(pluss::note::make("scalar").argsort()) << '\n';
 std::cout << "empty\n"
           << pluss::note::print(
-                 pluss::note::make(std::vector<std::string>{}).argsort())
+                              pluss::note::make(std::vector<std::string>{}).argsort())
           << '\n';
 ```
 

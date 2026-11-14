@@ -24,10 +24,10 @@ int main() {
 
   // The scale of the machine is known from its specification: sigma = 0.5 cl. ztest uses it; ttest estimates it.
   const auto z = hyp::ztest(a, 5.0, 0.5);
-  out.writeln("ztest (sigma = 0.5): z", z.stat, " p", z.pvalue, " standard error", z.std_err, " 95% interval", z.ci.pull<double>());
+  out.writeln("ztest (sigma = 0.5): z", z.stat, " p", z.pvalue, " standard error", z.std_err, " 95% interval", z.ci.items<double>());
 
   const auto t = hyp::ttest(a, 5.0);
-  out.writeln("ttest (estimated):   t", t.stat, " p", t.pvalue, " standard error", t.std_err, " 95% interval", t.ci.pull<double>());
+  out.writeln("ttest (estimated):   t", t.stat, " p", t.pvalue, " standard error", t.std_err, " 95% interval", t.ci.items<double>());
 
   // Same data, a wrong 'known' sigma: the answer moves with it.
   for (double sigma : {0.3, 0.5, 0.8, 1.2}) {
@@ -62,10 +62,10 @@ int main() {
   // Is the variance of machine A equal to the specified 0.25 cl^2?
   const auto v = hyp::vartest(a, 0.25);
   out.writeln("sample variance", v.sample_variance, " null variance", v.null_variance, " chi-squared", v.stat, " df", v.dof, " p", v.pvalue);
-  out.writeln("95% interval for the variance", v.ci.pull<double>());
+  out.writeln("95% interval for the variance", v.ci.items<double>());
 
   // The interval is asymmetric: variance estimates have a skewed distribution.
-  const auto ci = v.ci.pull<double>();
+  const auto ci = v.ci.items<double>();
   out.writeln("distance below / above the estimate", v.sample_variance - ci[0], ci[1] - v.sample_variance);
 
   // One-sided: is the variance larger than specified?
@@ -102,7 +102,7 @@ int main() {
   // Do the two machines have the same variance? vartest2 and f_ratio are the same F test.
   const auto f = hyp::vartest2(a, b);
   out.writeln("variances", f.var_x, f.var_y, " F", f.stat, " df", f.dof1, f.dof2, " p", f.pvalue);
-  out.writeln("95% interval for the ratio var_x / var_y", f.ci.pull<double>());
+  out.writeln("95% interval for the ratio var_x / var_y", f.ci.items<double>());
 
   const auto g = hyp::f_ratio(a, b);
   out.writeln("f_ratio gives the same statistic:", g.stat == f.stat ? "yes" : "no");
@@ -160,3 +160,16 @@ With normal data the F test rejects in 0.054 of the pairs, close to the 5% it pr
 - **The one-sided variance test is not the half of the two-sided one.** The two-sided p-value doubles the smaller tail; the chi-squared and F distributions are not symmetric, so the critical values are not mirror images.
 
 Where next: [One-sided alternatives and the level](one_sided_alternatives_and_the_level.md) covers the `tail` and `alpha` options that every test shares.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="tests_of_means.html">
+    <span class="label">Previous</span>
+    <span class="title">Tests of means</span>
+  </a>
+  <a class="next-link" href="one_sided_alternatives_and_the_level.html">
+    <span class="label">Next</span>
+    <span class="title">One-sided alternatives and the level</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

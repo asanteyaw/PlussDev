@@ -11,7 +11,7 @@ truth for which declarations may be documented publicly.
 
 The first structural tranche exposes two functional entry points:
 
-- `structure::truss(const Mesh&, const Bars&) -> Truss` validates and compiles immutable
+- `Truss structure::truss(const Mesh&, const Bars&)` validates and compiles immutable
   node connectivity and differentiable element geometry/material values;
 - `structure::solve(const Truss&, const Series& load, const Fix&,
   const SolveOptions&) -> StaticResult` solves one or more constrained static load cases.
@@ -143,11 +143,11 @@ modal, buckling, and transient response will then consume those same operators.
 E6b adds three functional entry points without exposing element matrices or assembly
 helpers:
 
-- `structure::frame(const Mesh&, const Sections&) -> Frame` compiles a planar,
+- `Frame structure::frame(const Mesh&, const Sections&)` compiles a planar,
   rigid-jointed Euler-Bernoulli frame;
 - `structure::solve(const Frame&, const Series& load, const Fix&,
   const SolveOptions&) -> FrameResult` performs constrained linear statics; and
-- `structure::mass(const Frame&, const Series& acceleration) -> Series` applies the
+- `Series structure::mass(const Frame&, const Series& acceleration)` applies the
   assembled consistent mass operator without materializing a global mass matrix.
 
 A frame has exactly two coordinate lanes and three nodal degrees of freedom in
@@ -288,9 +288,9 @@ time integration.
 
 E6c adds two functional analyses over the existing immutable `Frame`:
 
-- `structure::modes(frame, fix, options) -> ModeResult` returns the lowest elastic
+- `ModeResult structure::modes(frame, fix, options)` returns the lowest elastic
   vibration modes; and
-- `structure::buckling(frame, reference_load, fix, options) -> BuckResult` returns the
+- `BuckResult structure::buckling(frame, reference_load, fix, options)` returns the
   lowest positive linearized load multipliers about the reference elastic state.
 
 `EigOptions::count` is the requested block size. `max_iterations`,

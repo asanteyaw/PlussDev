@@ -28,19 +28,6 @@ Bend a cantilever through a large angle.
 
 @@example Eng/api/structure_nonlinear_solve.cpp@@
 
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-statics/SolveOptions
-statics/StaticResult
-statics/FrameResult
-statics/MemberLoad
-statics/NonlinearOptions
-statics/NonlinearResult
-statics/solve
-```
-
 <!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 2

@@ -172,7 +172,7 @@ TEST_CASE("MPS native put supports uint8 lane under strict policy", "[mps][put][
   base_cpu = (base_cpu.*put_fn)(idx_cpu, src_cpu, /*accumulate=*/false);
   base_mps = (base_mps.*put_fn)(idx_cpu.to(pluss::pMPS), src_cpu.to(pluss::pMPS), /*accumulate=*/false);
   REQUIRE(base_mps.platform() == pluss::pMPS);
-  require_equal_(base_mps.to(pluss::pCPU).pull<std::uint8_t>(), base_cpu.pull<std::uint8_t>());
+  require_equal_(base_mps.to(pluss::pCPU).items<std::uint8_t>(), base_cpu.items<std::uint8_t>());
 }
 
 TEST_CASE("MPS strict put rejects unsupported accumulate lane when fallback is disabled", "[mps][put][native][strict][policy]") {

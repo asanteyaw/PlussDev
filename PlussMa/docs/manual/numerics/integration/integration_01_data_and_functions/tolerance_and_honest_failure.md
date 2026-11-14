@@ -59,3 +59,12 @@ Auto (tries Gauss-Legendre first) no         1379701      2.8e-09         1.5e-0
 Simpson, fixed 1025 nodes         yes        1027         inf             2.5e-06
 ```
 The integral of `sqrt(x)` has an infinite slope at 0, which slows every rule. Under the default settings Simpson, Gauss–Legendre and `Auto` end with `converged` false, yet their values are accurate to 1e-9: the estimate sits just above the 1e-10 tolerance. Read `converged` together with `error_estimate`: a loose tolerance (1e-6) converges cheaply, a larger refinement allowance converges at great cost, and a fixed node count (`adaptive` off) gives no estimate at all (`inf`) but, here, still 2.5e-6 accuracy. `Auto` tries Gauss–Legendre, then Simpson, then the trapezoid rule, so on a failing integrand it spends the effort of all three.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_rules.html">
+    <span class="label">Previous</span>
+    <span class="title">The rules</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

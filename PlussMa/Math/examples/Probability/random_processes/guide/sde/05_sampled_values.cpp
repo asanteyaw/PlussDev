@@ -22,16 +22,16 @@ int main() {
   // An integrand computed from the path: the square of the path so far.
   const pluss::Series f = x.mul(x);
   std::cout << std::fixed << std::setprecision(6);
-  std::cout << "Ito of x^2 dx:            " << f.antidiff(x).ito(0).item<double>() << "\n";
-  std::cout << "Stratonovich of x^2 dx:   " << f.antidiff(x).strat(0).item<double>() << "   (x_T^3 / 3 = "
-            << std::pow(x.select(0, steps).item<double>(), 3) / 3.0 << " in the limit)\n";
+  std::cout << "Ito of x^2 dx:            " << f.antidiff(x).ito(0).squeeze().item<double>() << "\n";
+  std::cout << "Stratonovich of x^2 dx:   " << f.antidiff(x).strat(0).squeeze().item<double>() << "   (x_T^3 / 3 = "
+            << std::pow(x.select(0, steps).squeeze().item<double>(), 3) / 3.0 << " in the limit)\n";
   // The Ito form needs only the left endpoints: n - 1 samples are enough.
-  std::cout << "Ito from n - 1 samples:   " << f.slice(0, 0, steps, 1).antidiff(x).ito(0).item<double>() << "\n\n";
+  std::cout << "Ito from n - 1 samples:   " << f.slice(0, 0, steps, 1).antidiff(x).ito(0).squeeze().item<double>() << "\n\n";
 
-  const double qx = x.antidiff().quadratic_variation(0).item<double>();
-  const double qy = y.antidiff().quadratic_variation(0).item<double>();
-  const double cxy = x.antidiff(y).covariation(0).item<double>();
-  const double qsum = x.add(y).antidiff().quadratic_variation(0).item<double>();
+  const double qx = x.antidiff().quadratic_variation(0).squeeze().item<double>();
+  const double qy = y.antidiff().quadratic_variation(0).squeeze().item<double>();
+  const double cxy = x.antidiff(y).covariation(0).squeeze().item<double>();
+  const double qsum = x.add(y).antidiff().quadratic_variation(0).squeeze().item<double>();
   std::cout << "[x] = " << qx << ", [y] = " << qy << ", [x, y] = " << cxy << "\n";
   std::cout << "[x + y] = " << qsum << " = [x] + [y] + 2 [x, y] = " << qx + qy + 2.0 * cxy << "\n";
   return 0;

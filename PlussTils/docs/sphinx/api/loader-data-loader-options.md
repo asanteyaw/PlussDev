@@ -151,7 +151,7 @@ namespace {
 std::vector<double> one_pass(pluss::loader::DataLoader& loader) {
   std::vector<double> order;
   for (auto batch : loader) {
-    const auto values = batch.x().reshape({batch.x().numel()}).pull<double>();
+    const auto values = batch.x().reshape({batch.x().numel()}).items<double>();
     order.insert(order.end(), values.begin(), values.end());
   }
   return order;
@@ -223,7 +223,7 @@ void print_values(const std::vector<double>& values) {
 std::vector<double> visited(pluss::loader::DataLoader& loader) {
   std::vector<double> out;
   for (auto batch : loader) {
-    const auto values = batch.x().reshape({batch.x().numel()}).pull<double>();
+    const auto values = batch.x().reshape({batch.x().numel()}).items<double>();
     out.insert(out.end(), values.begin(), values.end());
   }
   return out;
@@ -396,7 +396,7 @@ int main() {
   // Iterating the prefetching loader yields the same order too.
   std::vector<double> streamed;
   for (auto batch : prefetched) {
-    const auto v = batch.x().reshape({batch.x().numel()}).pull<double>();
+    const auto v = batch.x().reshape({batch.x().numel()}).items<double>();
     streamed.insert(streamed.end(), v.begin(), v.end());
   }
   std::cout << "streamed order matches: " << (streamed == values) << '\n';

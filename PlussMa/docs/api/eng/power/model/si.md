@@ -47,7 +47,7 @@ Per-unit to watts.
 #include <pluss/tils/kit/output.h>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -85,7 +85,7 @@ Results of a solved network in per unit.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -162,7 +162,7 @@ A rejected base is described with the validation errors.
 #include <functional>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -215,7 +215,7 @@ two slack buses       : eng::power::make: exactly one slack bus is required
 an isolated bus       : eng::power::make: every bus must connect to the slack island
 zero line impedance   : eng::power::make: line series impedance cannot be zero
 generator off the grid: eng::power::make: generator bus lies outside the network
-a load of 50 per unit (meant 0.5): accepted, converged 0, load-bus voltage 4.48327
+a load of 50 per unit (meant 0.5): accepted, converged 0, load-bus voltage -4.45537
 ```
 
 <!-- apiref:nav:start -->

@@ -3495,7 +3495,7 @@ Slate Slate::cast_(
       if (kind() == SlateKind::Series) {
         PLUSS_CHECK(as_series().scalar_type() == pluss::codem::ScalarType::Int64,
                     "Slate::cast(Duration): Series source must have Int64 dtype");
-        return Slate(pluss::duration::nanos(as_series().pull<std::int64_t>(), {size()}),
+        return Slate(pluss::duration::nanos(as_series().items<std::int64_t>(), {size()}),
                       validity_mask());
       }
 

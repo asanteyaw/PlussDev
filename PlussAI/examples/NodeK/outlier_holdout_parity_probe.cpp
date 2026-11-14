@@ -70,7 +70,7 @@ int main() {
   }
   std::cout << "\n";
 
-  auto train_df = housing.take(train_idx);
+  auto train_df = housing.take(std::vector<std::int64_t>(train_idx.begin(), train_idx.end()));
   auto null_rows = train_df.isnull().any().as_series().to(pluss::pCPU, ScalarType::Bool).host<bool>();
   std::vector<std::int64_t> null_pos{};
   std::vector<std::int64_t> null_orig_idx{};

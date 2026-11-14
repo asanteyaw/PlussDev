@@ -54,8 +54,8 @@ Inspect all three result fields from a continuous synthesis.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -90,7 +90,7 @@ See how a state-input cross weight changes the returned value, gain, and pole.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -125,8 +125,8 @@ Compare the result contract across direct discrete solving and routed LQR.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -156,7 +156,6 @@ direct value = [1.132782]
 routed value = [1.132782]
 discrete gain = [0.265564]
 ```
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="care.html">

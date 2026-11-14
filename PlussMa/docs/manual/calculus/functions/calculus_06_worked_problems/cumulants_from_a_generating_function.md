@@ -96,9 +96,9 @@ int main() {
   const math::Function poisson = math::function({"t", "rate"}, [](math::Function t, math::Function rate) { return t.expm1() * rate; });
   const auto at_zero = pluss::make_series(0.0);
   const auto rates = pluss::make_series({0.5, 1.0, 2.5, 10.0});
-  out.writeln("rate     ", rates.pull<double>());
+  out.writeln("rate     ", rates.items<double>());
   for (const std::int64_t order : {1, 2, 3, 4}) {
-    out.writeln("kappa", order, "  ", operators::differential("t", order)(poisson)({at_zero, rates}).pull<double>());
+    out.writeln("kappa", order, "  ", operators::differential("t", order)(poisson)({at_zero, rates}).items<double>());
   }
 }
 ```
@@ -117,3 +117,12 @@ The four columns show κ₁ to κ₄ equal to the four rates, at every rate, fro
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="taylor_polynomials_from_derivatives.html">
+    <span class="label">Next</span>
+    <span class="title">A Taylor polynomial and its error</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -111,3 +111,16 @@ int main() {
 
 - [`pacf_payload`](plot_pacf_payload.md)
 - [`CorrPlotOptions`](CorrPlotOptions.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="plot_acf_payload.html">
+    <span class="label">Previous</span>
+    <span class="title">plot_acf_payload</span>
+  </a>
+  <a class="next-link" href="plot_pacf_payload.html">
+    <span class="label">Next</span>
+    <span class="title">plot_pacf_payload</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,8 @@
+# Circuits 3: Diodes and Transistors
+
+Resistors, capacitors and inductors give linear equations; a diode or a transistor does not. Its current depends exponentially on the voltages across its junctions, so a bias point has to be found by iteration. This chapter adds the two semiconductor devices to the circuit description and solves them: the DC bias point of a diode and of a transistor stage, the small-signal gain around a bias point, a rectifier in time, MOSFETs, and the charge that devices store.
+
+- [Diodes and bias points](circuit_03_devices/diodes_and_bias.md)
+- [The transistor amplifier](circuit_03_devices/transistor_amplifier.md)
+- [The rectifier in time](circuit_03_devices/rectifier_transient.md)
+- [MOSFETs and charge storage](circuit_03_devices/mosfets_and_charge_storage.md)

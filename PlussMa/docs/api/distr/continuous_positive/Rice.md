@@ -237,3 +237,16 @@ The two largest differences are 1.39e-17 for the density and 1.59e-09 for the di
 - [`Chi`](../continuous_positive/Chi.md)
 - [`ChiSquareNoncentral`](../continuous_positive/ChiSquareNoncentral.md)
 - [`Nakagami`](../continuous_positive/Nakagami.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Rayleigh.html">
+    <span class="label">Previous</span>
+    <span class="title">Rayleigh</span>
+  </a>
+  <a class="next-link" href="Wald.html">
+    <span class="label">Next</span>
+    <span class="title">Wald</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

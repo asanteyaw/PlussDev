@@ -33,11 +33,11 @@ int main() {
   const math::Function f = math::function({"x"}, [](math::Function x) { return x.pow(3) - x; });
   const auto x = pluss::make_series({-2.0, -0.5, 0.5, 2.0});
 
-  out.writeln("x         ", x.pull<double>());
-  out.writeln("f'        ", operators::differential("x")(f)({x}).pull<double>());
-  out.writeln("|f'|      ", operators::magnitude_differential("x")(f)({x}).pull<double>());
-  out.writeln("f''       ", operators::differential("x", 2)(f)({x}).pull<double>());
-  out.writeln("|f''|     ", operators::magnitude_differential("x", 2)(f)({x}).pull<double>());
+  out.writeln("x         ", x.items<double>());
+  out.writeln("f'        ", operators::differential("x")(f)({x}).items<double>());
+  out.writeln("|f'|      ", operators::magnitude_differential("x")(f)({x}).items<double>());
+  out.writeln("f''       ", operators::differential("x", 2)(f)({x}).items<double>());
+  out.writeln("|f''|     ", operators::magnitude_differential("x", 2)(f)({x}).items<double>());
   out.writeln("linear?  differential:", operators::differential("x").capabilities().linear,
               " magnitude_differential:", operators::magnitude_differential("x").capabilities().linear);
 }
@@ -73,18 +73,18 @@ int main() {
   const math::Function varying = math::function({"x"}, [](math::Function v) { return v; });
 
   const auto plain = operators::differential("x")(f)({x});
-  out.writeln("f'                   ", plain.pull<double>());
-  out.writeln("f' + 3 f             ", operators::covariant("x", constant_connection)(f)({x}).pull<double>());
-  out.writeln("by hand              ", plain.add(x.pow(3).sub(x).mul(3.0)).pull<double>());
-  out.writeln("f' + x f             ", operators::covariant("x", varying)(f)({x}).pull<double>());
-  out.writeln("by hand              ", plain.add(x.mul(x.pow(3).sub(x))).pull<double>());
+  out.writeln("f'                   ", plain.items<double>());
+  out.writeln("f' + 3 f             ", operators::covariant("x", constant_connection)(f)({x}).items<double>());
+  out.writeln("by hand              ", plain.add(x.pow(3).sub(x).mul(3.0)).items<double>());
+  out.writeln("f' + x f             ", operators::covariant("x", varying)(f)({x}).items<double>());
+  out.writeln("by hand              ", plain.add(x.mul(x.pow(3).sub(x))).items<double>());
 
   // Applying the operator twice composes: (d + 3)(d + 3) f = f'' + 6 f' + 9 f.
   const operators::Operator nabla = operators::covariant("x", constant_connection);
   const auto twice = operators::compose(nabla, nabla)(f)({x});
   const auto second = operators::differential("x", 2)(f)({x});
-  out.writeln("nabla nabla f        ", twice.pull<double>());
-  out.writeln("f'' + 6 f' + 9 f     ", second.add(plain.mul(6.0)).add(x.pow(3).sub(x).mul(9.0)).pull<double>());
+  out.writeln("nabla nabla f        ", twice.items<double>());
+  out.writeln("f'' + 6 f' + 9 f     ", second.add(plain.mul(6.0)).add(x.pow(3).sub(x).mul(9.0)).items<double>());
 }
 ```
 
@@ -163,7 +163,7 @@ int main() {
 
   const double theta0 = 1.0;
   const auto point = std::vector<pluss::Series>{pluss::make_series(theta0, as_f64()), pluss::make_series(0.3, as_f64())};
-  const auto christoffel = gamma(pluss::RangeView<pluss::Series>(point)).reshape({8}).pull<double>();
+  const auto christoffel = gamma(pluss::RangeView<pluss::Series>(point)).reshape({8}).items<double>();
   out.writeln("Gamma^theta_{phi phi}   ", christoffel[3], "   closed form ", -std::sin(theta0) * std::cos(theta0));
   out.writeln("Gamma^phi_{theta phi}   ", christoffel[5], "   closed form ", std::cos(theta0) / std::sin(theta0));
 
@@ -174,16 +174,16 @@ int main() {
   // Its own velocity is not parallel: D(velocity)/dt = (-sin cos, 0).
   const math::Function acceleration = D(operators::differential("t")(curve));
   const auto t0 = pluss::make_series(0.7, as_f64());
-  out.writeln("D(velocity)/dt          ", acceleration({t0}).pull<double>());
+  out.writeln("D(velocity)/dt          ", acceleration({t0}).items<double>());
 
   // The transported vector V = (cos(w t), -sin(w t) / sin(theta0)), w = cos(theta0), has DV/dt = 0.
   const double w = std::cos(theta0), s0 = std::sin(theta0);
   const math::Function transported = math::function({"t"}, [&](math::Function t) {
     return math::stack({(t * w).cos(), (t * w).sin() * (-1.0 / s0)});
   });
-  out.writeln("DV/dt for transport     ", D(transported)({t0}).pull<double>());
+  out.writeln("DV/dt for transport     ", D(transported)({t0}).items<double>());
   const math::Function constant = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0 + 1.0, t * 0.0}); });
-  out.writeln("DV/dt for V = (1, 0)    ", D(constant)({t0}).pull<double>(), "   cot(theta0) = ", w / s0);
+  out.writeln("DV/dt for V = (1, 0)    ", D(constant)({t0}).items<double>(), "   cot(theta0) = ", w / s0);
 }
 ```
 
@@ -215,16 +215,16 @@ int main() {
   const pluss::RangeView<pluss::Series> at(point);
 
   // nabla_k g_ij = 0 (signature {0, 2}) and nabla_k g^ij = 0 (signature {2, 0}).
-  out.writeln("nabla_theta g      ", geometry::covariant("theta", gamma, {0, 2})(metric)(at).reshape({4}).pull<double>());
-  out.writeln("nabla_phi g^-1     ", geometry::covariant("phi", gamma, {2, 0})(metric.inverse())(at).reshape({4}).pull<double>());
+  out.writeln("nabla_theta g      ", geometry::covariant("theta", gamma, {0, 2})(metric)(at).reshape({4}).items<double>());
+  out.writeln("nabla_phi g^-1     ", geometry::covariant("phi", gamma, {2, 0})(metric.inverse())(at).reshape({4}).items<double>());
 
   // The covariant Hessian of f: H_{ji} = nabla_j (d_i f) is symmetric.
   const math::Function f = math::function({"theta", "phi"}, [](math::Function theta, math::Function phi) {
     return (theta * theta).sin() * phi.cos() + theta * phi;
   });
   const math::Function df = operators::gradient({"theta", "phi"})(f);
-  const auto row_theta = geometry::covariant("theta", gamma, {0, 1})(df)(at).pull<double>();
-  const auto row_phi = geometry::covariant("phi", gamma, {0, 1})(df)(at).pull<double>();
+  const auto row_theta = geometry::covariant("theta", gamma, {0, 1})(df)(at).items<double>();
+  const auto row_phi = geometry::covariant("phi", gamma, {0, 1})(df)(at).items<double>();
   out.writeln("H_{theta phi}      ", row_theta[1]);
   out.writeln("H_{phi theta}      ", row_phi[0]);
 }
@@ -236,3 +236,12 @@ Both geometric operators hold an arbitrary connection `Function`, so they cannot
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="opaque_functions_and_the_autodiff_fallback.html">
+    <span class="label">Previous</span>
+    <span class="title">Opaque functions and the autodiff fallback</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

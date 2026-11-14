@@ -2,144 +2,255 @@
 
 [Back to Monte Carlo](../finance_04_monte_carlo.md)
 
-Monte Carlo pricing starts from simulated paths of the asset and its variance. Each model has a path generator with the same shape:
+Monte Carlo pricing starts from simulated paths of the asset and its variance. A `Field` whose engine is `MonteCarlo` simulates the model it holds, whichever the model is, with one set of controls:
 
 ```cpp
-vol::StochVolPaths vol::heston_paths(std::int64_t steps, std::int64_t paths, double spot0, double dt, const vol::HestonParams &params,
-                                     const vol::SimOptions &options, Config cfg = {}, std::uint64_t seed = 0);
-vol::StochVolPaths vol::heston_paths(steps, paths, spot0, dt, params, Config cfg = {}, std::uint64_t seed = 0);   // default options
-// the same pair of overloads for gbm_paths, bates_paths, sv_paths, heston_nandi_paths, sabr_paths, slv_paths, rough_heston_paths, rough_bergomi_paths
-
-struct vol::StochVolPaths { Series spot, variance, innovation_spot, innovation_var; };
+module::Paths module::Field::simulate_paths(Config cfg = {}) const;
+void module::Field::simulate(Config cfg = {});
 ```
 
-`vol` is `pluss::subsp::math::finance::volatility`. `spot` and `variance` are `[steps + 1, paths]` arrays whose first row is the initial value; `innovation_spot` and `innovation_var` are the `[steps, paths]` normal shocks that drove the spot and the variance, kept so that estimators can reweight them. The time step `dt` is in years, so a horizon of one year in 252 steps has `dt = 1/252`. The drift of the spot is the `mu` of the parameter struct, as an expected growth rate, so for a risk-neutral simulation set it to `r − q`.
+`simulate_paths` returns the paths and `simulate` keeps them in `field.paths`. In use:
 
-| `SimOptions` | Meaning | Default |
+```cpp
+mod::Field field{.instrument = ..., .market = ..., .model = fin::model::make(fin::model::Kind::Heston, {...}),
+                 .controls = {.engine = mod::Engine::MonteCarlo}};
+field.controls.mc.paths = 50000;                 // and the other controls below
+const mod::Paths paths = field.simulate_paths();  // or field.simulate(), which keeps them in field.paths
+```
+
+The models a Monte Carlo field can hold are `BlackScholes`, `Sabr`, `Heston`, `Bates`, `RoughHeston` and `RoughBergomi`. The result is a [`Paths`](../../../../api/finance/field/Paths.md) with `asset`, `variance` and `vol` of shape `[paths, steps + 1]`, whose first column is the initial value, and `asset_shocks` and `vol_shocks` of shape `[paths, steps]`, the normal shocks that drove the asset and its variance, kept so that estimators can reweight them. The paths run on a uniform grid from 0 to the longest maturity in the field, in `steps` steps. The simulation is risk neutral: the drift of the asset is `rate − dividend_yield` of the market, whatever the model. The market is read from the first element of the strip; one simulation serves every strike.
+
+| `field.controls.mc` | Meaning | Default |
 |---|---|---|
+| `paths`, `steps` | the number of paths, and of time steps to the longest maturity | 40000, 252 |
 | `scheme` | the discretisation of the variance: `Euler`, `Milstein`, `Milstein2`, `QuadExp`, `Transition` | `Euler` |
-| `method` | the source of random numbers: `Pseudo`, `Sobol`, `Halton`, `Torus` ([Quasi-random sequences](quasi_random_sequences.md)) | `Pseudo` |
+| `rand_method` | the source of random numbers: `Pseudo`, `Sobol`, `Halton`, `Torus` ([Quasi-random sequences](quasi_random_sequences.md)) | `Pseudo` |
 | `randomized_quasi`, `sobol_scrambling` | randomise a quasi-random sequence, and the scrambling variant (0 to 3) | false, 0 |
 | `antithetic` | pair each path with its mirror image ([Variance reduction](variance_reduction.md)) | false |
-| `normal_shift` | a shift added to the spot shocks, for importance sampling | 0 |
-| `paths_first` | return `[paths, steps + 1]` instead of `[steps + 1, paths]` | false |
+| `importance_sampling`, `importance_shift` | shift the asset shocks and reweight | false, 0 |
 | `seed`, `offset` | the random stream, and where a quasi-random sequence starts | 0, 0 |
 
 ## What a path set looks like
 
-The program simulates a Heston path set and checks it against what the model implies: the shapes and first rows; the variance staying above its floor; the mean variance at the end, which for the mean-reverting square-root process is exactly θ + (v₀ − θ) e^(−κT); the mean spot at the end, which for `mu = r − q` must be S₀ e^((r−q)T); and the correlation between the two shocks, which must equal ρ.
+The program simulates a Heston path set and checks it against what the model implies: the shapes and first columns; the variance staying non-negative; the mean variance at the end, which for the mean-reverting square-root process is exactly θ + (v₀ − θ) e^(−κT); the mean spot at the end, which must be S₀ e^((r−q)T); and the correlation between the two shocks, which must equal ρ.
 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(5));
-  const double spot0 = 100.0, mu = 0.02, maturity = 1.0;
+  const double maturity = 1.0;
   const std::int64_t steps = 100, paths = 50000;
-  vol::HestonParams params;
-  params.mu = mu;
-  params.v0 = 0.09;  // away from theta, so the mean reversion of the variance is visible
-  const auto sim = vol::heston_paths(steps, paths, spot0, maturity / steps, params, vol::SimOptions{}, as_f64(), 7);
+  const std::vector<double> params{1.5, 0.04, 0.3, -0.7, 0.09};   // v0 away from theta, so the mean reversion of the variance is visible
+  mod::Field field = monte_carlo(fin::model::Kind::Heston, params);
+  field.controls.mc.paths = paths;
+  field.controls.mc.steps = steps;
+  field.controls.mc.seed = 7;
+  const mod::Paths sim = field.simulate_paths();
 
-  out.writeln("spot", sim.spot.sizes(), " variance", sim.variance.sizes(), " innovations", sim.innovation_spot.sizes(), sim.innovation_var.sizes());
-  out.writeln("first row: spot", sim.spot.select(0, 0).mean().item<double>(), " variance", sim.variance.select(0, 0).mean().item<double>());
-  out.writeln("smallest variance on any path", sim.variance.min().item<double>(), "(the floor is", params.variance_floor, ")");
-  const double expected_variance = params.theta + (params.v0 - params.theta) * std::exp(-params.kappa * maturity);
-  out.writeln("E[V_T]: simulated", sim.variance.select(0, steps).mean().item<double>(), " exact", expected_variance);
-  const auto terminal = sim.spot.select(0, steps);
+  out.writeln("asset", sim.asset.sizes(), " variance", sim.variance.sizes(), " shocks", sim.asset_shocks.sizes(), sim.vol_shocks.sizes());
+  out.writeln("first column: asset", sim.asset.select(1, 0).mean().item<double>(), " variance", sim.variance.select(1, 0).mean().item<double>());
+  out.writeln("smallest variance on any path", sim.variance.min().item<double>());
+  const double expected_variance = 0.04 + (0.09 - 0.04) * std::exp(-1.5 * maturity);
+  out.writeln("E[V_T]: simulated", sim.variance.select(1, steps).mean().item<double>(), " exact", expected_variance);
+  const auto terminal = sim.asset.select(1, steps);
   const double mean = terminal.mean().item<double>();
   const double standard_error = std::sqrt(terminal.sub(mean).pow(2.0).mean().item<double>() / paths);
-  out.writeln("E[S_T]: simulated", mean, " exact", spot0 * std::exp(mu * maturity), " (standard error", standard_error, ")");
-  const auto zs = sim.innovation_spot.reshape({steps * paths});
-  const auto zv = sim.innovation_var.reshape({steps * paths});
-  out.writeln("correlation of the shocks", zs.mul(zv).mean().item<double>() / std::sqrt(zs.pow(2.0).mean().item<double>() * zv.pow(2.0).mean().item<double>()), " (rho =", params.rho, ")");
+  out.writeln("E[S_T]: simulated", mean, " exact", kSpot * std::exp((kRate - kDiv) * maturity), " (standard error", standard_error, ")");
+  const auto zs = sim.asset_shocks.reshape({{steps * paths}});
+  const auto zv = sim.vol_shocks.reshape({{steps * paths}});
+  out.writeln("correlation of the shocks", zs.mul(zv).mean().item<double>() / std::sqrt(zs.pow(2.0).mean().item<double>() * zv.pow(2.0).mean().item<double>()), " (rho = -0.7)");
 }
 ```
 
-Both arrays are `[101, 50000]` and the shocks `[100, 50000]`, with the first row equal to the starting values. The variance reaches its floor on some path (the smallest value is at the floor of 10⁻¹²) and never goes below it. The mean variance at the end is 0.05117 against the exact 0.05116. The mean terminal spot is 101.90 against 102.02, a difference of one standard error (0.11), and the correlation between the shocks is −0.7002 against ρ = −0.7.
+Both arrays are `[50000, 101]` and the shocks `[50000, 100]`, with the first column equal to the starting values. The variance reaches zero on some path (the scheme truncates it there, so it is never negative). The mean variance at the end is 0.05117 against the exact 0.05116. The mean terminal spot is 101.90 against 102.02, a difference of one standard error (0.11), and the correlation between the shocks is −0.7002 against ρ = −0.7.
 
-## Every generator is a martingale
+## Every model is a martingale
 
-A risk-neutral generator must reproduce the forward: E[S_T] = S₀ e^(μT). This is the first check to run on any generator, and a failure of it was behind a bias in an earlier version of the Heston generator. The program checks every generator that has a spot price, with its default parameters except for the drift, and prints the mean, the exact value and the number of standard errors between them.
+A risk-neutral simulation must reproduce the forward: E[S_T] = S₀ e^((r−q)T). This is the first check to run on any generator, and a failure of it was behind a bias in an earlier version of the Heston generator. The program checks every model a Monte Carlo field can hold, with typical parameters, and prints the mean, the exact value and the number of standard errors between them.
 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(3));
-  const double spot0 = 100.0, mu = 0.02, maturity = 1.0;
-  const std::int64_t steps = 100, paths = 30000;
-  const double dt = maturity / steps, target = spot0 * std::exp(mu * maturity);
-  auto report = [&](const char *name, const vol::StochVolPaths &p) {
-    const auto terminal = p.spot.select(0, steps);
-    const double mean = terminal.mean().item<double>();
-    const double se = std::sqrt(terminal.sub(mean).pow(2.0).mean().item<double>() / paths);
-    out.writeln(name, " E[S_T]", mean, " exact", target, " z =", (mean - target) / se);
+  const double maturity = 1.0, target = kSpot * std::exp((kRate - kDiv) * maturity);
+  struct Case {
+    const char *name;
+    fin::model::Kind kind;
+    std::vector<double> params;
+    std::int64_t paths;
   };
-  vol::GbmParams gbm;          gbm.mu = mu;          report("GBM          ", vol::gbm_paths(steps, paths, spot0, dt, gbm));
-  vol::HestonParams heston;    heston.mu = mu;       report("Heston       ", vol::heston_paths(steps, paths, spot0, dt, heston));
-  vol::BatesParams bates;      bates.mu = mu;        report("Bates        ", vol::bates_paths(steps, paths, spot0, dt, bates));
-  vol::SvParams sv;            sv.mu = mu;           report("log-variance ", vol::sv_paths(steps, paths, spot0, dt, sv));
-  vol::SabrParams sabr;        sabr.mu = mu;         report("SABR         ", vol::sabr_paths(steps, paths, spot0, dt, sabr));
-  vol::SlvParams slv;          slv.mu = mu;          report("local-stoch vol", vol::slv_paths(steps, paths, spot0, dt, slv));
-  vol::RoughHestonParams rough; rough.mu = mu;       report("rough Heston ", vol::rough_heston_paths(steps, 10000, spot0, dt, rough));
-  vol::RoughBergomiParams bergomi; bergomi.mu = mu;  report("rough Bergomi", vol::rough_bergomi_paths(steps, 10000, spot0, dt, bergomi));
+  const std::vector<Case> cases{{"Black-Scholes ", fin::model::Kind::BlackScholes, {0.2}, 30000},
+                                {"SABR          ", fin::model::Kind::Sabr, {0.2, 1.0, 0.4, -0.3}, 30000},
+                                {"Heston        ", fin::model::Kind::Heston, kHeston, 30000},
+                                {"Bates         ", fin::model::Kind::Bates, {1.5, 0.04, 0.3, -0.7, 0.04, 0.5, -0.1, 0.2}, 30000},
+                                {"rough Heston  ", fin::model::Kind::RoughHeston, {1.5, 0.04, 0.3, -0.3, -0.7, 0.04}, 10000},
+                                {"rough Bergomi ", fin::model::Kind::RoughBergomi, {0.04, 1.5, -0.1, -0.7}, 10000}};
+  for (const auto &c : cases) {
+    mod::Field field = monte_carlo(c.kind, c.params);
+    field.controls.mc.paths = c.paths;
+    field.controls.mc.steps = 100;
+    field.controls.mc.seed = 11;
+    const auto terminal = field.simulate_paths().asset.select(1, 100);
+    const double mean = terminal.mean().item<double>();
+    const double se = std::sqrt(terminal.sub(mean).pow(2.0).mean().item<double>() / c.paths);
+    out.writeln(c.name, " E[S_T]", mean, " exact", target, " z =", (mean - target) / se);
+  }
 }
 ```
 
-Every generator reproduces the forward within about one standard error: the z-values are between −1.2 and 1.2.
+Every model reproduces the forward within about two standard errors: the z-values are between −1.9 and 1.2.
 
-(The two rough generators use 10000 paths, so their standard errors are larger.)
+(The two rough models use 10000 paths, so their standard errors are larger.)
 
 ## Options and shapes
 
-`seed` fixes the random stream, so the same seed gives the same paths and a different seed different ones. `antithetic` makes each path's second half the mirror of its first, so the shocks average to exactly zero. `paths_first` transposes the outputs. `normal_shift` shifts the spot shocks, which is the mechanism of importance sampling. The program shows each.
+`seed` fixes the random stream, so the same seed gives the same paths and a different seed different ones. `antithetic` makes each path's second half the mirror of its first, so the shocks average to exactly zero. `importance_shift` shifts the asset shocks, which is the mechanism of importance sampling. The program shows each.
 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(6));
-  const vol::HestonParams params;
-  auto terminal_mean = [&](const vol::SimOptions &options, std::uint64_t seed) {
-    return vol::heston_paths(20, 2000, 100.0, 0.05, params, options, as_f64(), seed).spot.select(0, 20).mean().item<double>();
+  auto field_with = [&](auto edit) {
+    mod::Field field = monte_carlo(fin::model::Kind::Heston, kHeston);
+    field.controls.mc.paths = 2000;
+    field.controls.mc.steps = 20;
+    edit(field.controls.mc);
+    return field;
   };
-  vol::SimOptions plain;
-  out.writeln("seed 5 twice:", terminal_mean(plain, 5), terminal_mean(plain, 5), " seed 6:", terminal_mean(plain, 6));
+  auto terminal_mean = [&](std::uint64_t seed) {
+    return field_with([&](auto &mc) { mc.seed = seed; }).simulate_paths().asset.select(1, 20).mean().item<double>();
+  };
+  out.writeln("seed 5 twice:", terminal_mean(5), terminal_mean(5), " seed 6:", terminal_mean(6));
 
-  vol::SimOptions antithetic;
-  antithetic.antithetic = true;
-  const auto anti = vol::heston_paths(20, 2000, 100.0, 0.05, params, antithetic, as_f64(), 5);
-  const auto plain_paths = vol::heston_paths(20, 2000, 100.0, 0.05, params, plain, as_f64(), 5);
-  out.writeln("mean of the spot shocks over all paths: plain", plain_paths.innovation_spot.mean().item<double>(), " antithetic", anti.innovation_spot.mean().item<double>());
-  out.writeln("antithetic: the first path's shocks and the mirror path's shocks add to", anti.innovation_spot.select(1, 0).add(anti.innovation_spot.select(1, 1000)).abs().max().item<double>());
+  const auto plain = field_with([](auto &mc) { mc.seed = 5; }).simulate_paths();
+  const auto anti = field_with([](auto &mc) { mc.seed = 5; mc.antithetic = true; }).simulate_paths();
+  out.writeln("mean of the asset shocks over all paths: plain", plain.asset_shocks.mean().item<double>(), " antithetic", anti.asset_shocks.mean().item<double>());
+  out.writeln("antithetic: the first path's shocks and the mirror path's shocks add to", anti.asset_shocks.select(0, 0).add(anti.asset_shocks.select(0, 1000)).abs().max().item<double>());
 
-  vol::SimOptions transposed;
-  transposed.paths_first = true;
-  out.writeln("paths_first: spot", vol::heston_paths(20, 2000, 100.0, 0.05, params, transposed, as_f64(), 5).spot.sizes(), " default", plain_paths.spot.sizes());
-
-  vol::SimOptions shifted;
-  shifted.normal_shift = 0.1;
-  out.writeln("normal_shift 0.1: mean spot shock", vol::heston_paths(20, 2000, 100.0, 0.05, params, shifted, as_f64(), 5).innovation_spot.mean().item<double>());
+  const auto shifted = field_with([](auto &mc) { mc.seed = 5; mc.importance_sampling = true; mc.importance_shift = 0.1; }).simulate_paths();
+  out.writeln("importance_shift 0.1: mean asset shock", shifted.asset_shocks.mean().item<double>(), " (plain", plain.asset_shocks.mean().item<double>(), ")");
 }
 ```
 
-The same seed gives the same paths (100.094106 twice) and another seed different ones (99.753035). With `antithetic` the spot shocks average to exactly zero, against −0.0020 for the plain set, and a path's shocks and its mirror's add to zero. `paths_first` returns `[2000, 21]` instead of `[21, 2000]`, and a `normal_shift` of 0.1 moves the mean shock to 0.0980.
+The same seed gives the same paths (102.116141 twice) and another seed different ones (101.768180). With `antithetic` the asset shocks average to exactly zero, against −0.0020 for the plain set, and a path's shocks and its mirror's add to zero. An `importance_shift` of 0.1 moves the mean shock to 0.0980.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="quasi_random_sequences.html">
+    <span class="label">Previous</span>
+    <span class="title">Quasi-random sequences</span>
+  </a>
+  <a class="next-link" href="variance_reduction.html">
+    <span class="label">Next</span>
+    <span class="title">Variance reduction</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

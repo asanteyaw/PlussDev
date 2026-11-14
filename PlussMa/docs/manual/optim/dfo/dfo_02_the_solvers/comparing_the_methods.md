@@ -244,3 +244,8 @@ Read the second column as a probability, and the surprise in it. Particle swarm 
 - **Restarts help in proportion to how well the starts cover the region.** Six restarts improved the best value from 17.9 to 1.99 but none started in the global minimum's basin; a population method covers the region by construction.
 
 Where next: [Chapter 3](../dfo_03_bounds_and_constraints.md) adds bounds and constraints.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

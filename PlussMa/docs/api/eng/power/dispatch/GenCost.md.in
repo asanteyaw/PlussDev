@@ -1,0 +1,69 @@
+# `power::GenCost`
+
+Cost curves and output bounds of the generators.
+
+## Signature
+
+```cpp
+power::GenCost
+```
+
+## What It Does
+
+Describes, for every generator of the grid, the bounds on its active output and its cost as a polynomial of the output. The same type serves `dispatch` (active terms only) and `opf` (also the reactive terms).
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `lower` | Active-power lower bound of each generator, per unit, `[..., generator]`. | required |
+| `upper` | Active-power upper bound, `[..., generator]`; may be infinite. | required |
+| `linear` | Coefficient of `p`, cost per per-unit, `[..., generator]`. | required |
+| `quadratic` | Coefficient of `p^2`, `[..., generator]`; must be non-negative for `dispatch`. | required |
+| `constant` | Constant cost, which does not change the optimum. | undefined (zero) |
+| `q_linear` | Coefficient of the reactive output `q`, used by `opf` only. | undefined (zero) |
+| `q_quadratic` | Coefficient of `q^2`, used by `opf` only. | undefined (zero) |
+| `q_constant` | Constant reactive cost, used by `opf` only. | undefined (zero) |
+
+## Returns
+
+A value; validated by `dispatch` and `opf`.
+
+## Errors
+
+A lower bound above its upper bound, a negative quadratic coefficient for `dispatch`, or a length that is not the number of generators is rejected.
+
+## Interpretation and Use
+
+The optimum of `dispatch` is where every generator that is not at a bound has the same incremental cost `2 a g + b`. The leading axes give one cost curve per scenario. A fixed cost does not change how output is shared.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A quadratic cost solved against its hand optimum.
+
+@@example Eng/api/power_dispatch_hand.cpp@@
+
+### Example 2
+
+Upper bounds, an infinite bound and fixed costs.
+
+@@example Eng/api/power_dispatch_limits.cpp@@
+
+### Example 3
+
+A concave cost refused.
+
+@@example Eng/api/power_dispatch_pitfalls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="DispatchOptions.html">
+    <span class="label">Next</span>
+    <span class="title">DispatchOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

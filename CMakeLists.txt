@@ -27,13 +27,8 @@ function(pluss_register_sdk_zip_link ZIP_LIBRARY)
         $<BUILD_INTERFACE:${ZIP_LIBRARY}>
     )
 
-    get_filename_component(_pluss_zip_realpath "${ZIP_LIBRARY}" REALPATH)
-    get_filename_component(_pluss_zip_filename "${_pluss_zip_realpath}" NAME)
-    install(FILES "${_pluss_zip_realpath}"
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
     target_link_libraries(pluss_sdk_zip_link INTERFACE
-        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${_pluss_zip_filename}>
+        $<INSTALL_INTERFACE:Pluss::Zip>
     )
     install(TARGETS pluss_sdk_zip_link EXPORT PlussTargets)
 endfunction()
@@ -89,7 +84,7 @@ if(_pluss_is_conda_clang AND EXISTS "/usr/bin/clang++")
     unset(_pluss_probe)
 endif()
 
-project(plussma VERSION 0.0.3 LANGUAGES CXX)
+project(plussma VERSION 0.0.4 LANGUAGES CXX)
 
 if(MSVC)
     add_compile_options(/utf-8)
@@ -205,6 +200,26 @@ option(
     "Keep frame pointers and minimal line tables in Release builds for readable stack traces"
     ON
 )
+
+# Source paths baked into the binaries (error tracebacks, debug info) are relative to the repository,
+# so a shipped library never carries the build machine's directories.
+if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang|GNU")
+    add_compile_options($<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.>)
+    add_compile_options($<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:-ffile-prefix-map=${CMAKE_BINARY_DIR}=.>)
+endif()
+
+# Error tracebacks show the source line of every library frame when the sources are installed next to the
+# library (share/pluss/src, found automatically, or any folder named by PLUSS_SOURCE_ROOT). Off by default.
+option(PLUSS_INSTALL_SOURCES "Install library sources under share/pluss/src so tracebacks can show their source lines" OFF)
+if(PLUSS_INSTALL_SOURCES)
+    foreach(_pluss_src_dir PlussQit/src PlussPl/src PlussMa PlussAI PlussMic/src PlussTils/src)
+        if(EXISTS "${CMAKE_SOURCE_DIR}/${_pluss_src_dir}")
+            install(DIRECTORY "${CMAKE_SOURCE_DIR}/${_pluss_src_dir}/"
+                    DESTINATION "share/pluss/src/${_pluss_src_dir}"
+                    FILES_MATCHING PATTERN "*.cpp" PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inl")
+        endif()
+    endforeach()
+endif()
 
 if(PLUSS_TRACE_FRIENDLY_RELEASE)
     if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang|Clang|GNU")
@@ -518,11 +533,6 @@ install(FILES
     DESTINATION ${PLUSS_INSTALL_DOCDIR}
 )
 
-install(FILES
-    ${CMAKE_SOURCE_DIR}/ExLibs/fmt/LICENSE
-    DESTINATION ${PLUSS_INSTALL_DOCDIR}/third_party/fmt
-)
-
 configure_package_config_file(
     ${CMAKE_SOURCE_DIR}/cmake/PlussConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/PlussConfig.cmake
@@ -570,6 +580,8 @@ set(PLUSS_SDK_CONSUMER_BUILD_DIR
 add_custom_target(plussii_distribution_stage
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PLUSS_SDK_STAGING_DIR}"
     COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --prefix "${PLUSS_SDK_STAGING_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${PLUSS_SDK_STAGING_DIR}/bin/curl-config"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${PLUSS_SDK_STAGING_DIR}/lib/pkgconfig/libcurl.pc"
     DEPENDS
         pluss
         PlussPl

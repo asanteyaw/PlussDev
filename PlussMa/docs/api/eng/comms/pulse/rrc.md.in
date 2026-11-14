@@ -1,0 +1,70 @@
+# `comms::rrc`
+
+A root-raised-cosine pulse.
+
+## Signature
+
+```cpp
+pluss::Series comms::rrc(double rolloff, std::int64_t samples_per_symbol, std::int64_t span, pluss::ScalarType dtype = pluss::ScalarType::Float64);
+```
+
+## What It Does
+
+Returns the taps of a root-raised-cosine pulse: `span * samples_per_symbol + 1` samples, symmetric about the centre, scaled to unit energy. Two in cascade (transmit and matched receive filter) make a raised-cosine pulse, which is zero at every other symbol instant: no intersymbol interference.
+
+## Parameters
+
+`rolloff`
+: The excess bandwidth, in `[0, 1]`. `0` is the narrowest, a sinc; `1` the widest.
+
+`samples_per_symbol`
+: The oversampling factor, at least `2`.
+
+`span`
+: The length in symbols, at least `2`.
+
+`dtype`
+: `Float64` or `Float32`.
+
+## Returns
+
+A real vector of `span * samples_per_symbol + 1` taps.
+
+## Errors
+
+Throws `pluss::Error` for a `rolloff` outside `[0, 1]`, `samples_per_symbol` below `2`, `span` below `2`, or a `dtype` that is not `Float64` or `Float32`.
+
+## Interpretation and Use
+
+Truncating the pulse leaves a small residual interference that falls with the span. At a span of 16 symbols the interference is below `5e-4` for a rolloff of `0.25` and above, and a rolloff of zero is the slowest to decay. Unit energy makes the noise variance after the matched filter equal to the per-sample variance.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The taps of a short pulse.
+
+@@example Eng/api/comms_rrc_taps.cpp@@
+
+### Example 2
+
+Interference against the rolloff.
+
+@@example Eng/api/comms_rrc_rolloff.cpp@@
+
+### Example 3
+
+Single-precision taps.
+
+@@example Eng/api/comms_rrc_single.cpp@@
+
+### Example 4
+
+Rejected parameters.
+
+@@example Eng/api/comms_rrc_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

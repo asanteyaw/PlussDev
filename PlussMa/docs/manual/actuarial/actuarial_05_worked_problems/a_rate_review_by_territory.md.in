@@ -1,0 +1,277 @@
+# A Rate Review by Territory
+
+[Back to Worked Problems](../actuarial_05_worked_problems.md)
+
+**The problem.** A personal-lines insurer reviews its rates in six territories. For each it has a year of exposure (car-years), incurred losses and the premium it now charges per car-year, and it has a manual pure premium for each territory from a larger book. Expenses are 40 per car-year plus 18% of premium for commission and tax, and the company wants a 7% profit margin. The review must produce, for each territory, an **indicated rate change**, decide **how much to trust each territory's own experience** (the small ones have very little), and then **limit any one territory's change to 10%** while keeping the overall rate level right.
+
+This is the full ratemaking cycle of [Actuarial 4](../actuarial_04_ratemaking_credibility_and_loss_reserving.md) applied to a realistic table: measure, credibility-weight, load, compare, then adjust for practical limits.
+
+## The plan
+
+For each territory {math}`i` with exposure {math}`E_i` and losses {math}`L_i`, the experience pure premium is {math}`L_i/E_i`. A territory with little exposure has a noisy figure, so it is blended with the manual figure {math}`M_i` by credibility {math}`Z_i=E_i/(E_i+K)`,
+
+```{math}
+\hat p_i=Z_i\,\frac{L_i}{E_i}+(1-Z_i)\,M_i ,
+```
+
+where {math}`K` is the exposure at which experience and manual rate get equal weight. The blended pure premium is loaded for expenses and profit, and compared with the current premium {math}`P_i`:
+
+```{math}
+P^{\ast}_i=\frac{\hat p_i+F}{1-v-\pi},\qquad \Delta_i=\frac{P^{\ast}_i}{P_i}-1 .
+```
+
+The numbers here are small enough to follow by hand, and each program checks its work against a second route.
+
+## Step 1: what the experience says
+
+The first program prints each territory's exposure, its experience pure premium and its experience loss ratio, losses over premium at the current rates. The permissible loss ratio, the share of premium left for losses after expenses and profit, is {math}`1-0.18-0.07=0.75` less the fixed expense, so a territory whose loss ratio is above it is under-priced.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const std::vector<std::string> territory = {"A", "B", "C", "D", "E", "F"};
+  const pluss::Series exposure = pluss::make_series({12000.0, 8000.0, 4500.0, 2500.0, 900.0, 300.0});
+  const pluss::Series losses = pluss::make_series({9360000.0, 7280000.0, 3150000.0, 2875000.0, 576000.0, 450000.0});
+  const pluss::Series current = pluss::make_series({1000.0, 1050.0, 950.0, 1000.0, 900.0, 1000.0});
+  const pluss::Series manual = pluss::make_series({800.0, 880.0, 780.0, 850.0, 760.0, 900.0});
+  const double fixed_expense = 40.0, variable = 0.18, profit = 0.07, k = 2000.0;
+  const auto row = [&](const char *name, const pluss::Series &s, int digits_unused = 0) {
+    (void)digits_unused;
+    out.write(name);
+    for (const double v : s.items<double>()) out.write(" ", v);
+    out.writeln();
+  };
+  const pluss::Series pure = models::premium_curve(losses, exposure);
+  const pluss::Series earned = current.mul(exposure);
+  const pluss::Series ratio = models::ratio_curve(losses, earned);
+  row("exposure            ", exposure);
+  row("experience pure prem", pure);
+  row("current premium     ", current);
+  row("experience loss ratio", ratio);
+  out.writeln("book pure premium =", models::pure_premium(losses, exposure).item<double>(), "  book loss ratio =", models::loss_ratio(losses, earned).item<double>());
+}
+```
+
+## Step 2: credibility
+
+With {math}`K=2000`, a territory with 2,000 car-years gets weight one half, a larger one more, a smaller one less. The program prints the weights and the blended pure premiums, and checks the blend by hand for the smallest territory.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const std::vector<std::string> territory = {"A", "B", "C", "D", "E", "F"};
+  const pluss::Series exposure = pluss::make_series({12000.0, 8000.0, 4500.0, 2500.0, 900.0, 300.0});
+  const pluss::Series losses = pluss::make_series({9360000.0, 7280000.0, 3150000.0, 2875000.0, 576000.0, 450000.0});
+  const pluss::Series current = pluss::make_series({1000.0, 1050.0, 950.0, 1000.0, 900.0, 1000.0});
+  const pluss::Series manual = pluss::make_series({800.0, 880.0, 780.0, 850.0, 760.0, 900.0});
+  const double fixed_expense = 40.0, variable = 0.18, profit = 0.07, k = 2000.0;
+  const auto row = [&](const char *name, const pluss::Series &s, int digits_unused = 0) {
+    (void)digits_unused;
+    out.write(name);
+    for (const double v : s.items<double>()) out.write(" ", v);
+    out.writeln();
+  };
+  const pluss::Series pure = models::premium_curve(losses, exposure);
+  const pluss::Series z = models::credibility_weight(exposure, k);
+  const pluss::Series blended = models::credibility_blend(pure, manual, exposure, k);
+  row("credibility Z        ", z);
+  row("experience           ", pure);
+  row("manual               ", manual);
+  row("blended              ", blended);
+  const double z_f = 300.0 / (300.0 + k);
+  out.writeln("territory F by hand:", z_f * 1500.0 + (1.0 - z_f) * 900.0, " against", blended.items<double>()[5]);
+}
+```
+
+## Step 3: the indicated rates
+
+The blended pure premium is loaded and compared with the current premium. The program shows both the credibility-weighted indication and the raw one that uses experience alone, and checks the raw indication against the single-call `experience_change`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::vector<std::string> territory = {"A", "B", "C", "D", "E", "F"};
+  const pluss::Series exposure = pluss::make_series({12000.0, 8000.0, 4500.0, 2500.0, 900.0, 300.0});
+  const pluss::Series losses = pluss::make_series({9360000.0, 7280000.0, 3150000.0, 2875000.0, 576000.0, 450000.0});
+  const pluss::Series current = pluss::make_series({1000.0, 1050.0, 950.0, 1000.0, 900.0, 1000.0});
+  const pluss::Series manual = pluss::make_series({800.0, 880.0, 780.0, 850.0, 760.0, 900.0});
+  const double fixed_expense = 40.0, variable = 0.18, profit = 0.07, k = 2000.0;
+  const auto row = [&](const char *name, const pluss::Series &s, int digits_unused = 0) {
+    (void)digits_unused;
+    out.write(name);
+    for (const double v : s.items<double>()) out.write(" ", v);
+    out.writeln();
+  };
+  const pluss::Series pure = models::premium_curve(losses, exposure);
+  const pluss::Series blended = models::credibility_blend(pure, manual, exposure, k);
+  const pluss::Series indicated = models::indicated_premium(blended, fixed_expense, variable, profit);
+  const pluss::Series change = models::rate_change(current, indicated);
+  const pluss::Series raw_change = models::rate_change(current, models::indicated_premium(pure, fixed_expense, variable, profit));
+  row("indicated premium    ", indicated);
+  row("change, credibility  ", change);
+  row("change, experience   ", raw_change);
+  row("raw by experience_change", models::experience_change(losses, exposure, current, fixed_expense, variable, profit));
+  const double needed = indicated.mul(exposure).sum().item<double>(), charged = current.mul(exposure).sum().item<double>();
+  out.writeln("overall change needed =", needed / charged - 1.0);
+}
+```
+
+## Step 4: the limit on any one change
+
+The company will not move any territory by more than 10% in a year. Clamping each change to [−10%, +10%] gives the premiums actually charged, but holding some territories back from the increase they need leaves the company short of the revenue the indications call for. The usual remedy is an **off-balance factor**: multiply the clamped premiums by whatever restores the required total, clamp again, and repeat. The program computes the shortfall after the first clamp and then iterates the factor three times. Whether this can work depends on the size of the overall change needed against the cap, and this exercise has a lesson in it: when the needed overall change is above the cap, no arrangement of territory changes can reach it in a year.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::vector<std::string> territory = {"A", "B", "C", "D", "E", "F"};
+  const pluss::Series exposure = pluss::make_series({12000.0, 8000.0, 4500.0, 2500.0, 900.0, 300.0});
+  const pluss::Series losses = pluss::make_series({9360000.0, 7280000.0, 3150000.0, 2875000.0, 576000.0, 450000.0});
+  const pluss::Series current = pluss::make_series({1000.0, 1050.0, 950.0, 1000.0, 900.0, 1000.0});
+  const pluss::Series manual = pluss::make_series({800.0, 880.0, 780.0, 850.0, 760.0, 900.0});
+  const double fixed_expense = 40.0, variable = 0.18, profit = 0.07, k = 2000.0;
+  const auto row = [&](const char *name, const pluss::Series &s, int digits_unused = 0) {
+    (void)digits_unused;
+    out.write(name);
+    for (const double v : s.items<double>()) out.write(" ", v);
+    out.writeln();
+  };
+  const pluss::Series pure = models::premium_curve(losses, exposure);
+  const pluss::Series blended = models::credibility_blend(pure, manual, exposure, k);
+  const pluss::Series indicated = models::indicated_premium(blended, fixed_expense, variable, profit);
+  const pluss::Series change = models::rate_change(current, indicated);
+  const double need = indicated.mul(exposure).sum().item<double>();
+  pluss::Series capped = current.mul(change.clamp(-0.10, 0.10).add(1.0));
+  row("clamped change       ", change.clamp(-0.10, 0.10));
+  out.writeln("revenue after clamp =", capped.mul(exposure).sum().item<double>(), " revenue needed =", need, " shortfall =", need - capped.mul(exposure).sum().item<double>());
+  for (int round = 1; round <= 3; ++round) {
+    const double off_balance = need / capped.mul(exposure).sum().item<double>();
+    capped = current.mul(capped.mul(off_balance).div(current).clamp(0.90, 1.10));
+    out.writeln("round", round, " off-balance factor", off_balance, " revenue", capped.mul(exposure).sum().item<double>());
+  }
+  row("final premium        ", capped);
+  row("final change         ", capped.div(current).sub(1.0));
+}
+```
+
+## Step 5: how much to trust a small territory
+
+The standard {math}`K` is a judgement. The program shows how the indicated change for the biggest and the smallest territory moves as {math}`K` ranges from very small (trust the experience) to very large (trust the manual rate).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const std::vector<std::string> territory = {"A", "B", "C", "D", "E", "F"};
+  const pluss::Series exposure = pluss::make_series({12000.0, 8000.0, 4500.0, 2500.0, 900.0, 300.0});
+  const pluss::Series losses = pluss::make_series({9360000.0, 7280000.0, 3150000.0, 2875000.0, 576000.0, 450000.0});
+  const pluss::Series current = pluss::make_series({1000.0, 1050.0, 950.0, 1000.0, 900.0, 1000.0});
+  const pluss::Series manual = pluss::make_series({800.0, 880.0, 780.0, 850.0, 760.0, 900.0});
+  const double fixed_expense = 40.0, variable = 0.18, profit = 0.07, k = 2000.0;
+  const auto row = [&](const char *name, const pluss::Series &s, int digits_unused = 0) {
+    (void)digits_unused;
+    out.write(name);
+    for (const double v : s.items<double>()) out.write(" ", v);
+    out.writeln();
+  };
+  out.writeln("K        A (12000 car-years)   F (300 car-years)   overall");
+  const pluss::Series pure = models::premium_curve(losses, exposure);
+  for (const double kk : {1.0, 500.0, 2000.0, 8000.0, 1.0e9}) {
+    const pluss::Series blended = models::credibility_blend(pure, manual, exposure, kk);
+    const pluss::Series indicated = models::indicated_premium(blended, fixed_expense, variable, profit);
+    const pluss::Series change = models::rate_change(current, indicated);
+    out.writeln(kk, "   ", change.items<double>()[0], "   ", change.items<double>()[5], "   ", indicated.mul(exposure).sum().item<double>() / current.mul(exposure).sum().item<double>() - 1.0);
+  }
+}
+```
+
+## Reading the results
+
+**The experience.** Pure premiums run from 640 to 1,500 per car-year, and the book as a whole costs 840.11 per car-year with a loss ratio of 83.8% against current premiums. Territory D (1,150, loss ratio 115%) and territory F (1,500, 150%) are the worst; A (78.0%) is also above the 71% that remains for losses after the 18% and 7% shares and the fixed 40 on a premium of 1,000. The raw loss ratios, taken at face value, say that nearly every territory needs an increase.
+
+**Credibility.** The weights fall steadily with size: 0.857 for the 12,000-car-year territory down to **0.130 for the 300-car-year territory F**. The blended pure premiums show the effect of shrinking toward the manual rate: A moves from 780 to 782.9 (almost no change), but F drops from 1,500 to **978.3** and E rises from 640 to 722.8. The hand check for F, 0.13 times 1,500 plus 0.87 times 900, reproduces 978.261 exactly. Shrinkage moves a thin territory toward the manual rate in either direction: down when its experience was high, up when it was low.
+
+**The indications.** After loading, the credibility-weighted changes are +9.7%, +19.9%, +7.3%, +40.9%, +13.0% and +35.8%, and the raw experience changes are +9.3%, +20.6%, +3.9%, +58.7%, +0.7% and +105.3%. The largest differences are in the small territories: F would rise 105% on its own experience and only 35.8% after credibility, while E would barely move on its own (+0.7%) but rises 13.0% once its unusually good year is tempered. The overall change needed is **+15.5%**. The raw route through `experience_change` reproduces the experience-only line to every printed digit, which is the check that the step functions and the single call agree.
+
+**The limit.** With a 10% cap, the clamped changes are +9.7%, +10%, +7.3%, +10%, +10% and +10%: territories A and C are below the cap, and B, D, E and F are held to it. The clamped premiums collect 30.96 million against 32.67 million needed, a shortfall of 1.70 million. The off-balance factor of 1.055 pushes every territory to the cap, and the iterations settle there: all six at +10%, collecting 31.11 million, still **1.55 million (4.8%) short**. The cap is lower than the +15.5% the book needs, so the rate level cannot be reached this year by any combination of territory changes: the company must file the remainder next year, or choose to take a lower overall level now and accept the lower margin. The program found this by arithmetic, not by assumption; had the overall need been, say, 8%, the same iteration would have redistributed the shortfall among the uncapped territories and converged to a mix of capped and uncapped changes.
+
+**The standard.** The last table shows how a judgement affects the answer. The change for the large territory A hardly moves with K (+9.3% to +12.0%) because its experience is credible at any reasonable standard. The small territory F ranges from +105.1% at K = 1 (trusting its 300 car-years entirely) through +55.3%, +35.8% and +28.2% to +25.3% at an enormous K (using the manual rate alone), and the overall change drifts from +17.0% to +14.8%. The choice of K is the main source of subjectivity in a small territory's rate, and it is worth showing the range to whoever approves the filing.
+
+## What to carry forward
+
+- Measure per-cell pure premiums with `premium_curve`, and the book with `pure_premium`: the book figure is the exposure-weighted average of the cells.
+- Credibility moves thin cells toward the manual rate, up or down, and leaves big cells alone: look at E and F, not just the average.
+- Gross up a pure premium by the shares of premium, then compare with the current premium; `experience_change` is the whole chain for the raw indication.
+- A cap on rate changes is a constraint on the answer, not a rounding step: compare the revenue it allows with the revenue needed before filing.
+- Report the sensitivity to K for the thinnest territories.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="designing_a_reinsurance_programme.html">
+    <span class="label">Previous</span>
+    <span class="title">Designing a Reinsurance Programme</span>
+  </a>
+  <a class="next-link" href="a_reserving_review.html">
+    <span class="label">Next</span>
+    <span class="title">A Reserving Review</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

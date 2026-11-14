@@ -1,0 +1,57 @@
+# `comms::CarrierResult`
+
+The result of carrier recovery.
+
+## Signature
+
+```cpp
+comms::CarrierResult
+```
+
+## What It Does
+
+Holds the corrected symbols and the phase the loop tracked for each.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `symbols` | The symbols after the tracked phase is removed, `[..., N]`. |  |
+| `phase` | The phase estimate used for every symbol, in radians, `[..., N]`. |  |
+
+## Returns
+
+Returned by `pll`.
+
+## Errors
+
+Reading a field does not run the loop again.
+
+## Interpretation and Use
+
+The phase starts at zero and converges; the first symbols of a block are not yet corrected. The phase is only known modulo `2 pi / order`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A locked loop and its tracked phase.
+
+@@example Eng/api/comms_carrier_lock.cpp@@
+
+### Example 2
+
+Loops of different bandwidth.
+
+@@example Eng/api/comms_carrier_bandwidth.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_carrier_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

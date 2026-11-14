@@ -82,4 +82,19 @@ int main() {
 ```
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+plot/CorrPlotOptions
+plot/CorrPlotPayload
+plot/plot_acf
+plot/plot_acf_payload
+plot/plot_pacf
+plot/plot_pacf_payload
+plot/plot_residuals
+plot/plot_residuals_payload
+plot/ResidualPlotOptions
+plot/ResidualPlotPayload
+```
 <!-- apiref:toctree:end -->

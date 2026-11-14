@@ -66,7 +66,7 @@ The current handwritten shape and slice/indexing cluster now covers:
 - torch interop: `tensor` (the reverse of
   [`pluss::series::from_torch`](api/series_factory/from_torch.md))
 - transport and materialization core: `clone`, `contiguous`, `to`
-- native extraction boundaries: rank-zero `item`, rank-one `pull`, and
+- native extraction boundaries: rank-zero `item`, rank-one `items`, and
   rank-aware `host`
 - rounding and numeric-state helpers: `ceil`, `floor`, `round`, `trunc`,
   `isnan`, `isinf`, `isfinite`, `invalid`, `invalid_index`, `nan_to_num`
@@ -113,7 +113,7 @@ The current handwritten shape and slice/indexing cluster now covers:
   `masked_select`, `where`, `where_`
 - logical and bitwise masks: `logical_and`, `logical_or`, `logical_xor`,
   `logical_not`, `logical_not_`, `bitwise_and`, `bitwise_or`,
-  `bitwise_xor`, `bitwise_not`
+  `bitwise_xor`, `bitwise_not`, and the symbolic `&`, `|`, and `~` forms
 - elementwise comparison/bounds helpers and a few load-bearing utility ops
 - reduction and scan core: `sum`, `mean`, `prod`, `max`, `min`, `argmax`,
   `argmin`, `amax`, `amin`, `norm`, `cumsum`, `cumprod`
@@ -213,6 +213,7 @@ api/series/bessely
 api/series/beta
 api/series/betaln
 api/series/bincount
+api/series/operators
 api/series/bitwise_and
 api/series/bitwise_left_shift
 api/series/bitwise_not
@@ -379,6 +380,7 @@ api/series/isposinf
 api/series/isreal
 api/series/istft
 api/series/item
+api/series/items
 api/series/kron
 api/series/kthvalue
 api/series/kurtosis
@@ -454,7 +456,6 @@ api/series/pow
 api/series/prelu
 api/series/prime
 api/series/prod
-api/series/pull
 api/series/put_
 api/series/quantile
 api/series/rad2deg

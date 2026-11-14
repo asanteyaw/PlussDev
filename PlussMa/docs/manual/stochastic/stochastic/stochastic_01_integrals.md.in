@@ -32,4 +32,16 @@ The difference is not numerical error that shrinks with the step. For `f = W` th
 - Read `quadratic_variation_ratio` and `warnings` before trusting a value computed on a path you did not simulate.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic_01_integrals/a_wiener_path
+stochastic_01_integrals/ito_and_stratonovich_on_the_same_path
+stochastic_01_integrals/the_family_in_between
+stochastic_01_integrals/the_forms_of_the_call
+stochastic_01_integrals/values_that_were_not_simulated
+stochastic_01_integrals/integrands_that_look_into_the_future
+stochastic_01_integrals/is_it_a_standard_wiener_path
+```
 <!-- apiref:toctree:end -->

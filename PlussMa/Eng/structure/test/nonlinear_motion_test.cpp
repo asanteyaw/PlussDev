@@ -266,5 +266,38 @@ int main() {
       },
       "invalid nonlinear motion line search was accepted");
 
+  // A stiff rod rotated rigidly about its pin and left unloaded is in equilibrium: the step must converge and the rod must not move,
+  // although the rounding noise of its internal forces is far above the absolute tolerance.
+  {
+    constexpr int pieces = 8;
+    constexpr double angle = 1.0;
+    std::vector<double> coordinates, start;
+    std::vector<std::int64_t> starts, ends;
+    for (int i = 0; i <= pieces; ++i) {
+      const double x = static_cast<double>(i) / pieces;
+      coordinates.insert(coordinates.end(), {0.0, -x});
+      start.insert(start.end(), {x * std::sin(angle), x * (1.0 - std::cos(angle)), angle});
+    }
+    for (int i = 0; i < pieces; ++i) {
+      starts.push_back(i);
+      ends.push_back(i + 1);
+    }
+    const auto fill = [&](double value) {
+      return pluss::series::make(std::vector<double>(pieces, value))
+          .to(pluss::ScalarType::Float64);
+    };
+    const auto rod = structure::frame(
+        {pluss::series::make(coordinates).reshape({pieces + 1, 2}).to(pluss::ScalarType::Float64), starts, ends},
+        {fill(4e-4), fill(1.333e-8), fill(200e9), fill(7850.0)});
+    structure::MotionState initial;
+    initial.displacement = pluss::series::make(start).reshape({pieces + 1, 3}).to(pluss::ScalarType::Float64);
+    const auto time = pluss::series::make({0.0, 0.01, 0.02, 0.03}).to(pluss::ScalarType::Float64);
+    const auto none = pluss::series::zeros({4, pieces + 1, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+    const auto r = structure::motion(rod, none, time, {{0, 0}, {0, 1}, {}}, initial, structure::NonlinearMotionOptions{});
+    expect(r.converged.all().item<bool>() &&
+               std::abs(r.displacement.select(-3, 3).select(-2, pieces).select(-1, 2).item<double>() - angle) < 1e-9,
+           "an unloaded rigidly rotated rod did not stay in equilibrium");
+  }
+
   std::cout << "E6g nonlinear motion checks passed\n";
 }

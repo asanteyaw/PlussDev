@@ -1,0 +1,58 @@
+# `comms::ber`
+
+The fraction of bits that differ.
+
+## Signature
+
+```cpp
+pluss::Series comms::ber(const pluss::Series& sent, const pluss::Series& received);
+```
+
+## What It Does
+
+Returns the fraction of positions at which `sent` and `received` differ, over the last axis.
+
+## Parameters
+
+`sent`
+: The transmitted bits, `[..., N]`.
+
+`received`
+: The decided bits, of the same shape.
+
+## Returns
+
+A real array of shape `[...]`; zero for identical streams.
+
+## Errors
+
+Throws `pluss::Error` for arrays of different shapes or an empty last axis.
+
+## Interpretation and Use
+
+Values compare by value, so integer and floating bits can be mixed. A bit error rate estimated from `K` errors has a relative uncertainty of about `1 / sqrt(K)`: count enough errors before trusting a digit.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Two of eight bits differ.
+
+@@example Eng/api/comms_ber_basic.cpp@@
+
+### Example 2
+
+One rate per frame.
+
+@@example Eng/api/comms_ber_batch.cpp@@
+
+### Example 3
+
+Rejected arrays.
+
+@@example Eng/api/comms_ber_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

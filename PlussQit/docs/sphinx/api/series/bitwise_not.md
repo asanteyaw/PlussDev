@@ -9,6 +9,7 @@
 ```cpp
 Series Series::bitwise_not() const
 Series& Series::bitwise_not_() const
+Series Series::operator~() const
 ```
 
 ## What It Does
@@ -19,6 +20,10 @@ For an integer lane, each `0` bit becomes `1` and each `1` bit becomes `0`.
 That is why signed results can look surprising at first glance: the operation
 acts on the stored bit pattern, so two's-complement negative values are the
 natural consequence.
+
+The symbolic form `~value` is the out-of-place equivalent. On Boolean Series
+it produces the same values as `logical_not()`; on integer Series it preserves
+the integer dtype and complements every bit.
 
 ## Returns
 
@@ -92,6 +97,7 @@ Use `bitwise_not()` when the intent is to invert bit patterns directly.
 - [`Series::bitwise_or`](bitwise_or.md): combine bits from either side.
 - [`Series::logical_not`](logical_not.md): truth-value inversion rather than
   raw bit inversion.
+- [`Series operators`](operators.md): `&`, `|`, and `~` taught together.
 
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="bitwise_left_shift.html">

@@ -14,10 +14,10 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include "pluss/coden/note_factory.h"
 #include "table/display/Display.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::table {
 
@@ -27,7 +27,7 @@ std::string unique_feature_name(std::string candidate,
                                 std::unordered_set<std::string>& seen,
                                 std::int64_t row_index) {
   if (candidate.empty()) {
-    candidate = fmt::format("cs_{}", row_index);
+    candidate = pluss::tils::OutputEngine::format("cs_{}", row_index);
   }
   if (seen.insert(candidate).second) {
     return candidate;
@@ -36,7 +36,7 @@ std::string unique_feature_name(std::string candidate,
   auto base = candidate;
   std::int64_t suffix = 1;
   while (true) {
-    auto probe = fmt::format("{}_{}", base, suffix++);
+    auto probe = pluss::tils::OutputEngine::format("{}_{}", base, suffix++);
     if (seen.insert(probe).second) {
       return probe;
     }
@@ -154,7 +154,7 @@ std::string normalize_case_label(std::string raw) {
   char* end = nullptr;
   const auto parsed = std::strtod(raw.c_str(), &end);
   if (end != nullptr && *end == '\0' && std::isfinite(parsed) && std::floor(parsed) == parsed) {
-    return fmt::format("{:.0f}", parsed);
+    return pluss::tils::OutputEngine::format("{:.0f}", parsed);
   }
   return raw;
 }
@@ -173,21 +173,21 @@ std::string case_label_from_axis(const Slate& axis, std::int64_t row) {
         case pluss::codem::ScalarType::Int16:
         case pluss::codem::ScalarType::Int32:
         case pluss::codem::ScalarType::Int64:
-          return fmt::format("{}", s.host<std::int64_t>()[static_cast<std::size_t>(row)]);
+          return pluss::tils::OutputEngine::format("{}", s.host<std::int64_t>()[static_cast<std::size_t>(row)]);
         case pluss::codem::ScalarType::UInt8:
         case pluss::codem::ScalarType::UInt16:
         case pluss::codem::ScalarType::UInt32:
         case pluss::codem::ScalarType::UInt64:
-          return fmt::format("{}", s.host<std::uint64_t>()[static_cast<std::size_t>(row)]);
+          return pluss::tils::OutputEngine::format("{}", s.host<std::uint64_t>()[static_cast<std::size_t>(row)]);
         case pluss::codem::ScalarType::Float16:
         case pluss::codem::ScalarType::BFloat16:
         case pluss::codem::ScalarType::Float32:
         case pluss::codem::ScalarType::Float64: {
           const auto value = s.host<double>()[static_cast<std::size_t>(row)];
           if (std::isfinite(value) && std::floor(value) == value) {
-            return fmt::format("{:.0f}", value);
+            return pluss::tils::OutputEngine::format("{:.0f}", value);
           }
-          return fmt::format("{}", value);
+          return pluss::tils::OutputEngine::format("{}", value);
         }
         default:
           return std::string(axis.cast().note().as_note().at(row));
@@ -196,9 +196,9 @@ std::string case_label_from_axis(const Slate& axis, std::int64_t row) {
     case SlateKind::Note:
       return normalize_case_label(std::string(axis.as_note().at(row)));
     case SlateKind::Timeline:
-      return fmt::format("{}", axis.as_timeline().ticks()[static_cast<std::size_t>(row)]);
+      return pluss::tils::OutputEngine::format("{}", axis.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case SlateKind::Duration:
-      return fmt::format("{}", axis.as_duration().host()[static_cast<std::size_t>(row)]);
+      return pluss::tils::OutputEngine::format("{}", axis.as_duration().host()[static_cast<std::size_t>(row)]);
   }
   PLUSS_FAIL("DataFrame::lengthen: unsupported case-label kind");
 }
@@ -493,7 +493,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
       column_keys.push_back(col_key);
     }
 
-    const auto cell_key = fmt::format("{}\x1F{}", row_it->second, col_it->second);
+    const auto cell_key = pluss::tils::OutputEngine::format("{}\x1F{}", row_it->second, col_it->second);
     PLUSS_CHECK(cell_row.emplace(cell_key, row).second,
                 "DataFrame::unstack: duplicate cells found; aggregate before unstacking");
   }
@@ -520,7 +520,7 @@ DataFrame DataFrame::unstack(const UnstackOptions& options) const {
       std::vector<Slate> blocks;
       blocks.reserve(row_keys.size());
       for (std::size_t row = 0; row < row_keys.size(); ++row) {
-        const auto key = fmt::format("{}\x1F{}", row, col);
+        const auto key = pluss::tils::OutputEngine::format("{}\x1F{}", row, col);
         const auto found = cell_row.find(key);
         blocks.push_back(found == cell_row.end()
                              ? null_singleton_like(source)

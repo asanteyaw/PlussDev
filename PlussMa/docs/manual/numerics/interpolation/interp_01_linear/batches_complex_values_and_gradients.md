@@ -50,3 +50,16 @@ complex values at 1.5: 1.5 + 3i
 d value(2.25) / d samples: 0 0 0.75 0.25   (weights 0.75 and 0.25 on the samples at 2 and 3)
 ```
 Each curve in the batch is read at the same queries in one call, and the result keeps the batch axes. Complex values are interpolated componentwise. The result is built from differentiable operations, so a Series marked `tracks_slope_(true)` receives its gradient: the interpolation weights of the two samples that bracket the query, and zero for all others. This makes an interpolated table usable inside a fitted model.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="queries_outside_the_table.html">
+    <span class="label">Previous</span>
+    <span class="title">Queries outside the table</span>
+  </a>
+  <a class="next-link" href="accuracy.html">
+    <span class="label">Next</span>
+    <span class="title">Accuracy</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -78,16 +78,16 @@ int main() {
   const std::vector<double> params = {3.2};
 
   std::cout << "x:";
-  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).items<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pmf:";
-  for (double v : distr::pdf(dst::Poisson, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Poisson, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Poisson, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Poisson, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpmf:";
-  for (double v : distr::logpdf(dst::Poisson, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Poisson, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -127,7 +127,7 @@ int main() {
   const double mass_sum = as_f64(distr::pdf(dst::Poisson, grid, params).sum());
 
   const auto edges = pluss::make_series({-1.0, 6.0}, f64);
-  const auto c = distr::cdf(dst::Poisson, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Poisson, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Poisson, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 0.0).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean());
@@ -168,16 +168,16 @@ int main() {
   const auto x = pluss::make_series({0.0, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0}, f64);
 
   std::cout << "x:";
-  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).items<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "lambda 0.5:";
-  for (double v : distr::pdf(dst::Poisson, x, {0.5}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Poisson, x, {0.5}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "lambda 3  :";
-  for (double v : distr::pdf(dst::Poisson, x, {3.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Poisson, x, {3.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "lambda 8  :";
-  for (double v : distr::pdf(dst::Poisson, x, {8.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Poisson, x, {8.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -237,3 +237,16 @@ The two largest differences are 3.30e-04 for the density and 4.60e-04 for the di
 - [`Geometric`](../discrete/Geometric.md)
 - [`Skellam`](../discrete/Skellam.md)
 - [`distr::Poisson`](../object_based/Poisson.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="NegativeBinomial.html">
+    <span class="label">Previous</span>
+    <span class="title">NegativeBinomial</span>
+  </a>
+  <a class="next-link" href="Rademacher.html">
+    <span class="label">Next</span>
+    <span class="title">Rademacher</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

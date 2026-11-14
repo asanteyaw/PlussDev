@@ -54,10 +54,10 @@ int main() {
     const auto a = reg::quantile_fit(pluss::make_series(ys, {12}, as_f64()), pluss::make_series(xs, {12}, as_f64()), weighted);
     const auto b = reg::quantile_fit(pluss::make_series(repeated_y, {n_repeated}, as_f64()), pluss::make_series(repeated_x, {n_repeated}, as_f64()), plain);
     out.writeln("tau", tau, " rows", a.nobs, "and", b.nobs);
-    out.writeln("  coefficients weighted", a.coefficients.pull<double>(), " repeated", b.coefficients.pull<double>());
+    out.writeln("  coefficients weighted", a.coefficients.items<double>(), " repeated", b.coefficients.items<double>());
     out.writeln("  objective    weighted", a.objective, " repeated", b.objective, "  null", a.objective_null, b.objective_null);
     out.writeln("  density at 0 weighted", a.residual_density0, " repeated", b.residual_density0);
-    out.writeln("  std errors   weighted", a.std_errors.pull<double>(), " repeated", b.std_errors.pull<double>());
+    out.writeln("  std errors   weighted", a.std_errors.items<double>(), " repeated", b.std_errors.items<double>());
   }
 }
 ```
@@ -88,13 +88,26 @@ int main() {
   const auto by_rows = reg::quantile_fit(y, none, median);
   median.weights = pluss::make_series(units, {8}, as_f64());
   const auto by_units = reg::quantile_fit(y, none, median);
-  out.writeln("median of the 8 rows    ", by_rows.coefficients.pull<double>(), " converged", by_rows.converged);
-  out.writeln("median of the 103 units ", by_units.coefficients.pull<double>(), " converged", by_units.converged);
+  out.writeln("median of the 8 rows    ", by_rows.coefficients.items<double>(), " converged", by_rows.converged);
+  out.writeln("median of the 103 units ", by_units.coefficients.items<double>(), " converged", by_units.converged);
 
   reg::QuantileOptions top = median;
   top.tau = 0.99;
-  out.writeln("99th percentile of the units", reg::quantile_fit(y, none, top).coefficients.pull<double>());
+  out.writeln("99th percentile of the units", reg::quantile_fit(y, none, top).coefficients.items<double>());
 }
 ```
 
 The median of the eight rows is 10.38, pulled up by the three high rows that are a minority of the units but three eighths of the rows. The median of the 103 units, with the rows weighted by the units they stand for, is 10.10, the middle of the large group, and the 99th percentile of the units, 30.5, lies among the three single units of the small group.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="optimiser_controls.html">
+    <span class="label">Previous</span>
+    <span class="title">Optimiser controls</span>
+  </a>
+  <a class="next-link" href="prediction_summary_and_options.html">
+    <span class="label">Next</span>
+    <span class="title">Prediction, the summary and options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

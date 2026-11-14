@@ -19,7 +19,7 @@ It works on any integrand, including one with a singularity at an end point: set
 ## Parameters
 
 `const integ::IntegrandFn &fn`
-: `Series -> Series`, the integrand at a `Series` of cell midpoints.
+: `Series (Series)`, the integrand at a `Series` of cell midpoints.
 
 `double a, double b`
 : A finite interval, `a < b`.

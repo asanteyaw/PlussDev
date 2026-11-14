@@ -37,4 +37,11 @@ The sign convention matters: a constraint is satisfied when its value is **zero 
 5. Expect the last digits on a boundary to be slow; budget for them or accept a looser answer.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_03_bounds_and_constraints/bounds_and_constraint_types
+dfo_03_bounds_and_constraints/mesh_methods_and_infeasible_problems
+```
 <!-- apiref:toctree:end -->

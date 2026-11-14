@@ -250,3 +250,16 @@ lags 4  statistic -3.477  observations used 195
 - [`AdfOptions`](AdfOptions.md)
 - [`AdfResult`](AdfResult.md)
 - [`kpss_test`](kpss_test.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="AcfOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">AcfOptions</span>
+  </a>
+  <a class="next-link" href="AdfOptions.html">
+    <span class="label">Next</span>
+    <span class="title">AdfOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

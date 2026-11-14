@@ -1,0 +1,76 @@
+# `power::DispatchResult`
+
+Generation, flows, post-outage flows and solver diagnostics of `dispatch`.
+
+## Signature
+
+```cpp
+power::DispatchResult
+```
+
+## What It Does
+
+The result of `dispatch`. Arrays keep the leading scenario axes of the grid.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `generation` | The optimal active output of each generator, `[..., generator]`. |  |
+| `angle` | The DC angles, `[..., bus]`. |  |
+| `injection` | The net active injection at each bus, `[..., bus]`. |  |
+| `flow` | The DC flow on each line, `[..., line]`. |  |
+| `post_flow` | With `secure` true, the flows after each outage, `[..., outage line, monitored line]`; undefined otherwise. |  |
+| `outage_valid` | With `secure` true, whether each outage is valid, `[..., outage line]`; undefined otherwise. |  |
+| `objective` | The total cost from the quadratic and linear terms, `[...]`. |  |
+| `converged` | True when the solver met its tolerances. |  |
+| `iterations` | Solver iterations used. |  |
+| `primal_residual` | The violation of the constraints at the returned point. |  |
+| `dual_residual` | The optimality residual. |  |
+
+## Returns
+
+Returned by `dispatch`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+Check `converged` first. An infeasible dispatch does not throw: it returns with `converged` false and a primal residual that says by how much the constraints are violated.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field against the hand optimum.
+
+@@example Eng/api/power_dispatch_hand.cpp@@
+
+### Example 2
+
+Post-outage flows after a secure dispatch.
+
+@@example Eng/api/power_dispatch_postflow.cpp@@
+
+### Example 3
+
+An infeasible secure dispatch.
+
+@@example Eng/api/power_dispatch_infeasible.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DispatchOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">DispatchOptions</span>
+  </a>
+  <a class="next-link" href="dispatch.html">
+    <span class="label">Next</span>
+    <span class="title">dispatch</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

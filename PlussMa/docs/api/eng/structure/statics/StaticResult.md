@@ -56,7 +56,7 @@ Every field of a truss solve on the three-bar truss.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -131,7 +131,7 @@ The diagnostic fields under a short iteration budget.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -230,7 +230,7 @@ Prescribed displacements and the reactions they produce.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }

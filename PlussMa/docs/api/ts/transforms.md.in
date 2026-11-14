@@ -61,4 +61,28 @@ int main() {
 ```
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+transforms/diff
+transforms/ema
+transforms/ewm_mean
+transforms/ewm_std
+transforms/expanding_mean
+transforms/expanding_std
+transforms/fill_gaps
+transforms/lag
+transforms/lead
+transforms/log_returns
+transforms/resample
+transforms/returns
+transforms/rolling_max
+transforms/rolling_mean
+transforms/rolling_min
+transforms/rolling_std
+transforms/rolling_sum
+transforms/rolling_var
+transforms/zscore_rolling
+```
 <!-- apiref:toctree:end -->

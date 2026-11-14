@@ -1,0 +1,799 @@
+# apiref_manifest_financeapi.toml -- the `Finance` API reference of PlussMa.
+
+[framework.finance_api]
+title = "Finance"
+nav_title = "Finance API"
+nav_prefix = "api/finance/"
+root_page = "api/plussma_finance.html"
+summary = "Option pricing by Black-Scholes, implied volatility, stochastic-volatility models, rates, hedging and filtering."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "finance/field"
+page = "api/finance/field.md"
+title = "The pricing field"
+maxdepth = 2
+children = ["field/Controls", "field/Engine", "field/Field", "field/Greeks", "field/Loss", "field/Paths", "field/Result", "field/Risk"]
+
+[[family]]
+path = "finance/model"
+page = "api/finance/model.md"
+title = "Models"
+maxdepth = 2
+children = ["model/Bates", "model/BlackScholes", "model/Heston", "model/Kind", "model/Model", "model/RoughBergomi", "model/RoughHeston", "model/Sabr"]
+
+[[family]]
+path = "finance/instrument"
+page = "api/finance/instrument.md"
+title = "Instruments and market"
+maxdepth = 2
+children = ["instrument/ExerciseStyle", "instrument/OptionType", "instrument/State", "instrument/Vanilla", "instrument/american", "instrument/bermudan", "instrument/make", "instrument/market_make"]
+
+[[family]]
+path = "finance/engines"
+page = "api/finance/engines.md"
+title = "Pricing engines"
+maxdepth = 2
+children = ["engines/Analytic", "engines/COS", "engines/Fft", "engines/HestonCfMode", "engines/HestonFftQuadrature", "engines/Lattice", "engines/MonteCarlo", "engines/Pde", "engines/RandMethod", "engines/RiskSpec", "engines/SimScheme", "engines/Spectral"]
+
+[[family]]
+path = "finance/chord"
+page = "api/finance/chord.md"
+title = "Several assets"
+maxdepth = 2
+children = ["chord/Chord"]
+
+[[family]]
+path = "finance/implied"
+page = "api/finance/implied.md"
+title = "Implied volatility"
+maxdepth = 2
+children = ["implied/ImpliedVolMethod", "implied/ImpliedVolOptions"]
+
+[[family]]
+path = "finance/rates"
+page = "api/finance/rates.md"
+title = "Interest-rate models"
+maxdepth = 2
+children = ["rates/CirParams", "rates/HjmParams", "rates/HjmPaths", "rates/HullWhiteParams", "rates/RatePaths", "rates/Scheme", "rates/SimOptions", "rates/VasicekParams", "rates/cir_paths", "rates/cir_zcb", "rates/hjm_paths", "rates/hjm_zcb_mc", "rates/hull_white_paths", "rates/hull_white_zcb", "rates/vasicek_paths", "rates/vasicek_zcb"]
+
+[[family]]
+path = "finance/hedging"
+page = "api/finance/hedging.md"
+title = "Delta hedging"
+maxdepth = 2
+children = ["hedging/DeltaHedgeResult", "hedging/delta_hedge"]
+
+[[family]]
+path = "finance/filtering"
+page = "api/finance/filtering.md"
+title = "Filtering"
+maxdepth = 2
+children = ["filtering/EkfModel", "filtering/KalmanModel", "filtering/KalmanResult", "filtering/ParticleFilterModel", "filtering/ParticleFilterOptions", "filtering/ParticleFilterResult", "filtering/ParticleResampleMethod", "filtering/ParticleResampleTrigger", "filtering/UkfModel", "filtering/UkfOptions", "filtering/ekf_filter", "filtering/kalman_filter", "filtering/particle_filter", "filtering/sv_particle_filter", "filtering/ukf_filter"]
+
+[[family]]
+path = "finance/volbridge"
+page = "api/finance/volbridge.md"
+title = "The volatility bridge"
+maxdepth = 2
+children = ["volbridge/Garch11Params", "volbridge/JointLikelihoodWeights", "volbridge/Ngarch11Params", "volbridge/OptionVolMetrics", "volbridge/ReturnsMetrics", "volbridge/pricing_metrics", "volbridge/pricing_variance_forecast", "volbridge/returns_metrics", "volbridge/to_pricing_params", "volbridge/unconditional_variance", "volbridge/variance_forecast", "volbridge/weighted_joint_loglik", "volbridge/weighted_joint_nll"]
+
+[[symbol]]
+qualname = "module::Engine"
+kind = "options"
+family = "finance/field"
+page = "api/finance/field/Engine.md"
+summary = "How the price of an option is computed: closed form, Fourier transforms, simulation, a tree, collocation or a PDE."
+fields = ["Fft", "Cos", "MonteCarlo", "Analytic", "Lattice", "Spectral", "Pde"]
+
+[[symbol]]
+qualname = "module::Risk"
+kind = "options"
+family = "finance/field"
+page = "api/finance/field/Risk.md"
+summary = "Whether pricing also returns the Greeks."
+fields = ["PriceOnly", "All"]
+
+[[symbol]]
+qualname = "module::Loss"
+kind = "options"
+family = "finance/field"
+page = "api/finance/field/Loss.md"
+summary = "How the residuals of a fit are reduced to one number."
+fields = ["MSE", "RelativeMSE", "MAE", "Huber"]
+
+[[symbol]]
+qualname = "module::Paths"
+kind = "options"
+family = "finance/field"
+page = "api/finance/field/Paths.md"
+summary = "The simulated paths of a Monte Carlo run: asset, volatility, variance and the shocks that drove them."
+fields = ["asset", "vol", "variance", "asset_shocks", "vol_shocks"]
+
+[[symbol]]
+qualname = "pricer::Greeks"
+kind = "options"
+family = "finance/field"
+page = "api/finance/field/Greeks.md"
+summary = "The five Greeks of a priced strip, each a `Series` with one entry per option."
+fields = ["delta", "gamma", "vega", "theta", "rho"]
+
+[[symbol]]
+qualname = "module::Field::Result"
+kind = "options"
+family = "finance/field"
+page = "api/finance/field/Result.md"
+summary = "What pricing returns: the prices, the Greeks, and (for the FFT engine) the strike grid."
+fields = ["price", "greeks", "strike_grid"]
+
+[[symbol]]
+qualname = "module::Controls"
+kind = "options"
+family = "finance/field"
+page = "api/finance/field/Controls.md"
+summary = "The engine, whether Greeks are wanted, the loss, and the settings of every engine side by side."
+fields = ["engine", "risk", "loss", "huber_delta", "fft", "cos", "mc", "analytic", "lattice", "spectral", "pde"]
+
+[[symbol]]
+qualname = "model::Kind"
+kind = "options"
+family = "finance/model"
+page = "api/finance/model/Kind.md"
+summary = "The six model families, in the order that fixes each family's parameter vector."
+fields = ["BlackScholes", "Sabr", "Heston", "Bates", "RoughHeston", "RoughBergomi"]
+
+[[symbol]]
+qualname = "model::BlackScholes"
+kind = "options"
+family = "finance/model"
+page = "api/finance/model/BlackScholes.md"
+summary = "Constant-volatility model: one parameter, the volatility."
+fields = ["volatility"]
+
+[[symbol]]
+qualname = "model::Heston"
+kind = "options"
+family = "finance/model"
+page = "api/finance/model/Heston.md"
+summary = "The Heston stochastic-variance model: five parameters, plus a drift and a variance floor."
+fields = ["kappa", "theta", "sigma", "rho", "v0", "mu", "variance_floor"]
+
+[[symbol]]
+qualname = "model::Bates"
+kind = "options"
+family = "finance/model"
+page = "api/finance/model/Bates.md"
+summary = "Heston with log-normal jumps in the asset: eight parameters."
+fields = ["kappa", "theta", "sigma", "rho", "v0", "mu", "variance_floor", "jump_intensity", "jump_mean", "jump_vol"]
+
+[[symbol]]
+qualname = "model::Sabr"
+kind = "options"
+family = "finance/model"
+page = "api/finance/model/Sabr.md"
+summary = "The SABR stochastic alpha-beta-rho model: four parameters, plus drift, floor and the volatility convention."
+fields = ["alpha0", "beta", "nu", "rho", "mu", "alpha_floor", "vol_type", "approx"]
+
+[[symbol]]
+qualname = "model::RoughHeston"
+kind = "options"
+family = "finance/model"
+page = "api/finance/model/RoughHeston.md"
+summary = "A Heston-type model with a rough variance kernel: six parameters."
+fields = ["kappa", "theta", "sigma", "alpha", "rho", "v0", "mu", "variance_floor"]
+
+[[symbol]]
+qualname = "model::RoughBergomi"
+kind = "options"
+family = "finance/model"
+page = "api/finance/model/RoughBergomi.md"
+summary = "The rough Bergomi model: four parameters, plus a drift and a variance floor."
+fields = ["xi", "eta", "alpha", "rho", "mu", "variance_floor"]
+
+[[symbol]]
+qualname = "pricing::ExerciseStyle"
+kind = "options"
+family = "finance/instrument"
+page = "api/finance/instrument/ExerciseStyle.md"
+summary = "When the holder may exercise: at maturity only, on a schedule, or at any time."
+fields = ["European", "Bermudan", "American"]
+
+[[symbol]]
+qualname = "instrument::Vanilla"
+kind = "options"
+family = "finance/instrument"
+page = "api/finance/instrument/Vanilla.md"
+summary = "A strip of vanilla calls and puts: types, strikes, maturities and exercise style."
+fields = ["type", "is_call", "strike", "maturity", "exercise", "exercise_times"]
+
+[[symbol]]
+qualname = "instrument::make"
+kind = "function"
+family = "finance/instrument"
+page = "api/finance/instrument/make.md"
+summary = "A European call or put with one strike and one maturity."
+overloads = 1
+
+[[symbol]]
+qualname = "instrument::american"
+kind = "function"
+family = "finance/instrument"
+page = "api/finance/instrument/american.md"
+summary = "An American call or put: exercisable at any time up to maturity."
+overloads = 1
+
+[[symbol]]
+qualname = "instrument::bermudan"
+kind = "function"
+family = "finance/instrument"
+page = "api/finance/instrument/bermudan.md"
+summary = "A Bermudan call or put: exercisable on a schedule of dates and at maturity."
+overloads = 1
+
+[[symbol]]
+qualname = "market::State"
+kind = "options"
+family = "finance/instrument"
+page = "api/finance/instrument/State.md"
+summary = "The market a strip is priced in: spot, interest rate and dividend yield."
+fields = ["spot", "rate", "dividend_yield"]
+
+[[symbol]]
+qualname = "market::make"
+kind = "function"
+family = "finance/instrument"
+page = "api/finance/instrument/market_make.md"
+summary = "A market state with one spot, one rate and one dividend yield."
+overloads = 1
+
+[[symbol]]
+qualname = "pricer::RiskSpec"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/RiskSpec.md"
+summary = "Whether an engine's `price` method also computes the Greeks (the engine-level twin of `module::Risk`)."
+fields = ["PriceOnly", "All"]
+
+[[symbol]]
+qualname = "pricer::Analytic"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/Analytic.md"
+summary = "The closed-form engine: the Black-Scholes formula, or the SABR expansion priced through Black or Bachelier."
+fields = ["with_greeks"]
+
+[[symbol]]
+qualname = "pricer::Lattice"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/Lattice.md"
+summary = "The binomial-tree engine for Black-Scholes, with European, Bermudan and American exercise."
+fields = ["steps"]
+
+[[symbol]]
+qualname = "pricer::Spectral"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/Spectral.md"
+summary = "The collocation engine for American options under Black-Scholes: the exercise boundary by Chebyshev collocation."
+fields = ["nodes", "quadrature", "max_iterations", "tolerance"]
+
+[[symbol]]
+qualname = "pricer::Pde"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/Pde.md"
+summary = "The two-dimensional finite-difference engine for Heston, with European, Bermudan and American exercise."
+fields = ["spot_nodes", "variance_nodes", "time_steps"]
+
+[[symbol]]
+qualname = "pricer::COS"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/COS.md"
+summary = "The Fourier-cosine engine: Black-Scholes, Heston and Bates by expanding the density in cosines, with Bermudan and American exercise."
+fields = ["num_terms", "truncation", "cumulant_step", "exercise_truncation", "exercise_terms", "extrapolation", "variance_nodes", "variance_tolerance"]
+
+[[symbol]]
+qualname = "pricer::Fft"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/Fft.md"
+summary = "The Carr-Madan FFT engine for Heston and Bates: one transform prices every strike on a grid."
+fields = ["vol_risk_premium", "mode", "num_fft", "du", "dk", "alpha", "quadrature", "return_grid"]
+
+[[symbol]]
+qualname = "pricer::MonteCarlo"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/MonteCarlo.md"
+summary = "The simulation engine: prices every model by averaging discounted payoffs over simulated paths, with variance reduction and least-squares early exercise."
+fields = ["paths", "steps", "scheme", "rand_method", "randomized_quasi", "sobol_scrambling", "antithetic", "control_variate", "importance_sampling", "importance_shift", "control_vol", "offset", "seed", "basis_degree"]
+
+[[symbol]]
+qualname = "volatility::SimScheme"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/SimScheme.md"
+summary = "The time-stepping scheme for the variance in simulated stochastic-volatility paths."
+fields = ["Euler", "Milstein", "Milstein2", "QuadExp", "Transition"]
+
+[[symbol]]
+qualname = "volatility::RandMethod"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/RandMethod.md"
+summary = "The source of the random numbers of a simulation: pseudo-random or a quasi-random sequence."
+fields = ["Pseudo", "Sobol", "Halton", "Torus"]
+
+[[symbol]]
+qualname = "pricing::HestonCfMode"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/HestonCfMode.md"
+summary = "Which algebraic form of the Heston characteristic function the Fourier engines evaluate."
+fields = ["Original", "LittleTrap"]
+
+[[symbol]]
+qualname = "pricing::HestonFftQuadrature"
+kind = "options"
+family = "finance/engines"
+page = "api/finance/engines/HestonFftQuadrature.md"
+summary = "The weights of the integral inside the FFT pricing: Simpson or trapezoidal."
+fields = ["Simpson", "Trapezoidal"]
+
+[[symbol]]
+qualname = "module::Chord::Result"
+kind = "class"
+family = "finance/chord"
+owner = "module::Chord"
+page = "api/finance/chord/Result.md"
+summary = "The result of pricing a Chord: a Field::Result per asset and every price laid end to end."
+fields = ["names", "results", "price", "offsets"]
+methods = ["operator_index"]
+
+[[symbol]]
+qualname = "module::Chord::Parameters"
+kind = "options"
+family = "finance/chord"
+owner = "module::Chord"
+page = "api/finance/chord/Parameters.md"
+summary = "The model parameters of several assets of any model as columns, and the correlations between the assets."
+fields = ["names", "spot", "rate", "dividend_yield", "kappa", "theta", "sigma", "rho", "v0", "kind", "volatility", "alpha0", "beta", "nu", "jump_intensity", "jump_mean", "jump_vol", "alpha", "xi", "eta", "maturity", "strike", "controls", "price_corr", "var_corr", "price_var_cross"]
+
+[[symbol]]
+qualname = "module::Chord::Paths"
+kind = "options"
+family = "finance/chord"
+owner = "module::Chord"
+page = "api/finance/chord/Paths.md"
+summary = "The simulated paths of all assets of a Chord, with the asset axis last."
+fields = ["names", "asset", "variance", "asset_shocks", "vol_shocks", "horizon"]
+
+[[symbol]]
+qualname = "prc::OptionType"
+kind = "options"
+family = "finance/instrument"
+page = "api/finance/instrument/OptionType.md"
+summary = "Whether an option is a call or a put (and `Auto`, which only instruments that carry their own flag may use)."
+fields = ["Call", "Put", "Auto"]
+
+[[symbol]]
+qualname = "prc::ImpliedVolMethod"
+kind = "options"
+family = "finance/implied"
+page = "api/finance/implied/ImpliedVolMethod.md"
+summary = "The root-finding algorithm `Field::implied_vol` uses."
+fields = ["Auto", "Newton", "Bisection", "Secant", "Brent"]
+
+[[symbol]]
+qualname = "prc::ImpliedVolOptions"
+kind = "options"
+family = "finance/implied"
+page = "api/finance/implied/ImpliedVolOptions.md"
+summary = "The algorithm, the volatility bracket, the tolerance and the iteration limit of `Field::implied_vol`."
+fields = ["method", "lower_vol", "upper_vol", "tolerance", "max_iterations", "vega_floor"]
+
+[[symbol]]
+qualname = "rates::Scheme"
+kind = "options"
+family = "finance/rates"
+page = "api/finance/rates/Scheme.md"
+summary = "The time-stepping scheme of the rate simulators: Euler, Milstein or the exact transition."
+fields = ["Euler", "Milstein", "Transition"]
+
+[[symbol]]
+qualname = "rates::SimOptions"
+kind = "options"
+family = "finance/rates"
+page = "api/finance/rates/SimOptions.md"
+summary = "The scheme, random-number source, layout and seed of the rate simulators."
+fields = ["scheme", "method", "randomized_quasi", "sobol_scrambling", "paths_first", "seed", "offset"]
+
+[[symbol]]
+qualname = "rates::VasicekParams"
+kind = "options"
+family = "finance/rates"
+page = "api/finance/rates/VasicekParams.md"
+summary = "Parameters of the Vasicek short-rate model `dr = κ(θ − r)dt + σ dW`."
+fields = ["kappa", "theta", "sigma", "r0"]
+
+[[symbol]]
+qualname = "rates::CirParams"
+kind = "options"
+family = "finance/rates"
+page = "api/finance/rates/CirParams.md"
+summary = "Parameters of the Cox-Ingersoll-Ross short-rate model `dr = κ(θ − r)dt + σ√r dW`."
+fields = ["kappa", "theta", "sigma", "r0", "rate_floor"]
+
+[[symbol]]
+qualname = "rates::HullWhiteParams"
+kind = "options"
+family = "finance/rates"
+page = "api/finance/rates/HullWhiteParams.md"
+summary = "Parameters of the Hull-White (extended Vasicek) model `dr = κ(θ₀ + θ₁t − r)dt + σ dW` with a linear target."
+fields = ["kappa", "sigma", "r0", "theta0", "theta_slope"]
+
+[[symbol]]
+qualname = "rates::HjmParams"
+kind = "options"
+family = "finance/rates"
+page = "api/finance/rates/HjmParams.md"
+summary = "Parameters of the one-factor Heath-Jarrow-Morton forward-rate model: the starting level, the tenor grid and the volatility at each tenor."
+fields = ["r0", "tenors", "vol"]
+
+[[symbol]]
+qualname = "rates::RatePaths"
+kind = "options"
+family = "finance/rates"
+page = "api/finance/rates/RatePaths.md"
+summary = "Simulated short-rate paths and the normals that drove them."
+fields = ["rate", "innovation"]
+
+[[symbol]]
+qualname = "rates::HjmPaths"
+kind = "options"
+family = "finance/rates"
+page = "api/finance/rates/HjmPaths.md"
+summary = "Simulated forward curves, the short rate and the normals of an HJM simulation."
+fields = ["rate", "forward", "innovation"]
+
+[[symbol]]
+qualname = "rates::vasicek_paths"
+kind = "function"
+family = "finance/rates"
+page = "api/finance/rates/vasicek_paths.md"
+summary = "Simulates paths of the Vasicek short rate `dr = κ(θ − r)dt + σ dW`."
+overloads = 2
+toggles = ["with SimOptions", "default options with a seed"]
+
+[[symbol]]
+qualname = "rates::cir_paths"
+kind = "function"
+family = "finance/rates"
+page = "api/finance/rates/cir_paths.md"
+summary = "Simulates paths of the Cox-Ingersoll-Ross short rate `dr = κ(θ − r)dt + σ√r dW`."
+overloads = 2
+toggles = ["with SimOptions", "default options with a seed"]
+
+[[symbol]]
+qualname = "rates::hull_white_paths"
+kind = "function"
+family = "finance/rates"
+page = "api/finance/rates/hull_white_paths.md"
+summary = "Simulates paths of the Hull-White short rate `dr = κ(θ₀ + θ₁t − r)dt + σ dW`."
+overloads = 2
+toggles = ["with SimOptions", "default options with a seed"]
+
+[[symbol]]
+qualname = "rates::hjm_paths"
+kind = "function"
+family = "finance/rates"
+page = "api/finance/rates/hjm_paths.md"
+summary = "Simulates the forward curve of the one-factor Heath-Jarrow-Morton model."
+overloads = 2
+toggles = ["with SimOptions", "default options with a seed"]
+
+[[symbol]]
+qualname = "rates::vasicek_zcb"
+kind = "function"
+family = "finance/rates"
+page = "api/finance/rates/vasicek_zcb.md"
+summary = "The closed-form Vasicek price of a zero-coupon bond."
+overloads = 1
+
+[[symbol]]
+qualname = "rates::cir_zcb"
+kind = "function"
+family = "finance/rates"
+page = "api/finance/rates/cir_zcb.md"
+summary = "The closed-form Cox-Ingersoll-Ross price of a zero-coupon bond."
+overloads = 1
+
+[[symbol]]
+qualname = "rates::hull_white_zcb"
+kind = "function"
+family = "finance/rates"
+page = "api/finance/rates/hull_white_zcb.md"
+summary = "The closed-form Hull-White price of a zero-coupon bond for a linear reversion level."
+overloads = 1
+
+[[symbol]]
+qualname = "rates::hjm_zcb_mc"
+kind = "function"
+family = "finance/rates"
+page = "api/finance/rates/hjm_zcb_mc.md"
+summary = "The price of a zero-coupon bond in the HJM model, by simulation."
+overloads = 1
+
+[[symbol]]
+qualname = "hedging::DeltaHedgeResult"
+kind = "options"
+family = "finance/hedging"
+page = "api/finance/hedging/DeltaHedgeResult.md"
+summary = "The option value, the hedge, the cash and the hedging error along a path."
+fields = ["option_value", "delta", "cash", "portfolio", "hedge_error", "terminal_pnl"]
+
+[[symbol]]
+qualname = "hedging::delta_hedge"
+kind = "function"
+family = "finance/hedging"
+page = "api/finance/hedging/delta_hedge.md"
+summary = "Delta-hedges the field's European option along a spot path, with the delta of the field's own model and engine, and reports the hedging error."
+overloads = 1
+
+[[symbol]]
+qualname = "filtering::KalmanModel"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/KalmanModel.md"
+summary = "A linear Gaussian state-space model: the matrices of the dynamics and the observation, the noise covariances and the initial state."
+fields = ["transition", "observation", "process_cov", "observation_cov", "initial_mean", "initial_cov", "control", "control_matrix", "info_tol"]
+
+[[symbol]]
+qualname = "filtering::KalmanResult"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/KalmanResult.md"
+summary = "What the Kalman, extended and unscented filters return: the filtered and predicted states, the innovations, which data were used, and the log-likelihood."
+fields = ["filtered_mean", "filtered_cov", "predicted_mean", "predicted_cov", "innovation", "innovation_cov", "data_used", "loglik"]
+
+[[symbol]]
+qualname = "filtering::kalman_filter"
+kind = "function"
+family = "finance/filtering"
+page = "api/finance/filtering/kalman_filter.md"
+summary = "The Kalman filter: the exact posterior of a linear Gaussian state-space model, date by date."
+overloads = 1
+
+[[symbol]]
+qualname = "filtering::EkfModel"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/EkfModel.md"
+summary = "A nonlinear state-space model for the extended Kalman filter: the dynamics, the observation and their Jacobians."
+fields = ["transition", "observation", "transition_jacobian", "observation_jacobian", "process_cov", "observation_cov", "initial_mean", "initial_cov", "info_tol"]
+
+[[symbol]]
+qualname = "filtering::ekf_filter"
+kind = "function"
+family = "finance/filtering"
+page = "api/finance/filtering/ekf_filter.md"
+summary = "The extended Kalman filter: the Kalman equations linearised around the current estimate."
+overloads = 1
+
+[[symbol]]
+qualname = "filtering::UkfOptions"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/UkfOptions.md"
+summary = "The spread and prior of the unscented filter's sigma points, and its numerical jitter."
+fields = ["alpha", "beta", "kappa", "jitter"]
+
+[[symbol]]
+qualname = "filtering::UkfModel"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/UkfModel.md"
+summary = "A nonlinear state-space model for the unscented Kalman filter: the dynamics and the observation, without Jacobians."
+fields = ["transition", "observation", "process_cov", "observation_cov", "initial_mean", "initial_cov", "info_tol", "options"]
+
+[[symbol]]
+qualname = "filtering::ukf_filter"
+kind = "function"
+family = "finance/filtering"
+page = "api/finance/filtering/ukf_filter.md"
+summary = "The unscented Kalman filter: sigma points through the nonlinear model, with no Jacobians."
+overloads = 1
+
+[[symbol]]
+qualname = "filtering::ParticleResampleMethod"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/ParticleResampleMethod.md"
+summary = "How a particle filter redraws the cloud when the weights have concentrated."
+fields = ["Systematic", "Multinomial", "Stratified", "Residual"]
+
+[[symbol]]
+qualname = "filtering::ParticleResampleTrigger"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/ParticleResampleTrigger.md"
+summary = "When a particle filter resamples: when the weights degrade, or at fixed intervals."
+fields = ["Ratio", "Interval"]
+
+[[symbol]]
+qualname = "filtering::ParticleFilterOptions"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/ParticleFilterOptions.md"
+summary = "Resampling and storage settings of a particle filter."
+fields = ["ess_threshold", "resample", "store_particles", "resample_method", "resample_trigger", "resample_interval", "resample_seed"]
+
+[[symbol]]
+qualname = "filtering::ParticleFilterModel"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/ParticleFilterModel.md"
+summary = "A state-space model for the particle filter: how particles move, how likely an observation is under each, and the starting cloud."
+fields = ["transition", "loglik", "initial_particles", "initial_weights", "options"]
+
+[[symbol]]
+qualname = "filtering::ParticleFilterResult"
+kind = "options"
+family = "finance/filtering"
+page = "api/finance/filtering/ParticleFilterResult.md"
+summary = "What a particle filter returns: the filtered mean, the weights, the cloud, the effective sample size and the log-likelihood estimate."
+fields = ["filtered_mean", "particle_weights", "particles", "ess", "loglik"]
+
+[[symbol]]
+qualname = "filtering::particle_filter"
+kind = "function"
+family = "finance/filtering"
+page = "api/finance/filtering/particle_filter.md"
+summary = "The bootstrap particle filter for any state-space model you can simulate and whose observation density you can evaluate."
+overloads = 1
+
+[[symbol]]
+qualname = "filtering::sv_particle_filter"
+kind = "function"
+family = "finance/filtering"
+page = "api/finance/filtering/sv_particle_filter.md"
+summary = "A ready particle filter for the log-variance of a stochastic-volatility model, from a series of log returns."
+overloads = 1
+
+[[symbol]]
+qualname = "volatility::Ngarch11Params"
+kind = "options"
+family = "finance/volbridge"
+page = "api/finance/volbridge/Ngarch11Params.md"
+summary = "Parameters of Duan's NGARCH(1,1)-in-mean model for pricing: the variance recursion with leverage, the risk premium and the risk-free rate."
+fields = ["omega", "alpha", "beta", "gamma", "lambda", "r", "variance_floor", "stationarity_margin"]
+
+[[symbol]]
+qualname = "volatility::Garch11Params"
+kind = "options"
+family = "finance/volbridge"
+page = "api/finance/volbridge/Garch11Params.md"
+summary = "Parameters of a plain GARCH(1,1)-in-mean model for pricing: Ngarch11Params without the leverage."
+fields = ["omega", "alpha", "beta", "lambda", "r", "variance_floor", "stationarity_margin"]
+
+[[symbol]]
+qualname = "volatility::unconditional_variance"
+kind = "function"
+family = "finance/volbridge"
+page = "api/finance/volbridge/unconditional_variance.md"
+summary = "The long-run variance of an NGARCH or GARCH pricing model."
+overloads = 2
+toggles = ["NGARCH", "GARCH"]
+
+[[symbol]]
+qualname = "volatility::to_pricing_params"
+kind = "function"
+family = "finance/volbridge"
+page = "api/finance/volbridge/to_pricing_params.md"
+summary = "Converts a fitted GARCH model into NGARCH pricing parameters, adding the risk-free rate and the premium."
+overloads = 2
+toggles = ["GarchFit", "Garch11Fit"]
+
+[[symbol]]
+qualname = "bridge::ReturnsMetrics"
+kind = "options"
+family = "finance/volbridge"
+page = "api/finance/volbridge/ReturnsMetrics.md"
+summary = "The log-likelihood, its per-observation terms and the conditional variances of returns under a fitted GARCH-type model."
+fields = ["loglik", "loglik_per_obs", "variance"]
+
+[[symbol]]
+qualname = "bridge::returns_metrics"
+kind = "function"
+family = "finance/volbridge"
+page = "api/finance/volbridge/returns_metrics.md"
+summary = "The log-likelihood and conditional variances of returns under a fitted GARCH, EGARCH or GJR model."
+overloads = 3
+toggles = ["GARCH", "EGARCH", "GJR"]
+
+[[symbol]]
+qualname = "bridge::variance_forecast"
+kind = "function"
+family = "finance/volbridge"
+page = "api/finance/volbridge/variance_forecast.md"
+summary = "The multi-step variance forecast of a fitted GARCH, EGARCH or GJR model, starting from the end of a return sample."
+overloads = 3
+toggles = ["GARCH", "EGARCH", "GJR"]
+
+[[symbol]]
+qualname = "bridge::JointLikelihoodWeights"
+kind = "options"
+family = "finance/volbridge"
+page = "api/finance/volbridge/JointLikelihoodWeights.md"
+summary = "Weights of the returns and the option prices in a joint log-likelihood."
+fields = ["returns_weight", "options_weight"]
+
+[[symbol]]
+qualname = "bridge::weighted_joint_loglik"
+kind = "function"
+family = "finance/volbridge"
+page = "api/finance/volbridge/weighted_joint_loglik.md"
+summary = "The weighted sum of a returns log-likelihood and an options log-likelihood."
+overloads = 1
+
+[[symbol]]
+qualname = "bridge::weighted_joint_nll"
+kind = "function"
+family = "finance/volbridge"
+page = "api/finance/volbridge/weighted_joint_nll.md"
+summary = "The negative of the weighted joint log-likelihood: the quantity a minimiser reduces."
+overloads = 1
+
+[[symbol]]
+qualname = "pricing::OptionVolMetrics"
+kind = "options"
+family = "finance/volbridge"
+page = "api/finance/volbridge/OptionVolMetrics.md"
+summary = "The log-likelihood, conditional variances, conditional means and standardised innovations of returns under pricing (NGARCH) dynamics."
+fields = ["loglik", "loglik_per_obs", "variance", "mean", "standardized_innovation"]
+
+[[symbol]]
+qualname = "pricing::pricing_metrics"
+kind = "function"
+family = "finance/volbridge"
+page = "api/finance/volbridge/pricing_metrics.md"
+summary = "The likelihood, variances and innovations of returns under NGARCH or GARCH pricing dynamics."
+overloads = 2
+toggles = ["NGARCH", "GARCH"]
+
+[[symbol]]
+qualname = "pricing::pricing_variance_forecast"
+kind = "function"
+family = "finance/volbridge"
+page = "api/finance/volbridge/pricing_variance_forecast.md"
+summary = "The multi-step variance forecast under NGARCH or GARCH pricing dynamics, from the end of a return sample."
+overloads = 2
+toggles = ["NGARCH", "GARCH"]
+
+[[symbol]]
+qualname = "module::Field"
+kind = "class"
+family = "finance/field"
+page = "api/finance/field/Field.md"
+summary = "An instrument, a market, a model, pricing controls and simulated paths: the object that prices, differentiates, simulates and calibrates."
+methods = ["bind_objective", "bind_objective_typed", "clear_paths", "engine_name", "exercise_boundary", "implied_vol", "loss", "loss_value", "model_name", "objective", "price", "residuals", "simulate", "simulate_paths", "validate"]
+
+[[symbol]]
+qualname = "module::Model"
+kind = "class"
+family = "finance/model"
+page = "api/finance/model/Model.md"
+summary = "A value holding one of the six model families, with its parameters as a flat vector."
+methods = ["as", "holds", "kind", "make", "name", "parameters", "validate", "visit"]
+
+[[symbol]]
+qualname = "module::Chord"
+kind = "class"
+family = "finance/chord"
+page = "api/finance/chord/Chord.md"
+summary = "Named single-asset Fields priced together, with assets that can share a call merged into one vectorised call."
+methods = ["Chord", "add", "at", "batches", "contains", "from_model_params", "implied_vol", "names", "operator_index", "price", "simulate_paths", "size", "validate"]
+

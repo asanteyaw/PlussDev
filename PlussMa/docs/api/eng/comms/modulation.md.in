@@ -1,0 +1,50 @@
+# Modulation and detection
+
+This branch maps bits to complex symbols and back. `psk` and `qam` build a `Constellation`, `modulate` and `symbols` map to symbols, `to_bits` and `to_labels` convert between bits and labels, `detect`, `demod` and `llr` decide what was sent, and `to_tones` and `from_tones` carry subcarrier symbols over a multipath channel with a cyclic prefix.
+
+## Choosing A Surface
+
+Use `psk` for phase modulation of any power-of-two order and `qam` for square amplitude-and-phase modulation; use `llr` rather than `demod` when a decoder will use the decisions.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+QPSK points by label.
+
+@@example Eng/api/comms_psk_points.cpp@@
+
+### Example 2
+
+Bits to 16-QAM symbols.
+
+@@example Eng/api/comms_modulate_bits.cpp@@
+
+### Example 3
+
+Bit error rate against Eb/N0.
+
+@@example Eng/api/comms_demodulate_ber.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+modulation/Constellation
+modulation/ConstellationOptions
+modulation/psk
+modulation/qam
+modulation/modulate
+modulation/symbols
+modulation/to_bits
+modulation/to_labels
+modulation/detect
+modulation/demod
+modulation/llr
+modulation/to_tones
+modulation/from_tones
+```
+<!-- apiref:toctree:end -->

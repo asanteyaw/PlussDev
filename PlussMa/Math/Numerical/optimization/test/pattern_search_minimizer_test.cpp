@@ -366,6 +366,29 @@ int main() {
     expect(out.minimum < 1e-6, "bounded poll on badly scaled variables reaches the optimum", &failures);
   }
 
+  {
+    // A merit-penalty weight below the constraint's multiplier must grow until the penalized minimum is feasible; the
+    // incumbent's merit has to be recomputed at each new weight, or every poll fails and the run stalls at the start.
+    // Minimise (x0-2)^2 + (x1-2)^2 inside the unit disc: the exact optimum is 3.3431 at (0.7071, 0.7071).
+    const Config c64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
+    for (const double initial_penalty : {0.5, 1.0, 2.0, 10.0}) {
+      PSConfig ps;
+      ps.constraint_policy = PSConstraintPolicy::MeritPenalty;
+      ps.initial_penalty = initial_penalty;
+      ps.nonlinear_constraints = [](const Series& x) {
+        PSConstraintValues v;
+        v.inequality = (x.square().sum() - 1.0).reshape({1});
+        return v;
+      };
+      const auto out = pattern_search_minimizer(
+          [](const Series& x) { return (x - 2.0).square().sum(); },
+          pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, c64),
+          ps);
+      expect(out.status == PSStatus::Converged && std::abs(out.minimum - 3.3431) < 5e-3,
+             "merit penalty converges from initial_penalty " + std::to_string(initial_penalty), &failures);
+    }
+  }
+
   if (failures != 0) {
     std::cerr << "pattern_search_minimizer_test: " << failures << " failure(s)\n";
     return 1;

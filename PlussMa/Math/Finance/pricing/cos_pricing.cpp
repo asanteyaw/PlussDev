@@ -222,6 +222,36 @@ double cos_psi_(std::int64_t k, double a, double b, double c, double d) {
   return (std::sin(u * (d - a)) - std::sin(u * (c - a))) / u;
 }
 
+// Above this span (b - ln K) the call payoff coefficients carry terms of size e^(b - ln K) that cancel down to a price of order K, so a
+// call computed directly loses digits roughly as e^span * eps (a heavy-tailed model at a long maturity widens the interval to
+// span ~ 20 and the error grows to the size of the spot). The put payoff max(K - e^y, 0) is bounded on [a, ln K], so its coefficients
+// do not cancel; the call then follows from put-call parity. Below the span the direct call is exact to rounding and is kept.
+constexpr double kCosCallSpan = 5.0;
+
+// Put price (already discounted by `disc_r`) from the characteristic function sampled at u_k = k pi / (b - a), k = 0..n-1.
+double cos_put_from_phi_(const double *phi_re, const double *phi_im, std::int64_t n, std::int64_t cols, double a, double b,
+                         double strike, double disc_r) {
+  const double c = std::min(std::max(std::log(strike), a), b);
+  const double scale = 2.0 / (b - a);
+  double acc = 0.0;
+  for (std::int64_t k = 0; k < n; ++k) {
+    const double u = static_cast<double>(k) * kPi / (b - a);
+    const double kernel = phi_re[k * cols] * std::cos(u * a) + phi_im[k * cols] * std::sin(u * a);
+    const double hk = scale * (strike * cos_psi_(k, a, b, a, c) - cos_chi_(k, a, b, a, c));
+    acc += (k == 0 ? 0.5 : 1.0) * kernel * hk;
+  }
+  return std::max(0.0, acc * disc_r);
+}
+
+// A price outside the no-arbitrage band is not a price: it means the truncated series has not converged (an interval too wide for the
+// number of terms, or a characteristic function evaluated outside its accurate range). Say so instead of returning it.
+void check_cos_bounds_(OptionType type, double price, double spot, double strike, double disc_q, double disc_r, const char *op) {
+  const double upper = (type == OptionType::Call) ? spot * disc_q : strike * disc_r;
+  PLUSS_CHECK(std::isfinite(price) && price <= upper * (1.0 + 1e-6) + 1e-12,
+              std::string("subsp::math::finance::pricing::") + op + ": the cosine series did not converge (price " + std::to_string(price) +
+                  " exceeds the no-arbitrage bound " + std::to_string(upper) + "); increase num_terms or reduce truncation");
+}
+
 // Fused CPU kernel for the vectorized COS call price. For each option column j it accumulates
 //   sum_k w_k Re[phi_k e^{-i u_k a}] * 2/(b-a) * (chi_k - K psi_k)
 // in one pass, with u_k = k pi / (b - a). The trigonometric factors cos/sin(k theta) come from a rotation
@@ -332,6 +362,24 @@ double option_price_cos(OptionType type,
   const double c = std::log(strike);
   const double l = std::max(c, a);
   const double scale = 2.0 / (b - a);
+  const double disc_r = std::exp(-rate * maturity);
+  const double disc_q = std::exp(-dividend_yield * maturity);
+
+  if (b - c > kCosCallSpan) {
+    std::vector<double> re(static_cast<std::size_t>(options.num_terms)), im(static_cast<std::size_t>(options.num_terms));
+    for (std::int64_t k = 0; k < options.num_terms; ++k) {
+      const std::complex<double> phi = char_fn(std::complex<double>(static_cast<double>(k) * kPi / (b - a), 0.0));
+      PLUSS_CHECK(std::isfinite(phi.real()) && std::isfinite(phi.imag()),
+                  "subsp::math::finance::pricing::option_price_cos: char_fn returned non-finite value");
+      re[static_cast<std::size_t>(k)] = phi.real();
+      im[static_cast<std::size_t>(k)] = phi.imag();
+    }
+    const double put = cos_put_from_phi_(re.data(), im.data(), options.num_terms, 1, a, b, strike, disc_r);
+    const double call_via_put = std::max(0.0, put + spot * disc_q - strike * disc_r);
+    const double result = (type == OptionType::Call) ? call_via_put : put;
+    check_cos_bounds_(type, result, spot, strike, disc_q, disc_r, "option_price_cos");
+    return result;
+  }
 
   std::complex<double> acc(0.0, 0.0);
   for (std::int64_t k = 0; k < options.num_terms; ++k) {
@@ -346,18 +394,17 @@ double option_price_cos(OptionType type,
     acc += wk * phi * phase * hk;
   }
 
-  const double disc_r = std::exp(-rate * maturity);
   const double call = std::max(0.0, std::real(acc) * disc_r);
-  if (type == OptionType::Call) return call;
-  const double disc_q = std::exp(-dividend_yield * maturity);
-  return std::max(0.0, call + strike * disc_r - spot * disc_q);
+  const double result = (type == OptionType::Call) ? call : std::max(0.0, call + strike * disc_r - spot * disc_q);
+  check_cos_bounds_(type, result, spot, strike, disc_q, disc_r, "option_price_cos");
+  return result;
 }
 
-Series option_price_cos(OptionType type,
+Series detail::option_price_cos_v(OptionType type,
                         const Series& spot,
                         const Series& strike,
-                        double rate,
-                        double dividend_yield,
+                        const Series& rate_in,
+                        const Series& dividend_in,
                         const Series& maturity,
                         const CharacteristicSeriesFn& char_fn,
                         const CosOptions& options,
@@ -365,22 +412,25 @@ Series option_price_cos(OptionType type,
   validate_option_(type, "option_price_cos");
   PLUSS_CHECK(static_cast<bool>(char_fn), "subsp::math::finance::pricing::option_price_cos: char_fn must be valid");
   validate_cos_options_(options, "option_price_cos");
-  PLUSS_CHECK(std::isfinite(rate), "subsp::math::finance::pricing::option_price_cos: rate must be finite");
-  PLUSS_CHECK(std::isfinite(dividend_yield),
-              "subsp::math::finance::pricing::option_price_cos: dividend_yield must be finite");
+  PLUSS_CHECK(rate_in.defined() && dividend_in.defined(), "subsp::math::finance::pricing::option_price_cos: rate and dividend_yield must be defined");
   PLUSS_CHECK(spot.defined() && strike.defined() && maturity.defined(),
               "subsp::math::finance::pricing::option_price_cos: spot, strike and maturity must be defined");
 
   // The three inputs are paired element by element; an input of length one is repeated against the others.
-  const std::int64_t length = std::max({spot.numel(), strike.numel(), maturity.numel()});
+  const std::int64_t length = std::max({spot.numel(), strike.numel(), maturity.numel(), rate_in.numel(), dividend_in.numel()});
   PLUSS_CHECK((spot.numel() == 1 || spot.numel() == length) && (strike.numel() == 1 || strike.numel() == length) &&
-                  (maturity.numel() == 1 || maturity.numel() == length),
+                  (maturity.numel() == 1 || maturity.numel() == length) && (rate_in.numel() == 1 || rate_in.numel() == length) &&
+                  (dividend_in.numel() == 1 || dividend_in.numel() == length),
               "subsp::math::finance::pricing::option_price_cos: spot, strike and maturity must have the same length (or length 1)");
 
   const Config out_cfg = f64_cfg_(cfg);
   const Series spot2 = as_f64_(spot, out_cfg).flatten(0, -1).reshape({1, spot.numel()});
   const Series strike2 = as_f64_(strike, out_cfg).flatten(0, -1).reshape({1, strike.numel()});
   const Series tau2 = as_f64_(maturity, out_cfg).flatten(0, -1).reshape({1, maturity.numel()});
+  const Series rate = as_f64_(rate_in, out_cfg).flatten(0, -1).reshape({1, rate_in.numel()});
+  PLUSS_CHECK(rate.isfinite().all().item<bool>() && as_f64_(dividend_in, out_cfg).isfinite().all().item<bool>(),
+              "subsp::math::finance::pricing::option_price_cos: rate and dividend_yield must be finite");
+  const Series dividend_yield = as_f64_(dividend_in, out_cfg).flatten(0, -1).reshape({1, dividend_in.numel()});
   PLUSS_CHECK(spot2.gt(0.0).all().item<bool>(),
               "subsp::math::finance::pricing::option_price_cos: spot must be > 0");
   PLUSS_CHECK(strike2.gt(0.0).all().item<bool>(),
@@ -396,7 +446,7 @@ Series option_price_cos(OptionType type,
   const Series lower = strike2.log().maximum(a);
 
   const ComplexSeries phi = checked_cf_(char_fn, u, out_cfg, "option_price_cos");
-  const Series discount = tau2.mul(-rate).exp();
+  const Series discount = tau2.mul(rate.neg()).exp();
   Series call = pluss::series::undefined();
   if (fused_cos_applicable_(phi.real, phi.imag, spot2, strike2, tau2) && phi.real.dim() == 2) {
     call = fused_cos_call_(phi, a, b, lower, strike2, discount.add(strike2.mul(0.0)), n, out_cfg);
@@ -417,14 +467,149 @@ Series option_price_cos(OptionType type,
     const Series psi = zero_mask.where(psi_zero, psi_general);
     const Series wk = zero_mask.where(pluss::series::full({n, 1}, 0.5, out_cfg), pluss::series::full({n, 1}, 1.0, out_cfg));
     const Series hk = chi.sub(strike2.mul(psi)).mul(2.0).div(width);
-      call = kernel.mul(hk).mul(wk).sum(0, false).mul(tau2.mul(-rate).exp()).clamp_min(0.0);
+      call = kernel.mul(hk).mul(wk).sum(0, false).mul(tau2.mul(rate.neg()).exp()).clamp_min(0.0);
   }
-  if (type == OptionType::Call) {
-    return call.flatten(0, -1);
+  // Options whose interval reaches far above the strike are priced through the put (see kCosCallSpan).
+  {
+    const std::vector<double> av = host_f64_(a), bv = host_f64_(b), kv = host_f64_(strike2), sv = host_f64_(spot2), tv = host_f64_(tau2), rv_ = host_f64_(rate), qv_ = host_f64_(dividend_yield);
+    const std::int64_t m = call.numel();
+    const auto at = [](const std::vector<double> &v, std::int64_t j) { return v[v.size() == 1 ? 0 : static_cast<std::size_t>(j)]; };
+    std::vector<double> prices = host_f64_(call);
+    std::vector<std::int64_t> wide;
+    for (std::int64_t j = 0; j < m; ++j) {
+      if (at(bv, j) - std::log(at(kv, j)) > kCosCallSpan) wide.push_back(j);
+    }
+    if (!wide.empty()) {
+      const std::vector<double> re = host_f64_(phi.real), im = host_f64_(phi.imag);
+      const std::int64_t cols = phi.real.sizes()[1];
+      for (const std::int64_t j : wide) {
+        const double disc_r = std::exp(-at(rv_, j) * at(tv, j));
+        const double disc_q = std::exp(-at(qv_, j) * at(tv, j));
+        const std::int64_t pj = cols == 1 ? 0 : j;
+        const double put = cos_put_from_phi_(re.data() + pj, im.data() + pj, n, cols, at(av, j), at(bv, j), at(kv, j), disc_r);
+        prices[static_cast<std::size_t>(j)] = std::max(0.0, put + at(sv, j) * disc_q - at(kv, j) * disc_r);
+      }
+      call = pluss::make_series(prices, {1, m}, out_cfg);
+    }
   }
-  return call.add(strike2.mul(tau2.mul(-rate).exp()).sub(spot2.mul(tau2.mul(-dividend_yield).exp())))
-      .clamp_min(0.0)
-      .flatten(0, -1);
+  Series result = (type == OptionType::Call)
+                      ? call
+                      : call.add(strike2.mul(tau2.mul(rate.neg()).exp()).sub(spot2.mul(tau2.mul(dividend_yield.neg()).exp()))).clamp_min(0.0);
+  {
+    const std::vector<double> rv = host_f64_(result), kv = host_f64_(strike2), sv = host_f64_(spot2), tv = host_f64_(tau2), rr = host_f64_(rate), qq = host_f64_(dividend_yield);
+    const auto at = [](const std::vector<double> &v, std::int64_t j) { return v[v.size() == 1 ? 0 : static_cast<std::size_t>(j)]; };
+    for (std::int64_t j = 0; j < static_cast<std::int64_t>(rv.size()); ++j) {
+      check_cos_bounds_(type, rv[static_cast<std::size_t>(j)], at(sv, j), at(kv, j), std::exp(-at(qq, j) * at(tv, j)),
+                        std::exp(-at(rr, j) * at(tv, j)), "option_price_cos");
+    }
+  }
+  return result.flatten(0, -1);
+}
+
+detail::CosGreeksV detail::cos_greeks_v(const Series& is_call,
+                                        const Series& spot,
+                                        const Series& strike,
+                                        const Series& rate_in,
+                                        const Series& dividend_in,
+                                        const Series& maturity,
+                                        const CosCfPiecesFn& pieces,
+                                        const CosOptions& options,
+                                        Config cfg) {
+  validate_cos_options_(options, "cos_greeks");
+  const Config out_cfg = f64_cfg_(cfg);
+  const std::int64_t m = std::max({spot.numel(), strike.numel(), maturity.numel(), rate_in.numel(), dividend_in.numel(), is_call.numel()});
+  const auto full = [&](const Series& x) {
+    PLUSS_CHECK(x.numel() == 1 || x.numel() == m, "subsp::math::finance::pricing::cos_greeks: inputs must have one element or one per option");
+    return host_f64_(as_f64_(x, out_cfg).flatten(0, -1).add(pluss::series::zeros({m}, out_cfg)));
+  };
+  const std::vector<double> S = full(spot), K = full(strike), T = full(maturity), R = full(rate_in), Q = full(dividend_in), flag = full(is_call);
+  const Series spot_row = pluss::make_series(S, {1, m}, out_cfg), tau_row = pluss::make_series(T, {1, m}, out_cfg);
+
+  const std::int64_t n = std::max<std::int64_t>(options.num_terms, 8);
+  const Series k_axis = pluss::series::arange(0, n, out_cfg).to(pluss::ScalarType::Float64).reshape({n, 1});
+  const CharacteristicSeriesFn base = [&](const Series& u) {
+    const CosCfPieces z = pieces(u);
+    return z.phi;
+  };
+  const auto [a_s, b_s] = cos_truncation_interval_series_(spot_row, base, options, out_cfg, "cos_greeks");
+  const std::vector<double> A = host_f64_(a_s), B = host_f64_(b_s);
+  const auto at = [](const std::vector<double>& v, std::int64_t j) { return v[v.size() == 1 ? 0 : static_cast<std::size_t>(j)]; };
+  const Series width = b_s.sub(a_s).clamp_min(kEps);
+  const Series u_axis = k_axis.mul(kPi).div(width);   // [n, m]
+  const CosCfPieces z = pieces(u_axis);
+  const std::vector<double> pr = host_f64_(z.phi.real), pi = host_f64_(z.phi.imag), vr = host_f64_(z.dlog_v0.real), vi = host_f64_(z.dlog_v0.imag),
+                            tr = host_f64_(z.dlog_tau.real), ti = host_f64_(z.dlog_tau.imag);
+  const std::int64_t cols = z.phi.real.sizes()[1];
+  const auto idx = [&](std::int64_t kk, const std::vector<double>& v, std::int64_t j) { return v[static_cast<std::size_t>(kk * (cols == 1 ? 1 : cols) + (cols == 1 ? 0 : j))]; };
+
+  CosGreeksV out;
+  std::vector<double> price(m), delta(m), gamma(m), vega(m), theta(m), rho(m);
+  using C = std::complex<double>;
+  for (std::int64_t j = 0; j < m; ++j) {
+    const double a = at(A, j), b = at(B, j), s = at(S, j), kk = at(K, j), t = at(T, j), r = at(R, j), q = at(Q, j);
+    const double lk = std::log(kk), scale = 2.0 / (b - a);
+    const bool wide = b - lk > kCosCallSpan;
+    // call coefficients on [max(ln K, a), b]; put coefficients on [a, min(max(ln K, a), b)]
+    const double c_call = std::max(lk, a), c_put = std::min(std::max(lk, a), b);
+    C f0 = 0.0, fd = 0.0, fg = 0.0, fv = 0.0, fr = 0.0, ft = 0.0;
+    double sum[6] = {0, 0, 0, 0, 0, 0};
+    for (std::int64_t i = 0; i < n; ++i) {
+      const double u = static_cast<double>(i) * kPi / (b - a);
+      const C phi(idx(i, pr, j), idx(i, pi, j));
+      const C rot(std::cos(u * a), -std::sin(u * a));   // e^{-i u a}
+      const C base_term = phi * rot;
+      const double h = wide ? scale * (kk * cos_psi_(i, a, b, a, c_put) - cos_chi_(i, a, b, a, c_put))
+                            : scale * (cos_chi_(i, a, b, c_call, b) - kk * cos_psi_(i, a, b, c_call, b));
+      const double w = (i == 0 ? 0.5 : 1.0) * h;
+      const C iu(0.0, u);
+      sum[0] += w * base_term.real();
+      sum[1] += w * (base_term * (iu / s)).real();
+      sum[2] += w * (base_term * (iu * (iu - 1.0) / (s * s))).real();
+      sum[3] += w * (base_term * C(idx(i, vr, j), idx(i, vi, j))).real();
+      sum[4] += w * (base_term * (iu * t)).real();
+      sum[5] += w * (base_term * C(idx(i, tr, j), idx(i, ti, j))).real();
+    }
+    const double disc = std::exp(-r * t), dq = std::exp(-q * t);
+    // value and derivatives of the series form (call, or put when wide)
+    double V = disc * sum[0], dS = disc * sum[1], d2S = disc * sum[2], dv = disc * sum[3];
+    double dr = -t * V + disc * sum[4], dt = -r * V + disc * sum[5];
+    if (wide) {   // series was the put: C = P + S e^{-qT} - K e^{-rT}
+      V = V + s * dq - kk * disc;
+      dS += dq;
+      dr += t * kk * disc;
+      dt += -q * s * dq + r * kk * disc;
+    }
+    if (at(flag, j) < 0.5) {   // requested a put: P = C - S e^{-qT} + K e^{-rT}
+      V = V - s * dq + kk * disc;
+      dS -= dq;
+      dr -= t * kk * disc;
+      dt += q * s * dq - r * kk * disc;
+    }
+    price[static_cast<std::size_t>(j)] = std::max(0.0, V);
+    delta[static_cast<std::size_t>(j)] = dS;
+    gamma[static_cast<std::size_t>(j)] = d2S;
+    vega[static_cast<std::size_t>(j)] = dv;
+    theta[static_cast<std::size_t>(j)] = -dt;
+    rho[static_cast<std::size_t>(j)] = dr;
+  }
+  const auto make = [&](const std::vector<double>& v) { return pluss::make_series(v, {m}, out_cfg); };
+  out.price = make(price); out.delta = make(delta); out.gamma = make(gamma); out.vega = make(vega); out.theta = make(theta); out.rho = make(rho);
+  return out;
+}
+
+Series option_price_cos(OptionType type,
+                        const Series& spot,
+                        const Series& strike,
+                        double rate,
+                        double dividend_yield,
+                        const Series& maturity,
+                        const CharacteristicSeriesFn& char_fn,
+                        const CosOptions& options,
+                        Config cfg) {
+  PLUSS_CHECK(std::isfinite(rate), "subsp::math::finance::pricing::option_price_cos: rate must be finite");
+  PLUSS_CHECK(std::isfinite(dividend_yield), "subsp::math::finance::pricing::option_price_cos: dividend_yield must be finite");
+  const Config out_cfg = f64_cfg_(cfg);
+  return detail::option_price_cos_v(type, spot, strike, scalar_(rate, out_cfg).reshape({1}), scalar_(dividend_yield, out_cfg).reshape({1}), maturity, char_fn, options, cfg);
 }
 
 } // namespace pluss::subsp::math::finance::pricing

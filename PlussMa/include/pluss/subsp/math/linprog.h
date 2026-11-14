@@ -113,7 +113,7 @@ namespace detail {
 // Flat row-major copy of a Series of any rank (host<T>() keeps the rank; a std::vector destination needs rank one).
 inline std::vector<double> flat_host_(const Series &s) {
   const Series c = s.to(pluss::ScalarType::Float64).contiguous();
-  return c.reshape({c.numel()}).pull<double>();
+  return c.reshape({c.numel()}).items<double>();
 }
 
 inline Series cat_cols(const Series &a, const Series &b) { return a.unite(std::vector<Series>{b}, 1); }

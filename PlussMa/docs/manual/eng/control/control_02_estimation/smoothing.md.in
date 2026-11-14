@@ -1,0 +1,248 @@
+# Smoothing
+
+[Back to Control 2: Estimation](../control_02_estimation.md)
+
+The Kalman filter estimates the state at time `t` from the measurements up to `t`. When the whole record is already in hand, which is usual in analysis, you can do better: the measurements after `t` also carry information about the state at `t`. `control::smooth` runs the filter forwards and then a backward pass, and returns the estimate of every state given *all* the data. It is more accurate than the filter everywhere except the last step, where the two agree.
+
+## The mental model
+
+The backward pass, the Rauch-Tung-Striebel recursion, corrects each filtered estimate with the next smoothed one:
+
+```{math}
+\hat x_{t|T} = \hat x_{t|t} + G_t\,(\hat x_{t+1|T} - \hat x_{t+1|t}), \qquad
+G_t = P_{t|t} A^T P_{t+1|t}^{-1}.
+```
+
+The correction is large where the future disagrees with the prediction. `smooth` takes the same arguments as `kalman` and returns a `SmoothResult` with four members: `filter`, the complete `KalmanResult` of the forward pass; `smoothed_mean` and `smoothed_cov`, the smoothed estimate and its covariance at each step, with the shapes of the filtered ones; and `gain`, the backward gain `G_t`. Two facts follow from the recursion and are visible in the programs:
+
+- At the last step there is no future, so the smoothed and filtered estimates are the same.
+- The smoothed covariance is never larger than the filtered one, and is much smaller where the future measurements are informative.
+
+## Filtering against smoothing
+
+The program reruns the constant-velocity tracking example with `smooth`, and prints the root-mean-square error of the filtered and smoothed position and velocity against the truth, the position variance at a middle step, and the agreement at the last step.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static double rms(const pluss::Series &e) { return std::sqrt(e.square().mean().item<double>()); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 1, 0, 1}, 2, 2), matrix({0.5, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 1.0);
+
+  const int steps = 80;
+  std::vector<double> position, velocity, measured;
+  double x = 0.0, v = 0.5;
+  for (int t = 0; t < steps; ++t) {
+    position.push_back(x);
+    velocity.push_back(v);
+    measured.push_back(x + std::sin(1.9 * t + 0.3) * std::cos(0.7 * t));
+    x += v;
+    v += 0.05 * std::sin(0.8 * t);
+  }
+  const pluss::Series truth_position = pluss::make_series(position, {steps}, f64);
+  const pluss::Series truth_velocity = pluss::make_series(velocity, {steps}, f64);
+  const pluss::Series observations = pluss::make_series(measured, {steps, 1}, f64);
+
+  const auto result = ctl::smooth(plant, observations, matrix({0, 0, 0, 0.01}, 2, 2), matrix({1}, 1, 1), pluss::series::make(std::vector<double>{0.0, 0.0}),
+                                  matrix({100, 0, 0, 100}, 2, 2));
+  const auto &filtered = result.filter;
+  out.writeln("rms position error: filtered", rms(filtered.filtered_mean.select(1, 0) - truth_position), " smoothed", rms(result.smoothed_mean.select(1, 0) - truth_position));
+  out.writeln("rms velocity error: filtered", rms(filtered.filtered_mean.select(1, 1) - truth_velocity), " smoothed", rms(result.smoothed_mean.select(1, 1) - truth_velocity));
+  out.writeln("position variance at step 40: filtered", filtered.filtered_cov.select(0, 40).select(0, 0).select(0, 0).squeeze().item<double>(),
+              " smoothed", result.smoothed_cov.select(0, 40).select(0, 0).select(0, 0).squeeze().item<double>());
+  out.writeln("position variance at step 0 : filtered", filtered.filtered_cov.select(0, 0).select(0, 0).select(0, 0).squeeze().item<double>(),
+              " smoothed", result.smoothed_cov.select(0, 0).select(0, 0).select(0, 0).squeeze().item<double>());
+  out.writeln("shapes: smoothed_mean", result.smoothed_mean.sizes(), " smoothed_cov", result.smoothed_cov.sizes(), " gain", result.gain.sizes());
+  out.writeln("largest difference at the last step:", (result.smoothed_mean.select(0, steps - 1) - filtered.filtered_mean.select(0, steps - 1)).abs().max().item<double>());
+}
+```
+
+Smoothing cuts the position error from `0.183` to `0.068` and the velocity error from `0.098` to `0.045`. The position variance in the middle of the record falls from `0.362` to `0.113`, and at the start from `0.995`, where the filter was still guessing, to `0.360`. At the last step the two estimates are identical.
+
+## Filling a gap
+
+Smoothing helps most where measurements are missing, because the data on both sides of the gap pin the state down. The program removes steps 30 to 39 and prints the position uncertainty (standard deviation) of the filter and the smoother in the middle of the gap.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 1, 0, 1}, 2, 2), matrix({0.5, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 1.0);
+  const int steps = 80;
+  std::vector<double> measured;
+  double x = 0.0, v = 0.5;
+  for (int t = 0; t < steps; ++t) {
+    measured.push_back(x + std::sin(1.9 * t + 0.3) * std::cos(0.7 * t));
+    x += v;
+    v += 0.05 * std::sin(0.8 * t);
+  }
+  for (int t = 30; t < 40; ++t) measured[t] = std::nan("");
+
+  const auto result = ctl::smooth(plant, pluss::make_series(measured, {steps, 1}, f64), matrix({0, 0, 0, 0.01}, 2, 2), matrix({1}, 1, 1),
+                                  pluss::series::make(std::vector<double>{0.0, 0.0}), matrix({100, 0, 0, 100}, 2, 2));
+  out.writeln("step   filter std   smoother std");
+  for (const int t : {30, 34, 39}) {
+    out.writeln(t, std::sqrt(result.filter.filtered_cov.select(0, t).select(0, 0).select(0, 0).squeeze().item<double>()),
+                std::sqrt(result.smoothed_cov.select(0, t).select(0, 0).select(0, 0).squeeze().item<double>()));
+  }
+}
+```
+
+At the end of the gap (step 39) the filter, having had no data for ten steps, is uncertain by `3.06`; the smoother, which knows the measurements that follow, is uncertain by only `0.52`. At the middle of the gap the smoother's uncertainty is `0.66`: the two ends of the gap constrain the middle, but less tightly than they constrain the points beside them.
+
+## A known input
+
+As with `kalman`, a known input is passed as the third argument and enters through `B` and `D`. The call is otherwise identical, and the result has the same members. The program runs the smoother with a constant input of `0.2` and prints the smoothed state at step 40 with and without it.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 1, 0, 1}, 2, 2), matrix({0.5, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 1.0);
+  const int steps = 80;
+  std::vector<double> measured;
+  double x = 0.0, v = 0.5;
+  for (int t = 0; t < steps; ++t) {
+    measured.push_back(x + std::sin(1.9 * t + 0.3) * std::cos(0.7 * t));
+    x += v;
+    v += 0.05 * std::sin(0.8 * t);
+  }
+  const pluss::Series observations = pluss::make_series(measured, {steps, 1}, f64);
+  const pluss::Series push = pluss::make_series(std::vector<double>(steps, 0.2), {steps, 1}, f64);
+  const pluss::Series start = pluss::series::make(std::vector<double>{0.0, 0.0});
+  const pluss::Series spread = matrix({100, 0, 0, 100}, 2, 2);
+
+  const auto without = ctl::smooth(plant, observations, matrix({0, 0, 0, 0.01}, 2, 2), matrix({1}, 1, 1), start, spread);
+  const auto with = ctl::smooth(plant, observations, push, matrix({0, 0, 0, 0.01}, 2, 2), matrix({1}, 1, 1), start, spread);
+  out.writeln("smoothed state at step 40, no input", without.smoothed_mean.select(0, 40).reshape({2}).items<double>());
+  out.writeln("smoothed state at step 40, input 0.2", with.smoothed_mean.select(0, 40).reshape({2}).items<double>());
+}
+```
+
+The positions agree to `1e-3` (`22.3035` against `22.3028`), and the two velocity estimates differ by exactly `0.1`.
+
+## Decisions
+
+- **Real-time estimation, where only the past is available:** the filter. **Analysis of a recorded series:** the smoother, always; its estimates are at least as good at every step.
+- **Reconstructing missing data:** the smoother, with `NaN` in the missing places. The smoothed mean at those steps is the best estimate of the state, and the smoothed covariance says how well.
+- **Controlling a system:** a controller can only use the filter, because it cannot see the future. Smoothing is for understanding afterwards.
+
+## Pitfalls
+
+The program makes three mistakes with a smoother: treating it as a streaming estimator, expecting it to help at the end of the record, and giving it a process variance that is too large.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series scalar(double value) { return pluss::series::make(std::vector<double>{value}).reshape({1, 1}); }
+static double rms(const pluss::Series &e) { return std::sqrt(e.square().mean().item<double>()); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int steps = 80;
+
+  std::vector<double> truth, measured;
+  double x = 3.0;
+  for (int t = 0; t < steps; ++t) {
+    truth.push_back(x);
+    measured.push_back(x + std::sin(1.7 * t));
+    x = 0.97 * x + 0.3 * std::cos(2.3 * t);
+  }
+  const auto plant = lti::state(scalar(0.97), scalar(1.0), scalar(1.0), scalar(0.0), 1.0);
+  const auto start = pluss::series::make(std::vector<double>{0.0});
+  const auto state = pluss::make_series(truth, {steps}, f64);
+  const auto smooth = [&](int length, double process) {
+    const std::vector<double> data(measured.begin(), measured.begin() + length);
+    return ctl::smooth(plant, pluss::make_series(data, {length, 1}, f64), scalar(process), scalar(0.5), start, scalar(10.0));
+  };
+  const auto at = [&](const pluss::Series &s, int t) { return s.select(0, t).squeeze().item<double>(); };
+
+  // 1. the smoothed value at a step depends on data that arrive later: the whole record must be kept
+  out.writeln("true state at step 30: ", truth[30]);
+  for (const int length : {31, 40, 80}) out.writeln("smoothed estimate at step 30 from a record of ", length, " samples: ", at(smooth(length, 0.045).smoothed_mean, 30));
+
+  // 2. at the end of the record the smoother has no future data: it equals the filter there
+  const auto full = smooth(steps, 0.045);
+  const auto err = [&](const pluss::Series &estimate, int from, int to) { return rms(estimate.reshape({steps}).slice(0, from, to) - state.slice(0, from, to)); };
+  out.writeln("error over steps 5-65:  filter ", err(full.filter.filtered_mean, 5, 65), "   smoother ", err(full.smoothed_mean, 5, 65));
+  out.writeln("error over steps 75-80: filter ", err(full.filter.filtered_mean, 75, 80), "   smoother ", err(full.smoothed_mean, 75, 80));
+  out.writeln("last step: filter ", at(full.filter.filtered_mean, steps - 1), "   smoother ", at(full.smoothed_mean, steps - 1), "   true ", truth[steps - 1]);
+
+  // 3. a wrong process variance makes the smoothed path too wobbly
+  for (const double w : {0.045, 0.5, 5.0}) {
+    const auto s = smooth(steps, w).smoothed_mean.reshape({steps});
+    const auto step_sizes = s.slice(0, 1, steps) - s.slice(0, 0, steps - 1);
+    out.writeln("W = ", w, ": error ", rms(s - state), ",  rms step of the path ", rms(step_sizes), "   (the true state: ", rms(state.slice(0, 1, steps) - state.slice(0, 0, steps - 1)), ")");
+  }
+}
+```
+
+The smoothed estimate at step `30` is `1.2652` from a record of `31` samples, `1.2901` from `40` and `1.2861` from `80`: it depends on the data that come after the step, so the whole record has to be kept and a stream cannot be smoothed one sample at a time. At the end of the record there is no later data, and the smoother has nothing to add: at the last step the filter and the smoother agree, `0.4402` (against a true `0.1179`), and over the last six steps the improvement, `0.1859` to `0.1663`, is much smaller than over the interior, `0.1663` to `0.1195`. A process variance that is too large makes the path wobbly: with `W = 0.5` and `5` the path moves `0.3417` and `0.8927` per step against a true `0.2198`, and the error grows to `0.2430` and `0.5792` from `0.1227`.
+
+Reference: [`state`](../../../../api/eng/lti/state/state.md), [`smooth`](../../../../api/eng/control/estimation/smooth.md).
+
+Where next: the [control reference](../../../../api/eng/control.md) lists every call used in these chapters.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="kalman_filter.html">
+    <span class="label">Previous</span>
+    <span class="title">The Kalman filter</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

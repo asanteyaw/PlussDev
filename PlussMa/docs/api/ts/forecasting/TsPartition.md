@@ -447,3 +447,12 @@ training mask sum of fold 0: 5
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PartitionWindow.html">
+    <span class="label">Previous</span>
+    <span class="title">PartitionWindow</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

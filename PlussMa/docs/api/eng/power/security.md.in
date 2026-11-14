@@ -1,0 +1,42 @@
+# Sensitivity and outage factors
+
+This branch answers what-if questions with the linear DC model. `ptdf` gives the change of every line flow per unit of injection at every bus, `lodf` the redistribution of flow when a line is lost, and `outages` applies the factors to give the flows after every single-line outage in one call.
+
+## Choosing A Surface
+
+Use `ptdf` for changes of injection, and `outages` to screen every N-1 contingency of a network at once. Confirm the critical cases with `ac`.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Power transfer factors of a ring against hand values.
+
+@@example Eng/api/power_ptdf_ring.cpp@@
+
+### Example 2
+
+N-1 screening of a five-bus network.
+
+@@example Eng/api/power_n1_screen.cpp@@
+
+### Example 3
+
+Outages that split a network.
+
+@@example Eng/api/power_lodf_spur.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+security/LodfResult
+security/OutageResult
+security/ptdf
+security/lodf
+security/outages
+```
+<!-- apiref:toctree:end -->

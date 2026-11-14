@@ -152,6 +152,25 @@ int main() {
   std::cout << bool_left.bitwise_or(bool_right) << "\n";
   std::cout << bool_left.bitwise_xor(bool_right) << "\n\n";
 
+  heading("bitwise_symbol_bool");
+  const auto symbol_left = pluss::make_series({true, true, false, false});
+  const auto symbol_right = pluss::make_series({true, false, true, false});
+  std::cout << "and = " << (symbol_left & symbol_right) << "\n\n";
+  std::cout << "or = " << (symbol_left | symbol_right) << "\n\n";
+  std::cout << "not = " << (~symbol_left) << "\n\n";
+
+  heading("bitwise_symbol_integer");
+  const auto symbol_bits_left = pluss::make_series({6, 5});
+  const auto symbol_bits_right = pluss::make_series({3, 10});
+  std::cout << "and = " << (symbol_bits_left & symbol_bits_right) << "\n\n";
+  std::cout << "or = " << (symbol_bits_left | symbol_bits_right) << "\n\n";
+  std::cout << "not = " << (~symbol_bits_left) << "\n\n";
+
+  heading("bitwise_symbol_vs_logical_not");
+  const auto symbol_values = pluss::make_series({2, 0});
+  std::cout << "bitwise = " << (~symbol_values) << "\n\n";
+  std::cout << "logical = " << symbol_values.logical_not() << "\n\n";
+
   heading("bitwise_float_error");
   try {
     std::cout << pluss::make_series({1.0, 2.0}).bitwise_and(

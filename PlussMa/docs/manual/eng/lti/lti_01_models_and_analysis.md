@@ -1,0 +1,20 @@
+<!-- generated from lti_01_models_and_analysis.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Systems 1: Models and Analysis
+
+A system is described by matrices, analysed by the questions its structure can answer, and summarised by its poles, zeros and frequency response. This chapter builds state-space models, tests whether they can be controlled and observed, measures how strongly with gramians, and describes single-input, single-output systems by their zeros, poles and gain.
+
+- [State-space models](lti_01_models_and_analysis/state_space_models.md)
+- [Controllability and gramians](lti_01_models_and_analysis/controllability_and_gramians.md)
+- [Poles, zeros and frequency response](lti_01_models_and_analysis/poles_zeros_and_response.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+lti_01_models_and_analysis/state_space_models
+lti_01_models_and_analysis/controllability_and_gramians
+lti_01_models_and_analysis/poles_zeros_and_response
+```
+<!-- apiref:toctree:end -->

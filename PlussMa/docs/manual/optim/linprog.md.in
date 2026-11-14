@@ -8,4 +8,13 @@ Chapters, in reading order:
 - [Linear Programming 4: Large Sparse Models](linprog/linprog_04_large_sparse_models.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog/linprog_01_first_programs
+linprog/linprog_02_prices_and_certificates
+linprog/linprog_03_methods_warm_starts_and_sweeps
+linprog/linprog_04_large_sparse_models
+```
 <!-- apiref:toctree:end -->

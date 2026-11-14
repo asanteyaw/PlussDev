@@ -47,4 +47,10 @@ The method is **branch and bound**. Solve the linear program with the integralit
 - `NodeLimit` still returns the best solution and a proven bound. The difference is the gap, and it is the measure of how good the answer is.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+milp_01_integer_programs/choosing_whole_things
+```
 <!-- apiref:toctree:end -->

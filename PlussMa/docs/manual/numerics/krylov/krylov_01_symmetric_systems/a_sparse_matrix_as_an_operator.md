@@ -66,3 +66,12 @@ solution at the middle (i = 16): 120.000000  (exact 120.000000)
 adjoint is 30 x 30
 ```
 The map plugs straight into the solvers: `[&](const Series& x) { return A.apply(x); }` is an operator. Index arrays must be `Int64`, all inside the map's dimensions, with at least one nonzero.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="batches.html">
+    <span class="label">Previous</span>
+    <span class="title">Batches</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

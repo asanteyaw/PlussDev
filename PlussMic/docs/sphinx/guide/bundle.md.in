@@ -1,0 +1,72 @@
+# Bundle: multi-table workspaces
+
+[Back to PlussMic by example](../guide.md)
+
+When an analysis spans several related tables, a workspace that remembers how they connect saves repeating the join logic. A `Nexus` coordinates `DataFrame`s and a `Locus` coordinates `Catalog`s. This page assembles a customer table, checks a workspace's health, walks a join path, asks SQL questions across tables, persists a workspace, and does the Locus versions.
+
+## The mental model
+
+A workspace holds named tables, a **declaration of what one row of each table is** (its primary key), and **relationships** between tables with a cardinality. Everything else uses those declarations. `pull(root)` assembles one row per root row with features reduced from related tables (the grain never changes). `from(root).join(...)` walks relationships and expands rows. `query()` runs SQL across the tables by name. `audit()` and its companions check the declarations against the data. The default cardinality of a declared relationship is many-to-one (left rows share a right row), so a one-to-many link must say so.
+
+## One row per customer
+
+Customers and their orders, with one customer who has never ordered.
+
+@@example nexus_customer_360.cpp@@
+
+The summary shows the two tables. `pull("customers")` returns one row per customer with the name and country copied from the root and a count, a sum and a mean reduced from the orders table: Ada has two orders totalling `170`, Bola two totalling `95`, Chen one and Dara none, with `NULL` for the sum of nothing. Four customers in, four rows out, whereas the join expands to the five order rows and loses Dara.
+
+## Health check before analysis
+
+Customers with a duplicated id and orders that include one for a customer who does not exist.
+
+@@example nexus_health_check.cpp@@
+
+The audit lists one line per table and relationship: the customers table is not valid (a repeated key) and the relationship has two duplicate rows on the customer side and one orphan on the order side. `validate_keys` answers yes or no per table, `detect_duplicates` shows the two rows with customer id `2`, and `detect_orphans` shows order `102`, whose customer `9` does not exist. A check like this is the first step in any analysis of a workspace; the numbers in the answers are only as trustworthy as the keys.
+
+## Walking a path
+
+Orders, order lines and products: two hops from an order to its product.
+
+@@example nexus_traverse_revenue.cpp@@
+
+`from("orders").join("lines").join("products")` follows the two declared relationships, and `pick` keeps the fields that matter. Revenue is quantity times price per line, and the totals match a hand calculation: tools `110` over three lines and toys `100` over two; Ada `160` and Bola `50`. Because the path is declared once, any question over these three tables is a few lines.
+
+## SQL across the workspace
+
+The same customers and orders, queried with SQL.
+
+@@example nexus_sql_workspace.cpp@@
+
+Tables are addressed by name inside one statement. Revenue per country is `170` for the UK, `95` for Nigeria and `33` for China; the left join keeps Dara in the customer ranking with `0` spent; and the parameterised query takes its threshold as a value: the two orders of at least `60` come out, order `103` for Ada and order `101` for Bola.
+
+## Saving and restoring
+
+A workspace saved to a directory and read back.
+
+@@example nexus_save_load.cpp@@
+
+`save` writes the tables, the key declarations, the relationships and the saved plans; `read` restores them (`load` is a different call that scans a directory of raw table files and makes each file a table, with no relationships). The restored workspace has two tables and one relationship, the same pull gives an identical table, and the source note on the customers table comes back with it.
+
+## Locus: the catalog version
+
+A `Locus` is a `Nexus` for catalogs. The tables are streams, so the child streams keep their own lengths and are not forced into a rectangle.
+
+@@example locus_customer_360.cpp@@
+
+The pull gives the same customer table as the Nexus: counts `2`, `2`, `1`, `0` and sums `170`, `95`, `33` and `NA`. The audit is the same too, and it is valid because the link declares the orders side optional: a customer without orders is a fact about the data and not a violation.
+
+@@example locus_join_report.cpp@@
+
+Shipments are joined to their ports. Shipment 5 goes to port Z, which is not in the ports table, and port D has no shipment. The join keeps four records, and the report says so exactly: four output records, four matched pairs, one shipment without a partner and one port without a partner, each omitted. The relationship audit shows one orphan on each side, so the declared link is not valid until the data is repaired.
+
+## Decisions
+
+- **Nexus or Locus:** a Nexus for tables (`DataFrame`), a Locus for catalogs when stream semantics and ragged data matter.
+- **Declare first:** primary keys and cardinalities are declarations; the checks compare them with the data.
+- **Pull or join:** `pull` to keep one row per root row, a join to expand.
+- **Persist with `save` and `read`:** `load` is for a directory of raw files.
+
+## Where next
+
+Reference pages: [`pull`](../api/nexus/pull.md), [`audit`](../api/nexus/audit.md), [`validate_keys`](../api/nexus/validate_keys.md), [`detect_orphans`](../api/nexus/detect_orphans.md), [`detect_duplicates`](../api/nexus/detect_duplicates.md), [`from`](../api/nexus/from.md), [`query`](../api/nexus/query.md), [`save`](../api/nexus/save.md), [`read`](../api/nexus/read.md), [`set_table_meta`](../api/nexus/set_table_meta.md), [`add_relationship`](../api/nexus/add_relationship.md), [`pull`](../api/locus/pull.md), [`audit_report`](../api/locus/audit_report.md), [`join`](../api/locus/join.md), [`link`](../api/locus/link.md), [`relationship_audit`](../api/locus/relationship_audit.md). Back to [PlussMic by example](../guide.md).

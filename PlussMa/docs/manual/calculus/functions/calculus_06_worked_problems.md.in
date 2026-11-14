@@ -29,4 +29,13 @@ Every program is complete and its output is the output of that program.
 5. Share one `Function` among threads freely; do not copy it to avoid locks.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_06_worked_problems/cumulants_from_a_generating_function
+calculus_06_worked_problems/taylor_polynomials_from_derivatives
+calculus_06_worked_problems/sensitivity_of_a_probability
+calculus_06_worked_problems/precision_and_concurrency
+```
 <!-- apiref:toctree:end -->

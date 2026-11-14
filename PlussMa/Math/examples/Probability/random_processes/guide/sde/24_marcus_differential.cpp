@@ -19,8 +19,8 @@ int main() {
   const auto d = x.calc.diff.marcus([](const pluss::Series& s) { return s.log(); }, mu, sigma,
                                     [](const pluss::Series& s) { return s; }, jumps);
   std::cout << std::fixed << std::setprecision(6);
-  std::cout << "continuous drift  " << d.drift.item<double>() << "  (mu / x = " << 0.1 << ")\n";
-  std::cout << "diffusion         " << d.diffusion.item<double>() << "  (sigma / x = " << 0.3 << ")\n";
+  std::cout << "continuous drift  " << d.drift.squeeze().item<double>() << "  (mu / x = " << 0.1 << ")\n";
+  std::cout << "diffusion         " << d.diffusion.squeeze().item<double>() << "  (sigma / x = " << 0.3 << ")\n";
   const auto js = d.jump_sizes.host<double>();
   std::cout << "jump sizes of log X: " << js[0] << ", " << js[1] << "  (the atoms 0.4 and -0.7)\n";
   return 0;

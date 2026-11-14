@@ -28,4 +28,11 @@ The adjoint, `fluctua_adjoint`, runs the simulation, stores the realized noise, 
 - The adjoint holds the noise fixed, so it gives the derivative of the path, which is right for smooth payoffs and silent for payoffs with jumps. Chapter 5 shows what to do about those.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic_04_simulating_sdes/convergence_on_geometric_brownian_motion
+stochastic_04_simulating_sdes/pathwise_delta
+```
 <!-- apiref:toctree:end -->

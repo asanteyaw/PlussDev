@@ -368,16 +368,6 @@ set_target_properties(plusstils_view_inhouse_html_render_demo PROPERTIES
     CXX_EXTENSIONS OFF
 )
 
-add_executable(plusstils_view_platform_show_smoke
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/platform_show_smoke.cpp
-)
-target_link_libraries(plusstils_view_platform_show_smoke PRIVATE PlussTilsView)
-set_target_properties(plusstils_view_platform_show_smoke PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-)
-
 add_executable(plusstils_view_inhouse_scroll_showcase
     ${CMAKE_CURRENT_SOURCE_DIR}/examples/window/inhouse_scroll_showcase.cpp
 )

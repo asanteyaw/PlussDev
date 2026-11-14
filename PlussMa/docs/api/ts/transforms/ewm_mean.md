@@ -112,3 +112,16 @@ alpha = 1       10.0000  12.0000  11.0000  15.0000  14.0000  18.0000  17.0000
 
 - [`ema`](ema.md): the same function under its common name
 - [`ewm_std`](ewm_std.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ema.html">
+    <span class="label">Previous</span>
+    <span class="title">ema</span>
+  </a>
+  <a class="next-link" href="ewm_std.html">
+    <span class="label">Next</span>
+    <span class="title">ewm_std</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

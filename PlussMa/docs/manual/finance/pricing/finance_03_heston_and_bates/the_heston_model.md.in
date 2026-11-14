@@ -6,19 +6,28 @@ In the Black-Scholes model the volatility is a constant, which no option market 
 
 dS = (r − q) S dt + √v S dW₁, dv = κ (θ − v) dt + σ √v dW₂, with corr(dW₁, dW₂) = ρ.
 
-The variance reverts to its long-run level θ at speed κ, σ is the volatility of the variance, ρ the correlation between the asset and its variance (negative for equities: the variance rises when the price falls), and v₀ the starting variance. The characteristic function of ln S_T is known in closed form, so a European option price is a one-dimensional integral.
+The variance reverts to its long-run level θ at speed κ, σ is the volatility of the variance, ρ the correlation between the asset and its variance (negative for equities: the variance rises when the price falls), and v₀ the starting variance. The characteristic function of ln S_T is known in closed form, so a European option price is a one-dimensional integral, which the Fourier engines evaluate quickly.
 
 ```cpp
-struct vol::HestonParams {
-  double kappa = 1.5, theta = 0.04, sigma = 0.3, rho = -0.7, v0 = 0.04;
-  double mu = 0.0;                 // the drift of simulated paths; pricing uses r - q
-  double variance_floor = 1e-12;   // the floor of simulated variances
-};
-double prc::heston_price(prc::OptionType type, double spot, double strike, double rate, double dividend_yield,
-                         double maturity, const vol::HestonParams &params, const prc::HestonIntegrationOptions &options = {});
+instrument::Vanilla instrument::make(pricing::OptionType type, double strike, double maturity, Config cfg = f64_default());
+market::State market::make(double spot, double rate, double dividend_yield, Config cfg = f64_default());
+module::Model model::make(model::Kind kind, std::initializer_list<double> params, Config cfg = f64_default());
+module::Field::Result module::Field::price(Config cfg = {}) const;
+module::Engine module::Controls::engine = module::Engine::Analytic;
 ```
 
-`vol` is `pluss::subsp::math::finance::volatility`. The parameters `kappa`, `theta`, `sigma` and `v0` must be positive and `rho` must lie strictly between −1 and 1. The Feller condition 2κθ ≥ σ², which keeps the variance away from zero, is not required: the formula is valid without it, and simulated paths are floored at `variance_floor`.
+The model is built from its five parameters, in the order `kappa, theta, sigma, rho, v0`, and priced on the COS engine:
+
+```cpp
+mod::Field field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                 .market = fin::market::make(spot, rate, dividend_yield),
+                 .model = fin::model::make(fin::model::Kind::Heston, {kappa, theta, sigma, rho, v0}),
+                 .controls = {.engine = mod::Engine::Cos}};
+```
+
+The model is the only change from the Black-Scholes field of chapter 1; the engine changes too, because Heston has no closed form. Four engines price a Heston field: `Cos` and `Fft` (this chapter), `MonteCarlo` (the next) and `Pde`. `fin` is `pluss::subsp::math::finance`, `mod` is `fin::module` and `prc` is `fin::pricing`. The parameters `kappa`, `theta` and `sigma` must be positive, `v0` non-negative, and `rho` must lie strictly between −1 and 1. The Feller condition 2κθ ≥ σ², which keeps the variance away from zero, is not required: the pricing formula is valid without it.
+
+The programs of this chapter share a small helper, `strip`, that builds a field for a list of strikes and maturities under the model and engine it is given.
 
 ## Checks
 
@@ -29,170 +38,163 @@ Three properties pin the price down. Put-call parity holds exactly, as for any m
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+
+// A strip of options on one underlying priced under Heston (or Bates, with eight parameters) by the chosen engine.
+mod::Field strip(mod::Engine engine, const std::vector<double> &strikes, const std::vector<double> &maturities, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04},
+                 prc::OptionType type = prc::Call, fin::model::Kind kind = fin::model::Kind::Heston) {
+  return mod::Field{.instrument = {.type = type, .strike = pluss::make_series(strikes), .maturity = pluss::make_series(maturities)},
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+std::vector<double> prices(const mod::Field &f) { return f.price().price.items<double>(); }
+double price1(const mod::Field &f) { return prices(f)[0]; }
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(6));
-  const double spot = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
-  vol::HestonParams params;  // kappa 1.5, theta 0.04, sigma 0.3, rho -0.7, v0 0.04
-
   out.writeln("strike   call       put        call - put   S e^-qT - K e^-rT");
-  for (double strike : {80.0, 100.0, 120.0}) {
-    const double c = prc::heston_price(prc::Call, spot, strike, rate, dividend, maturity, params);
-    const double p = prc::heston_price(prc::Put, spot, strike, rate, dividend, maturity, params);
-    out.writeln(strike, c, p, c - p, spot * std::exp(-dividend * maturity) - strike * std::exp(-rate * maturity));
+  const std::vector<double> strikes{80.0, 100.0, 120.0};
+  const auto calls = prices(strip(mod::Engine::Cos, strikes, {1.0}));
+  const auto puts = prices(strip(mod::Engine::Cos, strikes, {1.0}, {1.5, 0.04, 0.3, -0.7, 0.04}, prc::Put));
+  for (std::size_t i = 0; i < strikes.size(); ++i) {
+    out.writeln(strikes[i], calls[i], puts[i], calls[i] - puts[i], kSpot * std::exp(-kDiv) - strikes[i] * std::exp(-kRate));
   }
 
+  // The Black-Scholes field at volatility 0.2 is the limit as the volatility of variance vanishes.
+  mod::Field black_scholes{.instrument = fin::instrument::make(prc::Call, 100.0, 1.0), .market = fin::market::make(kSpot, kRate, kDiv),
+                           .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}), .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
   out.writeln("vol of vol sigma -> 0 (v0 = theta = 0.04), against Black-Scholes at volatility 0.2:");
   for (double sigma : {0.3, 0.1, 0.01, 0.001}) {
-    vol::HestonParams p = params;
-    p.sigma = sigma;
-    out.writeln("  sigma", sigma, " Heston", prc::heston_price(prc::Call, spot, 100.0, rate, dividend, maturity, p), " Black-Scholes", prc::black_scholes_price(prc::Call, spot, 100.0, rate, dividend, maturity, 0.2));
+    out.writeln("  sigma", sigma, " Heston", price1(strip(mod::Engine::Cos, {100.0}, {1.0}, {1.5, 0.04, sigma, -0.7, 0.04})), " Black-Scholes", price1(black_scholes));
   }
 
   out.writeln("correlation rho, calls struck at 80, 100, 120:");
   for (double rho : {-0.7, 0.0, 0.7}) {
-    vol::HestonParams p = params;
-    p.rho = rho;
-    out.writeln("  rho", rho, prc::heston_price(prc::Call, spot, 80.0, rate, dividend, maturity, p), prc::heston_price(prc::Call, spot, 100.0, rate, dividend, maturity, p), prc::heston_price(prc::Call, spot, 120.0, rate, dividend, maturity, p));
+    out.writeln("  rho", rho, prices(strip(mod::Engine::Cos, strikes, {1.0}, {1.5, 0.04, 0.3, rho, 0.04})));
   }
 }
 ```
 
 Parity holds to the digits shown at each strike (21.3693, 1.9604 and −17.4485). As σ falls, the Heston price approaches the Black-Scholes price at volatility 0.2: 8.5423 at σ = 0.3, 8.7947 at 0.1, 8.826992 at 0.01 and 8.827318 at 0.001, against 8.827321. The correlation reshapes the price across strikes: with ρ = −0.7 the call at strike 120 is worth 1.477 against 2.460 at ρ = 0 and 3.234 at ρ = 0.7, and the call at strike 80 is worth more (22.83, 22.37, 21.76), which is the skew.
 
-## The integration controls
-
-`HestonIntegrationOptions` has three controls: `integration_steps`, the number of nodes of Simpson's rule; `integration_u_max`, the upper limit of the integral over the frequency u (the integrand decays, so a finite limit suffices); and `mode`, the form of the characteristic function. The defaults, 2048 steps and a limit of 150, are converged for ordinary parameters. The program shows the price as each control is relaxed.
-
-@@run@@
-```cpp
-#include <pluss/ma.h>
-#include <pluss/tils/kit/output.h>
-
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
-using namespace pluss::tils;
-
-int main() {
-  OutputEngine out;
-  out.print_defaults(PrintOptions{}.fixed(8));
-  const double spot = 100.0, strike = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
-  const vol::HestonParams params;
-  const double reference = prc::heston_price(prc::Call, spot, strike, rate, dividend, maturity, params);
-  out.writeln("default price", reference);
-
-  out.writeln("integration_steps:");
-  for (std::int64_t steps : {16, 32, 64, 128, 256, 2048}) {
-    prc::HestonIntegrationOptions options;
-    options.integration_steps = steps;
-    out.writeln("  ", steps, " error", prc::heston_price(prc::Call, spot, strike, rate, dividend, maturity, params, options) - reference);
-  }
-  out.writeln("integration_u_max:");
-  for (double u_max : {5.0, 10.0, 20.0, 50.0, 100.0, 150.0}) {
-    prc::HestonIntegrationOptions options;
-    options.integration_u_max = u_max;
-    out.writeln("  ", u_max, " error", prc::heston_price(prc::Call, spot, strike, rate, dividend, maturity, params, options) - reference);
-  }
-}
-```
-
-Simpson's rule needs about 64 nodes to be accurate to 0.002 and 128 to be accurate to 10⁻⁷; the default of 2048 is far beyond convergence. The frequency limit matters more: a limit of 5 gives an error of −2.56, 20 an error of +0.048, 50 an error of 2 × 10⁻⁵, and 100 and above are converged to eight decimals, so the default of 150 has a wide margin.
-
 ## The two forms of the characteristic function
 
-The Heston characteristic function contains a complex square root and logarithm. In the original formulation of Heston (1993) the logarithm is evaluated on its principal branch, which jumps as the frequency or the maturity grows, so the integrand is discontinuous and the price is wrong for long maturities. The reformulation `HestonCfMode::LittleTrap` (Albrecher et al.) is algebraically equal but continuous, and is the default. `HestonCfMode::Original` is kept so that results computed with the original formulation can be reproduced. The program prices a one-year-to-fifteen-year call both ways, and with the COS pricer (which uses the stable form) for reference.
+The Heston characteristic function contains a complex square root and logarithm. In the original formulation of Heston (1993) the logarithm is evaluated on its principal branch, which jumps as the frequency or the maturity grows, so the integrand is discontinuous and the price is wrong for long maturities. The reformulation `HestonCfMode::LittleTrap` (Albrecher et al.) is algebraically equal but continuous, and is the default of the FFT engine (`controls.fft.mode`). `HestonCfMode::Original` is kept so that results computed with the original formulation can be reproduced; at the longest maturities the FFT engine refuses it rather than return a wrong price. The program prices a call from three months to fifteen years with the FFT engine in both forms, and with the COS engine (which uses the stable form) for reference.
 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+
+// A strip of options on one underlying priced under Heston (or Bates, with eight parameters) by the chosen engine.
+mod::Field strip(mod::Engine engine, const std::vector<double> &strikes, const std::vector<double> &maturities, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04},
+                 prc::OptionType type = prc::Call, fin::model::Kind kind = fin::model::Kind::Heston) {
+  return mod::Field{.instrument = {.type = type, .strike = pluss::make_series(strikes), .maturity = pluss::make_series(maturities)},
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+std::vector<double> prices(const mod::Field &f) { return f.price().price.items<double>(); }
+double price1(const mod::Field &f) { return prices(f)[0]; }
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(6));
-  const vol::HestonParams params;
-  out.writeln("maturity   Original    LittleTrap   COS (reference)");
+  out.writeln("maturity   Original              LittleTrap   COS (reference)");
   for (double maturity : {0.25, 1.0, 2.0, 5.0, 10.0, 15.0}) {
-    prc::HestonIntegrationOptions original;
-    original.mode = prc::HestonCfMode::Original;
-    prc::HestonIntegrationOptions stable;
-    stable.mode = prc::HestonCfMode::LittleTrap;
-    out.writeln(maturity, prc::heston_price(prc::Call, 100.0, 100.0, 0.03, 0.01, maturity, params, original), prc::heston_price(prc::Call, 100.0, 100.0, 0.03, 0.01, maturity, params, stable),
-                prc::heston_price_cos(prc::Call, 100.0, 100.0, 0.03, 0.01, maturity, params));
+    auto original = strip(mod::Engine::Fft, {100.0}, {maturity});
+    original.controls.fft.mode = prc::HestonCfMode::Original;
+    auto stable = strip(mod::Engine::Fft, {100.0}, {maturity});
+    stable.controls.fft.mode = prc::HestonCfMode::LittleTrap;
+    std::string shown;
+    try {
+      shown = std::to_string(price1(original));
+    } catch (const std::exception &e) {
+      shown = "refused";
+    }
+    out.writeln(maturity, shown, price1(stable), price1(strip(mod::Engine::Cos, {100.0}, {maturity})));
   }
 }
 ```
 
-Up to one year the two forms agree to six decimals, and at two years they differ in the third decimal (12.4274 against 12.4385). The original form then fails badly: 17.19 against 20.56 at five years, 16.93 against 29.32 at ten years and 18.20 against 35.11 at fifteen, while `LittleTrap` equals the COS price at every maturity.
+The two forms agree through two years (12.4385 at two years), and the COS price equals both. Beyond that the original form is not just less accurate: the FFT engine refuses it at five years and longer rather than return a wrong price. `LittleTrap` equals the COS price at every maturity (20.5643 at five years, 29.3176 at ten and 35.1073 at fifteen).
 
 ## Maturity zero and invalid inputs
 
-At zero maturity the price is the intrinsic value. Every invalid input is an error naming the argument; `mu` is not used for pricing, only for simulation.
+At zero maturity the price is the intrinsic value. A field checks its model before it prices, and reports every parameter outside its domain, naming it. The Feller condition is not one of them.
 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+
+// A strip of options on one underlying priced under Heston (or Bates, with eight parameters) by the chosen engine.
+mod::Field strip(mod::Engine engine, const std::vector<double> &strikes, const std::vector<double> &maturities, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04},
+                 prc::OptionType type = prc::Call, fin::model::Kind kind = fin::model::Kind::Heston) {
+  return mod::Field{.instrument = {.type = type, .strike = pluss::make_series(strikes), .maturity = pluss::make_series(maturities)},
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+std::vector<double> prices(const mod::Field &f) { return f.price().price.items<double>(); }
+double price1(const mod::Field &f) { return prices(f)[0]; }
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const vol::HestonParams params;
-  out.writeln("maturity 0: call at spot 110 and 90 (strike 100):", prc::heston_price(prc::Call, 110.0, 100.0, 0.03, 0.01, 0.0, params), prc::heston_price(prc::Call, 90.0, 100.0, 0.03, 0.01, 0.0, params));
-  out.writeln("mu does not enter the price:", prc::heston_price(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, params), prc::heston_price(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, [] { vol::HestonParams p; p.mu = 0.5; return p; }()));
+  out.writeln("maturity 0: the call struck at 90 is worth", price1(strip(mod::Engine::Cos, {90.0, 100.0, 110.0}, {0.0})) );
   out.writeln("a variance process that violates the Feller condition is allowed (2 kappa theta =", 2 * 0.2 * 0.02, "< sigma^2 =", 0.8 * 0.8, "):",
-              prc::heston_price(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, [] { vol::HestonParams p; p.kappa = 0.2; p.theta = 0.02; p.sigma = 0.8; return p; }()));
+              price1(strip(mod::Engine::Cos, {100.0}, {1.0}, {0.2, 0.02, 0.8, -0.7, 0.04})));
 
-  auto attempt = [&](const char *label, auto edit) {
-    vol::HestonParams p;
-    edit(p);
-    try {
-      prc::heston_price(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, p);
-      out.writeln(label, "-> no error");
-    } catch (const std::exception &e) {
-      const std::string message = e.what();
-      const auto start = message.find("heston_price: ") + 14;
-      out.writeln(label, "->", message.substr(start, message.find('\n') - start));
-    }
-  };
-  attempt("kappa = -1  ", [](vol::HestonParams &p) { p.kappa = -1.0; });
-  attempt("theta = 0   ", [](vol::HestonParams &p) { p.theta = 0.0; });
-  attempt("sigma = 0   ", [](vol::HestonParams &p) { p.sigma = 0.0; });
-  attempt("rho = 1     ", [](vol::HestonParams &p) { p.rho = 1.0; });
-  attempt("v0 = -0.1   ", [](vol::HestonParams &p) { p.v0 = -0.1; });
-  for (std::int64_t steps : {0, 1}) {
-    try {
-      prc::HestonIntegrationOptions options;
-      options.integration_steps = steps;
-      prc::heston_price(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, vol::HestonParams{}, options);
-    } catch (const std::exception &e) {
-      const std::string message = e.what();
-      const auto start = message.find("heston_price: ") + 14;
-      out.writeln("integration_steps =", steps, "->", message.substr(start, message.find('\n') - start));
-    }
-  }
+  auto attempt = [&](const char *label, std::vector<double> params) {
   try {
-    prc::HestonIntegrationOptions options;
-    options.integration_u_max = 0.0;
-    prc::heston_price(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, vol::HestonParams{}, options);
+    (void)strip(mod::Engine::Cos, {100.0}, {1.0}, params).price();
+    out.writeln(label, "-> no error");
   } catch (const std::exception &e) {
     const std::string message = e.what();
-    const auto start = message.find("heston_price: ") + 14;
-    out.writeln("integration_u_max = 0 ->", message.substr(start, message.find('\n') - start));
+    out.writeln(label, "->", message.substr(0, message.find('\n')));
   }
+  };
+  attempt("kappa = -1  ", {-1.0, 0.04, 0.3, -0.7, 0.04});
+  attempt("theta = 0   ", {1.5, 0.0, 0.3, -0.7, 0.04});
+  attempt("sigma = 0   ", {1.5, 0.04, 0.0, -0.7, 0.04});
+  attempt("rho = 1     ", {1.5, 0.04, 0.3, 1.0, 0.04});
+  attempt("v0 = -0.1   ", {1.5, 0.04, 0.3, -0.7, -0.1});
+  attempt("5 values for a 4-parameter list", {1.5, 0.04, 0.3, -0.7});
 }
 ```
 
-At zero maturity the call is worth its intrinsic value (10 at spot 110, 0 at spot 90). Setting `mu` to 0.5 does not change the price, since pricing uses r − q. A variance process with 2κθ = 0.008 far below σ² = 0.64 prices without complaint. Each invalid parameter and each invalid control is rejected with the message shown.
+At zero maturity the call struck at 90 is worth its intrinsic value, 10 (the spot is 100). A variance process with 2κθ = 0.008, far below σ² = 0.64, prices without complaint. Each invalid parameter is rejected with a message that names it, and a parameter list of the wrong length is rejected too.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_fft_pricer.html">
+    <span class="label">Previous</span>
+    <span class="title">The FFT pricer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

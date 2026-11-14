@@ -22,7 +22,7 @@ The result is a [`NelderMeadOutcome`](NelderMeadOutcome.md). Nelder-Mead has no 
 ## Parameters
 
 `Fn &&objective`
-: A callable `Series -> Series` (real scalar) or `Series -> number`; may return `+infinity` for a forbidden point.
+: A callable `Series (Series)` (real scalar) or `Series -> number`; may return `+infinity` for a forbidden point.
 
 `const pluss::Series &initial`
 : The starting point.

@@ -1,0 +1,330 @@
+<!-- generated from windows.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Windows
+
+[Back to Signals 1: Windows and Convolution](../signal_01_windows_and_convolution.md)
+
+You have a finite record of samples and you are about to look at its spectrum, or to filter it, and the record starts and stops abruptly. A **window** is a vector of weights you multiply the record by so that the ends fade out. This page shows the five windows `signal` provides, how the two window modes differ, and what a window does to the spectrum of a sinusoid. Read it before the frequency-response and filter-design chapters, which use windows to shape their results.
+
+## The mental model
+
+A window `w` of length `N` multiplies sample `n` of your record by `w[n]`. Multiplying in time is convolving in frequency, so the spectrum you see is the true spectrum smeared by the spectrum of the window. Every window trades two properties of that smear:
+
+- **Main-lobe width.** How wide the smear is around a true frequency. A narrow lobe separates two nearby tones.
+- **Side-lobe level.** How much of a strong tone leaks into frequencies far away. Low side lobes let a weak tone be seen next to a strong one.
+
+The rectangular window (`boxcar`) has the narrowest main lobe and the highest side lobes. The tapered windows widen the main lobe and push the side lobes down, and the price rises in the order `bartlett`, `hann`, `hamming`, `blackman`.
+
+Every window is built by a short formula in the sample index `k = 0, ..., N-1`, with `m = N-1` for the symmetric mode and `m = N` for the periodic mode:
+
+| Window | Formula |
+|---|---|
+| `boxcar` | `1` |
+| `bartlett` | `1 - abs(k - m/2) / (m/2)` |
+| `hann` | `0.5 - 0.5 cos(2 pi k / m)` |
+| `hamming` | `0.54 - 0.46 cos(2 pi k / m)` |
+| `blackman` | `0.42 - 0.5 cos(2 pi k / m) + 0.08 cos(4 pi k / m)` |
+
+## The five windows
+
+Each window takes the length and an optional `WindowOptions`. The first program prints all five for `N = 8`. The values are symmetric about the middle, the tapered windows are small at the ends and close to 1 in the middle, and they can be checked against the table: for the `hann` window, `k = 1` gives `0.5 - 0.5 cos(2 pi / 7) = 0.18826`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  out.writeln("boxcar   ", sig::boxcar(8).items<double>());
+  out.writeln("bartlett ", sig::bartlett(8).items<double>());
+  out.writeln("hann     ", sig::hann(8).items<double>());
+  out.writeln("hamming  ", sig::hamming(8).items<double>());
+  out.writeln("blackman ", sig::blackman(8).items<double>());
+}
+```
+
+Output
+
+```text
+boxcar    [1.00000, 1.00000, 1.00000, 1.00000, 1.00000, 1.00000, 1.00000, 1.00000]
+bartlett  [0.00000, 0.28571, 0.57143, 0.85714, 0.85714, 0.57143, 0.28571, 0.00000]
+hann      [0.00000, 0.18826, 0.61126, 0.95048, 0.95048, 0.61126, 0.18826, 0.00000]
+hamming   [0.08000, 0.25319, 0.64236, 0.95445, 0.95445, 0.64236, 0.25319, 0.08000]
+blackman  [0.00000, 0.09045, 0.45918, 0.92036, 0.92036, 0.45918, 0.09045, 0.00000]
+```
+
+`hamming` is the one window that does not reach zero: its ends are `0.54 - 0.46 = 0.08`. That is deliberate. It nearly cancels the first side lobe of the rectangular window, at the cost of a slightly higher far side-lobe level than `hann`.
+
+## Symmetric and periodic windows
+
+The default mode, `Symmetric`, makes the window mirror-symmetric about its centre, with its last sample equal to its first. That is the right choice when the window is itself a filter, an FIR design for example, whose impulse response should have linear phase.
+
+The `Periodic` mode computes the window as if it had one more sample and drops the last. It is the right choice for spectral analysis, where the record is treated as one period of a repeating signal, because a length-`N` transform treats the record as exactly one period. The program shows both for `hann`, and shows that the periodic window of length `N` is the first `N` samples of the symmetric window of length `N + 1`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  sig::WindowOptions periodic;
+  periodic.mode = sig::WindowMode::Periodic;
+
+  out.writeln("hann(8) symmetric      ", sig::hann(8).items<double>());
+  out.writeln("hann(8) periodic       ", sig::hann(8, periodic).items<double>());
+  out.writeln("hann(9) symmetric      ", sig::hann(9).items<double>());
+  out.writeln("largest difference, periodic(8) against the first 8 of symmetric(9):",
+              (sig::hann(8, periodic) - sig::hann(9).slice(0, 0, 8)).abs().max().item<double>());
+  out.writeln("bartlett(8) periodic   ", sig::bartlett(8, periodic).items<double>());
+}
+```
+
+Output
+
+```text
+hann(8) symmetric       [0.00000, 0.18826, 0.61126, 0.95048, 0.95048, 0.61126, 0.18826, 0.00000]
+hann(8) periodic        [0.00000, 0.14645, 0.50000, 0.85355, 1.00000, 0.85355, 0.50000, 0.14645]
+hann(9) symmetric       [0.00000, 0.14645, 0.50000, 0.85355, 1.00000, 0.85355, 0.50000, 0.14645, 0.00000]
+largest difference, periodic(8) against the first 8 of symmetric(9): 0.00000
+bartlett(8) periodic    [0.00000, 0.25000, 0.50000, 0.75000, 1.00000, 0.75000, 0.50000, 0.25000]
+```
+
+The symmetric window never reaches 1 for an even length, because the peak falls between two samples; the periodic one reaches exactly 1 at `k = N/2`. For `bartlett` the periodic window is the triangle `0, 0.25, 0.5, 0.75, 1, 0.75, 0.5, 0.25`, which is the shape of the same window of length 9 with its final zero dropped.
+
+## What a window does to a spectrum
+
+The next program records 64 samples of a cosine that is **not** an exact number of cycles in the record, 5.5 cycles, which is the worst case for leakage: the true frequency falls halfway between two transform bins. It windows the record with `boxcar`, `hann` and `blackman` (all periodic), takes the magnitude of the transform, and prints the two bins around the peak and two bins far away.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <utility>
+#include <vector>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int n = 64;
+  sig::WindowOptions periodic;
+  periodic.mode = sig::WindowMode::Periodic;
+
+  const pluss::Series t = pluss::series::arange(0, n, f64);
+  const pluss::Series record = (t * (2.0 * M_PI * 5.5 / n)).cos();
+
+  const std::vector<std::pair<const char *, pluss::Series>> windows = {
+      {"boxcar  ", sig::boxcar(n, periodic)}, {"hann    ", sig::hann(n, periodic)}, {"blackman", sig::blackman(n, periodic)}};
+  out.writeln("window    bin 5      bin 6      bin 20     bin 30");
+  for (const auto &[name, w] : windows) {
+    const pluss::Series magnitude = (record * w).rfft(n, 0, "backward").abs();
+    out.writeln(name, magnitude.select(0, 5).item<double>(), magnitude.select(0, 6).item<double>(),
+                magnitude.select(0, 20).item<double>(), magnitude.select(0, 30).item<double>());
+  }
+}
+```
+
+Output
+
+```text
+window    bin 5      bin 6      bin 20     bin 30
+boxcar   19.51076 21.18095 1.24690 1.00561
+hann     13.58564 13.57787 0.00187 0.00016
+blackman 11.84434 11.84167 0.00066 0.00006
+```
+
+The true tone sits between bins 5 and 6, so those two bins carry the peak. With the rectangular window the peak is largest (19.5 and 21.2), and the far bins still hold about 1.2 and 1.0: the energy of the tone has leaked across the whole spectrum, about six percent of the peak at bin 20, but enough to bury a tone that is a few percent as strong. With `hann` the peak is lower (13.6) because the window removed energy, but bin 20 is down to 0.0019 and bin 30 to 0.00016, a drop of nearly three orders of magnitude. `blackman` goes lower again, at the cost of a peak of 11.8. This is the trade stated in the mental model, with numbers on it.
+
+## Window gains
+
+A window changes the amplitude of what it multiplies. Two numbers describe that: the **coherent gain**, the mean of the window, which scales the height of a tone in the spectrum, and the mean of the squared window, which scales the power of noise. The program prints both for a periodic window of 64 samples.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <utility>
+#include <vector>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  sig::WindowOptions periodic;
+  periodic.mode = sig::WindowMode::Periodic;
+  const std::vector<std::pair<const char *, pluss::Series>> windows = {
+      {"boxcar  ", sig::boxcar(64, periodic)}, {"bartlett", sig::bartlett(64, periodic)}, {"hann    ", sig::hann(64, periodic)},
+      {"hamming ", sig::hamming(64, periodic)}, {"blackman", sig::blackman(64, periodic)}};
+  out.writeln("window    mean       mean square");
+  for (const auto &[name, w] : windows) out.writeln(name, w.mean().item<double>(), w.square().mean().item<double>());
+}
+```
+
+Output
+
+```text
+window    mean       mean square
+boxcar   1.00000 1.00000
+bartlett 0.50000 0.33350
+hann     0.50000 0.37500
+hamming  0.54000 0.39740
+blackman 0.42000 0.30460
+```
+
+The means are the constant terms of the formulas: `1`, `0.5`, `0.5`, `0.54` and `0.42`. They are exact for a periodic window, which is another reason to use that mode for analysis. To read a tone's true amplitude from a windowed spectrum, divide the peak by the mean (for a tone exactly on a bin); to read noise power, divide by the mean square.
+
+## Sizes, dtype and platform
+
+Lengths 0 and 1 are handled without special cases in your code: a length-0 window is an empty vector and a length-1 window is `[1]`, for every window. A length-2 symmetric window of a tapered type is `[0, 0]` (both samples are ends), and the periodic one is `[0, 1]`. `WindowOptions` also chooses the element type, `Float64` (the default) or `Float32`, and the platform the window is created on.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  sig::WindowOptions periodic;
+  periodic.mode = sig::WindowMode::Periodic;
+  sig::WindowOptions single;
+  single.dtype = pluss::ScalarType::Float32;
+
+  out.writeln("hann(0) shape        ", sig::hann(0).sizes());
+  out.writeln("hann(1)              ", sig::hann(1).items<double>());
+  out.writeln("hann(2) symmetric    ", sig::hann(2).items<double>());
+  out.writeln("hann(2) periodic     ", sig::hann(2, periodic).items<double>());
+  const pluss::Series w = sig::hann(5, single);
+  out.writeln("hann(5) in", w.dtype().name, w.items<float>());
+}
+```
+
+Output
+
+```text
+hann(0) shape         [0]
+hann(1)               [1.00000]
+hann(2) symmetric     [0.00000, 0.00000]
+hann(2) periodic      [0.00000, 1.00000]
+hann(5) in float32 [0.00000, 0.50000, 1.00000, 0.50000, 0.00000]
+```
+
+## Errors
+
+A negative length and an element type other than `Float32` or `Float64` are refused with a message that names the operation.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([] { (void)sig::hann(-3); });
+  sig::WindowOptions integer;
+  integer.dtype = pluss::ScalarType::Int64;
+  report([&] { (void)sig::hamming(8, integer); });
+}
+```
+
+Output
+
+```text
+eng::signal::hann: size must be non-negative
+eng::signal::hamming: dtype must be Float32 or Float64
+```
+
+## Decisions
+
+- **Analysing a spectrum:** use `Periodic`. Choose `hann` as the default; `blackman` when a strong tone must not hide a weak one far away; `boxcar` only when the record holds a whole number of cycles, or when you need the narrowest main lobe and can accept the leakage.
+- **Designing an FIR filter by windowing a sinc:** use `Symmetric`, so the filter has linear phase.
+- **Smoothing with a triangular weight:** `bartlett`, in either mode.
+- **Needing to read amplitudes from a windowed spectrum:** keep the window mean from the gain table and divide.
+
+## Pitfalls
+
+The most common mistake is analysing a spectrum with the default symmetric window. The program records a cosine of exactly 5 cycles in 64 samples, which should have all its energy in bin 5, and windows it with the symmetric and the periodic `hann`. The periodic window gives the exact answer: `hann` has mean `0.5`, so the peak is `0.5 * 64 / 2 = 16`, shared with bins 4 and 6 at 8 each, and every other bin is zero. The symmetric window, which is slightly wider than a period, leaks into every bin.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <utility>
+#include <vector>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int n = 64;
+  sig::WindowOptions periodic;
+  periodic.mode = sig::WindowMode::Periodic;
+  const pluss::Series record = (pluss::series::arange(0, n, f64) * (2.0 * M_PI * 5 / n)).cos();
+
+  const std::vector<std::pair<const char *, pluss::Series>> windows = {{"symmetric", sig::hann(n)}, {"periodic ", sig::hann(n, periodic)}};
+  for (const auto &[name, w] : windows) {
+    const pluss::Series m = (record * w).rfft(n, 0, "backward").abs();
+    out.writeln(name, "bins 4, 5, 6:", m.select(0, 4).item<double>(), m.select(0, 5).item<double>(), m.select(0, 6).item<double>(),
+                " bin 8:", m.select(0, 8).item<double>(), " bin 20:", m.select(0, 20).item<double>());
+  }
+}
+```
+
+Output
+
+```text
+symmetric bins 4, 5, 6: 8.057008 15.752199 8.057960  bin 8: 0.033517  bin 20: 0.001240
+periodic  bins 4, 5, 6: 8.000000 16.000000 8.000000  bin 8: 0.000000  bin 20: 0.000000
+```
+
+The symmetric window gives a peak of `15.75` instead of `16`, unequal side bins (`8.0570` and `8.0580`), and leakage of `0.0335` at bin 8 and `0.0012` at bin 20. The periodic window has none of these errors. The leakage is small here, but it sets a floor under any weak tone you are looking for.
+
+Two other mistakes are worth knowing:
+
+- **A window of length 2 is not the same in the two modes** (`[0, 0]` and `[0, 1]`, as above), so test small lengths.
+- **Windowing lowers the amplitude.** A tone of amplitude 1 shows a peak of about half that under `hann`; the gains table gives the factor.
+
+Reference: [`boxcar`](../../../../api/eng/signal/windows/boxcar.md), [`bartlett`](../../../../api/eng/signal/windows/bartlett.md), [`hann`](../../../../api/eng/signal/windows/hann.md), [`hamming`](../../../../api/eng/signal/windows/hamming.md), [`blackman`](../../../../api/eng/signal/windows/blackman.md), [`WindowOptions`](../../../../api/eng/signal/windows/WindowOptions.md), [`WindowMode`](../../../../api/eng/signal/windows/WindowMode.md).
+
+Where next: [Convolution and correlation](convolution_and_correlation.md) applies a weight vector along a signal, which is what an FIR filter does.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="convolution_and_correlation.html">
+    <span class="label">Next</span>
+    <span class="title">Convolution and correlation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

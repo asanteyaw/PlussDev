@@ -96,4 +96,25 @@ int main() {
 ```
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+diagnostics/acf
+diagnostics/AcfOptions
+diagnostics/adf_test
+diagnostics/AdfOptions
+diagnostics/AdfResult
+diagnostics/arch_lm
+diagnostics/ArchLmOptions
+diagnostics/ArchLmResult
+diagnostics/kpss_test
+diagnostics/KpssOptions
+diagnostics/KpssResult
+diagnostics/ljung_box
+diagnostics/LjungBoxOptions
+diagnostics/LjungBoxResult
+diagnostics/pacf
+diagnostics/PacfOptions
+```
 <!-- apiref:toctree:end -->

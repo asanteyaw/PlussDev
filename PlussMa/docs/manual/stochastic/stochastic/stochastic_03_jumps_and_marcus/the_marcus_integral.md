@@ -22,11 +22,11 @@ int main() {
   const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 4000, 11, 0.0, 0.2, 6.0, 0.0, 0.5);
   auto square = [](double, const pluss::Series& x) { return x.mul(x); };
 
-  const double xT = jp.path.w.select(0, jp.path.steps).item<double>();
+  const double xT = jp.path.w.select(0, jp.path.steps).squeeze().item<double>();
   const double exact = xT * xT * xT / 3.0;
-  const double marcus = sde::marcus_integral(square, jp.path, jp.jump_mask).value.item<double>();
-  const double strat = sde::strat_integral(square, jp.path).value.item<double>();
-  const double ito = sde::ito_integral(square, jp.path).value.item<double>();
+  const double marcus = sde::marcus_integral(square, jp.path, jp.jump_mask).value.squeeze().item<double>();
+  const double strat = sde::strat_integral(square, jp.path).value.squeeze().item<double>();
+  const double ito = sde::ito_integral(square, jp.path).value.squeeze().item<double>();
 
   std::cout << std::setprecision(6);
   std::cout << "X_T^3 / 3 (chain rule)  " << exact << "\n";
@@ -36,7 +36,7 @@ int main() {
 
   // Without a mask the jump steps are found from their size: |dX| > jump_sigma * sqrt(step). A jump smaller
   // than that threshold (here 8 * sqrt(1/4000) = 0.13) is treated as Brownian, which is why the number differs.
-  const double automatic = sde::marcus_integral(square, jp.path, 8.0).value.item<double>();
+  const double automatic = sde::marcus_integral(square, jp.path, 8.0).value.squeeze().item<double>();
   std::cout << "Marcus, jumps found by size  " << automatic << "\n";
   return 0;
 }
@@ -52,3 +52,16 @@ Ito                     -0.195062   error 1.967085e-01
 Marcus, jumps found by size  0.001497
 ```
 The chain-rule value is 0.00164677. Marcus gives 0.00164654, off by 2.4e-7, which is the trapezoid error of the small Brownian steps and shrinks with the grid. The Stratonovich average is off by 0.0781 and the Ito sum by 0.1967, because both treat a jump step as if the path were straight enough to average two ends or to read the start. The last line lets the library find the jump steps by size (a step whose increment exceeds 8 standard deviations); it gives 0.001497, a little off because jumps smaller than that threshold are treated as Brownian. When you know where the jumps are, pass the mask.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_path_with_jumps.html">
+    <span class="label">Previous</span>
+    <span class="title">A path with jumps</span>
+  </a>
+  <a class="next-link" href="what_a_jump_does_to_the_state.html">
+    <span class="label">Next</span>
+    <span class="title">What a jump does to the state</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

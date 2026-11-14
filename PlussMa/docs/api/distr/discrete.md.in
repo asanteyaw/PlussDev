@@ -19,4 +19,20 @@ Families for counts and other integer-valued variables. Each page documents one 
 | [`Zeta`](discrete/Zeta.md) | The zeta (Zipf) distribution: a discrete power-law distribution on the positive integers. |
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+discrete/Bernoulli
+discrete/Bessel
+discrete/Binomial
+discrete/Geometric
+discrete/Hypergeometric
+discrete/NegativeBinomial
+discrete/Poisson
+discrete/Rademacher
+discrete/Skellam
+discrete/Yule
+discrete/Zeta
+```
 <!-- apiref:toctree:end -->

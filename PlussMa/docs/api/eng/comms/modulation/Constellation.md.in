@@ -1,0 +1,59 @@
+# `comms::Constellation`
+
+A set of complex symbols with their bit labels.
+
+## Signature
+
+```cpp
+comms::Constellation
+```
+
+## What It Does
+
+The result of `psk` and `qam`: the points of a modulation and the bits each carries. `points[i]` is the symbol sent for the integer label `i`, whose binary digits (most significant first) are the `bits` bits it carries. The average symbol energy is one, so `1 / noise_variance` is the signal-to-noise ratio per symbol.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `points` | The complex symbol of each label, a complex vector `[order]`. |  |
+| `bits` | The number of bits per symbol. |  |
+| `order` | The number of points, `2^bits`. |  |
+| `phase_shift_keying` | `true` for PSK and `false` for QAM; it selects the theory formula of `theory`. |  |
+
+## Returns
+
+Returned by `psk` and `qam`; read by every function of the branch.
+
+## Errors
+
+Functions that take a constellation throw `pluss::Error` when it is not one made by `psk` or `qam`.
+
+## Interpretation and Use
+
+Build a constellation once and reuse it. The average energy `E|s|^2` is one for every constellation, so Es/N0 is `1 / N0` and Eb/N0 is `1 / (bits N0)`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Fields of three constellations.
+
+@@example Eng/api/comms_constellation_fields.cpp@@
+
+### Example 2
+
+QPSK points by label.
+
+@@example Eng/api/comms_psk_points.cpp@@
+
+### Example 3
+
+The 16-QAM grid.
+
+@@example Eng/api/comms_qam_points.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

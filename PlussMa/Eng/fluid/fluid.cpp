@@ -892,13 +892,64 @@ SteadyResult steady(const Network &network, const Options &options) {
             .neg()
             .unite({batch_matrix(junction_incidence, batch)}, -1);
     const Series jacobian = top.unite({bottom}, -2);
-    const Series delta =
-        jacobian.linearalg.lu_solve(residual.neg().unsqueeze(-1))
-            .squeeze(-1)
-            .to(network.dtype_);
-    junction_head = junction_head.add(delta.slice(-1, 0, network.junctions_));
-    flow = flow.add(delta.slice(-1, network.junctions_,
-                                network.junctions_ + network.links()));
+    Series delta;
+    try {
+      delta = jacobian.linearalg.lu_solve(residual.neg().unsqueeze(-1))
+                  .squeeze(-1)
+                  .to(network.dtype_);
+    } catch (const std::exception &error) {
+      if (std::string(error.what()).find("singular") == std::string::npos)
+        throw;
+      throw std::runtime_error(
+          "eng::fluid::steady: the hydraulic system is singular: a junction "
+          "is cut off from every reservoir and tank by closed links");
+    }
+    const Series head_step = delta.slice(-1, 0, network.junctions_);
+    const Series flow_step = delta.slice(-1, network.junctions_,
+                                         network.junctions_ + network.links());
+
+    // Backtracking relaxation of the Newton step, lane by lane, as in the gradient method's step-size control: a
+    // lane whose full step does not reduce its weighted residual norm takes a halved step, up to eight times.
+    // The relaxation factor is a detached decision, so the reverse graph of an accepted full step is unchanged.
+    const double flow_weight = options.head_tolerance / options.flow_tolerance;
+    // Closed-link and fixed-flow rows are residuals in m^3/s, not metres, so they carry the same weight as continuity.
+    const Series row_weight = active_flow.add(closed.to(network.dtype_))
+                                  .mul(flow_weight - 1.0)
+                                  .add(1.0);
+    const auto merit_of = [&](const Series &trial_junction_head,
+                              const Series &trial_flow) {
+      const Series trial_head =
+          matvec(network.junction_put_, trial_junction_head).add(fixed_head);
+      const auto trial_energy = std::get<0>(evaluate(trial_head, trial_flow));
+      const auto trial_demand = evaluate_demand(trial_head);
+      const Series trial_balance =
+          matvec(junction_incidence, trial_flow)
+              .sub(matvec(network.junction_pick_,
+                          trial_demand.demand.add(trial_demand.emitter)));
+      return trial_energy.mul(row_weight).square()
+          .sum(-1, false)
+          .add(trial_balance.mul(flow_weight).square().sum(-1, false))
+          .detach();
+    };
+    const Series current_merit =
+        energy_residual.mul(row_weight).square()
+            .sum(-1, false)
+            .add(balance.mul(flow_weight).square().sum(-1, false))
+            .detach();
+    Series relaxation = pluss::series::ones_like(current_merit);
+    for (int halving = 0; halving < 8; ++halving) {
+      const Series trial_merit = merit_of(
+          junction_head.add(head_step.mul(relaxation.unsqueeze(-1))),
+          flow.add(flow_step.mul(relaxation.unsqueeze(-1))));
+      const Series worse = trial_merit.ge(current_merit)
+                               .logical_and(converged.logical_not())
+                               .logical_or(trial_merit.isfinite().logical_not());
+      if (!worse.any().item<bool>())
+        break;
+      relaxation = relaxation.mul(worse.to(network.dtype_).mul(-0.5).add(1.0));
+    }
+    junction_head = junction_head.add(head_step.mul(relaxation.unsqueeze(-1)));
+    flow = flow.add(flow_step.mul(relaxation.unsqueeze(-1)));
   }
 
   const Series head =
@@ -936,6 +987,18 @@ SteadyResult steady(const Network &network, const Options &options) {
           .item<bool>())
     throw std::runtime_error(
         "eng::fluid::steady: an active control valve requires reverse flow");
+  // A valve dissipates energy. An active setting that can only be met by raising the head across the valve is
+  // infeasible, exactly as a reversed flow is, and is refused rather than returned as a solution.
+  if (matvec(network.energy_, head)
+          .lt(-100.0 * options.head_tolerance)
+          .logical_and(
+              network.flow_valve_mask_.add(network.pressure_valve_mask_)
+                  .gt(0.0))
+          .logical_and(closed.logical_not())
+          .any()
+          .item<bool>())
+    throw std::runtime_error(
+        "eng::fluid::steady: an active control valve cannot add head");
 
   const Series pressure =
       head.sub(network.elevation_)

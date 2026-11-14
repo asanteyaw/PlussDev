@@ -173,3 +173,16 @@ Read down the rows: `a 1` peaks on this grid at x = 0 (value 0.8847); `a 4` peak
 
 - [`Poisson`](../discrete/Poisson.md)
 - [`Skellam`](../discrete/Skellam.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Bernoulli.html">
+    <span class="label">Previous</span>
+    <span class="title">Bernoulli</span>
+  </a>
+  <a class="next-link" href="Binomial.html">
+    <span class="label">Next</span>
+    <span class="title">Binomial</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

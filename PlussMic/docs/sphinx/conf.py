@@ -23,6 +23,7 @@ myst_enable_extensions = [
     'deflist',
     'fieldlist',
 ]
+myst_heading_anchors = 3
 
 latex_engine = 'pdflatex'
 latex_documents = [

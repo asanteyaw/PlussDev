@@ -46,3 +46,16 @@ exp(-r t)(mu - r x): 0.00000   3.12411
 discounted diffusion: 19.52571   15.62057   (exp(-r t) sigma = 19.52571, 15.62057)
 ```
 The first state is risk-neutral and has discounted drift 0.00000; the second has 3.12411, equal to `e^(−rt)(μ − r x)`. The discounted diffusion equals `e^(−rt) σ`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="products_and_quotients.html">
+    <span class="label">Previous</span>
+    <span class="title">Products and quotients</span>
+  </a>
+  <a class="next-link" href="the_stratonovich_convention.html">
+    <span class="label">Next</span>
+    <span class="title">The Stratonovich convention</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

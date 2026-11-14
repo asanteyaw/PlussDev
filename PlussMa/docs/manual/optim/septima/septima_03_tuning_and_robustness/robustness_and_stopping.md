@@ -121,16 +121,16 @@ Output
 
 ```text
 gradient tolerance  exit          iters   gradient    objective
-1e-03               Converged     99      2.5e-04     3.3e-10
-1e-06               NoProgress    124     2.5e-04     3.3e-10
-1e-09               NoProgress    124     2.5e-04     3.3e-10
+1e-03               Converged     105     1.5e-06     2.9e-15
+1e-06               Converged     106     2.1e-07     4.7e-17
+1e-09               Converged     111     1.9e-10     3.7e-23
 
 conditioning: 0.5 * (x0^2 + 10000 x1^2) from (1, 1)
   Adam, learning rate 0.01  Converged  iterations 531   2.6e-17
   Adam, learning rate 0.1   Converged  iterations 422   2.0e-17
   L-BFGS                    Converged  iterations 5     6.2e-33
 ```
-With a gradient tolerance of 1e-3 the run converges in 99 iterations. With 1e-6 and 1e-9 it ends in 124 iterations with `NoProgress`, at the same gradient (2.5e-04) and the same objective (3.3e-10): this method, without a line search, cannot bring the gradient lower than that, so asking for more changes the flag and nothing else. **If a run ends with `NoProgress` and the gradient is within a small factor of what you need, the answer is usually the answer; loosen the tolerance to match what you can use, and the flag will say so.**
+With a gradient tolerance of 1e-3 the run converges at iteration 105 with a gradient of 1.5e-06, and with 1e-6 only one iteration later, at 106 with 2.1e-07: the gradient of a quasi-Newton run falls steeply at the end, so a thousand-fold tighter tolerance costs almost nothing. Asking for 1e-9 costs 6 more iterations than 1e-3 and reaches a gradient of 1.9e-10 and an objective of 3.7e-23. **A tolerance sets where the run stops, so choose it from the accuracy you can use; below that accuracy, extra digits cost iterations and change nothing you will read.**
 
 On the stretched quadratic, both Adam runs converge (in 531 and 422 iterations), and L-BFGS in 5. Adam divides each coordinate's step by the size of that coordinate's own gradients, so a stretch along the axes costs it little. L-BFGS learns the curvature itself and needs far fewer iterations.
 
@@ -195,23 +195,32 @@ Output
 
 ```text
 precision   exit          iters   objective   x, y
-Float64     NoProgress    102     5.6e-11     1.00000, 0.99999
-Float32     Converged     109     3.6e-15     1.00000, 1.00000
+Float64     Converged     81      1.7e-24     1.00000, 1.00000
+Float32     Converged     110     0.0e+00     1.00000, 1.00000
 
 complex parameter, minimize |z - (1 + 2i)|^2 from z = 0
   Adam    Converged  iterations 213  z = 1.0000 + 2.0000i
   L-BFGS  Converged  iterations 3    z = 1.0000 + 2.0000i
 ```
-In double precision L-BFGS ends with `NoProgress` at an objective of 5.6e-11; in single precision it ends with `Converged` at 3.6e-15. Single precision has fewer digits, but in this run the smaller gradients it computes happen to satisfy the tolerances sooner; do not read it as single precision being better. The point is that single precision works, and that its floor is the accuracy of the arithmetic.
+Both precisions end with `Converged`: double precision at an objective of 1.7e-24 in 81 iterations, single precision at 0 in 110. Single precision has fewer digits, so it needs more iterations to get its gradient and step under the tolerances; the point is that single precision works, and that its floor is the accuracy of the arithmetic.
 
 A complex parameter needs a real loss. Here `|z - (1 + 2i)|^2` is written with `abs` and `pow`, and Septima treats the real and imaginary parts as two independent coordinates. Adam finds `1 + 2i` in 213 iterations and L-BFGS in 3. Bounds on a complex parameter are rejected, because complex numbers have no order.
 
 ## Decisions and pitfalls
 
 - **Control the step, not the recovery.** If a step can leave the domain, use a smaller learning rate; the recovery settings fix non-finite parameters, they do not know where your objective ends.
-- **A tighter tolerance than the method can reach changes only the flag.** Without a line search L-BFGS cannot bring the gradient below a floor; asking for 1e-9 gives `NoProgress` at the same point as 1e-6.
+- **A tolerance is a stopping point, not an accuracy guarantee.** Tightening it from 1e-6 to 1e-9 here cost 3 iterations and bought a gradient of 1e-10; tighten only as far as you will use.
 - **Adam copes with stretch, L-BFGS with curvature.** Adam divides each coordinate's step by its own gradient scale; L-BFGS learns the curvature and needs far fewer iterations when it can.
 - **Single precision is not better, it is different.** It converged sooner in one run by chance; use it when memory or speed demands it and check the answer.
 - **A complex parameter needs a real loss.** Write it with `abs` and `pow`; the real and imaginary parts are treated as independent coordinates.
 
 Where next: [Chapter 4](../septima_04_lsr1_trust_region.md) introduces the third solver, a trust-region method.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="tuning_adam_and_lbfgs.html">
+    <span class="label">Previous</span>
+    <span class="title">Tuning Adam and L-BFGS</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

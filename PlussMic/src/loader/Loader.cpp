@@ -20,7 +20,6 @@
 #include <variant>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
@@ -30,6 +29,7 @@
 #include "pluss/codeh/timeline_factory.h"
 #include "table/DataFrame.h"
 #include "table/io/CsvSchemaConvert.h"
+#include <pluss/tils/kit/output.h>
 
 #ifndef PLUSSMIC_HAS_PARQUET_CPP
 #define PLUSSMIC_HAS_PARQUET_CPP 0
@@ -1238,7 +1238,7 @@ CsvRawBatch raw_from_json_value(const JsonValue& root, const Config& config) {
       CsvRawBatch raw;
       raw.features.reserve(max_cols);
       for (std::size_t col = 0; col < max_cols; ++col) {
-        const auto name = col < names_hint.size() ? names_hint[col] : fmt::format("feat_{}", col);
+        const auto name = col < names_hint.size() ? names_hint[col] : pluss::tils::OutputEngine::format("feat_{}", col);
         raw.features.push_back(CsvRawColumn{
             name,
             col,
@@ -1967,12 +1967,12 @@ void save_parquet_cpp(const pluss::table::DataFrame& frame,
   for (std::size_t i = 0; i < columns.size(); ++i) {
     auto name = trim_ascii(names[i]);
     if (name.empty()) {
-      name = fmt::format("feat_{}", i);
+      name = pluss::tils::OutputEngine::format("feat_{}", i);
     }
     auto [it, inserted] = seen.emplace(name, 1);
     if (!inserted) {
       const auto nth = ++(it->second);
-      name = fmt::format("{}_{}", name, nth);
+      name = pluss::tils::OutputEngine::format("{}_{}", name, nth);
     }
 
     auto array = slate_to_arrow_array(columns[i]);
@@ -2290,10 +2290,10 @@ std::ostream& operator<<(std::ostream& os, const LoadResult& loaded) {
   }
 
   const auto& wb = loaded.workbook();
-  os << fmt::format("Workbook({} sheets)", wb.size());
+  os << pluss::tils::OutputEngine::format("Workbook({} sheets)", wb.size());
   for (std::size_t i = 0; i < wb.size(); ++i) {
     const auto& [name, frame] = wb[i];
-    os << fmt::format("\n  [{}] {} -> [{} cs x {} feat]", i, name, frame.ncases(), frame.nfeatures());
+    os << pluss::tils::OutputEngine::format("\n  [{}] {} -> [{} cs x {} feat]", i, name, frame.ncases(), frame.nfeatures());
   }
   return os;
 }
@@ -2665,6 +2665,8 @@ LoadResult load(std::string_view source_type, std::string_view filepath, const C
   if (source == "json") {
     return LoadResult(load_json(filepath, config));
   }
+  static const bool pluss_vocab_1 = pluss::exception::names::define("source type", {"csv", "text", "txt", "xlsx", "excel", "parquet", "json"});
+  (void)pluss_vocab_1;
   PLUSS_FAIL("loader::load: unsupported source type '" + std::string(source_type) + "'");
 }
 
@@ -2684,44 +2686,44 @@ std::string series_json_scalar_token(const pluss::Series& s, std::int64_t row) {
     case pluss::codem::ScalarType::Bool:
       return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
     case pluss::codem::ScalarType::Int8:
-      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
     case pluss::codem::ScalarType::Int16:
-      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
     case pluss::codem::ScalarType::Int32:
-      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
     case pluss::codem::ScalarType::Int64:
-      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt8:
-      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
     case pluss::codem::ScalarType::UInt16:
-      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt32:
-      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt64:
-      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16: {
       const auto v = pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]);
-      return std::isfinite(v) ? fmt::format("{:.9g}", v) : std::string("null");
+      return std::isfinite(v) ? pluss::tils::OutputEngine::format("{:.9g}", v) : std::string("null");
     }
     case pluss::codem::ScalarType::BFloat16: {
       const auto v = pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]);
-      return std::isfinite(v) ? fmt::format("{:.9g}", v) : std::string("null");
+      return std::isfinite(v) ? pluss::tils::OutputEngine::format("{:.9g}", v) : std::string("null");
     }
     case pluss::codem::ScalarType::Float32: {
       const auto v = reinterpret_cast<const float*>(base)[row];
-      return std::isfinite(v) ? fmt::format("{:.9g}", v) : std::string("null");
+      return std::isfinite(v) ? pluss::tils::OutputEngine::format("{:.9g}", v) : std::string("null");
     }
     case pluss::codem::ScalarType::Float64: {
       const auto v = reinterpret_cast<const double*>(base)[row];
-      return std::isfinite(v) ? fmt::format("{:.17g}", v) : std::string("null");
+      return std::isfinite(v) ? pluss::tils::OutputEngine::format("{:.17g}", v) : std::string("null");
     }
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
-      return json_string_token(fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag()));
+      return json_string_token(pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag()));
     }
     case pluss::codem::ScalarType::Complex128: {
       const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
-      return json_string_token(fmt::format("({:.12g}{:+.12g}j)", v.real(), v.imag()));
+      return json_string_token(pluss::tils::OutputEngine::format("({:.12g}{:+.12g}j)", v.real(), v.imag()));
     }
     default:
       return "null";
@@ -2761,7 +2763,7 @@ std::string slate_json_scalar_token(const pluss::table::Slate& slate,
       return json_string_token(note->at(row));
     }
     case pluss::table::SlateKind::Duration:
-      return json_string_token(fmt::format(
+      return json_string_token(pluss::tils::OutputEngine::format(
           "{}", slate.as_duration().host()[static_cast<std::size_t>(row)]));
   }
   return "null";
@@ -3020,6 +3022,8 @@ void save_as(const pluss::table::DataFrame& frame,
     save_parquet(frame, filepath, config);
     return;
   }
+  static const bool pluss_vocab_2 = pluss::exception::names::define("target type", {"csv", "xlsx", "excel", "text", "txt", "json", "parquet"});
+  (void)pluss_vocab_2;
   PLUSS_FAIL("loader::save_as: unsupported target type '" + std::string(target_type) + "'");
 }
 

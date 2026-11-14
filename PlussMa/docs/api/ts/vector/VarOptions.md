@@ -23,3 +23,16 @@ Choose `lag_order` by comparing Akaike's `2m − 2 loglik` or Schwarz's `m log T
 ## See Also
 
 - [`Var`](Var.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="VarFit.html">
+    <span class="label">Previous</span>
+    <span class="title">VarFit</span>
+  </a>
+  <a class="next-link" href="Vecm.html">
+    <span class="label">Next</span>
+    <span class="title">Vecm</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

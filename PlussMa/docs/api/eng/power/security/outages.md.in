@@ -1,0 +1,64 @@
+# `power::outages`
+
+Flows after every single-line outage.
+
+## Signature
+
+```cpp
+power::OutageResult power::outages(const power::Grid& grid, double tolerance = 1e-10);
+```
+
+## What It Does
+
+Solves the DC power flow of the grid and applies the outage factors, returning the flow on every line after the loss of every single line. Screening all N-1 contingencies is one matrix computation.
+
+## Parameters
+
+`grid`
+: The compiled network.
+
+`tolerance`
+: The validity threshold of `lodf`.
+
+## Returns
+
+An `OutageResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for a non-positive or non-finite tolerance.
+
+## Interpretation and Use
+
+Compare `flow` with ratings and read `valid` next to it. Confirm the critical outages with an AC power flow with the line's `active` flag false.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Flows after each outage of a ring, checked against a new DC solve.
+
+@@example Eng/api/power_lodf_ring.cpp@@
+
+### Example 2
+
+Screening a five-bus network for overloads.
+
+@@example Eng/api/power_n1_screen.cpp@@
+
+### Example 3
+
+The pitfall of comparing against NaN.
+
+@@example Eng/api/power_n1_nan.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lodf.html">
+    <span class="label">Previous</span>
+    <span class="title">lodf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

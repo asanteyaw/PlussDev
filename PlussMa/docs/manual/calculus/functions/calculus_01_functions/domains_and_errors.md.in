@@ -15,7 +15,7 @@ Four primitives test their input on every evaluation and raise a `pluss::Error` 
 | `sqrt(a)` | `a >= 0` | every finite value, principal square root |
 | `a / b` | `b != 0` | `b != 0` |
 
-A `NaN` is neither positive nor non-negative, so a `NaN` reaching `log` or `sqrt` is also reported. The other primitives are not checked, and follow floating-point arithmetic: `exp` overflows to infinity, a negative number to a fractional power is `NaN`, zero to a negative power is infinity, and `tan` is finite near its poles. The program evaluates a function at one point at a time and prints either the value or the error, so each case can be seen.
+A `NaN` is neither positive nor non-negative, so a `NaN` reaching `log` or `sqrt` is also reported. The other primitives are not checked, and follow floating-point arithmetic: `exp` overflows to infinity, a negative number to a fractional power is an error (a real power of a negative base exists only for an integer exponent), zero to a negative power is infinity, and `tan` is finite near its poles. The program evaluates a function at one point at a time and prints either the value or the error, so each case can be seen.
 
 @@run@@
 ```cpp
@@ -66,7 +66,7 @@ int main() {
 }
 ```
 
-The checked group matches the table: the boundary values 0 for `log`, −1 for `log1p` and 0 for division are errors, interior values are not, and `log(nan)` is reported. The unchecked group is what the underlying arithmetic does. In particular `(-1)^0.5` is `NaN`, not an error, because a power with a fractional exponent has no inexpensive exact domain test; if the base of such a power can be negative, constrain it yourself. `tan(π/2)` is about 1.6 × 10¹⁶, a large finite number, because π/2 is not exactly representable.
+The checked group matches the table: the boundary values 0 for `log`, −1 for `log1p` and 0 for division are errors, interior values are not, and `log(nan)` is reported. The unchecked group is what the underlying arithmetic does (the power is checked, as the next sentence says). `(-1)^0.5` is reported as an error, because a real power of a negative base exists only for an integer exponent. `tan(π/2)` is about 1.6 × 10¹⁶, a large finite number, because π/2 is not exactly representable.
 
 The check is applied to every element of the argument, so one bad point in an array fails the whole evaluation, and the message does not say which element. If a few points of a batch may be invalid, filter them out first, or evaluate where the function is defined.
 
@@ -133,3 +133,16 @@ Every error described here is a `pluss::Error` (a `std::exception`), so one hand
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="simplification_and_assumptions.html">
+    <span class="label">Previous</span>
+    <span class="title">Simplification and assumptions</span>
+  </a>
+  <a class="next-link" href="functions_from_series_code.html">
+    <span class="label">Next</span>
+    <span class="title">Functions from Series code</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

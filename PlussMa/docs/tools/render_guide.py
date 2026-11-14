@@ -111,7 +111,13 @@ def run_source(text: str, label: str, assets: Path | None = None) -> str:
 
 
 def lib_stamp() -> str:
-    """Changes whenever the library or any public header an example can include changes."""
+    """Changes whenever the library or any public header an example can include changes.
+
+    PLUSSMA_GUIDE_STAMP pins the stamp while a large set of pages is being written, so unchanged programs are not recompiled after every
+    library edit; render without it for the final pass."""
+    pinned = os.environ.get("PLUSSMA_GUIDE_STAMP")
+    if pinned:
+        return pinned
     lib = Path(os.environ.get("PLUSSDEV_BUILD", str(ROOT / "build-nn-optim-f64"))) / "libpluss.a"
     stamps = [str(lib.stat().st_mtime) if lib.exists() else "nolib"]
     for folder in (ROOT / "PlussMa" / "include", ROOT / "PlussQit" / "include", ROOT / "PlussMa" / "Math" / "Numerical"):
@@ -148,6 +154,15 @@ def render(template: Path) -> str:
     return "<!-- generated from %s by PlussMa/docs/tools/render_guide.py; edit the template -->\n\n" % template.name + MARKER.sub(expand, body)
 
 
+GENERATED_BLOCKS = [("<!-- apiref:nav:start -->", "<!-- apiref:nav:end -->"), ("<!-- apiref:toctree:start -->", "<!-- apiref:toctree:end -->")]
+
+
+def strip_generated_blocks(text: str) -> str:
+    for start, end in GENERATED_BLOCKS:
+        text = re.sub(re.escape(start) + r".*?" + re.escape(end) + r"\n*", "", text, flags=re.S)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
@@ -159,24 +174,33 @@ def main() -> int:
     for t in templates:
         body = t.read_text()
         for m in RUN.finditer(body):
-            jobs.append(("run", m.group(1), (t.name, t.parent / "assets")))
+            jobs.append(("run", m.group(1), (t.name, t.parent / "assets"), t))
         for m in MARKER.finditer(body):
-            jobs.append(("example", m.group(1), t.parent / "assets"))
+            jobs.append(("example", m.group(1), t.parent / "assets", t))
+    failed: dict[Path, str] = {}
     if jobs:
         from concurrent.futures import ThreadPoolExecutor
 
         def work(job):
-            kind, payload, extra = job
-            return run_source(payload, extra[0], extra[1]) if kind == "run" else run_example(payload, extra)
+            kind, payload, extra, template = job
+            try:
+                return run_source(payload, extra[0], extra[1]) if kind == "run" else run_example(payload, extra)
+            except BaseException as exc:  # one broken program must not stop the others from being built
+                failed.setdefault(template, str(exc))
 
         with ThreadPoolExecutor(max_workers=int(os.environ.get("PLUSSMA_GUIDE_JOBS", "6"))) as pool:
             list(pool.map(work, jobs))
     stale = 0
     for t in templates:
+        if t in failed:
+            print(f"FAILED {t.relative_to(ROOT)}\n{failed[t][:1500]}")
+            stale += 1
+            continue
         out = t.with_suffix("")  # strips .in -> .md
         rendered = render(t)
         if args.check:
-            if not out.exists() or out.read_text() != rendered:
+            # the navigation and toctree blocks are written into the page by `apiref.py wire`, not by the template, so they are not compared
+            if not out.exists() or strip_generated_blocks(out.read_text()) != strip_generated_blocks(rendered):
                 print(f"STALE {out.relative_to(ROOT)}")
                 stale += 1
         else:

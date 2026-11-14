@@ -21,4 +21,14 @@ Every program is complete and its output is the output of that program.
 5. Unsure: `integra`. Known form: `analytica`, also as a cross-check.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+integration_02_beyond_one_interval/infinite_limits
+integration_02_beyond_one_interval/batches_and_derivatives
+integration_02_beyond_one_interval/integrals_over_a_box
+integration_02_beyond_one_interval/monte_carlo
+integration_02_beyond_one_interval/the_dispatcher_and_the_closed_forms
+```
 <!-- apiref:toctree:end -->

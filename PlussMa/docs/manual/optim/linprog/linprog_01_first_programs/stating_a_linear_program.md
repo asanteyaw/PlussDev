@@ -192,3 +192,12 @@ The same two rows and the same objective are unbounded with no bounds given and 
 - **A greater-than row is a less-than row with both sides negated.** Both forms are accepted; use whichever matches where the requirement comes from.
 
 Where next: [Results and endings](results_and_endings.md) reads what a solve returns.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="results_and_endings.html">
+    <span class="label">Next</span>
+    <span class="title">Reading a result and how a solve ends</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

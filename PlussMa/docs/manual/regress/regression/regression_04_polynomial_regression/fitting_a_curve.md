@@ -41,7 +41,7 @@ int main() {
     options.degree = degree;
     const auto fit = reg::poly_fit(y, x, options);
     out.writeln("degree", degree, " names", fit.ols.coefficient_names);
-    out.writeln("   coefficients", fit.ols.coefficients.pull<double>(), " R2", fit.ols.rsquared, " rmse", fit.ols.rmse);
+    out.writeln("   coefficients", fit.ols.coefficients.items<double>(), " R2", fit.ols.rsquared, " rmse", fit.ols.rmse);
   }
 
   reg::PolyOptions quadratic;
@@ -60,7 +60,7 @@ degree 1  names [const, x1]
 degree 2  names [const, x1, x1^2]
    coefficients [1.000000, -2.000000, 0.500000]  R2 1.000000  rmse 0.000000
 degree 3  names [const, x1, x1^2, x1^3]
-   coefficients [1.000000, -2.000000, 0.500000, 0.000000]  R2 1.000000  rmse 0.000000
+   coefficients [1.000000, -2.000000, 0.500000, -0.000000]  R2 1.000000  rmse 0.000000
 poly_fit versus ols_fit on poly_expand: 0.000000
 degree 2  include_cross false  base names [x1]
 ```
@@ -97,9 +97,9 @@ int main() {
   const auto fit = reg::poly_fit(y, x, options);
   const auto ci = fit.ols.conf_int.host<double>().array().data;
   out.writeln("true coefficients  [1.0000, -2.0000, 0.5000]");
-  out.writeln("estimated          ", fit.ols.coefficients.pull<double>(), " names", fit.ols.coefficient_names);
-  out.writeln("std errors         ", fit.ols.std_errors.pull<double>());
-  out.writeln("interval of time^2  [", ci[4], ",", ci[5], "]  p value", fit.ols.p_values.pull<double>()[2]);
+  out.writeln("estimated          ", fit.ols.coefficients.items<double>(), " names", fit.ols.coefficient_names);
+  out.writeln("std errors         ", fit.ols.std_errors.items<double>());
+  out.writeln("interval of time^2  [", ci[4], ",", ci[5], "]  p value", fit.ols.p_values.items<double>()[2]);
 
   reg::PolyOptions straight = options;
   straight.degree = 1;
@@ -121,3 +121,12 @@ Durbin-Watson of the straight line / the curve 0.2424 2.7035 (rows are in order 
 ```
 
 The estimates [0.8278, −1.8909, 0.4856] are near the generating values [1, −2, 0.5], within the standard errors [0.21, 0.17, 0.028], and the interval for the squared term, [0.4265, 0.5446], is far from zero (p < 10⁻⁴): the curvature is real. The straight line explains 57% of the variation and the curve 97%. The Durbin–Watson statistic tells the same story from the residuals: for the straight line it is 0.24, a strongly serial pattern because the line leaves a systematic arc in the residuals of data ordered by time, and for the curve it is 2.70, as for noise.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_expanded_design.html">
+    <span class="label">Next</span>
+    <span class="title">The expanded design</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

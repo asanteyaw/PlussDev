@@ -1142,7 +1142,9 @@ class GridPoint {
     for (std::size_t i = 0; i < axes_->size(); ++i) {
       if ((*axes_)[i].name == axis_name) return values_[i];
     }
-    ::pluss::throw_error("selection::GridPoint::at: unknown axis \"" + std::string(axis_name) + "\".");
+    std::vector<std::string> axis_names;
+    for (const auto& axis : *axes_) axis_names.push_back(axis.name);
+    PLUSS_FAIL("selection::GridPoint::at: unknown axis \"" + std::string(axis_name) + "\".", axis_name, axis_names);
   }
 
   [[nodiscard]] double operator[](std::size_t index) const { return values_.at(index); }

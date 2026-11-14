@@ -1,0 +1,61 @@
+# `comms::gardner`
+
+Gardner symbol-timing recovery.
+
+## Signature
+
+```cpp
+comms::TimingResult comms::gardner(const pluss::Series& filtered, std::int64_t samples_per_symbol, double loop_bandwidth);
+```
+
+## What It Does
+
+Runs a second-order timing loop over a matched-filtered waveform. The sampling instant is interpolated (cubic) from the waveform; the Gardner error `Re{conj(y(mid)) (y(n) - y(n - 1))}` (normalised by the signal power) is positive when the instant is late; a proportional-plus-integral filter with damping `1 / sqrt(2)` moves the instant, so the loop also follows a sample-clock drift. The loop runs over the symbols and is vectorized over frames.
+
+## Parameters
+
+`filtered`
+: The matched-filtered waveform, a real or complex `[..., L]` array holding at least eight symbols.
+
+`samples_per_symbol`
+: The oversampling factor, at least `2`.
+
+`loop_bandwidth`
+: The normalised noise bandwidth of the loop, in `(0, 0.5)`; about `0.005` to `0.03` is typical.
+
+## Returns
+
+A `TimingResult` with the recovered symbols and their sampling instants.
+
+## Errors
+
+Throws `pluss::Error` for `samples_per_symbol` below `2`, a `loop_bandwidth` outside `(0, 0.5)`, or a waveform that is not real or complex with at least eight symbols.
+
+## Interpretation and Use
+
+The error is independent of the symbols and of the carrier phase for a rotated constellation, but the loop assumes a pulse with a clean eye (a root-raised-cosine pair); too wide a loop passes noise and can lose lock. For a block with a known fixed offset `timing` is a one-shot alternative.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Locking onto three offsets.
+
+@@example Eng/api/comms_gardner_lock.cpp@@
+
+### Example 2
+
+The loop bandwidth.
+
+@@example Eng/api/comms_gardner_bandwidth.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_gardner_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

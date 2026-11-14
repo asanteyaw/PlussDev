@@ -248,3 +248,16 @@ The formula and `distr::cdf` agree to 1.11e-16 over the grid, so the library imp
 - [`Burr`](../continuous_positive/Burr.md)
 - [`Exponential`](../continuous_positive/Exponential.md)
 - [`Gamma`](../continuous_positive/Gamma.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Lognormal.html">
+    <span class="label">Previous</span>
+    <span class="title">Lognormal</span>
+  </a>
+  <a class="next-link" href="Maxwell.html">
+    <span class="label">Next</span>
+    <span class="title">Maxwell</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -61,13 +61,13 @@ Series complex_series(const std::vector<Complex>& values, const std::vector<std:
 std::vector<double> to_vec_f64(const Series& x) {
   return x.to(pluss::pCPU, ScalarType::Float64)
       .reshape({x.numel()})
-      .pull<double>();
+      .items<double>();
 }
 
 std::vector<Complex> to_vec_c128(const Series& x) {
   return x.to(pluss::pCPU, ScalarType::Complex128)
       .reshape({x.numel()})
-      .pull<Complex>();
+      .items<Complex>();
 }
 
 void expect_vec_near(const std::vector<double>& lhs, const std::vector<double>& rhs, double atol,

@@ -1,0 +1,366 @@
+# Calibration
+
+[Back to The Pricing Field](../finance_06_the_pricing_field.md)
+
+Calibration finds the parameters {math}`\theta` of a model for which the model prices {math}`P_i(\theta)` reproduce the market quotes {math}`Q_i`:
+
+```{math}
+\hat\theta=\arg\min_{\theta\in\Theta}\;L\big(P_1(\theta),\dots,P_n(\theta);\,Q_1,\dots,Q_n\big),
+```
+
+where {math}`L` is one of the losses of page 4 and {math}`\Theta` is the set of parameters the model allows. A `Field` supplies everything on the left: it prices all {math}`n` options in one call for any candidate {math}`\theta`. What is left to you is the minimiser and the bookkeeping between its vector of real numbers and the model's parameters. The recipe has five steps:
+
+1. **Build the `Field`** with the instruments of the quotes (a strike and a maturity for each quote, in the same order), the market, a starting model, and `risk = PriceOnly`.
+2. **Choose the loss** in `controls.loss`.
+3. **Write the objective**: a function from a real vector {math}`x` to a number, which turns {math}`x` into a model, prices, and returns the loss. Either set the parameters in place with `field.model.parameters(x)` and call `loss_value(quotes)`, or bind the `Field` once with `bind_objective_typed<M>(quotes)` and call the bound function on a model struct.
+4. **Minimise** it with a derivative-free method such as Nelder-Mead ([Derivative-Free Optimization](../../../optim/dfo.md)). The objective is a price computed by a transform or a formula, smooth in the parameters but with no gradient supplied.
+5. **Write the result back** with `field.model.parameters(best)`.
+
+## Keeping the optimiser inside the model's domain
+
+An unconstrained minimiser proposes any real vector, and most real vectors are not Heston models. Three devices keep it inside the domain:
+
+- **Transform.** Optimise {math}`x` and set {math}`\kappa=e^{x_1}`, {math}`\theta=e^{x_2}`, {math}`\sigma=e^{x_3}`, {math}`\rho=\tanh x_4`, {math}`v_0=e^{x_5}`. Every real {math}`x` is then a valid model: positive where positivity is needed, and a correlation inside {math}`(-1,1)`. The starting point is transformed the other way, with `log` and `atanh`.
+- **Penalty.** Return a large number outside a plausible box of parameters (for example {math}`\kappa\le10`). The transformed problem is unconstrained, but a box keeps the answer realistic, as the outlier program below shows.
+- **Guard.** A model whose parameters are outside its domain is *rejected with an exception*, not priced to `NaN`: for example the Heston pricer says "rho must be in (-1,1)". `tanh` saturates to exactly {math}`\pm1` for large arguments, so a wandering minimiser will hit this. Catch the exception in the objective and return a large value. A non-finite loss should be treated the same way, since Nelder-Mead compares values.
+
+## Program 1: the smallest calibration
+
+One quote, one parameter. The program prices a one-year call struck at 110 under Black-Scholes, sets the market quote to 5.50, and minimises the squared price error over the volatility. The same number is the implied volatility of the quote (page 2 of Chapter 2), so the answer can be checked. The tolerances of the minimiser are tightened to 10⁻¹⁰ so the check is to six digits.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace opt = pluss::subsp::math::optimization;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 110.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.3})},
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  const auto quote = pluss::make_series({5.50});
+
+  int evaluations = 0;
+  const auto objective = [&](const pluss::Series &x) {
+    ++evaluations;
+    field.model.parameters(std::vector<double>{x.items<double>()[0]});
+    return field.loss_value(quote);
+  };
+  opt::NelderMeadConfig config;
+  config.position_tolerance = 1e-10;
+  config.value_tolerance = 1e-18;
+  const auto fit = opt::nelder_mead_minimizer(objective, pluss::make_series({0.3}, {1}, as_f64()), config);
+  const double sigma = fit.minimizer.items<double>()[0];
+  out.writeln("fitted volatility", sigma, " loss", fit.minimum, " evaluations", evaluations);
+  out.writeln("implied_vol      ", field.implied_vol(quote).items<double>()[0]);
+}
+```
+
+The fit matches the implied volatility, 0.214420, to the six digits shown, in 70 evaluations of the objective; every evaluation is a closed-form price, so this costs nothing. The structure is what matters: the objective sets the model in place with `parameters(...)` and then asks for the loss, and the minimiser sees only a vector.
+
+## Program 2: five parameters from one maturity
+
+A Heston model has five parameters, and a smile at one maturity may not determine all of them. The program builds a "market" by pricing nine strikes at one year with the true parameters, so there is no noise and the true answer is known, and starts from a poor guess. It uses the transforms above and `bind_objective_typed`. The fit is then tested on options the optimiser never saw: three strikes at 0.25 and at 3 years.
+
+Why can this go wrong? The expected variance at time {math}`t` is {math}`\mathbb{E}[v_t]=\theta+(v_0-\theta)e^{-\kappa t}`, and to first order a one-maturity smile depends on the variance only through its average over the option's life,
+
+```{math}
+\bar w(T)=\frac1T\int_0^T\mathbb{E}[v_t]\,dt=\theta+(v_0-\theta)\,\frac{1-e^{-\kappa T}}{\kappa T},
+```
+
+so many triples {math}`(\kappa,\theta,v_0)` give the same {math}`\bar w(1)` and nearly the same smile. The skew and the curvature fix {math}`\rho\sigma` and {math}`\sigma^2` and so identify {math}`\rho` and {math}`\sigma`; the level alone cannot separate the other three.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace opt = pluss::subsp::math::optimization;
+using namespace pluss::tils;
+
+// positive parameters through exp, the correlation through tanh: any real vector is a valid Heston model
+mod::Model heston_from(const pluss::Series &x) {
+  const auto p = x.items<double>();
+  return fin::model::make(fin::model::Kind::Heston, {std::exp(p[0]), std::exp(p[1]), std::exp(p[2]), std::tanh(p[3]), std::exp(p[4])});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto series = [](std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}, as_f64()); };
+  const auto field_for = [&](std::vector<double> strike, std::vector<double> maturity) {
+    return mod::Field{.instrument = {.type = fin::pricing::Call, .strike = series(strike), .maturity = series(maturity)},
+                      .market = fin::market::make(100.0, 0.02, 0.0),
+                      .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                      .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly, .loss = mod::Loss::RelativeMSE}};
+  };
+  const auto field = field_for({80, 85, 90, 95, 100, 105, 110, 115, 120}, std::vector<double>(9, 1.0));
+  const auto quotes = field.price().price;  // the "market": prices of the true model
+
+  const auto objective = field.bind_objective_typed<fin::model::Heston>(quotes);
+  int evaluations = 0;
+  const auto loss = [&](const pluss::Series &x) {
+    ++evaluations;
+    try {
+      const double value = objective(heston_from(x).as<fin::model::Heston>());
+      return std::isfinite(value) ? value : 1e10;
+    } catch (const std::exception &) {
+      return 1e10;  // parameters outside the model's domain are rejected with an error: penalise them
+    }
+  };
+  const pluss::Series start = series({std::log(2.5), std::log(0.06), std::log(0.5), std::atanh(-0.4), std::log(0.06)});
+  opt::NelderMeadConfig config;
+  config.position_tolerance = 1e-8;
+  config.value_tolerance = 1e-16;
+  config.max_evaluations = 6000;
+  config.max_iterations = 6000;
+  out.writeln("loss at the start", loss(start));
+  const auto fit = opt::nelder_mead_minimizer(loss, start, config);
+  const auto fitted = heston_from(fit.minimizer);
+  out.writeln("true   ", std::vector<double>{1.5, 0.04, 0.3, -0.7, 0.04});
+  out.writeln("fitted ", mod::Model(fitted).parameters().items<double>(), " loss", fit.minimum, " evaluations", evaluations);
+
+  for (const double maturity : {0.25, 3.0}) {
+    auto probe = field_for({90, 100, 110}, std::vector<double>(3, maturity));
+    const auto truth = probe.price().price.items<double>();
+    probe.model = fitted;
+    out.writeln("maturity", maturity, " true prices", truth, " fitted", probe.price().price.items<double>());
+  }
+}
+```
+
+The loss falls from 0.247 at the start to below the 5 decimals shown, so by the objective's own measure the fit is perfect: the nine one-year quotes are reproduced. Yet the parameters are not the true ones: {math}`\kappa=1.60` for 1.50, {math}`\theta=0.0348` for 0.0400, {math}`v_0=0.0452` for 0.0400. Check the average variance: {math}`0.0348+(0.0452-0.0348)\cdot\frac{1-e^{-1.60}}{1.60}=0.0400`, equal to the true {math}`\bar w(1)=0.04`; the fit has moved along the ridge where it does not change. The out-of-sample prices show the cost. At 0.25 years the fitted model prices the 110 strike at 0.816 against 0.703 (16% too high), and at 3 years the at-the-money price is 15.56 against 16.03. A calibration is only as good as the information in the quotes: a model fitted to one expiry should not be used at another.
+
+## Program 3: three maturities
+
+Maturities are the cure. The expected variance curve {math}`\theta+(v_0-\theta)e^{-\kappa t}` is observed at three horizons, which fixes its starting level, its end level and its speed. In a `Field` a term structure is just a longer strike vector and a maturity vector of the same length: element {math}`i` of one pairs with element {math}`i` of the other, so 21 quotes (three expiries, seven strikes each) are one call. The program is the same as before, with the quotes changed.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace opt = pluss::subsp::math::optimization;
+using namespace pluss::tils;
+
+mod::Model heston_from(const pluss::Series &x) {
+  const auto p = x.items<double>();
+  return fin::model::make(fin::model::Kind::Heston, {std::exp(p[0]), std::exp(p[1]), std::exp(p[2]), std::tanh(p[3]), std::exp(p[4])});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto series = [](std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}, as_f64()); };
+  std::vector<double> strike, maturity;
+  for (const double t : {0.25, 1.0, 3.0}) {
+    for (const double k : {80, 90, 95, 100, 105, 110, 120}) {
+      strike.push_back(k);
+      maturity.push_back(t);
+    }
+  }
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = series(strike), .maturity = series(maturity)},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly, .loss = mod::Loss::RelativeMSE}};
+  const auto quotes = field.price().price;
+  out.writeln("quotes", quotes.sizes(), " strikes", field.instrument.strike.sizes(), " maturities", field.instrument.maturity.sizes());
+
+  const auto objective = field.bind_objective_typed<fin::model::Heston>(quotes);
+  int evaluations = 0;
+  const auto loss = [&](const pluss::Series &x) {
+    ++evaluations;
+    try {
+      const double value = objective(heston_from(x).as<fin::model::Heston>());
+      return std::isfinite(value) ? value : 1e10;
+    } catch (const std::exception &) {
+      return 1e10;  // parameters outside the model's domain are rejected with an error: penalise them
+    }
+  };
+  opt::NelderMeadConfig config;
+  config.position_tolerance = 1e-8;
+  config.value_tolerance = 1e-16;
+  config.max_evaluations = 6000;
+  config.max_iterations = 6000;
+  const auto fit = opt::nelder_mead_minimizer(loss, series({std::log(2.5), std::log(0.06), std::log(0.5), std::atanh(-0.4), std::log(0.06)}), config);
+  out.writeln("true   ", std::vector<double>{1.5, 0.04, 0.3, -0.7, 0.04});
+  out.writeln("fitted ", mod::Model(heston_from(fit.minimizer)).parameters().items<double>(), " loss", fit.minimum, " evaluations", evaluations);
+}
+```
+
+The strike and maturity vectors and the quotes all have 21 elements. The fit recovers {math}`(1.50000, 0.04000, 0.30000, -0.70000, 0.04000)` to the five decimals shown, from the same poor start as before, in 1109 evaluations. With enough quotes the problem is well posed, so use the maturities that matter for the use of the model: for a long-dated product, include long-dated quotes.
+
+## Program 4: one bad quote
+
+Real quotes have errors: a stale price, a typo, a wide bid-ask. The program takes 14 quotes (two expiries, seven strikes), makes the at-the-money two-year quote 50% too high, and fits under each of the four losses, with the plausible box of parameters as a penalty. It prints the recovered parameters and the largest relative error in them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace opt = pluss::subsp::math::optimization;
+using namespace pluss::tils;
+
+mod::Model heston_from(const pluss::Series &x) {
+  const auto p = x.items<double>();
+  return fin::model::make(fin::model::Kind::Heston, {std::exp(p[0]), std::exp(p[1]), std::exp(p[2]), std::tanh(p[3]), std::exp(p[4])});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto series = [](std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}, as_f64()); };
+  std::vector<double> strike, maturity;
+  for (const double t : {0.5, 2.0}) {
+    for (const double k : {80, 90, 95, 100, 105, 110, 120}) {
+      strike.push_back(k);
+      maturity.push_back(t);
+    }
+  }
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = series(strike), .maturity = series(maturity)},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly, .huber_delta = 0.05}};
+  auto quote = field.price().price.items<double>();
+  quote[10] *= 1.5;  // strike 100 at maturity 2: a quote 50% too high
+  const auto quotes = series(quote);
+  const std::vector<double> truth{1.5, 0.04, 0.3, -0.7, 0.04};
+
+  out.writeln("loss          kappa    theta    sigma    rho      v0       worst relative error");
+  for (const auto [name, loss_kind] : std::vector<std::pair<const char *, mod::Loss>>{
+           {"MSE        ", mod::Loss::MSE}, {"RelativeMSE", mod::Loss::RelativeMSE}, {"MAE        ", mod::Loss::MAE}, {"Huber      ", mod::Loss::Huber}}) {
+    field.controls.loss = loss_kind;
+    const auto objective = field.bind_objective_typed<fin::model::Heston>(quotes);
+    const auto loss = [&](const pluss::Series &x) {
+      const auto p = x.items<double>();  // a plausible box: kappa in [0.05, 10], theta and v0 in [0.005, 0.5], sigma in [0.05, 2]
+      if (std::exp(p[0]) < 0.05 || std::exp(p[0]) > 10.0 || std::exp(p[1]) < 0.005 || std::exp(p[1]) > 0.5 || std::exp(p[2]) < 0.05 || std::exp(p[2]) > 2.0 ||
+          std::exp(p[4]) < 0.005 || std::exp(p[4]) > 0.5 || std::abs(std::tanh(p[3])) > 0.99) {
+        return 1e10;
+      }
+      try {
+        const double value = objective(heston_from(x).as<fin::model::Heston>());
+        return std::isfinite(value) ? value : 1e10;
+      } catch (const std::exception &) {
+        return 1e10;
+      }
+    };
+    opt::NelderMeadConfig config;
+    config.position_tolerance = 1e-7;
+    config.value_tolerance = 1e-14;
+    config.max_evaluations = 2500;
+    config.max_iterations = 2500;
+    const auto fit = opt::nelder_mead_minimizer(loss, series({std::log(2.5), std::log(0.06), std::log(0.5), std::atanh(-0.4), std::log(0.06)}), config);
+    const auto p = mod::Model(heston_from(fit.minimizer)).parameters().items<double>();
+    double worst = 0.0;
+    std::string row = name + std::string("   ");
+    for (std::size_t i = 0; i < p.size(); ++i) {
+      worst = std::max(worst, std::abs(p[i] - truth[i]) / std::abs(truth[i]));
+      row += std::to_string(p[i]).substr(0, 7) + "  ";
+    }
+    out.writeln(row + std::to_string(worst).substr(0, 6));
+  }
+}
+```
+
+The true parameters are (1.5, 0.04, 0.3, −0.7, 0.04).
+
+- **MSE** is dragged to the boundary of the box on the correlation ({math}`\rho=-0.99`) with the other parameters far off: the squared error of one quote dominates the sum and the fit distorts everything to reduce it.
+- **RelativeMSE** ends at the lower bound of {math}`\kappa` (0.05) and a long-run variance of 0.286, an error of over 600%. The quote is 50% too high and the loss takes it seriously; the quotes at the other strikes have to give way.
+- **MAE** is much better (worst error 26%) because the penalty grows only linearly with the error.
+- **Huber** with {math}`\delta=0.05` recovers the parameters to 3% (worst error in {math}`\sigma`, 0.2906 for 0.3). Good quotes have residuals below {math}`\delta` and are fitted as with MSE; the bad one has a bounded influence.
+
+The lesson is not that Huber always wins; it is that the loss encodes a belief about the errors. If the quotes can be wrong, use a loss that does not square them. If they cannot, `MSE` or `RelativeMSE` is the efficient choice. Whichever you use, look at the *residuals* of the fit: `field.residuals(quotes)` after `field.model.parameters(best)` shows at once which quote the model refuses to match, and removing it is a decision to take explicitly.
+
+## Program 5: fitting some of the parameters
+
+You rarely fit every parameter. SABR's {math}`\beta` is usually fixed by convention, because it is hard to separate from {math}`\nu` and {math}`\rho`, and the optimiser then sees three numbers while the model has four. The objective fills the fixed one. The program generates 21 SABR quotes with {math}`\beta=0.5`, using the analytic engine, and fits {math}`(\alpha_0,\nu,\rho)` with {math}`\beta` held at 0.5.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace opt = pluss::subsp::math::optimization;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto series = [](std::vector<double> v) { return pluss::make_series(v, {static_cast<std::int64_t>(v.size())}, as_f64()); };
+  std::vector<double> strike, maturity;
+  for (const double t : {0.25, 1.0, 3.0}) {
+    for (const double k : {80, 90, 95, 100, 105, 110, 120}) {
+      strike.push_back(k);
+      maturity.push_back(t);
+    }
+  }
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = series(strike), .maturity = series(maturity)},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Sabr, {2.0, 0.5, 0.5, -0.4}),
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly, .loss = mod::Loss::RelativeMSE}};
+  const auto quotes = field.price().price;
+
+  // beta is fixed at 0.5; the optimiser sees (alpha0, nu, rho) and the objective fills the four-parameter vector
+  int evaluations = 0;
+  const auto objective = [&](const pluss::Series &x) {
+    ++evaluations;
+    const auto p = x.items<double>();
+    field.model.parameters(std::vector<double>{std::exp(p[0]), 0.5, std::exp(p[1]), std::tanh(p[2])});
+    try {
+      const double value = field.loss_value(quotes);
+      return std::isfinite(value) ? value : 1e10;
+    } catch (const std::exception &) {
+      return 1e10;
+    }
+  };
+  opt::NelderMeadConfig config;
+  config.position_tolerance = 1e-9;
+  config.value_tolerance = 1e-18;
+  const auto fit = opt::nelder_mead_minimizer(objective, series({std::log(1.5), std::log(0.3), 0.0}), config);
+  const auto p = fit.minimizer.items<double>();
+  out.writeln("true   alpha0 2.00000  nu 0.50000  rho -0.40000");
+  out.writeln("fitted alpha0", std::exp(p[0]), " nu", std::exp(p[1]), " rho", std::tanh(p[2]), " loss", fit.minimum, " evaluations", evaluations);
+}
+```
+
+The fit recovers {math}`\alpha_0=2`, {math}`\nu=0.5` and {math}`\rho=-0.4` in 505 evaluations. Each evaluation prices 21 options through the SABR expansion, so this is a fraction of a second. With three maturities, fixing {math}`\beta` is what makes the problem well posed: {math}`\beta` and {math}`\rho` both tilt the smile and are close to interchangeable on one expiry.
+
+## Checklist
+
+1. Put every quote in the `Field`: one strike and one maturity per quote, in the order of the quotes vector, with `risk = PriceOnly`.
+2. Keep the optimiser inside the domain: transform positive parameters with `exp` and the correlation with `tanh`, penalise a plausible box, and catch the exception that an invalid model raises.
+3. Treat `NaN` and exceptions as a large loss, not as a stop.
+4. Check identifiability. A good fit to one expiry does not fix the parameters; fit the maturities you will use, and test out of sample.
+5. Choose the loss to match the quotes: robust (`Huber` or `MAE`) if some may be wrong.
+6. Inspect `residuals(quotes)` at the optimum; a single large residual is a data question before it is a model question.
+7. Fix the parameters you cannot identify (SABR's {math}`\beta`) and let the objective fill them in.
+8. Tighten the minimiser's tolerances to the accuracy you need; the default 10⁻⁴ gave 0.214395 for a value that is 0.214420.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="losses_and_objectives.html">
+    <span class="label">Previous</span>
+    <span class="title">Losses and objectives</span>
+  </a>
+  <a class="next-link" href="simulated_paths.html">
+    <span class="label">Next</span>
+    <span class="title">Simulated paths</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

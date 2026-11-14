@@ -15,4 +15,12 @@ Chapters, in reading order:
 - [Distributions 3: Heavy Tails and Mixtures](distributions/dist_03_heavy_tails_and_mixtures.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+distributions/dist_01_evaluating_and_sampling
+distributions/dist_02_maximum_likelihood
+distributions/dist_03_heavy_tails_and_mixtures
+```
 <!-- apiref:toctree:end -->

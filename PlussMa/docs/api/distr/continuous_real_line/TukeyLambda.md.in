@@ -208,3 +208,12 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`Uniform`](../continuous_bounded/Uniform.md)
 - [`Normal`](../continuous_real_line/Normal.md)
 - [`Cauchy`](../continuous_real_line/Cauchy.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="StudentT.html">
+    <span class="label">Previous</span>
+    <span class="title">StudentT</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

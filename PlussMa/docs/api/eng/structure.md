@@ -28,7 +28,7 @@ Build a plane and a space truss and a batch of three apex heights.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -91,7 +91,7 @@ Solve the hung three-bar truss and read every result field.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -166,7 +166,7 @@ Find the lowest modes of a cantilever against the closed formula.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -246,15 +246,6 @@ shape array [3, 9, 3], residuals [0.000, 0.000, 0.003]
 largest deviation of phi_i' M phi_j from the identity: 0.000
 relative_tolerance 1e-3: omega [40.502, 253.839, 711.133], iterations 6
 max_iterations 2: converged [0.000, 0.000, 0.000]
-```
-```{toctree}
-:maxdepth: 3
-:hidden:
-
-structure/model
-structure/statics
-structure/spectral
-structure/dynamics
 ```
 
 <!-- apiref:toctree:start -->

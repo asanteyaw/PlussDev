@@ -56,7 +56,7 @@ Every field, checked against the defining equation.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -134,7 +134,7 @@ Voltage-controlled and uncontrolled buses compared.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -187,7 +187,7 @@ An unconverged scenario.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }

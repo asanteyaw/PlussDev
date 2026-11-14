@@ -1,0 +1,58 @@
+# `comms::TurboCode`
+
+A parallel-concatenated recursive systematic code.
+
+## Signature
+
+```cpp
+comms::TurboCode
+```
+
+## What It Does
+
+Describes the two identical constituent encoders of a turbo code: recursive systematic convolutional encoders with the feedforward polynomial `feedforward` and the feedback polynomial `feedback`, each `constraint_length` bits with the most significant bit first (octal-style integers). The second encoder sees the information bits through an interleaver.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `constraint_length` | The constraint length `K`, in `[2, 8]`. | `4` |
+| `feedforward` | The parity (feedforward) polynomial, non-zero and below `2^K`. | `013` |
+| `feedback` | The feedback polynomial, below `2^K` with its leading bit set. | `015` |
+
+## Returns
+
+A value; read by `encode` and `decode`.
+
+## Errors
+
+The functions throw `pluss::Error` for a constraint length outside `[2, 8]`, polynomials that are zero or too wide, or a feedback polynomial without its leading bit.
+
+## Interpretation and Use
+
+The default is the common (13, 15) code of constraint length 4. The rate is about one third.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The codeword layout.
+
+@@example Eng/api/comms_turbo_codeword.cpp@@
+
+### Example 2
+
+Iterations and a smaller code.
+
+@@example Eng/api/comms_turbo_iterations.cpp@@
+
+### Example 3
+
+Rejected codes.
+
+@@example Eng/api/comms_turbo_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

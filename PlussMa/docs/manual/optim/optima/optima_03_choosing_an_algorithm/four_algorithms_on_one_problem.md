@@ -78,14 +78,14 @@ Output
 
 ```text
 algorithm        flag  iters  evals  objective     violation
-MeritMethod      1     66     180    27.146428     1.28e-08
+MeritMethod      1     68     180    27.146428     1.32e-09
 SequentialQP     1     4      5      17.014017     8.24e-08
 WorkingSet       1     4      6      17.014017     8.24e-08
 InternalProtocol 1     8      12     17.014018     8.84e-08
 
 MeritMethod ended at a = 1.0000, b = 5.0000, c = 1.4495, d = 3.4495 (a is at its lower bound 1, b at its upper bound 5)
 ```
-All four exit with flag `1`, but they do not agree. Sequential QP, the working-set method and the interior method reach `17.0140`, the best known value for this problem, in 4, 4 and 8 iterations. The merit method needs 66 iterations and ends at `27.1464`. That second value is not a failure: the last line shows it is a different point, with `a` on its lower bound and `b` on its upper bound, and the solver certifies it as a local solution. A flag of `1` means "a local solution", and this table is the reason to remember it. The same row-by-row difference, fewer iterations for the quadratic-model methods, holds across the rest of the chapter.
+All four exit with flag `1`, but they do not agree. Sequential QP, the working-set method and the interior method reach `17.0140`, the best known value for this problem, in 4, 4 and 8 iterations. The merit method needs 68 iterations and ends at `27.1464`. That second value is not a failure: the last line shows it is a different point, with `a` on its lower bound and `b` on its upper bound, and the solver certifies it as a local solution. A flag of `1` means "a local solution", and this table is the reason to remember it. The same row-by-row difference, fewer iterations for the quadratic-model methods, holds across the rest of the chapter.
 
 ## Program 2: What happens to the constraints on the way
 
@@ -151,7 +151,7 @@ start inside the disc at (0, 0)
   WorkingSet       iterations 9   infeasible iterates 0   flag 1
   InternalProtocol iterations 6   infeasible iterates 2   flag 1
 start outside the disc at (3, 3)
-  MeritMethod      iterations 21  infeasible iterates 19  flag 1
+  MeritMethod      iterations 21  infeasible iterates 18  flag 1
   SequentialQP     iterations 6   infeasible iterates 4   flag 1
   WorkingSet       iterations 12  infeasible iterates 2   flag 1
   InternalProtocol iterations 7   infeasible iterates 6   flag 1
@@ -314,3 +314,12 @@ A start without a value is a failure for all four, flag `-4`, and the start is r
 - **Pick by the problem, then confirm.** SQP is the default for a reason (few evaluations on smooth problems); the working-set and interior methods earn their place on problems with many active inequalities.
 
 Where next: [Curvature, scaling and size](curvature_scaling_and_size.md) looks at what controls the cost of a step.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="curvature_scaling_and_size.html">
+    <span class="label">Next</span>
+    <span class="title">Curvature, scaling and size</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

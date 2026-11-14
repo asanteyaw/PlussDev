@@ -1,0 +1,42 @@
+# Robot model
+
+This branch describes a robot. `Links` lists the rigid links as a tree, `make` validates it and compiles an immutable `Robot`, and `rotation` and `rpy` build the rotation matrices used to describe frames.
+
+## Choosing A Surface
+
+Describe the robot once, with one row per link, and compile it. Frames are described by a translation and roll-pitch-yaw angles in the parent frame.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A planar arm compiled.
+
+@@example Eng/api/robot_make_arm.cpp@@
+
+### Example 2
+
+A tree compiled.
+
+@@example Eng/api/robot_make_tree.cpp@@
+
+### Example 3
+
+A rotation about an axis.
+
+@@example Eng/api/robot_rotation_axis.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+model/rotation
+model/rpy
+model/Links
+model/RobotModel
+model/make
+```
+<!-- apiref:toctree:end -->

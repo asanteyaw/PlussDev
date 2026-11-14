@@ -1,0 +1,77 @@
+# `fluid::transport`
+
+Follows a constituent or the age of the water through a run.
+
+## Signature
+
+```cpp
+TransportResult transport(const Network &network, const Schedule &schedule, const Quality &quality, const RouteOptions &route_options = {}, const Options &hydraulic_options = {});
+```
+
+## What It Does
+
+Calls `run` for the hydraulics and advances the quality through each hydraulic interval with the flows held fixed: conservative first-order upwind transport in equal-volume pipe cells, complete mixing at junctions, fully mixed tanks, zero-volume pumps and valves, and exact first-order reactions.
+
+## Parameters
+
+`network`
+: The compiled `Network`.
+
+`schedule`
+: The `Schedule` of the hydraulics.
+
+`quality`
+: The `Quality`.
+
+`route_options`
+: The `RouteOptions`.
+
+`hydraulic_options`
+: The `Options` of the hydraulic solves.
+
+## Returns
+
+A `TransportResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for invalid quality or route options. Throws `std::runtime_error` for the failures of `run`.
+
+## Interpretation and Use
+
+The quality can only be as right as the flows that carry it. Choose cells and step for the sharpness of the front you need, and read `mass_error` after every run.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Two sources mixing at a junction.
+
+@@example Eng/api/fluid_transport_mix.cpp@@
+
+### Example 2
+
+A decay checked against its exact value.
+
+@@example Eng/api/fluid_transport_decay.cpp@@
+
+### Example 3
+
+Quality that is refused.
+
+@@example Eng/api/fluid_transport_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="TransportResult.html">
+    <span class="label">Previous</span>
+    <span class="title">TransportResult</span>
+  </a>
+  <a class="next-link" href="Heat.html">
+    <span class="label">Next</span>
+    <span class="title">Heat</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

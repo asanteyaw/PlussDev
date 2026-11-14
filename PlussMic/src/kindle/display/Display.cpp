@@ -9,14 +9,13 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
 
 #include "kindle/Archive.h"
 #include "kindle/Stream.h"
 #include "kindle/catalog.h"
 #include "table/Slate.h"
 #include "table/display/Display.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::kindle::display {
 
@@ -144,7 +143,7 @@ std::string stream_preview(const Stream& stream, const EffectiveOptions& options
     parts.emplace_back(slate_value_at(slate, idx[i], std::max<std::int64_t>(8, max_width / 2)));
   }
 
-  return clip_text(fmt::format("[{}]", fmt::join(parts, ", ")), max_width);
+  return clip_text(pluss::tils::OutputEngine::format("[{}]", pluss::tils::OutputEngine::join(parts, ", ")), max_width);
 }
 
 std::int64_t frame_rule_width(std::int64_t terminal_width) {
@@ -171,7 +170,7 @@ std::string catalog_keys_preview(const Catalog& catalog,
     }
     names.emplace_back(catalog.keys()[static_cast<std::size_t>(idx[i])]);
   }
-  return clip_text(fmt::format("[{}]", fmt::join(names, ", ")), max_width);
+  return clip_text(pluss::tils::OutputEngine::format("[{}]", pluss::tils::OutputEngine::join(names, ", ")), max_width);
 }
 
 std::string render_stream_frame(const Stream& stream, const EffectiveOptions& options) {
@@ -183,14 +182,14 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
   std::ostringstream oss;
   oss << frame_rule('=', width) << "\n";
   oss << fit_line(
-      fmt::format("kindle::Stream  kind={}  dtype={}  records={}",
+      pluss::tils::OutputEngine::format("kindle::Stream  kind={}  dtype={}  records={}",
                   kind_name(stream.kind()),
                   stream.dtype(),
                   stream.size()),
       width)
       << "\n";
   oss << fit_line(
-      fmt::format("label={}  mask={}  meta={}",
+      pluss::tils::OutputEngine::format("label={}  mask={}  meta={}",
                   stream.has_label() ? "yes" : "no",
                   detail::has_validity_mask(stream) ? "yes" : "no",
                   stream.meta().size()),
@@ -233,7 +232,7 @@ std::string render_stream_frame(const Stream& stream, const EffectiveOptions& op
     std::sort(meta_items.begin(), meta_items.end(),
               [](const auto& a, const auto& b) { return a.first < b.first; });
     for (const auto& [k, v] : meta_items) {
-      oss << fit_line(fmt::format("{}: {}", k, v), width) << "\n";
+      oss << fit_line(pluss::tils::OutputEngine::format("{}: {}", k, v), width) << "\n";
     }
   }
 
@@ -249,8 +248,8 @@ std::string render_catalog_frame(const Catalog& catalog, const EffectiveOptions&
   const auto width = frame_rule_width(options.terminal_width);
   std::ostringstream oss;
   oss << frame_rule('=', width) << "\n";
-  oss << fit_line(fmt::format("kindle::Catalog  keys={}", catalog.nkeys()), width) << "\n";
-  oss << fit_line(fmt::format("keys: {}", catalog_keys_preview(catalog, options, width - 6)), width) << "\n";
+  oss << fit_line(pluss::tils::OutputEngine::format("kindle::Catalog  keys={}", catalog.nkeys()), width) << "\n";
+  oss << fit_line(pluss::tils::OutputEngine::format("keys: {}", catalog_keys_preview(catalog, options, width - 6)), width) << "\n";
   oss << frame_rule('-', width) << "\n";
 
   const bool show_dtype = width >= 96;
@@ -321,8 +320,8 @@ std::string render_archive_frame(const pluss::kindle::Archive& archive,
   const auto width = frame_rule_width(options.terminal_width);
   std::ostringstream oss;
   oss << frame_rule('=', width) << "\n";
-  oss << fit_line(fmt::format("kindle::Archive  depth={}", archive.depth()), width) << "\n";
-  oss << fit_line(fmt::format("depth_labels={}", archive.label().has() ? "yes" : "no"), width) << "\n";
+  oss << fit_line(pluss::tils::OutputEngine::format("kindle::Archive  depth={}", archive.depth()), width) << "\n";
+  oss << fit_line(pluss::tils::OutputEngine::format("depth_labels={}", archive.label().has() ? "yes" : "no"), width) << "\n";
   oss << frame_rule('-', width) << "\n";
 
   const bool show_label = archive.label().has() && width >= 84;

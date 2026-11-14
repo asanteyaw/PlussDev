@@ -41,7 +41,7 @@ Properties that follow from the definition and from `erf` being odd:
 
 - `erfc(0) = 1`
 - `erfc(-x) = 2 - erfc(x)`
-- `erfc(x) -> 0` as `x -> +inf`, and `erfc(x) -> 2` as `x -> -inf`
+- `0 erfc(x)` as `x -> +inf`, and `2 erfc(x)` as `x -> -inf`
 - `erfc` is strictly decreasing
 
 The tail connection to the normal distribution is the usual reason to use it.

@@ -73,7 +73,7 @@ int main() {
 
   const auto r = hyp::vartest2(a, b);
   std::cout << "variances " << r.var_x << " and " << r.var_y << ", F " << r.stat << " on (" << r.dof1 << ", " << r.dof2 << ") df, p " << r.pvalue << "\n";
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }
 ```
@@ -107,7 +107,7 @@ int main() {
   hyp::TestOptions options;
   options.alpha = 0.10;
   const auto r = hyp::vartest2(a, b, options);
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "90% interval for the variance ratio [" << ci[0] << ", " << ci[1] << "], upper critical value " << r.critical << "\n";
 }
 ```
@@ -125,3 +125,16 @@ The 90% interval for the variance ratio is [0.68, 8.82]: a ratio anywhere from s
 - [`f_ratio`](f_ratio.md)
 - [`vartest`](vartest.md)
 - [`ttest2`](ttest2.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="vartest.html">
+    <span class="label">Previous</span>
+    <span class="title">vartest</span>
+  </a>
+  <a class="next-link" href="f_ratio.html">
+    <span class="label">Next</span>
+    <span class="title">f_ratio</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

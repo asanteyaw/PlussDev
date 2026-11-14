@@ -1,0 +1,68 @@
+# Properties and a recovery ventilator
+
+[Back to Thermal 2: Exchangers and Air](../thermal_02_exchangers_and_air.md)
+
+Every thermal calculation needs density, specific heat and conductivity, and an easy way to get a project wrong is to type them in from different places. This page uses the property provider, reads where its numbers come from, and then combines everything in the chapter in a heat-recovery ventilator.
+
+## The mental model
+
+The provider is one function, `props`, that takes a fluid and a temperature in kelvin and returns density, specific heat, conductivity, viscosity and the Prandtl number. Each fluid has an explicit **state** (saturated liquid water; dry air as an ideal gas at the pressure you give), a **range** in which it is valid, and a **provenance** string. A temperature outside the range is an error: nothing is extrapolated, so a model that has left its validity says so.
+
+## Liquid water
+
+From freezing to boiling:
+
+@@example Eng/api/thermal_props_water.cpp@@
+
+The density falls from 999.8 kg/m^3 at 0 degrees to 958.4 at 100 degrees; the viscosity falls by a factor of six; the Prandtl number from 13 to 1.7 is what changes convective heat transfer so much with temperature. Viscosity is printed in micropascal-seconds, because in pascal-seconds it is of order `1e-3` and loses its digits at five places.
+
+## Dry air
+
+Air is an ideal gas, so its density follows the pressure, while its transport properties are tabulated at one atmosphere:
+
+@@example Eng/api/thermal_props_air.cpp@@
+
+@@example Eng/api/thermal_props_pressure.cpp@@
+
+Water ignores the pressure argument, since the liquid is saturated and incompressible here; air's density is exactly proportional to it, and its viscosity does not change.
+
+## Where the numbers come from
+
+`source` returns the name, the correlations and tables, the state and the valid range, and the range is exactly the one `props` enforces:
+
+@@example Eng/api/thermal_source_water.cpp@@
+
+@@example Eng/api/thermal_source_air.cpp@@
+
+@@example Eng/api/thermal_source_range.cpp@@
+
+Quote the origin in a report: a number is only as good as its source and its range.
+
+## A heat-recovery ventilator
+
+Exhaust air at 22 degrees and 40 % relative humidity warms outdoor air at -5 degrees and 80 %, 0.1 kg/s of dry air each way, through a counter-flow exchanger of `UA = 120 W/K`. The program finds the humidity ratios with `ratio`, the capacity rates from the moist specific heat, the outlet states with `rate` and the dew point of the exhaust with `dew`.
+
+@@example Eng/api/thermal_guide_recovery.cpp@@
+
+The effectiveness is 54 %: the supply air leaves at 9.7 degrees instead of -5 and 1.5 kW is recovered. The check at the end is the part that matters for the design: the exhaust leaves the exchanger at 7.4 degrees, below its own dew point of 7.8, so water condenses on the exhaust side. The sensible calculation is then a slight under-estimate of the recovered heat (the condensing water releases latent heat), and at lower outdoor temperatures the condensate would freeze.
+
+## Decisions
+
+- **Always use the provider:** it keeps every program on the same reference values and gives you a range check.
+- **Kelvin for properties, Celsius for moist air:** convert at the boundary and nowhere else.
+- **A fluid or a range the provider lacks:** that is a missing feature, not a reason to type constants; extend the provider.
+- **Quote the origin:** the string is for the report.
+
+## Pitfalls
+
+A temperature outside the validity range is refused with the range stated, as is a non-positive pressure for air or a temperature that is not finite:
+
+@@example Eng/api/thermal_props_errors.cpp@@
+
+Passing the wrong temperature scale to the wrong function is the commonest mistake, and both families refuse it:
+
+@@example Eng/api/thermal_pitfall_units.cpp@@
+
+## Where next
+
+Reference pages: [`props`](../../../../api/eng/thermal/properties/props.md), [`Properties`](../../../../api/eng/thermal/properties/Properties.md), [`Fluid`](../../../../api/eng/thermal/properties/Fluid.md), [`source`](../../../../api/eng/thermal/properties/source.md), [`Origin`](../../../../api/eng/thermal/properties/Origin.md), and for the exchanger [`rate`](../../../../api/eng/thermal/exchangers/rate.md). Back to [Engineering guides](../../../eng.md).

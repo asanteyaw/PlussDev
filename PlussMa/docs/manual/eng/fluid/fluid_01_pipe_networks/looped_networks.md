@@ -1,0 +1,310 @@
+<!-- generated from looped_networks.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Looped networks
+
+[Back to Fluid 1: Pipe Networks](../fluid_01_pipe_networks.md)
+
+A real distribution system is rarely a tree. Pipes close into loops, so the water has more than one way to reach a junction and the split between the ways is part of the answer. A looped network has no closed-form solution: the head at every junction and the flow in every pipe have to be found together. This page explains how `steady` finds them, solves a network with two loops, checks the result against continuity and energy by hand, shows how the stopping rule works and what it costs, and shows how to solve in `Float32` and what to do when a solve does not converge.
+
+## The mental model
+
+`steady` solves one square nonlinear system: for each junction the continuity equation, and for each pipe the energy equation that ties the head drop to the flow. It is solved by Newton's method on the heads and the flows together, so each iteration is one linear solve of the whole network. The network of this page needs three iterations from the starting guess.
+
+Because the heads and flows are solved together, the answer has two properties you can check without trusting the solver:
+
+- **Continuity.** At every junction the flow in minus the flow out equals the demand.
+- **Energy.** Around every loop, the head losses along the pipes, counted with sign, add to zero.
+
+`SteadyResult` carries both as numbers, `balance` per node and `energy_residual` per link, so you can read how well the equations hold. `converged` is true when the energy residuals are below `Options::head_tolerance` (metres) and the continuity residuals below `Options::flow_tolerance` (m³/s), and `iterations` is the number of Newton steps taken.
+
+## A network with two loops
+
+A reservoir at `60` m feeds four junctions through six pipes. Pipe `0` joins the reservoir to junction `1`; pipes `1` and `2` leave junction `1` for junctions `2` and `3`; pipes `3` and `4` run on to junction `4`; and pipe `5` is a cross-link between junctions `2` and `3`, so there are two loops. The demands are `0.010`, `0.015`, `0.012` and `0.008` m³/s. The program solves the network and then checks it by hand: continuity at two junctions from the flows it printed, and the head losses summed around both loops.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a reservoir (node 0) and four junctions, joined by six pipes that form two loops
+static fluid::Net looped() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Junction,
+                    fluid::NodeKind::Junction, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 10.0, 12.0, 8.0, 15.0});
+  net.nodes.demand = vec({0.0, 0.010, 0.015, 0.012, 0.008});
+  net.nodes.head = vec({60.0, 55.0, 55.0, 55.0, 55.0});
+  net.pipes.from = {0, 1, 1, 2, 3, 2};
+  net.pipes.to = {1, 2, 3, 4, 4, 3};
+  net.pipes.length = vec({800.0, 500.0, 600.0, 450.0, 550.0, 300.0});
+  net.pipes.diameter = vec({0.30, 0.20, 0.20, 0.15, 0.15, 0.10});
+  net.pipes.roughness = vec({1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const auto r = fluid::steady(fluid::network(looped()));
+  const auto h = flat(r.head), q = flat(r.flow), hl = flat(r.head_loss), balance = flat(r.balance);
+  out.writeln("head      ", h);
+  out.writeln("flow      ", q);
+  out.writeln("head loss ", hl);
+  out.writeln("iterations ", r.iterations, ", converged ", flat(r.converged)[0]);
+
+  double worst = 0.0;
+  for (std::size_t node = 1; node < balance.size(); ++node) worst = std::max(worst, std::abs(balance[node]));
+  out.writeln("largest junction balance ", worst, " m3/s, reservoir supplies ", -balance[0], " m3/s, total demand 0.045");
+  out.writeln("largest energy residual ", r.energy_residual.abs().max().item<double>(), " m");
+
+  const double d[5] = {0.0, 0.010, 0.015, 0.012, 0.008};
+  out.writeln("continuity at junction 1: in ", q[0], ", out ", q[1] + q[2], " + demand ", d[1], " = ", q[1] + q[2] + d[1]);
+  out.writeln("continuity at junction 2: in ", q[1] - q[5], ", out ", q[3], " + demand ", d[2], " = ", q[3] + d[2]);
+  out.writeln("energy round loop 1-2-3 (pipes 1, 5, then back along 2): ", hl[1] + hl[5] - hl[2], " m");
+  out.writeln("energy round loop 2-3-4 (pipes 5, 4, then back along 3): ", hl[5] + hl[4] - hl[3], " m");
+  out.writeln("pipe 5, declared 2 -> 3, carries ", q[5], ": the water runs from 3 to 2");
+}
+```
+
+Output
+
+```text
+head      [60.000000, 59.002957, 58.118057, 58.146721, 57.917692]
+flow      [0.045000, 0.018502, 0.016498, 0.004074, 0.003926, -0.000572]
+head loss [0.997043, 0.884900, 0.856236, 0.200365, 0.229029, -0.028664]
+iterations 3, converged 1.000000
+largest junction balance 0.000000 m3/s, reservoir supplies 0.045000 m3/s, total demand 0.045
+largest energy residual 0.000000 m
+continuity at junction 1: in 0.045000, out 0.035000 + demand 0.010000 = 0.045000
+continuity at junction 2: in 0.019074, out 0.004074 + demand 0.015000 = 0.019074
+energy round loop 1-2-3 (pipes 1, 5, then back along 2): 0.000000 m
+energy round loop 2-3-4 (pipes 5, 4, then back along 3): 0.000000 m
+pipe 5, declared 2 -> 3, carries -0.000572: the water runs from 3 to 2
+```
+
+The reservoir supplies `0.045` m³/s, exactly the sum of the demands, and the junction balances are zero to the printed digits. At junction `1` the inflow `0.045000` equals the two outflows plus the demand; at junction `2` the `0.019074` that arrives through pipe `1` and the cross-link equals the outflow through pipe `3` plus the demand. The head losses sum to zero around both loops. Pipe `5` carries `-0.000572` m³/s: the cross-link is declared from junction `2` to junction `3` and the water runs the other way, because the head at junction `3`, `58.147` m, is slightly above the head at junction `2`, `58.118` m, and the small flow shows the loop is nearly balanced. Nothing was told which way to run; the equations decided.
+
+## The stopping rule
+
+Newton's method converges quadratically near the answer, and the run shows it. The program solves the same network with the iteration limit set to `1`, `2`, `3` and `4`, and with tolerances from `1e-3` down to `1e-12`. Setting `fail_on_nonconvergence` to false makes `steady` return the last iterate instead of throwing, so the residuals of an unfinished solve can be read.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net looped() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Junction,
+                    fluid::NodeKind::Junction, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 10.0, 12.0, 8.0, 15.0});
+  net.nodes.demand = vec({0.0, 0.010, 0.015, 0.012, 0.008});
+  net.nodes.head = vec({60.0, 55.0, 55.0, 55.0, 55.0});
+  net.pipes.from = {0, 1, 1, 2, 3, 2};
+  net.pipes.to = {1, 2, 3, 4, 4, 3};
+  net.pipes.length = vec({800.0, 500.0, 600.0, 450.0, 550.0, 300.0});
+  net.pipes.diameter = vec({0.30, 0.20, 0.20, 0.15, 0.15, 0.10});
+  net.pipes.roughness = vec({1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2).with_sep(""));
+  const auto network = fluid::network(looped());
+
+  for (std::int64_t limit : {1, 2, 3, 4}) {
+    fluid::Options options;
+    options.max_iterations = limit;
+    options.fail_on_nonconvergence = false;
+    const auto s = fluid::steady(network, options);
+    out.writeln("max_iterations ", limit, ": iterations ", s.iterations, ", converged ", flat(s.converged)[0], ", largest energy residual ", s.energy_residual.abs().max().item<double>());
+  }
+  for (double tolerance : {1e-3, 1e-6, 1e-9, 1e-12}) {
+    fluid::Options options;
+    options.head_tolerance = tolerance;
+    options.flow_tolerance = tolerance * 1e-2;
+    const auto s = fluid::steady(network, options);
+    out.writeln("head_tolerance ", tolerance, ": iterations ", s.iterations, ", largest energy residual ", s.energy_residual.abs().max().item<double>());
+  }
+}
+```
+
+Output
+
+```text
+max_iterations 1: iterations 1, converged 0.00e+00, largest energy residual 2.33e-03
+max_iterations 2: iterations 2, converged 0.00e+00, largest energy residual 4.26e-06
+max_iterations 3: iterations 3, converged 1.00e+00, largest energy residual 3.21e-11
+max_iterations 4: iterations 3, converged 1.00e+00, largest energy residual 3.21e-11
+head_tolerance 1.00e-03: iterations 2, largest energy residual 4.26e-06
+head_tolerance 1.00e-06: iterations 3, largest energy residual 3.21e-11
+head_tolerance 1.00e-09: iterations 3, largest energy residual 3.21e-11
+head_tolerance 1.00e-12: iterations 4, largest energy residual 3.66e-15
+```
+
+One step leaves an energy residual of `2.3e-03` m, two leave `4.3e-06` m, and the third brings it to `3.2e-11` m. The solver stops at the first iteration whose residuals are below the tolerances, so asking for `1e-3` m takes two iterations and asking for `1e-12` m takes four. The default, `1e-9` m and `1e-11` m³/s, is far finer than any pipe data deserves and costs three iterations here; loosen it for large scenario batches, never to hide a solve that fails.
+
+## Solving in `Float32`
+
+A network built from `Float32` arrays is solved in `Float32`: the heads and flows come back in single precision, which halves the memory of a large batch. Single precision cannot reach `1e-9` m, so the tolerances must match it. The program solves the network in both precisions, then in `Float32` with the default tolerances, which cannot be met, and then again with `fail_on_nonconvergence` false to read what the solver reached.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <iomanip>
+#include <iostream>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.to(pluss::ScalarType::Float64).reshape({s.numel()}).items<double>(); }
+
+static fluid::Net looped(pluss::ScalarType t) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Junction,
+                    fluid::NodeKind::Junction, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 10.0, 12.0, 8.0, 15.0}).to(t);
+  net.nodes.demand = vec({0.0, 0.010, 0.015, 0.012, 0.008}).to(t);
+  net.nodes.head = vec({60.0, 55.0, 55.0, 55.0, 55.0}).to(t);
+  net.pipes.from = {0, 1, 1, 2, 3, 2};
+  net.pipes.to = {1, 2, 3, 4, 4, 3};
+  net.pipes.length = vec({800.0, 500.0, 600.0, 450.0, 550.0, 300.0}).to(t);
+  net.pipes.diameter = vec({0.30, 0.20, 0.20, 0.15, 0.15, 0.10}).to(t);
+  net.pipes.roughness = vec({1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4}).to(t);
+  net.pipes.minor = vec({0.0, 0.0, 0.0, 0.0, 0.0, 0.0}).to(t);
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const auto r64 = fluid::steady(fluid::network(looped(pluss::ScalarType::Float64)));
+  out.writeln("Float64 head ", flat(r64.head));
+
+  fluid::Options loose;
+  loose.head_tolerance = 1e-4;
+  loose.flow_tolerance = 1e-6;
+  const auto r32 = fluid::steady(fluid::network(looped(pluss::ScalarType::Float32)), loose);
+  out.writeln("Float32 head ", flat(r32.head), " (result is Float32: ", r32.head.scalar_type() == pluss::ScalarType::Float32, ")");
+
+  try {
+    (void)fluid::steady(fluid::network(looped(pluss::ScalarType::Float32)));
+  } catch (const std::exception &e) {
+    std::cout << "Float32 with the default tolerances: " << e.what() << "\n";
+  }
+  fluid::Options inspect;
+  inspect.fail_on_nonconvergence = false;
+  const auto quiet = fluid::steady(fluid::network(looped(pluss::ScalarType::Float32)), inspect);
+  out.writeln("with fail_on_nonconvergence false: converged ", flat(quiet.converged)[0], ", iterations ", quiet.iterations);
+  std::cout << "largest energy residual " << std::scientific << std::setprecision(2) << quiet.energy_residual.abs().max().item<double>() << " m\n";
+}
+```
+
+Output
+
+```text
+Float64 head [60.000000, 59.002957, 58.118057, 58.146721, 57.917692]
+Float32 head [60.000000, 59.002956, 58.118057, 58.146721, 57.917694] (result is Float32: true)
+Float32 with the default tolerances: eng::fluid::steady: coupled hydraulic Newton solve did not converge
+with fail_on_nonconvergence false: converged 0.000000, iterations 40
+largest energy residual 1.82e-06 m
+```
+
+With tolerances of `1e-4` m and `1e-6` m³/s the `Float32` heads agree with the `Float64` heads to about `2e-6` m. With the defaults the solve spends all `40` iterations and raises, because single precision has a floor near `2e-6` m in the energy residual and the default asks for `1e-9`. Reading the residual with `fail_on_nonconvergence` set to false shows that floor, `1.82e-06` m, which is the number to set the tolerance above.
+
+## Decisions
+
+- **Tolerances.** Leave the defaults for `Float64`. For `Float32` set `head_tolerance` a little above the residual floor of single precision, a few `1e-6` m to `1e-4` m for typical heads, and `flow_tolerance` a few `1e-7`.
+- **Throw or inspect.** The default raises on nonconvergence, which is the right behaviour in a pipeline. Set `fail_on_nonconvergence` to false when you want to look at an unfinished solve, and then test `converged` yourself.
+- **Iteration limit.** The default of `40` is generous. A solve that needs more than a dozen is almost always a data problem: a pipe with a wrong diameter, a pump that cannot deliver, or a demand the network cannot meet.
+
+## Pitfalls
+
+The mistake is to turn the exception off and then use the result. With `fail_on_nonconvergence` false and an iteration limit of one, the solver returns an iterate that does not satisfy the equations, and nothing stops the program from reading it as the answer.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net looped() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Junction,
+                    fluid::NodeKind::Junction, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 10.0, 12.0, 8.0, 15.0});
+  net.nodes.demand = vec({0.0, 0.010, 0.015, 0.012, 0.008});
+  net.nodes.head = vec({60.0, 55.0, 55.0, 55.0, 55.0});
+  net.pipes.from = {0, 1, 1, 2, 3, 2};
+  net.pipes.to = {1, 2, 3, 4, 4, 3};
+  net.pipes.length = vec({800.0, 500.0, 600.0, 450.0, 550.0, 300.0});
+  net.pipes.diameter = vec({0.30, 0.20, 0.20, 0.15, 0.15, 0.10});
+  net.pipes.roughness = vec({1e-4, 1e-4, 1e-4, 1e-4, 1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const auto network = fluid::network(looped());
+  const auto good = fluid::steady(network);
+
+  fluid::Options options;
+  options.max_iterations = 1;
+  options.fail_on_nonconvergence = false;
+  const auto cut = fluid::steady(network, options);
+  out.writeln("converged solve: junction 4 head ", flat(good.head)[4], ", pipe 5 flow ", flat(good.flow)[5]);
+  out.writeln("cut-short solve: junction 4 head ", flat(cut.head)[4], ", pipe 5 flow ", flat(cut.flow)[5], ", converged ", flat(cut.converged)[0]);
+  out.writeln("error in the cut-short head ", std::abs(flat(cut.head)[4] - flat(good.head)[4]), " m, energy residual ", cut.energy_residual.abs().max().item<double>(), " m");
+}
+```
+
+Output
+
+```text
+converged solve: junction 4 head 57.917692, pipe 5 flow -0.000572
+cut-short solve: junction 4 head 57.920764, pipe 5 flow -0.000580, converged 0.000000
+error in the cut-short head 0.003072 m, energy residual 0.002334 m
+```
+
+The cut-short solve reads like an answer, and the difference is small: the head at junction `4` is `3.1` mm too high and the cross-link flow `-0.000580` instead of `-0.000572`. That is what makes it dangerous, because nothing in the numbers looks wrong. Its `converged` flag is `0` and its energy residual is `2.3e-03` m, and those are the only warnings. Always test `converged` before using a result that was allowed to be unfinished.
+
+Reference: [`steady`](../../../../api/eng/fluid/steady/steady.md), [`Options`](../../../../api/eng/fluid/steady/Options.md), [`SteadyResult`](../../../../api/eng/fluid/steady/SteadyResult.md), [`network`](../../../../api/eng/fluid/model/network_fn.md).
+
+Where next: [Pipe loss models](pipe_loss_models.md) looks inside the head-loss law the solver applies to every pipe.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="building_a_network.html">
+    <span class="label">Previous</span>
+    <span class="title">Building a network</span>
+  </a>
+  <a class="next-link" href="pipe_loss_models.html">
+    <span class="label">Next</span>
+    <span class="title">Pipe loss models</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

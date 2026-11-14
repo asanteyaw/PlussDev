@@ -1,0 +1,67 @@
+# `power::LoadPath`
+
+The target injections that a continuation moves toward.
+
+## Signature
+
+```cpp
+power::LoadPath
+```
+
+## What It Does
+
+Names the net active and reactive injection at every bus at loading factor `1`. The grid's own injections are loading factor `0`, and the load at factor `lambda` is `(1 - lambda) base + lambda target`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `p` | Target net active injection at every bus, per unit, `[..., bus]`. | required |
+| `q` | Target net reactive injection at every bus, `[..., bus]`. | required |
+
+## Returns
+
+A value; validated by `trace`.
+
+## Errors
+
+Arrays of the wrong length are rejected.
+
+## Interpretation and Use
+
+Give the net injection of every bus, including generator buses, which keep their generation unless you change it.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A line loaded from nothing to its nose.
+
+@@example Eng/api/power_trace_nose.cpp@@
+
+### Example 2
+
+From a base load to a target.
+
+@@example Eng/api/power_trace_target.cpp@@
+
+### Example 3
+
+A network with a generator.
+
+@@example Eng/api/power_trace_generator.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="TraceStop.html">
+    <span class="label">Previous</span>
+    <span class="title">TraceStop</span>
+  </a>
+  <a class="next-link" href="TraceOptions.html">
+    <span class="label">Next</span>
+    <span class="title">TraceOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -229,7 +229,7 @@ int main() {
 Output
 
 ```text
-sin(x) exp(x) -> saved 195 bytes
+saved 195 bytes sin(x) exp(x)
 black box    -> not saved: Opaque function
 ```
 

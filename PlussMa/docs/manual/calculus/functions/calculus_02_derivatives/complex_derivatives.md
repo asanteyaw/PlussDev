@@ -139,3 +139,16 @@ Complex tensors use the same rules elementwise, preserve `Complex64` or `Complex
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_differentiation_rules.html">
+    <span class="label">Previous</span>
+    <span class="title">The differentiation rules</span>
+  </a>
+  <a class="next-link" href="non_smooth_points.html">
+    <span class="label">Next</span>
+    <span class="title">Non-smooth points</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

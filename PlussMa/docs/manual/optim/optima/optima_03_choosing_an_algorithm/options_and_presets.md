@@ -105,8 +105,8 @@ SequentialQP optimality_tolerance 0.001             1     4      5      17.0140
 SequentialQP optimality_tolerance 1e-06             1     4      5      17.0140
 SequentialQP optimality_tolerance 1e-10             1     5      6      17.0140
 MeritMethod penalty 1                               1     33     84     17.0140
-MeritMethod penalty 10                              1     66     180    27.1464
-MeritMethod penalty 100                             1     79     269    17.0140
+MeritMethod penalty 10                              1     68     180    27.1464
+MeritMethod penalty 100                             1     79     283    17.0140
 ```
 Four lessons. The initial barrier parameter of the interior method is worth a quick sweep: too small and too large both cost iterations, and the default `0.01` was the best of the three. Backing off `fraction_to_boundary` from `0.99` to `0.9` costs two iterations here. `independent_nonlinear_slacks` is the single largest effect in the table, 56 iterations and 293 evaluations without it against 8 and 12 with it, because without independent slacks a start on the boundary of a nonlinear inequality can only creep along the curve. Tightening sequential QP's `optimality_tolerance` from `1e-6` to `1e-10` costs one more iteration, from 4 to 5, with no change visible at four decimals. And the merit method's `penalty` does not just change the path: with `10` it settles at the other first-order point, `27.1464`, while `1` and `100` reach `17.0140`. When one algorithm's answer looks wrong, run it again with a different penalty before blaming the model.
 
@@ -270,3 +270,12 @@ The first run asked for at most 2 iterations on the wrong struct and ran 6 to co
 - **A change that does not change the path may still change the cost.** Asking for conjugate gradients changed how subproblems were solved (88 Krylov iterations against 0) but not the path; look at the work counters, not only the answer.
 
 Where next: [Chapter 4](../optima_04_sequential_qp.md) opens up the default algorithm, sequential QP.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="curvature_scaling_and_size.html">
+    <span class="label">Previous</span>
+    <span class="title">Curvature, scaling and size</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

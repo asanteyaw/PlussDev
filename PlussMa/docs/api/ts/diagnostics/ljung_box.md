@@ -250,3 +250,16 @@ dof              8.0000
 - [`LjungBoxResult`](LjungBoxResult.md)
 - [`acf`](acf.md)
 - [`arch_lm`](arch_lm.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="KpssResult.html">
+    <span class="label">Previous</span>
+    <span class="title">KpssResult</span>
+  </a>
+  <a class="next-link" href="LjungBoxOptions.html">
+    <span class="label">Next</span>
+    <span class="title">LjungBoxOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

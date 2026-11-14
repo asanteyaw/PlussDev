@@ -1,10 +1,14 @@
 #include "pluss/subsp/math/finance/module.h"
+#include "validation_internal.h"
 
 #include "CodeM/core/Errors.h"
 #include "pluss/codem/losses.h"
 #include "pluss/codem/series_factory.h"
 
+#include <algorithm>
 #include <cmath>
+#include <vector>
+#include <cstdlib>
 #include <string>
 #include <type_traits>
 
@@ -195,52 +199,21 @@ const char* engine_name_(Engine engine) {
       return "MonteCarlo";
     case Engine::Analytic:
       return "Analytic";
+    case Engine::Lattice:
+      return "Lattice";
+    case Engine::Spectral:
+      return "Spectral";
+    case Engine::Pde:
+      return "Pde";
   }
   return "UnknownEngine";
 }
 
 template <typename ModelT>
-const char* supported_engines_() {
-  if constexpr (std::is_same_v<ModelT, model::Heston> || std::is_same_v<ModelT, model::Bates>) {
-    return "Fft, Cos, MonteCarlo";
-  }
-  if constexpr (std::is_same_v<ModelT, model::BlackScholes> || std::is_same_v<ModelT, model::Sabr>) {
-    return "Analytic, MonteCarlo";
-  }
-  if constexpr (std::is_same_v<ModelT, model::RoughHeston> || std::is_same_v<ModelT, model::RoughBergomi>) {
-    return "MonteCarlo";
-  }
-  return "None";
-}
-
-template <typename ModelT>
-bool supports_engine_(Engine engine) {
-  if constexpr (std::is_same_v<ModelT, model::Heston> || std::is_same_v<ModelT, model::Bates>) {
-    return engine == Engine::Fft || engine == Engine::Cos || engine == Engine::MonteCarlo;
-  }
-  if constexpr (std::is_same_v<ModelT, model::BlackScholes> || std::is_same_v<ModelT, model::Sabr>) {
-    return engine == Engine::Analytic || engine == Engine::MonteCarlo;
-  }
-  if constexpr (std::is_same_v<ModelT, model::RoughHeston> || std::is_same_v<ModelT, model::RoughBergomi>) {
-    return engine == Engine::MonteCarlo;
-  }
-  return false;
-}
-
-template <typename ModelT>
-void validate_engine_(Engine engine) {
-  PLUSS_CHECK(supports_engine_<ModelT>(engine),
-              std::string("subsp::math::finance::module::Field: controls.engine=") + engine_name_(engine) +
-                  " is not supported for model " + model_name_<ModelT>() + ". Supported engines: " +
-                  supported_engines_<ModelT>());
-}
-
-template <typename ModelT>
 [[noreturn]] void unsupported_engine_(Engine engine) {
-  PLUSS_CHECK(false,
-              std::string("subsp::math::finance::module::Field: controls.engine=") + engine_name_(engine) +
-                  " is not supported for model " + model_name_<ModelT>() + ". Supported engines: " +
-                  supported_engines_<ModelT>());
+  Model m{ModelT{}};
+  internal::validation::check(Controls{.engine = engine}, m, instrument::Vanilla{}).raise("subsp::math::finance::module::Field");
+  PLUSS_CHECK(false, "subsp::math::finance::module::Field: unsupported engine");
 }
 
 pricer::Result price_one_(const instrument::Vanilla& inst,
@@ -253,6 +226,9 @@ pricer::Result price_one_(const instrument::Vanilla& inst,
   }
   if (controls.engine == Engine::Cos) {
     return controls.cos.price(inst, mdl, mkt, to_risk_(controls.risk), cfg);
+  }
+  if (controls.engine == Engine::Pde) {
+    return controls.pde.price(inst, mdl, mkt, to_risk_(controls.risk), cfg);
   }
   if (controls.engine == Engine::MonteCarlo) {
     return controls.mc.price(inst, mdl, mkt, to_risk_(controls.risk), cfg);
@@ -287,6 +263,15 @@ pricer::Result price_one_(const instrument::Vanilla& inst,
   }
   if (controls.engine == Engine::MonteCarlo) {
     return controls.mc.price(inst, mdl, mkt, to_risk_(controls.risk), cfg);
+  }
+  if (controls.engine == Engine::Cos) {
+    return controls.cos.price(inst, mdl, mkt, to_risk_(controls.risk), cfg);
+  }
+  if (controls.engine == Engine::Lattice) {
+    return controls.lattice.price(inst, mdl, mkt, to_risk_(controls.risk), cfg);
+  }
+  if (controls.engine == Engine::Spectral) {
+    return controls.spectral.price(inst, mdl, mkt, to_risk_(controls.risk), cfg);
   }
   unsupported_engine_<model::BlackScholes>(controls.engine);
 }
@@ -353,7 +338,7 @@ Paths simulate_one_(const instrument::Vanilla& inst,
             first_from_series_(mkt.dividend_yield, "simulate_paths", "market.dividend_yield", cfg),
       .sigma = scalar_from_series_(mdl.volatility, "simulate_paths", "model.black_scholes.volatility", cfg),
   };
-  return to_paths_(volatility::gbm_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
+  return to_paths_(volatility::detail::gbm_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
 }
 
 Paths simulate_one_(const instrument::Vanilla& inst,
@@ -371,7 +356,7 @@ Paths simulate_one_(const instrument::Vanilla& inst,
   auto p = heston_params_from_model_(mdl, cfg);
   p.mu = first_from_series_(mkt.rate, "simulate_paths", "market.rate", cfg) -
          first_from_series_(mkt.dividend_yield, "simulate_paths", "market.dividend_yield", cfg);
-  return to_paths_(volatility::heston_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
+  return to_paths_(volatility::detail::heston_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
 }
 
 Paths simulate_one_(const instrument::Vanilla& inst,
@@ -389,7 +374,7 @@ Paths simulate_one_(const instrument::Vanilla& inst,
   auto p = bates_params_from_model_(mdl, cfg);
   p.mu = first_from_series_(mkt.rate, "simulate_paths", "market.rate", cfg) -
          first_from_series_(mkt.dividend_yield, "simulate_paths", "market.dividend_yield", cfg);
-  return to_paths_(volatility::bates_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
+  return to_paths_(volatility::detail::bates_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
 }
 
 Paths simulate_one_(const instrument::Vanilla& inst,
@@ -407,7 +392,7 @@ Paths simulate_one_(const instrument::Vanilla& inst,
   auto p = sabr_params_from_model_(mdl, cfg);
   p.mu = first_from_series_(mkt.rate, "simulate_paths", "market.rate", cfg) -
          first_from_series_(mkt.dividend_yield, "simulate_paths", "market.dividend_yield", cfg);
-  return to_paths_(volatility::sabr_paths(steps, paths, forward0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
+  return to_paths_(volatility::detail::sabr_paths(steps, paths, forward0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
 }
 
 Paths simulate_one_(const instrument::Vanilla& inst,
@@ -426,7 +411,7 @@ Paths simulate_one_(const instrument::Vanilla& inst,
   p.mu = first_from_series_(mkt.rate, "simulate_paths", "market.rate", cfg) -
          first_from_series_(mkt.dividend_yield, "simulate_paths", "market.dividend_yield", cfg);
   return to_paths_(
-      volatility::rough_heston_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
+      volatility::detail::rough_heston_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
 }
 
 Paths simulate_one_(const instrument::Vanilla& inst,
@@ -445,7 +430,7 @@ Paths simulate_one_(const instrument::Vanilla& inst,
   p.mu = first_from_series_(mkt.rate, "simulate_paths", "market.rate", cfg) -
          first_from_series_(mkt.dividend_yield, "simulate_paths", "market.dividend_yield", cfg);
   return to_paths_(
-      volatility::rough_bergomi_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
+      volatility::detail::rough_bergomi_paths(steps, paths, spot0, dt, p, to_sim_options_(controls), cfg, controls.mc.seed));
 }
 
 Config model_param_cfg_(std::initializer_list<const Series*> refs, Config cfg) {
@@ -538,10 +523,20 @@ Series param_slot_(const Series& p, std::int64_t idx, Config cfg) {
   return p.select(0, idx).reshape({1}).to(cfg.platform, cfg.dtype);
 }
 
+const char* param_order_(const char* model_name) {
+  const std::string n = model_name;
+  if (n == "Heston") return "kappa, theta, sigma, rho, v0";
+  if (n == "Bates") return "kappa, theta, sigma, rho, v0, jump_intensity, jump_mean, jump_vol";
+  if (n == "BlackScholes") return "volatility";
+  if (n == "Sabr") return "alpha0, beta, nu, rho";
+  if (n == "RoughHeston") return "kappa, theta, sigma, alpha, rho, v0";
+  return "xi, eta, alpha, rho";
+}
+
 void require_param_count_(const Series& p, std::int64_t expected, const char* model_name) {
   PLUSS_CHECK(p.numel() == expected,
               std::string("subsp::math::finance::module::Model::parameters: ") + model_name + " expects " +
-                  std::to_string(expected) + " parameters");
+                  std::to_string(expected) + " parameters (" + param_order_(model_name) + ")");
 }
 
 void set_heston_parameters_series_(model::Heston& mdl, const Series& params, Config cfg) {
@@ -715,6 +710,44 @@ void Model::parameters(std::span<const double> params, pluss::codem::Config cfg)
   parameters(make_param_series_(params, f64_cfg_(cfg, cfg.platform)), cfg);
 }
 
+Model Model::make(model::Kind kind, std::span<const double> params, pluss::codem::Config cfg) {
+  Model out;
+  switch (kind) {
+    case model::Kind::BlackScholes: out.value = model::BlackScholes{}; break;
+    case model::Kind::Sabr: out.value = model::Sabr{}; break;
+    case model::Kind::Heston: out.value = model::Heston{}; break;
+    case model::Kind::Bates: out.value = model::Bates{}; break;
+    case model::Kind::RoughHeston: out.value = model::RoughHeston{}; break;
+    case model::Kind::RoughBergomi: out.value = model::RoughBergomi{}; break;
+  }
+  out.parameters(params, cfg);
+  out.validate();
+  return out;
+}
+
+void Model::validate() const {
+  internal::validation::require(*this);
+}
+
+model::Kind Model::kind() const {
+  return std::visit(
+      [](const auto& m) {
+        using M = std::decay_t<decltype(m)>;
+        if constexpr (std::is_same_v<M, model::BlackScholes>) return model::Kind::BlackScholes;
+        else if constexpr (std::is_same_v<M, model::Sabr>) return model::Kind::Sabr;
+        else if constexpr (std::is_same_v<M, model::Heston>) return model::Kind::Heston;
+        else if constexpr (std::is_same_v<M, model::Bates>) return model::Kind::Bates;
+        else if constexpr (std::is_same_v<M, model::RoughHeston>) return model::Kind::RoughHeston;
+        else return model::Kind::RoughBergomi;
+      },
+      value);
+}
+
+void Model::wrong_model(const char* requested) const {
+  PLUSS_CHECK(false, std::string("subsp::math::finance::module::Model::as: the model holds ") + name() + ", not " + requested);
+  std::abort();
+}
+
 Paths Field::simulate_paths(pluss::codem::Config cfg) const {
   return simulate_paths(model, cfg);
 }
@@ -758,24 +791,7 @@ std::string Field::engine_name() const {
 }
 
 void Field::validate() const {
-  PLUSS_CHECK(instrument.strike.defined(), "subsp::math::finance::module::Field: instrument.strike must be defined");
-  PLUSS_CHECK(instrument.maturity.defined(),
-              "subsp::math::finance::module::Field: instrument.maturity must be defined");
-  PLUSS_CHECK(market.spot.defined(), "subsp::math::finance::module::Field: market.spot must be defined");
-  PLUSS_CHECK(market.rate.defined(), "subsp::math::finance::module::Field: market.rate must be defined");
-  PLUSS_CHECK(market.dividend_yield.defined(),
-              "subsp::math::finance::module::Field: market.dividend_yield must be defined");
-  if (controls.loss == Loss::Huber) {
-    PLUSS_CHECK(std::isfinite(controls.huber_delta) && controls.huber_delta > 0.0,
-                "subsp::math::finance::module::Field: controls.huber_delta must be finite and > 0");
-  }
-
-  model.visit(
-      [&](const auto& m) {
-        using M = std::decay_t<decltype(m)>;
-        (void)m;
-        validate_engine_<M>(controls.engine);
-      });
+  internal::validation::require(*this);
 }
 
 pricer::Result Field::price(pluss::codem::Config cfg) const {
@@ -790,6 +806,74 @@ pricer::Result Field::price(const Model& model_candidate, pluss::codem::Config c
       [&](const auto& m) {
         return price_one_(tmp.instrument, tmp.market, m, tmp.controls, cfg);
       });
+}
+
+namespace {
+
+std::vector<double> broadcast_host_(const Series& x, std::int64_t n, const char* name) {
+  PLUSS_CHECK(x.defined(), std::string("subsp::math::finance::module::Field::implied_vol: ") + name + " must be defined");
+  Series v = x.to(pluss::pCPU, ScalarType::Float64);
+  v = v.reshape({v.numel()});
+  PLUSS_CHECK(v.numel() == 1 || v.numel() == n,
+              std::string("subsp::math::finance::module::Field::implied_vol: ") + name + " must have one value or one per quote");
+  if (v.numel() == 1 && n != 1) v = v.expand({n});
+  return v.contiguous().host<double>();
+}
+
+}  // namespace
+
+pluss::codem::Series Field::implied_vol(const pricing::ImpliedVolOptions& options, pluss::codem::Config cfg) const {
+  return implied_vol(price(cfg).price, options, cfg);
+}
+
+pluss::codem::Series Field::implied_vol(const pluss::codem::Series& quotes,
+                                        const pricing::ImpliedVolOptions& options,
+                                        pluss::codem::Config cfg) const {
+  PLUSS_CHECK(instrument.exercise == pricing::ExerciseStyle::European,
+              "subsp::math::finance::module::Field::implied_vol: only European instruments have a Black-Scholes implied volatility");
+  PLUSS_CHECK(quotes.defined(), "subsp::math::finance::module::Field::implied_vol: quotes must be defined");
+  const std::int64_t n = std::max<std::int64_t>({quotes.numel(), instrument.strike.numel(), instrument.maturity.numel(), market.spot.numel()});
+  const auto q = broadcast_host_(quotes, n, "quotes");
+  const auto k = broadcast_host_(instrument.strike, n, "strike");
+  const auto t = broadcast_host_(instrument.maturity, n, "maturity");
+  const auto s = broadcast_host_(market.spot, n, "spot");
+  const auto r = broadcast_host_(market.rate, n, "rate");
+  const auto d = broadcast_host_(market.dividend_yield, n, "dividend_yield");
+  std::vector<double> call;
+  if (instrument.type == pricing::OptionType::Auto) call = broadcast_host_(instrument.is_call, n, "is_call");
+  std::vector<double> out(static_cast<std::size_t>(n));
+  for (std::size_t i = 0; i < out.size(); ++i) {
+    const auto type = instrument.type == pricing::OptionType::Auto
+                          ? (call[i] > 0.5 ? pricing::OptionType::Call : pricing::OptionType::Put)
+                          : instrument.type;
+    out[i] = pricing::detail::implied_vol(type, q[i], s[i], k[i], r[i], d[i], t[i], options);
+  }
+  return pluss::make_series(out, {n}, f64_cfg_(cfg, cfg.platform));
+}
+
+pluss::codem::Series Field::exercise_boundary(const pluss::codem::Series& times_to_maturity, pluss::codem::Config cfg) const {
+  constexpr const char* who = "subsp::math::finance::module::Field::exercise_boundary: ";
+  PLUSS_CHECK(instrument.exercise == pricing::ExerciseStyle::American, std::string(who) + "the instrument must be American");
+  PLUSS_CHECK(model.holds<model::BlackScholes>(),
+              std::string(who) + "only Black-Scholes has an exercise boundary curve (other models' exercise regions are surfaces); the model is " + model.name());
+  PLUSS_CHECK(instrument.strike.defined() && instrument.strike.numel() == 1 && instrument.maturity.defined() && instrument.maturity.numel() == 1 &&
+                  market.rate.defined() && market.rate.numel() == 1 && market.dividend_yield.defined() && market.dividend_yield.numel() == 1,
+              std::string(who) + "one strike, maturity, rate and dividend yield are required");
+  validate();
+  const auto one = [](const Series& x) { return x.to(pluss::pCPU, ScalarType::Float64).host<double>()[0]; };
+  PLUSS_CHECK(instrument.type != pricing::OptionType::Auto || instrument.is_call.numel() == 1, std::string(who) + "a single option is required");
+  const bool call = instrument.type == pricing::OptionType::Auto ? one(instrument.is_call) > 0.5 : instrument.type == pricing::OptionType::Call;
+  const double sigma = one(model.as<model::BlackScholes>().volatility);
+  const double maturity = one(instrument.maturity);
+  const auto t = times_to_maturity.to(pluss::pCPU, ScalarType::Float64).host<double>();
+  for (double v : t) {
+    PLUSS_CHECK(std::isfinite(v) && v >= 0.0 && v <= maturity, std::string(who) + "times_to_maturity must lie in [0, maturity]");
+  }
+  return pricing::detail::spectral_boundary(call ? pricing::OptionType::Call : pricing::OptionType::Put, one(instrument.strike), one(market.rate),
+                                            one(market.dividend_yield), maturity, sigma, times_to_maturity,
+                                            pricing::SpectralOptions{.nodes = controls.spectral.nodes, .quadrature = controls.spectral.quadrature,
+                                                                     .max_iterations = controls.spectral.max_iterations, .tolerance = controls.spectral.tolerance})
+      .to(cfg.platform, ScalarType::Float64);
 }
 
 pluss::codem::Series Field::residuals(const pluss::codem::Series& target_prices, pluss::codem::Config cfg) const {

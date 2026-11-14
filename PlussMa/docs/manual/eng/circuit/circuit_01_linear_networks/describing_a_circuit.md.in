@@ -1,0 +1,259 @@
+# Describing a circuit
+
+[Back to Circuits 1: Linear Networks](../circuit_01_linear_networks.md)
+
+You have a network of resistors, capacitors, inductors, sources and amplifiers, and you want its voltages and currents. `circuit::make` takes a description of the network, a `Net`, checks that it is well formed, and compiles it into a `Circuit` that the analysis functions solve. This page explains how a circuit is written down: the nodes, the element groups and their orientation, the sign conventions of the results, and the sweeps of component values that are written as batches.
+
+## The mental model
+
+A circuit is a set of **elements** connected between **nodes**. Nodes are numbered `0` to `nodes - 1`, and node `0` is always the **ground** (reference) node: its voltage is zero and it has no unknown. The analysis is **modified nodal analysis**: the unknowns are the voltages of the nodes `1, ..., nodes - 1`, plus a current for each element that cannot be written as a conductance (voltage sources, inductors, controlled voltage sources and op amps). Kirchhoff's current law at every node, and one equation for each extra current, give a linear system that is solved at once.
+
+Elements of one kind are written together as a group, with the node numbers as two lists and the values as one `Series`:
+
+| Group in `Net` | Elements | Value | Unit |
+|---|---|---|---|
+| `resistors` | resistors | resistance | ohm, positive |
+| `capacitors` | capacitors | capacitance | farad, non-negative |
+| `inductors` | inductors | inductance | henry, positive |
+| `current_sources` | independent current sources | current | ampere |
+| `voltage_sources` | independent voltage sources | voltage | volt |
+| `vccs` | voltage-controlled current sources | transconductance | siemens |
+| `vcvs` | voltage-controlled voltage sources | gain | volt per volt |
+| `amps` | ideal op amps | none | |
+
+A `Branches` group has `positive`, `negative` and `value`: element `i` connects node `positive[i]` to node `negative[i]` and has value `value[..., i]`. The value is a real floating-point `Series` whose last axis lists the elements. Any leading axes are a **batch** of different circuits with the same topology (a parameter sweep), described below.
+
+## Orientation and signs
+
+Every element has a positive and a negative terminal, and the positive terminal comes first in the lists. The conventions are fixed and are used by every result:
+
+- A **voltage source** fixes `V(positive) - V(negative) = value`.
+- A **current source** carries its value from the positive node through the source to the negative node, so it *injects* current into the negative node and draws it from the positive node.
+- A **resistor**, **capacitor** or **inductor** passes current from positive to negative when the positive node is at the higher voltage.
+- A **VCCS** (`Controls`) carries `gain * (V(control_positive) - V(control_negative))` from its positive to its negative node.
+- A **VCVS** fixes `V(positive) - V(negative) = gain * (V(control_positive) - V(control_negative))`.
+- An **op amp** (`Amps`) is ideal with infinite gain: it supplies whatever current its `output` node needs, returning it through `reference`, so that `V(positive_input) = V(negative_input)`. Its inputs draw no current.
+
+The currents in the results follow the same direction: positive terminal to negative terminal through the element. A voltage source that is delivering power therefore has a **negative** current, the usual passive sign convention.
+
+## A first circuit
+
+A 10 V source across two resistors in series, `1 kohm` and `3 kohm`: the source is between node 1 and ground, the resistors run from node 1 to node 2 and from node 2 to ground. The program builds the net, compiles it and reads the counts. There are three nodes, and the unknowns are two node voltages plus the current of the one voltage source: three.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({10.0})};
+  net.resistors = {{1, 2}, {2, 0}, vec({1000.0, 3000.0})};
+
+  const ckt::Circuit circuit = ckt::make(net);
+  out.writeln("nodes", circuit.nodes(), " unknowns", circuit.unknowns());
+  out.writeln("element type", dtype_of(circuit.dtype()).name, " batch shape", circuit.batch_shape());
+}
+```
+
+The element type is the type of the values you gave (here `Float64`); every group must use the same one. An empty batch shape means a single circuit.
+
+## Every kind of element
+
+The same net can hold all the kinds. The program builds a circuit with one of each: an inductor, a capacitor, a current source, a voltage source, a VCCS, a VCVS and an op amp, on six nodes. The unknown count is the five node voltages plus the currents of the voltage source, the inductor, the VCVS and the op amp: `5 + 4 = 9`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  ckt::Net net;
+  net.nodes = 6;
+  net.resistors = {{1}, {2}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  net.inductors = {{2}, {3}, vec({1e-3})};
+  net.current_sources = {{0}, {3}, vec({0.001})};
+  net.voltage_sources = {{1}, {0}, vec({5.0})};
+  net.vccs = {{4}, {0}, {1}, {0}, vec({0.002})};
+  net.vcvs = {{5}, {0}, {1}, {0}, vec({2.0})};
+  net.amps = {{4}, {0}, {0}, {3}};
+
+  const ckt::Circuit circuit = ckt::make(net);
+  out.writeln("nodes", circuit.nodes(), " unknowns", circuit.unknowns(), " (5 node voltages + voltage source + inductor + VCVS + op amp)");
+}
+```
+
+## A sweep of component values
+
+A value `Series` with a leading axis describes a batch of circuits that share their topology, for example a sweep of a resistor. The batch is the leading shape of the values; groups with a scalar value `[elements]` are shared by every member, and groups with a leading axis must all have the same leading shape. The program sweeps the lower resistor of the divider over three values: the value of that group is `[3, 2]` (three circuits, two resistors) and the source, with value `[1]`, is shared.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({10.0})};
+  net.resistors = {{1, 2}, {2, 0}, vec({1000, 1000, 1000, 2000, 1000, 4000}).reshape({3, 2})};
+
+  const ckt::Circuit circuit = ckt::make(net);
+  out.writeln("batch shape", circuit.batch_shape(), " unknowns per circuit", circuit.unknowns());
+}
+```
+
+The next two pages solve the circuit, and the results carry the same leading batch axes.
+
+## Errors
+
+`make` validates the description before it builds anything. The program shows too few nodes, a net with no elements, a resistor from a node to itself, a node outside the range, a negative resistance, a value list that does not match the elements, endpoint lists of unequal length, and groups with different element types.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  report([&] { ckt::Net net; net.nodes = 1; (void)ckt::make(net); });
+  report([&] { ckt::Net net; net.nodes = 3; (void)ckt::make(net); });
+  report([&] { ckt::Net net; net.nodes = 3; net.resistors = {{1}, {1}, vec({1.0})}; (void)ckt::make(net); });
+  report([&] { ckt::Net net; net.nodes = 3; net.resistors = {{1}, {5}, vec({1.0})}; (void)ckt::make(net); });
+  report([&] { ckt::Net net; net.nodes = 3; net.resistors = {{1}, {0}, vec({-1.0})}; (void)ckt::make(net); });
+  report([&] { ckt::Net net; net.nodes = 3; net.resistors = {{1, 2}, {0, 0}, vec({1.0})}; (void)ckt::make(net); });
+  report([&] { ckt::Net net; net.nodes = 3; net.resistors = {{1}, {0, 2}, vec({1.0})}; (void)ckt::make(net); });
+  report([&] {
+    ckt::Net net;
+    net.nodes = 3;
+    net.resistors = {{1}, {0}, vec({1.0})};
+    net.capacitors = {{2}, {0}, pluss::series::make(std::vector<float>{1.0f})};
+    (void)ckt::make(net);
+  });
+}
+```
+
+## Decisions
+
+- **Numbering the nodes:** ground is `0`; number the rest from `1`, in any order. Draw the schematic and write the node numbers on it first.
+- **One group per kind of element:** write all resistors in one `Branches`, with the endpoint lists in the same order as the values.
+- **A sweep:** put the swept values on a leading axis of that group only; leave every other group unbatched.
+- **Single or double precision:** `Float64` for analysis; `Float32` works when every group uses it.
+
+## Pitfalls
+
+The program makes four mistakes at the description stage: swapping two valid node numbers, getting the direction of a current source backwards, giving an element a zero value, and leaving a node connected to nothing.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <functional>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static void report(const char *what, const std::function<void()> &call) {
+  try {
+    call();
+    std::cout << what << ": solved\n";
+  } catch (const pluss::Error &e) {
+    std::cout << what << ": " << e.message() << "\n";
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+
+  // 1. a 10 V source across a divider of 1 kohm and 3 kohm: swapping the two nodes of the source reverses it, swapping those of a resistor does not
+  const auto middle = [&](std::int64_t source_positive, std::int64_t source_negative, std::int64_t resistor_from, std::int64_t resistor_to) {
+    ckt::Net net;
+    net.nodes = 3;
+    net.voltage_sources = {{source_positive}, {source_negative}, vec({10.0})};
+    net.resistors = {{resistor_from, 2}, {resistor_to, 0}, vec({1000.0, 3000.0})};
+    return flat(ckt::op(ckt::make(net)).voltage)[2];
+  };
+  out.writeln("divider middle node: ", middle(1, 0, 1, 2), " V;  source written 0 -> 1: ", middle(0, 1, 1, 2), " V;  first resistor written 2 -> 1: ", middle(1, 0, 2, 1), " V");
+
+  // 2. a current source delivers into its negative node
+  const auto into_node = [&](std::int64_t positive, std::int64_t negative) {
+    ckt::Net net;
+    net.nodes = 2;
+    net.current_sources = {{positive}, {negative}, vec({0.002})};
+    net.resistors = {{1}, {0}, vec({1000.0})};
+    return flat(ckt::op(ckt::make(net)).voltage)[1];
+  };
+  out.writeln("current source written 0 -> 1: node 1 at ", into_node(0, 1), " V;  written 1 -> 0: node 1 at ", into_node(1, 0), " V");
+
+  // 3. a zero value: allowed for a capacitor, refused for a resistor
+  ckt::Net open_capacitor;
+  open_capacitor.nodes = 2;
+  open_capacitor.voltage_sources = {{1}, {0}, vec({1.0})};
+  open_capacitor.resistors = {{1}, {0}, vec({1000.0})};
+  open_capacitor.capacitors = {{1}, {0}, vec({0.0})};
+  report("a capacitor of zero capacitance", [&] { (void)ckt::make(open_capacitor); });
+  ckt::Net shorted = open_capacitor;
+  shorted.capacitors = {};
+  shorted.resistors = {{1}, {0}, vec({0.0})};
+  report("a resistor of zero resistance  ", [&] { (void)ckt::make(shorted); });
+
+  // 4. a node connected to nothing
+  ckt::Net stray;
+  stray.nodes = 3;
+  stray.voltage_sources = {{1}, {0}, vec({1.0})};
+  stray.resistors = {{1}, {0}, vec({1000.0})};
+  report("node 2 connected to nothing     ", [&] { (void)ckt::op(ckt::make(stray)); });
+}
+```
+
+Two valid node numbers can be swapped without any error, and the effect depends on the element: a resistor's two ends are interchangeable (the divider stays at `7.5 V`), but the direction of a source is not (written from `0` to `1`, the same source gives `-7.5 V`). A current source written from `0` to `1` delivers into node `1` and raises it by `2 V`, and written from `1` to `0` it pulls node `1` down by the same amount; a typo that swaps the nodes of a source is a different circuit. A capacitor may have zero capacitance (an open circuit), a resistor may not, and a node that nothing touches makes the equations singular and is reported by the analysis.
+
+Reference: [`Net`](../../../../api/eng/circuit/model/Net.md), [`Circuit`](../../../../api/eng/circuit/model/CircuitModel.md), [`make`](../../../../api/eng/circuit/model/make.md).
+
+Where next: [DC operating point](dc_operating_point.md) solves a circuit with constant sources.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="dc_operating_point.html">
+    <span class="label">Next</span>
+    <span class="title">DC operating point</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

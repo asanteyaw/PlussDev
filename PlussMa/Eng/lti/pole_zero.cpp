@@ -250,7 +250,8 @@ Series to_sos(const PoleZero &system) {
         result.real().to(system.poles().scalar_type() == ScalarType::Complex128
                              ? ScalarType::Float64
                              : ScalarType::Float32);
-  return result;
+  // adding zero turns a negative zero left by the root arithmetic into a plain zero
+  return result.add(0.0);
 }
 
 } // namespace pluss::subsp::eng::lti

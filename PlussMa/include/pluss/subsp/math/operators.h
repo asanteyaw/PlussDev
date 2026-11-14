@@ -295,29 +295,35 @@ enum class Engine : std::uint8_t { Auto = 0, Structural = 1, Jet = 2 };
 [[nodiscard]] Operator taylor(pluss::StackArray<std::string_view> variables,
                               pluss::RangeView<double> center,
                               std::int64_t order, DiffOptions options = {});
-// The coefficients f^(k)(a) / k!, k = 0..order, as a vector-valued Function
-// (shape [order + 1]).
-[[nodiscard]] Operator taylor_coefficients(std::string_view variable,
-                                           double center, std::int64_t order,
-                                           DiffOptions options = {},
-                                           Engine engine = Engine::Auto);
-// The Lagrange remainder factor f^(order + 1)(x) / (order + 1)!, so that
-// |f(x) - T_order(x)| <= sup |factor| |x - a|^(order + 1) between a and x.
-[[nodiscard]] Operator taylor_remainder(std::string_view variable,
-                                        std::int64_t order,
-                                        DiffOptions options = {});
+// Companion operators of the Taylor expansion, reached as taylor().name(...).
+struct Taylor {
+  // The coefficients f^(k)(a) / k!, k = 0..order, as a vector-valued Function
+  // (shape [order + 1]).
+  [[nodiscard]] Operator coefficients(std::string_view variable, double center,
+                                      std::int64_t order,
+                                      DiffOptions options = {},
+                                      Engine engine = Engine::Auto) const;
+  // The Lagrange remainder factor f^(order + 1)(x) / (order + 1)!, so that
+  // |f(x) - T_order(x)| <= sup |factor| |x - a|^(order + 1) between a and x.
+  [[nodiscard]] Operator remainder(std::string_view variable,
+                                   std::int64_t order,
+                                   DiffOptions options = {}) const;
+};
+[[nodiscard]] inline Taylor taylor() { return {}; }
 
-
-// Operators on coefficient vectors (rank-1 Functions, as taylor_coefficients
+// Operators on coefficient vectors (rank-1 Functions, as taylor().coefficients
 // returns): a truncated power series sum c_k (x - a)^k is its coefficient vector.
 // Polynomial in `variable` about `center` with the input as its coefficients.
-[[nodiscard]] Operator power_series(std::string_view variable, double center);
-// Termwise derivative: c'_k = (k + 1) c_{k+1} (one coefficient fewer).
-[[nodiscard]] Operator series_derivative();
-// Termwise integral from the centre: c'_0 = 0, c'_{k+1} = c_k / (k + 1) (one more).
-[[nodiscard]] Operator series_integral();
-// Cauchy product with another coefficient vector, truncated to the shorter length.
-[[nodiscard]] Operator series_product(math::Function other);
+[[nodiscard]] Operator power(std::string_view variable, double center);
+struct Power {
+  // Termwise derivative: c'_k = (k + 1) c_{k+1} (one coefficient fewer).
+  [[nodiscard]] Operator derivative() const;
+  // Termwise integral from the centre: c'_0 = 0, c'_{k+1} = c_k / (k + 1) (one more).
+  [[nodiscard]] Operator integral() const;
+  // Cauchy product with another coefficient vector, truncated to the shorter length.
+  [[nodiscard]] Operator product(math::Function other) const;
+};
+[[nodiscard]] inline Power power() { return {}; }
 
 } // namespace expansion
 
@@ -460,12 +466,16 @@ void require_callable(bool present);
 [[nodiscard]] Operator
 define_erased(std::string key,
               std::function<math::Function(const math::Function &)> callable,
-              Options options);
+              Options options, Operator adjoint);
 } // namespace detail
 
+// `adjoint` is the formal adjoint of the operator being defined; supplying it
+// makes `operators::adjoint` work on the result (and sets `adjoint_known`).
+// Declaring `Options::adjoint_known` without supplying it is an error, since
+// the library could not build the adjoint.
 template <class Callable>
 [[nodiscard]] Operator define(std::string_view key, Callable &&callable,
-                              Options options = {}) {
+                              Options options = {}, Operator adjoint = {}) {
   using Value = std::remove_cvref_t<Callable>;
   static_assert(
       std::invocable<Value &, const math::Function &>,
@@ -485,7 +495,7 @@ template <class Callable>
       [stored = std::move(stored)](const math::Function &input) {
         return std::invoke(*stored, input);
       },
-      options);
+      options, std::move(adjoint));
 }
 
 template <class Callable> [[nodiscard]] Operator define(Callable &&callable) {

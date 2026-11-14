@@ -1125,7 +1125,7 @@ def user_signature(method: Method, class_name: str) -> str:
             f'{typ} {name}' + (f' {default}' if default else '')
         )
     ret = public_cpp_type(method.return_type)
-    return f'{class_name}::{method.name}({", ".join(rendered_params)}) -> {ret}'
+    return f'{ret} {class_name}::{method.name}({", ".join(rendered_params)})'
 
 
 def returns_doc(ret: str) -> str:
@@ -7872,7 +7872,7 @@ def example_for(class_name: str, method: Method) -> str:
                     df_base()
                     + '\n\n'
                     + 'auto blocks = df.matrix();\n'
-                    + 'auto out = fmt::format(\n'
+                    + 'auto out = pluss::tils::OutputEngine::format(\n'
                     + '    "series blocks: {}\\nnote blocks: {}\\ntimeline blocks: {}\\ntimeindex blocks: {}",\n'
                     + '    blocks.series_span().size(),\n'
                     + '    blocks.note_span().size(),\n'

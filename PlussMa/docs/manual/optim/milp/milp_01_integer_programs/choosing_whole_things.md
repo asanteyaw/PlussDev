@@ -221,3 +221,8 @@ A node limit gives an *anytime* answer: the best solution so far, with a proof o
 - **`Infeasible` can hide a feasible relaxation.** `2x = 1` with `x` an integer has a relaxation at 0.5 and no whole solution.
 
 Where next: [Chapter 2](../milp_02_larger_integer_models.md) solves larger models with the sparse branch-and-cut solver.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

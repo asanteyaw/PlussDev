@@ -5,14 +5,16 @@
 #include <string_view>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include <pluss/pluss.h>
 #include <pluss/tils.h>
+#include <pluss/tils/kit/output.h>
 
 namespace {
 
 namespace fs = std::filesystem;
+
+pluss::tils::OutputEngine console;
 
 fs::path data_file(std::string_view name) {
   return fs::path(PLUSSMIC_SOURCE_DIR) / "data" / std::string(name);
@@ -33,15 +35,15 @@ void write_text_file(const fs::path& path, std::string_view text) {
 }
 
 void print_frame_shape(std::string_view label, const pluss::table::DataFrame& frame) {
-  fmt::print("{} -> [{} cs x {} feat]\n", label, frame.ncases(), frame.nfeatures());
+  console.writef("{} -> [{} cs x {} feat]\n", label, frame.ncases(), frame.nfeatures());
 }
 
 void print_catalog_shape(std::string_view label, const pluss::kindle::Catalog& catalog) {
-  fmt::print("{} -> [{} rows x {} streams]\n", label, catalog.nrows(), catalog.nkeys());
+  console.writef("{} -> [{} rows x {} streams]\n", label, catalog.nrows(), catalog.nkeys());
 }
 
 void print_registry_shape(std::string_view label, const pluss::scribble::Registry& registry) {
-  fmt::print("{} -> [{} slots]\n", label, registry.size());
+  console.writef("{} -> [{} slots]\n", label, registry.size());
 }
 
 struct TextFixtures {
@@ -92,7 +94,7 @@ TextFixtures create_text_fixtures() {
 }
 
 void demo_dataframe_io(const TextFixtures& fixtures) {
-  fmt::print("\n=== DataFrame Loaders/Savers ===\n");
+  console.writef("\n=== DataFrame Loaders/Savers ===\n");
   const auto report_excel_cfg = pluss::loader::config_from(
       {{"sheetindex", 0},
        {"auto_table_block", true},
@@ -103,27 +105,27 @@ void demo_dataframe_io(const TextFixtures& fixtures) {
        {"header_ffill", true},
        {"header_joiner", "_"}});
 
-  fmt::print("loading DataFrame csv...\n");
+  console.writef("loading DataFrame csv...\n");
   const auto df_csv = pluss::table::DataFrame::load(
       "csv",
       data_file("messy_data.csv").string(),
       {{"ncases", 6}});
-  fmt::print("loading DataFrame excel...\n");
+  console.writef("loading DataFrame excel...\n");
   const auto df_excel = pluss::table::DataFrame::load_excel(data_file("report.xlsx").string(), report_excel_cfg);
-  fmt::print("loading DataFrame json...\n");
+  console.writef("loading DataFrame json...\n");
   const auto df_json = pluss::table::DataFrame::load_json(
       data_file("weather.json").string(),
       {{"ncases", 6}});
 
-  fmt::print("loading DataFrame txt delimited...\n");
+  console.writef("loading DataFrame txt delimited...\n");
   const auto df_txt_delimited = pluss::table::DataFrame::load_txt(
       fixtures.delimited_txt.string(),
       {{"txt_mode", "delimited"}, {"sep", "pipe"}, {"header", true}});
-  fmt::print("loading DataFrame txt whitespace...\n");
+  console.writef("loading DataFrame txt whitespace...\n");
   const auto df_txt_whitespace = pluss::table::DataFrame::load_txt(
       fixtures.whitespace_txt.string(),
       {{"txt_mode", "whitespace"}, {"header", true}});
-  fmt::print("loading DataFrame txt fixed-width...\n");
+  console.writef("loading DataFrame txt fixed-width...\n");
   const auto df_txt_fixed = pluss::table::DataFrame::load_txt(
       fixtures.fixed_width_txt.string(),
       {{"txt_mode", "fixed_width"}, {"widths", {"4", "11", "8", "20"}}, {"header", true}});
@@ -139,7 +141,7 @@ void demo_dataframe_io(const TextFixtures& fixtures) {
     const auto df_parquet = pluss::table::DataFrame::load_parquet(data_file("weather.parquet").string());
     print_frame_shape("DataFrame::load_parquet(...)", df_parquet);
   } catch (const std::exception& e) {
-    fmt::print("DataFrame::load_parquet(...) not available in this build: {}\n", e.what());
+    console.writef("DataFrame::load_parquet(...) not available in this build: {}\n", e.what());
   }
 
   const auto out_dir = demo_temp_dir() / "df_outputs";
@@ -166,14 +168,14 @@ void demo_dataframe_io(const TextFixtures& fixtures) {
   try {
     const auto out_parquet = out_dir / "df_demo.parquet";
     df_txt_whitespace.save_parquet(out_parquet.string());
-    fmt::print("saved parquet: {}\n", out_parquet.string());
+    console.writef("saved parquet: {}\n", out_parquet.string());
   } catch (const std::exception& e) {
-    fmt::print("DataFrame::save_parquet(...) not available in this build: {}\n", e.what());
+    console.writef("DataFrame::save_parquet(...) not available in this build: {}\n", e.what());
   }
 }
 
 void demo_catalog_io(const TextFixtures& fixtures) {
-  fmt::print("\n=== Catalog Loaders/Savers ===\n");
+  console.writef("\n=== Catalog Loaders/Savers ===\n");
   const auto report_excel_cfg = pluss::loader::config_from(
       {{"sheetindex", 0},
        {"auto_table_block", true},
@@ -208,7 +210,7 @@ void demo_catalog_io(const TextFixtures& fixtures) {
     const auto cat_parquet = pluss::kindle::Catalog::load_parquet(data_file("weather.parquet").string());
     print_catalog_shape("Catalog::load_parquet(...)", cat_parquet);
   } catch (const std::exception& e) {
-    fmt::print("Catalog::load_parquet(...) not available in this build: {}\n", e.what());
+    console.writef("Catalog::load_parquet(...) not available in this build: {}\n", e.what());
   }
 
   const auto out_dir = demo_temp_dir() / "catalog_outputs";
@@ -227,12 +229,12 @@ void demo_catalog_io(const TextFixtures& fixtures) {
   try {
     cat_txt.save_parquet((out_dir / "catalog_demo.parquet").string());
   } catch (const std::exception& e) {
-    fmt::print("Catalog::save_parquet(...) not available in this build: {}\n", e.what());
+    console.writef("Catalog::save_parquet(...) not available in this build: {}\n", e.what());
   }
 }
 
 void demo_registry_io(const TextFixtures& fixtures) {
-  fmt::print("\n=== Registry Loaders/Savers ===\n");
+  console.writef("\n=== Registry Loaders/Savers ===\n");
   const auto report_excel_cfg = pluss::loader::config_from(
       {{"sheetindex", 0},
        {"auto_table_block", true},
@@ -265,7 +267,7 @@ void demo_registry_io(const TextFixtures& fixtures) {
     const auto reg_parquet = pluss::scribble::Registry::load_parquet(data_file("weather.parquet").string());
     print_registry_shape("Registry::load_parquet(...)", reg_parquet);
   } catch (const std::exception& e) {
-    fmt::print("Registry::load_parquet(...) not available in this build: {}\n", e.what());
+    console.writef("Registry::load_parquet(...) not available in this build: {}\n", e.what());
   }
 
   const auto out_dir = demo_temp_dir() / "registry_outputs";
@@ -283,24 +285,24 @@ void demo_registry_io(const TextFixtures& fixtures) {
       pluss::loader::config_from({{"orient", "split"}}));
 
   reg_json.save_json((out_dir / "registry_hetero_native.json").string());
-  fmt::print("Registry heterogeneous JSON save succeeded via native representation.\n");
+  console.writef("Registry heterogeneous JSON save succeeded via native representation.\n");
 
   try {
     reg_json.save_csv((out_dir / "registry_hetero_should_fail.csv").string());
-    fmt::print("WARNING: heterogeneous Registry unexpectedly saved as CSV.\n");
+    console.writef("WARNING: heterogeneous Registry unexpectedly saved as CSV.\n");
   } catch (const std::exception& e) {
-    fmt::print("Registry heterogeneous save to tabular target is blocked (expected): {}\n", e.what());
+    console.writef("Registry heterogeneous save to tabular target is blocked (expected): {}\n", e.what());
   }
 
   try {
     reg_stream_compatible.save_parquet((out_dir / "registry_demo.parquet").string());
   } catch (const std::exception& e) {
-    fmt::print("Registry::save_parquet(...) not available in this build: {}\n", e.what());
+    console.writef("Registry::save_parquet(...) not available in this build: {}\n", e.what());
   }
 }
 
 void demo_loader_level_save_as() {
-  fmt::print("\n=== Loader-Level save_as/load ===\n");
+  console.writef("\n=== Loader-Level save_as/load ===\n");
   const auto df = pluss::table::DataFrame::load(
       "csv",
       data_file("messy_data.csv").string(),
@@ -324,9 +326,9 @@ void demo_loader_level_save_as() {
 
 int main() {
   try {
-    fmt::print("PlussMic Loader/Saver Parity Demo\n");
-    fmt::print("data dir: {}\n", (fs::path(PLUSSMIC_SOURCE_DIR) / "data").string());
-    fmt::print("temp dir: {}\n", demo_temp_dir().string());
+    console.writef("PlussMic Loader/Saver Parity Demo\n");
+    console.writef("data dir: {}\n", (fs::path(PLUSSMIC_SOURCE_DIR) / "data").string());
+    console.writef("temp dir: {}\n", demo_temp_dir().string());
 
     const auto fixtures = create_text_fixtures();
     demo_dataframe_io(fixtures);
@@ -334,7 +336,7 @@ int main() {
     demo_registry_io(fixtures);
     demo_loader_level_save_as();
   } catch (const std::exception& e) {
-    fmt::print("demo failed: {}\n", e.what());
+    console.writef("demo failed: {}\n", e.what());
     return 1;
   }
   return 0;

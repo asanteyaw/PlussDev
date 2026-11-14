@@ -1,0 +1,30 @@
+<!-- generated from signal.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Signal processing
+
+A signal is a sequence of samples. The chapters answer four questions in turn:
+
+1. **How do I prepare a finite record, and combine it with a set of weights?** Windows taper the ends of a record, and convolution and correlation slide a kernel along it. This is the foundation for everything else.
+2. **How do I run a filter whose output depends on its own past?** Recursive filters, second-order sections for high orders, and zero-phase filtering for offline work.
+3. **What does a filter do to each frequency, and how do I design one?** Frequency response, and Butterworth and Chebyshev designs.
+
+All the operations work on a batch of signals at once: any axis that is not the sample axis is a batch axis, and `dim` picks the sample axis. Signals may be `Float32`, `Float64` or complex, and a filter can be run block by block, with the state carried from one block to the next.
+
+Chapters, in reading order:
+
+- [Signals 1: Windows and Convolution](signal/signal_01_windows_and_convolution.md)
+- [Signals 2: Recursive Filters](signal/signal_02_recursive_filters.md)
+- [Signals 3: Frequency Response and Design](signal/signal_03_frequency_response_and_design.md)
+
+Every chapter follows the same format: a mental model, complete programs, and output produced by those programs.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+signal/signal_01_windows_and_convolution
+signal/signal_02_recursive_filters
+signal/signal_03_frequency_response_and_design
+```
+<!-- apiref:toctree:end -->

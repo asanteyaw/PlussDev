@@ -53,7 +53,7 @@ auto meta = x.attr();
 std::cout << meta << '\n';
 ```
 
-Use `item<T>()` only for a rank-zero `Series`, and `pull<T>()` only for a
+Use `item<T>()` only for a rank-zero `Series`, and `items<T>()` only for a
 rank-one `Series`. Use `host<T>()` when generic code must preserve and inspect
 arbitrary rank; its array representation retains shape and stride metadata.
 

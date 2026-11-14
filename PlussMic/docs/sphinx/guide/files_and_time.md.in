@@ -1,0 +1,44 @@
+# Files, missing data and time
+
+[Back to PlussMic by example](../guide.md)
+
+Real data comes from files, has holes, and has dates. This page reads a messy CSV, repairs it, summarises it, writes it back and checks the round trip; and then turns daily prices into a monthly view.
+
+## The mental model
+
+A loaded frame remembers which values are missing. `NULL` is a state of the value, not a number, and the table operations (`aggregate`, `group`, `fillnull`, `dropnull`) respect it. The numbers underneath, which you reach with `as_series()`, are an array with a placeholder where a value is missing; that is the escape hatch to the full `Series` API, and it does not know about missingness. Time works the same way: dates live in a `Timeline` feature, numeric streams are read with `.ts()`, and resampling needs the dates on the case axis.
+
+## A file round trip
+
+Six lines of a CSV with a missing station, a missing temperature and a missing humidity. The program loads it, drops the row without a station, fills the remaining holes with each feature's mean, summarises per station, saves the clean table and reads it back.
+
+@@example load_clean_save.cpp@@
+
+The frame arrives with `NULL` where the file was empty. `dropnull({"station"}, true)` removes the one row whose station is missing, so five rows remain. The fills use each feature's mean: `13.85` for temperature, and for humidity a mean of `78.75` that the program rounds to `79` itself, because the humidity feature was read as whole numbers and so cannot hold a fraction. The per-station report then has two rows, and the reloaded file has five rows and the same humidity total as the table that was saved, which is the check that the round trip lost nothing.
+
+## Missing is not zero
+
+The means above came from `aggregate`. The next program shows why.
+
+@@example pitfall_nulls.cpp@@
+
+Through the table, the mean of the three known temperatures is `14.5333`. Through `as_series()` the missing value is the placeholder zero, and the mean of four numbers drops to `10.9`. Take reductions through the table (`aggregate`, `group`) whenever values can be missing, and treat `as_series()` as the tool for work that is already free of nulls.
+
+## From daily to monthly
+
+Eight prices on irregular days. The program computes day-to-day returns, then puts the dates on the case axis and resamples to calendar months.
+
+@@example daily_to_monthly.cpp@@
+
+The first return is `nan` because the first day has no predecessor. Resampling with `"MS"` (month start) takes the mean of the closing price within each month, and a second resample with `sum` totals the volume: January averages `102` over three days, February `109.5` over two, March `112.33` over three. Resampling needs a time axis, so the program moves `date` to the case axis with `labels().set("date", false)` first; without that step there is nothing to bin.
+
+## Decisions
+
+- **Missing values:** decide the rule once (drop the row, fill with a statistic, keep the null) and apply it with `dropnull` and `fillnull` before summarising.
+- **Fill type:** a whole-number feature takes a whole-number fill; round it yourself so the table shows what is stored.
+- **Round trips:** always read back what you wrote and compare a total.
+- **Time:** parse dates into a `Timeline` early, keep them on the case axis for resampling, and use `.ts()` for returns and rolling work.
+
+## Where next
+
+Reference pages: [`load_csv`](../api/dataframe/load_csv.md), [`dropnull`](../api/dataframe/dropnull.md), [`fillnull`](../api/dataframe/fillnull.md), [`group`](../api/dataframe/group.md), [`save_csv`](../api/dataframe/save_csv.md), [`aggregate`](../api/dataframe/aggregate.md). Back to [PlussMic by example](../guide.md).

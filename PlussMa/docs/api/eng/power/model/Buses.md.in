@@ -54,6 +54,12 @@ A shunt capacitor on a bus.
 
 ### Example 3
 
+A shunt conductance at the load bus.
+
+@@example Eng/api/power_gens_shunt_shift.cpp@@
+
+### Example 4
+
 A batch of load levels in one call.
 
 @@example Eng/api/power_scenarios.cpp@@

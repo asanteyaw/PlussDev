@@ -9,6 +9,14 @@ stream. You configure an engine with an `OutputOptions` value and with
 - [`OutputEngine`](../core-output-engine.md): construction, the sink, and every
   member that writes, configures, or logs.
 - [`OutputLevel`](../core-output-level.md): the ranked levels that filter log lines.
+- [`OutputEngine::format`](../core-output-engine/format.md) and
+  [`join`](../core-output-engine/join.md): render a pattern or a range to a
+  string instead of writing it. The literal patterns of every formatting call are
+  checked against their arguments while compiling.
+- [`runtime_format`](../core-runtime-format.md): marks a pattern that is only
+  known at run time.
+- [`print`](../core-print.md) and [`println`](../core-println.md): one-off
+  formatted output to standard output, a stream, or a C file handle.
 - [`OutputOptions`](../core-output-options.md): the bulk configuration of an engine.
 
 For a guide with worked programs, see
@@ -31,6 +39,8 @@ For a guide with worked programs, see
 ../core-output-engine/writeln
 ../core-output-engine/writef
 ../core-output-engine/writelnf
+../core-output-engine/format
+../core-output-engine/join
 ../core-output-engine/endln
 ../core-output-engine/flush
 ../core-output-engine/log
@@ -45,6 +55,9 @@ For a guide with worked programs, see
 ../core-output-engine/infof
 ../core-output-engine/warnf
 ../core-output-engine/errorf
+../core-runtime-format
+../core-print
+../core-println
 ../core-output-level
 ../core-output-options
 ```

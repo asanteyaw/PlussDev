@@ -8,3 +8,16 @@ With `m` independent Wiener processes, `dX = μ dt + Σ σ_k dW_k`. Pass `sigma`
 @@example Probability/random_processes/guide/sde/12_several_factors.cpp@@
 
 The diffusion has shape `[3, 2]`: three states, two sources. For `g = x²` each row matches `2xμ + σ₁² + σ₂²` for the drift and `2xσ_k` for the diffusion, to the printed digits.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ito_s_lemma_for_three_functions.html">
+    <span class="label">Previous</span>
+    <span class="title">Ito's lemma for three functions</span>
+  </a>
+  <a class="next-link" href="products_and_quotients.html">
+    <span class="label">Next</span>
+    <span class="title">Products and quotients</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

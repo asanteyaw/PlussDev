@@ -56,8 +56,8 @@ Compare the three prototype families and inspect a second-order-section conversi
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::ma::eng::lti;
-namespace sig = pluss::ma::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -99,8 +99,8 @@ Exercise band transformations and analog-versus-digital interpretation.
 #include <cmath>
 #include <optional>
 
-namespace lti = pluss::ma::eng::lti;
-namespace sig = pluss::ma::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -145,7 +145,7 @@ Observe validation of cutoffs, ripple, and band/cutoff shape.
 #include <exception>
 #include <string>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {

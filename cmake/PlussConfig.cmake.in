@@ -19,9 +19,11 @@ string(FIND "${_pluss_export_content}" "Parquet::parquet" _pluss_needs_parquet)
 string(FIND "${_pluss_export_content}" "CURL::libcurl" _pluss_needs_curl)
 string(FIND "${_pluss_export_content}" "X11::X11" _pluss_needs_x11)
 string(FIND "${_pluss_export_content}" "Freetype::Freetype" _pluss_needs_freetype)
-string(FIND "${_pluss_export_content}" "fmt::fmt" _pluss_needs_fmt)
-string(FIND "${_pluss_export_content}" "SQLite::SQLite3" _pluss_needs_sqlite3)
+string(FIND "${_pluss_export_content}" "SQLite3::SQLite3" _pluss_needs_sqlite3)
+string(FIND "${_pluss_export_content}" "SQLite::SQLite3" _pluss_needs_sqlite_legacy)
 string(FIND "${_pluss_export_content}" "Threads::Threads" _pluss_needs_threads)
+string(FIND "${_pluss_export_content}" "Pluss::Unistring" _pluss_needs_unistring)
+string(FIND "${_pluss_export_content}" "Pluss::Zip" _pluss_needs_zip)
 string(FIND "${_pluss_export_content}" "torch_library" _pluss_needs_torch_library)
 string(FIND "${_pluss_export_content}" "torch;" _pluss_needs_torch_target)
 
@@ -59,16 +61,45 @@ if(NOT _pluss_needs_freetype EQUAL -1)
   find_dependency(Freetype)
 endif()
 
-if(NOT _pluss_needs_fmt EQUAL -1)
-  find_dependency(fmt CONFIG QUIET)
-endif()
-
-if(NOT _pluss_needs_sqlite3 EQUAL -1)
+if(NOT _pluss_needs_sqlite3 EQUAL -1 OR NOT _pluss_needs_sqlite_legacy EQUAL -1)
   find_dependency(SQLite3)
+  if(NOT TARGET SQLite3::SQLite3 AND TARGET SQLite::SQLite3)
+    add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
+  elseif(NOT TARGET SQLite::SQLite3 AND TARGET SQLite3::SQLite3)
+    add_library(SQLite::SQLite3 ALIAS SQLite3::SQLite3)
+  endif()
 endif()
 
 if(NOT _pluss_needs_threads EQUAL -1)
   find_dependency(Threads)
+endif()
+
+# Resolve optional native libraries on the consumer's machine. The exported
+# targets must not carry paths from the build runner into a downloaded ZIP.
+if(NOT _pluss_needs_unistring EQUAL -1 AND NOT TARGET Pluss::Unistring)
+  if(APPLE)
+    file(GLOB _pluss_bundled_unistring
+      "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_LIBDIR@/libunistring.*.dylib")
+  endif()
+  if(_pluss_bundled_unistring)
+    list(GET _pluss_bundled_unistring 0 _pluss_unistring_library)
+  else()
+    find_library(_pluss_unistring_library NAMES unistring libunistring)
+  endif()
+  if(_pluss_unistring_library)
+    add_library(Pluss::Unistring SHARED IMPORTED)
+    set_target_properties(Pluss::Unistring PROPERTIES
+      IMPORTED_LOCATION "${_pluss_unistring_library}")
+  endif()
+endif()
+
+if(NOT _pluss_needs_zip EQUAL -1 AND NOT TARGET Pluss::Zip)
+  find_library(_pluss_zip_library NAMES zip libzip)
+  if(_pluss_zip_library)
+    add_library(Pluss::Zip UNKNOWN IMPORTED)
+    set_target_properties(Pluss::Zip PROPERTIES
+      IMPORTED_LOCATION "${_pluss_zip_library}")
+  endif()
 endif()
 
 if(NOT _pluss_needs_torch_library EQUAL -1 OR NOT _pluss_needs_torch_target EQUAL -1)
@@ -95,23 +126,30 @@ if(NOT _pluss_needs_curl EQUAL -1 AND NOT TARGET CURL::libcurl)
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
       "PlussII C++ requires libcurl for URL loading support, but CURL::libcurl was not found. "
-      "Install libcurl (or build PlussII C++ with bundled curl enabled) and retry.")
+      "Install libcurl (or build PlussII with bundled curl enabled) and retry.")
   return()
 endif()
 
-if(NOT _pluss_needs_fmt EQUAL -1 AND NOT TARGET fmt::fmt)
+if((NOT _pluss_needs_sqlite3 EQUAL -1 OR NOT _pluss_needs_sqlite_legacy EQUAL -1)
+   AND (NOT TARGET SQLite3::SQLite3 OR NOT TARGET SQLite::SQLite3))
   set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
   set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
-      "PlussII C++ was built with fmt-enabled public headers, but fmt::fmt was not found. "
-      "Install fmt and add its prefix to CMAKE_PREFIX_PATH, or rebuild the distribution with PLUSSQIT_USE_FMT=OFF.")
-  return()
-endif()
-
-if(NOT _pluss_needs_sqlite3 EQUAL -1 AND NOT TARGET SQLite::SQLite3)
-  set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
-  set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
-      "PlussII C++ requires SQLite3 for DataFrame SQL / Nexus query support, but SQLite::SQLite3 was not found. "
+      "PlussII C++ requires SQLite3 for DataFrame SQL / Nexus query support, but SQLite3::SQLite3 was not found. "
       "Install SQLite development files and add their prefix to CMAKE_PREFIX_PATH, or rebuild the distribution without SQL support.")
+  return()
+endif()
+
+if(NOT _pluss_needs_unistring EQUAL -1 AND NOT TARGET Pluss::Unistring)
+  set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+  set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
+      "PlussII C++ requires libunistring for Unicode normalization. Install libunistring and retry.")
+  return()
+endif()
+
+if(NOT _pluss_needs_zip EQUAL -1 AND NOT TARGET Pluss::Zip)
+  set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+  set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE
+      "PlussII C++ requires libzip for archive support. Install libzip and retry.")
   return()
 endif()
 

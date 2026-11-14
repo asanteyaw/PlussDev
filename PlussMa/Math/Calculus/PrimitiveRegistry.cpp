@@ -27,7 +27,16 @@ pluss::Series div(pluss::RangeView<pluss::Series> x) {
               "math::Function: division domain excludes zero denominators");
   return x[0].div(x[1]);
 }
-pluss::Series pow(pluss::RangeView<pluss::Series> x) { return x[0].pow(x[1]); }
+pluss::Series pow(pluss::RangeView<pluss::Series> x) {
+  if (!is_complex(x[0]) && !is_complex(x[1])) {
+    // A real power of a negative base exists only for an integer exponent.
+    const pluss::Series bad = x[0].lt(0.0).logical_and(x[1].ne(x[1].round()));
+    PLUSS_CHECK(!bad.any().item<bool>(),
+                "math::Function: pow domain requires a nonnegative base unless "
+                "the exponent is an integer");
+  }
+  return x[0].pow(x[1]);
+}
 pluss::Series neg(pluss::RangeView<pluss::Series> x) { return x[0].neg(); }
 pluss::Series exp(pluss::RangeView<pluss::Series> x) { return x[0].exp(); }
 pluss::Series log(pluss::RangeView<pluss::Series> x) {
@@ -64,7 +73,9 @@ pluss::Series angle(pluss::RangeView<pluss::Series> x) { return x[0].angle(); }
 
 pluss::Series safe_div_strict(pluss::RangeView<pluss::Series> x) {
   PLUSS_CHECK(x[1].ne(0.0).all().item<bool>(),
-              "operators: complex derivative is undefined at zero");
+              "operators::differential: the derivative is undefined at a zero denominator "
+              "(abs and angle at zero, or a quotient with a zero divisor); a "
+              "NonSmooth mode other than Strict defines it there");
   return x[0].div(x[1]);
 }
 pluss::Series safe_div_zero(pluss::RangeView<pluss::Series> x) {
@@ -90,6 +101,23 @@ pluss::Series stack(pluss::RangeView<pluss::Series> x) {
   promoted.reserve(x.size());
   for (const pluss::Series &value : x) {
     promoted.push_back(value.scalar_type() == dtype ? value : value.to(dtype));
+  }
+  // Components broadcast against one another (a constant among batched components), as arithmetic does.
+  bool uniform = true;
+  for (std::size_t i = 1; i < promoted.size(); ++i) {
+    uniform = uniform && promoted[i].sizes() == promoted.front().sizes();
+  }
+  if (!uniform) {
+    pluss::Series shape_holder = promoted.front();
+    for (std::size_t i = 1; i < promoted.size(); ++i) {
+      shape_holder = shape_holder.add(promoted[i]);
+    }
+    const pluss::Series zeros = pluss::series::zeros_like(shape_holder);
+    for (pluss::Series &value : promoted) {
+      if (value.sizes() != zeros.sizes()) {
+        value = value.add(zeros);
+      }
+    }
   }
   return promoted.front().pile(
       pluss::RangeView<pluss::Series>(promoted).drop_front(),

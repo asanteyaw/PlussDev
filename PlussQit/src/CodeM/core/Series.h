@@ -71,6 +71,36 @@ struct NativeRank<std::vector<T, Allocator>> {
   static constexpr std::size_t value = NativeRank<T>::value + 1;
 };
 
+// One voice for every rank mismatch at the host boundary (item<T>, items<T>, and the typed/untyped host() values): say what was expected, what
+// the Series actually is, and point to the call that fits that rank, never to the one that just failed.
+//   failing: "item" | "items" | "scalar" | "vector" | "nested" (a destination of the wrong depth) | "array"
+inline std::string shape_text(std::span<const std::int64_t> sizes) {
+  std::string out = "[";
+  for (std::size_t i = 0; i < sizes.size(); ++i) out += (i ? ", " : "") + std::to_string(sizes[i]);
+  return out + "]";
+}
+
+inline std::string rank_mismatch(std::string_view api, std::string_view expected, std::size_t rank, const std::string &shape,
+                                 std::string_view failing) {
+  std::string out(api);
+  out += ": expected ";
+  out += expected;
+  out += ", got a rank-" + std::to_string(rank) + " Series (shape " + shape + "). ";
+  if (rank == 0 && failing != "item") {
+    out += "Use item<T>() to read a rank-zero Series as a scalar.";
+  } else if (rank == 1 && failing != "items") {
+    out += "Use items<T>() to read a rank-one Series as a std::vector<T>.";
+  } else if (rank >= 2) {
+    out += "Use host<T>() to keep the shape: assign the result to a std::vector nested " + std::to_string(rank) +
+           " deep, or to HostArray<T> (flat data with sizes and strides).";
+  }
+  return out;
+}
+
+inline std::string rank_mismatch(std::string_view api, std::string_view expected, std::span<const std::int64_t> sizes, std::string_view failing) {
+  return rank_mismatch(api, expected, sizes.size(), shape_text(sizes), failing);
+}
+
 } // namespace host_detail
 
 namespace ops_internal {
@@ -199,18 +229,29 @@ public:
     bool is_vector() const noexcept { return kind_ == Kind::Vector; }
     bool is_array() const noexcept { return kind_ == Kind::Array; }
 
+    std::size_t rank_() const {
+      if (is_scalar()) return 0;
+      if (is_vector()) return 1;
+      return std::get<HostArrayAny>(payload_).sizes.size();
+    }
+    std::string shape_() const {
+      if (is_scalar()) return "[]";
+      if (is_vector()) return "[" + std::to_string(std::visit([](const auto &v) { return v.size(); }, std::get<HostVectorAny>(payload_))) + "]";
+      return host_detail::shape_text(std::get<HostArrayAny>(payload_).sizes);
+    }
+
     const HostScalarAny &scalar() const {
-      PLUSS_CHECK(is_scalar(), "Series::host(): value is not scalar");
+      PLUSS_CHECK(is_scalar(), host_detail::rank_mismatch("Series::host()", "a rank-zero Series to read as a scalar", rank_(), shape_(), "scalar"));
       return std::get<HostScalarAny>(payload_);
     }
 
     const HostVectorAny &vector() const {
-      PLUSS_CHECK(is_vector(), "Series::host(): value is not a 1-D vector");
+      PLUSS_CHECK(is_vector(), host_detail::rank_mismatch("Series::host()", "a rank-one Series to read as a vector", rank_(), shape_(), "vector"));
       return std::get<HostVectorAny>(payload_);
     }
 
     const HostArrayAny &array() const {
-      PLUSS_CHECK(is_array(), "Series::host(): value is not N-D array");
+      PLUSS_CHECK(is_array(), host_detail::rank_mismatch("Series::host()", "a Series of rank two or more to read as an N-D array", rank_(), shape_(), "array"));
       return std::get<HostArrayAny>(payload_);
     }
 
@@ -237,8 +278,7 @@ public:
     }
 
     template <class T> T to_scalar() const {
-      PLUSS_CHECK(is_scalar(),
-                  "Series::host(): scalar conversion requested on non-scalar");
+      PLUSS_CHECK(is_scalar(), host_detail::rank_mismatch("Series::host()", "a rank-zero Series for a scalar conversion", rank_(), shape_(), "scalar"));
       return std::visit(
           [](const auto &v) -> T {
             using U = std::remove_cv_t<std::remove_reference_t<decltype(v)>>;
@@ -384,7 +424,7 @@ public:
     bool is_array() const noexcept { return kind_ == Kind::Array; }
 
     T scalar() const {
-      PLUSS_CHECK(is_scalar(), "Series::HostValue: not scalar");
+      PLUSS_CHECK(is_scalar(), host_detail::rank_mismatch("Series::host<T>()", "a rank-zero Series to read as a scalar", arr_.sizes, "scalar"));
       PLUSS_CHECK(
           arr_.data.size() == 1,
           "Series::HostValue: scalar payload must contain exactly one element");
@@ -431,14 +471,13 @@ public:
     operator Native() const {
       constexpr auto native_rank = host_detail::NativeRank<Native>::value;
       if constexpr (native_rank == 1) {
-        PLUSS_CHECK(is_vector(),
-                    "Series::host<T>(): a flat vector destination requires "
-                    "a rank-one Series; use pull<T>()");
+        PLUSS_CHECK(is_vector(), host_detail::rank_mismatch("Series::host<T>()", "a rank-one Series for a flat vector destination", arr_.sizes, "vector"));
         return Native(arr_.data.begin(), arr_.data.end());
       }
-      PLUSS_CHECK(
-          arr_.sizes.size() == native_rank,
-          "Series::host<T>(): destination nesting depth must match Series rank");
+      PLUSS_CHECK(arr_.sizes.size() == native_rank,
+                  host_detail::rank_mismatch("Series::host<T>()",
+                                             ("a rank-" + std::to_string(native_rank) + " Series for a destination nested " + std::to_string(native_rank) + " deep").c_str(),
+                                             arr_.sizes, "nested"));
       std::size_t offset = 0;
       Native out = build_native_<Native>(0, offset);
       PLUSS_CHECK(offset == arr_.data.size(),
@@ -747,6 +786,16 @@ public:
       return _compat::invoke("cdf", self(), {mu, sigma});
     }
 
+    Series icdf() const { return icdf(0.0, 1.0); }
+    Series icdf(double sigma) const { return icdf(0.0, sigma); }
+    Series icdf(double mu, double sigma) const {
+      PLUSS_CHECK(sigma > 0.0, "Series.stat.icdf: sigma must be positive");
+      const Series centered = self().mul(2.0).sub(1.0);
+      return _compat::invoke("erfinv", centered)
+          .mul(1.4142135623730950488 * sigma)
+          .add(mu);
+    }
+
     // Rolling stats
     Series movsum() const { return _compat::invoke("movsum", self()); }
     Series movsum(std::int64_t window) const {
@@ -898,6 +947,11 @@ public:
     Series cdf(double sigma) const { return (*this)().cdf(sigma); }
     Series cdf(double mu, double sigma) const {
       return (*this)().cdf(mu, sigma);
+    }
+    Series icdf() const { return (*this)().icdf(); }
+    Series icdf(double sigma) const { return (*this)().icdf(sigma); }
+    Series icdf(double mu, double sigma) const {
+      return (*this)().icdf(mu, sigma);
     }
     Series movsum() const { return (*this)().movsum(); }
     Series movsum(std::int64_t window) const {
@@ -2053,27 +2107,24 @@ public:
   // Scalar extraction: only a rank-zero Series has a native scalar form.
   // Returns a native C++ value of the requested type.
   template <class T> T item() const {
-    PLUSS_CHECK(dim() == 0,
-                "Series::item<T>(): expected a rank-zero Series");
+    PLUSS_CHECK(dim() == 0, host_detail::rank_mismatch("Series::item<T>()", "a rank-zero Series", sizes(), "item"));
     auto data = detail_materialize_vec_<T>();
     PLUSS_CHECK(data.size() == 1,
                 "Series::item<T>(): scalar payload must contain one value");
     return data.front();
   }
 
-  // One-dimensional host extraction. Higher ranks use host<T>(), which
-  // preserves rank and shape metadata rather than flattening implicitly.
-  template <class T> std::vector<T> pull() const {
-    PLUSS_CHECK(dim() == 1,
-                "Series::pull<T>(): expected a rank-one Series");
+  // One-dimensional host extraction: the plural of item<T>(). A rank-one Series becomes an owning std::vector<T>.
+  // Higher ranks use host<T>(), which preserves rank and shape metadata rather than flattening implicitly.
+  template <class T> std::vector<T> items() const {
+    PLUSS_CHECK(dim() == 1, host_detail::rank_mismatch("Series::items<T>()", "a rank-one Series", sizes(), "items"));
     return detail_materialize_vec_<T>();
   }
   // Dynamic scalar extraction: requires a rank-zero Series.
   // Returns a tagged Scalar when caller doesn't want to spell an explicit C++
   // type. Use item<T>() when exact native type extraction is required.
   Scalar item() const {
-    PLUSS_CHECK(dim() == 0,
-                "Series::item(): expected a rank-zero Series");
+    PLUSS_CHECK(dim() == 0, host_detail::rank_mismatch("Series::item()", "a rank-zero Series", sizes(), "item"));
     switch (scalar_type()) {
     case ScalarType::Bool:
       return Scalar(item<bool>(), ScalarType::Bool);

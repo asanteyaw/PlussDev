@@ -1,0 +1,306 @@
+# Supports, loads and sweeps
+
+[Back to Structures 1: Trusses](../structure_01_trusses.md)
+
+A structure is only as well defined as its supports. This page covers how supports are described with `Fix`, which support arrangements make a truss solvable and which leave it free to move as a mechanism, how a support that moves (a settlement) loads an indeterminate structure, and how to solve many load cases and many designs in a single call instead of a loop.
+
+## The mental model
+
+A `Fix` lists the constrained degrees of freedom as pairs. `node[i]` and `axis[i]` name one degree of freedom, node `node[i]` in direction `axis[i]`, and the support holds it at a value: zero when `value` is left empty, or `value[i]` when it is given. A **pin** fixes every axis of a node; a **roller** fixes only the axis it cannot move along and lets the node slide in the others.
+
+| To model | Fix, in a plane truss |
+|---|---|
+| pin at node 0 | `node = {0, 0}`, `axis = {0, 1}` |
+| roller at node 1, free in x | `node = {1}`, `axis = {1}` |
+| roller at node 1, free in y | `node = {1}`, `axis = {0}` |
+| support that settles by `s` in y | `node = {1}`, `axis = {1}`, `value = {s}` |
+
+A degree of freedom may appear in `Fix` once; naming it twice is an error. The truss as a whole must be restrained against rigid motion: in a plane, three independent restraints at least (two for a pin, one for a roller), and the arrangement must not leave any joint free to move without stretching a bar.
+
+## A roller and a tie
+
+A triangle on a pin and a roller is the classic arrangement: the pin at the left foot stops it moving, the roller at the right foot lets it slide horizontally. Without help, that triangle is a mechanism, as the next section shows. Joining the two feet with a **tie** bar closes the triangle; the tie carries the horizontal thrust that a second pin would have carried.
+
+The program builds the triangle of the previous pages, adds the tie as a third bar from the left foot to the right foot, pins the left foot and puts a roller under the right foot (fixed in y, free in x). With the 10 kN load at the apex, the two inclined bars carry `-6250 N` as before and the tie carries the horizontal component, `+6250 * 0.6 = 3750 N` in tension.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  // bars: left foot - apex, right foot - apex, and the tie from the left foot to the right foot
+  const st::Mesh mesh{grid({0, 0, 6, 0, 3, 4}, 2), {0, 1, 0}, {2, 2, 1}};
+  const auto truss = st::truss(mesh, {vec({1e-3, 1e-3, 1e-3}), vec({200e9, 200e9, 200e9})});
+  // pin at node 0 (x and y), roller at node 1 (y only)
+  const st::Fix supports{{0, 0, 1}, {0, 1, 1}, {}};
+  const auto r = st::solve(truss, grid({0, 0, 0, 0, 0, -10000}, 2), supports);
+
+  const auto u = flat(r.displacement);
+  out.writeln("bar forces (N): ", flat(r.force), "   hand: -6250, -6250, 3750");
+  out.writeln("reactions (N), x then y at the feet: ", flat(r.reaction).at(0) + 0.0, " ", flat(r.reaction).at(1), "   ", flat(r.reaction).at(2) + 0.0, " ", flat(r.reaction).at(3));
+  out.writeln("right foot slides (mm): ", 1000.0 * u[2], "   hand ", 1000.0 * 3750.0 * 6.0 / (200e9 * 1e-3));
+}
+```
+
+The roller carries only a vertical reaction of `5000 N` and no horizontal one, and the tie lengthens by `N L / (E A) = 3750 * 6 / 2e8 = 0.1125 mm`, which is exactly how far the right foot slides.
+
+## When the supports leave a mechanism
+
+The same triangle without the tie, on a pin and a roller, cannot carry the load. The right foot can slide, the apex drops as the bars rotate, and nothing resists. The solver finds this and says so; the error names the cause and where to look.
+
+Two other cases fail differently. Two collinear bars loaded across their line have no stiffness across the line at the middle joint: the first-order stiffness of a straight bar against a sideways push is zero, so that degree of freedom has nothing to resist it, and the solver rejects it before iterating. And a frame of four bars forming a square has no diagonal, so it can shear; here the stiffness matrix is singular but each degree of freedom has some stiffness, so the iteration runs, breaks down, and reports a mechanism. The program shows all three messages, then solves the square with `fail_on_nonconvergence` off to show the diagnostics a mechanism leaves behind.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <functional>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+static void report(const char *what, const std::function<void()> &solve) {
+  try {
+    solve();
+    std::cout << what << ": solved\n";
+  } catch (const std::exception &e) {
+    std::cout << what << ": " << e.what() << "\n";
+  }
+}
+
+int main() {
+  // 1. the triangle on a pin and a roller, without the tie
+  const auto triangle = st::truss({grid({0, 0, 6, 0, 3, 4}, 2), {0, 1}, {2, 2}}, {vec({1e-3, 1e-3}), vec({200e9, 200e9})});
+  report("triangle, no tie     ", [&] { (void)st::solve(triangle, grid({0, 0, 0, 0, 0, -10000}, 2), {{0, 0, 1}, {0, 1, 1}, {}}); });
+
+  // 2. two collinear bars pushed across their line
+  const auto line = st::truss({grid({0, 0, 1, 0, 2, 0}, 2), {0, 1}, {1, 2}}, {vec({1e-3, 1e-3}), vec({200e9, 200e9})});
+  report("collinear bars       ", [&] { (void)st::solve(line, grid({0, 0, 0, -100, 0, 0}, 2), {{0, 0, 2, 2}, {0, 1, 0, 1}, {}}); });
+
+  // 3. a square of four bars with no diagonal, pushed sideways
+  const auto square = st::truss({grid({0, 0, 1, 0, 1, 1, 0, 1}, 2), {0, 1, 2, 3}, {1, 2, 3, 0}}, {vec(std::vector<double>(4, 1e-3)), vec(std::vector<double>(4, 200e9))});
+  const auto push = grid({0, 0, 0, 0, 1000, 0, 0, 0}, 2);
+  const st::Fix corner{{0, 0, 1}, {0, 1, 1}, {}};
+  report("square, no diagonal  ", [&] { (void)st::solve(square, push, corner); });
+
+  st::SolveOptions inspect;
+  inspect.fail_on_nonconvergence = false;
+  const auto r = st::solve(square, push, corner, inspect);
+  std::cout << "with the failure switched off: converged " << r.converged.item<bool>() << ", breakdown " << r.breakdown.item<bool>() << ", residual is huge: "
+            << (r.residual_norm.item<double>() > 1e6) << "\n";
+
+  // the cure for the square: a diagonal from node 0 to node 2
+  const auto braced = st::truss({grid({0, 0, 1, 0, 1, 1, 0, 1}, 2), {0, 1, 2, 3, 0}, {1, 2, 3, 0, 2}}, {vec(std::vector<double>(5, 1e-3)), vec(std::vector<double>(5, 200e9))});
+  const auto b = st::solve(braced, push, corner);
+  std::cout << "braced square: converged " << b.converged.item<bool>() << ", diagonal force " << b.force.select(-1, 4).item<double>() << " N, hand " << 1000.0 * 1.41421356237 << " N\n";
+}
+```
+
+With the failure switched off a mechanism returns `converged` of zero, `breakdown` of one and a meaningless residual, and the displacement must not be used. Bracing the square with a diagonal removes the mechanism, and the diagonal carries `1000 * sqrt(2) = 1414.2 N` in tension: the horizontal push at the top corner has to be passed down the diagonal at 45 degrees.
+
+## A support that moves
+
+A support need not stay where it was built: a foundation settles, a jack lifts a bearing, a bar is made slightly too long. Give `Fix` a `value` for the moved degrees of freedom and the solver imposes that displacement.
+
+What happens depends on whether the truss is determinate. A determinate truss simply accommodates the move: the joints shift, the bars rotate, but no bar changes length, so the forces stay zero. An indeterminate truss cannot: bars that are held at both ends are forced to stretch, and the structure stresses itself with no load at all.
+
+The program drops the right foot of the two-bar triangle by `10 mm` with no load (determinate: no force), then raises the middle support of the hung three-bar truss by `1 mm` with no load (indeterminate: forces appear). For the three-bar truss, the hung joint rises `u = s / 2.024` of the lift `s` by the same stiffness argument as the loaded case, and the middle bar is stretched by `s - u`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3).with_sep(""));
+  const auto no_load = grid({0, 0, 0, 0, 0, 0, 0, 0}, 2);
+
+  // determinate: the right foot drops by 10 mm; value lists the prescribed displacement of each constrained dof in order
+  const auto triangle = st::truss({grid({0, 0, 6, 0, 3, 4}, 2), {0, 1}, {2, 2}}, {vec({1e-3, 1e-3}), vec({200e9, 200e9})});
+  const st::Fix drop{{0, 0, 1, 1}, {0, 1, 0, 1}, vec({0, 0, 0, -0.010})};
+  const auto d = st::solve(triangle, grid({0, 0, 0, 0, 0, 0}, 2), drop);
+  out.writeln("determinate: bar forces (N) ", flat(d.force), ", apex moves (mm) ", 1000.0 * flat(d.displacement)[4], " ", 1000.0 * flat(d.displacement)[5]);
+
+  // indeterminate: the middle support of the hung truss is raised by 1 mm
+  const double lift = 0.001;
+  const auto hung = st::truss({grid({-3, 4, 0, 4, 3, 4, 0, 0}, 2), {0, 1, 2}, {3, 3, 3}}, {vec({1e-3, 1e-3, 1e-3}), vec({200e9, 200e9, 200e9})});
+  const st::Fix raise{{0, 0, 1, 1, 2, 2}, {0, 1, 0, 1, 0, 1}, vec({0, 0, 0, lift, 0, 0})};
+  const auto h = st::solve(hung, no_load, raise);
+  const double joint = lift / 2.024;
+  const double middle = 200e9 * 1e-3 / 4.0 * (lift - joint);
+  out.writeln("indeterminate: bar forces (N) ", flat(h.force), "   hand: middle ", middle, ", sides ", -middle / 1.6);
+  out.writeln("hung joint rises (mm): ", 1000.0 * flat(h.displacement)[7], "   hand ", 1000.0 * joint);
+  out.writeln("strain energy (J): ", h.energy.item<double>());
+}
+```
+
+The determinate triangle shows zero force in both bars: the apex moves `6.667 mm` sideways and `5.000 mm` down, exactly the motion that lets both bars keep their lengths as the foot drops (the rotated bars stay `5 m` long). The three-bar truss goes into a state of self-stress, with `25.3 kN` in the middle bar and `-15.8 kN` in each side bar, balanced against each other at the hung joint, and stores strain energy with nothing pushing on it. This is why settlement and fabrication errors matter in indeterminate structures and not in determinate ones.
+
+## Many load cases, many designs: batches
+
+Real design means many load cases (dead, live, wind, combinations) and many trial designs (sections, heights). Both are written as leading axes, and one `solve` call handles the whole set with no loop.
+
+A leading axis on `load` is a set of load cases; on `area` or `modulus` it is a set of designs; on `position` it is a set of geometries. Axes broadcast against each other under the usual rules: a load of shape `[2, 1, node, axis]` and areas of shape `[4, bar]` give results with leading shape `[2, 4]`, every load case on every design. Because the solution is linear in the load, the same call can be checked for superposition: the response to two loads together is the sum of the responses to each.
+
+The program solves the hung three-bar truss for two load cases (10 kN down and 5 kN sideways at the hung joint) on four designs with the middle bar's area `1`, `2`, `4` and `8` thousandths of a square metre.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1).with_sep(""));
+  const st::Mesh mesh{grid({-3, 4, 0, 4, 3, 4, 0, 0}, 2), {0, 1, 2}, {3, 3, 3}};
+  const st::Fix supports{{0, 0, 1, 1, 2, 2}, {0, 1, 0, 1, 0, 1}, {}};
+
+  // four designs: the middle bar's area grows
+  const auto areas = pluss::series::make(std::vector<double>{1e-3, 1e-3, 1e-3, 1e-3, 2e-3, 1e-3, 1e-3, 4e-3, 1e-3, 1e-3, 8e-3, 1e-3}).reshape({4, 3});
+  const auto truss = st::truss(mesh, {areas, vec({200e9, 200e9, 200e9})});
+
+  // two load cases at the hung joint: 10 kN down, then 5 kN sideways
+  const auto loads = pluss::series::make(std::vector<double>{0, 0, 0, 0, 0, 0, 0, -10000, 0, 0, 0, 0, 0, 0, 5000, 0}).reshape({2, 1, 4, 2});
+  const auto r = st::solve(truss, loads, supports);
+
+  out.writeln("force shape [load case, design, bar]: ", r.force.sizes(), "   displacement shape: ", r.displacement.sizes());
+  const auto force = flat(r.force);
+  out.writeln("load case 1 (10 kN down), middle-bar force for the four designs: ", force[1], " ", force[4], " ", force[7], " ", force[10]);
+  out.writeln("load case 2 (5 kN sideways), middle-bar force for the four designs: ", force[13], " ", force[16], " ", force[19], " ", force[22]);
+
+  // superposition: the two load cases together equal the sum of the separate answers
+  const auto combined = pluss::series::make(std::vector<double>{0, 0, 0, 0, 0, 0, 5000, -10000}).reshape({4, 2});
+  const auto both = st::solve(truss, combined, supports);
+  const auto sum = r.force.select(0, 0).add(r.force.select(0, 1));
+  out.writeln("largest superposition error over all bars and designs (N): ", both.force.sub(sum).abs().max().item<double>());
+}
+```
+
+Load case 1 shows the middle bar attracting more of the load as it gets thicker, up to `8865 N` of `10 kN`; load case 2, a sideways push, is carried entirely by the two inclined bars (the vertical bar has no sideways stiffness at the first order), so the middle-bar force is zero for every design. Superposition holds to rounding.
+
+Geometry sweeps work the same way. The apex height of the two-bar triangle controls how efficiently it carries the load: a low apex makes shallow bars with a large force, a very high apex makes long, soft bars. The program gives `position` a leading axis of three heights and reads the strain energy, which measures the flexibility of each design under the same load.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3).with_sep(""));
+  // three apex heights: 2 m, 4 m and 8 m above the span of 6 m
+  const auto positions = pluss::series::make(std::vector<double>{0, 0, 6, 0, 3, 2, 0, 0, 6, 0, 3, 4, 0, 0, 6, 0, 3, 8}).reshape({3, 3, 2});
+  const auto truss = st::truss({positions, {0, 1}, {2, 2}}, {vec({1e-3, 1e-3}), vec({200e9, 200e9})});
+  const st::Fix feet{{0, 0, 1, 1}, {0, 1, 0, 1}, {}};
+  const auto r = st::solve(truss, grid({0, 0, 0, 0, 0, -10000}, 2), feet);
+
+  const auto force = flat(r.force);
+  const auto energy = flat(r.energy);
+  const double heights[3] = {2.0, 4.0, 8.0};
+  for (int i = 0; i < 3; ++i) {
+    const double length = std::sqrt(9.0 + heights[i] * heights[i]);
+    out.writeln("apex height ", heights[i], " m: bar force ", force[2 * i], " N (hand ", -10000.0 / (2 * heights[i] / length), "), strain energy ", energy[i], " J");
+  }
+}
+```
+
+The force falls steadily with height but the energy does not: of the three heights it is smallest at `4 m`, because a taller apex needs longer bars, which are softer. A sweep like this finds the stiffest design in one call.
+
+## Decisions
+
+- **Restraint:** pins where a node must not move at all, rollers where it may slide; the supports must at least stop rigid motion, and in an indeterminate truss every extra restraint changes every bar force.
+- **Settlements and misfit:** `Fix::value`; expect forces from it only in an indeterminate structure.
+- **Many cases or designs:** leading axes on `load`, `area`, `modulus` or `position`; do not write a loop around `solve`.
+- **Mechanism suspected:** read the error; with the failure switched off, check `breakdown` before the displacement.
+
+## Pitfalls
+
+The program shows two mistakes whose result is a plausible number. It lists the same prescribed settlements in two orders to show that each value belongs to its own pair, and it gives a value to the wrong pair to show how far that moves the answer; and it solves the triangle once on a roller and once on a second pin to show that a roller is a missing restraint, not a softer one.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3).with_sep(""));
+  // the hung three-bar truss, whose middle support is raised 1 mm
+  const auto hung = st::truss({grid({-3, 4, 0, 4, 3, 4, 0, 0}, 2), {0, 1, 2}, {3, 3, 3}}, {vec({1e-3, 1e-3, 1e-3}), vec({200e9, 200e9, 200e9})});
+  const auto no_load = grid({0, 0, 0, 0, 0, 0, 0, 0}, 2);
+  const auto middle_force = [&](const st::Fix &fix) { return flat(st::solve(hung, no_load, fix).force)[1]; };
+
+  // the value of the i-th pair belongs to the i-th pair: the same support data in two orders gives the same answer
+  out.writeln("pairs in node order:       middle-bar force (N) ", middle_force({{0, 0, 1, 1, 2, 2}, {0, 1, 0, 1, 0, 1}, vec({0, 0, 0, 0.001, 0, 0})}));
+  out.writeln("same data, pairs reversed: middle-bar force (N) ", middle_force({{2, 2, 1, 1, 0, 0}, {1, 0, 1, 0, 1, 0}, vec({0, 0, 0.001, 0, 0, 0})}));
+  out.writeln("the value left in place while the pairs were reversed: middle-bar force (N) ", middle_force({{2, 2, 1, 1, 0, 0}, {1, 0, 1, 0, 1, 0}, vec({0, 0, 0, 0.001, 0, 0})}));
+
+  // a roller is a missing restraint: the triangle with a pin at the right foot is stiff, with a roller it is a mechanism
+  const auto triangle = st::truss({grid({0, 0, 6, 0, 3, 4}, 2), {0, 1}, {2, 2}}, {vec({1e-3, 1e-3}), vec({200e9, 200e9})});
+  const auto load = grid({0, 0, 0, 0, 0, -10000}, 2);
+  out.writeln("right foot pinned: apex drop (mm) ", -1000.0 * flat(st::solve(triangle, load, {{0, 0, 1, 1}, {0, 1, 0, 1}, {}}).displacement)[5]);
+  try {
+    (void)st::solve(triangle, load, {{0, 0, 1}, {0, 1, 1}, {}});
+  } catch (const std::exception &e) {
+    std::cout << "right foot on a roller: " << e.what() << "\n";
+  }
+}
+```
+
+Listing the same support data in a different order changes nothing, because each `value[i]` is attached to the `i`-th pair; but leaving the values in their old positions while reversing the pairs raises a different support and changes the middle-bar force from `25296 N` to `0 N`, with no error at all. Removing a horizontal restraint does not soften the triangle, it turns it into a mechanism.
+
+Reference: [`Fix`](../../../../api/eng/structure/model/Fix.md), [`solve`](../../../../api/eng/structure/statics/solve.md), [`SolveOptions`](../../../../api/eng/structure/statics/SolveOptions.md), [`StaticResult`](../../../../api/eng/structure/statics/StaticResult.md), [`truss`](../../../../api/eng/structure/model/truss.md), [`Bars`](../../../../api/eng/structure/model/Bars.md), [`Mesh`](../../../../api/eng/structure/model/Mesh.md).
+
+Where next: the [frames chapter](../structure_02_frames.md) adds members that resist bending as well as stretching, which removes the need for pin joints and braced triangles.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="static_analysis.html">
+    <span class="label">Previous</span>
+    <span class="title">Static analysis</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

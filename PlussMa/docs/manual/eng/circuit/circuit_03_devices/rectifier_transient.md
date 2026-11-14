@@ -1,0 +1,432 @@
+<!-- generated from rectifier_transient.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# The rectifier in time
+
+[Back to Circuits 3: Diodes and Transistors](../circuit_03_devices.md)
+
+A diode in a transient run switches: it conducts for part of every cycle and blocks for the rest, and the capacitor it charges holds the voltage between the pulses. `circuit::tran` handles circuits with diodes and transistors by solving the nonlinear equation of every time step with Newton iteration. This page builds a half-wave rectifier, sweeps its filter capacitor, compares the two time-stepping rules on it, starts it from a charged capacitor, and shows what the step size does to the peak.
+
+## The mental model
+
+Everything about `tran` from [Circuits 2](../circuit_02_transient.md) holds: a uniform time grid, the first sample is the consistent starting state, `Drive` supplies waveforms and `Start` the stored energy, and every result gains a time axis. The devices add three things.
+
+- **Each step is a nonlinear solve.** The step equation of the trapezoid or Gear2 rule is the linear one plus the device currents, and Newton solves it starting from the previous sample. `Result::iterations` has one entry per time sample, `[time]`, with the iterations that sample needed; the first entry is the starting-state solve.
+- **The device currents are in the result.** `diode_current` is `[..., time, diodes]`, and `collector_current` and `base_current` are `[..., time, transistors]`.
+- **The solver controls move to `TranOptions`.** `TranOptions::solver` is the `SolveOptions` of the iteration (`tolerance`, `max_iterations`, `thermal_voltage`, `gmin`), the same fields `op` takes.
+
+## A half-wave rectifier
+
+A `5 V` peak, `500 Hz` sine drives a diode (`Is = 1e-12 A`) into a `1 kohm` load in parallel with `1 uF`. The program runs four cycles at `50 us` per step, driving the source through `Drive`, and prints the source, the load voltage and the diode current every quarter of a millisecond.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({0.0})};
+  net.diodes.positive = {1};
+  net.diodes.negative = {2};
+  net.diodes.saturation = vec({1e-12});
+  net.resistors = {{2}, {0}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+
+  const int samples = 81;
+  const double step = 5e-5;
+  std::vector<double> time, wave;
+  for (int k = 0; k < samples; ++k) {
+    time.push_back(k * step);
+    wave.push_back(5.0 * std::sin(2.0 * M_PI * 500.0 * k * step));
+  }
+  ckt::Drive drive;
+  drive.voltage = vec(wave).reshape({samples, 1});
+  const auto run = ckt::tran(ckt::make(net), vec(time), drive);
+
+  const std::vector<double> load = flat(run.voltage.select(1, 2));
+  const std::vector<double> diode = flat(run.diode_current);
+  out.writeln("diode_current shape", run.diode_current.sizes(), " (time sample, diode)");
+  out.writeln("   ms    source    load   diode current");
+  for (int k = 0; k < samples; k += 5) out.writeln(time[k] * 1e3, wave[k], load[k], diode[k]);
+  out.writeln("highest load voltage", *std::max_element(load.begin(), load.end()));
+  out.writeln("residual below 1e-8 at every sample", run.residual.amax().item<double>() < 1e-8);
+}
+```
+
+Output
+
+```text
+diode_current shape [81, 1]  (time sample, diode)
+   ms    source    load   diode current
+0.0000 0.0000 0.0000 0.0000
+0.2500 3.5355 2.9312 0.0142
+0.5000 5.0000 4.4182 0.0060
+0.7500 3.5355 3.6491 -0.0000
+1.0000 0.0000 2.8418 -0.0000
+1.2500 -3.5355 2.2131 -0.0000
+1.5000 -5.0000 1.7234 -0.0000
+1.7500 -3.5355 1.3421 -0.0000
+2.0000 -0.0000 1.0452 -0.0000
+2.2500 3.5355 2.9311 0.0143
+2.5000 5.0000 4.4181 0.0060
+2.7500 3.5355 3.6491 -0.0000
+3.0000 0.0000 2.8418 -0.0000
+3.2500 -3.5355 2.2131 -0.0000
+3.5000 -5.0000 1.7234 -0.0000
+3.7500 -3.5355 1.3421 -0.0000
+4.0000 -0.0000 1.0452 -0.0000
+highest load voltage 4.4182
+residual below 1e-8 at every sample true
+```
+
+`diode_current` is `[81, 1]`, a time axis then a diode axis. The diode conducts only while the source is above the load voltage: in the first quarter-millisecond it carries `14 mA` and the load rises to `2.93 V`, a diode drop below the source, and at the source peak the load is `4.418 V`, `0.58 V` below `5.0 V`. Once the source falls below the capacitor the diode carries nothing (the printed `-0.0000` is a leakage of picoamps) and the load decays through the resistor, from `3.65 V` to `1.05 V` over the next `1.25 ms`. The second cycle recharges it to the same `4.418 V`. `residual` is below `1e-8` at every sample, so every step's nonlinear equation was solved.
+
+## Sweeping the filter capacitor
+
+A bigger capacitor holds the load voltage steadier between pulses. A batch axis on the capacitor gives the whole comparison in one call: three values, `0.1 uF`, `1 uF` and `10 uF`, over eight cycles. The program reports the highest and lowest load voltage in the last cycle, and the ripple, their difference.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({0.0})};
+  net.diodes.positive = {1};
+  net.diodes.negative = {2};
+  net.diodes.saturation = vec({1e-12});
+  net.resistors = {{2}, {0}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-7, 1e-6, 1e-5}).reshape({3, 1})};
+
+  const int samples = 321;   // eight cycles of 40 steps
+  const double step = 5e-5;
+  std::vector<double> time, wave;
+  for (int k = 0; k < samples; ++k) {
+    time.push_back(k * step);
+    wave.push_back(5.0 * std::sin(2.0 * M_PI * 500.0 * k * step));
+  }
+  ckt::Drive drive;
+  drive.voltage = vec(wave).reshape({samples, 1});
+  const auto run = ckt::tran(ckt::make(net), vec(time), drive);
+
+  out.writeln("voltage shape", run.voltage.sizes(), " (capacitor value, time sample, node)");
+  const std::vector<double> load = flat(run.voltage.select(2, 2));   // [3 * samples]
+  const double farads[] = {0.1, 1.0, 10.0};
+  out.writeln("   C (uF)   highest   lowest   ripple   (last cycle)");
+  for (int lane = 0; lane < 3; ++lane) {
+    const auto begin = load.begin() + lane * samples + (samples - 41);
+    const double high = *std::max_element(begin, begin + 41), low = *std::min_element(begin, begin + 41);
+    out.writeln(farads[lane], high, low, high - low);
+  }
+}
+```
+
+Output
+
+```text
+voltage shape [3, 321, 3]  (capacitor value, time sample, node)
+   C (uF)   highest   lowest   ripple   (last cycle)
+0.1000 4.4253 0.0000 4.4252
+1.0000 4.4197 0.9647 3.4550
+10.0000 4.3962 3.6919 0.7043
+```
+
+The result has shape `[3, 321, 3]`: capacitor value, time sample, node. With `0.1 uF` the time constant is `0.1 ms`, so the load empties between pulses and the ripple is `4.43 V`, as large as the output; with `1 uF` it is `3.46 V`; with `10 uF` the load stays between `3.69 V` and `4.40 V`, a ripple of `0.70 V`. The peak barely changes with the capacitor, since the diode drop sets it; the ripple is what the capacitor buys.
+
+## Comparing the two rules
+
+The trapezoid rule and Gear2 solve the same equations and agree wherever the signal is smooth, but a diode switches, and the two rules treat a switching edge differently. The program runs the rectifier with each rule at `50 us` and `25 us` steps and reports the largest difference between the two load waveforms, and the total number of Newton iterations each run needed.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static ckt::Net rectifier() {
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({0.0})};
+  net.diodes.positive = {1};
+  net.diodes.negative = {2};
+  net.diodes.saturation = vec({1e-12});
+  net.resistors = {{2}, {0}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  return net;
+}
+
+static std::vector<double> run(ckt::Scheme scheme, double step, double &iterations) {
+  const int samples = static_cast<int>(std::lround(4e-3 / step)) + 1;
+  std::vector<double> time, wave;
+  for (int k = 0; k < samples; ++k) {
+    time.push_back(k * step);
+    wave.push_back(5.0 * std::sin(2.0 * M_PI * 500.0 * k * step));
+  }
+  ckt::Drive drive;
+  drive.voltage = vec(wave).reshape({samples, 1});
+  ckt::TranOptions options;
+  options.scheme = scheme;
+  const auto result = ckt::tran(ckt::make(rectifier()), vec(time), drive, {}, options);
+  const std::vector<double> counts = flat(result.iterations.to(pluss::ScalarType::Float64));
+  iterations = 0.0;
+  for (double c : counts) iterations += c;
+  return flat(result.voltage.select(1, 2));
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  for (double step : {5e-5, 2.5e-5}) {
+    double trapezoid_iterations = 0.0, gear_iterations = 0.0;
+    const auto trapezoid = run(ckt::Scheme::Trapezoid, step, trapezoid_iterations);
+    const auto gear = run(ckt::Scheme::Gear2, step, gear_iterations);
+    double gap = 0.0;
+    for (std::size_t k = 0; k < trapezoid.size(); ++k) gap = std::max(gap, std::abs(trapezoid[k] - gear[k]));
+    out.writeln("step", step * 1e6, "us  largest difference", gap, " iterations: trapezoid", trapezoid_iterations, " Gear2", gear_iterations);
+  }
+}
+```
+
+Output
+
+```text
+step 50.0000 us  largest difference 0.0044  iterations: trapezoid 1574.0000  Gear2 1592.0000
+step 25.0000 us  largest difference 0.0056  iterations: trapezoid 1650.0000  Gear2 1672.0000
+```
+
+The two rules agree to `0.0044 V` at a `50 us` step and to `0.0056 V` at `25 us`: they differ by well under a hundredth of a volt on a `4.4 V` waveform, because `tran` subdivides the steps where the diode switches and both rules then follow the same fine solution there. Each run needed about `20` Newton iterations per sample on average at `50 us` (`1574` and `1592` in total over `81` samples), because the subdivision solves extra sub-steps at the switching edges and the half-step checks cost a few iterations everywhere. Gear2 is available when you want its damping of a response that a long step cannot resolve.
+
+## Starting from stored energy
+
+`Start` works as it does for linear circuits. The program charges the filter capacitor to `3 V` with the source off. The diode is then reverse biased, so it behaves as an open circuit and the capacitor discharges through the load: `v(t) = 3 exp(-t / RC)` with `RC = 1 ms`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({0.0})};
+  net.diodes.positive = {1};
+  net.diodes.negative = {2};
+  net.diodes.saturation = vec({1e-12});
+  net.resistors = {{2}, {0}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  ckt::Start charged;
+  charged.capacitor_voltage = vec({3.0});
+  std::vector<double> time;
+  for (int k = 0; k <= 30; ++k) time.push_back(k * 1e-4);
+  const auto run = ckt::tran(ckt::make(net), vec(time), {}, charged);
+
+  const std::vector<double> load = flat(run.voltage.select(1, 2));
+  out.writeln("  ms    load    closed form");
+  for (int ms = 0; ms <= 3; ++ms) out.writeln(ms, load[ms * 10], 3.0 * std::exp(-1.0 * ms));
+  out.writeln("diode current below 1e-9 A at every sample", run.diode_current.abs().amax().item<double>() < 1e-9);
+}
+```
+
+Output
+
+```text
+  ms    load    closed form
+0 3.00000 3.00000
+1 1.10272 1.10364
+2 0.40533 0.40601
+3 0.14899 0.14936
+diode current below 1e-9 A at every sample true
+```
+
+The load follows `3 exp(-t / RC)` to within a millivolt: `1.1027 V` against `1.1036 V` at `1 ms`, with the small difference the trapezoid rule's error at a `0.1 ms` step. The diode never conducts: its current stays below `1e-9 A` at every sample, because the source (`0 V`) is below the capacitor, so the diode is reverse biased for the whole run.
+
+## Errors
+
+The iteration limit and the other solver controls are checked when `tran` starts. The program allows one Newton iteration per step, which is too few for a switching edge, and then gives the iteration a negative tolerance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({0.0})};
+  net.diodes.positive = {1};
+  net.diodes.negative = {2};
+  net.diodes.saturation = vec({1e-12});
+  net.resistors = {{2}, {0}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  const auto circuit = ckt::make(net);
+  const int samples = 41;
+  std::vector<double> time, wave;
+  for (int k = 0; k < samples; ++k) {
+    time.push_back(k * 5e-5);
+    wave.push_back(5.0 * std::sin(2.0 * M_PI * 500.0 * k * 5e-5));
+  }
+  ckt::Drive drive;
+  drive.voltage = vec(wave).reshape({samples, 1});
+
+  ckt::TranOptions few;
+  few.solver.max_iterations = 1;
+  report([&] { (void)ckt::tran(circuit, vec(time), drive, {}, few); });
+  ckt::TranOptions negative;
+  negative.solver.tolerance = -1.0;
+  report([&] { (void)ckt::tran(circuit, vec(time), drive, {}, negative); });
+}
+```
+
+Output
+
+```text
+eng::circuit::tran: the Newton iteration did not converge in 1 iterations (last update 0.782); raise max_iterations, loosen tolerance, or check that the bias is reachable (gmin stepping was also tried)
+eng::circuit::tran: solver tolerance must be positive
+```
+
+Each message names the cause: the step that did not converge and the control that is out of range.
+
+## Decisions
+
+- **Rectifiers, clippers and any circuit whose diodes switch:** `tran` with the trapezoid rule, a step of a tenth of the shortest feature you need, and a `Drive` for the source.
+- **How much ripple a filter leaves:** a batch on the capacitor, and read the last cycle once the response has settled.
+- **A long run that starts from an operating point:** `op`, then pass the capacitor voltages as `Start`, as for linear circuits.
+- **A step that does not converge:** the solver already retries with gmin stepping, so the cause is usually an unreachable bias; check the circuit before raising `max_iterations`.
+
+## Pitfalls
+
+The program makes three mistakes with a `10 uF` rectifier: a step so long that the source is represented poorly, reading the ripple from a run that has not settled, and reading the time axis of the diode current as the last axis.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static ckt::Result run(double step, double stop) {
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({0.0})};
+  net.diodes.positive = {1};
+  net.diodes.negative = {2};
+  net.diodes.saturation = vec({1e-12});
+  net.resistors = {{2}, {0}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-5})};
+  const int samples = static_cast<int>(std::lround(stop / step)) + 1;
+  std::vector<double> time, wave;
+  for (int k = 0; k < samples; ++k) {
+    time.push_back(k * step);
+    wave.push_back(5.0 * std::sin(2.0 * M_PI * 500.0 * k * step));
+  }
+  ckt::Drive drive;
+  drive.voltage = vec(wave).reshape({samples, 1});
+  return ckt::tran(ckt::make(net), vec(time), drive);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // 1. the highest load voltage found at three step sizes
+  for (double step : {5e-5, 2e-4, 5e-4}) {
+    const auto load = flat(run(step, 8e-3).voltage.select(1, 2));
+    out.writeln("step", step * 1e6, "us  highest load voltage", *std::max_element(load.begin(), load.end()));
+  }
+  // 2. the ripple of the last cycle is not the ripple of the settled circuit until the capacitor has charged
+  for (double stop : {2e-3, 16e-3}) {
+    const auto load = flat(run(5e-5, stop).voltage.select(1, 2));
+    const auto last = load.end() - 41;
+    out.writeln("run of", stop * 1e3, "ms  last-cycle lowest and highest", *std::min_element(last, load.end()), *std::max_element(last, load.end()));
+  }
+  // 3. the time axis precedes the device axis
+  out.writeln("diode_current shape", run(5e-5, 2e-3).diode_current.sizes(), "(time sample, diode)");
+}
+```
+
+Output
+
+```text
+step 50.0000 us  highest load voltage 4.3993
+step 200.0000 us  highest load voltage 4.1823
+step 500.0000 us  highest load voltage 4.3451
+run of 2.0000 ms  last-cycle lowest and highest 0.0000 4.3993
+run of 16.0000 ms  last-cycle lowest and highest 3.6954 4.3993
+diode_current shape [41, 1] (time sample, diode)
+```
+
+At `50 us` the highest load voltage is `4.399 V`, at `200 us` it is `4.182 V` and at `500 us` it is `4.345 V`: all below the `5 V` source, because `tran` subdivides a step where the diode switches (see `Result::refinements`). The coarse runs are still less accurate, because the source is only known at the samples, and four samples per cycle represent the sine poorly, so shorten the step until the answer stops moving. The ripple of a short run is not the ripple of the settled circuit: the `2 ms` run's last cycle includes the start from rest, lowest at `0 V`, while after `16 ms` the cycle runs from `3.695 V` to `4.399 V`. And `diode_current` has shape `[41, 1]`: samples first, devices last.
+
+## Where next
+
+The full list of devices and controls is in the reference: [`Diodes`](../../../../api/eng/circuit/model/Diodes.md), [`Transistors`](../../../../api/eng/circuit/model/Transistors.md), [`SolveOptions`](../../../../api/eng/circuit/analysis/SolveOptions.md), [`tran`](../../../../api/eng/circuit/analysis/tran.md), [`TranOptions`](../../../../api/eng/circuit/analysis/TranOptions.md).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="transistor_amplifier.html">
+    <span class="label">Previous</span>
+    <span class="title">The transistor amplifier</span>
+  </a>
+  <a class="next-link" href="mosfets_and_charge_storage.html">
+    <span class="label">Next</span>
+    <span class="title">MOSFETs and charge storage</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

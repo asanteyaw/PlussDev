@@ -324,7 +324,9 @@ Misframing the public family structure is not.
 
 ## Multiple Examples Rule
 
-One tiny example is usually not enough.
+Every object, method, function, and options page requires at least three
+practical examples. One tiny example is never sufficient for a completed API
+reference page.
 
 For each important object or method, prefer multiple examples under practical
 examples, including some mix of:

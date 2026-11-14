@@ -44,20 +44,20 @@ int main() {
   const operators::Operator d = operators::differential("x");
 
   // Scaling and shifting commute.
-  out.writeln("scale after shift    ", operators::compose(twice, shift)(square)({x}).pull<double>(), " = 2 (x+2)^2:", x.add(2.0).pow(2).mul(2.0).pull<double>());
-  out.writeln("shift after scale    ", operators::compose(shift, twice)(square)({x}).pull<double>());
+  out.writeln("scale after shift    ", operators::compose(twice, shift)(square)({x}).items<double>(), " = 2 (x+2)^2:", x.add(2.0).pow(2).mul(2.0).items<double>());
+  out.writeln("shift after scale    ", operators::compose(shift, twice)(square)({x}).items<double>());
 
   // Shifting and multiplying by x do not: the inner operator acts first.
-  out.writeln("shift after times_x  ", operators::compose(shift, times_x)(square)({x}).pull<double>(), " = (x+2)^3:", x.add(2.0).pow(3).pull<double>());
-  out.writeln("times_x after shift  ", operators::compose(times_x, shift)(square)({x}).pull<double>(), " = x (x+2)^2:", x.mul(x.add(2.0).pow(2)).pull<double>());
+  out.writeln("shift after times_x  ", operators::compose(shift, times_x)(square)({x}).items<double>(), " = (x+2)^3:", x.add(2.0).pow(3).items<double>());
+  out.writeln("times_x after shift  ", operators::compose(times_x, shift)(square)({x}).items<double>(), " = x (x+2)^2:", x.mul(x.add(2.0).pow(2)).items<double>());
 
   // A chain of three, applied inside out: shift, then scale, then negate.
   const operators::Operator chain = operators::compose(operators::scale(-1.0), operators::compose(twice, shift));
-  out.writeln("-(2 (x+2)^2)         ", chain(square)({x}).pull<double>());
+  out.writeln("-(2 (x+2)^2)         ", chain(square)({x}).items<double>());
 
   // Differentiation commutes with shifting x.
-  out.writeln("d after shift        ", operators::compose(d, shift)(square)({x}).pull<double>(), " = 2 (x+2):", x.add(2.0).mul(2.0).pull<double>());
-  out.writeln("shift after d        ", operators::compose(shift, d)(square)({x}).pull<double>());
+  out.writeln("d after shift        ", operators::compose(d, shift)(square)({x}).items<double>(), " = 2 (x+2):", x.add(2.0).mul(2.0).items<double>());
+  out.writeln("shift after d        ", operators::compose(shift, d)(square)({x}).items<double>());
 }
 ```
 
@@ -90,18 +90,18 @@ int main() {
 
   const auto x = pluss::make_series({-1.0, 0.0, 0.5, 2.0});
   const math::Function square = math::function({"x"}, [](math::Function v) { return v.pow(2); });
-  out.writeln("L(x^2)      ", L(square)({x}).pull<double>(), " = 2 - 4 x^2:", x.pow(2).mul(-4.0).add(2.0).pull<double>());
+  out.writeln("L(x^2)      ", L(square)({x}).items<double>(), " = 2 - 4 x^2:", x.pow(2).mul(-4.0).add(2.0).items<double>());
 
   const math::Function growth = math::function({"x"}, [](math::Function v) { return (v * 2.0).exp(); });
   const math::Function decay = math::function({"x"}, [](math::Function v) { return (v * -2.0).exp(); });
-  out.writeln("L(exp(2x))  ", L(growth)({x}).pull<double>());
-  out.writeln("L(exp(-2x)) ", L(decay)({x}).pull<double>());
+  out.writeln("L(exp(2x))  ", L(growth)({x}).items<double>());
+  out.writeln("L(exp(-2x)) ", L(decay)({x}).items<double>());
 
   // The parallel form with separate ranges.
   std::vector<operators::Operator> parts{d, operators::identity()};
   std::vector<double> weights{1.0, 3.0};
   const operators::Operator mixed = operators::linear_combination(pluss::RangeView<operators::Operator>(parts), pluss::RangeView<double>(weights));
-  out.writeln("(d + 3) x^2 ", mixed(square)({x}).pull<double>(), " = 2x + 3x^2:", x.mul(2.0).add(x.pow(2).mul(3.0)).pull<double>());
+  out.writeln("(d + 3) x^2 ", mixed(square)({x}).items<double>(), " = 2x + 3x^2:", x.mul(2.0).add(x.pow(2).mul(3.0)).items<double>());
 }
 ```
 
@@ -129,18 +129,18 @@ int main() {
   const operators::Operator d = operators::differential("x");
   const operators::Operator times_x = operators::multiply(f.arg("x"));
   const operators::Operator bracket = operators::commutator(d, times_x);
-  out.writeln("[d, x] f            ", bracket(f)({x}).pull<double>());
-  out.writeln("f                   ", f({x}).pull<double>());
+  out.writeln("[d, x] f            ", bracket(f)({x}).items<double>());
+  out.writeln("f                   ", f({x}).items<double>());
 
   // Shifting a function and multiplying by x: [T_1, M_x] f = T_1 f, as the shift moves the factor x too.
   const operators::Operator shift = operators::shift("x", 1.0);
   const math::Function square = math::function({"x"}, [](math::Function v) { return v.pow(2); });
   const operators::Operator shift_bracket = operators::commutator(shift, operators::multiply(square.arg("x")));
-  out.writeln("[T, x] f            ", shift_bracket(square)({x}).pull<double>(), " = T f:", x.add(1.0).pow(2).pull<double>());
+  out.writeln("[T, x] f            ", shift_bracket(square)({x}).items<double>(), " = T f:", x.add(1.0).pow(2).items<double>());
 
   // Operators that commute give zero.
   const operators::Operator zero = operators::commutator(operators::scale(2.0), operators::shift("x", 1.0));
-  out.writeln("[scale, shift] f    ", zero(square)({x}).pull<double>());
+  out.writeln("[scale, shift] f    ", zero(square)({x}).items<double>());
   out.writeln("commutator is linear:", bracket.capabilities().linear ? "yes" : "no");
 }
 ```
@@ -149,3 +149,16 @@ The commutator of differentiation and multiplication by x returns the function i
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="operators_are_values.html">
+    <span class="label">Previous</span>
+    <span class="title">Operators are values</span>
+  </a>
+  <a class="next-link" href="custom_operators.html">
+    <span class="label">Next</span>
+    <span class="title">Custom operators</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

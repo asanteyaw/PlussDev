@@ -1,0 +1,2715 @@
+# apiref_manifest_engapi.toml -- the engineering API reference.
+
+[framework.eng_api]
+title = "Engineering"
+nav_title = "Engineering API"
+nav_prefix = "api/eng/"
+root_page = "api/plussma_eng.html"
+summary = "Series-native signal, system, control, circuit, power, fluid and structural engineering."
+include = "<pluss/ma.h>"
+header = ""
+min_examples = 3
+
+[[family]]
+path = "eng/signal"
+page = "api/eng/signal.md"
+title = "Signal"
+maxdepth = 3
+children = ["signal/windows", "signal/filtering", "signal/design"]
+
+[[family]]
+path = "eng/signal/windows"
+page = "api/eng/signal/windows.md"
+title = "Signal windows"
+maxdepth = 2
+children = ["windows/WindowMode", "windows/WindowOptions", "windows/boxcar", "windows/bartlett", "windows/blackman", "windows/hamming", "windows/hann"]
+
+[[family]]
+path = "eng/signal/filtering"
+page = "api/eng/signal/filtering.md"
+title = "Filtering and response"
+maxdepth = 2
+children = ["filtering/ConvMode", "filtering/PadMode", "filtering/FilterRun", "filtering/PhaseOpts", "filtering/conv", "filtering/corr", "filtering/fir", "filtering/filter", "filtering/sos", "filtering/zero_phase", "filtering/freqz"]
+
+[[family]]
+path = "eng/signal/design"
+page = "api/eng/signal/design.md"
+title = "IIR design"
+maxdepth = 2
+children = ["design/Band", "design/IirOptions", "design/butter", "design/cheby1", "design/cheby2"]
+
+[[family]]
+path = "eng/lti"
+page = "api/eng/lti.md"
+title = "Linear time-invariant systems"
+maxdepth = 3
+children = ["lti/state", "lti/response", "lti/simulation"]
+
+[[family]]
+path = "eng/lti/state"
+page = "api/eng/lti/state.md"
+title = "State space"
+maxdepth = 2
+children = ["state/StateSpace", "state/Gram", "state/state", "state/ctrb", "state/obsv", "state/gramian"]
+
+[[family]]
+path = "eng/lti/response"
+page = "api/eng/lti/response.md"
+title = "Pole-zero and response"
+maxdepth = 2
+children = ["response/PoleZero", "response/zpk", "response/to_sos", "response/freqresp"]
+
+[[family]]
+path = "eng/lti/simulation"
+page = "api/eng/lti/simulation.md"
+title = "Simulation"
+maxdepth = 2
+children = ["simulation/Hold", "simulation/SimOptions", "simulation/SimRun", "simulation/sim"]
+
+[[family]]
+path = "eng/control"
+page = "api/eng/control.md"
+title = "Control systems"
+maxdepth = 3
+children = ["control/optimal", "control/estimation", "control/loop", "control/controllers", "control/mpc"]
+
+[[family]]
+path = "eng/control/optimal"
+page = "api/eng/control/optimal.md"
+title = "Optimal feedback"
+maxdepth = 2
+children = ["optimal/RiccatiResult", "optimal/care", "optimal/dare", "optimal/lqr"]
+
+[[family]]
+path = "eng/control/estimation"
+page = "api/eng/control/estimation.md"
+title = "Estimation and smoothing"
+maxdepth = 2
+children = ["estimation/LqeResult", "estimation/KalmanOptions", "estimation/KalmanResult", "estimation/SmoothResult", "estimation/lqe", "estimation/kalman", "estimation/smooth"]
+
+[[family]]
+path = "eng/control/loop"
+page = "api/eng/control/loop.md"
+title = "Loop analysis"
+maxdepth = 2
+children = ["loop/LoopResult", "loop/MarginResult", "loop/loop", "loop/margin"]
+
+[[family]]
+path = "eng/control/controllers"
+page = "api/eng/control/controllers.md"
+title = "Controller construction"
+maxdepth = 2
+children = ["controllers/PlaceOptions", "controllers/PlaceResult", "controllers/PidRule", "controllers/PidController", "controllers/place", "controllers/pid", "controllers/freqresp"]
+
+[[family]]
+path = "eng/control/mpc"
+page = "api/eng/control/mpc.md"
+title = "Model-predictive control"
+maxdepth = 2
+children = ["mpc/Weights", "mpc/Bounds", "mpc/Options", "mpc/Result", "mpc/Plan", "mpc/build", "mpc/solve"]
+
+[[symbol]]
+qualname = "signal::WindowMode"
+kind = "options"
+family = "eng/signal/windows"
+page = "api/eng/signal/windows/WindowMode.md"
+summary = "Chooses symmetric finite-analysis or periodic tiling window coefficients."
+fields = ["Symmetric", "Periodic"]
+
+[[symbol]]
+qualname = "signal::WindowOptions"
+kind = "options"
+family = "eng/signal/windows"
+page = "api/eng/signal/windows/WindowOptions.md"
+summary = "Controls window endpoint convention, floating dtype and execution platform."
+fields = ["mode", "dtype", "platform"]
+
+[[symbol]]
+qualname = "signal::boxcar"
+kind = "function"
+family = "eng/signal/windows"
+page = "api/eng/signal/windows/boxcar.md"
+summary = "Creates a constant-one rectangular window."
+
+[[symbol]]
+qualname = "signal::bartlett"
+kind = "function"
+family = "eng/signal/windows"
+page = "api/eng/signal/windows/bartlett.md"
+summary = "Creates a triangular Bartlett window with zero symmetric endpoints."
+
+[[symbol]]
+qualname = "signal::blackman"
+kind = "function"
+family = "eng/signal/windows"
+page = "api/eng/signal/windows/blackman.md"
+summary = "Creates a three-term Blackman taper."
+
+[[symbol]]
+qualname = "signal::hamming"
+kind = "function"
+family = "eng/signal/windows"
+page = "api/eng/signal/windows/hamming.md"
+summary = "Creates a raised-cosine Hamming window with nonzero endpoints."
+
+[[symbol]]
+qualname = "signal::hann"
+kind = "function"
+family = "eng/signal/windows"
+page = "api/eng/signal/windows/hann.md"
+summary = "Creates a raised-cosine Hann window."
+
+[[symbol]]
+qualname = "signal::ConvMode"
+kind = "options"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/ConvMode.md"
+summary = "Selects full, input-sized or overlap-only convolution alignment."
+fields = ["Full", "Same", "Valid"]
+
+[[symbol]]
+qualname = "signal::PadMode"
+kind = "options"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/PadMode.md"
+summary = "Selects the endpoint extension used by zero-phase filtering."
+fields = ["Odd", "Even", "Constant", "None"]
+
+[[symbol]]
+qualname = "signal::FilterRun"
+kind = "options"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/FilterRun.md"
+summary = "Carries filtered values and the final recurrence state for continuation."
+fields = ["values", "state"]
+
+[[symbol]]
+qualname = "signal::PhaseOpts"
+kind = "options"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/PhaseOpts.md"
+summary = "Controls sample axis, extension length and endpoint policy for zero-phase filtering."
+fields = ["dim", "edge", "pad"]
+
+[[symbol]]
+qualname = "signal::conv"
+kind = "function"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/conv.md"
+summary = "Computes batched linear convolution along a selected axis."
+
+[[symbol]]
+qualname = "signal::corr"
+kind = "function"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/corr.md"
+summary = "Computes conjugating linear correlation along a selected axis."
+
+[[symbol]]
+qualname = "signal::fir"
+kind = "function"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/fir.md"
+summary = "Applies a causal zero-state finite-impulse-response filter."
+
+[[symbol]]
+qualname = "signal::filter"
+kind = "function"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/filter.md"
+summary = "Applies a direct-form recurrence with optional continuation state."
+overloads = 2
+
+[[symbol]]
+qualname = "signal::sos"
+kind = "function"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/sos.md"
+summary = "Applies a cascade of second-order filter sections."
+overloads = 2
+
+[[symbol]]
+qualname = "signal::zero_phase"
+kind = "function"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/zero_phase.md"
+summary = "Applies endpoint-conditioned forward-backward filtering."
+overloads = 2
+
+[[symbol]]
+qualname = "signal::freqz"
+kind = "function"
+family = "eng/signal/filtering"
+page = "api/eng/signal/filtering/freqz.md"
+summary = "Evaluates FIR or IIR delay-polynomial frequency response."
+overloads = 2
+
+[[symbol]]
+qualname = "signal::Band"
+kind = "options"
+family = "eng/signal/design"
+page = "api/eng/signal/design/Band.md"
+summary = "Selects low-pass, high-pass, band-pass or band-stop transformation."
+fields = ["Low", "High", "Pass", "Stop"]
+
+[[symbol]]
+qualname = "signal::IirOptions"
+kind = "options"
+family = "eng/signal/design"
+page = "api/eng/signal/design/IirOptions.md"
+summary = "Controls band transformation, analog-versus-digital interpretation, dtype and platform."
+fields = ["band", "sample_rate", "dtype", "platform"]
+
+[[symbol]]
+qualname = "signal::butter"
+kind = "function"
+family = "eng/signal/design"
+page = "api/eng/signal/design/butter.md"
+summary = "Designs a maximally-flat Butterworth pole-zero system."
+overloads = 2
+
+[[symbol]]
+qualname = "signal::cheby1"
+kind = "function"
+family = "eng/signal/design"
+page = "api/eng/signal/design/cheby1.md"
+summary = "Designs a Chebyshev type-I pole-zero system with passband ripple."
+overloads = 2
+
+[[symbol]]
+qualname = "signal::cheby2"
+kind = "function"
+family = "eng/signal/design"
+page = "api/eng/signal/design/cheby2.md"
+summary = "Designs a Chebyshev type-II pole-zero system with stopband attenuation."
+overloads = 2
+
+[[symbol]]
+qualname = "lti::StateSpace"
+kind = "class"
+family = "eng/lti/state"
+page = "api/eng/lti/state/StateSpace.md"
+summary = "An immutable continuous- or discrete-time state-space system with broadcast batch axes."
+
+[[symbol]]
+qualname = "lti::Gram"
+kind = "options"
+family = "eng/lti/state"
+page = "api/eng/lti/state/Gram.md"
+summary = "Selects reachability or observability Gramians."
+fields = ["Reach", "Observe"]
+
+[[symbol]]
+qualname = "lti::state"
+kind = "function"
+family = "eng/lti/state"
+page = "api/eng/lti/state/state.md"
+summary = "Validates and constructs a state-space system from A, B, C and D matrices."
+
+[[symbol]]
+qualname = "lti::ctrb"
+kind = "function"
+family = "eng/lti/state"
+page = "api/eng/lti/state/ctrb.md"
+summary = "Builds the controllability matrix."
+
+[[symbol]]
+qualname = "lti::obsv"
+kind = "function"
+family = "eng/lti/state"
+page = "api/eng/lti/state/obsv.md"
+summary = "Builds the observability matrix."
+
+[[symbol]]
+qualname = "lti::gram"
+kind = "function"
+family = "eng/lti/state"
+page = "api/eng/lti/state/gramian.md"
+summary = "Solves the continuous or discrete Lyapunov equation for a system Gramian."
+
+[[symbol]]
+qualname = "lti::PoleZero"
+kind = "class"
+family = "eng/lti/response"
+page = "api/eng/lti/response/PoleZero.md"
+summary = "An immutable zero-pole-gain system with explicit timebase and stability inspection."
+
+[[symbol]]
+qualname = "lti::zpk"
+kind = "function"
+family = "eng/lti/response"
+page = "api/eng/lti/response/zpk.md"
+summary = "Constructs a proper zero-pole-gain system."
+
+[[symbol]]
+qualname = "lti::to_sos"
+kind = "function"
+family = "eng/lti/response"
+page = "api/eng/lti/response/to_sos.md"
+summary = "Realizes a discrete pole-zero system as numerically ordered second-order sections."
+
+[[symbol]]
+qualname = "lti::freqresp"
+kind = "function"
+family = "eng/lti/response"
+page = "api/eng/lti/response/freqresp.md"
+summary = "Evaluates state-space or pole-zero frequency response on an angular-frequency grid."
+overloads = 2
+
+[[symbol]]
+qualname = "lti::Hold"
+kind = "options"
+family = "eng/lti/simulation"
+page = "api/eng/lti/simulation/Hold.md"
+summary = "Selects automatic, zero-order or linear input interpolation."
+fields = ["Auto", "Zero", "Linear"]
+
+[[symbol]]
+qualname = "lti::SimOptions"
+kind = "options"
+family = "eng/lti/simulation"
+page = "api/eng/lti/simulation/SimOptions.md"
+summary = "Controls input interpolation during state-space simulation."
+fields = ["hold"]
+
+[[symbol]]
+qualname = "lti::SimRun"
+kind = "options"
+family = "eng/lti/simulation"
+page = "api/eng/lti/simulation/SimRun.md"
+summary = "Carries output and state histories from one simulation."
+fields = ["values", "states"]
+
+[[symbol]]
+qualname = "lti::sim"
+kind = "function"
+family = "eng/lti/simulation"
+page = "api/eng/lti/simulation/sim.md"
+summary = "Simulates continuous or discrete state-space dynamics with optional initial state."
+overloads = 2
+
+[[symbol]]
+qualname = "control::RiccatiResult"
+kind = "options"
+family = "eng/control/optimal"
+page = "api/eng/control/optimal/RiccatiResult.md"
+summary = "Carries a Riccati solution, feedback gain, and closed-loop dynamics."
+fields = ["value", "gain", "closed_loop"]
+
+[[symbol]]
+qualname = "control::care"
+kind = "function"
+family = "eng/control/optimal"
+page = "api/eng/control/optimal/care.md"
+summary = "Solves a continuous algebraic Riccati control problem."
+overloads = 2
+
+[[symbol]]
+qualname = "control::dare"
+kind = "function"
+family = "eng/control/optimal"
+page = "api/eng/control/optimal/dare.md"
+summary = "Solves a discrete algebraic Riccati control problem."
+overloads = 2
+
+[[symbol]]
+qualname = "control::lqr"
+kind = "function"
+family = "eng/control/optimal"
+page = "api/eng/control/optimal/lqr.md"
+summary = "Routes a state-space model to continuous or discrete optimal feedback."
+overloads = 2
+
+[[symbol]]
+qualname = "control::LqeResult"
+kind = "options"
+family = "eng/control/estimation"
+page = "api/eng/control/estimation/LqeResult.md"
+summary = "Carries estimator covariance, gain, and error dynamics."
+fields = ["covariance", "gain", "closed_loop"]
+
+[[symbol]]
+qualname = "control::KalmanOptions"
+kind = "options"
+family = "eng/control/estimation"
+page = "api/eng/control/estimation/KalmanOptions.md"
+summary = "Controls information tolerance and covariance jitter during filtering."
+fields = ["info_tol", "jitter"]
+
+[[symbol]]
+qualname = "control::KalmanResult"
+kind = "options"
+family = "eng/control/estimation"
+page = "api/eng/control/estimation/KalmanResult.md"
+summary = "Carries complete filtered and predicted state, observation, and likelihood trajectories."
+fields = ["filtered_mean", "filtered_cov", "predicted_mean", "predicted_cov", "predicted_obs", "innovation", "innovation_cov", "gain", "data_used", "loglik_terms", "loglik"]
+
+[[symbol]]
+qualname = "control::SmoothResult"
+kind = "options"
+family = "eng/control/estimation"
+page = "api/eng/control/estimation/SmoothResult.md"
+summary = "Carries the forward filter plus backward-smoothed state trajectories."
+fields = ["filter", "smoothed_mean", "smoothed_cov", "gain"]
+
+[[symbol]]
+qualname = "control::lqe"
+kind = "function"
+family = "eng/control/estimation"
+page = "api/eng/control/estimation/lqe.md"
+summary = "Designs a continuous or discrete steady-state linear estimator."
+overloads = 2
+
+[[symbol]]
+qualname = "control::kalman"
+kind = "function"
+family = "eng/control/estimation"
+page = "api/eng/control/estimation/kalman.md"
+summary = "Runs a discrete linear Kalman filter with optional known inputs."
+overloads = 2
+
+[[symbol]]
+qualname = "control::smooth"
+kind = "function"
+family = "eng/control/estimation"
+page = "api/eng/control/estimation/smooth.md"
+summary = "Runs forward filtering followed by backward state smoothing."
+overloads = 2
+
+[[symbol]]
+qualname = "control::LoopResult"
+kind = "options"
+family = "eng/control/loop"
+page = "api/eng/control/loop/LoopResult.md"
+summary = "Carries open-loop, sensitivity, and complementary-sensitivity responses."
+fields = ["response", "sens", "comp"]
+
+[[symbol]]
+qualname = "control::MarginResult"
+kind = "options"
+family = "eng/control/loop"
+page = "api/eng/control/loop/MarginResult.md"
+summary = "Carries gain, phase, and stability margins with their frequencies."
+fields = ["gain", "phase", "stability", "gain_freq", "phase_freq", "stability_freq"]
+
+[[symbol]]
+qualname = "control::loop"
+kind = "function"
+family = "eng/control/loop"
+page = "api/eng/control/loop/loop.md"
+summary = "Evaluates open-loop, sensitivity, and complementary sensitivity responses."
+overloads = 2
+
+[[symbol]]
+qualname = "control::margin"
+kind = "function"
+family = "eng/control/loop"
+page = "api/eng/control/loop/margin.md"
+summary = "Interpolates classical stability margins from a sampled frequency response."
+overloads = 3
+
+[[symbol]]
+qualname = "control::PlaceOptions"
+kind = "options"
+family = "eng/control/controllers"
+page = "api/eng/control/controllers/PlaceOptions.md"
+summary = "Controls iterative eigenvector refinement and conditioning checks for pole placement."
+fields = ["sweeps", "tolerance", "condition_limit"]
+
+[[symbol]]
+qualname = "control::PlaceResult"
+kind = "options"
+family = "eng/control/controllers"
+page = "api/eng/control/controllers/PlaceResult.md"
+summary = "Carries placed gain, closed-loop dynamics, basis, and diagnostics."
+fields = ["gain", "closed_loop", "basis", "residual", "condition", "sweeps"]
+
+[[symbol]]
+qualname = "control::PidRule"
+kind = "options"
+family = "eng/control/controllers"
+page = "api/eng/control/controllers/PidRule.md"
+summary = "Selects forward, backward, or trapezoidal discrete integration."
+fields = ["Forward", "Backward", "Trapezoid"]
+
+[[symbol]]
+qualname = "control::Pid"
+kind = "class"
+family = "eng/control/controllers"
+page = "api/eng/control/controllers/PidController.md"
+summary = "An immutable continuous or discrete parallel-form PID controller."
+
+[[symbol]]
+qualname = "control::place"
+kind = "function"
+family = "eng/control/controllers"
+page = "api/eng/control/controllers/place.md"
+summary = "Assigns the poles of a controllable state-feedback system."
+overloads = 2
+
+[[symbol]]
+qualname = "control::pid"
+kind = "function"
+family = "eng/control/controllers"
+page = "api/eng/control/controllers/pid.md"
+summary = "Constructs a validated parallel-form PID controller."
+
+[[symbol]]
+qualname = "control::freqresp"
+kind = "function"
+family = "eng/control/controllers"
+page = "api/eng/control/controllers/freqresp.md"
+summary = "Evaluates a PID controller over an angular-frequency grid."
+
+[[symbol]]
+qualname = "control::mpc::Weights"
+kind = "options"
+family = "eng/control/mpc"
+page = "api/eng/control/mpc/Weights.md"
+summary = "Carries stage and terminal quadratic MPC weights."
+fields = ["state", "input", "terminal"]
+
+[[symbol]]
+qualname = "control::mpc::Bounds"
+kind = "options"
+family = "eng/control/mpc"
+page = "api/eng/control/mpc/Bounds.md"
+summary = "Carries mandatory input and optional state trajectory bounds."
+fields = ["input_lower", "input_upper", "state_lower", "state_upper"]
+
+[[symbol]]
+qualname = "control::mpc::Options"
+kind = "options"
+family = "eng/control/mpc"
+page = "api/eng/control/mpc/Options.md"
+summary = "Controls prediction horizon and the condensed QP solver."
+fields = ["horizon", "qp"]
+
+[[symbol]]
+qualname = "control::mpc::Result"
+kind = "options"
+family = "eng/control/mpc"
+page = "api/eng/control/mpc/Result.md"
+summary = "Carries the first action, planned trajectories, and QP diagnostics."
+fields = ["control", "controls", "states", "optimization"]
+
+[[symbol]]
+qualname = "control::mpc::Plan"
+kind = "class"
+family = "eng/control/mpc"
+page = "api/eng/control/mpc/Plan.md"
+summary = "A compiled finite-horizon MPC problem with reusable factorization."
+
+[[symbol]]
+qualname = "control::mpc::build"
+kind = "function"
+family = "eng/control/mpc"
+page = "api/eng/control/mpc/build.md"
+summary = "Compiles invariant prediction and QP matrices into a reusable plan."
+
+[[symbol]]
+qualname = "control::mpc::solve"
+kind = "function"
+family = "eng/control/mpc"
+page = "api/eng/control/mpc/solve.md"
+summary = "Solves a compiled or one-shot finite-horizon regulation problem."
+overloads = 2
+
+
+[[family]]
+path = "eng/structure"
+page = "api/eng/structure.md"
+title = "Structures"
+maxdepth = 3
+children = ["structure/model", "structure/statics", "structure/spectral", "structure/dynamics"]
+
+[[family]]
+path = "eng/structure/model"
+page = "api/eng/structure/model.md"
+title = "Structural models"
+maxdepth = 2
+children = ["model/Mesh", "model/Bars", "model/Sections", "model/Fix", "model/TrussModel", "model/FrameModel", "model/truss", "model/frame"]
+
+[[family]]
+path = "eng/structure/statics"
+page = "api/eng/structure/statics.md"
+title = "Static analysis"
+maxdepth = 2
+children = ["statics/SolveOptions", "statics/StaticResult", "statics/FrameResult", "statics/MemberLoad", "statics/NonlinearOptions", "statics/NonlinearResult", "statics/solve"]
+
+[[family]]
+path = "eng/structure/spectral"
+page = "api/eng/structure/spectral.md"
+title = "Mass, modes and buckling"
+maxdepth = 2
+children = ["spectral/EigOptions", "spectral/ModeResult", "spectral/BuckResult", "spectral/mass", "spectral/modes", "spectral/buckling"]
+
+[[family]]
+path = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics.md"
+title = "Time and frequency response"
+maxdepth = 2
+children = ["dynamics/MotionState", "dynamics/MotionOptions", "dynamics/NonlinearMotionOptions", "dynamics/HarmonicOptions", "dynamics/MotionResult", "dynamics/NonlinearMotionResult", "dynamics/HarmonicResult", "dynamics/motion", "dynamics/harmonic"]
+
+[[symbol]]
+qualname = "structure::Mesh"
+kind = "options"
+family = "eng/structure/model"
+page = "api/eng/structure/model/Mesh.md"
+summary = "Node coordinates and the bar or member connectivity of a structure."
+fields = ["position", "from", "to"]
+
+[[symbol]]
+qualname = "structure::Bars"
+kind = "options"
+family = "eng/structure/model"
+page = "api/eng/structure/model/Bars.md"
+summary = "Cross-section area and modulus of each truss bar."
+fields = ["area", "modulus"]
+
+[[symbol]]
+qualname = "structure::Sections"
+kind = "options"
+family = "eng/structure/model"
+page = "api/eng/structure/model/Sections.md"
+summary = "Cross-section properties and density of each frame member."
+fields = ["area", "inertia", "modulus", "density"]
+
+[[symbol]]
+qualname = "structure::Fix"
+kind = "options"
+family = "eng/structure/model"
+page = "api/eng/structure/model/Fix.md"
+summary = "Constrained degrees of freedom and the displacement prescribed at each."
+fields = ["node", "axis", "value"]
+
+[[symbol]]
+qualname = "structure::Truss"
+kind = "class"
+family = "eng/structure/model"
+page = "api/eng/structure/model/TrussModel.md"
+summary = "An immutable compiled truss of pin-jointed bars."
+
+[[symbol]]
+qualname = "structure::Frame"
+kind = "class"
+family = "eng/structure/model"
+page = "api/eng/structure/model/FrameModel.md"
+summary = "An immutable compiled frame of rigidly jointed members."
+
+[[symbol]]
+qualname = "structure::truss"
+kind = "function"
+family = "eng/structure/model"
+page = "api/eng/structure/model/truss.md"
+summary = "Validates and compiles a pin-jointed truss."
+overloads = 1
+
+[[symbol]]
+qualname = "structure::frame"
+kind = "function"
+family = "eng/structure/model"
+page = "api/eng/structure/model/frame.md"
+summary = "Validates and compiles a plane frame."
+overloads = 1
+
+[[symbol]]
+qualname = "structure::MemberLoad"
+kind = "options"
+family = "eng/structure/statics"
+page = "api/eng/structure/statics/MemberLoad.md"
+summary = "Uniform loads along frame members."
+fields = ["transverse", "axial"]
+
+[[symbol]]
+qualname = "structure::SolveOptions"
+kind = "options"
+family = "eng/structure/statics"
+page = "api/eng/structure/statics/SolveOptions.md"
+summary = "Controls of the iterative static solve."
+fields = ["cg.max_iterations", "cg.relative_tolerance", "cg.absolute_tolerance", "cg.curvature_tolerance", "cg.check_interval", "fail_on_nonconvergence"]
+
+[[symbol]]
+qualname = "structure::StaticResult"
+kind = "options"
+family = "eng/structure/statics"
+page = "api/eng/structure/statics/StaticResult.md"
+summary = "Displacements, reactions and bar results of a truss solve."
+fields = ["displacement", "reaction", "strain", "stress", "force", "energy", "residual_norm", "converged", "breakdown", "iterations"]
+
+[[symbol]]
+qualname = "structure::FrameResult"
+kind = "options"
+family = "eng/structure/statics"
+page = "api/eng/structure/statics/FrameResult.md"
+summary = "Displacements, reactions and member end actions of a frame solve."
+fields = ["displacement", "reaction", "end_force", "energy", "residual_norm", "converged", "breakdown", "iterations"]
+
+[[symbol]]
+qualname = "structure::NonlinearOptions"
+kind = "options"
+family = "eng/structure/statics"
+page = "api/eng/structure/statics/NonlinearOptions.md"
+summary = "Controls of the large-displacement static solve."
+fields = ["load_steps", "max_iterations", "max_line_search", "max_cutbacks", "relative_tolerance", "absolute_tolerance", "line_search_shrink", "armijo", "min_load_step", "solve", "fail_on_nonconvergence"]
+
+[[symbol]]
+qualname = "structure::NonlinearResult"
+kind = "options"
+family = "eng/structure/statics"
+page = "api/eng/structure/statics/NonlinearResult.md"
+summary = "Displacements, reactions and end actions of a large-displacement solve."
+fields = ["displacement", "reaction", "end_force", "energy", "residual_norm", "converged", "load_factor", "iterations", "steps", "cutbacks"]
+
+[[symbol]]
+qualname = "structure::solve"
+kind = "function"
+family = "eng/structure/statics"
+page = "api/eng/structure/statics/solve.md"
+summary = "Solves the static equilibrium of a truss or a frame."
+overloads = 4
+
+[[symbol]]
+qualname = "structure::EigOptions"
+kind = "options"
+family = "eng/structure/spectral"
+page = "api/eng/structure/spectral/EigOptions.md"
+summary = "Controls of the modal and buckling eigenvalue searches."
+fields = ["count", "max_iterations", "relative_tolerance", "absolute_tolerance", "solve"]
+
+[[symbol]]
+qualname = "structure::ModeResult"
+kind = "options"
+family = "eng/structure/spectral"
+page = "api/eng/structure/spectral/ModeResult.md"
+summary = "Natural frequencies and mode shapes of a frame."
+fields = ["omega", "hertz", "shape", "residual", "converged", "iterations"]
+
+[[symbol]]
+qualname = "structure::BuckResult"
+kind = "options"
+family = "eng/structure/spectral"
+page = "api/eng/structure/spectral/BuckResult.md"
+summary = "Buckling factors and buckled shapes of a frame."
+fields = ["factor", "shape", "residual", "converged", "iterations"]
+
+[[symbol]]
+qualname = "structure::mass"
+kind = "function"
+family = "eng/structure/spectral"
+page = "api/eng/structure/spectral/mass.md"
+summary = "Applies the consistent mass of a frame to an acceleration."
+overloads = 1
+
+[[symbol]]
+qualname = "structure::modes"
+kind = "function"
+family = "eng/structure/spectral"
+page = "api/eng/structure/spectral/modes.md"
+summary = "Finds the lowest natural frequencies and mode shapes of a frame."
+overloads = 1
+
+[[symbol]]
+qualname = "structure::buckling"
+kind = "function"
+family = "eng/structure/spectral"
+page = "api/eng/structure/spectral/buckling.md"
+summary = "Finds the linearised buckling factors of a frame."
+overloads = 1
+
+[[symbol]]
+qualname = "structure::MotionState"
+kind = "options"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/MotionState.md"
+summary = "The initial displacement and velocity of a time integration."
+fields = ["displacement", "velocity"]
+
+[[symbol]]
+qualname = "structure::MotionOptions"
+kind = "options"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/MotionOptions.md"
+summary = "Controls of the linear time integration."
+fields = ["spectral_radius", "mass_damping", "stiffness_damping", "solve", "fail_on_nonconvergence"]
+
+[[symbol]]
+qualname = "structure::NonlinearMotionOptions"
+kind = "options"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/NonlinearMotionOptions.md"
+summary = "Controls of the large-displacement time integration."
+fields = ["spectral_radius", "mass_damping", "stiffness_damping", "max_iterations", "max_line_search", "relative_tolerance", "absolute_tolerance", "line_search_shrink", "armijo", "solve", "fail_on_nonconvergence"]
+
+[[symbol]]
+qualname = "structure::HarmonicOptions"
+kind = "options"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/HarmonicOptions.md"
+summary = "Controls of the frequency-domain solve."
+fields = ["mass_damping", "stiffness_damping", "solve", "fail_on_nonconvergence"]
+
+[[symbol]]
+qualname = "structure::MotionResult"
+kind = "options"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/MotionResult.md"
+summary = "The time history of a linear integration."
+fields = ["time", "displacement", "velocity", "acceleration", "reaction", "kinetic", "strain_energy", "residual_norm", "converged", "breakdown", "iterations"]
+
+[[symbol]]
+qualname = "structure::NonlinearMotionResult"
+kind = "options"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/NonlinearMotionResult.md"
+summary = "The time history of a large-displacement integration."
+fields = ["time", "displacement", "velocity", "acceleration", "reaction", "kinetic", "strain_energy", "residual_norm", "converged", "iterations"]
+
+[[symbol]]
+qualname = "structure::HarmonicResult"
+kind = "options"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/HarmonicResult.md"
+summary = "The steady response at each frequency."
+fields = ["omega", "displacement", "velocity", "acceleration", "reaction", "residual_norm", "relative_residual", "converged", "iterations", "operator_evaluations", "restarts"]
+
+[[symbol]]
+qualname = "structure::motion"
+kind = "function"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/motion.md"
+summary = "Integrates the motion of a frame under a load history."
+overloads = 2
+
+[[symbol]]
+qualname = "structure::harmonic"
+kind = "function"
+family = "eng/structure/dynamics"
+page = "api/eng/structure/dynamics/harmonic.md"
+summary = "Computes the steady response of a frame to sinusoidal loads."
+overloads = 1
+
+[[family]]
+path = "eng/power"
+page = "api/eng/power.md"
+title = "Power systems"
+maxdepth = 3
+children = ["power/model", "power/flow", "power/security", "power/dispatch", "power/opf", "power/estimation", "power/continuation"]
+
+[[family]]
+path = "eng/power/model"
+page = "api/eng/power/model.md"
+title = "Network model"
+maxdepth = 2
+children = ["model/BusKind", "model/Base", "model/Buses", "model/Gens", "model/Lines", "model/Net", "model/Grid", "model/make", "model/zbase", "model/ybase", "model/ibase", "model/pu", "model/si"]
+
+[[family]]
+path = "eng/power/flow"
+page = "api/eng/power/flow.md"
+title = "Power flow"
+maxdepth = 2
+children = ["flow/Options", "flow/DcResult", "flow/AcResult", "flow/dc", "flow/ac"]
+
+[[family]]
+path = "eng/power/security"
+page = "api/eng/power/security.md"
+title = "Sensitivity and outage factors"
+maxdepth = 2
+children = ["security/LodfResult", "security/OutageResult", "security/ptdf", "security/lodf", "security/outages"]
+
+[[family]]
+path = "eng/power/dispatch"
+page = "api/eng/power/dispatch.md"
+title = "Economic dispatch"
+maxdepth = 2
+children = ["dispatch/GenCost", "dispatch/DispatchOptions", "dispatch/DispatchResult", "dispatch/dispatch"]
+
+[[family]]
+path = "eng/power/opf"
+page = "api/eng/power/opf.md"
+title = "Optimal power flow"
+maxdepth = 2
+children = ["opf/Limits", "opf/OpfOptions", "opf/OpfResult", "opf/opf"]
+
+[[family]]
+path = "eng/power/estimation"
+page = "api/eng/power/estimation.md"
+title = "State estimation"
+maxdepth = 2
+children = ["estimation/MeasureKind", "estimation/Measurements", "estimation/EstimateOptions", "estimation/EstimateResult", "estimation/estimate"]
+
+[[family]]
+path = "eng/power/continuation"
+page = "api/eng/power/continuation.md"
+title = "Continuation power flow"
+maxdepth = 2
+children = ["continuation/TraceStop", "continuation/LoadPath", "continuation/TraceOptions", "continuation/TraceResult", "continuation/trace"]
+
+[[symbol]]
+qualname = "power::BusKind"
+kind = "options"
+family = "eng/power/model"
+page = "api/eng/power/model/BusKind.md"
+summary = "Selects which pair of quantities a bus fixes."
+fields = ["Slack", "PV", "PQ"]
+
+[[symbol]]
+qualname = "power::Base"
+kind = "options"
+family = "eng/power/model"
+page = "api/eng/power/model/Base.md"
+summary = "The power and voltage bases of a per-unit system."
+fields = ["power", "voltage"]
+
+[[symbol]]
+qualname = "power::Buses"
+kind = "options"
+family = "eng/power/model"
+page = "api/eng/power/model/Buses.md"
+summary = "The buses of a network: kind, fixed injections, voltage set points and shunts."
+fields = ["kind", "p", "q", "vm", "va", "g", "b"]
+
+[[symbol]]
+qualname = "power::Gens"
+kind = "options"
+family = "eng/power/model"
+page = "api/eng/power/model/Gens.md"
+summary = "The generators of a network."
+fields = ["bus", "p", "q", "active"]
+
+[[symbol]]
+qualname = "power::Lines"
+kind = "options"
+family = "eng/power/model"
+page = "api/eng/power/model/Lines.md"
+summary = "The lines and transformers of a network."
+fields = ["from", "to", "r", "x", "charge", "tap", "shift", "active"]
+
+[[symbol]]
+qualname = "power::Net"
+kind = "options"
+family = "eng/power/model"
+page = "api/eng/power/model/Net.md"
+summary = "The complete description of a power network."
+fields = ["base", "buses", "gens", "lines"]
+
+[[symbol]]
+qualname = "power::Grid"
+kind = "class"
+family = "eng/power/model"
+page = "api/eng/power/model/Grid.md"
+summary = "An immutable compiled network."
+
+[[symbol]]
+qualname = "power::make"
+kind = "function"
+family = "eng/power/model"
+page = "api/eng/power/model/make.md"
+summary = "Validates a network and compiles it into a grid."
+overloads = 1
+
+[[symbol]]
+qualname = "power::zbase"
+kind = "function"
+family = "eng/power/model"
+page = "api/eng/power/model/zbase.md"
+summary = "Impedance base of a per-unit system."
+overloads = 1
+
+[[symbol]]
+qualname = "power::ybase"
+kind = "function"
+family = "eng/power/model"
+page = "api/eng/power/model/ybase.md"
+summary = "Admittance base of a per-unit system."
+overloads = 1
+
+[[symbol]]
+qualname = "power::ibase"
+kind = "function"
+family = "eng/power/model"
+page = "api/eng/power/model/ibase.md"
+summary = "Current base of a per-unit system."
+overloads = 1
+
+[[symbol]]
+qualname = "power::pu"
+kind = "function"
+family = "eng/power/model"
+page = "api/eng/power/model/pu.md"
+summary = "Converts a value to per unit."
+overloads = 1
+
+[[symbol]]
+qualname = "power::si"
+kind = "function"
+family = "eng/power/model"
+page = "api/eng/power/model/si.md"
+summary = "Converts a per-unit value to physical units."
+overloads = 1
+
+[[symbol]]
+qualname = "power::Options"
+kind = "options"
+family = "eng/power/flow"
+page = "api/eng/power/flow/Options.md"
+summary = "Controls of the AC Newton iteration."
+fields = ["tolerance", "max_iterations"]
+
+[[symbol]]
+qualname = "power::DcResult"
+kind = "options"
+family = "eng/power/flow"
+page = "api/eng/power/flow/DcResult.md"
+summary = "Angles, injections and flows of the DC power flow."
+fields = ["angle", "injection", "from_power", "to_power", "residual"]
+
+[[symbol]]
+qualname = "power::AcResult"
+kind = "options"
+family = "eng/power/flow"
+page = "api/eng/power/flow/AcResult.md"
+summary = "Voltages, injections and flows of the AC power flow."
+fields = ["voltage", "magnitude", "angle", "injection", "from_power", "to_power", "residual", "converged", "iterations"]
+
+[[symbol]]
+qualname = "power::dc"
+kind = "function"
+family = "eng/power/flow"
+page = "api/eng/power/flow/dc.md"
+summary = "Solves the linear DC power flow."
+overloads = 1
+
+[[symbol]]
+qualname = "power::ac"
+kind = "function"
+family = "eng/power/flow"
+page = "api/eng/power/flow/ac.md"
+summary = "Solves the AC power flow by Newton's method."
+overloads = 1
+
+[[symbol]]
+qualname = "power::LodfResult"
+kind = "options"
+family = "eng/power/security"
+page = "api/eng/power/security/LodfResult.md"
+summary = "Line outage distribution factors and their validity."
+fields = ["factor", "valid"]
+
+[[symbol]]
+qualname = "power::OutageResult"
+kind = "options"
+family = "eng/power/security"
+page = "api/eng/power/security/OutageResult.md"
+summary = "Flows after every single-line outage."
+fields = ["base_flow", "flow", "valid"]
+
+[[symbol]]
+qualname = "power::ptdf"
+kind = "function"
+family = "eng/power/security"
+page = "api/eng/power/security/ptdf.md"
+summary = "Power transfer distribution factors of a grid."
+overloads = 1
+
+[[symbol]]
+qualname = "power::lodf"
+kind = "function"
+family = "eng/power/security"
+page = "api/eng/power/security/lodf.md"
+summary = "Line outage distribution factors of a grid."
+overloads = 1
+
+[[symbol]]
+qualname = "power::outages"
+kind = "function"
+family = "eng/power/security"
+page = "api/eng/power/security/outages.md"
+summary = "Flows after every single-line outage."
+overloads = 1
+
+[[symbol]]
+qualname = "power::GenCost"
+kind = "options"
+family = "eng/power/dispatch"
+page = "api/eng/power/dispatch/GenCost.md"
+summary = "Cost curves and output bounds of the generators."
+fields = ["lower", "upper", "linear", "quadratic", "constant", "q_linear", "q_quadratic", "q_constant"]
+
+[[symbol]]
+qualname = "power::DispatchOptions"
+kind = "options"
+family = "eng/power/dispatch"
+page = "api/eng/power/dispatch/DispatchOptions.md"
+summary = "Security switch and quadratic-programming controls of `dispatch`."
+fields = ["secure", "outage_tolerance", "qp"]
+
+[[symbol]]
+qualname = "power::DispatchResult"
+kind = "options"
+family = "eng/power/dispatch"
+page = "api/eng/power/dispatch/DispatchResult.md"
+summary = "Generation, flows, post-outage flows and solver diagnostics of `dispatch`."
+fields = ["generation", "angle", "injection", "flow", "post_flow", "outage_valid", "objective", "converged", "iterations", "primal_residual", "dual_residual"]
+
+[[symbol]]
+qualname = "power::dispatch"
+kind = "function"
+family = "eng/power/dispatch"
+page = "api/eng/power/dispatch/dispatch.md"
+summary = "Least-cost DC dispatch of the generators, optionally secure against single-line outages."
+overloads = 1
+
+[[symbol]]
+qualname = "power::Limits"
+kind = "options"
+family = "eng/power/opf"
+page = "api/eng/power/opf/Limits.md"
+summary = "Reactive, voltage and line limits of the optimal power flow."
+fields = ["q_lower", "q_upper", "vm_lower", "vm_upper", "flow"]
+
+[[symbol]]
+qualname = "power::OpfOptions"
+kind = "options"
+family = "eng/power/opf"
+page = "api/eng/power/opf/OpfOptions.md"
+summary = "Iteration budget and tolerances of the optimal power flow."
+fields = ["max_iterations", "constraint_tolerance", "optimality_tolerance"]
+
+[[symbol]]
+qualname = "power::OpfResult"
+kind = "options"
+family = "eng/power/opf"
+page = "api/eng/power/opf/OpfResult.md"
+summary = "Optimal generation, voltages, flows, prices and diagnostics."
+fields = ["generation_p", "generation_q", "voltage", "magnitude", "angle", "injection", "from_power", "to_power", "objective", "p_price", "q_price", "from_shadow", "to_shadow", "converged", "iterations", "constraint_violation", "first_order_optimality", "message"]
+
+[[symbol]]
+qualname = "power::opf"
+kind = "function"
+family = "eng/power/opf"
+page = "api/eng/power/opf/opf.md"
+summary = "Exact AC optimal power flow by sequential quadratic programming."
+overloads = 1
+
+[[symbol]]
+qualname = "power::MeasureKind"
+kind = "options"
+family = "eng/power/estimation"
+page = "api/eng/power/estimation/MeasureKind.md"
+summary = "The eight kinds of measurement the estimator understands."
+fields = ["FromP, ToP", "FromQ, ToQ", "BusP, BusQ", "Angle, Magnitude"]
+
+[[symbol]]
+qualname = "power::Measurements"
+kind = "options"
+family = "eng/power/estimation"
+page = "api/eng/power/estimation/Measurements.md"
+summary = "A set of measurements with their values and accuracies."
+fields = ["kind", "index", "value", "stddev"]
+
+[[symbol]]
+qualname = "power::EstimateOptions"
+kind = "options"
+family = "eng/power/estimation"
+page = "api/eng/power/estimation/EstimateOptions.md"
+summary = "Tolerance and iteration budget of the state estimator."
+fields = ["tolerance", "max_iterations", "observability_tolerance"]
+
+[[symbol]]
+qualname = "power::EstimateResult"
+kind = "options"
+family = "eng/power/estimation"
+page = "api/eng/power/estimation/EstimateResult.md"
+summary = "The estimated state, residuals, covariance and diagnostics."
+fields = ["voltage", "magnitude", "angle", "injection", "from_power", "to_power", "predicted", "residual", "normalized_residual", "objective", "covariance", "converged", "iterations"]
+
+[[symbol]]
+qualname = "power::estimate"
+kind = "function"
+family = "eng/power/estimation"
+page = "api/eng/power/estimation/estimate.md"
+summary = "Weighted least-squares state estimation from redundant measurements."
+overloads = 1
+
+[[symbol]]
+qualname = "power::TraceStop"
+kind = "options"
+family = "eng/power/continuation"
+page = "api/eng/power/continuation/TraceStop.md"
+summary = "Where a continuation trace ends."
+fields = ["Target", "Nose"]
+
+[[symbol]]
+qualname = "power::LoadPath"
+kind = "options"
+family = "eng/power/continuation"
+page = "api/eng/power/continuation/LoadPath.md"
+summary = "The target injections that a continuation moves toward."
+fields = ["p", "q"]
+
+[[symbol]]
+qualname = "power::TraceOptions"
+kind = "options"
+family = "eng/power/continuation"
+page = "api/eng/power/continuation/TraceOptions.md"
+summary = "Stopping rule and stepping controls of the continuation."
+fields = ["stop", "target", "step", "step_min", "step_max", "adapt_tolerance", "adapt_damping", "tolerance", "max_steps", "max_iterations", "adaptive"]
+
+[[symbol]]
+qualname = "power::TraceResult"
+kind = "options"
+family = "eng/power/continuation"
+page = "api/eng/power/continuation/TraceResult.md"
+summary = "The points of a continuation curve."
+fields = ["voltage", "magnitude", "angle", "injection", "from_power", "to_power", "factor", "tangent", "residual", "valid", "reached", "points"]
+
+[[symbol]]
+qualname = "power::trace"
+kind = "function"
+family = "eng/power/continuation"
+page = "api/eng/power/continuation/trace.md"
+summary = "Continuation power flow through the voltage-collapse point."
+overloads = 1
+[[family]]
+path = "eng/circuit"
+page = "api/eng/circuit.md"
+title = "Circuits"
+maxdepth = 3
+children = ["circuit/model", "circuit/analysis"]
+
+[[family]]
+path = "eng/circuit/model"
+page = "api/eng/circuit/model.md"
+title = "Circuit model"
+maxdepth = 2
+children = ["model/Branches", "model/Controls", "model/Amps", "model/Diodes", "model/Transistors", "model/Mosfets", "model/Net", "model/CircuitModel", "model/make"]
+
+[[family]]
+path = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis.md"
+title = "Circuit analysis"
+maxdepth = 2
+children = ["analysis/Result", "analysis/op", "analysis/ac", "analysis/tran", "analysis/Drive", "analysis/Start", "analysis/TranOptions", "analysis/Scheme", "analysis/SolveOptions"]
+
+[[symbol]]
+qualname = "circuit::Branches"
+kind = "options"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/Branches.md"
+summary = "Two-terminal elements of one kind: their nodes and values."
+fields = ["positive", "negative", "value"]
+
+[[symbol]]
+qualname = "circuit::Controls"
+kind = "options"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/Controls.md"
+summary = "Four-terminal voltage-controlled elements."
+fields = ["positive", "negative", "control_positive", "control_negative", "gain"]
+
+[[symbol]]
+qualname = "circuit::Amps"
+kind = "options"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/Amps.md"
+summary = "Ideal operational amplifiers."
+fields = ["output", "reference", "positive_input", "negative_input"]
+
+[[symbol]]
+qualname = "circuit::Diodes"
+kind = "options"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/Diodes.md"
+summary = "Junction diodes of a circuit."
+fields = ["positive", "negative", "saturation", "ideality", "junction_capacitance", "junction_potential", "grading", "transit_time"]
+
+[[symbol]]
+qualname = "circuit::Transistors"
+kind = "options"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/Transistors.md"
+summary = "Bipolar transistors of a circuit."
+fields = ["collector", "base", "emitter", "polarity", "saturation", "forward_gain", "reverse_gain", "early_voltage", "base_emitter_capacitance", "base_collector_capacitance"]
+
+[[symbol]]
+qualname = "circuit::Net"
+kind = "options"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/Net.md"
+summary = "The complete description of a circuit."
+fields = ["nodes", "resistors, capacitors, inductors", "current_sources, voltage_sources", "vccs, vcvs", "amps"]
+
+[[symbol]]
+qualname = "circuit::Circuit"
+kind = "class"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/CircuitModel.md"
+summary = "An immutable compiled circuit."
+
+[[symbol]]
+qualname = "circuit::make"
+kind = "function"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/make.md"
+summary = "Validates a circuit description and compiles it."
+overloads = 1
+
+[[symbol]]
+qualname = "circuit::Result"
+kind = "options"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/Result.md"
+summary = "Voltages and currents of an operating point, an AC response or a transient run."
+fields = ["voltage", "source_current", "inductor_current", "vccs_current", "vcvs_current", "amp_current", "diode_current", "collector_current", "base_current", "drain_current", "iterations", "refinements", "residual"]
+
+[[symbol]]
+qualname = "circuit::op"
+kind = "function"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/op.md"
+summary = "Solves the DC operating point of a circuit."
+overloads = 1
+
+[[symbol]]
+qualname = "circuit::ac"
+kind = "function"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/ac.md"
+summary = "Computes the small-signal phasor response of a circuit."
+overloads = 2
+
+[[symbol]]
+qualname = "circuit::tran"
+kind = "function"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/tran.md"
+summary = "Computes the response of a circuit in time."
+overloads = 1
+
+[[symbol]]
+qualname = "circuit::Drive"
+kind = "options"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/Drive.md"
+summary = "Time-varying values of the independent sources."
+fields = ["voltage", "current"]
+
+[[symbol]]
+qualname = "circuit::Start"
+kind = "options"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/Start.md"
+summary = "The energy stored in the circuit at the first instant of a transient run."
+fields = ["capacitor_voltage", "inductor_current"]
+
+[[symbol]]
+qualname = "circuit::TranOptions"
+kind = "options"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/TranOptions.md"
+summary = "Choices of the transient solver."
+fields = ["scheme", "solver"]
+
+[[symbol]]
+qualname = "circuit::SolveOptions"
+kind = "options"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/SolveOptions.md"
+summary = "Controls of the Newton iteration for circuits with diodes and transistors."
+fields = ["thermal_voltage", "tolerance", "max_iterations", "gmin", "max_current", "step_tolerance", "max_refinement"]
+
+[[symbol]]
+qualname = "circuit::Scheme"
+kind = "options"
+family = "eng/circuit/analysis"
+page = "api/eng/circuit/analysis/Scheme.md"
+summary = "Selects the time-stepping rule of a transient run."
+fields = ["Trapezoid", "Gear2"]
+
+[[family]]
+path = "eng/robot"
+page = "api/eng/robot.md"
+title = "Robotics"
+maxdepth = 3
+children = ["robot/model", "robot/kinematics", "robot/dynamics", "robot/constraints"]
+
+[[family]]
+path = "eng/robot/model"
+page = "api/eng/robot/model.md"
+title = "Robot model"
+maxdepth = 2
+children = ["model/rotation", "model/rpy", "model/Links", "model/RobotModel", "model/make"]
+
+[[family]]
+path = "eng/robot/kinematics"
+page = "api/eng/robot/kinematics.md"
+title = "Robot kinematics"
+maxdepth = 2
+children = ["kinematics/Pose", "kinematics/frames", "kinematics/jac", "kinematics/IkOptions", "kinematics/IkResult", "kinematics/ik"]
+
+[[family]]
+path = "eng/robot/dynamics"
+page = "api/eng/robot/dynamics.md"
+title = "Robot dynamics"
+maxdepth = 2
+children = ["dynamics/DynamicsOptions", "dynamics/torques", "dynamics/inertia", "dynamics/bias", "dynamics/accel", "dynamics/ke", "dynamics/pe"]
+
+[[symbol]]
+qualname = "robot::rotation"
+kind = "function"
+family = "eng/robot/model"
+page = "api/eng/robot/model/rotation.md"
+summary = "The rotation matrix of a turn about an axis."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::rpy"
+kind = "function"
+family = "eng/robot/model"
+page = "api/eng/robot/model/rpy.md"
+summary = "The rotation matrix of roll, pitch and yaw angles."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::Links"
+kind = "options"
+family = "eng/robot/model"
+page = "api/eng/robot/model/Links.md"
+summary = "The description of a robot as a tree of rigid links."
+fields = ["parent", "prismatic", "axis", "translation", "rpy", "mass", "center", "inertia"]
+
+[[symbol]]
+qualname = "robot::Robot"
+kind = "class"
+family = "eng/robot/model"
+page = "api/eng/robot/model/RobotModel.md"
+summary = "An immutable compiled robot."
+
+[[symbol]]
+qualname = "robot::make"
+kind = "function"
+family = "eng/robot/model"
+page = "api/eng/robot/model/make.md"
+summary = "Validates a robot description and compiles it."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::Pose"
+kind = "options"
+family = "eng/robot/kinematics"
+page = "api/eng/robot/kinematics/Pose.md"
+summary = "The frames of every link in the world."
+fields = ["rotation", "position"]
+
+[[symbol]]
+qualname = "robot::frames"
+kind = "function"
+family = "eng/robot/kinematics"
+page = "api/eng/robot/kinematics/frames.md"
+summary = "The world frames of every link for given joint values."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::jac"
+kind = "function"
+family = "eng/robot/kinematics"
+page = "api/eng/robot/kinematics/jac.md"
+summary = "The geometric Jacobian of a link."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::IkOptions"
+kind = "options"
+family = "eng/robot/kinematics"
+page = "api/eng/robot/kinematics/IkOptions.md"
+summary = "Controls of the inverse-kinematics iteration."
+fields = ["max_iterations", "tolerance", "damping", "orientation_weight", "lower", "upper"]
+
+[[symbol]]
+qualname = "robot::IkResult"
+kind = "options"
+family = "eng/robot/kinematics"
+page = "api/eng/robot/kinematics/IkResult.md"
+summary = "The result of inverse kinematics."
+fields = ["q", "error", "iterations", "converged"]
+
+[[symbol]]
+qualname = "robot::ik"
+kind = "function"
+family = "eng/robot/kinematics"
+page = "api/eng/robot/kinematics/ik.md"
+summary = "Joint values that bring a link to a target."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::DynamicsOptions"
+kind = "options"
+family = "eng/robot/dynamics"
+page = "api/eng/robot/dynamics/DynamicsOptions.md"
+summary = "Controls of the dynamics functions."
+fields = ["gravity"]
+
+[[symbol]]
+qualname = "robot::torques"
+kind = "function"
+family = "eng/robot/dynamics"
+page = "api/eng/robot/dynamics/torques.md"
+summary = "The joint forces and torques of a motion."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::inertia"
+kind = "function"
+family = "eng/robot/dynamics"
+page = "api/eng/robot/dynamics/inertia.md"
+summary = "The joint-space inertia matrix."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::bias"
+kind = "function"
+family = "eng/robot/dynamics"
+page = "api/eng/robot/dynamics/bias.md"
+summary = "The Coriolis, centrifugal and gravity forces."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::accel"
+kind = "function"
+family = "eng/robot/dynamics"
+page = "api/eng/robot/dynamics/accel.md"
+summary = "The joint accelerations under given torques."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::ke"
+kind = "function"
+family = "eng/robot/dynamics"
+page = "api/eng/robot/dynamics/ke.md"
+summary = "The kinetic energy of a motion."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::pe"
+kind = "function"
+family = "eng/robot/dynamics"
+page = "api/eng/robot/dynamics/pe.md"
+summary = "The gravitational potential energy."
+overloads = 1
+
+[[family]]
+path = "eng/comms"
+page = "api/eng/comms.md"
+title = "Communications"
+maxdepth = 3
+children = ["comms/modulation", "comms/pulse", "comms/channel", "comms/metrics", "comms/coding", "comms/synchronisation"]
+
+[[family]]
+path = "eng/comms/modulation"
+page = "api/eng/comms/modulation.md"
+title = "Modulation and detection"
+maxdepth = 2
+children = ["modulation/Constellation", "modulation/ConstellationOptions", "modulation/psk", "modulation/qam", "modulation/modulate", "modulation/symbols", "modulation/to_bits", "modulation/to_labels", "modulation/detect", "modulation/demod", "modulation/llr", "modulation/to_tones", "modulation/from_tones"]
+
+[[family]]
+path = "eng/comms/pulse"
+page = "api/eng/comms/pulse.md"
+title = "Pulse shaping"
+maxdepth = 2
+children = ["pulse/rrc", "pulse/shape", "pulse/match"]
+
+[[family]]
+path = "eng/comms/channel"
+page = "api/eng/comms/channel.md"
+title = "Channel"
+maxdepth = 2
+children = ["channel/noise", "channel/n0"]
+
+[[family]]
+path = "eng/comms/metrics"
+page = "api/eng/comms/metrics.md"
+title = "Error metrics and theory"
+maxdepth = 2
+children = ["metrics/ber", "metrics/ser", "metrics/evm", "metrics/theory"]
+
+[[symbol]]
+qualname = "comms::Constellation"
+kind = "options"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/Constellation.md"
+summary = "A set of complex symbols with their bit labels."
+fields = ["points", "bits", "order", "phase_shift_keying"]
+
+[[symbol]]
+qualname = "comms::ConstellationOptions"
+kind = "options"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/ConstellationOptions.md"
+summary = "Choices of the constellation builders."
+fields = ["gray", "phase", "dtype"]
+
+[[symbol]]
+qualname = "comms::psk"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/psk.md"
+summary = "An M-ary phase-shift-keying constellation."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::qam"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/qam.md"
+summary = "A square M-ary quadrature-amplitude-modulation constellation."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::modulate"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/modulate.md"
+summary = "Bits to symbols."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::symbols"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/symbols.md"
+summary = "Labels to symbols."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::to_bits"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/to_bits.md"
+summary = "Labels to bits."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::to_labels"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/to_labels.md"
+summary = "Bits to labels."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::detect"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/detect.md"
+summary = "Nearest-point symbol decisions."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::demod"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/demod.md"
+summary = "Hard-decision demodulation to bits."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::llr"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/llr.md"
+summary = "Soft-decision log-likelihood ratios."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::to_tones"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/to_tones.md"
+summary = "Subcarrier symbols to an OFDM waveform."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::from_tones"
+kind = "function"
+family = "eng/comms/modulation"
+page = "api/eng/comms/modulation/from_tones.md"
+summary = "An OFDM waveform to subcarrier symbols."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::rrc"
+kind = "function"
+family = "eng/comms/pulse"
+page = "api/eng/comms/pulse/rrc.md"
+summary = "A root-raised-cosine pulse."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::shape"
+kind = "function"
+family = "eng/comms/pulse"
+page = "api/eng/comms/pulse/shape.md"
+summary = "Pulse shaping of a symbol stream."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::match"
+kind = "function"
+family = "eng/comms/pulse"
+page = "api/eng/comms/pulse/match.md"
+summary = "Matched filtering and symbol-rate sampling."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::noise"
+kind = "function"
+family = "eng/comms/channel"
+page = "api/eng/comms/channel/noise.md"
+summary = "Additive white Gaussian noise."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::n0"
+kind = "function"
+family = "eng/comms/channel"
+page = "api/eng/comms/channel/n0.md"
+summary = "The noise variance for a given Eb/N0."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::ber"
+kind = "function"
+family = "eng/comms/metrics"
+page = "api/eng/comms/metrics/ber.md"
+summary = "The fraction of bits that differ."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::ser"
+kind = "function"
+family = "eng/comms/metrics"
+page = "api/eng/comms/metrics/ser.md"
+summary = "The fraction of symbols that differ."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::evm"
+kind = "function"
+family = "eng/comms/metrics"
+page = "api/eng/comms/metrics/evm.md"
+summary = "The error vector magnitude."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::theory"
+kind = "function"
+family = "eng/comms/metrics"
+page = "api/eng/comms/metrics/theory.md"
+summary = "The theoretical bit error probability."
+overloads = 1
+
+[[family]]
+path = "eng/robot/constraints"
+page = "api/eng/robot/constraints.md"
+title = "Constraints and contacts"
+maxdepth = 2
+children = ["constraints/Contacts", "constraints/Pins", "constraints/ConstraintOptions", "constraints/ConstrainedResult", "constraints/locate", "constraints/gap", "constraints/constrain", "constraints/ImpactResult", "constraints/impact"]
+
+[[family]]
+path = "eng/comms/coding"
+page = "api/eng/comms/coding.md"
+title = "Channel coding"
+maxdepth = 2
+children = ["coding/ConvolutionalCode", "coding/encode", "coding/decode", "coding/LdpcCode", "coding/gallager", "coding/LdpcResult", "coding/TurboCode", "coding/shuffle"]
+
+[[family]]
+path = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation.md"
+title = "Synchronisation"
+maxdepth = 2
+children = ["synchronisation/timing", "synchronisation/delay", "synchronisation/cfo", "synchronisation/derot", "synchronisation/CarrierResult", "synchronisation/pll", "synchronisation/matched", "synchronisation/TimingResult", "synchronisation/gardner"]
+
+[[symbol]]
+qualname = "circuit::Mosfets"
+kind = "options"
+family = "eng/circuit/model"
+page = "api/eng/circuit/model/Mosfets.md"
+summary = "Enhancement MOSFETs of a circuit."
+fields = ["drain", "gate", "source", "polarity", "transconductance", "threshold", "bulk", "body_effect", "surface_potential", "channel_modulation", "gate_source_capacitance", "gate_drain_capacitance"]
+
+[[symbol]]
+qualname = "robot::Contacts"
+kind = "options"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/Contacts.md"
+summary = "Frictionless unilateral contacts of link points with planes."
+fields = ["link", "point", "normal", "offset", "friction"]
+
+[[symbol]]
+qualname = "robot::Pins"
+kind = "options"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/Pins.md"
+summary = "Points held at rest in the world."
+fields = ["link", "point"]
+
+[[symbol]]
+qualname = "robot::ConstraintOptions"
+kind = "options"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/ConstraintOptions.md"
+summary = "Controls of constrained dynamics."
+fields = ["dynamics", "contact_threshold", "friction_iterations"]
+
+[[symbol]]
+qualname = "robot::ConstrainedResult"
+kind = "options"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/ConstrainedResult.md"
+summary = "The result of constrained dynamics."
+fields = ["acceleration", "contact_force", "pin_force", "friction_force", "gap"]
+
+[[symbol]]
+qualname = "robot::locate"
+kind = "function"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/locate.md"
+summary = "The world position of points fixed to links."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::gap"
+kind = "function"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/gap.md"
+summary = "The distance of contact points from their planes."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::constrain"
+kind = "function"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/constrain.md"
+summary = "Joint accelerations under pins and contacts."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::ConvolutionalCode"
+kind = "options"
+family = "eng/comms/coding"
+page = "api/eng/comms/coding/ConvolutionalCode.md"
+summary = "A feed-forward convolutional code."
+fields = ["constraint_length", "generators"]
+
+[[symbol]]
+qualname = "comms::encode"
+kind = "function"
+family = "eng/comms/coding"
+page = "api/eng/comms/coding/encode.md"
+summary = "Encoding with a convolutional, LDPC or turbo code."
+overloads = 3
+
+[[symbol]]
+qualname = "comms::decode"
+kind = "function"
+family = "eng/comms/coding"
+page = "api/eng/comms/coding/decode.md"
+summary = "Decoding a convolutional, LDPC or turbo code from soft values."
+overloads = 3
+
+[[symbol]]
+qualname = "comms::timing"
+kind = "function"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/timing.md"
+summary = "The timing offset of a shaped waveform."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::delay"
+kind = "function"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/delay.md"
+summary = "A fractional delay of a waveform."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::cfo"
+kind = "function"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/cfo.md"
+summary = "The carrier frequency offset of PSK symbols."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::derot"
+kind = "function"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/derot.md"
+summary = "Removing a carrier offset."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::CarrierResult"
+kind = "options"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/CarrierResult.md"
+summary = "The result of carrier recovery."
+fields = ["symbols", "phase"]
+
+[[symbol]]
+qualname = "comms::pll"
+kind = "function"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/pll.md"
+summary = "A phase-locked loop for PSK carriers."
+overloads = 1
+
+[[symbol]]
+qualname = "robot::ImpactResult"
+kind = "options"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/ImpactResult.md"
+summary = "The result of an impact."
+fields = ["velocity", "contact_impulse", "pin_impulse", "friction_impulse"]
+
+[[symbol]]
+qualname = "robot::impact"
+kind = "function"
+family = "eng/robot/constraints"
+page = "api/eng/robot/constraints/impact.md"
+summary = "Joint velocities after an impact."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::LdpcCode"
+kind = "options"
+family = "eng/comms/coding"
+page = "api/eng/comms/coding/LdpcCode.md"
+summary = "A binary low-density parity-check code."
+fields = ["parity_check", "generator", "info_positions", "length", "dimension"]
+
+[[symbol]]
+qualname = "comms::gallager"
+kind = "function"
+family = "eng/comms/coding"
+page = "api/eng/comms/coding/gallager.md"
+summary = "A regular Gallager LDPC code."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::LdpcResult"
+kind = "options"
+family = "eng/comms/coding"
+page = "api/eng/comms/coding/LdpcResult.md"
+summary = "The result of LDPC decoding."
+fields = ["bits", "codeword", "converged", "iterations"]
+
+[[symbol]]
+qualname = "comms::TurboCode"
+kind = "options"
+family = "eng/comms/coding"
+page = "api/eng/comms/coding/TurboCode.md"
+summary = "A parallel-concatenated recursive systematic code."
+fields = ["constraint_length", "feedforward", "feedback"]
+
+[[symbol]]
+qualname = "comms::shuffle"
+kind = "function"
+family = "eng/comms/coding"
+page = "api/eng/comms/coding/shuffle.md"
+summary = "A pseudo-random interleaver."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::matched"
+kind = "function"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/matched.md"
+summary = "The matched filter without sampling."
+overloads = 1
+
+[[symbol]]
+qualname = "comms::TimingResult"
+kind = "options"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/TimingResult.md"
+summary = "The result of symbol-timing recovery."
+fields = ["symbols", "offset"]
+
+[[symbol]]
+qualname = "comms::gardner"
+kind = "function"
+family = "eng/comms/synchronisation"
+page = "api/eng/comms/synchronisation/gardner.md"
+summary = "Gardner symbol-timing recovery."
+overloads = 1
+
+[[family]]
+path = "eng/fluid"
+page = "api/eng/fluid.md"
+title = "Fluid networks"
+maxdepth = 3
+children = ["fluid/model", "fluid/steady", "fluid/operation", "fluid/transport"]
+
+[[family]]
+path = "eng/fluid/model"
+page = "api/eng/fluid/model.md"
+title = "Network model"
+maxdepth = 2
+children = ["model/NodeKind", "model/ValveKind", "model/Nodes", "model/Tanks", "model/Pipes", "model/Pumps", "model/Valves", "model/Net", "model/Liquid", "model/Network", "model/network_fn"]
+
+[[family]]
+path = "eng/fluid/steady"
+page = "api/eng/fluid/steady.md"
+title = "Steady hydraulics"
+maxdepth = 2
+children = ["steady/LossModel", "steady/DemandMode", "steady/Options", "steady/SteadyResult", "steady/steady"]
+
+[[family]]
+path = "eng/fluid/operation"
+page = "api/eng/fluid/operation.md"
+title = "Operation over time"
+maxdepth = 2
+children = ["operation/Device", "operation/Sense", "operation/Act", "operation/Action", "operation/TimeControl", "operation/StateControl", "operation/Schedule", "operation/RunResult", "operation/run"]
+
+[[family]]
+path = "eng/fluid/transport"
+page = "api/eng/fluid/transport.md"
+title = "Transport of quality and heat"
+maxdepth = 2
+children = ["transport/QualityMode", "transport/Quality", "transport/RouteOptions", "transport/TransportResult", "transport/transport", "transport/Heat", "transport/HeatResult", "transport/heat_fn"]
+
+[[symbol]]
+qualname = "fluid::NodeKind"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/NodeKind.md"
+summary = "The three kinds of node of a pipe network."
+fields = ["Junction", "Reservoir", "Tank"]
+
+[[symbol]]
+qualname = "fluid::ValveKind"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/ValveKind.md"
+summary = "The four control valves and the equation each enforces."
+fields = ["Throttle", "Flow", "Reduce", "Sustain"]
+
+[[symbol]]
+qualname = "fluid::Nodes"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/Nodes.md"
+summary = "The kinds, elevations, demands, heads and emitters of the nodes."
+fields = ["kind", "elevation", "demand", "head", "emitter"]
+
+[[symbol]]
+qualname = "fluid::Tanks"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/Tanks.md"
+summary = "The cross-section, level limits and overflow behaviour of the tanks."
+fields = ["area", "min_level", "max_level", "overflow"]
+
+[[symbol]]
+qualname = "fluid::Pipes"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/Pipes.md"
+summary = "The ends, dimensions, roughness and minor losses of the pipes."
+fields = ["from", "to", "length", "diameter", "roughness", "minor"]
+
+[[symbol]]
+qualname = "fluid::Pumps"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/Pumps.md"
+summary = "The curve and speed of the pumps."
+fields = ["from", "to", "shutoff_head", "resistance", "exponent", "speed"]
+
+[[symbol]]
+qualname = "fluid::Valves"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/Valves.md"
+summary = "The kinds, bores, losses and settings of the control valves."
+fields = ["kind", "from", "to", "diameter", "minor", "setting"]
+
+[[symbol]]
+qualname = "fluid::Net"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/Net.md"
+summary = "The description of a pipe network."
+fields = ["nodes", "tanks", "pipes", "pumps", "valves"]
+
+[[symbol]]
+qualname = "fluid::Liquid"
+kind = "options"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/Liquid.md"
+summary = "Density, viscosity and gravity of the fluid."
+fields = ["density", "kinematic_viscosity", "gravity"]
+
+[[symbol]]
+qualname = "fluid::Network"
+kind = "class"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/Network.md"
+summary = "The compiled, immutable pipe network."
+
+[[symbol]]
+qualname = "fluid::network"
+kind = "function"
+family = "eng/fluid/model"
+page = "api/eng/fluid/model/network_fn.md"
+summary = "Validates a description and compiles it into a `Network`."
+overloads = 1
+
+[[symbol]]
+qualname = "fluid::LossModel"
+kind = "options"
+family = "eng/fluid/steady"
+page = "api/eng/fluid/steady/LossModel.md"
+summary = "The head-loss law of the pipes."
+fields = ["DarcyWeisbach", "HazenWilliams"]
+
+[[symbol]]
+qualname = "fluid::DemandMode"
+kind = "options"
+family = "eng/fluid/steady"
+page = "api/eng/fluid/steady/DemandMode.md"
+summary = "Whether a demand is fixed or falls with the pressure."
+fields = ["Fixed", "Pressure"]
+
+[[symbol]]
+qualname = "fluid::Options"
+kind = "options"
+family = "eng/fluid/steady"
+page = "api/eng/fluid/steady/Options.md"
+summary = "The loss law, demand policy and solver controls of `steady`."
+fields = ["loss", "demand_mode", "min_pressure", "full_pressure", "demand_exponent", "emitter_exponent", "head_tolerance", "flow_tolerance", "min_gradient", "max_iterations", "fail_on_nonconvergence"]
+
+[[symbol]]
+qualname = "fluid::SteadyResult"
+kind = "options"
+family = "eng/fluid/steady"
+page = "api/eng/fluid/steady/SteadyResult.md"
+summary = "Heads, pressures, flows and residuals of a steady solve."
+fields = ["head", "pressure", "flow", "velocity", "head_loss", "friction_factor", "balance", "energy_residual", "converged", "demand", "emitter", "iterations"]
+
+[[symbol]]
+qualname = "fluid::steady"
+kind = "function"
+family = "eng/fluid/steady"
+page = "api/eng/fluid/steady/steady.md"
+summary = "Solves heads and flows of a network at one instant."
+overloads = 1
+
+[[symbol]]
+qualname = "fluid::Device"
+kind = "options"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/Device.md"
+summary = "Which family a control acts on."
+fields = ["Pump", "Valve"]
+
+[[symbol]]
+qualname = "fluid::Sense"
+kind = "options"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/Sense.md"
+summary = "Whether a state control fires below or above its threshold."
+fields = ["Below", "Above"]
+
+[[symbol]]
+qualname = "fluid::Act"
+kind = "options"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/Act.md"
+summary = "What an action does to a device."
+fields = ["Open", "Close", "Set"]
+
+[[symbol]]
+qualname = "fluid::Action"
+kind = "options"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/Action.md"
+summary = "A change to one pump or one valve."
+fields = ["device", "index", "act", "value"]
+
+[[symbol]]
+qualname = "fluid::TimeControl"
+kind = "options"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/TimeControl.md"
+summary = "An action that fires at a given second of the run."
+fields = ["at", "action"]
+
+[[symbol]]
+qualname = "fluid::StateControl"
+kind = "options"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/StateControl.md"
+summary = "An action that fires when a level or a pressure crosses a threshold."
+fields = ["node", "sense", "threshold", "action"]
+
+[[symbol]]
+qualname = "fluid::Schedule"
+kind = "options"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/Schedule.md"
+summary = "The clock, patterns and controls of a run."
+fields = ["duration", "step", "pattern_step", "demand", "pump", "valve", "time", "state"]
+
+[[symbol]]
+qualname = "fluid::RunResult"
+kind = "options"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/RunResult.md"
+summary = "The state at every hydraulic event of a run."
+fields = ["time", "head", "pressure", "flow", "velocity", "head_loss", "friction_factor", "balance", "energy_residual", "demand", "emitter", "tank_level", "spill", "open", "converged", "iterations"]
+
+[[symbol]]
+qualname = "fluid::run"
+kind = "function"
+family = "eng/fluid/operation"
+page = "api/eng/fluid/operation/run.md"
+summary = "Simulates a network through time."
+overloads = 1
+
+[[symbol]]
+qualname = "fluid::QualityMode"
+kind = "options"
+family = "eng/fluid/transport"
+page = "api/eng/fluid/transport/QualityMode.md"
+summary = "Whether the transported quantity is a concentration or an age."
+fields = ["Constituent", "Age"]
+
+[[symbol]]
+qualname = "fluid::Quality"
+kind = "options"
+family = "eng/fluid/transport"
+page = "api/eng/fluid/transport/Quality.md"
+summary = "The quantity transported, its sources and its reactions."
+fields = ["mode", "initial", "source", "pipe_rate", "tank_rate"]
+
+[[symbol]]
+qualname = "fluid::RouteOptions"
+kind = "options"
+family = "eng/fluid/transport"
+page = "api/eng/fluid/transport/RouteOptions.md"
+summary = "The quality step, Courant limit and cell count of `transport` and `heat`."
+fields = ["step", "courant", "flow_tolerance", "cells"]
+
+[[symbol]]
+qualname = "fluid::TransportResult"
+kind = "options"
+family = "eng/fluid/transport"
+page = "api/eng/fluid/transport/TransportResult.md"
+summary = "The quality at every hydraulic event, with the mass balance."
+fields = ["hydraulic", "node", "link", "tank", "mass", "mass_error"]
+
+[[symbol]]
+qualname = "fluid::transport"
+kind = "function"
+family = "eng/fluid/transport"
+page = "api/eng/fluid/transport/transport.md"
+summary = "Follows a constituent or the age of the water through a run."
+overloads = 1
+
+[[symbol]]
+qualname = "fluid::Heat"
+kind = "options"
+family = "eng/fluid/transport"
+page = "api/eng/fluid/transport/Heat.md"
+summary = "The temperatures, conductances and specific heat of a thermal run."
+fields = ["initial", "source", "ambient", "ua", "tank_ambient", "tank_ua", "cp"]
+
+[[symbol]]
+qualname = "fluid::HeatResult"
+kind = "options"
+family = "eng/fluid/transport"
+page = "api/eng/fluid/transport/HeatResult.md"
+summary = "The temperatures at every hydraulic event, with the energy balance."
+fields = ["hydraulic", "node", "link", "tank", "energy", "energy_error"]
+
+[[symbol]]
+qualname = "fluid::heat"
+kind = "function"
+family = "eng/fluid/transport"
+page = "api/eng/fluid/transport/heat_fn.md"
+summary = "Follows the temperature of the water through a run."
+overloads = 1
+
+[[family]]
+path = "eng/thermal"
+page = "api/eng/thermal.md"
+title = "Thermal engineering"
+maxdepth = 3
+children = ["thermal/network", "thermal/conduction", "thermal/exchangers", "thermal/air", "thermal/properties"]
+
+[[family]]
+path = "eng/thermal/network"
+page = "api/eng/thermal/network.md"
+title = "Thermal networks"
+maxdepth = 2
+children = ["network/Links", "network/Stores", "network/Fixed", "network/Heats", "network/Net", "network/Result", "network/Drive", "network/Start", "network/steady", "network/tran"]
+
+[[family]]
+path = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction.md"
+title = "Conduction and fins"
+maxdepth = 2
+children = ["conduction/wall", "conduction/tube", "conduction/shell", "conduction/film", "conduction/biot", "conduction/Tip", "conduction/FinResult", "conduction/fin", "conduction/Layers", "conduction/Slab", "conduction/mesh"]
+
+[[family]]
+path = "eng/thermal/exchangers"
+page = "api/eng/thermal/exchangers.md"
+title = "Heat exchangers"
+maxdepth = 2
+children = ["exchangers/Flow", "exchangers/eff", "exchangers/ntu", "exchangers/Exchange", "exchangers/rate", "exchangers/lmtd"]
+
+[[family]]
+path = "eng/thermal/air"
+page = "api/eng/thermal/air.md"
+title = "Moist air"
+maxdepth = 2
+children = ["air/psat", "air/ratio", "air/rh", "air/enth", "air/vol", "air/dew", "air/wet", "air/MixState", "air/mix"]
+
+[[family]]
+path = "eng/thermal/properties"
+page = "api/eng/thermal/properties.md"
+title = "Fluid properties"
+maxdepth = 2
+children = ["properties/Fluid", "properties/Properties", "properties/props", "properties/Origin", "properties/source"]
+
+[[symbol]]
+qualname = "thermal::Links"
+kind = "options"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/Links.md"
+summary = "Thermal conductances between pairs of nodes."
+fields = ["a", "b", "conductance"]
+
+[[symbol]]
+qualname = "thermal::Stores"
+kind = "options"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/Stores.md"
+summary = "Thermal capacities of nodes."
+fields = ["node", "capacity"]
+
+[[symbol]]
+qualname = "thermal::Fixed"
+kind = "options"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/Fixed.md"
+summary = "Nodes held at prescribed temperatures."
+fields = ["node", "temperature"]
+
+[[symbol]]
+qualname = "thermal::Heats"
+kind = "options"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/Heats.md"
+summary = "Heat inflows into nodes."
+fields = ["node", "power"]
+
+[[symbol]]
+qualname = "thermal::Net"
+kind = "options"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/Net.md"
+summary = "A lumped thermal network."
+fields = ["nodes", "links", "stores", "fixed", "heats"]
+
+[[symbol]]
+qualname = "thermal::Result"
+kind = "options"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/Result.md"
+summary = "The solution of a thermal network."
+fields = ["temperature", "link_flow", "fixed_flow", "residual"]
+
+[[symbol]]
+qualname = "thermal::Drive"
+kind = "options"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/Drive.md"
+summary = "Time-varying boundary temperatures and heat inflows."
+fields = ["temperature", "power"]
+
+[[symbol]]
+qualname = "thermal::Start"
+kind = "options"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/Start.md"
+summary = "The temperature of every store at the first time sample."
+fields = ["temperature"]
+
+[[symbol]]
+qualname = "thermal::steady"
+kind = "function"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/steady.md"
+summary = "Solves the steady state of a thermal network."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::tran"
+kind = "function"
+family = "eng/thermal/network"
+page = "api/eng/thermal/network/tran.md"
+summary = "Solves the transient response of a thermal network."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::wall"
+kind = "function"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/wall.md"
+summary = "The conduction resistance of a plane wall."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::tube"
+kind = "function"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/tube.md"
+summary = "The conduction resistance of a cylindrical shell."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::shell"
+kind = "function"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/shell.md"
+summary = "The conduction resistance of a spherical shell."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::film"
+kind = "function"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/film.md"
+summary = "The resistance of a convection film."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::biot"
+kind = "function"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/biot.md"
+summary = "The Biot number of a body."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::Tip"
+kind = "options"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/Tip.md"
+summary = "The condition at the tip of a fin."
+fields = ["Adiabatic", "Convective", "Infinite"]
+
+[[symbol]]
+qualname = "thermal::FinResult"
+kind = "options"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/FinResult.md"
+summary = "The heat, efficiency and tip temperature of a fin."
+fields = ["heat", "efficiency", "tip"]
+
+[[symbol]]
+qualname = "thermal::fin"
+kind = "function"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/fin.md"
+summary = "The heat and temperature of a straight fin."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::Layers"
+kind = "options"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/Layers.md"
+summary = "The layers of a plane wall."
+fields = ["cells", "thickness", "conductivity", "density", "specific_heat"]
+
+[[symbol]]
+qualname = "thermal::Slab"
+kind = "options"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/Slab.md"
+summary = "A meshed wall as a thermal network."
+fields = ["net", "inner", "outer", "cells"]
+
+[[symbol]]
+qualname = "thermal::mesh"
+kind = "function"
+family = "eng/thermal/conduction"
+page = "api/eng/thermal/conduction/mesh.md"
+summary = "Divides a layered plane wall into a thermal network."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::Flow"
+kind = "options"
+family = "eng/thermal/exchangers"
+page = "api/eng/thermal/exchangers/Flow.md"
+summary = "The flow arrangement of a heat exchanger."
+fields = ["Parallel", "Counter", "Cross", "Shell", "Boil"]
+
+[[symbol]]
+qualname = "thermal::eff"
+kind = "function"
+family = "eng/thermal/exchangers"
+page = "api/eng/thermal/exchangers/eff.md"
+summary = "The effectiveness of a heat exchanger."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::ntu"
+kind = "function"
+family = "eng/thermal/exchangers"
+page = "api/eng/thermal/exchangers/ntu.md"
+summary = "The transfer units a heat exchanger needs."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::Exchange"
+kind = "options"
+family = "eng/thermal/exchangers"
+page = "api/eng/thermal/exchangers/Exchange.md"
+summary = "The result of rating a heat exchanger."
+fields = ["duty", "hot_out", "cold_out", "effectiveness", "ntu"]
+
+[[symbol]]
+qualname = "thermal::rate"
+kind = "function"
+family = "eng/thermal/exchangers"
+page = "api/eng/thermal/exchangers/rate.md"
+summary = "Rates a heat exchanger of given conductance."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::lmtd"
+kind = "function"
+family = "eng/thermal/exchangers"
+page = "api/eng/thermal/exchangers/lmtd.md"
+summary = "The log-mean temperature difference of an exchanger."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::psat"
+kind = "function"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/psat.md"
+summary = "The saturation pressure of water vapour."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::ratio"
+kind = "function"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/ratio.md"
+summary = "The humidity ratio of moist air from relative humidity."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::rh"
+kind = "function"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/rh.md"
+summary = "The relative humidity of moist air."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::enth"
+kind = "function"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/enth.md"
+summary = "The specific enthalpy of moist air."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::vol"
+kind = "function"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/vol.md"
+summary = "The specific volume of moist air."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::dew"
+kind = "function"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/dew.md"
+summary = "The dew-point temperature of moist air."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::wet"
+kind = "function"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/wet.md"
+summary = "The thermodynamic wet-bulb temperature of moist air."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::MixState"
+kind = "options"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/MixState.md"
+summary = "The state of a mixture of two moist-air streams."
+fields = ["temperature", "w"]
+
+[[symbol]]
+qualname = "thermal::mix"
+kind = "function"
+family = "eng/thermal/air"
+page = "api/eng/thermal/air/mix.md"
+summary = "Mixes two moist-air streams adiabatically."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::Fluid"
+kind = "options"
+family = "eng/thermal/properties"
+page = "api/eng/thermal/properties/Fluid.md"
+summary = "A fluid of the property provider."
+fields = ["Water", "Air"]
+
+[[symbol]]
+qualname = "thermal::Properties"
+kind = "options"
+family = "eng/thermal/properties"
+page = "api/eng/thermal/properties/Properties.md"
+summary = "The properties of a fluid at a temperature."
+fields = ["density", "specific_heat", "conductivity", "viscosity", "prandtl"]
+
+[[symbol]]
+qualname = "thermal::props"
+kind = "function"
+family = "eng/thermal/properties"
+page = "api/eng/thermal/properties/props.md"
+summary = "The properties of a fluid."
+overloads = 1
+
+[[symbol]]
+qualname = "thermal::Origin"
+kind = "options"
+family = "eng/thermal/properties"
+page = "api/eng/thermal/properties/Origin.md"
+summary = "The provenance of a fluid's properties."
+fields = ["name", "reference", "state", "t_min", "t_max"]
+
+[[symbol]]
+qualname = "thermal::source"
+kind = "function"
+family = "eng/thermal/properties"
+page = "api/eng/thermal/properties/source.md"
+summary = "Where the properties of a fluid come from."
+overloads = 1

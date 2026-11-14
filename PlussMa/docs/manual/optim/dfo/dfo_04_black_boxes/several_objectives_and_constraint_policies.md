@@ -105,9 +105,9 @@ Output
 ```text
 handling            objective   violation     evals
 Ignore              0.0000      7.0e+00       474
-ExtremeBarrier      3.3487      0.0e+00       214
-Progressive, 100    3.3487      0.0e+00       214
-Progressive, 1      2.0000      1.0e+00       309
+ExtremeBarrier      3.3432      0.0e+00       1000
+Progressive, 100    3.3432      0.0e+00       1000
+Progressive, 1      2.0000      1.0e+00       541
 ```
 - `Ignore` reports the constraint values but does not use them. The answer is the unconstrained minimum and the violation is large.
 - `ExtremeBarrier` discards any point that violates a constraint. Safe and simple, but it can never cross infeasible ground.
@@ -124,3 +124,12 @@ Check feasibility yourself after a black-box solve: `max_constraint_violation` i
 - **Check feasibility yourself after a black-box solve.** `max_constraint_violation` is filled by pattern search only; evaluate the constraints at `minimizer`.
 
 Where next: [Chapter 5](../dfo_05_worked_problems.md) works through a fit and the checks that verify an answer.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="failing_and_expensive_functions.html">
+    <span class="label">Previous</span>
+    <span class="title">Functions that fail and functions that are expensive</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

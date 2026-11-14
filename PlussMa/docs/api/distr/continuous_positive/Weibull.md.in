@@ -80,16 +80,16 @@ int main() {
   const std::vector<double> params = {1.7, 2.1};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::Weibull, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Weibull, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Weibull, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Weibull, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::Weibull, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Weibull, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -121,7 +121,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::Weibull, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({0.5, 2.0}, f64);
-  const auto c = distr::cdf(dst::Weibull, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Weibull, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Weibull, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 0.5).to(pluss::ScalarType::Float64) * (draws <= 2.0).to(pluss::ScalarType::Float64)).mean());
@@ -155,16 +155,16 @@ int main() {
   const auto x = pluss::make_series({0.25, 0.5, 1.0, 2.0, 4.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 0.8 (falling hazard):";
-  for (double v : distr::pdf(dst::Weibull, x, {0.8, 2.1}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Weibull, x, {0.8, 2.1}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 1.0 (exponential)    :";
-  for (double v : distr::pdf(dst::Weibull, x, {1.0, 2.1}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Weibull, x, {1.0, 2.1}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 3.0 (wear-out)       :";
-  for (double v : distr::pdf(dst::Weibull, x, {3.0, 2.1}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Weibull, x, {3.0, 2.1}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -210,3 +210,12 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`Lognormal`](../continuous_positive/Lognormal.md)
 - [`Gompertz`](../continuous_positive/Gompertz.md)
 - [`distr::Weibull`](../object_based/Weibull.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Wald.html">
+    <span class="label">Previous</span>
+    <span class="title">Wald</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

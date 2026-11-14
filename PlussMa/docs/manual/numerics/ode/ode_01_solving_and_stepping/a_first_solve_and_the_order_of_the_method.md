@@ -26,7 +26,7 @@ int main() {
     ode::OdeOptions o;
     o.steps = steps;
     const auto r = ode::fluxa(decay, vec({1.0}), 0.0, 4.0, pluss::series::undefined(), o);
-    const double y = r.y_final.item<double>();
+    const double y = r.y_final.squeeze().item<double>();
     const double err = std::abs(y - exact);
     std::cout << std::left << std::setw(8) << steps << std::setprecision(15) << std::fixed << std::setw(22) << y << std::scientific << std::setprecision(2) << std::setw(14) << err;
     if (previous > 0.0) std::cout << std::fixed << std::setprecision(1) << previous / err;
@@ -47,3 +47,12 @@ steps   y(4)                  error         error ratio
 80      0.135335284136256     9.00e-10      16.3
 ```
 Doubling the steps divides the error by about 16, the signature of a fourth-order method: error ∝ h⁴. The ratio drifts from 19 toward 16 as the steps get small enough for the asymptotic behaviour to set in. Use this halving test on any solver and any problem to confirm you are in the regime where the error estimate means what it says.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="letting_the_solver_choose_the_steps.html">
+    <span class="label">Next</span>
+    <span class="title">Letting the solver choose the steps</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

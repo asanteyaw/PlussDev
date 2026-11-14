@@ -1030,6 +1030,7 @@ struct CODEM_API Distribution {
   pluss::Series logpdf(const pluss::Series& x) const;
   pluss::Series cdf(const pluss::Series& x) const;
   pluss::Series logcdf(const pluss::Series& x) const;
+  pluss::Series icdf(const pluss::Series& probability) const;
   pluss::Series sample(std::span<const std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
   pluss::Series sample(std::initializer_list<std::int64_t> sizes, pluss::Config cfg = {}, std::uint64_t seed = 0) const;
   pluss::Series sample_like(const pluss::Series& like, std::uint64_t seed = 0) const;

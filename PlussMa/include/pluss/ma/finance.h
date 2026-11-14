@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pluss/subsp/math/finance/chord.h"
 #include "pluss/subsp/math/finance/filtering.h"
 #include "pluss/subsp/math/finance/hedging.h"
 #include "pluss/subsp/math/finance/module.h"

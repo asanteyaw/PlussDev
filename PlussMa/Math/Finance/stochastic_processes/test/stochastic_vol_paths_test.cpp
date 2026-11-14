@@ -10,6 +10,7 @@ namespace {
 
 using pluss::Config;
 using pluss::ScalarType;
+using pluss::Series;
 using pluss::subsp::math::finance::volatility::HestonParams;
 using pluss::subsp::math::finance::volatility::BatesParams;
 using pluss::subsp::math::finance::volatility::GbmParams;
@@ -17,10 +18,21 @@ using pluss::subsp::math::finance::volatility::RandMethod;
 using pluss::subsp::math::finance::volatility::SimOptions;
 using pluss::subsp::math::finance::volatility::SimScheme;
 using pluss::subsp::math::finance::volatility::SvParams;
-using pluss::subsp::math::finance::volatility::bates_paths;
-using pluss::subsp::math::finance::volatility::gbm_paths;
-using pluss::subsp::math::finance::volatility::heston_paths;
-using pluss::subsp::math::finance::volatility::sv_paths;
+using pluss::subsp::math::finance::volatility::detail::bates_paths;
+using pluss::subsp::math::finance::volatility::detail::gbm_paths;
+using pluss::subsp::math::finance::volatility::detail::heston_paths;
+using pluss::subsp::math::finance::volatility::detail::sv_paths;
+
+// How much higher the variance increment is after a strongly negative price shock than after a strongly positive one, as a t statistic. With rho < 0 it is large and
+// positive; an independent draw in a branch of the variance step would leave it near zero for the steps in that branch.
+double negative_shock_variance_lift(const Series& dv, const Series& shock) {
+  const double s = std::sqrt(shock.square().mean().item<double>());
+  const Series low = shock.lt(-s).to(ScalarType::Float64), high = shock.gt(s).to(ScalarType::Float64);
+  const double nl = low.sum().item<double>(), nh = high.sum().item<double>();
+  const double ml = dv.mul(low).sum().item<double>() / nl, mh = dv.mul(high).sum().item<double>() / nh;
+  const double vl = dv.sub(ml).square().mul(low).sum().item<double>() / (nl - 1.0), vh = dv.sub(mh).square().mul(high).sum().item<double>() / (nh - 1.0);
+  return (ml - mh) / std::sqrt(vl / nl + vh / nh);
+}
 
 void expect(bool condition, const std::string& message) {
   if (!condition) {
@@ -151,6 +163,31 @@ void test_bates_paths() {
   expect(out.variance.min().item<double>() > 0.0, "bates variance must stay positive");
 }
 
+// The quadratic-exponential step keeps the correlation of the variance with the price in both of its branches. With a small variance and a large volatility of
+// variance (a Feller ratio far below one) almost every step falls in the exponential branch; an independent uniform there would leave the variance increments
+// uncorrelated with the price shocks, while rho = -0.7 requires a strong negative correlation.
+void test_quadexp_keeps_the_correlation_in_the_exponential_branch() {
+  const auto cfg = f64_cpu();
+  HestonParams p;
+  p.kappa = 1.0;
+  p.theta = 0.01;
+  p.sigma = 1.5;
+  p.rho = -0.7;
+  p.v0 = 0.01;
+  p.mu = 0.0;
+  const auto lift = [&](SimScheme scheme) {
+    SimOptions opt;
+    opt.scheme = scheme;
+    opt.seed = 99ULL;
+    const auto out = heston_paths(100, 4000, 100.0, 1.0 / 100.0, p, opt, cfg, opt.seed);
+    const auto dv = out.variance.slice(0, 1, 101).sub(out.variance.slice(0, 0, 100)).reshape({100 * 4000});
+    const auto dx = out.spot.slice(0, 1, 101).div(out.spot.slice(0, 0, 100)).log().reshape({100 * 4000});
+    return negative_shock_variance_lift(dv, dx.sub(dx.mean()));
+  };
+  const double qe = lift(SimScheme::QuadExp), euler = lift(SimScheme::Euler);
+  expect(qe > 8.0 && euler > 8.0, "quadexp: the variance must rise after negative returns (t statistic: quadexp " + std::to_string(qe) + ", euler " + std::to_string(euler) + ")");
+}
+
 void test_gbm_paths() {
   const auto cfg = f64_cpu();
   GbmParams p;
@@ -211,6 +248,7 @@ int main() {
     test_heston_paths();
     test_sv_paths();
     test_bates_paths();
+    test_quadexp_keeps_the_correlation_in_the_exponential_branch();
     test_gbm_paths();
     std::cout << "stochastic_vol_paths_test passed\n";
     return 0;

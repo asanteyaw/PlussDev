@@ -1,0 +1,42 @@
+# Circuits
+
+Linear electrical networks of resistors, capacitors, inductors, independent and controlled sources and ideal op amps. A circuit is described once, as a `Net`, compiled by `make` into a `Circuit`, and solved for its DC operating point and its AC response, for a whole batch of component values at once.
+
+## Choosing A Surface
+
+| Task | Branch |
+|---|---|
+| Describe and compile a linear circuit | [Circuit model](circuit/model.md) |
+| DC operating point and AC response | [Circuit analysis](circuit/analysis.md) |
+
+## Practical Examples
+
+The examples solve a divider, an RC low-pass and a series resonance.
+
+### Example 1
+
+Solve the DC operating point of a divider.
+
+@@example Eng/api/circuit_dc_divider.cpp@@
+
+### Example 2
+
+Find the gain and phase of an RC low-pass.
+
+@@example Eng/api/circuit_rc.cpp@@
+
+### Example 3
+
+Find the resonance of a series RLC circuit.
+
+@@example Eng/api/circuit_rlc.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+circuit/model
+circuit/analysis
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,81 @@
+# `fluid::RunResult`
+
+The state at every hydraulic event of a run.
+
+## Signature
+
+```cpp
+fluid::RunResult
+```
+
+## What It Does
+
+The result of `run`. Every steady field is stacked along a leading sample axis. The samples include `t = 0`, every shortened event and the final time.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `time` | Sample times, s, `[sample]`. |  |
+| `head` | Node head, m, `[sample, ..., node]`. |  |
+| `pressure` | Gauge pressure, Pa, `[sample, ..., node]`. |  |
+| `flow` | Link flow, m³/s, `[sample, ..., link]`. |  |
+| `velocity` | Link velocity, m/s, `[sample, ..., link]`. |  |
+| `head_loss` | Head loss, m, `[sample, ..., link]`. |  |
+| `friction_factor` | Darcy friction factor, `[sample, ..., link]`. |  |
+| `balance` | Node continuity residual, `[sample, ..., node]`. |  |
+| `energy_residual` | Link equation residual, `[sample, ..., link]`. |  |
+| `demand` | Delivered demand, `[sample, ..., node]`. |  |
+| `emitter` | Emitter outflow, `[sample, ..., node]`. |  |
+| `tank_level` | Level above the bottom, m, `[sample, ..., tank]`. |  |
+| `spill` | Overflow discharge, m³/s, `[sample, ..., tank]`. |  |
+| `open` | Whether each link is open, `[sample, ..., link]`. |  |
+| `converged` | Whether each solve met its tolerances, `[sample, ...]`. |  |
+| `iterations` | Newton iterations of each solve, `[sample]`. |  |
+
+## Returns
+
+Returned by `run`.
+
+## Errors
+
+Reading a field does not run again.
+
+## Interpretation and Use
+
+A sample holds the state at its time, and its flows hold until the next sample. Use `time` to index the first axis. Volume conservation is exact: the area times the change of a tank level equals the integral of its inflow minus its spill.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Levels and flows over a day.
+
+@@example Eng/api/fluid_run_tank.cpp@@
+
+### Example 2
+
+Every field, with a spilling tank.
+
+@@example Eng/api/fluid_run_result_fields.cpp@@
+
+### Example 3
+
+The `open` flag of a switched pump.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Schedule.html">
+    <span class="label">Previous</span>
+    <span class="title">Schedule</span>
+  </a>
+  <a class="next-link" href="run.html">
+    <span class="label">Next</span>
+    <span class="title">run</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

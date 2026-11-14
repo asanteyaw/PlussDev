@@ -1,0 +1,70 @@
+# `fluid::Nodes`
+
+The kinds, elevations, demands, heads and emitters of the nodes.
+
+## Signature
+
+```cpp
+fluid::Nodes
+```
+
+## What It Does
+
+Describes every node of a `Net`. Each array ends in the node axis and may carry leading scenario axes; an array without them is shared by every scenario.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `kind` | One `NodeKind` per node, a plain `std::vector`. | required |
+| `elevation` | Node elevation in m, `[..., node]`. For a tank it is the bottom of the tank. | required |
+| `demand` | Flow leaving the network at the node, m³/s, `[..., node]`. Positive is a demand, negative a source, and it must be zero at a reservoir and a tank. | required |
+| `head` | The fixed head at a reservoir, the initial water-surface head at a tank, and a starting value elsewhere, m, `[..., node]`. | required |
+| `emitter` | Emitter coefficient, `(m³/s) / m^exponent`, `[..., node]`; zero where there is no emitter. | undefined (no emitters) |
+
+## Returns
+
+A value; validated by `network`.
+
+## Errors
+
+Arrays of the wrong length, non-floating or non-finite values, a non-zero demand or emitter at a reservoir or tank, a negative emitter coefficient, and mixed precision or platform are rejected.
+
+## Interpretation and Use
+
+A junction delivers its whole `demand` under `DemandMode::Fixed`, whatever the pressure; under `DemandMode::Pressure` the delivered demand falls with the pressure and an emitter adds a pressure-dependent leak. The head of a junction is only a starting value for the solver.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A reservoir and a junction.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 2
+
+Descriptions that are refused.
+
+@@example Eng/api/fluid_net_errors.cpp@@
+
+### Example 3
+
+A leak as an emitter.
+
+@@example Eng/api/fluid_demand_modes.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ValveKind.html">
+    <span class="label">Previous</span>
+    <span class="title">ValveKind</span>
+  </a>
+  <a class="next-link" href="Tanks.html">
+    <span class="label">Next</span>
+    <span class="title">Tanks</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

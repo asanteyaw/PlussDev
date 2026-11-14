@@ -150,3 +150,12 @@ Read the status before reading `x`: a result for an infeasible program still has
 - **`NearOptimal` is accepted by `lp::success`.** It means the iteration stalled with small residuals; check the residuals if the plan is critical.
 
 Where next: [Chapter 2](../linprog_02_prices_and_certificates.md) uses the duals as prices and checks the certificates.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="stating_a_linear_program.html">
+    <span class="label">Previous</span>
+    <span class="title">Stating a linear program</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

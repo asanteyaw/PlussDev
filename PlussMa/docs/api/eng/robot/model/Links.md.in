@@ -1,0 +1,69 @@
+# `robot::Links`
+
+The description of a robot as a tree of rigid links.
+
+## Signature
+
+```cpp
+robot::Links
+```
+
+## What It Does
+
+Describes a robot with one joint per link. Link `i` hangs from link `parent[i]` (`-1` for the base), and a parent always comes before its children. At zero joint value the link's joint frame sits at `translation[i]` with orientation `rpy[i]` in its parent's frame. A revolute joint turns the link about `axis[i]`, a prismatic joint slides it along `axis[i]`; the axis is expressed in the joint frame. Mass properties are expressed in the link's own frame, which is its joint frame.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `parent` | The parent of each link: `-1` or an earlier link's index. Length `n`. | required |
+| `prismatic` | `0` for a revolute joint and `1` for a prismatic joint, one per link. | required |
+| `axis` | The joint axis of each link in its joint frame, `[n, 3]`; non-zero, scaled to unit length by `make`. | required |
+| `translation` | The origin of each joint frame in its parent frame at zero joint value, `[n, 3]`, in metres. | required |
+| `rpy` | The orientation of each joint frame in its parent frame at zero joint value as roll-pitch-yaw angles, `[n, 3]`, in radians. | identity |
+| `mass` | The mass of each link, `[n]`, non-negative. Without it the robot is a kinematic model. | undefined (no dynamics) |
+| `center` | The centre of mass of each link in its own frame, `[n, 3]`. Needs `mass`. | the link origin |
+| `inertia` | The inertia matrix of each link about its centre of mass in its own frame, `[n, 3, 3]`, symmetric. Needs `mass`. | zero |
+
+## Returns
+
+A value; validated and compiled by `make`.
+
+## Errors
+
+`make` throws `pluss::Error` for no links, a `prismatic` array of a different length or with an entry other than `0` or `1`, a parent outside `-1` or an earlier link, a zero or non-finite axis, an array of the wrong shape, dtype or platform, a negative mass, a `center` or `inertia` without `mass`, or an inertia matrix that is not symmetric.
+
+## Interpretation and Use
+
+All values must share one real floating dtype and platform; the robot computes in that dtype. A joint value is a radian for a revolute joint and a metre for a prismatic one. Several links may share a parent, which is how branches (two arms on one trunk) are described.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A planar two-link arm.
+
+@@example Eng/api/robot_make_arm.cpp@@
+
+### Example 2
+
+A tree with a branch and a prismatic joint.
+
+@@example Eng/api/robot_make_tree.cpp@@
+
+### Example 3
+
+A kinematic-only robot.
+
+@@example Eng/api/robot_links_kinematic.cpp@@
+
+### Example 4
+
+The mass fields move the gravity torque.
+
+@@example Eng/api/robot_links_mass_effect.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

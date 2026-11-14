@@ -1,0 +1,260 @@
+<!-- generated from bornhuetter_ferguson.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Bornhuetter-Ferguson
+
+[Back to Ratemaking, Credibility and Loss Reserving](../actuarial_04_ratemaking_credibility_and_loss_reserving.md)
+
+The chain ladder trusts the paid claims completely: it scales what has been paid up to the ultimate. For the most recent origin, with little paid, that is a large multiplier on a small and noisy number, and the reserve inherits the noise. The **Bornhuetter-Ferguson** method keeps what has been paid and adds only the expected unpaid part, taken from an independent estimate of the origin's ultimate loss, for instance from the premium and an expected loss ratio:
+
+```{math}
+\hat U_i=C_i+\mathrm{ELR}_i\,P_i\,\bigl(1-q_i\bigr),\qquad R_i=\hat U_i-C_i=\hat U^{\text{exp}}_i\,(1-q_i),
+```
+
+where {math}`\hat U^{\text{exp}}_i` is the expected ultimate loss of origin {math}`i`, {math}`C_i` the claims reported or paid so far, and {math}`q_i` the **percent reported** (paid), the share of the ultimate the development pattern says has emerged by now: {math}`q_i=1/\mathrm{CDF}_{j_i}`. The expected loss is not updated by the emerged claims, only the unpaid share of it is added.
+
+The two methods are the ends of one scale. The chain ladder ultimate is {math}`C_i/q_i`, all experience; the expected ultimate is all prior. The Bornhuetter-Ferguson ultimate weights them by {math}`q_i`: it is {math}`q_i\,(C_i/q_i)+(1-q_i)\,\hat U^{\text{exp}}_i`, a credibility blend whose weight on the claims experience is the share of claims that have emerged. A recent origin, with {math}`q_i` small, is mostly prior; an old one, with {math}`q_i` near one, is mostly experience.
+
+```cpp
+pluss::Series models::bf_ultimate(const pluss::Series &reported_losses, const pluss::Series &expected_ultimate_losses, const pluss::Series &percent_reported);
+pluss::Series models::bf_reserve(const pluss::Series &expected_ultimate_losses, const pluss::Series &percent_reported);
+actuarial::Reserving actuarial::operators::bornhuetter_ferguson(pluss::Series expected_ultimate, pluss::Series percent_reported);
+```
+
+| Function | Meaning |
+|---|---|
+| `bf_ultimate(reported, expected_ultimate, percent_reported)` | `reported + expected_ultimate · (1 − percent_reported)`, origin by origin |
+| `bf_reserve(expected_ultimate, percent_reported)` | `expected_ultimate · (1 − percent_reported)`, origin by origin |
+| `operators::bornhuetter_ferguson(expected_ultimate, percent_reported)` | a `Reserving` operator with these assumptions, one per origin; apply it to a `Triangle`. Its result has the `ultimate` and `reserve`; the factors are not estimated, so `age_to_age` and `cdf` are undefined |
+
+The expected ultimates are positive amounts, and the percent reported is between 0 and 1, one value per origin.
+
+## The same triangle by both methods
+
+The percent reported comes from the chain ladder's development pattern: one over the cumulative factor of each origin's latest period. The oldest origin is at the last period and the most recent at the first, so the values run 100%, 96%, 88%, 73% and 40% from the oldest origin to the most recent. The expected ultimates are 260, 270, 285, 300 and 320, from the premiums and a plan loss ratio. The program prints the ultimate and the reserve from both methods side by side.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series triangle = pluss::make_series({100.0, 180.0, 220.0, 240.0, 250.0,
+                                                    110.0, 200.0, 245.0, 265.0, 0.0,
+                                                    120.0, 215.0, 260.0, 0.0, 0.0,
+                                                    130.0, 235.0, 0.0, 0.0, 0.0,
+                                                    140.0, 0.0, 0.0, 0.0, 0.0}, {5, 5});
+  const pluss::Series cdf = models::ladder_cdf(models::age_factors(triangle));
+  const auto reverse = [](const pluss::Series &s) { auto v = s.items<double>(); std::reverse(v.begin(), v.end()); return pluss::make_series(v); };
+  const pluss::Series percent = reverse(cdf.reciprocal());   // one value per origin: the oldest origin is at the last development period
+  const pluss::Series reported = pluss::make_series({250.0, 265.0, 260.0, 235.0, 140.0});
+  const pluss::Series expected = pluss::make_series({260.0, 270.0, 285.0, 300.0, 320.0});
+  out.writeln("percent reported       =", percent.items<double>());
+  out.writeln("chain ladder ultimate  =", models::ladder_ultimate(triangle, cdf).items<double>());
+  out.writeln("B-F ultimate           =", models::bf_ultimate(reported, expected, percent).items<double>());
+  out.writeln("chain ladder reserve   =", models::ladder_reserve(triangle, cdf).items<double>());
+  out.writeln("B-F reserve            =", models::bf_reserve(expected, percent).items<double>());
+}
+```
+
+Output
+
+```text
+percent reported       = [1.000000, 0.960000, 0.883960, 0.725457, 0.402061]
+chain ladder ultimate  = [250.000000, 276.041667, 294.130824, 323.933673, 348.206224]
+B-F ultimate           = [250.000000, 275.800000, 293.071287, 317.362854, 331.340611]
+chain ladder reserve   = [0.000000, 11.041667, 34.130824, 88.933673, 208.206224]
+B-F reserve            = [0.000000, 10.800000, 33.071287, 82.362854, 191.340611]
+```
+
+For the most recent origin the chain ladder says 348.2, scaling the 140 paid by a factor of 2.49. The Bornhuetter-Ferguson method says 331.3: the 140 paid plus the 59.8% of the expected 320 that is still to come, 191.3. It leans on the expected loss and not on one noisy first-period payment, so it is lower here because the plan of 320 is lower than the 348 the early payments imply. For the oldest origin both are 250, the amount paid, since nothing is left to emerge.
+
+## The blend between the two
+
+Writing the Bornhuetter-Ferguson ultimate as a weighted average makes the relation exact: the weight on the chain ladder is the percent reported. The program checks that for each origin the Bornhuetter-Ferguson ultimate equals the percent reported times the chain ladder ultimate plus one minus the percent reported times the expected ultimate.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series triangle = pluss::make_series({100.0, 180.0, 220.0, 240.0, 250.0,
+                                                    110.0, 200.0, 245.0, 265.0, 0.0,
+                                                    120.0, 215.0, 260.0, 0.0, 0.0,
+                                                    130.0, 235.0, 0.0, 0.0, 0.0,
+                                                    140.0, 0.0, 0.0, 0.0, 0.0}, {5, 5});
+  const pluss::Series cdf = models::ladder_cdf(models::age_factors(triangle));
+  const auto reverse = [](const pluss::Series &s) { auto v = s.items<double>(); std::reverse(v.begin(), v.end()); return pluss::make_series(v); };
+  const pluss::Series percent = reverse(cdf.reciprocal());   // one value per origin: the oldest origin is at the last development period
+  const pluss::Series reported = pluss::make_series({250.0, 265.0, 260.0, 235.0, 140.0});
+  const pluss::Series expected = pluss::make_series({260.0, 270.0, 285.0, 300.0, 320.0});
+  const pluss::Series chain = models::ladder_ultimate(triangle, cdf);
+  const pluss::Series blend = percent.mul(chain).add(percent.neg().add(1.0).mul(expected));
+  out.writeln("B-F ultimate       =", models::bf_ultimate(reported, expected, percent).items<double>());
+  out.writeln("weighted blend     =", blend.items<double>());
+}
+```
+
+Output
+
+```text
+B-F ultimate       = [250.000000, 275.800000, 293.071287, 317.362854, 331.340611]
+weighted blend     = [250.000000, 275.800000, 293.071287, 317.362854, 331.340611]
+```
+
+## As an operator
+
+The operator carries the two assumptions and takes the observed claims from a `Triangle`. It returns the ultimate and the reserve and leaves the factors undefined, because none were estimated.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series triangle = pluss::make_series({100.0, 180.0, 220.0, 240.0, 250.0,
+                                                    110.0, 200.0, 245.0, 265.0, 0.0,
+                                                    120.0, 215.0, 260.0, 0.0, 0.0,
+                                                    130.0, 235.0, 0.0, 0.0, 0.0,
+                                                    140.0, 0.0, 0.0, 0.0, 0.0}, {5, 5});
+  const pluss::Series cdf = models::ladder_cdf(models::age_factors(triangle));
+  const auto reverse = [](const pluss::Series &s) { auto v = s.items<double>(); std::reverse(v.begin(), v.end()); return pluss::make_series(v); };
+  const actuarial::Reserving bf = actuarial::operators::bornhuetter_ferguson(pluss::make_series({260.0, 270.0, 285.0, 300.0, 320.0}), reverse(cdf.reciprocal()));
+  const actuarial::ReserveResult result = bf(actuarial::triangle::cumulative(triangle));
+  out.writeln("ultimate =", result.ultimate.items<double>());
+  out.writeln("reserve  =", result.reserve.items<double>());
+  out.writeln("factors estimated:", result.cdf.defined(), "(age_to_age defined:", result.age_to_age.defined(), ")");
+}
+```
+
+Output
+
+```text
+ultimate = [250.000000, 275.800000, 293.071287, 317.362854, 331.340611]
+reserve  = [0.000000, 10.800000, 33.071287, 82.362854, 191.340611]
+factors estimated: false (age_to_age defined: false )
+```
+
+## The effect of the expected loss
+
+The Bornhuetter-Ferguson reserve is proportional to the expected ultimate: a plan that is 10% too high raises the reserve of every origin by 10%. The chain ladder has no such dependence, which is its strength where the triangle is reliable and its weakness where it is not. The program varies the expected ultimate of the most recent origin.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series triangle = pluss::make_series({100.0, 180.0, 220.0, 240.0, 250.0,
+                                                    110.0, 200.0, 245.0, 265.0, 0.0,
+                                                    120.0, 215.0, 260.0, 0.0, 0.0,
+                                                    130.0, 235.0, 0.0, 0.0, 0.0,
+                                                    140.0, 0.0, 0.0, 0.0, 0.0}, {5, 5});
+  const pluss::Series cdf = models::ladder_cdf(models::age_factors(triangle));
+  const auto reverse = [](const pluss::Series &s) { auto v = s.items<double>(); std::reverse(v.begin(), v.end()); return pluss::make_series(v); };
+  const pluss::Series percent = reverse(cdf.reciprocal());   // one value per origin: the oldest origin is at the last development period
+  for (const double plan : {260.0, 320.0, 400.0}) {
+    const pluss::Series expected = pluss::make_series({260.0, 270.0, 285.0, 300.0, plan});
+    out.writeln("expected ultimate of the latest origin", plan, " B-F reserve", models::bf_reserve(expected, percent).items<double>()[4], " chain ladder reserve", models::ladder_reserve(triangle, cdf).items<double>()[4]);
+  }
+}
+```
+
+Output
+
+```text
+expected ultimate of the latest origin 260.000000  B-F reserve 155.464246  chain ladder reserve 208.206224
+expected ultimate of the latest origin 320.000000  B-F reserve 191.340611  chain ladder reserve 208.206224
+expected ultimate of the latest origin 400.000000  B-F reserve 239.175764  chain ladder reserve 208.206224
+```
+
+## Invalid assumptions fail explicitly
+
+The percent reported must not exceed one, and the assumptions must match the triangle's origins.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series triangle = pluss::make_series({100.0, 180.0, 220.0, 240.0, 250.0,
+                                                    110.0, 200.0, 245.0, 265.0, 0.0,
+                                                    120.0, 215.0, 260.0, 0.0, 0.0,
+                                                    130.0, 235.0, 0.0, 0.0, 0.0,
+                                                    140.0, 0.0, 0.0, 0.0, 0.0}, {5, 5});
+  report([&] { (void)actuarial::operators::bornhuetter_ferguson(pluss::make_series({260.0, 270.0, 285.0, 300.0, 320.0}), pluss::make_series({1.2, 1.0, 1.0, 1.0, 1.0})); });
+  const actuarial::Reserving bf = actuarial::operators::bornhuetter_ferguson(pluss::make_series({260.0, 270.0}), pluss::make_series({0.9, 1.0}));
+  report([&] { (void)bf(actuarial::triangle::cumulative(triangle)); });
+}
+```
+
+Output
+
+```text
+bornhuetter_ferguson: percent_reported must be <= 1
+bornhuetter_ferguson: assumptions must match origin count
+```
+
+## Where to go next
+
+The worked problems of the last chapter combine pricing, credibility and reserving ([Chapter 5](../actuarial.md)).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="chain_ladder.html">
+    <span class="label">Previous</span>
+    <span class="title">Chain Ladder</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

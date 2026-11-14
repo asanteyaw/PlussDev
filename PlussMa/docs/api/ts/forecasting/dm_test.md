@@ -93,8 +93,8 @@ int main() {
   ts::DirectForecasterOptions a, b;
   a.lag.response_lags = b.lag.response_lags = {1, 2};
   b.lag.predictor_lags = {{1, 2}};
-  const auto pa = ts::DirectCVForecaster::fit(Series{}, data.y, partition, a).cvpredict(Series{}, data.y).reshape({400}).pull<double>();
-  const auto pb = ts::DirectCVForecaster::fit(data.x, data.y, partition, b).cvpredict(data.x, data.y).reshape({400}).pull<double>();
+  const auto pa = ts::DirectCVForecaster::fit(Series{}, data.y, partition, a).cvpredict(Series{}, data.y).reshape({400}).items<double>();
+  const auto pb = ts::DirectCVForecaster::fit(data.x, data.y, partition, b).cvpredict(data.x, data.y).reshape({400}).items<double>();
   const auto y = data.y.host<double>();
   std::vector<double> ea, eb;
   for (int t = 0; t < 400; ++t)
@@ -260,3 +260,16 @@ lags used 2, long-run variance 0.0185, statistic 2.1828
 - [`DmOptions`](DmOptions.md)
 - [`DmResult`](DmResult.md)
 - [`DirectCVForecaster`](DirectCVForecaster.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DirectStepModel.html">
+    <span class="label">Previous</span>
+    <span class="title">DirectStepModel</span>
+  </a>
+  <a class="next-link" href="DmOptions.html">
+    <span class="label">Next</span>
+    <span class="title">DmOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

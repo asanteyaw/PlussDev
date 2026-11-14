@@ -718,13 +718,13 @@ name
 name
 ```
 
-```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
 See [`Nexus::select`](select.md)'s own note on this — the same
 three-overload pattern (brace literal / named `RangeView`-convertible
 container / any other qualifying range) applies to every `fields`
 parameter on this page, including the fluent [`NexusPull::take`](../nexus-pull/take.md)
 examples above.
-```
+:::
 
 ## Notes
 

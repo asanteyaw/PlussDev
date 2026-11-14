@@ -44,19 +44,19 @@ auto [params, r] = optim::l_sr1_trust_region(objective_of_blocks, blocks);  // a
 | `max_iterations` | the budget | 200 |
 | `gradient_tolerance` | convergence on the 2-norm of the gradient | 1e-6 |
 | `step_tolerance`, `max_no_progress_iterations` | the test for `NoProgress` | 1e-12, 25 |
-| `progress_hook` | called each iteration with the objective, gradient norm, radius and step length; return `false` to stop | none |
+| `progress_hook` | called each iteration with the objective, gradient norm, radius and step length; return `true` to stop | none |
 
 The exit flags are the same as Septima's: `Converged`, `MaxIterations`, `Stopped`, `NoProgress`, `NonFiniteEvaluation`, `InvalidProblem`. Leave everything but `memory_size`, `initial_radius` and the tolerances alone unless you have measured a reason.
 
 ## What it cannot do
 
-L-SR1 has no way to state a bound, an equality or an inequality: the call takes only an objective and a starting point. If your problem has constraints, use `septima` with Adam, or L-BFGS with the strong-Wolfe line search (chapter 2), or Optima. If you need an unconstrained answer and the parameters are bounded in practice only by the objective itself, L-SR1 is the best of the three at accuracy.
+L-SR1 has no way to state a bound, an equality or an inequality: the call takes only an objective and a starting point. If your problem has constraints, use `septima` with Adam, or L-BFGS with the strong-Wolfe line search (chapter 2), or Optima. If you need an unconstrained answer and the parameters are bounded in practice only by the objective itself, L-SR1 is the one to try when the objective has saddles.
 
 ## What to remember
 
 - L-SR1 is a trust-region optimizer: it chooses how far to trust a quadratic model, steps inside that distance, and adapts the distance to how well the model predicted.
 - Its curvature model can be indefinite, so it can leave a saddle where L-BFGS stalls beside it.
-- On smooth unconstrained problems it reaches a more accurate answer than L-BFGS, at more function evaluations per iteration.
+- On smooth unconstrained problems it reaches an answer as accurate as L-BFGS's, at more function evaluations per iteration.
 - It needs a memory of about 10 or more. A radius that keeps shrinking points at too small a memory.
 - A first-order test cannot tell a saddle from a minimum. Run from more than one start and compare objective values.
 - It handles blocks, complex parameters and all the dtypes Septima does. It does not handle constraints or bounds.

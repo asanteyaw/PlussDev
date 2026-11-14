@@ -8,3 +8,12 @@ The program discretizes a double-exponential measure (up-jumps with probability 
 @@example Probability/random_processes/guide/sde/16_levy_jumps.cpp@@
 
 The atom rates add to 2.99997, the quadrature of the total rate 3. For `x²` the compensated drift is 0.35800, equal to the continuous part 0.19000 plus the second moment of the measure; for `exp(x)` it matches the exact value 0.35997, and the quadrature error is below the printed digits. The raw form keeps the continuous drift 0.19000 and returns 4000 jump sizes of `g(x + z) − g(x)`, the first being 0.00075 for `z = 0.00075`, which is `2xz + z²`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="a_path_with_jumps.html">
+    <span class="label">Next</span>
+    <span class="title">A path with jumps</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

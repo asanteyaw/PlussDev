@@ -19,7 +19,7 @@ The result is uniform: a value, an error estimate (the quadrature change or the 
 ## Parameters
 
 `const integ::IntegrandFn &fn`
-: `Series -> Series`.
+: `Series (Series)`.
 
 `double a, double b`
 : The interval; either may be infinite.

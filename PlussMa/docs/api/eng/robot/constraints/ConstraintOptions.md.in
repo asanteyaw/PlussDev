@@ -1,0 +1,58 @@
+# `robot::ConstraintOptions`
+
+Controls of constrained dynamics.
+
+## Signature
+
+```cpp
+robot::ConstraintOptions
+```
+
+## What It Does
+
+Holds the gravity of the underlying dynamics and the distance within which a contact acts.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `dynamics` | The `DynamicsOptions` (gravity) of the dynamics. | Earth gravity along `-z` |
+| `friction_iterations` | The rounds of the friction fixed-point iteration (the friction bound of each round is `friction` times the normal force of the previous one), at least `1`; frictionless problems need one. | `12` |
+| `contact_threshold` | A contact acts while its gap is at most this many metres, non-negative. | `1e-6` |
+
+## Returns
+
+A value; read by `constrain`.
+
+## Errors
+
+`constrain` and `impact` throw `pluss::Error` for a negative or non-finite `contact_threshold`, a `friction_iterations` below `1` or a malformed gravity.
+
+## Interpretation and Use
+
+A threshold of zero makes a contact act only when the point touches or penetrates the plane. A small positive value keeps a numerically resting robot supported.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The threshold decides whether a near point is supported.
+
+@@example Eng/api/robot_contact_threshold.cpp@@
+
+### Example 2
+
+Different gravities.
+
+@@example Eng/api/robot_constrained_options.cpp@@
+
+### Example 3
+
+Contacts of a resting slider.
+
+@@example Eng/api/robot_contact_rest.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

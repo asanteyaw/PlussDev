@@ -104,7 +104,7 @@ rotate through them:
 ```cpp
 std::cout << pluss::note::print(n) << "\n";  // print(n) -> std::string
 std::cout << n << "\n";                       // operator<< (default options)
-pluss::note::print(std::cout, n) << "\n";     // print(os, n) -> the stream
+the stream pluss::note::print(std::cout, n) << "\n";     // print(os, n)
 ```
 
 Typed Note results can be printed without first extracting host storage:

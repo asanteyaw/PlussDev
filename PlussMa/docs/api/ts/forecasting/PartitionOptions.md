@@ -26,3 +26,16 @@ With none of the three sizes given they all equal `⌊(n − gap)/(k + 1)⌋`. W
 ## See Also
 
 - [`TsPartition`](TsPartition.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LagPlanOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">LagPlanOptions</span>
+  </a>
+  <a class="next-link" href="PartitionWindow.html">
+    <span class="label">Next</span>
+    <span class="title">PartitionWindow</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

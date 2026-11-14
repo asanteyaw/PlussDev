@@ -7,8 +7,7 @@
 ## Signature
 
 ```cpp
-const Series::CalcAccessor::CalcOptions&
-Series::CalcAccessor::options() const noexcept
+const Series::CalcAccessor::CalcOptions& Series::CalcAccessor::options() const noexcept
 ```
 
 ## What It Returns

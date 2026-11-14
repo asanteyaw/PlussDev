@@ -1,9 +1,8 @@
 #pragma once
 
 // pluss::tils::PrintOptions -- the per-call, rich formatting spec for
-// pluss::tils::OutputEngine. Deliberately independent of {fmt}: every knob here
-// is realised by OutputEngine's own renderer, so it behaves identically whether
-// or not PLUSSQIT_HAS_FMT is set and is not capped by any external spec grammar.
+// pluss::tils::OutputEngine. Every knob here is realised by OutputEngine's own
+// renderer and is not capped by any external spec grammar.
 //
 // Design contract:
 //   * Every field either has an obvious no-op default (0, '\0', empty, `None`)

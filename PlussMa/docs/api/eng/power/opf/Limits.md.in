@@ -1,0 +1,66 @@
+# `power::Limits`
+
+Reactive, voltage and line limits of the optimal power flow.
+
+## Signature
+
+```cpp
+power::Limits
+```
+
+## What It Does
+
+The operating limits that `opf` must respect besides the active-power bounds in `GenCost`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `q_lower` | Reactive-power lower bound of each generator, per unit, `[..., generator]`. | required |
+| `q_upper` | Reactive-power upper bound of each generator. | required |
+| `vm_lower` | Voltage-magnitude lower bound of each bus, `[..., bus]`. | required |
+| `vm_upper` | Voltage-magnitude upper bound of each bus. | required |
+| `flow` | Apparent-power rating of each line, applied at both ends, `[..., line]`; leave it undefined to switch the rating off. | undefined (off) |
+
+## Returns
+
+A value; validated by `opf`.
+
+## Errors
+
+A lower bound above its upper bound, or a length that is not the number of generators, buses or lines, is rejected.
+
+## Interpretation and Use
+
+Limits that no operating point can meet do not throw: the optimiser returns the point that violates them least with `converged` false. A binding rating has a nonzero `from_shadow` or `to_shadow` in the result.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Reactive, voltage and rating limits tightened in turn.
+
+@@example Eng/api/power_opf_limits.cpp@@
+
+### Example 2
+
+The unconstrained solution.
+
+@@example Eng/api/power_opf_ring.cpp@@
+
+### Example 3
+
+Limits that cannot be met.
+
+@@example Eng/api/power_opf_pitfalls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="OpfOptions.html">
+    <span class="label">Next</span>
+    <span class="title">OpfOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

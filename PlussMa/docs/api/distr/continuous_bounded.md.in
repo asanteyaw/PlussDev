@@ -21,4 +21,22 @@ Families on a bounded interval or a circle: proportions, bounded shapes and dire
 | [`VonMises`](continuous_bounded/VonMises.md) | The von Mises distribution: the circular analogue of the normal distribution, for angles. |
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+continuous_bounded/Anglit
+continuous_bounded/Arcsin
+continuous_bounded/Beta
+continuous_bounded/Bradford
+continuous_bounded/Cosine
+continuous_bounded/HalfCosine
+continuous_bounded/NormalTrunc
+continuous_bounded/Quadratic
+continuous_bounded/Semicircle
+continuous_bounded/Triangular
+continuous_bounded/UShape
+continuous_bounded/Uniform
+continuous_bounded/VonMises
+```
 <!-- apiref:toctree:end -->

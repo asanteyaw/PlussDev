@@ -698,6 +698,20 @@ bool known_nonnegative(const NodePtr &node, const TraceState &trace) {
          assumption == Assumption::Positive;
 }
 
+bool known_nonpositive(const NodePtr &node, const TraceState &trace) {
+  if (node->kind() == NodeKind::ScalarConstant) {
+    return node->scalar_value() <= 0.0;
+  }
+  if (node->kind() != NodeKind::Projection) {
+    return false;
+  }
+  const Assumption assumption =
+      trace.assumptions()[static_cast<std::size_t>(node->variable_id())];
+  return assumption == Assumption::Zero ||
+         assumption == Assumption::NonPositive ||
+         assumption == Assumption::Negative;
+}
+
 Assumption merge_assumption(Assumption current, Assumption incoming) {
   if (current == incoming || incoming == Assumption::Real) {
     return current;
@@ -756,12 +770,22 @@ NodePtr simplify_unary(PrimitiveId primitive_id, NodePtr input,
   if (primitive_id == PrimitiveId::Abs && known_nonnegative(input, trace)) {
     return input;
   }
+  if (primitive_id == PrimitiveId::Abs && known_nonpositive(input, trace)) {
+    return unary_node(PrimitiveId::Neg, std::move(input));
+  }
   if (primitive_id == PrimitiveId::Sqrt &&
       input->kind() == NodeKind::Primitive &&
       input->primitive_id() == PrimitiveId::Pow &&
       scalar_is(input->children()[1], 2.0) &&
       known_nonnegative(input->children()[0], trace)) {
     return input->children()[0];
+  }
+  if (primitive_id == PrimitiveId::Sqrt &&
+      input->kind() == NodeKind::Primitive &&
+      input->primitive_id() == PrimitiveId::Pow &&
+      scalar_is(input->children()[1], 2.0) &&
+      known_nonpositive(input->children()[0], trace)) {
+    return unary_node(PrimitiveId::Neg, input->children()[0]);
   }
   return unary_node(primitive_id, std::move(input));
 }
@@ -1898,15 +1922,15 @@ Function FunctionAccess::compose(const Function &function,
   const FunctionImpl &outer = get(function);
   PLUSS_CHECK(outer.sealed(),
               "math::Function::compose: the Function must be finished");
-  PLUSS_CHECK(arguments.size() == outer.trace().variables().size(),
+  // one argument per variable the function still takes: a variable that an integral bound is not one
+  PLUSS_CHECK(arguments.size() == outer.active_variables().size(),
               "math::Function::compose: expected one argument per variable");
   PLUSS_CHECK(!arguments.empty(),
               "math::Function::compose: the Function has no variables");
   pluss::msharp::intrusive_ptr<TraceState> trace = get(arguments[0]).trace_ptr();
   bool sealed = true;
   bool depends = false;
-  std::vector<NodePtr> roots;
-  roots.reserve(arguments.size());
+  std::vector<NodePtr> roots(outer.trace().variables().size());
   for (std::size_t i = 0; i < arguments.size(); ++i) {
     const FunctionImpl &impl = get(arguments[i]);
     if (i > 0) {
@@ -1914,7 +1938,7 @@ Function FunctionAccess::compose(const Function &function,
     }
     sealed = sealed && impl.sealed();
     depends = depends || impl.depends_on_variables();
-    roots.push_back(impl.root_ptr());
+    roots[static_cast<std::size_t>(outer.active_variables()[i])] = impl.root_ptr();
   }
   // the execution plan is topologically ordered, so one pass rebuilds the graph
   std::unordered_map<const Node *, NodePtr> by_node;
@@ -1924,6 +1948,7 @@ Function FunctionAccess::compose(const Function &function,
     switch (node.kind()) {
     case NodeKind::Projection:
       rebuilt = roots[static_cast<std::size_t>(node.variable_id())];
+      PLUSS_CHECK(rebuilt, "math::Function::compose: a bound variable cannot be substituted");
       break;
     case NodeKind::ScalarConstant:
     case NodeKind::SeriesConstant:
@@ -2161,7 +2186,9 @@ Function FunctionAccess::transform_table(const Function &lifted, std::string_vie
   }
   std::unordered_map<const Node *, bool> memo;
   const bool real_input = !has_complex_constant(impl.root_ptr(), memo);
-  if (real_input && kind <= 2) result = result.real();
+  // The cosine and sine transforms of a real function are real by construction; the Laplace transform is
+  // complex-valued for complex s (the Talbot inversion evaluates it there), so it keeps its imaginary part.
+  if (real_input && (kind == 1 || kind == 2)) result = result.real();
   const FunctionImpl &out = get(result);
   return make(out.trace_ptr(), out.root_ptr(), true, true, bound);
 }
@@ -2976,6 +3003,9 @@ FunctionAccess::evaluate(const Function &function,
         }
       }
       integ::QuadraOptions options;
+      // An open rule: the integrand is never evaluated at the end points, so integrable end-point
+      // singularities and removable 0/0 end points (the declared null points of a measure) are safe.
+      options.rule = integ::QuadraRule::GaussLegendre;
       options.dtype =
           bindings[static_cast<std::size_t>(variable_id)].scalar_type();
       options.platform =

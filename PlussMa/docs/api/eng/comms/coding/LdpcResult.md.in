@@ -1,0 +1,59 @@
+# `comms::LdpcResult`
+
+The result of LDPC decoding.
+
+## Signature
+
+```cpp
+comms::LdpcResult
+```
+
+## What It Does
+
+Holds the decoded information, the hard-decision codeword and whether the decoder found a codeword.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `bits` | The decoded information bits, `[..., k]`, Int64. |  |
+| `codeword` | The hard-decision codeword, `[..., n]`, Int64. |  |
+| `converged` | Whether every parity check holds for each frame, a Bool array `[...]`. |  |
+| `iterations` | The number of iterations used by the batch, an `Int64` vector of one element. |  |
+
+## Returns
+
+Returned by `decode`.
+
+## Errors
+
+Reading a field does not decode again.
+
+## Interpretation and Use
+
+`converged` true means the output is a codeword, which is almost always the transmitted one; false means the decoder gave up and the bits are the best guess. A decoder that fails to converge is a detected error, unlike a wrong codeword.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field.
+
+@@example Eng/api/comms_ldpc_encode_decode.cpp@@
+
+### Example 2
+
+Frames decoded against Eb/N0.
+
+@@example Eng/api/comms_ldpc_gain.cpp@@
+
+### Example 3
+
+Iterations and convergence.
+
+@@example Eng/api/comms_ldpc_iterations.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

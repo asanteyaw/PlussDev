@@ -175,3 +175,16 @@ Read down the rows: `M 10` peaks on this grid at x = 2 (value 0.3369); `M 20` pe
 - [`Binomial`](../discrete/Binomial.md)
 - [`Poisson`](../discrete/Poisson.md)
 - [`NegativeBinomial`](../discrete/NegativeBinomial.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Geometric.html">
+    <span class="label">Previous</span>
+    <span class="title">Geometric</span>
+  </a>
+  <a class="next-link" href="NegativeBinomial.html">
+    <span class="label">Next</span>
+    <span class="title">NegativeBinomial</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

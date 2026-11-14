@@ -155,3 +155,8 @@ These checks are worth running in your own code when a verdict surprises you, an
 - **Prices measure the objective's units.** The dual of a program that minimises negated profit is the negated price in profit; mind the sign.
 
 Where next: [Chapter 3](../linprog_03_methods_warm_starts_and_sweeps.md) is about using the methods well.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

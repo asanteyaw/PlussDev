@@ -191,7 +191,7 @@ std::cout << "Bool\n"
           << '\n';
 std::cout << "Int64\n"
           << pluss::note::print(
-                 pluss::note::make(std::vector<std::int64_t>{1, 2}).repeat({2}))
+                              pluss::note::make(std::vector<std::int64_t>{1, 2}).repeat({2}))
           << '\n';
 ```
 

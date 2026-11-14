@@ -127,7 +127,7 @@ DataFrame::sql().execute: sqlite prepare failed: near "SELEKT": syntax error
 
 - [`NexusQuery::prepare`](prepare.md): build a reusable statement template
   instead of executing once.
-- [`Nexus::query`](../nexus_api_reference.md): the entry point that returns
+- [`Nexus::query`](../../nexus_api_reference.md): the entry point that returns
   this `NexusQuery`.
 
 <div class="pluss-inline-prev-next">

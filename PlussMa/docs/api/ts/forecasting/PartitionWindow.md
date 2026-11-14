@@ -21,3 +21,16 @@ One training/test window of a `TsPartition`.
 ## See Also
 
 - [`TsPartition`](TsPartition.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="PartitionOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">PartitionOptions</span>
+  </a>
+  <a class="next-link" href="TsPartition.html">
+    <span class="label">Next</span>
+    <span class="title">TsPartition</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

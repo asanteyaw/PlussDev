@@ -1,0 +1,58 @@
+# `comms::symbols`
+
+Labels to symbols.
+
+## Signature
+
+```cpp
+pluss::Series comms::symbols(const comms::Constellation& constellation, const pluss::Series& labels);
+```
+
+## What It Does
+
+Looks up the point of each integer label. It is `modulate` without the bit packing.
+
+## Parameters
+
+`constellation`
+: The constellation to map to.
+
+`labels`
+: Integer labels in `[0, order)`, a real array of any shape with at least one axis.
+
+## Returns
+
+A complex array of the same shape as `labels`.
+
+## Errors
+
+Throws `pluss::Error` for a constellation not made by `psk` or `qam`, labels outside `[0, order)`, or an undefined array.
+
+## Interpretation and Use
+
+Use `symbols` when the data is already symbol indices, and as the reference against which `detect` is checked.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Labels to points, and a matrix of labels.
+
+@@example Eng/api/comms_symbols_labels.cpp@@
+
+### Example 2
+
+Bits to symbols for comparison.
+
+@@example Eng/api/comms_modulate_bits.cpp@@
+
+### Example 3
+
+Rejected labels.
+
+@@example Eng/api/comms_symbols_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

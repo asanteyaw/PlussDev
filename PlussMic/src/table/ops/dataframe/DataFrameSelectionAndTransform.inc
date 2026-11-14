@@ -93,7 +93,7 @@ std::vector<std::size_t> resolve_time_feature_indices_(
     PLUSS_CHECK(!name.empty(), std::string(where) + ": feature name cannot be empty");
     PLUSS_CHECK(seen.insert(name).second, std::string(where) + ": duplicate feature '" + name + "'");
     const auto it = src.name_to_idx_.find(name);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
     const auto k = src.columns_[it->second].kind();
     PLUSS_CHECK(is_time_like_slate_(k),
                 std::string(where) + ": feature '" + name + "' is not Timeline");
@@ -123,7 +123,7 @@ std::vector<std::size_t> resolve_shift_feature_indices_(
     PLUSS_CHECK(!name.empty(), std::string(where) + ": feature name cannot be empty");
     PLUSS_CHECK(seen.insert(name).second, std::string(where) + ": duplicate feature '" + name + "'");
     const auto it = src.name_to_idx_.find(name);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
     indices.push_back(it->second);
   }
   return indices;
@@ -424,7 +424,7 @@ DataFrame DataFrame::take(const Slate& indices) const {
           || values.scalar_type() == pluss::codem::ScalarType::Int16
           || values.scalar_type() == pluss::codem::ScalarType::Int8,
       "DataFrame::take: indices slate must use an integer Series dtype");
-  return take(values.pull<std::int64_t>());
+  return take(values.items<std::int64_t>());
 }
 
 std::pair<DataFrame, DataFrame> DataFrame::split(double frac) const {
@@ -1248,7 +1248,7 @@ DataFrame DataFrame::transform(pluss::msharp::RangeView::Of<TransformSpec> specs
                 "DataFrame::transform: duplicate transform target '" + spec.feature + "'");
 
     const auto it = src.name_to_idx_.find(spec.feature);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::transform: unknown feature '" + spec.feature + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::transform: unknown feature '" + spec.feature + "'", spec.feature, pluss::exception::map_keys(src.name_to_idx_));
 
     auto transformed = spec.expr(out_cols[it->second]);
     PLUSS_CHECK(transformed.defined(), "DataFrame::transform: transform returned undefined Slate");
@@ -1290,7 +1290,7 @@ DataFrame DataFrame::put(std::string_view feature,
   PLUSS_CHECK(!name.empty(), "DataFrame::put: feature name cannot be empty");
   const auto& src = impl_ref_();
   const auto it = src.name_to_idx_.find(name);
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put: unknown feature '" + name + "'");
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
   const auto aligned_mask = prepare_mask_slate_(src, bool_mask, "DataFrame::put", options);
   const auto mask = bool_series_from_slate_mask_(aligned_mask, src.nrows_, "DataFrame::put");
   auto out_cols = src.columns_;
@@ -1329,7 +1329,7 @@ DataFrame DataFrame::put(std::string_view feature,
   PLUSS_CHECK(!name.empty(), "DataFrame::put(double): feature name cannot be empty");
   const auto& src = impl_ref_();
   const auto it = src.name_to_idx_.find(name);
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(double): unknown feature '" + name + "'");
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(double): unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
   const auto aligned_mask = prepare_mask_slate_(src, bool_mask, "DataFrame::put(double)", options);
   const auto mask = bool_series_from_slate_mask_(aligned_mask, src.nrows_, "DataFrame::put(double)");
   auto out_cols = src.columns_;
@@ -1368,7 +1368,7 @@ DataFrame DataFrame::put(std::string_view feature,
   PLUSS_CHECK(!name.empty(), "DataFrame::put(string): feature name cannot be empty");
   const auto& src = impl_ref_();
   const auto it = src.name_to_idx_.find(name);
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(string): unknown feature '" + name + "'");
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(string): unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
   const auto aligned_mask = prepare_mask_slate_(src, bool_mask, "DataFrame::put(string)", options);
   const auto mask = bool_series_from_slate_mask_(aligned_mask, src.nrows_, "DataFrame::put(string)");
   auto out_cols = src.columns_;
@@ -1407,7 +1407,7 @@ DataFrame DataFrame::put(std::string_view feature,
   PLUSS_CHECK(!name.empty(), "DataFrame::put(null): feature name cannot be empty");
   const auto& src = impl_ref_();
   const auto it = src.name_to_idx_.find(name);
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(null): unknown feature '" + name + "'");
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::put(null): unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
   const auto aligned_mask = prepare_mask_slate_(src, bool_mask, "DataFrame::put(null)", options);
   const auto mask = bool_series_from_slate_mask_(aligned_mask, src.nrows_, "DataFrame::put(null)");
   auto out_cols = src.columns_;
@@ -1428,7 +1428,7 @@ DataFrame& DataFrame::put_(std::string_view feature,
   PLUSS_CHECK(!name.empty(), "DataFrame::put_: feature name cannot be empty");
   auto& w = mut_impl_();
   const auto it = w.name_to_idx_.find(name);
-  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_: unknown feature '" + name + "'");
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_: unknown feature '" + name + "'", name, pluss::exception::map_keys(w.name_to_idx_));
   const auto aligned_mask = prepare_mask_slate_(w, bool_mask, "DataFrame::put_", options);
   const auto mask = bool_series_from_slate_mask_(aligned_mask, w.nrows_, "DataFrame::put_");
   w.columns_[it->second] = w.columns_[it->second].put(mask, value);
@@ -1447,7 +1447,7 @@ DataFrame& DataFrame::put_(std::string_view feature,
   PLUSS_CHECK(!name.empty(), "DataFrame::put_(double): feature name cannot be empty");
   auto& w = mut_impl_();
   const auto it = w.name_to_idx_.find(name);
-  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(double): unknown feature '" + name + "'");
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(double): unknown feature '" + name + "'", name, pluss::exception::map_keys(w.name_to_idx_));
   const auto aligned_mask = prepare_mask_slate_(w, bool_mask, "DataFrame::put_(double)", options);
   const auto mask = bool_series_from_slate_mask_(aligned_mask, w.nrows_, "DataFrame::put_(double)");
   w.columns_[it->second] = w.columns_[it->second].put(mask, value);
@@ -1466,7 +1466,7 @@ DataFrame& DataFrame::put_(std::string_view feature,
   PLUSS_CHECK(!name.empty(), "DataFrame::put_(string): feature name cannot be empty");
   auto& w = mut_impl_();
   const auto it = w.name_to_idx_.find(name);
-  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(string): unknown feature '" + name + "'");
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(string): unknown feature '" + name + "'", name, pluss::exception::map_keys(w.name_to_idx_));
   const auto aligned_mask = prepare_mask_slate_(w, bool_mask, "DataFrame::put_(string)", options);
   const auto mask = bool_series_from_slate_mask_(aligned_mask, w.nrows_, "DataFrame::put_(string)");
   w.columns_[it->second] = w.columns_[it->second].put(mask, value);
@@ -1485,7 +1485,7 @@ DataFrame& DataFrame::put_(std::string_view feature,
   PLUSS_CHECK(!name.empty(), "DataFrame::put_(null): feature name cannot be empty");
   auto& w = mut_impl_();
   const auto it = w.name_to_idx_.find(name);
-  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(null): unknown feature '" + name + "'");
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::put_(null): unknown feature '" + name + "'", name, pluss::exception::map_keys(w.name_to_idx_));
   const auto aligned_mask = prepare_mask_slate_(w, bool_mask, "DataFrame::put_(null)", options);
   const auto mask = bool_series_from_slate_mask_(aligned_mask, w.nrows_, "DataFrame::put_(null)");
   w.columns_[it->second] = w.columns_[it->second].put(mask, value);

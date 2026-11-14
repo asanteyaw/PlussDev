@@ -1,0 +1,41 @@
+# Error metrics and theory
+
+This branch measures a link. `ber` and `ser` count decisions, `evm` measures how far symbols are from their ideal positions, and `theory` gives the probability to compare against.
+
+## Choosing A Surface
+
+Count errors with `ber` and `ser`, measure the quality of symbols with `evm`, and compare with `theory`.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Bit errors.
+
+@@example Eng/api/comms_ber_basic.cpp@@
+
+### Example 2
+
+EVM against noise.
+
+@@example Eng/api/comms_evm_noise.cpp@@
+
+### Example 3
+
+Simulation against theory.
+
+@@example Eng/api/comms_theory_table.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+metrics/ber
+metrics/ser
+metrics/evm
+metrics/theory
+```
+<!-- apiref:toctree:end -->

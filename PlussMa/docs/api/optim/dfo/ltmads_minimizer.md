@@ -20,7 +20,7 @@ LT-MADS builds its poll directions from a random lower-triangular integer matrix
 ## Parameters
 
 `Fn &&objective`
-: A callable `Series -> Series` (real scalar) or `Series -> number`.
+: A callable `Series (Series)` (real scalar) or `Series -> number`.
 
 `const pluss::Series &initial`
 : The starting point.

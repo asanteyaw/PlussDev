@@ -40,7 +40,7 @@ Inspect stability, response, and second-order-section realization.
 #include <complex>
 #include <iostream>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -81,7 +81,7 @@ Compare frequency response across equivalent system representations.
 
 #include <complex>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -120,7 +120,7 @@ Exercise frequency-grid and realization validation.
 #include <exception>
 #include <string>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {

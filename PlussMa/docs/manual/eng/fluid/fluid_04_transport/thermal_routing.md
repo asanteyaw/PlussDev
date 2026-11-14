@@ -1,0 +1,351 @@
+<!-- generated from thermal_routing.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Thermal routing
+
+[Back to Fluid 4: Transport](../fluid_04_transport.md)
+
+Hot water cools as it travels. A district heating main loses heat to the ground, a hot-water return line loses it to the plant room, and a cold supply warms up in a summer ditch. `fluid::heat` follows the temperature of the water through the network over a run, with the heat each pipe and tank exchanges with its surroundings. It is the transport of the previous page with a different law: the water carries its heat with it exactly as it carried a concentration, and loses it to the ambient temperature at a rate that is set by a conductance. This page explains the model and its limits, cools a stagnant pipe and checks it against the exact decay, sends hot water through a pipe and checks the outlet temperature against the analytic result for each conductance, mixes a hot and a cold stream, and shows the confusion of units that gives a plausible wrong temperature.
+
+## The mental model
+
+`heat` runs on the same machinery as `transport`: the hydraulics come from `run`, each pipe is cut into `cells`, quality moves from one cell to the next with the flow, the water mixes completely at junctions, and the same `RouteOptions` control the step, the Courant limit and the cell count. What is different is the reaction. A pipe of volume `V` and a total conductance `UA` to an ambient temperature `T_a` exchanges heat at the rate
+
+```{math}
+\rho \, c_p \, V \frac{dT}{dt} = - UA \, ( T - T_a ) ,
+```
+
+which has the exact solution `T(t + Δt) = T_a + (T(t) - T_a) exp(-UA Δt / (ρ c_p V))`, the update the solver uses. The density `ρ` comes from the `Liquid` of the network, and the specific heat `c_p` is `Heat::cp`, `4180` J/(kg K) by default. The model is deliberately narrow: constant properties, one-way coupled, so the temperature does not change the hydraulics, and `UA` is the whole resistance between the bulk water and the ambient, not only the film at the wall.
+
+A `Heat` record gives the temperatures in kelvin and the conductances:
+
+| Member | Shape | Meaning | Default |
+|---|---|---|---|
+| `initial` | `[..., node]` | the starting temperature at every node, K | required |
+| `source` | `[..., node]` | the held temperature at a reservoir and of an injection | `initial` |
+| `ambient` | `[..., pipe]` | the surrounding temperature of each pipe, K | required where `ua > 0` |
+| `ua` | `[..., pipe]` | total conductance to the ambient, W/K | `0` |
+| `tank_ambient`, `tank_ua` | `[..., tank]` | the same for each tank | |
+| `cp` | scalar | specific heat, J/(kg K) | `4180` |
+
+The result is a `HeatResult`: `node`, `link` and `tank` temperatures at each hydraulic event, the hydraulic `RunResult` that drove them, and two energy fields. `energy` is the heat stored in the pipes and tanks, `ρ c_p Σ V T`, counted from absolute zero so that boundary flows are unambiguous. `energy_error` is the change of that store minus what flowed in through the boundaries and was exchanged with the ambient, in joules, and it should stay at rounding level.
+
+## A pipe that cools while it flows
+
+A reservoir at `340` K feeds a junction through a kilometre of `0.15` m pipe, `17.67` m³ in volume, with a `0.01` m³/s draw, so the water takes `1767` s to cross. The ambient is `288` K. With the quality step set to one cell's transit time, the plug is carried exactly, and the outlet temperature is the exact exponential with `T = 1767` s. The program runs four conductances and compares each outlet temperature with `T_a + (T_in - T_a) exp(-UA T / (ρ c_p V))`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// reservoir -> 1 km pipe -> junction drawing 0.01 m3/s
+static fluid::Net line(double demand) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, demand});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.15});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto network = fluid::network(line(0.01));
+  const double kPi = 3.14159265358979323846, volume = kPi * 0.15 * 0.15 / 4.0 * 1000.0, q = 0.01;
+  const double transit = volume / q, density = 998.2, cp = 4180.0;
+  const std::int64_t cells = 20;
+
+  fluid::Schedule schedule;
+  schedule.duration = 4.0 * 3600.0;
+  schedule.step = transit / cells; // the hydraulic step also cuts the quality step, so keep it a multiple
+  schedule.pattern_step = 24.0 * 3600.0;
+  fluid::RouteOptions route;
+  route.step = transit / cells; // Courant number one
+  route.courant = 1.0;
+  route.cells = cells;
+
+  for (double ua : {0.0, 5000.0, 20000.0, 80000.0}) {
+    fluid::Heat heat;
+    heat.initial = vec({340.0, 288.0});
+    heat.ambient = vec({288.0});
+    heat.ua = vec({ua});
+    const auto r = fluid::heat(network, schedule, heat, route);
+    const double exact = 288.0 + 52.0 * std::exp(-ua * transit / (density * cp * volume));
+    out.writeln("UA ", ua, " W/K: junction ", flat(r.node).back(), " K, exact ", exact, " K, energy error ", flat(r.energy_error).back(), " J of ", flat(r.energy).back(), " J stored");
+  }
+}
+```
+
+Output
+
+```text
+UA 0.0000 W/K: junction 340.0000 K, exact 340.0000 K, energy error 0.0000 J of 25069470652.2325 J stored
+UA 5000.0000 W/K: junction 334.1276 K, exact 334.1276 K, energy error 0.0000 J of 24837837101.9181 J stored
+UA 20000.0000 W/K: junction 320.1985 K, exact 320.1982 K, energy error -0.0004 J of 24245008735.7612 J stored
+UA 80000.0000 W/K: junction 295.6448 K, exact 295.6440 K, energy error 0.0001 J of 22860817189.1971 J stored
+```
+
+With no conductance the water arrives at the `340.0000` K it left at. With `5000` W/K it arrives at `334.1276` K against the exact `334.1276`, with `20000` W/K at `320.1985` K against `320.1982`, and with `80000` W/K at `295.6448` K against `295.6440`. The energy error is under a thousandth of a joule in `2.4 × 10¹⁰`. A conductance of `20000` W/K is `20` W per metre of pipe per kelvin, which a poorly insulated main might have; the water loses `20` K on its way.
+
+## A stagnant pipe
+
+When there is no flow the pipe is a lump of water losing heat to its surroundings, and its temperature follows the exponential exactly: `T_a + (T_0 - T_a) exp(-UA t / (ρ c_p V))`. The program fills the pipe with `340` K water, stops the draw, and compares the pipe's mean temperature with that formula every half hour for six hours.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net line(double demand) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, demand});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.15});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto idle = fluid::network(line(0.0));
+  const double kPi = 3.14159265358979323846, volume = kPi * 0.15 * 0.15 / 4.0 * 1000.0;
+  const double density = 998.2, cp = 4180.0, ua = 20000.0;
+
+  fluid::Schedule schedule;
+  schedule.duration = 6.0 * 3600.0;
+  schedule.step = 1800.0;
+  schedule.pattern_step = 24.0 * 3600.0;
+  fluid::Heat heat;
+  heat.initial = vec({340.0, 340.0});
+  heat.ambient = vec({288.0});
+  heat.ua = vec({ua});
+  fluid::RouteOptions route;
+  route.step = 60.0;
+  route.courant = 0.9;
+  route.cells = 8;
+
+  const auto r = fluid::heat(idle, schedule, heat, route);
+  const auto time = flat(r.hydraulic.time), pipe = flat(r.link);
+  double worst = 0.0;
+  for (std::size_t i = 0; i < time.size(); ++i) {
+    const double exact = 288.0 + 52.0 * std::exp(-ua * time[i] / (density * cp * volume));
+    worst = std::max(worst, std::abs(pipe[i] - exact));
+    if (i % 2 == 0) out.writeln("t ", time[i], " s: pipe ", pipe[i], " K, exact ", exact, " K");
+  }
+  out.writeln("largest difference over the run ", worst, " K");
+}
+```
+
+Output
+
+```text
+t 0.0000 s: pipe 340.0000 K, exact 340.0000 K
+t 3600.0000 s: pipe 307.5849 K, exact 307.5849 K
+t 7200.0000 s: pipe 295.3763 K, exact 295.3763 K
+t 10800.0000 s: pipe 290.7781 K, exact 290.7781 K
+t 14400.0000 s: pipe 289.0463 K, exact 289.0463 K
+t 18000.0000 s: pipe 288.3941 K, exact 288.3941 K
+t 21600.0000 s: pipe 288.1484 K, exact 288.1484 K
+largest difference over the run 0.0000 K
+```
+
+The pipe follows the exact cooling curve: `307.5849` K after an hour, `295.3763` K after two and `288.1484` K at six hours, and the largest difference from the exact value over the half-hourly samples of the whole run prints as `0.0000` K. The time constant `ρ c_p V / UA` is `3686` s, about an hour, so by six hours the water is within `0.15` K of its surroundings.
+
+## Mixing two streams
+
+At a junction the temperatures mix as the flows do, flow-weighted, because the water has one density and one specific heat. A hot reservoir at `340` K and a cold one at `290` K feed a junction through pipes of the same lengths as in the mixing example of the previous page, and the junction draws `0.02` m³/s. The program checks the junction's temperature against the weighted average.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net two_sources() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.0, 0.02});
+  net.nodes.head = vec({50.0, 48.0, 40.0});
+  net.pipes.from = {0, 1};
+  net.pipes.to = {2, 2};
+  net.pipes.length = vec({600.0, 300.0});
+  net.pipes.diameter = vec({0.15, 0.15});
+  net.pipes.roughness = vec({1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto network = fluid::network(two_sources());
+  const auto flow = flat(fluid::steady(network).flow);
+  fluid::Schedule schedule;
+  schedule.duration = 3600.0;
+  schedule.step = 120.0;
+  schedule.pattern_step = 24.0 * 3600.0;
+  fluid::Heat heat;
+  heat.initial = vec({340.0, 290.0, 300.0});
+  fluid::RouteOptions route;
+  route.step = 10.0;
+  route.courant = 0.9;
+  route.cells = 20;
+  const auto r = fluid::heat(network, schedule, heat, route);
+  const auto node = flat(r.node);
+  out.writeln("pipe flows ", flow, " m3/s");
+  out.writeln("junction temperature ", node.back(), " K, flow-weighted average ", (flow[0] * 340.0 + flow[1] * 290.0) / (flow[0] + flow[1]), " K");
+  out.writeln("energy error ", flat(r.energy_error).back(), " J");
+}
+```
+
+Output
+
+```text
+pipe flows [0.0131, 0.0069] m3/s
+junction temperature 322.8263 K, flow-weighted average 322.8263 K
+energy error 0.0004 J
+```
+
+The junction settles at `322.8263` K, the average of `340` K and `290` K weighted by the flows `0.0131` and `0.0069` m³/s, which is also `322.8263` K by hand. No `ambient` and no `ua` were given: the default conductance is zero and the pipes are adiabatic, which is why they are not required then.
+
+## Decisions
+
+- **UA, not a coefficient per area.** `ua` is a total in W/K for the whole pipe: its per-metre conductance times its length. It is the entire resistance from bulk water to ambient, with the wall, the insulation and the soil, not only the film at the wall.
+- **Constant properties.** `cp` is one number for the call, and density comes from the `Liquid`. A temperature-dependent property, pump heating, and a hydraulic feedback from temperature are not modelled; solve the hydraulics at the temperature that matters.
+- **Resolution.** The same rules as for a constituent: the number of cells sets how sharp a thermal front is, a Courant number of one gives an exact plug, and the hydraulic step also cuts the quality step.
+- **Absolute temperatures.** The solver wants kelvin because the stored energy is counted from absolute zero. The transport itself is unchanged by an offset, but a negative temperature in kelvin is refused.
+
+## Pitfalls
+
+Mistakes in the description. A conductance without its ambient temperature and a negative absolute temperature are refused. The one that is not is a conductance in the wrong units: `20` W/(m K), the figure per metre of pipe, entered as the total.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <functional>
+#include <iostream>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net line() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.01});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.15});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+static void attempt(const char *label, const std::function<void()> &call) {
+  try {
+    call();
+    std::cout << label << ": ran\n";
+  } catch (const std::exception &e) {
+    std::cout << label << ": " << e.what() << "\n";
+  }
+}
+
+int main() {
+  const auto network = fluid::network(line());
+  const double transit = 1767.1458;
+  fluid::Schedule schedule;
+  schedule.duration = 4.0 * 3600.0;
+  schedule.step = transit / 20.0;
+  schedule.pattern_step = 24.0 * 3600.0;
+  fluid::RouteOptions route;
+  route.step = transit / 20.0;
+  route.courant = 1.0;
+  route.cells = 20;
+
+  attempt("conductance without an ambient temperature", [&] {
+    fluid::Heat heat;
+    heat.initial = vec({340.0, 288.0});
+    heat.ua = vec({20000.0});
+    (void)fluid::heat(network, schedule, heat, route);
+  });
+  attempt("a negative absolute temperature", [&] {
+    fluid::Heat heat;
+    heat.initial = vec({-10.0, 288.0});
+    (void)fluid::heat(network, schedule, heat, route);
+  });
+
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  for (double ua : {20.0, 20000.0}) {
+    fluid::Heat heat;
+    heat.initial = vec({340.0, 288.0});
+    heat.ambient = vec({288.0});
+    heat.ua = vec({ua});
+    const auto r = fluid::heat(network, schedule, heat, route);
+    out.writeln("UA = ", ua, " W/K: the water arrives at ", flat(r.node).back(), " K");
+  }
+}
+```
+
+Output
+
+```text
+conductance without an ambient temperature: eng::fluid::heat: pipe ambient temperature is required
+a negative absolute temperature: eng::fluid::heat: initial temperature must be nonnegative
+UA = 20.0000 W/K: the water arrives at 339.9751 K
+UA = 20000.0000 W/K: the water arrives at 320.1985 K
+```
+
+The first two are refused, naming the conductance that has no ambient and the temperature that is below zero kelvin. The third is the slip to watch: `20` W/K is the conductance per metre of pipe, `20000` W/K is the conductance of the kilometre, and the same hot water arrives at `339.9751` K or at `320.1985` K depending on which was entered. Nothing in the solver can tell the two apart, since both are valid conductances. Multiply a per-metre figure by the length of the pipe before putting it in `ua`.
+
+Reference: [`heat`](../../../../api/eng/fluid/transport/heat_fn.md), [`Heat`](../../../../api/eng/fluid/transport/Heat.md), [`HeatResult`](../../../../api/eng/fluid/transport/HeatResult.md), [`RouteOptions`](../../../../api/eng/fluid/transport/RouteOptions.md), [`Liquid`](../../../../api/eng/fluid/model/Liquid.md).
+
+Where next: the chapter ends here. [Pipe loss models](../fluid_01_pipe_networks/pipe_loss_models.md) and [Controls and rules](../fluid_03_storage_and_operation/controls_and_rules.md) are the places to return to when a transported quantity looks wrong, because it can only be as right as the flows that carry it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="constituents_and_age.html">
+    <span class="label">Previous</span>
+    <span class="title">Constituents and water age</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

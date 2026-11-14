@@ -19,7 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 
 #if !defined(_WIN32)
 #include <sys/ioctl.h>
@@ -34,6 +33,7 @@
 #include "table/Atlas.h"
 #include "table/DataFrame.h"
 #include "table/Slate.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::table::display {
 
@@ -145,7 +145,7 @@ std::vector<std::string> split_display_token_(std::string_view text,
 std::string scalar_at(const pluss::Series& s, std::int64_t row) {
   const auto format_float = [](double value, std::string_view spec) {
     return std::isnan(value) ? std::string("NULL")
-                             : fmt::format(fmt::runtime(std::string(spec)), value);
+                             : pluss::tils::OutputEngine::format(pluss::tils::runtime_format(spec), value);
   };
   const auto st = s.scalar_type();
   const auto* base = s.raw_data();
@@ -153,21 +153,21 @@ std::string scalar_at(const pluss::Series& s, std::int64_t row) {
     case pluss::codem::ScalarType::Bool:
       return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
     case pluss::codem::ScalarType::Int8:
-      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
     case pluss::codem::ScalarType::Int16:
-      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
     case pluss::codem::ScalarType::Int32:
-      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
     case pluss::codem::ScalarType::Int64:
-      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt8:
-      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
     case pluss::codem::ScalarType::UInt16:
-      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt32:
-      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt64:
-      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16:
       return format_float(
           pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]),
@@ -182,11 +182,11 @@ std::string scalar_at(const pluss::Series& s, std::int64_t row) {
       return format_float(reinterpret_cast<const double*>(base)[row], "{:.10g}");
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     case pluss::codem::ScalarType::Complex128: {
       const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     default:
       return "<scalar?>";
@@ -242,7 +242,7 @@ std::string slate_value_at(const Slate& t, std::int64_t row) {
     case SlateKind::Note:
       return std::string(t.as_note().at(row));
     case SlateKind::Timeline:
-      return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
+      return pluss::tils::OutputEngine::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     case SlateKind::Duration:
       return std::string(t.as_duration().to_note_iso().at(row));
   }
@@ -295,7 +295,7 @@ std::string human_bytes(std::uint64_t b) {
     v /= 1024.0;
     ++u;
   }
-  return fmt::format("{:.2f} {}", v, units[u]);
+  return pluss::tils::OutputEngine::format("{:.2f} {}", v, units[u]);
 }
 
 ResponsivePreset preset_for_terminal_width(std::int64_t width, DisplayMode mode) {
@@ -723,7 +723,7 @@ std::string dtype_summary_line(const std::unordered_map<std::string, std::int64_
   std::vector<std::string> parts;
   parts.reserve(dtype_counts.size());
   for (const auto& kv : dtype_counts) {
-    parts.push_back(fmt::format("{}({})", kv.first, kv.second));
+    parts.push_back(pluss::tils::OutputEngine::format("{}({})", kv.first, kv.second));
   }
   std::sort(parts.begin(), parts.end());
 
@@ -839,9 +839,9 @@ std::string render_slate_series_like_(const Slate& slate,
       out.push_back('\n');
     }
     if (slate.named()) {
-      out += fmt::format("Name: {}, ptype: {}", slate.name(), dtype_footer);
+      out += pluss::tils::OutputEngine::format("Name: {}, ptype: {}", slate.name(), dtype_footer);
     } else {
-      out += fmt::format("ptype: {}", dtype_footer);
+      out += pluss::tils::OutputEngine::format("ptype: {}", dtype_footer);
     }
     return out;
   }
@@ -850,7 +850,7 @@ std::string render_slate_series_like_(const Slate& slate,
   rows.reserve(row_plan.head.size() + row_plan.tail.size() + (row_plan.ellipsis ? 1 : 0));
 
   auto push_row = [&](std::int64_t ridx) {
-    const auto idx = labels.has_value() ? slate_value_at(*labels, ridx) : fmt::format("{}", ridx);
+    const auto idx = labels.has_value() ? slate_value_at(*labels, ridx) : pluss::tils::OutputEngine::format("{}", ridx);
     const auto val = slate_value_at(values, ridx);
     rows.emplace_back(clip_cell(idx, options.max_cell_width), clip_cell(val, options.max_cell_width));
   };
@@ -872,7 +872,7 @@ std::string render_slate_series_like_(const Slate& slate,
 
   std::string out;
   for (std::size_t i = 0; i < rows.size(); ++i) {
-    const auto line = fmt::format("{}  {}",
+    const auto line = pluss::tils::OutputEngine::format("{}  {}",
                                   left_pad(rows[i].first, idx_width),
                                   rows[i].second);
     out += fit_line(line, terminal_width);
@@ -884,9 +884,9 @@ std::string render_slate_series_like_(const Slate& slate,
     out.push_back('\n');
   }
   if (slate.named()) {
-    out += fmt::format("Name: {}, ptype: {}", slate.name(), dtype_footer);
+    out += pluss::tils::OutputEngine::format("Name: {}, ptype: {}", slate.name(), dtype_footer);
   } else {
-    out += fmt::format("ptype: {}", dtype_footer);
+    out += pluss::tils::OutputEngine::format("ptype: {}", dtype_footer);
   }
   return out;
 }
@@ -998,7 +998,7 @@ std::string html_shell_(std::string_view title,
     }
 )CSS";
 
-  return fmt::format(R"HTML(<!DOCTYPE html>
+  return pluss::tils::OutputEngine::format(R"HTML(<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -1452,7 +1452,7 @@ std::string render_html_pre_(std::string_view title,
                              std::string_view subtitle,
                              const std::string& content,
                              const DisplayOptions& options) {
-  const auto body = fmt::format(
+  const auto body = pluss::tils::OutputEngine::format(
       R"HTML(<div class="table-wrap"><div class="table-scroll"><pre style="margin:0; padding:16px; font-family:'IBM Plex Mono', 'SFMono-Regular', monospace; white-space:pre-wrap;">{}</pre></div></div>)HTML",
       escape_html_(content));
   return html_shell_(title, subtitle, body, options);
@@ -1472,12 +1472,12 @@ std::string render_html_table_body_(const DataFrame& frame,
 
   std::string body;
   body += "<div class=\"summary-grid\">";
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
                       frame.ncases());
   body +=
-      fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
+      pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
                   frame.nfeatures());
-  body += fmt::format(
+  body += pluss::tils::OutputEngine::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div class=\"value\">{}</div></div>",
       escape_html_(logical_dtype(frame.labels().values())));
   body += "</div>";
@@ -1494,10 +1494,10 @@ std::string render_html_table_body_(const DataFrame& frame,
     case_width_px += 5;
   }
 
-  body += fmt::format("<table id=\"{}\" data-filterable=\"true\">", escape_html_(table_id));
+  body += pluss::tils::OutputEngine::format("<table id=\"{}\" data-filterable=\"true\">", escape_html_(table_id));
   if (options.show_case_index) {
     body += "<colgroup>";
-    body += fmt::format(
+    body += pluss::tils::OutputEngine::format(
         "<col class=\"case-col\" style=\"width:{}px; min-width:{}px; max-width:{}px;\">",
         case_width_px,
         case_width_px,
@@ -1513,7 +1513,7 @@ std::string render_html_table_body_(const DataFrame& frame,
   std::size_t column_index = 0;
   if (options.show_case_index) {
     const auto case_numeric = is_numeric_slate(frame.labels().values());
-    body += fmt::format(
+    body += pluss::tils::OutputEngine::format(
         "<th class=\"sortable sticky-left{}\" data-column-index=\"{}\" data-kind=\"{}\">case</th>",
         case_numeric ? " num" : "",
         column_index++,
@@ -1522,7 +1522,7 @@ std::string render_html_table_body_(const DataFrame& frame,
 
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto numeric = is_numeric_slate(cols[i]);
-    body += fmt::format("<th class=\"sortable{}\" data-column-index=\"{}\" data-kind=\"{}\">{}</th>",
+    body += pluss::tils::OutputEngine::format("<th class=\"sortable{}\" data-column-index=\"{}\" data-kind=\"{}\">{}</th>",
                         numeric ? " num" : "",
                         column_index++,
                         numeric ? "numeric" : "text",
@@ -1531,11 +1531,11 @@ std::string render_html_table_body_(const DataFrame& frame,
   body += "</tr></thead><tbody>";
 
   for (std::int64_t row = 0; row < frame.ncases(); ++row) {
-    body += fmt::format("<tr data-row-index=\"{}\">", row);
+    body += pluss::tils::OutputEngine::format("<tr data-row-index=\"{}\">", row);
     if (options.show_case_index) {
       const auto case_value = slate_value_at(display_cases, row);
       const auto case_numeric = is_numeric_slate(frame.labels().values());
-      body += fmt::format("<td class=\"sticky-left{}{}\" data-sort-value=\"{}\">{}</td>",
+      body += pluss::tils::OutputEngine::format("<td class=\"sticky-left{}{}\" data-sort-value=\"{}\">{}</td>",
                           case_numeric ? " num" : "",
                           case_value == "NULL" ? " missing" : "",
                           escape_html_(case_value),
@@ -1544,7 +1544,7 @@ std::string render_html_table_body_(const DataFrame& frame,
     for (std::size_t col = 0; col < cols.size(); ++col) {
       const auto value = slate_value_at(display_cols[col], row);
       const auto numeric = is_numeric_slate(cols[col]);
-      body += fmt::format("<td class=\"{}{}\" data-sort-value=\"{}\">{}</td>",
+      body += pluss::tils::OutputEngine::format("<td class=\"{}{}\" data-sort-value=\"{}\">{}</td>",
                           numeric ? "num" : "",
                           value == "NULL" ? " missing" : "",
                           escape_html_(value),
@@ -1669,15 +1669,15 @@ std::string render_virtual_html_table_(const DataFrame& frame,
                                        const DisplayOptions& options) {
   std::string body;
   body += "<div class=\"summary-grid\">";
-  body += fmt::format(
+  body += pluss::tils::OutputEngine::format(
       "<div class=\"summary-card\"><div class=\"label\">Cases</div><div "
       "class=\"value\">{}</div></div>",
       frame.ncases());
-  body += fmt::format(
+  body += pluss::tils::OutputEngine::format(
       "<div class=\"summary-card\"><div class=\"label\">Features</div><div "
       "class=\"value\">{}</div></div>",
       frame.nfeatures());
-  body += fmt::format(
+  body += pluss::tils::OutputEngine::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Axis</div><div "
       "class=\"value\">{}</div></div>",
       escape_html_(logical_dtype(frame.labels().values())));
@@ -1704,13 +1704,13 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
 
   std::string body;
   body += "<div class=\"summary-grid\">";
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Depth</div><div class=\"value\">{}</div></div>",
                       atlas.depth());
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
                       atlas.ncases());
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
                       atlas.nfeatures());
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Depth Labels</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Depth Labels</div><div class=\"value\">{}</div></div>",
                       atlas.axis0_labels().has_value() ? escape_html_(logical_dtype(*atlas.axis0_labels()))
                                                        : "None");
   body += "</div>";
@@ -1731,7 +1731,7 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   if (display_axis0.has_value()) {
     first_label = slate_value_at(*display_axis0, 0);
   }
-  body += fmt::format(
+  body += pluss::tils::OutputEngine::format(
       "<span id=\"atlas-current-frame\" class=\"atlas-current-frame\" role=\"status\">{} (1 of {})</span>",
       escape_html_(first_label), atlas.depth());
   body += "<button id=\"atlas-next\" type=\"button\" class=\"atlas-tab\">Next</button>";
@@ -1741,35 +1741,35 @@ std::string render_html_atlas_(const Atlas& atlas, const DisplayOptions& options
   body += "<div class=\"atlas-nav atlas-frame-tabs\" role=\"group\" aria-label=\"Select a frame\">";
 
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
-    std::string label = fmt::format("Frame {}", i);
+    std::string label = pluss::tils::OutputEngine::format("Frame {}", i);
     if (display_axis0.has_value()) {
       label = slate_value_at(*display_axis0, i);
     }
-    body += fmt::format(
+    body += pluss::tils::OutputEngine::format(
         "<button id=\"atlas-tab-{}\" type=\"button\" class=\"atlas-tab{}\" data-frame-index=\"{}\" aria-pressed=\"{}\">{}</button>",
         i, i == 0 ? " active" : "", i, i == 0 ? "true" : "false", escape_html_(label));
   }
   body += "</div>";
 
   for (std::int64_t i = 0; i < atlas.depth(); ++i) {
-    std::string label = fmt::format("Frame {}", i);
+    std::string label = pluss::tils::OutputEngine::format("Frame {}", i);
     if (display_axis0.has_value()) {
       label = slate_value_at(*display_axis0, i);
     }
     const auto frame = atlas.frame(i);
-    body += fmt::format("<section class=\"atlas-panel{}\" data-frame-index=\"{}\">",
+    body += pluss::tils::OutputEngine::format("<section class=\"atlas-panel{}\" data-frame-index=\"{}\">",
                         i == 0 ? " active" : "",
                         i);
     body += "<div class=\"atlas-frame-head\">";
-    body += fmt::format("<h2 class=\"atlas-frame-title\">{}</h2>", escape_html_(label));
-    body += fmt::format("<span class=\"pill\">frame {}</span>", i);
+    body += pluss::tils::OutputEngine::format("<h2 class=\"atlas-frame-title\">{}</h2>", escape_html_(label));
+    body += pluss::tils::OutputEngine::format("<span class=\"pill\">frame {}</span>", i);
     body += "</div>";
-    body += render_html_table_body_(frame, options, fmt::format("plussmic-table-{}", i));
+    body += render_html_table_body_(frame, options, pluss::tils::OutputEngine::format("plussmic-table-{}", i));
     body += "</section>";
   }
 
   return html_shell_(document_title_("Atlas", options),
-                     fmt::format("{} frames, {} cases, {} features", atlas.depth(), atlas.ncases(), atlas.nfeatures()),
+                     pluss::tils::OutputEngine::format("{} frames, {} cases, {} features", atlas.depth(), atlas.ncases(), atlas.nfeatures()),
                      body,
                      options);
 }
@@ -1792,26 +1792,26 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
 
   std::string body;
   body += "<div class=\"summary-grid\">";
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Class</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Class</div><div class=\"value\">{}</div></div>",
                       "pluss::table::DataFrame");
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Cases</div><div class=\"value\">{}</div></div>",
                       frame.ncases());
   body +=
-      fmt::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
+      pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Features</div><div class=\"value\">{}</div></div>",
                   frame.nfeatures());
-  body += fmt::format(
+  body += pluss::tils::OutputEngine::format(
       "<div class=\"summary-card\"><div class=\"label\">Case Range</div><div class=\"value\">{} <span class=\"muted\">to</span> {}</div></div>",
       escape_html_(first_case),
       escape_html_(last_case));
   const auto null_case_rows = frame.nfeatures() == 0
                                   ? std::int64_t{0}
                                   : frame.isnull().any(Axis::Case).sum().as_series().host<std::int64_t>().front();
-  body += fmt::format(
+  body += pluss::tils::OutputEngine::format(
       "<div class=\"summary-card\"><div class=\"label\">Null Case Rows</div><div class=\"value\">{}</div></div>",
       null_case_rows);
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">PTypes</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">PTypes</div><div class=\"value\">{}</div></div>",
                       escape_html_(dtype_summary_line(dtype_counts)));
-  body += fmt::format("<div class=\"summary-card\"><div class=\"label\">Memory</div><div class=\"value\">{}</div></div>",
+  body += pluss::tils::OutputEngine::format("<div class=\"summary-card\"><div class=\"label\">Memory</div><div class=\"value\">{}</div></div>",
                       escape_html_(human_bytes(memory_bytes)));
   body += "</div>";
 
@@ -1827,7 +1827,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
   for (std::size_t i = 0; i < names.size(); ++i) {
     const auto nn = non_null_count(cols[i]);
     const auto dtype = logical_dtype(cols[i]);
-    body += fmt::format(
+    body += pluss::tils::OutputEngine::format(
         "<tr><td class=\"num\" data-sort-value=\"{0}\">{0}</td><td class=\"sticky-left\" data-sort-value=\"{1}\">{2}</td><td class=\"num\" data-sort-value=\"{3}\">{3}</td><td data-sort-value=\"{4}\">{5}</td></tr>",
         i,
         escape_html_(names[i]),
@@ -1839,7 +1839,7 @@ std::string render_html_info_doc_(const DataFrame& frame, const DisplayOptions& 
 
   body += "</tbody></table></div></div>";
   return html_shell_(document_title_("DataFrame Info", options),
-                     fmt::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
+                     pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
                      body,
                      options);
 }
@@ -1957,7 +1957,7 @@ std::string render(const DataFrame& frame, const DisplayOptions& options) {
 
   std::string out = render_ascii_table(matrix, working, terminal_width);
   if (working.show_shape_footer) {
-    out += fmt::format("\n[{} cs x {} feat]", frame.ncases(), frame.nfeatures());
+    out += pluss::tils::OutputEngine::format("\n[{} cs x {} feat]", frame.ncases(), frame.nfeatures());
   }
   return out;
 }
@@ -1973,13 +1973,13 @@ std::string render_html(const DataFrame& frame, const DisplayOptions& options) {
   return render_html_table_(
       frame,
       document_title_("DataFrame", options),
-      fmt::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
+      pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(), frame.nfeatures()),
       options);
 }
 
 std::string render_html(const Slate& slate, const DisplayOptions& options) {
   const auto title = document_title_(slate.named() ? slate.name() : "Slate", options);
-  const auto subtitle = fmt::format("{} cases, dtype {}", slate.size(), slate.dtype());
+  const auto subtitle = pluss::tils::OutputEngine::format("{} cases, dtype {}", slate.size(), slate.dtype());
   return render_html_pre_(title, subtitle, render(slate, options), options);
 }
 
@@ -2017,10 +2017,10 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
                                   : frame.isnull().any(Axis::Case).sum().as_series().host<std::int64_t>().front();
   summary.rows = {
       {"Class", "pluss::table::DataFrame"},
-      {"Cases", fmt::format("{}", frame.ncases())},
-      {"Features", fmt::format("{}", frame.nfeatures())},
-      {"Case Range", fmt::format("{} -> {}", first_case, last_case)},
-      {"Null Case Rows", fmt::format("{}", null_case_rows)},
+      {"Cases", pluss::tils::OutputEngine::format("{}", frame.ncases())},
+      {"Features", pluss::tils::OutputEngine::format("{}", frame.nfeatures())},
+      {"Case Range", pluss::tils::OutputEngine::format("{} -> {}", first_case, last_case)},
+      {"Null Case Rows", pluss::tils::OutputEngine::format("{}", null_case_rows)},
       {"PTypes", dtype_summary_line(dtype_counts)},
       {"Memory", human_bytes(memory_bytes)},
   };
@@ -2035,9 +2035,9 @@ std::string render_info(const DataFrame& frame, const DisplayOptions& options) {
   auto push_detail_row = [&](std::size_t i) {
     const auto nn = non_null_count(cols[i]);
     details.rows.push_back({
-        fmt::format("{}", i),
+        pluss::tils::OutputEngine::format("{}", i),
         names[i],
-        fmt::format("{}", nn),
+        pluss::tils::OutputEngine::format("{}", nn),
         logical_dtype(cols[i]),
     });
   };
@@ -2067,7 +2067,7 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
   const auto term = detect_terminal();
   const auto effective = resolve_effective_options(options, term, false);
   std::vector<std::string> lines;
-  lines.push_back(fmt::format("Atlas(depth={}, rows={}, cols={})", atlas.depth(), atlas.ncases(), atlas.nfeatures()));
+  lines.push_back(pluss::tils::OutputEngine::format("Atlas(depth={}, rows={}, cols={})", atlas.depth(), atlas.ncases(), atlas.nfeatures()));
 
   const auto total = atlas.depth();
   const auto max_frames = std::max<std::int64_t>(2, effective.edge_rows + effective.tail_rows);
@@ -2105,9 +2105,9 @@ std::string render(const Atlas& atlas, const DisplayOptions& options) {
     }
 
     const auto idx = visible[i];
-    std::string label = fmt::format("frame[{}]", idx);
+    std::string label = pluss::tils::OutputEngine::format("frame[{}]", idx);
     if (display_axis0.has_value()) {
-      label += fmt::format(" case={}", slate_value_at(*display_axis0, idx));
+      label += pluss::tils::OutputEngine::format(" case={}", slate_value_at(*display_axis0, idx));
     }
     lines.push_back(label);
     lines.push_back(render(atlas.frame(idx), frame_opts));
@@ -2144,7 +2144,7 @@ void show(const DataFrame& frame, const DisplayOptions& options) {
             ? render_virtual_html_table_(
                   frame,
                   document_title_("DataFrame", render_opts),
-                  fmt::format("{} cases, {} features", frame.ncases(),
+                  pluss::tils::OutputEngine::format("{} cases, {} features", frame.ncases(),
                               frame.nfeatures()),
                   render_opts)
             : render_html(frame, render_opts);

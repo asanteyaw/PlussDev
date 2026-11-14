@@ -24,3 +24,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 
 - [`VarFit`](VarFit.md)
 - [`GrangerResult`](GrangerResult.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="FevdOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">FevdOptions</span>
+  </a>
+  <a class="next-link" href="GrangerResult.html">
+    <span class="label">Next</span>
+    <span class="title">GrangerResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

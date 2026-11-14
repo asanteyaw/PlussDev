@@ -261,3 +261,8 @@ adaptive_rho off, rho 0.005   4000        no          1.5e-03
 - **Reuse the factorisation.** When only `q` or the bounds change between solves, `qp::prepare` does the setup once.
 
 Where next: That completes the optimization guide. The API reference documents the solvers' types and options.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

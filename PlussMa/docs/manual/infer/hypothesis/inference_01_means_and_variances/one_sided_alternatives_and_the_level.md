@@ -30,7 +30,7 @@ int main() {
     hyp::TestOptions options;
     options.tail = tails[i];
     const auto r = hyp::ttest(a, 5.0, options);
-    out.writeln(names[i], " t", r.stat, " p", r.pvalue, " critical", r.critical, r.reject ? " -> reject" : " -> keep", " interval", r.ci.pull<double>());
+    out.writeln(names[i], " t", r.stat, " p", r.pvalue, " critical", r.critical, r.reject ? " -> reject" : " -> keep", " interval", r.ci.items<double>());
   }
 }
 ```
@@ -69,7 +69,7 @@ int main() {
     hyp::TestOptions options;
     options.alpha = alpha;
     const auto r = hyp::ttest(a, 5.0, options);
-    out.writeln("alpha", alpha, " p", r.pvalue, " |t|", std::fabs(r.stat), " critical", r.critical, r.reject ? " -> reject" : " -> keep", " interval", r.ci.pull<double>());
+    out.writeln("alpha", alpha, " p", r.pvalue, " |t|", std::fabs(r.stat), " critical", r.critical, r.reject ? " -> reject" : " -> keep", " interval", r.ci.items<double>());
   }
 }
 ```
@@ -142,3 +142,12 @@ With no shift the null hypothesis is true and the share of rejections is the **s
 - **Size is about the null; power is about the alternative.** A test that rarely rejects may be correctly sized and still useless if the sample is too small to find the effect you care about; with 20 observations a shift of 0.75 standard deviations is found 89% of the time, and a smaller one would often go undetected.
 
 Where next: [Chapter 2](../inference_02_ranks_distributions_and_tables.md) covers tests that do not assume normal data.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_known_standard_deviation_and_tests_of_variance.html">
+    <span class="label">Previous</span>
+    <span class="title">A known standard deviation, and tests of variances</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

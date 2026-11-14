@@ -1,0 +1,295 @@
+<!-- generated from demand_policy.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Demand policy
+
+[Back to Fluid 3: Storage and Operation](../fluid_03_storage_and_operation.md)
+
+A customer asks for a flow, but what they get depends on the pressure. When the pressure is high they get what they asked for; when the network is stressed, by a fire, a pump failure or a pipe burst, they get less, and at a leak the water leaves whatever anyone asked. `fluid::Options` chooses between two policies. The default holds every demand fixed, which is the right model while the network is healthy. The pressure-driven policy lets the delivered demand fall with the pressure, and emitters model leaks and sprinklers as flows that grow with the pressure. This page explains both, solves a stressed junction at the three degrees of stress and checks the delivered demand against the law, adds an emitter, and shows the mistakes the thresholds invite.
+
+## The mental model
+
+Under `DemandMode::Fixed` every junction delivers its full demand whatever the pressure, as in the previous chapters. This is a promise the network can break: when the demand is more than the pipes can carry at a decent pressure, the head falls below the ground, and the result is a negative pressure the solver reports without complaint.
+
+Under `DemandMode::Pressure` a junction's delivered demand follows the Wagner law, in terms of the pressure head `p`, the elevation above ground:
+
+```{math}
+d(p) = \begin{cases}
+0 & p \le p_{\min} \\
+D \left( \dfrac{p - p_{\min}}{p_{\text{full}} - p_{\min}} \right)^{\gamma} & p_{\min} < p < p_{\text{full}} \\
+D & p \ge p_{\text{full}}
+\end{cases}
+```
+
+with the requested demand `D`, the minimum pressure `p_min` below which nothing is delivered, the full pressure `p_full` above which the whole demand is, and an exponent `γ`. They are `Options::min_pressure`, `Options::full_pressure` and `Options::demand_exponent`, in metres of head, with the defaults `0`, `15` and `0.5`. The delivered demand is returned in `SteadyResult::demand`; the requested demand stays in the network. A negative demand is a source, and it is never throttled.
+
+An **emitter** is a second outflow at a junction, a leak or a sprinkler, that grows with the pressure:
+
+```{math}
+q_{\text{emit}} = C \max(p, 0)^{\epsilon} ,
+```
+
+with the coefficient `C` from `Net::nodes.emitter` and the exponent `ε` from `Options::emitter_exponent`, `0.5` by default. It is returned separately in `SteadyResult::emitter`, so ordinary delivery and loss can be told apart. Emitters work under either policy.
+
+## A starved junction
+
+The one-pipe network of the first page, a reservoir at `50` m feeding a junction at `5` m through `1` km of `0.30` m pipe, is asked for `0.2`, `0.4`, `0.6` and `1.0` m³/s of demand. A pipe of this size cannot deliver `1.0` m³/s at a positive pressure. The program solves each request under the pressure-driven policy, and recomputes the delivered demand from the solved pressure with the Wagner law.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net one_pipe(double demand, double emitter) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, demand});
+  net.nodes.head = vec({50.0, 49.0});
+  net.nodes.emitter = vec({0.0, emitter});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.30});
+  net.pipes.roughness = vec({1.0e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  fluid::Options pressure_driven;
+  pressure_driven.demand_mode = fluid::DemandMode::Pressure;
+  pressure_driven.min_pressure = 0.0;
+  pressure_driven.full_pressure = 15.0;
+  pressure_driven.demand_exponent = 0.5;
+
+  for (double demand : {0.2, 0.4, 0.6, 1.0}) {
+    const auto r = fluid::steady(fluid::network(one_pipe(demand, 0.0)), pressure_driven);
+    const double p = flat(r.head)[1] - 5.0, delivered = flat(r.demand)[1];
+    const double wagner = p <= 0.0 ? 0.0 : p >= 15.0 ? demand : demand * std::pow(p / 15.0, 0.5);
+    out.writeln("requested ", demand, ": pressure head ", p, " m, delivered ", delivered, ", Wagner law ", wagner, ", pipe flow ", flat(r.flow)[0]);
+  }
+}
+```
+
+Output
+
+```text
+requested 0.200000: pressure head 23.011199 m, delivered 0.200000, Wagner law 0.200000, pipe flow 0.200000
+requested 0.400000: pressure head 6.621629 m, delivered 0.265764, Wagner law 0.265764, pipe flow 0.265764
+requested 0.600000: pressure head 3.209615 m, delivered 0.277544, Wagner law 0.277544, pipe flow 0.277544
+requested 1.000000: pressure head 1.211716 m, delivered 0.284220, Wagner law 0.284220, pipe flow 0.284220
+```
+
+A request of `0.2` m³/s leaves a pressure head of `23.0` m, above the full pressure, and is delivered whole. Each larger request is delivered in part: `0.265764` of `0.4`, `0.277544` of `0.6` and `0.284220` of `1.0` at a pressure head of only `1.21` m. The delivered demand equals the Wagner law at the solved pressure to every digit, and equals the pipe flow, so continuity holds for what is delivered. The network settles at a flow of about `0.28` m³/s whatever is asked, which is the most the pipe can carry from this reservoir: it stops giving more water when the pressure falls, where the fixed policy kept demanding it at a pressure of `-4720` kPa.
+
+## Emitters
+
+A leak is a flow that nobody asked for. The junction below draws a fixed `0.02` m³/s and has an emitter of coefficient `0`, `0.002` and `0.01`. The program checks the emitter outflow against `C √p` at the solved pressure, and shows how the leak is added to what the pipe carries.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net one_pipe(double demand, double emitter) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, demand});
+  net.nodes.head = vec({50.0, 49.0});
+  net.nodes.emitter = vec({0.0, emitter});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.30});
+  net.pipes.roughness = vec({1.0e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  for (double c : {0.0, 0.002, 0.01}) {
+    const auto r = fluid::steady(fluid::network(one_pipe(0.02, c)));
+    const double p = flat(r.head)[1] - 5.0;
+    out.writeln("emitter coefficient ", c, ": pressure head ", p, ", ordinary demand ", flat(r.demand)[1], ", emitter outflow ", flat(r.emitter)[1], ", C sqrt(p) = ", c * std::sqrt(p), ", pipe flow ", flat(r.flow)[0]);
+  }
+}
+```
+
+Output
+
+```text
+emitter coefficient 0.000000: pressure head 44.725662, ordinary demand 0.020000, emitter outflow 0.000000, C sqrt(p) = 0.000000, pipe flow 0.020000
+emitter coefficient 0.002000: pressure head 44.292072, ordinary demand 0.020000, emitter outflow 0.013310, C sqrt(p) = 0.013310, pipe flow 0.033310
+emitter coefficient 0.010000: pressure head 40.911916, ordinary demand 0.020000, emitter outflow 0.063962, C sqrt(p) = 0.063962, pipe flow 0.083962
+```
+
+The emitter outflow equals `C √p` at the solved pressure: `0.013310` m³/s at `C = 0.002` and `0.063962` at `C = 0.01`, with the ordinary demand still `0.020000`. The pipe carries both, `0.033310` and `0.083962`, so the leak costs head and the pressure it leaks at falls: `44.73` m of pressure head without it, `40.91` m with the large one. A leak is a feedback: the more it loses, the lower its own pressure.
+
+## The thresholds
+
+The minimum and full pressures are the shape of the law, and they decide what a customer is left with. The same request of `0.6` m³/s is solved with a minimum pressure of `0` m and of `10` m (with the full pressure `15` m above each).
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net one_pipe(double demand) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, demand});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.30});
+  net.pipes.roughness = vec({1.0e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  for (double minimum : {0.0, 10.0}) {
+    fluid::Options options;
+    options.demand_mode = fluid::DemandMode::Pressure;
+    options.min_pressure = minimum;
+    options.full_pressure = minimum + 15.0;
+    const auto r = fluid::steady(fluid::network(one_pipe(0.6)), options);
+    out.writeln("minimum pressure ", minimum, " m, full pressure ", minimum + 15.0, " m: pressure head ", flat(r.head)[1] - 5.0, ", delivered ", flat(r.demand)[1]);
+  }
+  fluid::Options options;
+  options.demand_mode = fluid::DemandMode::Pressure;
+  const auto source = fluid::steady(fluid::network(one_pipe(-0.05)), options);
+  out.writeln("a source of 0.05 m3/s: delivered ", flat(source.demand)[1], ", junction head ", flat(source.head)[1]);
+}
+```
+
+Output
+
+```text
+minimum pressure 0.000000 m, full pressure 15.000000 m: pressure head 3.209615, delivered 0.277544
+minimum pressure 10.000000 m, full pressure 25.000000 m: pressure head 12.485326, delivered 0.244229
+a source of 0.05 m3/s: delivered -0.050000, junction head 51.521119
+```
+
+Raising the minimum pressure to `10` m means a tap needs more pressure before any water flows: the junction settles at `12.49` m of pressure head instead of `3.21`, and delivers `0.244229` m³/s instead of `0.277544`. A negative demand is a source: it is delivered whole, `-0.050000`, and raises the head above the reservoir's `50` m to `51.52` m.
+
+## Decisions
+
+- **Fixed or pressure-driven.** Use `Fixed` while every junction has a decent pressure, because it is the plain model. Use `Pressure` when the question is what a stressed network actually delivers, or when a fixed demand fails with a negative pressure.
+- **The thresholds.** Set `min_pressure` to the pressure below which taps stop running and `full_pressure` to the pressure that guarantees full service, both in metres of head; the exponent `0.5` is the orifice law and the usual default.
+- **Leaks.** Model a leak as an emitter with the coefficient that matches a measured loss at a known pressure: `C = q / √p`. Emitters work under either policy.
+- **Reading the result.** Compare `demand` with the requested demand to see the shortfall, and read `emitter` for the leakage; the sum of the two is what the pipes carried out of the junction.
+
+## Pitfalls
+
+Three mistakes. The thresholds are inverted, so that the full pressure is below the minimum. The exponent is set to zero, which would make the delivered demand jump from nothing to everything. An emitter is written at the reservoir, which supplies whatever is needed and cannot leak.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <functional>
+#include <iostream>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+static fluid::Net one_pipe(double demand, double emitter) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, demand});
+  net.nodes.head = vec({50.0, 49.0});
+  net.nodes.emitter = vec({0.0, emitter});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.30});
+  net.pipes.roughness = vec({1.0e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+static void attempt(const char *label, const std::function<void()> &call) {
+  try {
+    call();
+    std::cout << label << ": solved\n";
+  } catch (const std::exception &e) {
+    std::cout << label << ": " << e.what() << "\n";
+  }
+}
+
+int main() {
+  attempt("full pressure below the minimum", [] {
+    fluid::Options options;
+    options.demand_mode = fluid::DemandMode::Pressure;
+    options.min_pressure = 20.0;
+    options.full_pressure = 10.0;
+    (void)fluid::steady(fluid::network(one_pipe(0.1, 0.0)), options);
+  });
+  attempt("demand exponent zero", [] {
+    fluid::Options options;
+    options.demand_mode = fluid::DemandMode::Pressure;
+    options.demand_exponent = 0.0;
+    (void)fluid::steady(fluid::network(one_pipe(0.1, 0.0)), options);
+  });
+  attempt("an emitter at the reservoir", [] {
+    auto net = one_pipe(0.1, 0.0);
+    net.nodes.emitter = vec({0.01, 0.0});
+    (void)fluid::network(net);
+  });
+}
+```
+
+Output
+
+```text
+full pressure below the minimum: eng::fluid::steady: pressure bounds, exponents, tolerances, gradient floor, and iteration limit are invalid
+demand exponent zero: eng::fluid::steady: pressure bounds, exponents, tolerances, gradient floor, and iteration limit are invalid
+an emitter at the reservoir: eng::fluid::network: reservoir and tank demand/emitter lanes must be zero
+```
+
+The first two are refused when the solve starts, with one message that names every option the check covers: the pressure bounds, the exponents, the tolerances, the gradient floor and the iteration limit. Look at those first if a solve is refused before it begins. The third is refused when the network is compiled, since a reservoir and a tank take their water from an unlimited source and cannot leak at a pressure.
+
+Reference: [`Options`](../../../../api/eng/fluid/steady/Options.md), [`DemandMode`](../../../../api/eng/fluid/steady/DemandMode.md), [`Nodes`](../../../../api/eng/fluid/model/Nodes.md), [`SteadyResult`](../../../../api/eng/fluid/steady/SteadyResult.md).
+
+Where next: [Tanks and patterns](tanks_and_patterns.md) lets the demands and the water levels change with the hour.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="tanks_and_patterns.html">
+    <span class="label">Next</span>
+    <span class="title">Tanks and patterns</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

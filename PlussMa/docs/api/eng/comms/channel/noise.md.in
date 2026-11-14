@@ -1,0 +1,67 @@
+# `comms::noise`
+
+Additive white Gaussian noise.
+
+## Signature
+
+```cpp
+pluss::Series comms::noise(const pluss::Series& signal, double noise_variance, std::uint64_t seed);
+```
+
+## What It Does
+
+Adds zero-mean Gaussian noise of total variance `noise_variance` to every sample. For a complex signal the variance is split equally between the real and imaginary parts, so `E|n|^2 = noise_variance`; for a real signal it is the variance of the noise.
+
+## Parameters
+
+`signal`
+: A real floating or complex array of any shape.
+
+`noise_variance`
+: The variance, non-negative; zero adds nothing.
+
+`seed`
+: The seed of the noise generator; the same seed gives the same noise.
+
+## Returns
+
+An array of the shape and dtype of `signal`.
+
+## Errors
+
+Throws `pluss::Error` for an undefined or integer `signal` or a negative or non-finite `noise_variance`.
+
+## Interpretation and Use
+
+Use `n0` to turn an Eb/N0 into the variance. Noise is reproducible from the seed; use different seeds for independent runs.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The variance and its split.
+
+@@example Eng/api/comms_awgn_variance.cpp@@
+
+### Example 2
+
+Seeds give reproducible noise.
+
+@@example Eng/api/comms_awgn_seed.cpp@@
+
+### Example 3
+
+Real signals.
+
+@@example Eng/api/comms_awgn_real.cpp@@
+
+### Example 4
+
+Rejected arguments.
+
+@@example Eng/api/comms_awgn_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

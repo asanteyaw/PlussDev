@@ -1,0 +1,463 @@
+<!-- generated from dc_operating_point.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# DC operating point
+
+[Back to Circuits 1: Linear Networks](../circuit_01_linear_networks.md)
+
+With constant sources, a circuit settles to a steady state: every node has a fixed voltage and every branch a fixed current. `circuit::op` solves for it. In the steady state a capacitor carries no current (it is an open circuit) and an inductor has no voltage across it (it is a short circuit), so the circuit reduces to resistors and sources, and the solution is a single linear solve. This page works through circuits with known answers: a divider, a bridge, current sources, controlled sources and an op amp, and shows how to read and check the result.
+
+## The mental model
+
+`op(circuit)` returns a `Result` whose members are arrays with the same leading batch axes as the circuit:
+
+| Member | Shape (single circuit) | Meaning |
+|---|---|---|
+| `voltage` | `[nodes]` | the node voltages; entry `0` is the ground, always zero |
+| `source_current` | `[voltage sources]` | the current through each voltage source, positive terminal to negative |
+| `inductor_current` | `[inductors]` | the current through each inductor, positive to negative |
+| `vccs_current` | `[VCCS elements]` | the current each VCCS carries, positive to negative |
+| `vcvs_current` | `[VCVS elements]` | the current through each VCVS, positive to negative |
+| `amp_current` | `[amps]` | the current each op amp supplies from its output node to its reference node |
+| `residual` | batch shape | the largest error of the solved equations, a check on the solution |
+
+A group with no elements gives an axis of length zero. Currents follow the convention of the [previous page](describing_a_circuit.md): from the positive terminal to the negative terminal through the element, so a source that is delivering power shows a negative current.
+
+## A voltage divider
+
+A 10 V source across `1 kohm` and `3 kohm` in series: the current is `10 / 4000 = 2.5 mA`, the voltage at the middle node is `10 * 3000 / 4000 = 7.5 V`. The program solves it and prints every member of the result.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({10.0})};
+  net.resistors = {{1, 2}, {2, 0}, vec({1000.0, 3000.0})};
+  const auto result = ckt::op(ckt::make(net));
+
+  out.writeln("node voltages ", flat(result.voltage));
+  out.writeln("source current", flat(result.source_current), " (negative: the source delivers 2.5 mA)");
+  out.writeln("residual      ", result.residual.item<double>());
+  out.writeln("axes of the empty groups: inductors", result.inductor_current.sizes(), " VCCS", result.vccs_current.sizes(), " VCVS", result.vcvs_current.sizes(), " amps", result.amp_current.sizes());
+}
+```
+
+Output
+
+```text
+node voltages  [0.000000, 10.000000, 7.500000]
+source current [-0.002500]  (negative: the source delivers 2.5 mA)
+residual       0.000000
+axes of the empty groups: inductors [0]  VCCS [0]  VCVS [0]  amps [0]
+```
+
+The middle node is at `7.5 V`, and the source current is `-0.0025 A`. The residual is zero to the printed digits.
+
+## Checking the solution: power balance
+
+The power taken by the resistors must equal the power delivered by the source. With the voltages and the source current from the result, the program computes both: the resistors dissipate `(10 - 7.5)^2 / 1000 + 7.5^2 / 3000 = 0.00625 + 0.01875 = 0.025 W`, and the source delivers `10 V * 2.5 mA = 0.025 W`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({10.0})};
+  net.resistors = {{1, 2}, {2, 0}, vec({1000.0, 3000.0})};
+  const auto result = ckt::op(ckt::make(net));
+  const std::vector<double> v = flat(result.voltage);
+
+  const double dissipated = (v[1] - v[2]) * (v[1] - v[2]) / 1000.0 + v[2] * v[2] / 3000.0;
+  const double delivered = -10.0 * flat(result.source_current)[0];
+  out.writeln("power dissipated in the resistors", dissipated);
+  out.writeln("power delivered by the source    ", delivered);
+}
+```
+
+Output
+
+```text
+power dissipated in the resistors 0.025000
+power delivered by the source     0.025000
+```
+
+## A current source
+
+A current source of 2 mA into a `1 kohm` resistor to ground gives `2 V`. Which way the current goes depends on the order of the nodes: with `positive = 0` and `negative = 1` the source carries current from node 0 to node 1, injecting it into node 1, and the voltage is `+2 V`; reversing the nodes gives `-2 V`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ckt::Net into;
+  into.nodes = 2;
+  into.current_sources = {{0}, {1}, vec({0.002})};
+  into.resistors = {{1}, {0}, vec({1000.0})};
+  ckt::Net out_of = into;
+  out_of.current_sources = {{1}, {0}, vec({0.002})};
+
+  out.writeln("positive = 0, negative = 1: V1 =", flat(ckt::op(ckt::make(into)).voltage)[1]);
+  out.writeln("positive = 1, negative = 0: V1 =", flat(ckt::op(ckt::make(out_of)).voltage)[1]);
+}
+```
+
+Output
+
+```text
+positive = 0, negative = 1: V1 = 2.0000
+positive = 1, negative = 0: V1 = -2.0000
+```
+
+## A Wheatstone bridge
+
+Two dividers with a bridge resistor between their midpoints. When the ratios match (`100 / 200 = 300 / 600`) the midpoints are at the same voltage and the bridge resistor carries no current: both are at `10 * 200 / 300 = 6.667 V`. Changing one resistor unbalances it. The program solves the balanced bridge and a bridge with the lower right resistor changed to `500 ohm`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net bridge;
+  bridge.nodes = 4;
+  bridge.voltage_sources = {{1}, {0}, vec({10.0})};
+  bridge.resistors = {{1, 2, 1, 3, 2}, {2, 0, 3, 0, 3}, vec({100.0, 200.0, 300.0, 600.0, 50.0})};
+  const auto balanced = flat(ckt::op(ckt::make(bridge)).voltage);
+  out.writeln("balanced:   V2", balanced[2], " V3", balanced[3], " difference", balanced[2] - balanced[3]);
+
+  bridge.resistors.value = vec({100.0, 200.0, 300.0, 500.0, 50.0});
+  const auto skewed = flat(ckt::op(ckt::make(bridge)).voltage);
+  out.writeln("unbalanced: V2", skewed[2], " V3", skewed[3], " difference", skewed[2] - skewed[3]);
+}
+```
+
+Output
+
+```text
+balanced:   V2 6.666667  V3 6.666667  difference 0.000000
+unbalanced: V2 6.575342  V3 6.506849  difference 0.068493
+```
+
+## Inductors and capacitors at DC
+
+At DC an inductor is a wire and a capacitor is a break. A 5 V source drives an inductor in series with a `100 ohm` resistor, and a capacitor sits across the resistor. The inductor's voltage is zero, so node 2 is at `5 V`; the capacitor draws no current, so the whole `5 / 100 = 50 mA` flows through the inductor and the source.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({5.0})};
+  net.inductors = {{1}, {2}, vec({0.01})};
+  net.resistors = {{2}, {0}, vec({100.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  const auto result = ckt::op(ckt::make(net));
+  out.writeln("node voltages   ", flat(result.voltage));
+  out.writeln("inductor current", flat(result.inductor_current));
+  out.writeln("source current  ", flat(result.source_current));
+}
+```
+
+Output
+
+```text
+node voltages    [0.000000, 5.000000, 5.000000]
+inductor current [0.050000]
+source current   [-0.050000]
+```
+
+## Controlled sources
+
+A **voltage-controlled voltage source** with gain 5, controlled by the 2 V at node 1 and driving a `1 kohm` load from node 2, gives `10 V` at node 2 and sources `10 mA` (shown as `-0.01`, a delivering source). A **voltage-controlled current source** with transconductance `2 mS`, controlled by the 1 V at node 1 and feeding a `1 kohm` resistor from node 2 to ground, carries `2 mA` from its positive node 2 to ground: it draws that current out of node 2, so node 2 is at `-2 V`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net amplifier;
+  amplifier.nodes = 3;
+  amplifier.voltage_sources = {{1}, {0}, vec({2.0})};
+  amplifier.resistors = {{2}, {0}, vec({1000.0})};
+  amplifier.vcvs = {{2}, {0}, {1}, {0}, vec({5.0})};
+  const auto voltage_gain = ckt::op(ckt::make(amplifier));
+  out.writeln("VCVS, gain 5: node voltages", flat(voltage_gain.voltage), " VCVS current", flat(voltage_gain.vcvs_current));
+
+  ckt::Net transconductor;
+  transconductor.nodes = 3;
+  transconductor.voltage_sources = {{1}, {0}, vec({1.0})};
+  transconductor.resistors = {{2}, {0}, vec({1000.0})};
+  transconductor.vccs = {{2}, {0}, {1}, {0}, vec({0.002})};
+  const auto transconductance = ckt::op(ckt::make(transconductor));
+  out.writeln("VCCS, 2 mS : node voltages", flat(transconductance.voltage), " VCCS current", flat(transconductance.vccs_current));
+}
+```
+
+Output
+
+```text
+VCVS, gain 5: node voltages [0.000000, 2.000000, 10.000000]  VCVS current [-0.010000]
+VCCS, 2 mS : node voltages [0.000000, 1.000000, -2.000000]  VCCS current [0.002000]
+```
+
+## An op amp
+
+An ideal op amp forces its two inputs to the same voltage. In the **inverting amplifier** the input drives the amp's negative input through `Rin = 1 kohm`, a feedback resistor `Rf = 10 kohm` runs from the output back to that input, and the positive input is at ground. The negative input is therefore a virtual ground, and the gain is `-Rf / Rin = -10`: a 0.5 V input gives `-5 V` at the output. The `-0.000000` at node 2 is zero to rounding. The `amp_current` is what the amp supplies at its output, here the `0.5 mA` that flows through `Rin` and `Rf`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net net;
+  net.nodes = 4;
+  net.voltage_sources = {{1}, {0}, vec({0.5})};
+  net.resistors = {{1, 2}, {2, 3}, vec({1000.0, 10000.0})};
+  net.amps = {{3}, {0}, {0}, {2}};   // output 3, reference 0, positive input 0, negative input 2
+  const auto result = ckt::op(ckt::make(net));
+  out.writeln("node voltages", flat(result.voltage), " (node 2 is the virtual ground; node 3 the output)");
+  out.writeln("op-amp current", flat(result.amp_current));
+}
+```
+
+Output
+
+```text
+node voltages [0.000000, 0.500000, -0.000000, -5.000000]  (node 2 is the virtual ground; node 3 the output)
+op-amp current [0.000500]
+```
+
+## A sweep
+
+With a batched resistor value the circuit is solved for every member at once, and each result gains the batch axis in front. The program sweeps the lower resistor of the divider over `1 k`, `2 k` and `4 k`: the middle node is at `5 V`, `6.667 V` and `8 V`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({10.0})};
+  net.resistors = {{1, 2}, {2, 0}, vec({1000, 1000, 1000, 2000, 1000, 4000}).reshape({3, 2})};
+  const auto result = ckt::op(ckt::make(net));
+  out.writeln("voltage shape", result.voltage.sizes(), " source_current shape", result.source_current.sizes(), " residual shape", result.residual.sizes());
+  out.writeln("middle node over the sweep", result.voltage.select(1, 2).items<double>());
+}
+```
+
+Output
+
+```text
+voltage shape [3, 3]  source_current shape [3, 1]  residual shape [3]
+middle node over the sweep [5.00000, 6.66667, 8.00000]
+```
+
+## When the circuit has no solution
+
+Two kinds of mistake make the equations singular. A node that is not connected to ground by any path has no defined voltage; and two ideal voltage sources (or an ideal source and an inductor) forced across the same pair of nodes with different values contradict each other. `op` reports both with a message that lists the likely causes. The program shows a floating node and two sources of different voltage on the same nodes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  report([&] {
+    ckt::Net floating;
+    floating.nodes = 3;
+    floating.resistors = {{1}, {0}, vec({1.0})};   // node 2 is connected to nothing
+    (void)ckt::op(ckt::make(floating));
+  });
+  report([&] {
+    ckt::Net clash;
+    clash.nodes = 3;
+    clash.voltage_sources = {{1, 1}, {0, 0}, vec({1.0, 2.0})};   // 1 V and 2 V across the same nodes
+    clash.resistors = {{1}, {2}, vec({1.0})};
+    (void)ckt::op(ckt::make(clash));
+  });
+}
+```
+
+Output
+
+```text
+eng::circuit::op: the circuit equations are singular; check for a node with no path to ground, and for a loop of ideal voltage sources and inductors (or two sources fixing the same voltage). Solver message: subsp::math::linalg::lu_solve: singular matrix
+eng::circuit::op: the circuit equations are singular; check for a node with no path to ground, and for a loop of ideal voltage sources and inductors (or two sources fixing the same voltage). Solver message: subsp::math::linalg::lu_solve: singular matrix
+```
+
+## Decisions
+
+- **DC values only:** `op`. If a capacitor or an inductor matters (a time constant, a filter, a resonance), you want [AC analysis](ac_analysis.md).
+- **Many values of a component:** one batched call, not a loop.
+- **Checking a result:** read `residual` (it should be zero to rounding), compare a power balance, and check a hand value for a simple sub-circuit.
+
+## Pitfalls
+
+The program makes three mistakes on small circuits: taking the power delivered by a source from the sign of its current, expecting a positive transconductance to raise a node voltage, and connecting two ideal voltage sources to the same pair of nodes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <functional>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static void report(const char *what, const std::function<void()> &call) {
+  try {
+    call();
+    std::cout << what << ": solved\n";
+  } catch (const pluss::Error &e) {
+    std::cout << what << ": " << e.message() << "\n";
+  }
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+
+  // 1. a 10 V source across 1 kohm: it delivers 0.1 W, but its current is negative
+  ckt::Net divider;
+  divider.nodes = 2;
+  divider.voltage_sources = {{1}, {0}, vec({10.0})};
+  divider.resistors = {{1}, {0}, vec({1000.0})};
+  const auto r = ckt::op(ckt::make(divider));
+  out.writeln("source current (A): ", flat(r.source_current)[0], "   V times I: ", 10.0 * flat(r.source_current)[0], " W   (negative: the source delivers power)");
+
+  // 2. a VCCS with positive gain and a positive control voltage drives its output node negative when it feeds a load to ground
+  ckt::Net amplifier;
+  amplifier.nodes = 3;
+  amplifier.voltage_sources = {{1}, {0}, vec({1.0})};
+  amplifier.resistors = {{2}, {0}, vec({1000.0})};
+  amplifier.vccs = {{2}, {0}, {1}, {0}, vec({0.002})};   // output from node 2 to ground, controlled by the voltage at node 1
+  out.writeln("VCCS output node voltage for a positive gain and control: ", flat(ckt::op(ckt::make(amplifier)).voltage)[2], " V");
+
+  // 3. two ideal voltage sources across the same nodes contradict each other
+  ckt::Net clash;
+  clash.nodes = 2;
+  clash.voltage_sources = {{1, 1}, {0, 0}, vec({1.0, 2.0})};
+  clash.resistors = {{1}, {0}, vec({1000.0})};
+  report("1 V and 2 V across the same nodes", [&] { (void)ckt::op(ckt::make(clash)); });
+  // a small series resistance resolves the conflict: the sources now share the current
+  ckt::Net resolved;
+  resolved.nodes = 4;
+  resolved.voltage_sources = {{1, 2}, {0, 0}, vec({1.0, 2.0})};
+  resolved.resistors = {{1, 2, 3}, {3, 3, 0}, vec({0.01, 0.01, 1000.0})};
+  const auto s = ckt::op(ckt::make(resolved));
+  out.writeln("with 10 mohm in series with each source, the node they feed sits at ", flat(s.voltage)[3], " V and the sources carry ", flat(s.source_current)[0], " A and ", flat(s.source_current)[1], " A");
+}
+```
+
+Output
+
+```text
+source current (A): -0.01000   V times I: -0.10000 W   (negative: the source delivers power)
+VCCS output node voltage for a positive gain and control: -2.00000 V
+1 V and 2 V across the same nodes: eng::circuit::op: the circuit equations are singular; check for a node with no path to ground, and for a loop of ideal voltage sources and inductors (or two sources fixing the same voltage). Solver message: subsp::math::linalg::lu_solve: singular matrix
+with 10 mohm in series with each source, the node they feed sits at 1.49999 V and the sources carry 49.99925 A and -50.00075 A
+```
+
+A source that delivers power has a negative current: the product `V * I` is `-0.1 W`, and the power delivered is its absolute value. The VCCS draws its current out of its positive node, so with a load to ground the output node goes negative, `-2 V` here, and the gain of an amplifier built this way has the opposite sign to what the orientation might suggest. Two ideal sources across the same nodes cannot both be satisfied and the solve is refused with an explanatory error; giving each source a small series resistance makes the circuit solvable, and the answer is what contradictory ideal sources do in reality: a large current, here `50 A`, circulates between the two through their small resistances, while the node they feed sits near the average, `1.5 V`.
+
+Reference: [`Net`](../../../../api/eng/circuit/model/Net.md), [`op`](../../../../api/eng/circuit/analysis/op.md), [`make`](../../../../api/eng/circuit/model/make.md).
+
+Where next: [AC analysis](ac_analysis.md) finds the response of the same circuits to a sinusoidal source at each frequency.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="describing_a_circuit.html">
+    <span class="label">Previous</span>
+    <span class="title">Describing a circuit</span>
+  </a>
+  <a class="next-link" href="ac_analysis.html">
+    <span class="label">Next</span>
+    <span class="title">AC analysis</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

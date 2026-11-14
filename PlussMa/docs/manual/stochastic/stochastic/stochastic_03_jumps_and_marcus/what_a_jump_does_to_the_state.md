@@ -43,3 +43,16 @@ y = 0.500000, z = -2.000000:  additive -1.500000 (-1.500000)  multiplicative 0.0
 y = 0.900000, z = 3.000000:  additive 3.900000 (3.900000)  multiplicative 18.076951 (18.076983)  logistic 0.994499 (0.994499)
 ```
 Every row matches the closed form. The additive flow adds `z`, and the logistic flow never leaves (0, 1): from 0.9 with `z = 3` it ends at 0.994499. The flow is followed by a Runge-Kutta scheme with 32 steps by default; the multiplicative jump from 0.9 with `z = 3` is 18.076951 against the exact 18.076983, and the `flow_steps` option raises the accuracy when the jumps are large.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_marcus_integral.html">
+    <span class="label">Previous</span>
+    <span class="title">The Marcus integral</span>
+  </a>
+  <a class="next-link" href="the_marcus_differential.html">
+    <span class="label">Next</span>
+    <span class="title">The Marcus differential</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

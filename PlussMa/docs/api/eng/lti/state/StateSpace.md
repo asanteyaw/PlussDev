@@ -63,7 +63,7 @@ Construct and inspect a second-order continuous state-space model.
 
 #include <iostream>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -101,7 +101,7 @@ Compare energy Gramians across continuous and discrete timebases.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -142,7 +142,7 @@ Exercise matrix-shape and sample-time validation.
 #include <exception>
 #include <string>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -180,10 +180,6 @@ negative sample time rejected = eng::lti::state: sample_time must be finite and 
 
 See the [State space](../state.md) family page for matrix shapes, batching, and analysis guidance.
 
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="Gram.html">
@@ -192,3 +188,7 @@ See the [State space](../state.md) family page for matrix shapes, batching, and 
   </a>
 </div>
 <!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

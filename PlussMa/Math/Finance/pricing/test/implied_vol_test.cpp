@@ -34,23 +34,23 @@ int main() {
                                   {prc::Put, 100, 70, 0.5, 0.45},
                                   {prc::Put, 100, 60, 0.1, 0.12}};
     for (const auto& c : cases) {
-      const double price = prc::black_scholes_price(c.type, c.spot, c.strike, rate, dividend, c.maturity, c.vol);
+      const double price = prc::detail::black_scholes_price(c.type, c.spot, c.strike, rate, dividend, c.maturity, c.vol);
       for (auto method : {prc::Auto, prc::Newton, prc::Bisection, prc::Secant, prc::Brent}) {
         prc::ImpliedVolOptions options;
         options.method = method;
-        const double iv = prc::implied_vol(c.type, price, c.spot, c.strike, rate, dividend, c.maturity, options);
+        const double iv = prc::detail::implied_vol(c.type, price, c.spot, c.strike, rate, dividend, c.maturity, options);
         expect(std::abs(iv - c.vol) < 1e-6, "implied vol recovers the volatility of the price for every method");
       }
     }
 
     // Brent's method converges superlinearly: it needs a handful of iterations, far fewer than bisection.
-    const double price = prc::black_scholes_price(prc::Call, 100.0, 110.0, rate, 0.0, 0.5, 0.35);
+    const double price = prc::detail::black_scholes_price(prc::Call, 100.0, 110.0, rate, 0.0, 0.5, 0.35);
     auto iterations_needed = [&](prc::ImpliedVolMethod method) {
       for (int limit = 1; limit <= 200; ++limit) {
         prc::ImpliedVolOptions options;
         options.method = method;
         options.max_iterations = limit;
-        if (std::isfinite(prc::implied_vol(prc::Call, price, 100.0, 110.0, rate, 0.0, 0.5, options))) {
+        if (std::isfinite(prc::detail::implied_vol(prc::Call, price, 100.0, 110.0, rate, 0.0, 0.5, options))) {
           return limit;
         }
       }
@@ -64,12 +64,12 @@ int main() {
     prc::ImpliedVolOptions one;
     one.method = prc::Bisection;
     one.max_iterations = 1;
-    expect(std::isnan(prc::implied_vol(prc::Call, price, 100.0, 110.0, rate, 0.0, 0.5, one)), "an unconverged bisection is NaN");
+    expect(std::isnan(prc::detail::implied_vol(prc::Call, price, 100.0, 110.0, rate, 0.0, 0.5, one)), "an unconverged bisection is NaN");
 
     // No-arbitrage violations and invalid inputs are NaN.
-    expect(std::isnan(prc::implied_vol(prc::Call, 1.0, 100.0, 100.0, rate, 0.0, 1.0)), "below the intrinsic value is NaN");
-    expect(std::isnan(prc::implied_vol(prc::Call, 120.0, 100.0, 100.0, rate, 0.0, 1.0)), "above the spot is NaN");
-    expect(std::isnan(prc::implied_vol(prc::Call, 9.0, 100.0, 100.0, rate, 0.0, 0.0)), "zero maturity is NaN");
+    expect(std::isnan(prc::detail::implied_vol(prc::Call, 1.0, 100.0, 100.0, rate, 0.0, 1.0)), "below the intrinsic value is NaN");
+    expect(std::isnan(prc::detail::implied_vol(prc::Call, 120.0, 100.0, 100.0, rate, 0.0, 1.0)), "above the spot is NaN");
+    expect(std::isnan(prc::detail::implied_vol(prc::Call, 9.0, 100.0, 100.0, rate, 0.0, 0.0)), "zero maturity is NaN");
 
     std::cout << "implied_vol_test passed\n";
     return 0;

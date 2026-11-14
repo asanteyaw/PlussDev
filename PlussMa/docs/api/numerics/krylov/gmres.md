@@ -23,7 +23,7 @@ The method stores one basis vector per iteration, so it is **restarted** every `
 ## Parameters
 
 `Apply &&apply`
-: `Series -> Series`: the product `A x`.
+: `Series (Series)`: the product `A x`.
 
 `const pluss::Series &rhs`
 : Real or complex right-hand side; leading axes are lanes.

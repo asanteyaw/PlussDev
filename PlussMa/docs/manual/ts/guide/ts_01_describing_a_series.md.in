@@ -56,4 +56,13 @@ Because ADF and KPSS have opposite nulls, use both: a stationary series should r
 4. Check squared residuals for ARCH effects before trusting a constant variance.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ts_01_describing_a_series/the_transforms
+ts_01_describing_a_series/acf_and_pacf
+ts_01_describing_a_series/white_noise_unit_roots_stationarity
+ts_01_describing_a_series/volatility_clustering
+```
 <!-- apiref:toctree:end -->

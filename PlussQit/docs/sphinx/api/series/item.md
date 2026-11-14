@@ -23,7 +23,7 @@ number, or argument to an API that accepts a native scalar rather than a
 
 The precondition is deliberately about rank, not merely element count. Shape
 `[]` is a scalar and may be extracted. Shapes `[1]`, `[1,1]`, and higher-rank
-singletons remain arrays and are rejected. Use [`pull()`](pull.md) for a 1-D
+singletons remain arrays and are rejected. Use [`items()`](items.md) for a 1-D
 Series or [`host()`](host.md) for a rank-aware host representation.
 
 The typed overload, `item<T>()`, converts the value to the requested C++ type.
@@ -73,7 +73,7 @@ as the corresponding host materialization.
 ```cpp
 const auto singleton = pluss::make_series({42.0});
 std::cout << "dim=" << singleton.dim()
-          << " values=" << singleton.pull<double>().front() << '\n';
+          << " values=" << singleton.items<double>().front() << '\n';
 
 try {
   (void)singleton.item<double>();
@@ -86,7 +86,7 @@ try {
 
 ```text
 dim=1 values=42
-Series::item<T>(): expected a rank-zero Series
+Series::item<T>(): expected a rank-zero Series, got a rank-1 Series (shape [1]). Use items<T>() to read a rank-one Series as a std::vector<T>.
 ```
 
 The one-element vector is intentionally not collapsed into a scalar. This
@@ -161,16 +161,17 @@ try {
 #### Output
 
 ```text
-Series::item<T>(): expected a rank-zero Series
+Series::item<T>(): expected a rank-zero Series, got a rank-1 Series (shape [2]). Use items<T>() to read a rank-one Series as a std::vector<T>.
 ```
 
-Reduce or select explicitly before extraction. The failure protects code from
+The message names the call that fits the receiver's rank: `items<T>()` for a rank-one
+Series, `host<T>()` for rank two and above. Reduce or select explicitly before extraction. The failure protects code from
 silently reading only the first lane of a larger result.
 
 ## See Also
 
 - [`dim()`](dim.md) reports whether the receiver is rank zero.
-- [`pull()`](pull.md) exports a rank-one Series as `std::vector<T>`.
+- [`items()`](items.md) exports a rank-one Series as `std::vector<T>`.
 - [`host()`](host.md) exports any rank without collapsing its structure.
 - [`select()`](select.md) chooses one lane while remaining inside Series.
 - [`tensor()`](tensor.md) provides the external tensor interoperability

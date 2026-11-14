@@ -82,16 +82,16 @@ int main() {
   const std::vector<double> params = {0.0, 1.3, 2.5};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::Gamma, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gamma, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Gamma, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Gamma, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::Gamma, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Gamma, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -131,7 +131,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::Gamma, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({1.0, 6.0}, f64);
-  const auto c = distr::cdf(dst::Gamma, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Gamma, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Gamma, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 1.0).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean());
@@ -172,16 +172,16 @@ int main() {
   const auto x = pluss::make_series({0.25, 1.0, 2.0, 4.0, 8.0, 14.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 0.8:";
-  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 0.8}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 0.8}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 2.5:";
-  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 2.5}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 2.5}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 8  :";
-  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 8.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gamma, x, {0.0, 1.3, 8.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -243,3 +243,16 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`Lognormal`](../continuous_positive/Lognormal.md)
 - [`InverseGaussian`](../continuous_positive/InverseGaussian.md)
 - [`distr::Gamma`](../object_based/Gamma.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="FNoncentral.html">
+    <span class="label">Previous</span>
+    <span class="title">FNoncentral</span>
+  </a>
+  <a class="next-link" href="Gig.html">
+    <span class="label">Next</span>
+    <span class="title">Gig</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

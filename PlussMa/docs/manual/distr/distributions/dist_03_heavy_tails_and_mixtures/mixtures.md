@@ -235,3 +235,12 @@ All four starts reach the same maximum, a log-likelihood of −1211.702 with the
 - **Read the weights' standard errors with their constraint in mind.** They sum to one, so for two components they are equal.
 
 That completes the distributions guide. The API reference documents every family and method.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="heavy_tails.html">
+    <span class="label">Previous</span>
+    <span class="title">Heavy tails</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

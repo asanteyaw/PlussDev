@@ -154,3 +154,12 @@ From the calm date (a one-step variance of 0.35) the forecast climbs towards the
 - **Check the fit.** A fitted GARCH is only useful if the standardised residuals no longer show clustering: see [Checking the fit](checking_the_fit.md).
 
 Where next: [Asymmetric responses](asymmetric_responses.md) allows bad news to move volatility more than good news.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="asymmetric_responses.html">
+    <span class="label">Next</span>
+    <span class="title">Asymmetric responses</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

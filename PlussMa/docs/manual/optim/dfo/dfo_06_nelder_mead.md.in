@@ -54,4 +54,10 @@ The facade's `DfoOptions::nelder_mead` holds the same `NelderMeadConfig`, so eve
 5. Beyond about ten variables, or on noisy objectives, prefer a population or mesh method (Chapter 2).
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_06_nelder_mead/nelder_mead_in_practice
+```
 <!-- apiref:toctree:end -->

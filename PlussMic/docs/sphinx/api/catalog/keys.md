@@ -194,8 +194,7 @@ multi: Catalog::keys: unknown key 'nope'
 
 - [`Catalog::has`](has.md): check whether a key exists before selecting it.
 - [`Catalog::drop`](drop.md): remove names instead of projecting them.
-- [`Catalog::at`](at.md) / [`Catalog::get`](get.md): other single-stream
-  extraction paths.
+- [`Catalog::get`](get.md): the non-throwing single-stream extraction path.
 - [`Catalog::select`](select.md): static row-wise conditional choose between
   whole catalogs.
 

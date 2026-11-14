@@ -23,7 +23,7 @@ int main() {
     ode::OdeOptions o;
     o.steps = steps;
     const auto r = ode::fluxa(decay, vec({1.0}), 0.0, 4.0, pluss::series::undefined(), o);
-    const double y = r.y_final.item<double>();
+    const double y = r.y_final.squeeze().item<double>();
     const double err = std::abs(y - exact);
     std::cout << std::left << std::setw(8) << steps << std::setprecision(15) << std::fixed << std::setw(22) << y << std::scientific << std::setprecision(2) << std::setw(14) << err;
     if (previous > 0.0) std::cout << std::fixed << std::setprecision(1) << previous / err;

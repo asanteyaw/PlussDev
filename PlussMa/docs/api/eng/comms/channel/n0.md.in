@@ -1,0 +1,58 @@
+# `comms::n0`
+
+The noise variance for a given Eb/N0.
+
+## Signature
+
+```cpp
+double comms::n0(double ebn0_db, const comms::Constellation& constellation);
+```
+
+## What It Does
+
+Returns `N0 = 1 / (bits * 10^(ebn0_db / 10))`: the complex noise variance per symbol at which a unit-energy symbol stream sees the stated energy per bit to noise density ratio.
+
+## Parameters
+
+`ebn0_db`
+: Eb/N0 in decibels, finite.
+
+`constellation`
+: The constellation, for its bits per symbol.
+
+## Returns
+
+The noise variance, a positive `double`.
+
+## Errors
+
+Throws `pluss::Error` for a non-finite `ebn0_db` or a constellation not made by `psk` or `qam`.
+
+## Interpretation and Use
+
+At the same Eb/N0 a constellation with more bits per symbol sees less noise per symbol, so `N0` falls as `1 / bits`. Pass the result to `noise` and `llr`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+N0 for four constellations.
+
+@@example Eng/api/comms_noise_ebn0.cpp@@
+
+### Example 2
+
+Rejected arguments.
+
+@@example Eng/api/comms_noise_errors.cpp@@
+
+### Example 3
+
+A simulation against theory.
+
+@@example Eng/api/comms_theory_table.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

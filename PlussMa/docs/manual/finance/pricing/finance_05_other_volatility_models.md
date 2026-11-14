@@ -1,0 +1,39 @@
+<!-- generated from finance_05_other_volatility_models.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Finance 5: Other Volatility Models
+
+Heston and Bates are one family of stochastic-volatility models. This chapter prices two more with the same `Field`: SABR for forward rates and options on a forward, and the rough models, whose variance is driven by a fractional process. After this chapter you can read a SABR smile, price with the expansion or by simulation and know where they disagree, and simulate rough variance and read its short-maturity skew.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **SABR has a closed-form smile.** The `Analytic` engine of a SABR field prices with Black's formula at the SABR volatility, and the field's `implied_vol()` returns that volatility; the `MonteCarlo` engine simulates.
+- **Rough models are simulated.** `RoughHeston` and `RoughBergomi` fields take the same `controls.mc` as the earlier chapters.
+
+| Model of the field | Engines |
+|---|---|
+| `Sabr` | `Analytic` (expansion), `MonteCarlo` |
+| `RoughHeston`, `RoughBergomi` | `MonteCarlo` |
+
+The model is again the only change: `fin::model::make(fin::model::Kind::Sabr, {alpha0, beta, nu, rho})`, `...Kind::RoughHeston, {kappa, theta, sigma, alpha, rho, v0}`, `...Kind::RoughBergomi, {xi, eta, alpha, rho}`.
+
+## Programs
+
+- [SABR](finance_05_other_volatility_models/sabr.md)
+- [Rough volatility](finance_05_other_volatility_models/rough_volatility.md)
+
+## Checklist
+
+1. Use the SABR expansion for short maturities and the simulation for long ones or a large ν.
+2. The cost of a rough simulation grows with the square of the number of steps: choose them by checking that the price has stopped moving.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_05_other_volatility_models/sabr
+finance_05_other_volatility_models/rough_volatility
+```
+<!-- apiref:toctree:end -->

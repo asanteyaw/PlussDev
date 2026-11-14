@@ -34,4 +34,11 @@ All of these describe the function and its derivative at a point. None of them c
 - A long scalar loop with few parameters: `Fwd<N>` avoids the tape. Many parameters: use `autodiff`.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima_07_derivatives/automatic_analytic_and_audited_derivatives
+optima_07_derivatives/derivative_tools_and_costs
+```
 <!-- apiref:toctree:end -->

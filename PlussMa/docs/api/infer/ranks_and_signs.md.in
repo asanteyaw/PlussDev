@@ -11,4 +11,12 @@ Tests that use ranks or signs: the rank-sum, signed-rank and sign tests. Each pa
 | [`signtest`](ranks_and_signs/signtest.md) | Sign test for a median or for paired differences. |
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ranks_and_signs/ranksum
+ranks_and_signs/signrank
+ranks_and_signs/signtest
+```
 <!-- apiref:toctree:end -->

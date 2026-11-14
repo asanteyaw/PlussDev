@@ -1,0 +1,64 @@
+# `fluid::steady`
+
+Solves heads and flows of a network at one instant.
+
+## Signature
+
+```cpp
+SteadyResult steady(const Network &network, const Options &options = {});
+```
+
+## What It Does
+
+Solves junction heads and link flows as one coupled nonlinear system by Newton's method: pipe energy, pump and valve laws, and junction continuity. The linear solve of each iteration is the batched LU of the whole network, and each lane of a scenario batch is relaxed on its own if its full step does not reduce the residual. The solution is differentiable.
+
+## Parameters
+
+`network`
+: The compiled `Network`.
+
+`options`
+: The `Options`.
+
+## Returns
+
+A `SteadyResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for invalid options. Throws `std::runtime_error` when the solve does not converge and `fail_on_nonconvergence` is true, when an active pump or an active control valve would need a reverse flow, when an active valve would need to add head, and when closed links leave a junction cut off from every reservoir and tank.
+
+## Interpretation and Use
+
+A solution that is returned satisfies continuity and the link equations to the tolerances. The errors that mention a pump or a valve mean the settings or the curves do not fit the network, not that the solver failed: change the setting or the network.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Heads and flows of a looped network.
+
+@@example Eng/api/fluid_steady_basic.cpp@@
+
+### Example 2
+
+Tolerances and iteration limits.
+
+@@example Eng/api/fluid_steady_options.cpp@@
+
+### Example 3
+
+Options that are refused.
+
+@@example Eng/api/fluid_steady_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SteadyResult.html">
+    <span class="label">Previous</span>
+    <span class="title">SteadyResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

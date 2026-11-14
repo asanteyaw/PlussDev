@@ -20,7 +20,7 @@ Choose it for unconstrained problems of medium dimension, where [`Auto`](DfoSolv
 ## Parameters
 
 `Fn &&objective`
-: A callable `Series -> Series` (real scalar) or `Series -> number`.
+: A callable `Series (Series)` (real scalar) or `Series -> number`.
 
 `const pluss::Series &initial`
 : The starting point.

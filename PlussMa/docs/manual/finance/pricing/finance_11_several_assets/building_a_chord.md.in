@@ -1,0 +1,352 @@
+# Building a Chord
+
+[Back to Several assets](../finance_11_several_assets.md)
+
+A `Chord` can be built three ways. The first two start from `Field`s you have written: as a dictionary of names and assets, or added to an existing `Chord`. The third starts from numbers: the model parameters of several assets, given as columns, with the correlations between the assets. This page shows each, and, for the third, explains exactly how the shocks and correlations of the simulation are built from what is given.
+
+```cpp
+module::Chord::Chord(std::initializer_list<module::Chord::Entry> assets);
+explicit module::Chord::Chord(pluss::RangeView<module::Chord::Entry> assets);
+module::Chord &module::Chord::add(std::string name, module::Field field);
+module::Chord &module::Chord::add(pluss::RangeView<module::Chord::Entry> assets);
+static module::Chord module::Chord::from_model_params(const module::Chord::Parameters &parameters);
+```
+
+## A dictionary of assets
+
+A `module::Chord::Entry` is a name and a `Field`. A dictionary of entries in braces, `Chord book{{"spx", spx}, {"ndx", ndx}}`, builds the `Chord` in one expression, and `chord.add({{...}, {...}})` adds several to an existing one. Both read like a map literal, but the list is **ordered**: the assets are added in the order written, and that order is the order of every result and of the rows and columns of the correlation matrices. A `std::map` is deliberately not accepted, because it would reorder the assets by name and attach the wrong correlation row to an asset. A list built in a loop, a `std::vector<Chord::Entry>`, is passed the same way. The whole list is checked first, so one bad name adds none of the assets.
+
+The program builds the same three-asset book four ways and shows that they price identically, then shows the all-or-nothing rule.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Field bs(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  mod::Chord braced{{"spx", bs(100.0, 100.0, 0.20)}, {"ndx", bs(90.0, 95.0, 0.30)}, {"rut", bs(50.0, 55.0, 0.35, 0.5)}};
+
+  mod::Chord chained;
+  chained.add("spx", bs(100.0, 100.0, 0.20)).add("ndx", bs(90.0, 95.0, 0.30)).add("rut", bs(50.0, 55.0, 0.35, 0.5));
+
+  mod::Chord added;
+  added.add({{"spx", bs(100.0, 100.0, 0.20)}, {"ndx", bs(90.0, 95.0, 0.30)}, {"rut", bs(50.0, 55.0, 0.35, 0.5)}});
+
+  std::vector<mod::Chord::Entry> entries = {{"spx", bs(100.0, 100.0, 0.20)}, {"ndx", bs(90.0, 95.0, 0.30)}, {"rut", bs(50.0, 55.0, 0.35, 0.5)}};
+  const mod::Chord from_list(entries);
+
+  out.writeln("braced   ", braced.names(), braced.price().price.items<double>());
+  out.writeln("chained  ", chained.names(), chained.price().price.items<double>());
+  out.writeln("added    ", added.names(), added.price().price.items<double>());
+  out.writeln("from list", from_list.names(), from_list.price().price.items<double>());
+
+  report([&] { added.add({{"fx", bs(1.1, 1.1, 0.1)}, {"spx", bs(100.0, 100.0, 0.20)}}); });
+  out.writeln("after the refused list the Chord still holds", added.names());
+}
+```
+
+## From a table of model parameters
+
+When the numbers are already parameters, from a calibration or a file you read, writing a `Field` for each is boilerplate. `Chord::from_model_params` takes a `Chord::Parameters` table instead: one column per parameter, one row per asset, filled with designated initializers. The Heston dynamics of asset *a*, the model a table builds unless it says otherwise, are
+
+```{math}
+dS^a_t=(r_a-q_a)S^a_t\,dt+\sqrt{v^a_t}\,S^a_t\,dW^{S,a}_t,\qquad
+dv^a_t=\kappa_a(\theta_a-v^a_t)\,dt+\sigma_a\sqrt{v^a_t}\,dW^{v,a}_t ,\qquad
+d\langle W^{S,a},W^{v,a}\rangle_t=\rho_a\,dt ,
+```
+
+and the columns are `spot` (the starting {math}`S^a_0`), `rate` {math}`r_a`, `dividend_yield` {math}`q_a`, `kappa`, `theta`, `sigma`, `rho` and `v0` {math}`v^a_0`. With the three jump columns `jump_intensity`, `jump_mean` and `jump_vol` the assets are Bates; other models are chosen with the `kind` column, below. The rules for the columns are few:
+
+- The number of assets is the length of the longest column (or of `names`).
+- A column with **one entry applies to every asset**; any other column needs exactly one entry per asset.
+- `spot` is required, and so is every column that the model of some asset reads (for Heston, `kappa`, `theta`, `sigma`, `rho` and `v0`); `rate`, `dividend_yield` default to 0, `maturity` to 1, `strike` to the spot (an at-the-money call for `price`), and the controls to the Monte Carlo engine, shared by all assets.
+- `names` default to `asset1`, `asset2`, ... .
+
+The program builds five Heston assets from columns of numbers, with a price correlation, simulates them together and reads the correlation of two assets back from the shocks.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static double corr(const pluss::Series &a, const pluss::Series &b) { return a.mul(b).mean().item<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  mod::Chord::Parameters p;
+  p.names = {"spx", "ndx", "rut", "dax", "ftse"};
+  p.spot = {1290, 1370, 1302, 1260, 1405};
+  p.rate = {0.019};
+  p.dividend_yield = {0.012};
+  p.kappa = {1.6, 2.1, 1.9, 1.4, 2.3};
+  p.theta = {0.045, 0.04, 0.055, 0.035, 0.05};
+  p.sigma = {0.35, 0.4, 0.45, 0.3, 0.45};
+  p.rho = {-0.7, -0.5, -0.65, -0.55, -0.6};
+  p.v0 = {0.035, 0.05, 0.025, 0.04, 0.03};
+  p.controls.mc.paths = 20000;
+  p.controls.mc.steps = 20;
+  p.controls.mc.seed = 7;
+  p.price_corr = pluss::make_series({1.00, 0.35, 0.25, 0.30, 0.20,
+                                     0.35, 1.00, 0.15, 0.25, 0.10,
+                                     0.25, 0.15, 1.00, 0.20, 0.15,
+                                     0.30, 0.25, 0.20, 1.00, 0.25,
+                                     0.20, 0.10, 0.15, 0.25, 1.00}, {5, 5}, f64);
+  const mod::Chord book = mod::Chord::from_model_params(p);
+  const auto paths = book.simulate_paths();
+  out.writeln("assets", book.names(), " paths", paths.asset.sizes(), " horizon", paths.horizon);
+  out.writeln("spx and ndx price shocks, requested 0.35:", corr(paths.asset_shocks.select(2, 0), paths.asset_shocks.select(2, 1)));
+  out.writeln("ndx and ftse price shocks, requested 0.10:", corr(paths.asset_shocks.select(2, 1), paths.asset_shocks.select(2, 4)));
+  out.writeln("each asset keeps its own parameters: kappa of", book.names()[3], "is", book.at("dax").model.parameters().items<double>()[0]);
+}
+```
+
+## Mixed models in one table
+
+The `kind` column gives the model of each asset: `BlackScholes`, `Sabr`, `Heston`, `Bates`, `RoughHeston` or `RoughBergomi` (one entry applies to every asset). Each model reads its own columns:
+
+| Model | Columns it reads (besides `spot`) |
+|---|---|
+| Black-Scholes | `volatility` |
+| SABR | `alpha0`, `beta`, `nu`, `rho` |
+| Heston | `kappa`, `theta`, `sigma`, `rho`, `v0` |
+| Bates | the Heston columns and `jump_intensity`, `jump_mean`, `jump_vol` |
+| Rough Heston | the Heston columns and `alpha` |
+| Rough Bergomi | `xi`, `eta`, `alpha`, `rho` |
+
+An asset ignores the entries of the columns its model does not read, so in a table of mixed models those are fillers; NaN is the customary one. A column that is read by some asset is required and its entries for those assets must be finite; a column that no asset reads is refused, so a misspelt or misplaced column is not silently dropped. The program builds one asset of each model and simulates all six together, a joint simulation with the same three correlation matrices.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  using K = fin::model::Kind;
+  mod::Chord::Parameters p;
+  p.names = {"bs", "sabr", "heston", "bates", "rough_heston", "rough_bergomi"};
+  p.kind = {K::BlackScholes, K::Sabr, K::Heston, K::Bates, K::RoughHeston, K::RoughBergomi};
+  p.spot = {100.0, 100.0, 100.0, 100.0, 100.0, 100.0};
+  p.volatility = {0.2, nan, nan, nan, nan, nan};
+  p.alpha0 = {nan, 0.3, nan, nan, nan, nan};
+  p.beta = {nan, 0.7, nan, nan, nan, nan};
+  p.nu = {nan, 0.5, nan, nan, nan, nan};
+  p.kappa = {nan, nan, 1.5, 1.5, 1.5, nan};
+  p.theta = {nan, nan, 0.04, 0.04, 0.04, nan};
+  p.sigma = {nan, nan, 0.3, 0.3, 0.3, nan};
+  p.v0 = {nan, nan, 0.04, 0.04, 0.04, nan};
+  p.jump_intensity = {nan, nan, nan, 0.15, nan, nan};
+  p.jump_mean = {nan, nan, nan, -0.08, nan, nan};
+  p.jump_vol = {nan, nan, nan, 0.2, nan, nan};
+  p.alpha = {nan, nan, nan, nan, -0.1, -0.1};
+  p.xi = {nan, nan, nan, nan, nan, 0.04};
+  p.eta = {nan, nan, nan, nan, nan, 1.2};
+  p.rho = {nan, -0.3, -0.7, -0.7, -0.7, -0.7};
+  p.controls.mc.paths = 20000;
+  p.controls.mc.steps = 20;
+  p.controls.mc.seed = 3;
+  const mod::Chord book = mod::Chord::from_model_params(p);
+  for (const auto &name : book.names()) out.writeln(name, book.at(name).model.name());
+  const auto paths = book.simulate_paths();
+  out.writeln("paths", paths.asset.sizes());
+  for (int a = 0; a < 6; ++a) out.writeln(book.names()[a], "mean at the horizon", paths.asset.select(1, 20).select(1, a).mean().item<double>());
+}
+```
+
+Every mean is near the forward of 100, since the rate and the yield are zero, up to Monte Carlo error.
+
+## How the shocks and correlations are built
+
+Nothing is estimated for you. An undefined matrix means the identity: **independent**, not "some default correlation". `price_corr` is the correlation between the price shocks of the assets, `var_corr` the correlation between their variance shocks, and `price_var_cross` the cross correlation between one asset's price shock and another's variance shock. If you give the first two, the cross correlations are built from them. Write the variance shock of asset *a* as its own price shock plus an independent remainder,
+
+```{math}
+dW^{v,a}=\rho_a\,dW^{S,a}+\sqrt{1-\rho_a^{2}}\;dW^{\perp,a} ,
+```
+
+with {math}`dW^{\perp,a}` independent of every price shock. Then:
+
+- `price_corr` {math}`R_s`: {math}`\mathrm{corr}(dW^{S,a},dW^{S,b})=R_s[a,b]`.
+- Without `var_corr` the remainders are independent, so {math}`\mathrm{corr}(dW^{v,a},dW^{v,b})=\rho_a\rho_b R_s[a,b]`.
+- With `var_corr` {math}`R_v`: {math}`\mathrm{corr}(dW^{v,a},dW^{v,b})=R_v[a,b]` exactly. The remainders are given the correlation {math}`R_\perp[a,b]=\dfrac{R_v[a,b]-\rho_a\rho_b R_s[a,b]}{\sqrt{1-\rho_a^2}\sqrt{1-\rho_b^2}}` that makes this so, which must be a valid correlation matrix: that is the condition on {math}`R_v`.
+- The cross terms, when `price_var_cross` is not given, are {math}`\mathrm{corr}(dW^{S,a},dW^{v,b})=\rho_b R_s[a,b]`. When it is given, {math}`C` is used instead, with the diagonal set to each {math}`\rho_a`, and {math}`\left[\begin{smallmatrix}R_s&C\\C^{\top}&R_v\end{smallmatrix}\right]` must be one valid correlation matrix.
+
+| What you give | corr(price a, price b) | corr(variance a, variance b) | corr(price a, variance b) |
+|---|---|---|---|
+| nothing | 0 | 0 | 0 |
+| `price_corr` | {math}`R_s` | {math}`\rho_a\rho_b R_s` | {math}`\rho_b R_s` |
+| `price_corr`, `var_corr` | {math}`R_s` | {math}`R_v` | {math}`\rho_b R_s` |
+| all three | {math}`R_s` | {math}`R_v` | {math}`C` |
+
+So a single `price_corr` is enough to correlate the whole system, adding `var_corr` fixes the variance correlation, and `price_var_cross` is only needed when you have estimated the cross terms. The first three rows are valid whenever {math}`R_s` is valid and {math}`R_v` is one that {math}`R_s` and the {math}`\rho`s allow; the fourth needs the joint matrix to be positive definite. Both are checked when the paths are simulated. The program simulates two assets with {math}`\rho=-0.7` in the four cases and prints each correlation next to the value in the table.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Chord::Parameters base() {
+  mod::Chord::Parameters p;
+  p.spot = {100.0, 90.0};
+  p.kappa = {1.5};
+  p.theta = {0.04};
+  p.sigma = {0.3};
+  p.rho = {-0.7};
+  p.v0 = {0.04};
+  p.controls.mc.paths = 40000;
+  p.controls.mc.steps = 20;
+  p.controls.mc.seed = 3;
+  return p;
+}
+static double corr(const pluss::Series &a, const pluss::Series &b) { return a.mul(b).mean().item<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const auto read = [&](const char *label, const mod::Chord::Parameters &p) {
+    const auto paths = mod::Chord::from_model_params(p).simulate_paths();
+    out.writeln(label, " price/price", corr(paths.asset_shocks.select(2, 0), paths.asset_shocks.select(2, 1)),
+                " variance/variance", corr(paths.vol_shocks.select(2, 0), paths.vol_shocks.select(2, 1)),
+                " price a/variance b", corr(paths.asset_shocks.select(2, 0), paths.vol_shocks.select(2, 1)));
+  };
+  const auto matrix = [](double off) { return pluss::make_series({1.0, off, off, 1.0}, {2, 2}); };
+  mod::Chord::Parameters p = base();
+  read("nothing                 ", p);
+  p.price_corr = matrix(0.6);
+  read("price_corr 0.6          ", p);
+  p.var_corr = matrix(0.5);
+  read("+ var_corr 0.5          ", p);
+  p.price_var_cross = pluss::make_series({-0.7, -0.4, -0.4, -0.7}, {2, 2});
+  read("+ price_var_cross -0.4   ", p);
+}
+```
+
+## What is refused
+
+A table is checked when it is read and the correlations when the paths are simulated. A missing required column, a column of the wrong length, only some of the three jump columns, and a correlation matrix of the wrong size are refused at once, naming the column. A matrix that is not symmetric or not positive definite, a `var_corr` that the price correlation and the `rho`s cannot produce, or a joint matrix that cannot exist, is refused by `simulate_paths`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+static mod::Chord::Parameters base() {
+  mod::Chord::Parameters p;
+  p.spot = {100.0, 90.0};
+  p.kappa = {1.5};
+  p.theta = {0.04};
+  p.sigma = {0.3};
+  p.rho = {-0.7};
+  p.v0 = {0.04};
+  p.controls.mc.paths = 40000;
+  p.controls.mc.steps = 20;
+  p.controls.mc.seed = 3;
+  return p;
+}
+static double corr(const pluss::Series &a, const pluss::Series &b) { return a.mul(b).mean().item<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  mod::Chord::Parameters missing = base();
+  missing.theta.clear();
+  report([&] { (void)mod::Chord::from_model_params(missing); });
+  mod::Chord::Parameters partial = base();
+  partial.jump_intensity = {0.15};
+  report([&] { (void)mod::Chord::from_model_params(partial); });
+  mod::Chord::Parameters size = base();
+  size.price_corr = pluss::make_series({1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0}, {3, 3});
+  report([&] { (void)mod::Chord::from_model_params(size); });
+  mod::Chord::Parameters asymmetric = base();
+  asymmetric.var_corr = pluss::make_series({1.0, 0.2, 0.02, 1.0}, {2, 2});
+  report([&] { (void)mod::Chord::from_model_params(asymmetric).simulate_paths(); });
+  mod::Chord::Parameters unsupported = base();
+  unsupported.var_corr = pluss::make_series({1.0, 0.9, 0.9, 1.0}, {2, 2});
+  report([&] { (void)mod::Chord::from_model_params(unsupported).simulate_paths(); });
+  mod::Chord::Parameters impossible = base();
+  impossible.price_corr = pluss::make_series({1.0, 0.6, 0.6, 1.0}, {2, 2});
+  impossible.var_corr = pluss::make_series({1.0, 0.8, 0.8, 1.0}, {2, 2});
+  impossible.price_var_cross = pluss::make_series({-0.7, 0.1, 0.1, -0.7}, {2, 2});
+  report([&] { (void)mod::Chord::from_model_params(impossible).simulate_paths(); });
+}
+```
+
+## Reading the results
+
+**The dictionary.** All four constructions give the same three assets in the same order and the same prices (8.3494, 8.9726 and 3.1159). The refused `add` is the all-or-nothing rule at work: the list holds a new name (`fx`) followed by a repeated one (`spx`), the error names the repeated one, and the `Chord` afterwards still holds exactly the three assets it had, so `fx` was not added either.
+
+**The table.** Five assets, a few lines of numbers and one matrix; the paths come back as `[20000, 21, 5]` (paths, steps + 1, assets) up to a horizon of one year, because the table's maturity defaults to 1. The price shocks read back at 0.351 for `spx` and `ndx` and 0.099 for `ndx` and `ftse`, against the requested 0.35 and 0.10, within the sampling error of 20,000 paths. Each asset keeps its own parameters: `dax` has `kappa` 1.4.
+
+**The correlations.** The four rows of the table are visible in the output. With nothing given, every correlation between assets is zero to sampling error (−0.000, −0.002, −0.000): only each asset's own {math}`\rho` remains. With `price_corr` of 0.6 the price shocks correlate at 0.601, and the variance shocks and the price-variance cross terms follow without being specified: 0.293 against {math}`\rho_a\rho_b R_s=0.49\times0.6=0.294`, and −0.421 against {math}`\rho_b R_s=-0.7\times0.6=-0.42`. Adding `var_corr` of 0.5 leaves the price correlation and the cross term alone and moves the variance correlation to **0.499**, the 0.5 asked for: the remainders have been correlated at {math}`(0.5-0.294)/0.51=0.404` to make up the difference. Setting `price_var_cross` to −0.4 replaces the built cross term (−0.421) with the one given: it now reads −0.401, and the variance correlation is still 0.499. So giving only `price_corr` correlates the whole system, `var_corr` fixes the variance correlation exactly, and `price_var_cross` is needed only to override the cross terms.
+
+**The refusals.** The first three are caught when the table is read, each naming what is wrong. The last three are caught only when the paths are simulated. An asymmetric `var_corr` (0.2 against 0.02, the kind of typo a calibration file can carry) is refused as not symmetric. A `var_corr` of 0.9 for two assets with {math}`\rho=-0.7` and independent prices is refused too: with those {math}`\rho`s the variance shocks of two assets can correlate at most {math}`0.49R_s+0.51`, which is 0.51 with independent prices, so 0.9 would need remainders correlated above 1. Finally a joint matrix that cannot exist is refused: a variance correlation of 0.8 with a cross correlation of +0.1 and {math}`\rho=-0.7` asks assets whose variances move together to have positive cross terms although each has a strong negative price-variance link, which no set of random variables can do, even though each matrix alone is a valid correlation matrix.
+
+## Checklist
+
+1. Write many assets as a dictionary, in the order the correlation matrices will use, and let the names mean something.
+2. Build from a table when the numbers are parameters; give one entry for anything common to all assets.
+3. Give `price_corr` first: it correlates the whole system. Add `var_corr` for volatilities that move together beyond what the prices imply (it is the correlation of the variance shocks themselves), and `price_var_cross` only when you have estimated the cross terms.
+4. A matrix that is estimated separately for each block may not form a valid joint matrix; the explicit form is checked when you simulate.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pricing_a_book.html">
+    <span class="label">Previous</span>
+    <span class="title">Pricing a book of assets</span>
+  </a>
+  <a class="next-link" href="batching.html">
+    <span class="label">Next</span>
+    <span class="title">Batching</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

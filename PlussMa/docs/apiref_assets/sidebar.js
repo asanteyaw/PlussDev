@@ -12,19 +12,87 @@
 (function () {
   "use strict";
 
-  // The bundle may carry several framework nav trees (lymph, classic, ...).
-  // Pick the one whose pages match the current URL; fall back to the primary.
+  // The bundle carries both API-reference and guide trees. API pages render
+  // every API framework as a collapsible peer so moving between Regression,
+  // Actuarial, Calculus, and the other references never replaces the rail.
+  // Manual pages retain the narrower guide tree that owns the current page.
   var DATA = window.APIREF_NAV;
   var ALL = window.APIREF_NAV_ALL;
+  var TOPICS = window.PLUSS_TOPICS || [];
+
+  // The topic a navigation block belongs to, found through the registry that
+  // `apiref.py wire` writes (apiref_topics.toml): a block is the guide or the
+  // reference of the topic whose section root it shares.
+  function topicOfBlock(b) {
+    if (!b) return null;
+    for (var i = 0; i < TOPICS.length; i++) {
+      var t = TOPICS[i];
+      if (b.root_page && (t.guide === b.root_page || t.reference === b.root_page)) return t;
+    }
+    for (var j = 0; j < TOPICS.length; j++) {
+      if (b.framework === TOPICS[j].slug) return TOPICS[j];   // `ts` carries no root page
+    }
+    return null;
+  }
+
+  function sectionOfBlock(b) {
+    var t = topicOfBlock(b);
+    if (t && b.root_page && t.guide === b.root_page) return "guide";
+    if (t && b.root_page && t.reference === b.root_page) return "reference";
+    return b && b.prefix && b.prefix.indexOf("manual/") === 0 ? "guide" : "reference";
+  }
+
+  function containsPage(nodes, target) {
+    return (nodes || []).some(function (n) {
+      return n.page === target || containsPage(n.children, target);
+    });
+  }
+
+  function peerFrameworks(isGuide) {
+    return ALL.filter(function (b) {
+      if (!b || typeof b.root_page !== "string") return false;
+      var guide = sectionOfBlock(b) === "guide";
+      return guide === isGuide;
+    }).map(function (b) {
+      return {
+        type: "framework",
+        label: (topicOfBlock(b) || {}).title || b.title || b.framework,
+        page: b.root_page,
+        children: Array.isArray(b.tree) ? b.tree : [],
+      };
+    });
+  }
+
+  var SECTION = null;   // "guide" | "reference" | null (the home page)
+  var TOPIC = null;
   if (Array.isArray(ALL) && ALL.length > 1) {
     var here = currentRelPath();
-    var hit = ALL.filter(function (b) {
-      if (!b || !b.framework) return false;
-      if (b.prefix) return here.indexOf(b.prefix) === 0;
-      return here.indexOf("api/" + b.framework + "/") === 0 ||
-             here.indexOf("api/plussai_" + b.framework) === 0;
-    })[0];
-    DATA = hit || null;
+    if (here.indexOf("api/") === 0 || here === "api_reference.html") {
+      SECTION = "reference";
+      DATA = { title: "API Reference", root_page: "api_reference.html", tree: peerFrameworks(false) };
+      // the topic of an API page: the reference block whose tree holds it
+      // (a topic's own landing page, e.g. api/plussma_optim.html, is its root)
+      var apiHit = ALL.filter(function (b) {
+        return b && sectionOfBlock(b) === "reference" &&
+               (b.root_page === here || containsPage(b.tree, here));
+      })[0];
+      TOPIC = topicOfBlock(apiHit);
+      if (!TOPIC) {
+        TOPIC = TOPICS.filter(function (t) { return t.reference === here; })[0] || null;
+      }
+    } else if (here === "manual/index.html") {
+      SECTION = "guide";
+      DATA = { title: "User Guide", root_page: "manual/index.html", tree: peerFrameworks(true) };
+    } else {
+      var hit = ALL.filter(function (b) {
+        if (!b || !b.framework || sectionOfBlock(b) !== "guide") return false;
+        if (b.root_page && here === b.root_page) return true;
+        if (b.prefix) return here.indexOf(b.prefix) === 0;
+        return here.indexOf("manual/" + b.framework + "/") === 0;
+      })[0];
+      DATA = hit || null;
+      if (hit) { SECTION = "guide"; TOPIC = topicOfBlock(hit); }
+    }
   }
   if (!DATA || !Array.isArray(DATA.tree)) return;
 
@@ -137,7 +205,7 @@
 
     // Only take over on API reference pages.
     var cur = currentRelPath();
-    if (cur.indexOf("api/") === -1 && cur.indexOf("manual/") !== 0) return;
+    if (cur.indexOf("api/") === -1 && cur.indexOf("manual/") !== 0 && cur !== "api_reference.html") return;
 
     var openSet = loadOpen();
     var forced = new Set();
@@ -149,6 +217,26 @@
 
     // --- header -----------------------------------------------------------
     var head = el("div", "apiref-nav__head");
+    if (TOPIC) {
+      // The same topic in the other section: User Guide and API Reference are
+      // two views of one topic, one click apart from every page.
+      var tabs = el("div", "apiref-nav__tabs", { role: "tablist" });
+      [["guide", "User Guide"], ["reference", "API Reference"]].forEach(function (pair) {
+        var target = TOPIC[pair[0]];
+        var tab;
+        if (pair[0] === SECTION) {
+          tab = el("span", "apiref-nav__tab is-current", { "aria-current": "page" });
+        } else if (target) {
+          tab = el("a", "apiref-nav__tab");
+          tab.href = hrefFor(target);
+        } else {
+          tab = el("span", "apiref-nav__tab is-soon", { title: "Coming" });
+        }
+        tab.textContent = pair[1] + (target || pair[0] === SECTION ? "" : " (coming)");
+        tabs.appendChild(tab);
+      });
+      head.appendChild(tabs);
+    }
     var title = el("a", "apiref-nav__title");
     title.href = hrefFor(DATA.root_page || "api_reference.html");
     title.textContent = DATA.title || "API Reference";

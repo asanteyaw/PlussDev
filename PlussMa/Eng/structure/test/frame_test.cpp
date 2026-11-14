@@ -225,6 +225,43 @@ int main() {
       },
       "underconstrained frame was accepted");
 
+  // A uniformly loaded simply supported beam (two members): the node deflection, support reactions and the end action at mid-span
+  // must be exact, and the member's own load must be carried in end_force.
+  {
+    constexpr double span = 4.0, w = 1000.0, modulus = 200e9, inertia = 1e-7;
+    const auto positions = pluss::series::make({0.0, 0.0, 2.0, 0.0, 4.0, 0.0})
+                               .reshape({3, 2})
+                               .to(pluss::ScalarType::Float64);
+    const auto fill = [](double value) {
+      return pluss::series::make(std::vector<double>(2, value))
+          .to(pluss::ScalarType::Float64);
+    };
+    const auto simple = structure::frame({positions, {0, 1}, {1, 2}},
+                                         {fill(1e-3), fill(inertia), fill(modulus)});
+    const structure::MemberLoad uniform{fill(-w), {}};
+    const auto none = pluss::series::zeros(
+        {3, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+    const auto r = structure::solve(simple, none, uniform, {{0, 0, 2}, {0, 1, 1}, {}});
+    const double mid = -5.0 * w * std::pow(span, 4) / (384.0 * modulus * inertia);
+    expect(std::abs(r.displacement.select(-2, 1).select(-1, 1).item<double>() - mid) < 1e-12,
+           "uniform member load deflection is wrong");
+    expect(std::abs(r.reaction.select(-2, 0).select(-1, 1).item<double>() - w * span / 2) < 1e-6,
+           "uniform member load reaction is wrong");
+    // a batch of three intensities joins the leading axes: the middle one reproduces the single solve
+    const structure::MemberLoad batched{
+        pluss::series::make(std::vector<double>{-0.5 * w, -0.5 * w, -w, -w, -2.0 * w, -2.0 * w})
+            .reshape({3, 2})
+            .to(pluss::ScalarType::Float64),
+        {}};
+    const auto many = structure::solve(simple, none, batched, {{0, 0, 2}, {0, 1, 1}, {}});
+    expect(many.displacement.size(0) == 3 &&
+               std::abs(many.displacement.select(0, 1).select(-2, 1).select(-1, 1).item<double>() - mid) < 1e-12,
+           "a batch of member loads did not broadcast");
+    // Mj of the first member is the sagging moment at mid-span, w L^2 / 8
+    expect(std::abs(r.end_force.select(-2, 0).select(-1, 5).item<double>() - w * span * span / 8) < 1e-6,
+           "uniform member load end action is wrong");
+  }
+
   std::cout << "eng frame checks passed\n";
   return 0;
 }

@@ -42,7 +42,7 @@ Generate and compare every built-in window at a common length.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -74,7 +74,7 @@ Switch endpoint convention and dtype, then inspect zero-length and singleton beh
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -114,7 +114,7 @@ Observe the validation errors for invalid size and dtype requests.
 #include <exception>
 #include <string>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {

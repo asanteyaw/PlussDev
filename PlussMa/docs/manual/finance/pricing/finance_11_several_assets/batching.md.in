@@ -1,0 +1,113 @@
+# Batching
+
+[Back to Several assets](../finance_11_several_assets.md)
+
+The point of a `Chord` over a loop of `Field::price` calls is that assets that can share a call do. Two assets are merged when they have the same engine (`Analytic`, `Cos` or `Fft`), the same controls and `risk`, European exercise, and the same model family. Their strips are laid end to end, priced once and split back; the answer for each asset equals pricing it alone. Black-Scholes on the analytic engine, and Heston and Bates on the COS engine, need no equal parameters: the closed form and the COS series take every parameter per option, so every such asset merges whatever its spot, strike, maturity, rate, yield and model parameters, and calls and puts mix freely. The FFT engine builds one transform per parameter set, so FFT assets merge only when their parameters and option type are equal. Monte Carlo Heston and Bates assets with the same `controls.mc`, no control variate or importance sampling, and one maturity and a scalar market per asset share **one simulation with an asset axis**; every other asset makes a call of its own. `batches()` returns the number of calls a `price()` would make.
+
+## What merges
+
+The program builds five Black-Scholes assets with different volatilities, three Heston COS assets with different parameters, and two Monte Carlo assets, and counts the calls; it then gives one Monte Carlo asset a control variate.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field black_scholes(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+mod::Field heston(double spot, std::vector<double> strikes, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04}) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, params), .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Chord chord;
+  for (int i = 0; i < 5; ++i) chord.add("bs" + std::to_string(i), black_scholes(100.0 + 10 * i, 100.0, 0.15 + 0.03 * i, 0.5 + 0.25 * i));
+  out.writeln("5 Black-Scholes assets with different spots, maturities and volatilities: calls =", chord.batches());
+
+  chord.add("h1", heston(100.0, {90.0, 100.0})).add("h2", heston(80.0, {75.0, 85.0, 95.0})).add("h3", heston(100.0, {100.0}, {2.0, 0.09, 0.4, -0.5, 0.09}));
+  out.writeln("plus 3 Heston COS assets with different parameters: calls =", chord.batches());
+
+  for (int i = 0; i < 2; ++i) {
+    mod::Field mc = heston(100.0, {100.0});
+    mc.controls.engine = mod::Engine::MonteCarlo;
+    mc.controls.mc.paths = 2000;
+    mc.controls.mc.steps = 8;
+    chord.add("mc" + std::to_string(i), mc);
+  }
+  out.writeln("plus 2 Monte Carlo assets: calls =", chord.batches());
+  chord.at("mc0").controls.mc.control_variate = true;
+  out.writeln("with a control variate on mc0: calls =", chord.batches());
+}
+```
+
+The five Black-Scholes assets make one call, although their spots, maturities and volatilities all differ. The three Heston assets, with different parameters, strikes and spots, make one more call between them on the COS engine, so the count is two. The two Monte Carlo assets have the same controls, so they share one simulation: the count is three, and giving one a control variate (which needs its own paths) takes it out and makes it four. The merged Monte Carlo prices agree with each asset simulated alone up to Monte Carlo error, because the assets draw their random numbers from one stream; the closed-form and transform results are identical. Calls that could not be merged are not run one after another: `price()` runs them on up to one thread per core, and `chord.parallel = false` runs them on the calling thread with exactly the same results.
+
+## The merged answer is the single-asset answer
+
+Batching changes how many calls are made, not the numbers. The program prices the ten assets above together and then each alone, and prints the largest difference over every price and every Greek.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field black_scholes(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+mod::Field heston(double spot, std::vector<double> strikes, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04}) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, params), .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2));
+  mod::Chord chord;
+  for (int i = 0; i < 5; ++i) chord.add("bs" + std::to_string(i), black_scholes(100.0 + 10 * i, 100.0, 0.15 + 0.03 * i, 0.5 + 0.25 * i));
+  chord.add("h1", heston(100.0, {90.0, 100.0})).add("h2", heston(80.0, {75.0, 85.0, 95.0}));
+  const auto together = chord.price();
+  double worst = 0.0;
+  for (const auto &name : chord.names()) {
+    const auto alone = chord.at(name).price();
+    worst = std::max(worst, (together[name].price - alone.price).abs().max().sum().item<double>());
+    if (alone.greeks.delta.defined()) {
+      worst = std::max(worst, (together[name].greeks.delta - alone.greeks.delta).abs().max().sum().item<double>());
+      worst = std::max(worst, (together[name].greeks.vega - alone.greeks.vega).abs().max().sum().item<double>());
+    }
+  }
+  out.writeln("calls:", chord.batches(), " for", chord.size(), "assets; largest difference from pricing alone:", worst);
+}
+```
+
+Seven assets (the five Black-Scholes ones and two Heston ones) make two calls, and the prices and the Greeks differ from those of each asset priced alone by exactly zero. Batching is a saving in work, not an approximation.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="building_a_chord.html">
+    <span class="label">Previous</span>
+    <span class="title">Building a Chord</span>
+  </a>
+  <a class="next-link" href="correlated_assets.html">
+    <span class="label">Next</span>
+    <span class="title">Correlated assets</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

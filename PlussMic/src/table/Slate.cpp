@@ -25,7 +25,6 @@
 #include <variant>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/ScalarType.h"
@@ -35,6 +34,7 @@
 #include "kindle/Stream.h"
 #include "table/DataFrame.h"
 #include "table/display/Display.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::table {
 

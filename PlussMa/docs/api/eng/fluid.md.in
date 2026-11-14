@@ -1,0 +1,46 @@
+# Fluid networks
+
+Pressurised pipe networks described once as a `Net`, compiled by `network` into an immutable `Network`, and solved for steady heads and flows, simulated through time with tanks, demand patterns and controls, and used to carry a constituent, the age of the water, or heat. Pipes, pumps and control valves share one coupled solver, and every array may carry leading scenario axes and be differentiated.
+
+## Choosing A Surface
+
+| Task | Branch |
+|---|---|
+| Describe a network and compile it | [Network model](fluid/model.md) |
+| Heads and flows at one instant | [Steady hydraulics](fluid/steady.md) |
+| Tanks, patterns and controls | [Operation over time](fluid/operation.md) |
+| Constituents, water age and temperature | [Transport of quality and heat](fluid/transport.md) |
+
+## Practical Examples
+
+The examples describe the smallest network, solve a network with two loops and run a tank through a day of demand.
+
+### Example 1
+
+Describe and compile a reservoir and a junction and compare the solution with the textbook formula.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 2
+
+Solve a network with two loops and read every field of the result.
+
+@@example Eng/api/fluid_steady_basic.cpp@@
+
+### Example 3
+
+Run a tank through four demand periods and check its water balance.
+
+@@example Eng/api/fluid_run_tank.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+fluid/model
+fluid/steady
+fluid/operation
+fluid/transport
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,435 @@
+<!-- generated from ac_power_flow.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# AC power flow
+
+[Back to Power 1: Networks and Power Flow](../power_01_networks_and_power_flow.md)
+
+When voltages, reactive power or losses matter, the DC approximation is not enough, and you need the exact solution of the nonlinear network equations. `power::ac` solves them by Newton's method. This page solves a network and checks the answer against the defining equation, shows what a voltage-controlled bus does, controls the iteration and what it reports, and finds the loadability limit of a line beyond which no solution exists, against its closed form.
+
+## The mental model
+
+At every bus the complex power injected equals the power the bus sends into the network,
+
+```{math}
+S_i = V_i \overline{\sum_j Y_{ij} V_j},
+```
+
+where `V` is the vector of complex bus voltages and `Y` the admittance matrix of the grid. The unknowns are the angle and magnitude of every `PQ` bus and the angle of every `PV` bus, and the equations are the active and reactive power balances at the `PQ` buses and the active balance at the `PV` buses. `ac(grid, options)` starts from the voltages in the network description and applies Newton's method, an exact Jacobian and a linear solve at every iteration, until the largest mismatch falls below the tolerance. It returns an `AcResult`:
+
+| Member | Shape | Meaning |
+|---|---|---|
+| `voltage` | `[..., bus]` | complex bus voltages in per unit |
+| `magnitude`, `angle` | `[..., bus]` | the voltage magnitude and the angle in radians |
+| `injection` | `[..., bus]` | the complex power injected at every bus, `P + jQ`, including the slack |
+| `from_power`, `to_power` | `[..., line]` | the complex power entering each line at its two ends |
+| `residual` | `[...]` | the largest power mismatch left after the last iteration |
+| `converged` | `[...]` | true where the residual met the tolerance |
+| `iterations` | a number | Newton iterations used, the largest over the batch |
+
+`Options` holds `tolerance` (default `1e-10` per unit) and `max_iterations` (default `20`). A network that is solved in a batch is solved scenario by scenario, each with its own `converged`.
+
+## Solving a network and checking it
+
+The program solves the three-bus network of the previous pages. It then checks the answer in two independent ways: it rebuilds each bus power from the printed voltages and the grid's admittance matrix as `V * conj(Y V)`, which must equal the injection the solver reports, and it adds the power entering and leaving every line, which is the loss in that line, and compares the total with the sum of the injections.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack at bus 0, a generator bus at bus 1 (1.02 p.u., 0.6 p.u. generation, 0.2 p.u. load) and a load bus at bus 2
+static power::Net three_bus(power::BusKind second = power::BusKind::PV) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, second, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -0.2, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.2});
+  net.buses.vm = vec({1.04, 1.02, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.gens.bus = {1};
+  net.gens.p = vec({0.6});
+  net.gens.q = vec({0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.015});
+  net.lines.x = vec({0.1, 0.2, 0.25});
+  net.lines.charge = vec({0.02, 0.05, 0.04});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const power::Grid grid = power::make(three_bus());
+  const auto r = power::ac(grid);
+  out.writeln("voltage magnitudes: ", flat(r.magnitude), ", angles (rad): ", flat(r.angle));
+  out.writeln("converged ", r.converged.item<bool>(), " in ", r.iterations, " iterations, residual ", r.residual.item<double>());
+
+  // the defining equation, rebuilt from the voltages
+  const auto vr = flat(r.voltage.real()), vi = flat(r.voltage.imag()), yr = flat(grid.ybus().real()), yi = flat(grid.ybus().imag());
+  const auto pr = flat(r.injection.real()), pi = flat(r.injection.imag());
+  double worst = 0.0;
+  for (int i = 0; i < 3; ++i) {
+    std::complex<double> current = 0.0;
+    for (int j = 0; j < 3; ++j) current += std::complex<double>(yr[3 * i + j], yi[3 * i + j]) * std::complex<double>(vr[j], vi[j]);
+    const std::complex<double> power = std::complex<double>(vr[i], vi[i]) * std::conj(current);
+    worst = std::max(worst, std::abs(power - std::complex<double>(pr[i], pi[i])));
+    out.writeln("bus ", i, ": reported ", pr[i], " + ", pi[i], "j    V conj(Y V) = ", power.real(), " + ", power.imag(), "j");
+  }
+  out.writeln("largest difference: ", worst);
+
+  // losses: the sum of the two ends of every line
+  const auto from = flat(r.from_power.real()), to = flat(r.to_power.real());
+  double loss = 0.0, injected = 0.0;
+  for (std::size_t line = 0; line < from.size(); ++line) loss += from[line] + to[line];
+  for (double v : pr) injected += v;
+  out.writeln("active losses from the line ends: ", loss, "   sum of the injections: ", injected);
+}
+```
+
+Output
+
+```text
+voltage magnitudes: [1.04000, 1.02000, 1.00575], angles (rad): [0.00000, 0.01136, -0.04632]
+converged true in 3 iterations, residual 0.00000
+bus 0: reported 0.10314 + 0.32097j    V conj(Y V) = 0.10314 + 0.32097j
+bus 1: reported 0.40000 + -0.19852j    V conj(Y V) = 0.40000 + -0.19852j
+bus 2: reported -0.50000 + -0.20000j    V conj(Y V) = -0.50000 + -0.20000j
+largest difference: 0.00000
+active losses from the line ends: 0.00314   sum of the injections: 0.00314
+```
+
+The reported injections equal `V conj(Y V)` to rounding, which is the equation the solver was asked to satisfy. The slack injects `0.10314` per unit of active power and `0.32097` of reactive power, the generator bus `0.4` of active power as specified, and the active losses of the lines, `0.00314`, equal the sum of the injections: whatever power is not delivered to the load is lost in the lines, and the slack supplies it.
+
+## A voltage-controlled bus and a bus that is not
+
+A `PV` bus holds its voltage magnitude and lets its reactive power float; a `PQ` bus holds its reactive power and lets the voltage float. The program solves the network twice, with the generator bus as `PV` at `1.02` and as `PQ` with a fixed reactive injection of zero, and prints the voltage at the generator bus and the reactive power the slack supplies.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack at bus 0, a generator bus at bus 1 (1.02 p.u., 0.6 p.u. generation, 0.2 p.u. load) and a load bus at bus 2
+static power::Net three_bus(power::BusKind second = power::BusKind::PV) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, second, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -0.2, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.2});
+  net.buses.vm = vec({1.04, 1.02, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.gens.bus = {1};
+  net.gens.p = vec({0.6});
+  net.gens.q = vec({0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.015});
+  net.lines.x = vec({0.1, 0.2, 0.25});
+  net.lines.charge = vec({0.02, 0.05, 0.04});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  for (const auto kind : {power::BusKind::PV, power::BusKind::PQ}) {
+    const auto r = power::ac(power::make(three_bus(kind)));
+    out.writeln(kind == power::BusKind::PV ? "generator bus as PV: " : "generator bus as PQ: ", "voltage at bus 1 ", flat(r.magnitude)[1], ", reactive output at bus 1 ", flat(r.injection.imag())[1], ", reactive output of the slack ", flat(r.injection.imag())[0]);
+  }
+}
+```
+
+Output
+
+```text
+generator bus as PV: voltage at bus 1 1.02000, reactive output at bus 1 -0.19852, reactive output of the slack 0.32097
+generator bus as PQ: voltage at bus 1 1.03611, reactive output at bus 1 0.00000, reactive output of the slack 0.11458
+```
+
+As `PV` the bus holds `1.02` exactly and the solver finds that it must absorb `0.19852` of reactive power to do so; as `PQ` it injects no reactive power beyond its load, and its voltage settles wherever the network puts it, here `1.03611`, above the set point, while the slack supplies `0.11458` of reactive power instead of `0.32097`. Use `PV` where a generator or a regulator controls the voltage and `PQ` elsewhere.
+
+## Tolerance and iteration limit
+
+`Options` controls how long the Newton iteration works and how exactly it must finish. The first program solves the load-bus network with an iteration budget of one, two, three and four and prints the residual each leaves, so the way Newton's method converges is visible in the numbers. The second solves it with the default options, with a tolerance of `1e-3`, with a tolerance of `1e-14`, and with a budget of only two iterations, and prints the iterations used, the residual and whether each converged.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit; the load has a power factor of about 0.93
+static power::Net two_bus(double active) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -0.4 * active});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2).with_sep(""));
+  const power::Grid grid = power::make(two_bus(0.5));
+  for (std::int64_t budget = 1; budget <= 4; ++budget) {
+    power::Options options;
+    options.tolerance = 1e-30;   // never met, so the run uses its whole budget
+    options.max_iterations = budget;
+    const auto r = power::ac(grid, options);
+    out.writeln("after ", budget, " iteration(s): residual ", r.residual.item<double>());
+  }
+}
+```
+
+Output
+
+```text
+after 1 iteration(s): residual 1.61e-02
+after 2 iteration(s): residual 4.08e-05
+after 3 iteration(s): residual 2.46e-10
+after 4 iteration(s): residual 2.22e-16
+```
+
+Each iteration roughly squares the previous error, which is what quadratic convergence means and why Newton's method is the standard for power flow.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit; the load has a power factor of about 0.93
+static power::Net two_bus(double active) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -0.4 * active});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2).with_sep(""));
+  const power::Grid grid = power::make(two_bus(0.5));
+  struct Run { const char *name; double tolerance; std::int64_t iterations; };
+  for (const Run &run : {Run{"defaults (1e-10, 20)  ", 1e-10, 20}, Run{"tolerance 1e-3        ", 1e-3, 20}, Run{"tolerance 1e-14       ", 1e-14, 20}, Run{"max_iterations 2      ", 1e-10, 2}}) {
+    power::Options options;
+    options.tolerance = run.tolerance;
+    options.max_iterations = run.iterations;
+    const auto r = power::ac(grid, options);
+    out.writeln(run.name, ": iterations ", r.iterations, ", residual ", r.residual.item<double>(), ", converged ", r.converged.item<bool>());
+  }
+}
+```
+
+Output
+
+```text
+defaults (1e-10, 20)  : iterations 4, residual 2.22e-16, converged true
+tolerance 1e-3        : iterations 2, residual 4.08e-05, converged true
+tolerance 1e-14       : iterations 4, residual 2.22e-16, converged true
+max_iterations 2      : iterations 2, residual 4.08e-05, converged false
+```
+
+A loose tolerance stops after two iterations with a residual of `4e-5`, and a budget of two iterations ends in the same state but reports `converged` false because it did not meet the default tolerance. The default is usually right; reduce the budget only when you will check `converged` before using the result.
+
+## The loadability limit
+
+A line can carry only so much power. As the load on a line grows the voltage at its end falls, and at a critical load the two solutions of the power-flow equations, a normal one with a high voltage and an unstable one with a low voltage, meet. Beyond that **nose point** no solution exists, and Newton's method cannot find one. For the line of `0.01 + 0.1j` per unit with a load whose reactive power is `0.4` of its active power, the closed form for the load voltage is the root of `v^2 = (V^2/2 - (rP + xQ)) +- sqrt((V^2/2 - (rP + xQ))^2 - (r^2 + x^2)(P^2 + Q^2))`, with `V = 1` the sending voltage, and the root exists while the radicand is non-negative: the critical `P` is the one that makes it zero.
+
+The program finds the largest active load at which the power flow converges by bisection on `converged`, and compares it with the closed-form nose point, found the same way from the radicand.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit; the load has a power factor of about 0.93
+static power::Net two_bus(double active) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -0.4 * active});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+// the largest load the line can serve, from the radicand of the closed form
+static double closed_form_limit() {
+  const auto radicand = [](double P) {
+    const double Q = 0.4 * P, r = 0.01, x = 0.1;
+    const double b = 0.5 - (r * P + x * Q);
+    return b * b - (r * r + x * x) * (P * P + Q * Q);
+  };
+  double lo = 0.1, hi = 10.0;
+  for (int i = 0; i < 80; ++i) {
+    const double mid = 0.5 * (lo + hi);
+    (radicand(mid) >= 0.0 ? lo : hi) = mid;
+  }
+  return lo;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  power::Options options;
+  options.max_iterations = 60;
+  double lo = 0.5, hi = 6.0;   // converged at 0.5, not at 6
+  for (int i = 0; i < 40; ++i) {
+    const double mid = 0.5 * (lo + hi);
+    (power::ac(power::make(two_bus(mid)), options).converged.item<bool>() ? lo : hi) = mid;
+  }
+  out.writeln("largest load for which the power flow converges (p.u.): ", lo);
+  out.writeln("closed-form nose point (p.u.):                          ", closed_form_limit());
+  for (double load : {1.0, 3.0, lo, 3.2}) {
+    const auto r = power::ac(power::make(two_bus(load)), options);
+    out.writeln("load ", load, ": converged ", r.converged.item<bool>(), ", load-bus voltage ", flat(r.magnitude)[1], ", residual ", r.residual.item<double>());
+  }
+}
+```
+
+Output
+
+```text
+largest load for which the power flow converges (p.u.): 3.15975
+closed-form nose point (p.u.):                          3.15975
+load 1.00000: converged true, load-bus voltage 0.94169, residual 0.00000
+load 3.00000: converged true, load-bus voltage 0.69325, residual 0.00000
+load 3.15975: converged true, load-bus voltage 0.58482, residual 0.00000
+load 3.20000: converged false, load-bus voltage 0.47115, residual 0.20591
+```
+
+Newton's method converges all the way to the nose point, and the bisection on `converged` agrees with the closed-form limit to the printed digits, `3.1597` per unit, about `316 MW` on this base. The voltage there has fallen to about `0.59` per unit, far below any acceptable operating voltage, so the practical limit is much lower; a later chapter on continuation traces the whole curve from the normal solution through the nose.
+
+## Decisions
+
+- **When AC rather than DC:** whenever voltages, reactive power or losses are part of the question, and for the base case that DC screening studies are measured against.
+- **Which tolerance:** the default; a loose one only for a quick estimate, and always with `converged` checked.
+- **Many scenarios:** a leading axis on the injections or line values, solved in one call; each scenario has its own `converged`.
+
+## Pitfalls
+
+An unconverged result is not an answer. The program asks for a load just beyond the nose point, `3.2` per unit, and prints what the solver returns: a positive voltage magnitude that could pass for a real one, an angle that is not, and a large power mismatch.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit; the load has a power factor of about 0.93
+static power::Net two_bus(double active) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -0.4 * active});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  power::Options options;
+  options.max_iterations = 60;
+  const auto r = power::ac(power::make(two_bus(3.2)), options);
+  out.writeln("converged: ", r.converged.item<bool>(), ", residual (p.u.): ", r.residual.item<double>());
+  out.writeln("load-bus voltage ", flat(r.magnitude)[1], ", load-bus angle ", flat(r.angle)[1]);
+  out.writeln("reported load-bus injection: ", flat(r.injection.real())[1], " + ", flat(r.injection.imag())[1], "j   requested: -3.2 - 1.28j");
+}
+```
+
+Output
+
+```text
+converged: false, residual (p.u.): 0.20591
+load-bus voltage 0.47115, load-bus angle 43.32663
+reported load-bus injection: -2.99409 + -1.21528j   requested: -3.2 - 1.28j
+```
+
+The returned load-bus power, `-2.99 - 1.22j`, is far from the `-3.2 - 1.28j` that was asked for, because there is no voltage at which that load can be served, and the angle, `43` radians, is not an angle of any physical state. The residual says so, and `converged` is false; always read them before using a result, and treat a failure on a network that should be solvable as a sign of a mistake in the data, such as the per-unit conversion of the page on [describing a network](describing_a_network.md).
+
+Reference: [`ac`](../../../../api/eng/power/flow/ac.md), [`AcResult`](../../../../api/eng/power/flow/AcResult.md), [`Options`](../../../../api/eng/power/flow/Options.md), [`Grid`](../../../../api/eng/power/model/Grid.md), [`Net`](../../../../api/eng/power/model/Net.md).
+
+Where next: the next chapter uses the DC model to ask what happens when a line trips and how flows respond to changes of injection.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="dc_power_flow.html">
+    <span class="label">Previous</span>
+    <span class="title">DC power flow</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

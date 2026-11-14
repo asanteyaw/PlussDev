@@ -1,0 +1,76 @@
+# `fluid::Options`
+
+The loss law, demand policy and solver controls of `steady`.
+
+## Signature
+
+```cpp
+fluid::Options
+```
+
+## What It Does
+
+Controls for `steady`, and for every solve inside `run`, `transport` and `heat`. The tolerances apply to the residuals of the coupled Newton solve.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `loss` | The head-loss law. | DarcyWeisbach |
+| `demand_mode` | Fixed or pressure-driven demand. | Fixed |
+| `min_pressure` | Pressure head below which no demand is delivered, m. | 0 |
+| `full_pressure` | Pressure head above which the whole demand is delivered, m. | 15 |
+| `demand_exponent` | The exponent of the Wagner law. | 0.5 |
+| `emitter_exponent` | The exponent of every emitter. | 0.5 |
+| `head_tolerance` | Largest energy residual of a pipe, m. | 1e-9 |
+| `flow_tolerance` | Largest continuity residual of a junction, m³/s. | 1e-11 |
+| `min_gradient` | Floor on the head-loss gradient, so that a zero-flow link has a solvable Jacobian. It does not change the reported loss. | 1e-9 |
+| `max_iterations` | Newton iteration limit. | 40 |
+| `fail_on_nonconvergence` | Throw when the solve does not converge; if false, return the last iterate. | true |
+
+## Returns
+
+A value; validated by `steady`.
+
+## Errors
+
+Non-finite or non-positive tolerances, exponents or iteration limits, and unordered pressure bounds, are rejected.
+
+## Interpretation and Use
+
+Leave the defaults for `Float64`. For `Float32` set `head_tolerance` a little above the single-precision floor, near `1e-5`. With `fail_on_nonconvergence` false always test `converged`: an unfinished iterate reads like an answer.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Iteration limits, tolerances and non-throwing solves.
+
+@@example Eng/api/fluid_steady_options.cpp@@
+
+### Example 2
+
+Hazen-Williams, roughness and minor losses.
+
+@@example Eng/api/fluid_loss_models.cpp@@
+
+### Example 3
+
+Pressure-driven demand and emitters.
+
+@@example Eng/api/fluid_demand_modes.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DemandMode.html">
+    <span class="label">Previous</span>
+    <span class="title">DemandMode</span>
+  </a>
+  <a class="next-link" href="SteadyResult.html">
+    <span class="label">Next</span>
+    <span class="title">SteadyResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

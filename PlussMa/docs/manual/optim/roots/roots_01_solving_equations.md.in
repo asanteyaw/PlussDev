@@ -33,4 +33,10 @@ All live in `pluss::subsp::math::roots`. `f` is a `std::function<Series(const Se
 5. Put the whole sweep in one Series; do not loop over equations yourself.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+roots_01_solving_equations/solving_equations
+```
 <!-- apiref:toctree:end -->

@@ -1,0 +1,48 @@
+<!-- generated from finance_07_interest_rates.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Finance 7: Interest Rates
+
+Option pricing in the earlier chapters takes the interest rate as a constant. This chapter models the rate itself. After it you can simulate the three short-rate models of the library and choose the scheme for each, price zero-coupon bonds in closed form and by simulation, read a yield curve, compute the sensitivity of a bond to the rate, build the distribution of a bond's value at a horizon, and use the forward-rate model and the model objects.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **A short-rate model is a process for one number**, the instantaneous rate {math}`r_t`. Vasicek and Hull-White have Gaussian rates that can be negative; CIR is positive.
+- **Bond prices follow from the rate.** {math}`P(t,T)=\mathbb{E}[e^{-\int_t^Tr}]`; in all three models it is {math}`A(\tau)e^{-B(\tau)r}`, so one closed form gives prices, yields, duration and convexity.
+- **The exact scheme is the default to reach for.** `Transition` samples the true law of the next rate; `Euler` and `Milstein` approximate it, and for a CIR rate near zero they are biased.
+- **A forward-rate model follows the whole curve** instead of the short rate, starting from the market's curve, with one shock shared by all maturities.
+
+| Entry point | Purpose |
+|---|---|
+| `rates::vasicek_paths`, `cir_paths`, `hull_white_paths` | simulate the short rate of each model |
+| `rates::vasicek_zcb`, `cir_zcb`, `hull_white_zcb` | closed-form zero-coupon prices |
+| `rates::hjm_paths`, `hjm_zcb_mc` | the one-factor forward-rate model and its simulated zero price |
+| `models::VasicekRate`, `CirRate`, `HullWhiteRate`, `HjmRate` | model objects that hold their parameters |
+
+## Programs
+
+- [Short-rate models](finance_07_interest_rates/short_rate_models.md)
+- [Zero-coupon bonds and yield curves](finance_07_interest_rates/zero_coupon_bonds.md)
+- [Forward-rate models](finance_07_interest_rates/forward_rate_models.md)
+- [Rate model objects](finance_07_interest_rates/rate_objects.md)
+
+## Checklist
+
+1. Use `Transition` unless you have a reason to match another discretisation.
+2. Check a CIR model's Feller ratio {math}`2\kappa\theta/\sigma^2`.
+3. Check closed forms against simulation, and simulations against exact moments.
+4. Measure risk by simulating the factor to the horizon and revaluing in closed form.
+5. Rates are annual and continuously compounded, and time is in years.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_07_interest_rates/short_rate_models
+finance_07_interest_rates/zero_coupon_bonds
+finance_07_interest_rates/forward_rate_models
+finance_07_interest_rates/rate_objects
+```
+<!-- apiref:toctree:end -->

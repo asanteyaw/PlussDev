@@ -9,4 +9,14 @@ Chapters, in reading order:
 - [Stochastic 5: Malliavin Calculus](stochastic/stochastic_05_malliavin.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic/stochastic_01_integrals
+stochastic/stochastic_02_ito_lemma
+stochastic/stochastic_03_jumps_and_marcus
+stochastic/stochastic_04_simulating_sdes
+stochastic/stochastic_05_malliavin
+```
 <!-- apiref:toctree:end -->

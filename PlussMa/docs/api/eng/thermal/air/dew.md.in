@@ -1,0 +1,59 @@
+# `thermal::dew`
+
+The dew-point temperature of moist air.
+
+## Signature
+
+```cpp
+Series thermal::dew(const Series& w,
+                    const Series& pressure);
+```
+
+## What It Does
+
+Returns the temperature at which the saturation pressure equals the vapour pressure `p w / (0.621945 + w)`: the temperature to which the air must be cooled, at constant `w`, before water starts to condense. It is found by a bracketed root search over -60 to 150 degrees for the whole batch.
+
+## Parameters
+
+`w`
+: The humidity ratio in kg/kg, positive.
+
+`pressure`
+: The total pressure in Pa, positive.
+
+## Returns
+
+The dew point in degrees Celsius with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for a humidity ratio or pressure that is not positive or not finite, and for a dew point outside -60 to 150 degrees.
+
+## Interpretation and Use
+
+Dry air (`w = 0`) has no dew point and is rejected. A surface colder than the dew point of the air next to it collects water.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The dew point of air at 25 degrees and 50 %.
+
+@@example Eng/api/thermal_dew_basic.cpp@@
+
+### Example 2
+
+A sweep of humidity ratios.
+
+@@example Eng/api/thermal_dew_roundtrip.cpp@@
+
+### Example 3
+
+Rejected inputs.
+
+@@example Eng/api/thermal_dew_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

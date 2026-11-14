@@ -342,6 +342,82 @@ int main() {
   expect(flow_control.energy_residual.abs().max().item<double>() < 1e-8,
          "flow-control constraint did not close");
 
+  // A pressure-driven demand far above what the pipe can deliver makes the undamped Newton step cycle between
+  // two far-apart heads; the relaxed step converges to the Wagner-law solution.
+  {
+    auto starved = one_pipe(0.4);
+    fluid::Options pressure_driven;
+    pressure_driven.demand_mode = fluid::DemandMode::Pressure;
+    pressure_driven.full_pressure = 15.0;
+    const auto starved_result = fluid::steady(fluid::network(starved), pressure_driven);
+    const double head = starved_result.head.select(-1, 1).item<double>();
+    const double delivered = starved_result.demand.select(-1, 1).item<double>();
+    expect(starved_result.converged.item<bool>() && head > 5.0 && head < 20.0 &&
+               std::abs(delivered - 0.4 * std::sqrt((head - 5.0) / 15.0)) < 1e-9,
+           "starved pressure-driven demand did not converge to the Wagner solution");
+  }
+
+  // A pump closed by a control while the only tank drains to its minimum level leaves the demand junction cut off
+  // from every source; that is reported as a disconnected system, not as a bare linear-algebra failure.
+  expect_runtime_error(
+      [] {
+        fluid::Net net;
+        net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction,
+                          fluid::NodeKind::Tank};
+        net.nodes.elevation = pluss::series::make({0.0, 12.0, 20.0});
+        net.nodes.demand = pluss::series::make({0.0, 0.03, 0.0});
+        net.nodes.head = pluss::series::make({10.0, 30.0, 23.0});
+        net.tanks.area = pluss::series::make({200.0});
+        net.tanks.min_level = pluss::series::make({0.5});
+        net.tanks.max_level = pluss::series::make({6.0});
+        net.tanks.overflow = {false};
+        net.pumps.from = {0};
+        net.pumps.to = {1};
+        net.pumps.shutoff_head = pluss::series::make({60.0});
+        net.pumps.resistance = pluss::series::make({1500.0});
+        net.pumps.exponent = pluss::series::make({2.0});
+        net.pumps.speed = pluss::series::make({1.0});
+        net.pipes.from = {1};
+        net.pipes.to = {2};
+        net.pipes.length = pluss::series::make({300.0});
+        net.pipes.diameter = pluss::series::make({0.20});
+        net.pipes.roughness = pluss::series::make({1e-4});
+        net.pipes.minor = pluss::series::make({0.0});
+        fluid::Schedule schedule;
+        schedule.duration = 24.0 * 3600.0;
+        schedule.step = 1800.0;
+        schedule.time = {{3600.0, {fluid::Device::Pump, 0, fluid::Act::Close, 0.0}}};
+        (void)fluid::run(fluid::network(net), schedule);
+      },
+      "a demand cut off from every source was not reported");
+
+  // A valve cannot raise the head across it. A sustaining setting well below the natural upstream
+  // pressure could only be met by draining the junction through the valve and lifting the water
+  // downstream of it above the reservoir, which is refused.
+  expect_runtime_error(
+      [] {
+        fluid::Net parallel;
+        parallel.nodes.kind = {fluid::NodeKind::Reservoir,
+                               fluid::NodeKind::Junction,
+                               fluid::NodeKind::Junction};
+        parallel.nodes.elevation = pluss::series::make({0.0, 10.0, 5.0});
+        parallel.nodes.demand = pluss::series::make({0.0, 0.02, 0.02});
+        parallel.nodes.head = pluss::series::make({80.0, 55.0, 55.0});
+        parallel.pipes.from = {0, 0};
+        parallel.pipes.to = {1, 2};
+        parallel.pipes.length = pluss::series::make({600.0, 900.0});
+        parallel.pipes.diameter = pluss::series::make({0.20, 0.15});
+        parallel.pipes.roughness = pluss::series::make({1e-4, 1e-4});
+        parallel.valves.kind = {fluid::ValveKind::Sustain};
+        parallel.valves.from = {1};
+        parallel.valves.to = {2};
+        parallel.valves.diameter = pluss::series::make({0.2});
+        parallel.valves.minor = pluss::series::make({0.0});
+        parallel.valves.setting = pluss::series::make({50.0});
+        (void)fluid::steady(fluid::network(parallel));
+      },
+      "an energy-adding sustaining valve was accepted");
+
   auto float_pump = one_pump();
   float_pump.nodes.elevation =
       float_pump.nodes.elevation.to(pluss::ScalarType::Float32);
@@ -613,7 +689,7 @@ int main() {
   fluid::Quality constituent;
   constituent.initial = pluss::series::make({1.0, 0.0});
   constituent.source = pluss::series::make({1.0, 0.0});
-  fluid::QualityOptions transport_options;
+  fluid::RouteOptions transport_options;
   transport_options.cells = 4;
   transport_options.courant = 1.0;
   transport_options.step = travel_time / 4.0;
@@ -657,7 +733,7 @@ int main() {
   decay_schedule.duration = 10.0;
   decay_schedule.step = 10.0;
   decay_schedule.pattern_step = 10.0;
-  fluid::QualityOptions decay_options;
+  fluid::RouteOptions decay_options;
   decay_options.cells = 3;
   decay_options.step = 2.0;
   const auto decay = fluid::transport(fluid::network(one_pipe(0.0)),
@@ -677,7 +753,7 @@ int main() {
                                      transport_options);
   const double cell_time = travel_time / 4.0;
   expect(std::abs(aged.node.select(0, 1).select(-1, 1).item<double>() -
-                  3.0 * cell_time) < 2e-7,
+                  4.0 * cell_time) < 2e-7,
          "water age did not advance and reset across the pipe boundary");
   expect(aged.node.min().item<double>() >= 0.0,
          "water age produced a negative value");
@@ -805,9 +881,124 @@ int main() {
              float_transport.link.scalar_type() == pluss::ScalarType::Float32,
          "quality transport did not retain Float32");
 
+  // E7e: heat uses the same conservative route owner.  With stagnant fluid,
+  // a lumped pipe UA has the exact constant-property solution
+  // Ta + (T0 - Ta) exp[-UA t/(rho cp V)].
+  constexpr double cp = 4180.0;
+  constexpr double thermal_rate = 0.1;
+  fluid::Heat stagnant_heat;
+  stagnant_heat.initial = pluss::series::make({350.0, 350.0});
+  stagnant_heat.ambient = pluss::series::make({300.0});
+  stagnant_heat.ua = pluss::series::make(
+      {density * cp * pipe_volume * thermal_rate});
+  stagnant_heat.cp = cp;
+  const auto cooled = fluid::heat(fluid::network(one_pipe(0.0)),
+                                  decay_schedule, stagnant_heat,
+                                  decay_options);
+  const double cooled_temperature = 300.0 + 50.0 * std::exp(-1.0);
+  close(cooled.link.select(0, 1), {cooled_temperature}, 2e-8);
+  expect(cooled.energy_error.abs().max().item<double>() < 5e-2,
+         "thermal reaction was not reconciled in the energy ledger");
+
+  // A moving plug experiences the same exact exponential over its residence
+  // time.  The Courant-one case separates heat-transfer error from advection
+  // smearing and verifies that the source boundary remains prescribed.
+  fluid::Heat moving_heat;
+  moving_heat.initial = pluss::series::make({300.0, 300.0});
+  moving_heat.source = pluss::series::make({340.0, 300.0});
+  moving_heat.ambient = pluss::series::make({300.0});
+  moving_heat.ua =
+      pluss::series::make({density * cp * pipe_volume / travel_time});
+  moving_heat.cp = cp;
+  const auto heated_route = fluid::heat(
+      fluid::network(one_pipe()), transport_schedule, moving_heat,
+      transport_options);
+  const double expected_outlet = 300.0 + 40.0 * std::exp(-1.0);
+  const double actual_outlet = heated_route.node.select(0, 1)
+                                   .select(-1, 1)
+                                   .item<double>();
+  expect(std::abs(actual_outlet - expected_outlet) < 3e-8,
+         "moving thermal plug did not match its residence-time solution: got " +
+             std::to_string(actual_outlet) + ", expected " +
+             std::to_string(expected_outlet));
+
+  // Thermal junctions use the same complete, flow-weighted mixing system.
+  fluid::Heat mixed_heat;
+  mixed_heat.initial = pluss::series::make({300.0, 340.0, 300.0});
+  mixed_heat.source = mixed_heat.initial;
+  const auto thermally_mixed = fluid::heat(
+      fluid::network(mixer), transport_schedule, mixed_heat,
+      transport_options);
+  expect(std::abs(thermally_mixed.node.select(0, 1)
+                      .select(-1, 2)
+                      .item<double>() -
+                  320.0) < 2e-8,
+         "equal thermal tributaries did not mix to their mean temperature");
+
+  // Tank heat loss uses current hydraulic volume in the capacity term.  A
+  // stagnant tank therefore reduces to the exact lumped-capacitance law.
+  constexpr double tank_volume0 = 100.0;
+  fluid::Heat tank_heat;
+  tank_heat.initial = pluss::series::make({350.0, 350.0});
+  tank_heat.tank_ambient = pluss::series::make({300.0});
+  tank_heat.tank_ua = pluss::series::make(
+      {density * cp * tank_volume0 * thermal_rate});
+  tank_heat.cp = cp;
+  const auto cooled_tank = fluid::heat(fluid::network(tank_pipe(0.0)),
+                                       decay_schedule, tank_heat,
+                                       decay_options);
+  close(cooled_tank.tank.select(0, 1), {cooled_temperature}, 2e-8);
+
+  // Scenario axes remain vectorized, and dtype follows the compiled network.
+  fluid::Heat batched_heat;
+  batched_heat.initial = pluss::series::make(
+      std::vector<double>{320.0, 300.0, 340.0, 300.0}, {2, 2});
+  batched_heat.source = batched_heat.initial;
+  const auto heat_batch = fluid::heat(fluid::network(batched_pipe),
+                                      transport_schedule, batched_heat,
+                                      transport_options);
+  expect(heat_batch.node.sizes() == std::vector<std::int64_t>({2, 2, 2}),
+         "heat routing did not preserve the scenario axis");
+  fluid::Heat float_heat;
+  float_heat.initial =
+      pluss::series::make({320.0, 300.0}).to(pluss::ScalarType::Float32);
+  float_heat.source = float_heat.initial;
+  const auto routed_float_heat = fluid::heat(
+      fluid::network(float_pipe), transport_schedule, float_heat,
+      transport_options, float_options);
+  expect(routed_float_heat.node.scalar_type() == pluss::ScalarType::Float32 &&
+             routed_float_heat.energy.scalar_type() ==
+                 pluss::ScalarType::Float32,
+         "heat routing did not retain Float32");
+
+  // Both source temperature and UA remain on the reverse graph.
+  auto tracked_temperature = pluss::series::make({340.0, 300.0});
+  tracked_temperature.tracks_slope_(true);
+  fluid::Heat tracked_heat;
+  tracked_heat.initial = pluss::series::make({300.0, 300.0});
+  tracked_heat.source = tracked_temperature;
+  const auto tracked_thermal_route = fluid::heat(
+      fluid::network(one_pipe()), transport_schedule, tracked_heat,
+      transport_options);
+  tracked_thermal_route.node.select(0, 1).select(-1, 1).reverse();
+  close(tracked_temperature.sensitivity(), {1.0, 0.0}, 2e-7);
+
+  auto tracked_ua = pluss::series::make(
+      {density * cp * pipe_volume * thermal_rate});
+  tracked_ua.tracks_slope_(true);
+  fluid::Heat differentiable_heat = stagnant_heat;
+  differentiable_heat.ua = tracked_ua;
+  const auto differentiated = fluid::heat(
+      fluid::network(one_pipe(0.0)), decay_schedule, differentiable_heat,
+      decay_options);
+  differentiated.link.select(0, 1).select(-1, 0).reverse();
+  const double expected_ua_slope =
+      -50.0 * 10.0 * std::exp(-1.0) / (density * cp * pipe_volume);
+  close(tracked_ua.sensitivity(), {expected_ua_slope}, 2e-14);
+
   expect_error(
       [&] {
-        fluid::QualityOptions bad = transport_options;
+        fluid::RouteOptions bad = transport_options;
         bad.cells = 0;
         (void)fluid::transport(fluid::network(one_pipe()), transport_schedule,
                                constituent, bad);
@@ -829,6 +1020,38 @@ int main() {
                                bad, transport_options);
       },
       "an external reaction field was accepted for water age");
+  expect_error(
+      [&] {
+        fluid::Heat bad = stagnant_heat;
+        bad.cp = 0.0;
+        (void)fluid::heat(fluid::network(one_pipe(0.0)), decay_schedule, bad,
+                          decay_options);
+      },
+      "zero heat capacity was accepted");
+  expect_error(
+      [&] {
+        fluid::Heat bad = stagnant_heat;
+        bad.ua = pluss::series::make({-1.0});
+        (void)fluid::heat(fluid::network(one_pipe(0.0)), decay_schedule, bad,
+                          decay_options);
+      },
+      "negative pipe UA was accepted");
+  expect_error(
+      [&] {
+        fluid::Heat bad = stagnant_heat;
+        bad.ambient = pluss::series::undefined();
+        (void)fluid::heat(fluid::network(one_pipe(0.0)), decay_schedule, bad,
+                          decay_options);
+      },
+      "positive pipe UA without an ambient temperature was accepted");
+  expect_error(
+      [&] {
+        fluid::Heat bad = stagnant_heat;
+        bad.initial = pluss::series::make({-1.0, 300.0});
+        (void)fluid::heat(fluid::network(one_pipe(0.0)), decay_schedule, bad,
+                          decay_options);
+      },
+      "negative absolute temperature was accepted");
 
   std::cout << "eng fluid tests passed\n";
   return 0;

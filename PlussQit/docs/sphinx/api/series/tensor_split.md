@@ -7,10 +7,10 @@
 ## Signatures
 
 ```cpp
-Series::tensor_split(std::int64_t sections, std::int64_t dim = 0) const
+std::vector<Series> Series::tensor_split(std::int64_t sections, std::int64_t dim = 0) const
     -> std::vector<Series>
 
-Series::tensor_split(pluss::RangeView::Int indices, std::int64_t dim = 0) const
+std::vector<Series> Series::tensor_split(pluss::RangeView::Int indices, std::int64_t dim = 0) const
     -> std::vector<Series>
 ```
 

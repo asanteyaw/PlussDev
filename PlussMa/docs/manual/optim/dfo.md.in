@@ -16,4 +16,21 @@ Chapters, in reading order:
 - [Derivative-Free Optimization 12: The MADS Variants](dfo/dfo_12_mads_variants.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo/dfo_01_first_problems
+dfo/dfo_02_the_solvers
+dfo/dfo_03_bounds_and_constraints
+dfo/dfo_04_black_boxes
+dfo/dfo_05_worked_problems
+dfo/dfo_06_nelder_mead
+dfo/dfo_07_pattern_search
+dfo/dfo_08_differential_evolution
+dfo/dfo_09_particle_swarm
+dfo/dfo_10_mesh_adaptive_search
+dfo/dfo_11_mads_black_box
+dfo/dfo_12_mads_variants
+```
 <!-- apiref:toctree:end -->

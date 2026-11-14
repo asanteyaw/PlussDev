@@ -22,17 +22,17 @@ int main() {
     const auto path = sde::simulate_wiener_path(like, 0.0, 1.0, steps, /*seed=*/7);
     const auto ito = sde::ito_integral(w_of_t, path);
     const auto strat = sde::strat_integral(w_of_t, path);
-    const double wt = path.w.select(0, steps).item<double>();
-    const double qv = ito.realized_quadratic_variation.item<double>();
-    std::cout << std::setw(6) << steps << "  " << std::setw(8) << ito.value.item<double>() << "   "
-              << std::setw(8) << strat.value.item<double>() << "     " << std::setw(8) << 0.5 * (wt * wt - qv)
+    const double wt = path.w.select(0, steps).squeeze().item<double>();
+    const double qv = ito.realized_quadratic_variation.squeeze().item<double>();
+    std::cout << std::setw(6) << steps << "  " << std::setw(8) << ito.value.squeeze().item<double>() << "   "
+              << std::setw(8) << strat.value.squeeze().item<double>() << "     " << std::setw(8) << 0.5 * (wt * wt - qv)
               << "   " << std::setw(8) << 0.5 * wt * wt << "  " << std::setw(8) << 0.5 * qv << "  "
-              << std::setw(8) << strat.value.item<double>() - ito.value.item<double>() << "\n";
+              << std::setw(8) << strat.value.squeeze().item<double>() - ito.value.squeeze().item<double>() << "\n";
   }
 
   const auto path = sde::simulate_wiener_path(like, 0.0, 1.0, 10000, /*seed=*/7);
-  const double wt = path.w.select(0, 10000).item<double>();
-  const double ito = sde::ito_integral(w_of_t, path).value.item<double>();
+  const double wt = path.w.select(0, 10000).squeeze().item<double>();
+  const double ito = sde::ito_integral(w_of_t, path).value.squeeze().item<double>();
   std::cout << "\nat 10000 steps: Ito = " << ito << ", (W_T^2 - T)/2 = " << 0.5 * (wt * wt - 1.0)
             << "  (the continuous-time Ito value)\n";
   return 0;

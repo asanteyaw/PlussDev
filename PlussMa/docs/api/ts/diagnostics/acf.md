@@ -246,3 +246,12 @@ not demeaned     1.0000   0.9940   0.9890   0.9841
 - [`pacf`](pacf.md)
 - [`ljung_box`](ljung_box.md)
 - [`AcfOptions`](AcfOptions.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="AcfOptions.html">
+    <span class="label">Next</span>
+    <span class="title">AcfOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

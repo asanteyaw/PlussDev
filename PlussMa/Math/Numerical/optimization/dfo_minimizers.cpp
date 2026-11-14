@@ -1,11 +1,10 @@
 #include "dfo_minimizers.h"
 
+#include <pluss/tils/kit/output.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#if __has_include(<fmt/format.h>)
-#include <fmt/format.h>
-#endif
 #include <iostream>
 #include <limits>
 #include <random>
@@ -77,14 +76,7 @@ std::string iter_line(
     std::int64_t evals,
     double best,
     std::string_view step) {
-#if __has_include(<fmt/format.h>)
-  return fmt::format("iter={} evals={} f={:.6g} step={}", iter, evals, best, step);
-#else
-  std::ostringstream oss;
-  oss.setf(std::ios::fmtflags(0), std::ios::floatfield);
-  oss << "iter=" << iter << " evals=" << evals << " f=" << best << " step=" << step;
-  return oss.str();
-#endif
+  return pluss::tils::OutputEngine::format("iter={} evals={} f={:.6g} step={}", iter, evals, best, step);
 }
 
 void maybe_print_iteration(

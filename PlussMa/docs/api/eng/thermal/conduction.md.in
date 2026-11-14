@@ -1,0 +1,28 @@
+# Conduction and fins
+
+Resistances of walls, tubes, spheres and films; the Biot number that says whether a body may be lumped; straight fins; and a layered wall divided into a network.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A composite wall against its network.
+
+@@example Eng/api/thermal_wall_composite.cpp@@
+
+### Example 2
+
+A fin with three tip conditions.
+
+@@example Eng/api/thermal_fin_tips.cpp@@
+
+### Example 3
+
+A slab diffusing in time.
+
+@@example Eng/api/thermal_mesh_transient.cpp@@
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

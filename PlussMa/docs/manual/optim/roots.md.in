@@ -5,4 +5,10 @@ Chapters, in reading order:
 - [Root Finding: Solving Equations](roots/roots_01_solving_equations.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+roots/roots_01_solving_equations
+```
 <!-- apiref:toctree:end -->

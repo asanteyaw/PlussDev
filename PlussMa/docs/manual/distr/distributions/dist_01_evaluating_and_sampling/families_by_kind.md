@@ -230,3 +230,12 @@ Each mass function sums to one over its support (to five digits; the zeta and Yu
 - **Know the support.** A discrete family takes integers; evaluating a continuous family outside its support gives zero density.
 
 Where next: [Chapter 2](../dist_02_maximum_likelihood.md) fits these families to data by maximum likelihood.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="random_draws.html">
+    <span class="label">Previous</span>
+    <span class="title">Random draws</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

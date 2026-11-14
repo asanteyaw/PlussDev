@@ -35,8 +35,8 @@ int main() {
   out.writeln("F", r.stat, " df", r.dof_between, r.dof_within, " p", r.pvalue, r.reject ? " -> reject" : " -> keep", " critical", r.critical);
   out.writeln("between: SS", r.ss_between, " MS", r.ms_between, "   within: SS", r.ss_within, " MS", r.ms_within);
   out.writeln("groups", r.groups, " observations", r.effective_n);
-  out.writeln("group means", r.group_means.pull<double>());
-  out.writeln("group sizes", r.group_counts.pull<double>());
+  out.writeln("group means", r.group_means.items<double>());
+  out.writeln("group sizes", r.group_counts.items<double>());
 }
 ```
 
@@ -73,12 +73,12 @@ int main() {
   // With no expected counts given, the test assumes equal probabilities.
   const auto fair = hyp::chisq_gof(rolls);
   out.writeln("fair die: chi-squared", fair.stat, " df", fair.dof, " p", fair.pvalue, fair.reject ? " -> reject" : " -> keep", " critical", fair.critical);
-  out.writeln("expected counts", fair.expected.pull<double>(), " total", fair.total_count);
+  out.writeln("expected counts", fair.expected.items<double>(), " total", fair.total_count);
 
   // Expected counts need not be equal. Are the faces 1..6 in the ratio 1:1:1:1:1:2 ?
   const auto weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 2}, {6}, as_f64());
   const auto loaded = hyp::chisq_gof(rolls, weights);
-  out.writeln("1:1:1:1:1:2 -> chi-squared", loaded.stat, " p", loaded.pvalue, " expected", loaded.expected.pull<double>());
+  out.writeln("1:1:1:1:1:2 -> chi-squared", loaded.stat, " p", loaded.pvalue, " expected", loaded.expected.items<double>());
 
   // When parameters are estimated from the data, each one costs a degree of freedom: say the 6 counts were fitted with one
   // parameter, so the test has 6 - 1 - 1 = 4 degrees of freedom.
@@ -124,8 +124,8 @@ int main() {
   out.writeln("chi-squared", r.stat, " df", r.dof, " p", r.pvalue, r.reject ? " -> reject" : " -> keep", " critical", r.critical);
   out.writeln("table is", r.rows, "x", r.cols);
   out.writeln("expected counts if drink and age were independent:");
-  out.writeln("  tea   ", r.expected.select(0, 0).pull<double>());
-  out.writeln("  coffee", r.expected.select(0, 1).pull<double>());
+  out.writeln("  tea   ", r.expected.select(0, 0).items<double>());
+  out.writeln("  coffee", r.expected.select(0, 1).items<double>());
 
   // The chi-squared approximation needs expected counts that are not tiny (a common rule: all at least 5).
   out.writeln("smallest expected count", r.expected.min().item<double>());
@@ -154,3 +154,12 @@ Among 89 people, tea is preferred by 12, 8 and 15 people in the three age bands 
 - **The tests use counts, not percentages.** Pass frequencies; percentages give the wrong statistic and the wrong p-value.
 
 Where next: the [time-series guide](../../../ts/guide.md) tests for unit roots and serial correlation, and the [distributions guide](../../../distr/distributions.md) fits and samples the distributions used here.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="tests_of_a_distribution.html">
+    <span class="label">Previous</span>
+    <span class="title">Tests of a distribution</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

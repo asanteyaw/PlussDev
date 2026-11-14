@@ -59,3 +59,16 @@ time on the last axis:      -0.23277  -0.23616
 running integral: shape [501, 2], first row 0.00000, last row -0.23277 (equals the total above)
 ```
 The first and fourth lines are identical because the transposed path holds the same samples. The warped grid changes the times given to `f` but not the increments, so its value differs. The running integral has the shape of the path, starts at zero, and ends at the value of the total (−0.23277).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_family_in_between.html">
+    <span class="label">Previous</span>
+    <span class="title">The family in between</span>
+  </a>
+  <a class="next-link" href="values_that_were_not_simulated.html">
+    <span class="label">Next</span>
+    <span class="title">Values that were not simulated</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

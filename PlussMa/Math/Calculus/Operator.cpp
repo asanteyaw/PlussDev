@@ -190,7 +190,7 @@ void require_callable(bool present) {
 Operator
 define_erased(std::string key,
               std::function<math::Function(const math::Function &)> callable,
-              Options options) {
+              Options options, Operator adjoint) {
   PLUSS_CHECK(callable, "operators::define: callable must not be empty");
   PLUSS_CHECK(options.version > 0,
               "operators::define: version must be positive");
@@ -200,8 +200,18 @@ define_erased(std::string key,
   PLUSS_CHECK(!options.serializable || !key.empty(),
               "operators::define: a serializable custom operator requires a "
               "stable key");
-  return leaf(std::move(key), from_options(options), std::move(callable),
-              OperatorKind::Leaf, options.version, std::move(options.payload));
+  PLUSS_CHECK(!options.adjoint_known || adjoint.defined(),
+              "operators::define: adjoint_known requires the adjoint operator "
+              "to be passed to define");
+  Capabilities capabilities = from_options(options);
+  std::function<Operator()> adjoint_factory;
+  if (adjoint.defined()) {
+    capabilities.adjoint_known = true;
+    adjoint_factory = [adjoint = std::move(adjoint)]() { return adjoint; };
+  }
+  return leaf(std::move(key), capabilities, std::move(callable),
+              OperatorKind::Leaf, options.version, std::move(options.payload),
+              std::move(adjoint_factory));
 }
 
 } // namespace pluss::subsp::math::operators::detail
@@ -344,6 +354,24 @@ Capabilities combine_parallel(const std::vector<Operator> &ops) {
 }
 
 } // namespace
+
+// Integration is defined for scalar integrands; a vector- or tensor-valued integrand is integrated
+// component by component along its last output axis (stacking restores that axis), so the result has
+// the integrand's shape.
+template <class ScalarIntegral>
+math::Function componentwise(const math::Function &input, const ScalarIntegral &integrate) {
+  const std::int64_t rank = input.rank();
+  if (rank == 0) {
+    return integrate(input);
+  }
+  const std::int64_t length = input.shape()[static_cast<std::size_t>(rank - 1)];
+  std::vector<math::Function> parts;
+  parts.reserve(static_cast<std::size_t>(length));
+  for (std::int64_t i = 0; i < length; ++i) {
+    parts.push_back(componentwise(input.select(rank - 1, i), integrate));
+  }
+  return math::stack(pluss::RangeView<math::Function>(parts));
+}
 
 Operator::Operator() noexcept = default;
 Operator::Operator(const Operator &) noexcept = default;
@@ -538,7 +566,9 @@ Operator antiderivative(std::string_view variable) {
   return detail::leaf(
       "antiderivative", structural_linear(),
       [variable = std::string(variable)](const math::Function &input) {
-        return math::detail::FunctionAccess::antiderivative(input, variable);
+        return componentwise(input, [&variable](const math::Function &scalar) {
+          return math::detail::FunctionAccess::antiderivative(scalar, variable);
+        });
       },
       detail::OperatorKind::Leaf, 1, scalar_payload(variable, 0.0));
 }
@@ -549,8 +579,9 @@ Operator integral(std::string_view variable, double lower) {
   return detail::leaf(
       "integral", structural_linear(),
       [variable = std::string(variable), lower](const math::Function &input) {
-        return math::detail::FunctionAccess::integral(input, variable, lower,
-                                                      std::nullopt);
+        return componentwise(input, [&](const math::Function &scalar) {
+          return math::detail::FunctionAccess::integral(scalar, variable, lower, std::nullopt);
+        });
       },
       detail::OperatorKind::Leaf, 1, scalar_payload(variable, lower));
 }
@@ -562,8 +593,9 @@ Operator integral(std::string_view variable, double lower, double upper) {
       "integral", structural_linear(),
       [variable = std::string(variable), lower,
        upper](const math::Function &input) {
-        return math::detail::FunctionAccess::integral(input, variable, lower,
-                                                      upper);
+        return componentwise(input, [&](const math::Function &scalar) {
+          return math::detail::FunctionAccess::integral(scalar, variable, lower, upper);
+        });
       },
       detail::OperatorKind::Leaf, 1, scalar_payload(variable, lower, upper));
 }
@@ -1436,7 +1468,7 @@ Operator taylor(std::string_view variable, double center, std::int64_t order,
       [name = std::string(variable), center, order, options, engine](const Function &f) {
         if (use_jet(engine, f, order, "operators::expansion::taylor")) {
           const Function coefficients = math::detail::FunctionAccess::power_series_coefficients(f, name, center, order);
-          return power_series(name, center)(coefficients);
+          return power(name, center)(coefficients);
         }
         return taylor_polynomial(f, {name}, {center}, order, options);
       },
@@ -1467,17 +1499,17 @@ Operator taylor(pluss::StackArray<std::string_view> variables,
       detail::OperatorKind::Leaf, 1, pack_all(fields));
 }
 
-Operator taylor_coefficients(std::string_view variable, double center,
-                             std::int64_t order, DiffOptions options, Engine engine) {
-  check_expansion(order, "operators::expansion::taylor_coefficients");
-  check_center(center, "operators::expansion::taylor_coefficients");
+Operator Taylor::coefficients(std::string_view variable, double center,
+                             std::int64_t order, DiffOptions options, Engine engine) const {
+  check_expansion(order, "operators::expansion::Taylor::coefficients");
+  check_center(center, "operators::expansion::Taylor::coefficients");
   std::vector<std::string> fields{"1", std::string(variable), number(center), std::to_string(order)};
   diff_fields(options, fields);
   fields.push_back(std::to_string(static_cast<int>(engine)));
   return detail::leaf(
       "taylor_coefficients", expansion_capabilities(),
       [name = std::string(variable), center, order, options, engine](const Function &f) {
-        if (use_jet(engine, f, order, "operators::expansion::taylor_coefficients")) {
+        if (use_jet(engine, f, order, "operators::expansion::Taylor::coefficients")) {
           return math::detail::FunctionAccess::power_series_coefficients(f, name, center, order);
         }
         std::vector<Function> coefficients;
@@ -1489,9 +1521,9 @@ Operator taylor_coefficients(std::string_view variable, double center,
       detail::OperatorKind::Leaf, 1, pack_all(fields));
 }
 
-Operator taylor_remainder(std::string_view variable, std::int64_t order,
-                          DiffOptions options) {
-  check_expansion(order, "operators::expansion::taylor_remainder");
+Operator Taylor::remainder(std::string_view variable, std::int64_t order,
+                          DiffOptions options) const {
+  check_expansion(order, "operators::expansion::Taylor::remainder");
   std::vector<std::string> fields{"1", std::string(variable), number(0.0), std::to_string(order)};
   diff_fields(options, fields);
   fields.push_back("1");
@@ -1503,18 +1535,26 @@ Operator taylor_remainder(std::string_view variable, std::int64_t order,
       detail::OperatorKind::Leaf, 1, pack_all(fields));
 }
 
-Operator power_series(std::string_view variable, double center) {
-  check_center(center, "operators::expansion::power_series");
+Operator power(std::string_view variable, double center) {
+  check_center(center, "operators::expansion::power");
   return detail::leaf(
       "power_series", expansion_capabilities(),
       [name = std::string(variable), center](const Function &c) {
         PLUSS_CHECK(c.rank() == 1,
-                    "operators::expansion::power_series: the input must be a "
+                    "operators::expansion::power: the input must be a "
                     "coefficient vector (a rank-1 Function)");
-        const Function x = c.arg(name);
+        // The variable is the function's own when it has one of that name (coefficients that came from an expansion
+        // in `name`); otherwise it is introduced, so a plain coefficient vector can be turned into a polynomial.
+        Function base = c;
+        Function x;
+        try {
+          x = c.arg(name);
+        } catch (const pluss::Error &) {
+          base = math::detail::FunctionAccess::extend(c, name, x);
+        }
         Function sum;
-        for (std::int64_t k = 0; k < c.shape()[0]; ++k) {
-          Function term = c.select(0, k);
+        for (std::int64_t k = 0; k < base.shape()[0]; ++k) {
+          Function term = base.select(0, k);
           if (k > 0) term = term * (x - center).pow(static_cast<double>(k));
           sum = sum.defined() ? sum + term : term;
         }
@@ -1523,12 +1563,12 @@ Operator power_series(std::string_view variable, double center) {
       detail::OperatorKind::Leaf, 1, pack_all({name_field(variable), number(center)}));
 }
 
-Operator series_derivative() {
+Operator Power::derivative() const {
   return detail::leaf(
       "series_derivative", expansion_capabilities(),
       [](const Function &c) {
         PLUSS_CHECK(c.rank() == 1 && c.shape()[0] >= 2,
-                    "operators::expansion::series_derivative: needs a "
+                    "operators::expansion::Power::derivative: needs a "
                     "coefficient vector with at least two entries");
         std::vector<Function> out;
         for (std::int64_t k = 0; k + 1 < c.shape()[0]; ++k) out.push_back(c.select(0, k + 1) * static_cast<double>(k + 1));
@@ -1537,11 +1577,11 @@ Operator series_derivative() {
       detail::OperatorKind::Leaf, 1, std::string{});
 }
 
-Operator series_integral() {
+Operator Power::integral() const {
   return detail::leaf(
       "series_integral", expansion_capabilities(),
       [](const Function &c) {
-        PLUSS_CHECK(c.rank() == 1, "operators::expansion::series_integral: "
+        PLUSS_CHECK(c.rank() == 1, "operators::expansion::Power::integral: "
                                    "needs a coefficient vector");
         std::vector<Function> out{c.select(0, 0) * 0.0};
         for (std::int64_t k = 0; k < c.shape()[0]; ++k) out.push_back(c.select(0, k) * (1.0 / static_cast<double>(k + 1)));
@@ -1550,16 +1590,16 @@ Operator series_integral() {
       detail::OperatorKind::Leaf, 1, std::string{});
 }
 
-Operator series_product(Function other) {
+Operator Power::product(Function other) const {
   PLUSS_CHECK(other.defined() && other.rank() == 1,
-              "operators::expansion::series_product: the second factor must "
+              "operators::expansion::Power::product: the second factor must "
               "be a coefficient vector");
   Capabilities capabilities = structural_linear();
   capabilities.serializable = false;
   return detail::leaf(
       "series_product", capabilities,
       [other = std::move(other)](const Function &a) {
-        PLUSS_CHECK(a.rank() == 1, "operators::expansion::series_product: "
+        PLUSS_CHECK(a.rank() == 1, "operators::expansion::Power::product: "
                                    "the input must be a coefficient vector");
         const Function b = math::detail::FunctionAccess::rebind(other, a);
         const std::int64_t n = std::min(a.shape()[0], b.shape()[0]);
@@ -1581,10 +1621,10 @@ Operator restore_expansion(std::string_view key, std::string_view payload) {
   if (key == "power_series") {
     const auto f = unpack_all(payload);
     PLUSS_CHECK(f.size() == 2, "math::io: malformed expansion operator descriptor");
-    return power_series(f[0], real(f[1]));
+    return power(f[0], real(f[1]));
   }
-  if (key == "series_derivative") return series_derivative();
-  if (key == "series_integral") return series_integral();
+  if (key == "series_derivative") return power().derivative();
+  if (key == "series_integral") return power().integral();
   const std::vector<std::string> f = unpack_all(payload);
   PLUSS_CHECK(!f.empty(), "math::io: malformed expansion operator descriptor");
   const std::size_t n = static_cast<std::size_t>(std::stoull(f[0]));
@@ -1604,8 +1644,8 @@ Operator restore_expansion(std::string_view key, std::string_view payload) {
   const double center = real(f[2]);
   const std::int64_t order = std::stoll(f[3]);
   const DiffOptions options = read_diff(f, 4);
-  if (key == "taylor_coefficients") return taylor_coefficients(f[1], center, order, options, static_cast<Engine>(std::stoi(f[7])));
-  return taylor_remainder(f[1], order, options);
+  if (key == "taylor_coefficients") return taylor().coefficients(f[1], center, order, options, static_cast<Engine>(std::stoi(f[7])));
+  return taylor().remainder(f[1], order, options);
 }
 
 } // namespace pluss::subsp::math::operators::expansion

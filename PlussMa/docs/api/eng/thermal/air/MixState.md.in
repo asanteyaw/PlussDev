@@ -1,0 +1,57 @@
+# `thermal::MixState`
+
+The state of a mixture of two moist-air streams.
+
+## Signature
+
+```cpp
+thermal::MixState
+```
+
+## What It Does
+
+Holds the temperature and humidity ratio of the stream that results from mixing two streams adiabatically.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `temperature` | The mixture temperature in degrees Celsius. |  |
+| `w` | The mixture humidity ratio in kg/kg. |  |
+
+## Returns
+
+A value returned by `mix`.
+
+## Errors
+
+None: a state is only constructed by a successful call.
+
+## Interpretation and Use
+
+The state is not checked against saturation: a mixture of two saturated streams can be supersaturated, and `rh` of the result then exceeds one.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Two streams in equal parts.
+
+@@example Eng/api/thermal_mix_basic.cpp@@
+
+### Example 2
+
+An outdoor-air fraction.
+
+@@example Eng/api/thermal_mix_ratio.cpp@@
+
+### Example 3
+
+A mixture that forms fog.
+
+@@example Eng/api/thermal_mix_condensing.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

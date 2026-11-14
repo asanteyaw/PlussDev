@@ -34,4 +34,13 @@ Every program is complete and its output is the output of that program.
 6. The `fallback` option makes `gradient`, `jacobian` and `hessian` accept opaque `Series` callables, as `differential` does.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_03_vector_calculus/gradients
+calculus_03_vector_calculus/jacobians_and_hessians
+calculus_03_vector_calculus/batches_and_broadcasting
+calculus_03_vector_calculus/a_newton_step_from_the_hessian
+```
 <!-- apiref:toctree:end -->

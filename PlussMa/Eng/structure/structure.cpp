@@ -1,3 +1,4 @@
+#include <optional>
 #include "pluss/subsp/eng/structure.h"
 
 #include <algorithm>
@@ -483,10 +484,18 @@ struct CorotKernel {
     const Series finish_position = position.index_select(-2, to);
     const Series start = displacement.index_select(-2, from);
     const Series finish = displacement.index_select(-2, to);
-    const Series chord =
-        finish_position.add(finish.slice(-1, 0, 2))
-            .sub(start_position.add(start.slice(-1, 0, 2)));
+    // The extension is formed as (L^2 - L0^2) / (L + L0) = (2 c0.d + d.d) / (L + L0) from the reference chord c0 and the relative
+    // displacement d, so a member that has hardly moved reports its tiny extension to full relative accuracy instead of the rounding
+    // noise of subtracting two nearly equal lengths (which, times a large axial stiffness, would swamp small loads).
+    const Series reference_chord = finish_position.sub(start_position);
+    const Series relative =
+        finish.slice(-1, 0, 2).sub(start.slice(-1, 0, 2));
+    const Series chord = reference_chord.add(relative);
     const Series length = chord.square().sum(-1, false).sqrt();
+    const Series extension =
+        reference_chord.mul(relative).sum(-1, false).mul(2.0)
+            .add(relative.square().sum(-1, false))
+            .div(length.add(reference_length));
     if (!length.gt(0.0).all().item<bool>())
       throw std::runtime_error(
           "eng::structure: a deformed frame member collapsed to zero length");
@@ -501,7 +510,7 @@ struct CorotKernel {
     const Series turn_j = finish.select(-1, 2).sub(rigid_rotation);
     const Series axial_stiffness = modulus.mul(area).div(reference_length);
     const Series bending_stiffness = modulus.mul(inertia).div(reference_length);
-    const Series axial = axial_stiffness.mul(length.sub(reference_length));
+    const Series axial = axial_stiffness.mul(extension);
     const Series moment_i =
         bending_stiffness.mul(turn_i.mul(4.0).add(turn_j.mul(2.0)));
     const Series moment_j =
@@ -654,10 +663,21 @@ CoreResult solve_system(const Kernel &kernel, const SolveLayout &layout,
       [&](const Series &residual) { return residual.div(diagonal); }, rhs, {-1},
       options.cg);
   if (options.fail_on_nonconvergence &&
-      !solved.converged.all().template item<bool>())
-    throw std::runtime_error(std::string(operation) +
-                             ": constrained stiffness solve did not converge; "
-                             "the structure may contain a mechanism");
+      !solved.converged.all().template item<bool>()) {
+    if (solved.breakdown.any().template item<bool>())
+      throw std::runtime_error(
+          std::string(operation) +
+          ": the structure has a direction with no stiffness under this "
+          "load, so it is a mechanism; check the supports and the bar "
+          "connectivity");
+    throw std::runtime_error(
+        std::string(operation) +
+        ": the stiffness solve stopped after " +
+        std::to_string(solved.iterations) +
+        " iterations without reaching its tolerance; raise cg.max_iterations "
+        "or loosen cg.relative_tolerance (long or slender structures are "
+        "poorly conditioned)");
+  }
   const Series displacement =
       layout.prescribed_flat.add(solved.solution.mul(layout.free_mask))
           .reshape(layout.node_shape);
@@ -843,8 +863,12 @@ struct EquilibriumResult {
   std::int64_t iterations{};
 };
 
+// The line search measures progress in the residual scaled by the reference stiffness diagonal, so the very stiff axial and the soft
+// bending degrees of a slender member weigh as the displacements they produce rather than as raw forces: a full Newton step on a slender
+// member changes the axial force by far more than the bending forces it fixes, and the unscaled norm would reject it.
 EquilibriumResult equilibrate(const CorotKernel &kernel,
                               const SolveLayout &layout,
+                              const Series &inverse_scale,
                               const Series &external,
                               Series displacement,
                               const Series &prescribed,
@@ -863,8 +887,16 @@ EquilibriumResult equilibrate(const CorotKernel &kernel,
   const Series external_flat =
       external.reshape(layout.flat_shape).mul(layout.free_mask);
   const Series scale = state_norm(external_flat);
-  const Series tolerance =
-      scale.mul(relative_tolerance).maximum(absolute_tolerance);
+  // Internal forces cannot be evaluated more accurately than rounding allows, about eps times the stiffness times the size of the
+  // structure, so a tolerance below that floor could never be met however many iterations are spent.
+  const Series rounding_floor =
+      scale.mul(0.0).add(
+          inverse_scale.reciprocal().max().mul(
+              displacement.abs().max().maximum(kernel.reference_length.max())
+                  .mul(100.0 * std::numeric_limits<double>::epsilon())));
+  const Series tolerance = scale.mul(relative_tolerance)
+                               .maximum(absolute_tolerance)
+                               .maximum(rounding_floor);
   Series residual_norm = scale.mul(0.0);
   Series converged = residual_norm.eq(-1.0);
   std::int64_t iterations = 0;
@@ -899,7 +931,7 @@ EquilibriumResult equilibrate(const CorotKernel &kernel,
 
     const Series correction =
         solved.correction.mul(layout.free_mask).reshape(layout.node_shape);
-    const Series old_merit = residual_norm.square();
+    const Series old_merit = state_norm(residual.mul(inverse_scale)).square();
     bool accepted = false;
     double alpha = 1.0;
     for (std::int64_t search = 0; search < max_line_search; ++search) {
@@ -908,10 +940,12 @@ EquilibriumResult equilibrate(const CorotKernel &kernel,
           external.sub(kernel.linearize(trial).internal(trial))
               .reshape(layout.flat_shape)
               .mul(layout.free_mask);
-      const Series trial_merit = state_norm(trial_residual).square();
+      const Series trial_merit =
+          state_norm(trial_residual.mul(inverse_scale)).square();
       if (trial_merit
               .le(old_merit.mul(1.0 - armijo * alpha)
-                      .add(tolerance.square()))
+                      .add(state_norm(inverse_scale.mul(tolerance.unsqueeze(-1)))
+                               .square()))
               .all()
               .item<bool>()) {
         displacement = trial;
@@ -1055,9 +1089,28 @@ StaticResult solve(const Truss &truss, const Series &load, const Fix &fix,
 
 FrameResult solve(const Frame &frame, const Series &load, const Fix &fix,
                   const SolveOptions &options) {
+  return solve(frame, load, MemberLoad{}, fix, options);
+}
+
+FrameResult solve(const Frame &frame, const Series &load,
+                  const MemberLoad &member_load, const Fix &fix,
+                  const SolveOptions &options) {
   constexpr const char *operation = "eng::structure::solve";
-  const SolveLayout layout =
-      prepare_solve(frame.position_, load, fix, frame.nodes_, 3, operation);
+  // Leading axes of the member loads (a set of load intensities) join those of the nodal load.
+  Series nodal = load;
+  if (load.defined() && (member_load.transverse.defined() || member_load.axial.defined())) {
+    Shape batch = leading_shape(load, 2);
+    if (member_load.transverse.defined() && member_load.transverse.dim() >= 1)
+      batch = broadcast_shape(batch, leading_shape(member_load.transverse, 1), operation);
+    if (member_load.axial.defined() && member_load.axial.dim() >= 1)
+      batch = broadcast_shape(batch, leading_shape(member_load.axial, 1), operation);
+    Shape full = batch;
+    full.push_back(load.size(-2));
+    full.push_back(load.size(-1));
+    nodal = load.add(pluss::series::zeros(full, config(load.scalar_type(), load.platform())));
+  }
+  SolveLayout layout =
+      prepare_solve(frame.position_, nodal, fix, frame.nodes_, 3, operation);
   const FrameKernel kernel{
       expand_tail(frame.direction_, layout.batch, 2, operation),
       expand_tail(frame.length_, layout.batch, 1, operation),
@@ -1069,10 +1122,50 @@ FrameResult solve(const Frame &frame, const Series &load, const Fix &fix,
           : Series{},
       frame.from_index_,
       frame.to_index_};
+
+  // A uniform load q (transverse) and p (axial) on a member of length L is carried by the consistent nodal loads
+  // (p L / 2, q L / 2, q L^2 / 12) at the first node and (p L / 2, q L / 2, -q L^2 / 12) at the second. The member's
+  // own end actions are those of the nodal solution plus the fixed-end actions, which are the negatives of these.
+  Series equivalent;
+  const bool has_transverse = member_load.transverse.defined();
+  const bool has_axial = member_load.axial.defined();
+  if (has_transverse || has_axial) {
+    const auto dtype = frame.position_.scalar_type();
+    const auto platform = frame.position_.platform();
+    const Series zero = kernel.length.mul(0.0);
+    Series q = zero, p = zero;
+    if (has_transverse) {
+      inspect_values(member_load.transverse, 1, operation, "transverse load",
+                     dtype, platform);
+      if (member_load.transverse.size(-1) != frame.members_)
+        throw std::invalid_argument(
+            "eng::structure::solve: the transverse member load must end in "
+            "the member count");
+      q = expand_tail(member_load.transverse, layout.batch, 1, operation);
+    }
+    if (has_axial) {
+      inspect_values(member_load.axial, 1, operation, "axial load", dtype,
+                     platform);
+      if (member_load.axial.size(-1) != frame.members_)
+        throw std::invalid_argument(
+            "eng::structure::solve: the axial member load must end in the "
+            "member count");
+      p = expand_tail(member_load.axial, layout.batch, 1, operation);
+    }
+    const Series length = kernel.length;
+    const Series force_p = p.mul(length).mul(0.5);
+    const Series force_q = q.mul(length).mul(0.5);
+    const Series moment = q.mul(length.square()).div(12.0);
+    equivalent = lanes({force_p, force_q, moment, force_p, force_q, moment.neg()});
+    layout.load = layout.load.add(kernel.assemble(equivalent, layout.load));
+  }
+
   const CoreResult core = solve_system(kernel, layout, options, operation);
+  Series end_force = kernel.local_force(core.displacement);
+  if (equivalent.defined()) end_force = end_force.sub(equivalent);
   return {core.displacement,
           core.reaction,
-          kernel.local_force(core.displacement),
+          end_force,
           core.displacement.mul(core.internal).sum({-2, -1}, false).mul(0.5),
           core.residual_norm,
           core.converged,
@@ -1106,11 +1199,29 @@ NonlinearResult solve(const Frame &frame, const Series &load, const Fix &fix,
       frame.from_index_,
       frame.to_index_};
 
+  const FrameKernel linear_kernel{
+      expand_tail(frame.direction_, layout.batch, 2, operation),
+      expand_tail(frame.length_, layout.batch, 1, operation),
+      expand_tail(frame.area_, layout.batch, 1, operation),
+      expand_tail(frame.inertia_, layout.batch, 1, operation),
+      expand_tail(frame.modulus_, layout.batch, 1, operation),
+      Series{},
+      frame.from_index_,
+      frame.to_index_};
+  const Series inverse_scale =
+      linear_kernel.diagonal(pluss::series::zeros_like(layout.load))
+          .abs()
+          .reshape(layout.flat_shape)
+          .mul(layout.free_mask)
+          .add(layout.fixed_mask)
+          .reciprocal();
+
   Series displacement = pluss::series::zeros_like(layout.load);
   double load_factor = 0.0;
   double increment = 1.0 / static_cast<double>(options.load_steps);
   std::int64_t steps = 0;
   std::int64_t cutbacks = 0;
+  std::int64_t consecutive_cutbacks = 0;
   std::int64_t iterations = 0;
   Series residual_norm =
       state_norm(layout.load.reshape(layout.flat_shape).mul(0.0));
@@ -1122,7 +1233,7 @@ NonlinearResult solve(const Frame &frame, const Series &load, const Fix &fix,
     const Series prescribed =
         layout.prescribed_flat.mul(target).reshape(layout.node_shape);
     const EquilibriumResult attempt = equilibrate(
-        kernel, layout, external, displacement, prescribed,
+        kernel, layout, inverse_scale, external, displacement, prescribed,
         options.max_iterations, options.max_line_search,
         options.relative_tolerance, options.absolute_tolerance,
         options.line_search_shrink, options.armijo, options.solve);
@@ -1133,15 +1244,18 @@ NonlinearResult solve(const Frame &frame, const Series &load, const Fix &fix,
       converged = attempt.converged;
       load_factor = target;
       ++steps;
+      consecutive_cutbacks = 0;
       increment = std::min(1.0 / static_cast<double>(options.load_steps),
                            increment * 2.0);
       continue;
     }
     ++cutbacks;
+    ++consecutive_cutbacks;
     increment *= 0.5;
     converged = attempt.converged;
     residual_norm = attempt.residual_norm;
-    if (cutbacks > options.max_cutbacks || increment < options.min_load_step)
+    if (consecutive_cutbacks > options.max_cutbacks ||
+        increment < options.min_load_step)
       break;
   }
 
@@ -1154,10 +1268,17 @@ NonlinearResult solve(const Frame &frame, const Series &load, const Fix &fix,
   const Series internal = state.internal(displacement);
   residual_norm = state_norm(
       applied.sub(internal).reshape(layout.flat_shape).mul(layout.free_mask));
+  const Series final_scale =
+      state_norm(applied.reshape(layout.flat_shape).mul(layout.free_mask));
+  const Series final_floor =
+      final_scale.mul(0.0).add(
+          inverse_scale.reciprocal().max().mul(
+              displacement.abs().max().maximum(kernel.reference_length.max())
+                  .mul(100.0 * std::numeric_limits<double>::epsilon())));
   const Series final_tolerance =
-      state_norm(applied.reshape(layout.flat_shape).mul(layout.free_mask))
-          .mul(options.relative_tolerance)
-          .maximum(options.absolute_tolerance);
+      final_scale.mul(options.relative_tolerance)
+          .maximum(options.absolute_tolerance)
+          .maximum(final_floor);
   converged = residual_norm.le(final_tolerance);
   if (load_factor < 1.0)
     converged = converged.logical_and(converged.logical_not());
@@ -1229,6 +1350,7 @@ ModeResult modes(const Frame &frame, const Fix &fix,
   const SolveLayout layout = prepare_solve(frame.position_, zero_load, fix,
                                            frame.nodes_, 3, operation);
   const std::int64_t dofs = frame.nodes_ * 3;
+
   Shape node_shape = layout.batch;
   node_shape.push_back(options.count);
   node_shape.push_back(frame.nodes_);
@@ -1328,6 +1450,17 @@ BuckResult buckling(const Frame &frame, const Series &reference_load,
   const Series end_force = static_kernel.local_force(prestress.displacement);
   const Series compression =
       end_force.select(-1, 0).sub(end_force.select(-1, 3)).mul(0.5);
+  // Buckling needs a member in compression: a zero, tensile or purely transverse reference load leaves no destabilising axial force, and
+  // the eigenproblem would fail with a message about its internals.
+  if (!compression.amax(-1)
+           .gt(end_force.abs().amax(-1).amax(-1).mul(1e-9))
+           .all()
+           .item<bool>())
+    throw std::invalid_argument(
+        "eng::structure::buckling: the reference load puts no member in "
+        "compression, so there is no buckling factor; apply a compressive "
+        "axial reference load (a zero, tensile or purely transverse load "
+        "never buckles a frame in a linearised analysis)");
 
   const std::int64_t dofs = frame.nodes_ * 3;
   Shape node_shape = layout.batch;
@@ -1392,9 +1525,20 @@ BuckResult buckling(const Frame &frame, const Series &reference_load,
   const pluss::subsp::linearalg::GenEigOptions eig_options{
       options.max_iterations, options.relative_tolerance,
       options.absolute_tolerance};
-  auto spectral = spectral_seed(layout, dofs, options, operation)
-                      .linearalg.gen_eigh(apply_stiffness, apply_geometric,
-                                          solve_stiffness, eig_options);
+  const auto seed = spectral_seed(layout, dofs, options, operation);
+  const auto spectral = [&] {
+    try {
+      return seed.linearalg.gen_eigh(apply_stiffness, apply_geometric,
+                                     solve_stiffness, eig_options);
+    } catch (const std::exception &error) {
+      throw std::runtime_error(
+          std::string(operation) + ": could not extract " +
+          std::to_string(options.count) +
+          " positive buckling factors (" + error.what() +
+          "); ask for fewer modes, or check that the reference load "
+          "compresses enough of the structure");
+    }
+  }();
   const Series norm = spectral.vectors.abs().amax(-1).unsqueeze(-1);
   const Series vectors = spectral.vectors.div(norm);
   return {spectral.values, vectors.reshape(node_shape),
@@ -1825,6 +1969,10 @@ motion(const Frame &frame, const Series &load, const Series &time,
           .sub(initial_state.internal(displacement))
           .reshape(layout.flat_shape)
           .mul(layout.free_mask);
+  const Series stiffness_diagonal =
+      linear_kernel.diagonal(pluss::series::zeros_like(displacement))
+          .abs()
+          .reshape(layout.flat_shape);
   const Series mass_preconditioner =
       mass_diagonal.mul(layout.free_mask).add(layout.fixed_mask);
   pluss::subsp::math::krylov::CgOptions mass_options;
@@ -1941,11 +2089,25 @@ motion(const Frame &frame, const Series &load, const Series &time,
             .add(
                 force_sample[static_cast<std::size_t>(index + 1)].mul(alpha_f));
     Series alpha_acceleration = current_acceleration;
+    // progress is measured in the residual scaled by the effective stiffness diagonal (see equilibrate)
+    const Series inverse_scale =
+        mass_diagonal.add(stiffness_diagonal.mul(cu))
+            .mul(layout.free_mask)
+            .add(layout.fixed_mask)
+            .reciprocal();
     const Series load_scale =
         state_norm(applied.reshape(layout.flat_shape).mul(layout.free_mask));
+    // The internal forces of a stiff member cannot be evaluated more accurately than rounding allows, about eps times its stiffness
+    // times its size, so a tolerance below that floor can never be met (a rigidly rotated, unloaded rod is the extreme case).
+    const Series rounding_floor =
+        load_scale.mul(0.0).add(
+            stiffness_diagonal.max().mul(
+                pred_u.abs().max().maximum(nonlinear_kernel.reference_length.max())
+                    .mul(100.0 * std::numeric_limits<double>::epsilon())));
     const Series tolerance =
         load_scale.mul(options.relative_tolerance)
-            .maximum(options.absolute_tolerance);
+            .maximum(options.absolute_tolerance)
+            .maximum(rounding_floor);
     Series residual_norm = load_scale.mul(0.0);
     Series step_converged = residual_norm.eq(-1.0);
     std::int64_t step_iterations = 0;
@@ -1989,7 +2151,7 @@ motion(const Frame &frame, const Series &load, const Series &time,
       }
       const Series correction = solved.correction.mul(layout.free_mask)
                                     .reshape(layout.node_shape);
-      const Series old_merit = residual_norm.square();
+      const Series old_merit = state_norm(residual.mul(inverse_scale)).square();
       bool accepted = false;
       double scale = 1.0;
       for (std::int64_t search = 0; search < options.max_line_search;
@@ -2004,10 +2166,13 @@ motion(const Frame &frame, const Series &load, const Series &time,
                          .internal(candidate_u))
                 .reshape(layout.flat_shape)
                 .mul(layout.free_mask);
-        const Series candidate_merit = state_norm(candidate_residual).square();
+        const Series candidate_merit =
+            state_norm(candidate_residual.mul(inverse_scale)).square();
         if (candidate_merit
                 .le(old_merit.mul(1.0 - options.armijo * scale)
-                        .add(tolerance.square()))
+                        .add(state_norm(inverse_scale.mul(
+                                            tolerance.unsqueeze(-1)))
+                                 .square()))
                 .all()
                 .item<bool>()) {
           alpha_acceleration = candidate;

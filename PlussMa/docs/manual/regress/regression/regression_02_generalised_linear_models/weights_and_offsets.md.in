@@ -54,8 +54,8 @@ int main() {
   grouped.weights = pluss::make_series(size, {8}, as_f64());
   const auto b = reg::glm_fit(pluss::make_series(share, {8}, as_f64()), pluss::make_series(level, {8}, as_f64()), grouped);
 
-  out.writeln("80 individual rows   coefficients", a.coefficients.pull<double>(), " deviance", a.deviance, " null", a.null_deviance, " log-lik", a.log_likelihood);
-  out.writeln(" 8 weighted groups   coefficients", b.coefficients.pull<double>(), " deviance", b.deviance, " null", b.null_deviance, " log-lik", b.log_likelihood);
+  out.writeln("80 individual rows   coefficients", a.coefficients.items<double>(), " deviance", a.deviance, " null", a.null_deviance, " log-lik", a.log_likelihood);
+  out.writeln(" 8 weighted groups   coefficients", b.coefficients.items<double>(), " deviance", b.deviance, " null", b.null_deviance, " log-lik", b.log_likelihood);
   out.writeln("largest difference in the covariance", a.covariance.sub(b.covariance).abs().max().item<double>(), " std errors", a.std_errors.sub(b.std_errors).abs().max().item<double>());
   out.writeln("drop in deviance from the null model", a.null_deviance - a.deviance, "and", b.null_deviance - b.deviance);
   out.writeln("rows used", a.nobs, "and", b.nobs, " residual degrees of freedom", a.df_resid, "and", b.df_resid);
@@ -90,9 +90,9 @@ int main() {
   const auto down = reg::glm_fit(y, x, options);
   options.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 0, 1}, {8}, as_f64());
   const auto zero = reg::glm_fit(y, x, options);
-  out.writeln("equal weights                  coefficients", plain.coefficients.pull<double>());
-  out.writeln("the 7th row down-weighted to 0.1             ", down.coefficients.pull<double>());
-  out.writeln("the 7th row given weight 0      ", zero.coefficients.pull<double>(), " nobs", zero.nobs, " dropped", zero.dropped_observations);
+  out.writeln("equal weights                  coefficients", plain.coefficients.items<double>());
+  out.writeln("the 7th row down-weighted to 0.1             ", down.coefficients.items<double>());
+  out.writeln("the 7th row given weight 0      ", zero.coefficients.items<double>(), " nobs", zero.nobs, " dropped", zero.dropped_observations);
 
   auto attempt = [&](const char *label, const std::vector<double> &w) {
     reg::GLMOptions o;
@@ -157,7 +157,7 @@ int main() {
   options.family = reg::GLMFamily::Poisson;
   options.offset = pluss::make_series(log_exposure, {12}, as_f64());
   const auto fit = reg::glm_fit(y, x, options);
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
   const double rate0 = events_by_group[0] / exposure_by_group[0], rate1 = events_by_group[1] / exposure_by_group[1];
   out.writeln("rate per unit of exposure: group 0", std::exp(b[0]), " group 1", std::exp(b[0] + b[1]), " rate ratio", std::exp(b[1]));
   out.writeln("totals events / exposure : group 0", rate0, " group 1", rate1, " ratio", rate1 / rate0);
@@ -166,12 +166,12 @@ int main() {
   reg::GLMOptions naive;
   naive.family = reg::GLMFamily::Poisson;
   const auto raw = reg::glm_fit(y, x, naive);
-  out.writeln("without the offset, the 'rate ratio' of raw counts is", std::exp(raw.coefficients.pull<double>()[1]), "and its deviance is", raw.deviance, "against", fit.deviance, "with it");
+  out.writeln("without the offset, the 'rate ratio' of raw counts is", std::exp(raw.coefficients.items<double>()[1]), "and its deviance is", raw.deviance, "against", fit.deviance, "with it");
 
   // Predicting the expected count for a new site: the rate of its group times its own exposure.
   const auto new_x = pluss::make_series(std::vector<double>{0, 1}, {2}, as_f64());
   const auto new_offset = pluss::make_series(std::vector<double>{std::log(10.0), std::log(10.0)}, {2}, as_f64());
-  out.writeln("expected events for an exposure of 10, groups 0 and 1:", reg::glm_predict(fit, new_x, new_offset).pull<double>(), " by hand", 10.0 * rate0, 10.0 * rate1);
+  out.writeln("expected events for an exposure of 10, groups 0 and 1:", reg::glm_predict(fit, new_x, new_offset).items<double>(), " by hand", 10.0 * rate0, 10.0 * rate1);
   out.writeln("the linear predictor of the fit includes the offset:", fit.linear_predictor.sub(fit.fitted_values.log()).abs().max().item<double>());
 }
 ```
@@ -212,8 +212,21 @@ int main() {
     total_events += events[i];
     total_exposure += exposure[i];
   }
-  out.writeln("overall rate", std::exp(constant_rate.coefficients.pull<double>()[0]), " = total events / total exposure", total_events / total_exposure);
+  out.writeln("overall rate", std::exp(constant_rate.coefficients.items<double>()[0]), " = total events / total exposure", total_events / total_exposure);
 }
 ```
 
 The null deviance, 5.228, is the deviance of the intercept-only model fitted with the same offset, whose rate is the total events over the total exposure (2.5). The group indicator reduces the deviance to 2.164, a pseudo R² of 0.586 that measures what the groups add beyond a common rate.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="deviance_and_model_comparison.html">
+    <span class="label">Previous</span>
+    <span class="title">Deviance and model comparison</span>
+  </a>
+  <a class="next-link" href="responses_summary_and_errors.html">
+    <span class="label">Next</span>
+    <span class="title">Responses, the summary and errors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

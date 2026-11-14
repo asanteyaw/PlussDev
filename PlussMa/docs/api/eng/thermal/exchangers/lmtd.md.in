@@ -1,0 +1,77 @@
+# `thermal::lmtd`
+
+The log-mean temperature difference of an exchanger.
+
+## Signature
+
+```cpp
+Series thermal::lmtd(const Series& hot_in,
+                      const Series& hot_out,
+                      const Series& cold_in,
+                      const Series& cold_out,
+                      thermal::Flow flow);
+```
+
+## What It Does
+
+Returns `(dT1 - dT2) / ln(dT1 / dT2)` for the temperature differences at the two ends of a parallel-flow or counter-flow exchanger, so that `duty = UA * LMTD`. For counter flow the ends pair hot-in with cold-out and hot-out with cold-in; for parallel flow hot-in with cold-in and hot-out with cold-out. Equal end differences give their common value without dividing by zero.
+
+## Parameters
+
+`hot_in`
+: The hot inlet temperature.
+
+`hot_out`
+: The hot outlet temperature.
+
+`cold_in`
+: The cold inlet temperature.
+
+`cold_out`
+: The cold outlet temperature.
+
+`flow`
+: `Parallel` or `Counter`.
+
+## Returns
+
+The log-mean difference with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array or not finite, for an arrangement other than parallel or counter flow, and when the hot stream is not warmer than the cold stream at both ends.
+
+## Interpretation and Use
+
+Use `lmtd` to rate an exchanger whose four temperatures are known (a measurement or a specification). For other arrangements use `rate`, which handles every arrangement through effectiveness.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Counter flow with equal and unequal ends.
+
+@@example Eng/api/thermal_lmtd_counter.cpp@@
+
+### Example 2
+
+Parallel against counter flow.
+
+@@example Eng/api/thermal_lmtd_parallel.cpp@@
+
+### Example 3
+
+Duty from UA times LMTD.
+
+@@example Eng/api/thermal_lmtd_duty.cpp@@
+
+### Example 4
+
+Rejected inputs.
+
+@@example Eng/api/thermal_lmtd_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

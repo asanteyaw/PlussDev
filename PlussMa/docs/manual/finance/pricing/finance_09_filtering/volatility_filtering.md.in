@@ -1,0 +1,276 @@
+# Filtering volatility from returns
+
+[Back to Filtering](../finance_09_filtering.md)
+
+Volatility is never observed; only returns are. In a **stochastic-volatility** model the log of the variance follows its own process, and the returns are noisy readings of it: a day with a large return suggests that the volatility is high, but the same large return could be luck. Filtering the latent volatility from the returns is the standard use of a particle filter in finance, because the returns are not linear in the state and not Gaussian.
+
+## The model
+
+With {math}`h_t` the log of the annualised variance, the model is
+
+```{math}
+\begin{aligned}
+h_{t+1}&=\phi\,h_t+(1-\phi)\,m+\sigma_h\sqrt{\Delta t}\;\eta_t, &\eta_t&\sim\mathcal N(0,1),\\
+r_t&=\Big(\mu-\tfrac12e^{h_t}\Big)\Delta t+\sqrt{e^{h_t}\Delta t}\;z_t, &z_t&\sim\mathcal N(0,1),
+\end{aligned}
+```
+
+where {math}`r_t` is the log-return over a step {math}`\Delta t`. The log-variance reverts to the long-run level {math}`m` with persistence {math}`\phi` per step (a value near 1 is a slowly changing volatility), and its shocks have size {math}`\sigma_h\sqrt{\Delta t}`.
+
+```cpp
+filtering::ParticleFilterResult filtering::sv_particle_filter(const Series &log_returns, const volatility::SvParams &params, std::int64_t num_particles = 4000, double dt = 1.0, double ess_threshold = 0.5, Config cfg = {}, std::uint64_t seed = 0);
+```
+
+| `SvParams` field | Meaning | Default |
+|---|---|---|
+| `mu` | annual drift of the asset | 0 |
+| `logvar_mean` | {math}`m`, the long-run level of the log-variance | −3 |
+| `phi` | {math}`\phi`, the persistence **per step** | 0.98 |
+| `vol_of_logvar` | {math}`\sigma_h`, the volatility of the log-variance, per square root of a **year** | 0.25 |
+| `rho` | correlation of the return and the next variance shock: the leverage effect, used by the filter | −0.5 |
+| `logvar0` | the starting log-variance | −3 |
+| `variance_floor` | a floor under the variance | 10⁻¹² |
+
+| Argument | Meaning |
+|---|---|
+| `log_returns` | one return per period, a vector; the filter sees them as the observations |
+| `num_particles` | the size of the cloud (4000) |
+| `dt` | the length of a period in years; 1/252 for daily returns (the default 1 is wrong for them) |
+| `ess_threshold` | the resampling threshold as a fraction of the particles (0.5) |
+| `seed` | the seed of the random numbers; the same seed gives the same result |
+
+The result is the `ParticleFilterResult` of the previous page: `filtered_mean`, of shape `[T, 1]`, is the posterior mean of the **log-variance** {math}`h_t` that drove the return of date {math}`t`; the weights, the ESS and the log-likelihood are as before. The initial cloud is normal with mean `logvar0` and the stationary standard deviation {math}`\sigma_h/\sqrt{1-\phi^2}`.
+
+Note the two scales. {math}`\phi` is per step while {math}`\sigma_h` is per root year: a daily model with {math}`\phi=0.98` and {math}`\sigma_h=2` has shocks of {math}`2/\sqrt{252}=0.126` a day and a stationary standard deviation of the log-variance of 0.63, which is the range of real equity volatility. The small default {math}`\sigma_h=0.25` gives a log-variance that hardly moves (a standard deviation of 0.06), and there is then nothing to filter.
+
+## Program 1: tracking the volatility
+
+The program simulates three years of daily returns from the model (with a short generator written in the program, `simulate`, which follows the two equations above) with {math}`\phi=0.98`, {math}`\sigma_h=2`, a long-run log-variance of −3.5 (a volatility of 17%), keeping the true latent variance, filters the returns with 4,000 particles and compares the filtered log-variance with the true one.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <random>
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+namespace vol = fin::volatility;
+using namespace pluss::tils;
+
+// Simulates the model: returns[t] is driven by the variance exp(h[t]), and the next log-variance is shocked with correlation rho to that return.
+struct Simulated {
+  pluss::Series returns, variance;
+};
+Simulated simulate(const vol::SvParams &p, std::int64_t T, double dt, std::uint64_t seed) {
+  std::mt19937_64 rng(seed);
+  std::normal_distribution<double> normal;
+  std::vector<double> returns(T), variance(T);
+  double h = p.logvar0;
+  for (std::int64_t t = 0; t < T; ++t) {
+    const double v = std::exp(h);
+    const double z = normal(rng), eps = normal(rng);
+    returns[t] = (p.mu - 0.5 * v) * dt + std::sqrt(v * dt) * z;
+    variance[t] = v;
+    h = p.phi * h + (1.0 - p.phi) * p.logvar_mean + p.vol_of_logvar * std::sqrt(dt) * (p.rho * z + std::sqrt(1.0 - p.rho * p.rho) * eps);
+  }
+  return {pluss::make_series(returns, {T}, as_f64()), pluss::make_series(variance, {T}, as_f64())};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  vol::SvParams params;
+  params.mu = 0.05;
+  params.logvar_mean = -3.5;
+  params.phi = 0.98;
+  params.vol_of_logvar = 2.0;
+  params.rho = 0.0;
+  params.logvar0 = -3.5;
+  const std::int64_t T = 750;
+  const double dt = 1.0 / 252.0;
+
+  // three years of daily returns from the model, with the latent variance path kept for comparison
+  const auto sim = simulate(params, T, dt, 5);
+  const auto &returns = sim.returns;
+  const auto &variance = sim.variance;
+  out.writeln("daily returns", returns.sizes(), " annualised variance of the returns", returns.var().item<double>() / dt, " exp(logvar_mean)", std::exp(params.logvar_mean));
+
+  const auto result = flt::sv_particle_filter(returns, params, 4000, dt, 0.5, as_f64(), 7);
+  out.writeln("filtered_mean", result.filtered_mean.sizes(), " particle_weights", result.particle_weights.sizes(), " ess", result.ess.sizes());
+  const auto log_variance = result.filtered_mean.reshape({T});
+  const auto truth = variance.log();  // the variance that drives the return of each day
+  const auto correlation = [&](const pluss::Series &a, const pluss::Series &b) {
+    return ((a - a.mean()) * (b - b.mean())).mean().item<double>() / (a.std().item<double>() * b.std().item<double>());
+  };
+  out.writeln("correlation of the filtered log-variance with the true one", correlation(log_variance, truth));
+  out.writeln("mean of the filtered log-variance", log_variance.mean().item<double>(), " true", truth.mean().item<double>());
+  out.writeln("effective sample size: minimum", result.ess.min().item<double>(), " mean", result.ess.mean().item<double>(), " of 4000 particles");
+  out.writeln("log-likelihood", result.loglik);
+  out.writeln("date  filtered annualised volatility  true annualised volatility");
+  for (const std::int64_t t : {100, 200, 300, 400, 500, 600}) {
+    out.writeln(t, std::sqrt(std::exp(log_variance.select(0, t).item<double>())), std::sqrt(variance.select(0, t).item<double>()));
+  }
+}
+```
+
+The returns have an annualised variance of 0.0484, above the median {math}`e^{-3.5}=0.0302` because the variance is log-normal and its mean exceeds its median ({math}`e^{-3.5+0.63^2/2}=0.037`) and this path had a high-volatility stretch. The filtered log-variance has a correlation of 0.83 with the true one and a mean of −3.29 against −3.25: the filter finds the level and follows most of the movement. The volatilities are of the right size, with differences that a single day of return cannot resolve: 0.130 for 0.112 at date 100, 0.214 for 0.248 at date 200, 0.208 for 0.221 at date 400, and 0.2335 for 0.2330 at date 600. This is the limit of the information: one return per day, a day's move being only a rough reading of the volatility, and a persistent latent state is inferred from many days. The effective sample size has a minimum of 245 and a mean of 2,975 of the 4,000 particles: the cloud is healthy on average, and the minimum marks the date of one violent return, where the weights concentrate before resampling. The log-likelihood is 2186.75.
+
+## Program 2: likelihood across parameters
+
+The log-likelihood that comes with the filter makes it a tool for estimating the parameters: the true parameters should have the highest. The program evaluates the log-likelihood of the same returns over a range of each parameter in turn, and then shows how much the log-likelihood itself varies with the number of particles and the seed, which is the noise to compare the differences against.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <random>
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+namespace vol = fin::volatility;
+using namespace pluss::tils;
+
+// Simulates the model: returns[t] is driven by the variance exp(h[t]), and the next log-variance is shocked with correlation rho to that return.
+struct Simulated {
+  pluss::Series returns, variance;
+};
+Simulated simulate(const vol::SvParams &p, std::int64_t T, double dt, std::uint64_t seed) {
+  std::mt19937_64 rng(seed);
+  std::normal_distribution<double> normal;
+  std::vector<double> returns(T), variance(T);
+  double h = p.logvar0;
+  for (std::int64_t t = 0; t < T; ++t) {
+    const double v = std::exp(h);
+    const double z = normal(rng), eps = normal(rng);
+    returns[t] = (p.mu - 0.5 * v) * dt + std::sqrt(v * dt) * z;
+    variance[t] = v;
+    h = p.phi * h + (1.0 - p.phi) * p.logvar_mean + p.vol_of_logvar * std::sqrt(dt) * (p.rho * z + std::sqrt(1.0 - p.rho * p.rho) * eps);
+  }
+  return {pluss::make_series(returns, {T}, as_f64()), pluss::make_series(variance, {T}, as_f64())};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  vol::SvParams truth;
+  truth.mu = 0.05;
+  truth.logvar_mean = -3.5;
+  truth.phi = 0.98;
+  truth.vol_of_logvar = 2.0;
+  truth.rho = 0.0;
+  truth.logvar0 = -3.5;
+  const std::int64_t T = 750;
+  const double dt = 1.0 / 252.0;
+  const auto returns = simulate(truth, T, dt, 5).returns;
+
+  const auto loglik = [&](const vol::SvParams &p) { return flt::sv_particle_filter(returns, p, 4000, dt, 0.5, as_f64(), 7).loglik; };
+  out.writeln("persistence phi:       0.50      0.90      0.98 (true)   0.995");
+  std::string row = "log-likelihood      ";
+  for (const double phi : {0.5, 0.9, 0.98, 0.995}) {
+    auto p = truth;
+    p.phi = phi;
+    row += std::to_string(loglik(p)).substr(0, 8) + "  ";
+  }
+  out.writeln(row);
+  out.writeln("vol of log-variance:  0.5       1.0       2.0 (true)    4.0");
+  row = "log-likelihood      ";
+  for (const double v : {0.5, 1.0, 2.0, 4.0}) {
+    auto p = truth;
+    p.vol_of_logvar = v;
+    row += std::to_string(loglik(p)).substr(0, 8) + "  ";
+  }
+  out.writeln(row);
+  out.writeln("long-run log-variance: -5.0      -4.0      -3.5 (true)   -2.5");
+  row = "log-likelihood      ";
+  for (const double m : {-5.0, -4.0, -3.5, -2.5}) {
+    auto p = truth;
+    p.logvar_mean = m;
+    p.logvar0 = m;
+    row += std::to_string(loglik(p)).substr(0, 8) + "  ";
+  }
+  out.writeln(row);
+  const auto more = flt::sv_particle_filter(returns, truth, 20000, dt, 0.5, as_f64(), 7).loglik;
+  out.writeln("true parameters, 20000 particles", more, " 4000 particles", loglik(truth), " another seed", flt::sv_particle_filter(returns, truth, 4000, dt, 0.5, as_f64(), 99).loglik);
+}
+```
+
+Each profile peaks at the true value. The persistence {math}`\phi` gives 2105.0, 2152.5, **2186.8** and 2185.6 for 0.5, 0.9, the true 0.98 and 0.995; the volatility of the log-variance gives 2154.2, 2179.7, **2186.8** and 2176.4 for 0.5, 1, the true 2 and 4; and the long-run level gives 2157.1, 2181.5, **2186.8** and 2184.6 for −5, −4, the true −3.5 and −2.5. The last line gives the noise: the same returns with the true parameters give 2186.87 with 20,000 particles, 2186.75 with 4,000, and 2186.70 with 4,000 particles and another seed, so the likelihood has a Monte Carlo error of about 0.1. A difference of 7 to 80, as above, is far beyond that error, but the neighbourhood of the maximum is flat (the log-likelihood at {math}`\phi=0.995` is only 1.2 below the maximum, a few times the noise), so these returns determine the parameters only to within wide bands. A maximiser of this likelihood must use the same seed at every evaluation, so that the function it sees is smooth.
+
+The observation of date {math}`t` is read with the variance of the same date, so the filter estimates the variance that drove the return it has just seen.
+
+## Program 3: leverage
+
+Equity volatility tends to rise when the price falls: the shock of the next log-variance is negatively correlated with the return, the **leverage effect**, and `SvParams::rho` is that correlation. The filter uses it. Given a particle for the variance of one day and the return observed that day, the standardised return {math}`z=(r-\mu\Delta t+v/2)/\sqrt v` is known, and the next log-variance moves by {math}`\sigma_h\sqrt{\Delta t}\,(\rho z+\sqrt{1-\rho^2}\,\varepsilon)` with a fresh independent {math}`\varepsilon`. The program simulates returns with a strong leverage, {math}`\rho=-0.9`, and evaluates the log-likelihood with the true correlation and with the correlation set to zero, for three seeds of the particles: the filter that knows the leverage should explain the data better.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <random>
+
+namespace flt = pluss::subsp::math::finance::filtering;
+namespace vol = pluss::subsp::math::finance::volatility;
+using namespace pluss::tils;
+
+// Simulates the model: returns[t] is driven by the variance exp(h[t]), and the next log-variance is shocked with correlation rho to that return.
+struct Simulated {
+  pluss::Series returns, variance;
+};
+Simulated simulate(const vol::SvParams &p, std::int64_t T, double dt, std::uint64_t seed) {
+  std::mt19937_64 rng(seed);
+  std::normal_distribution<double> normal;
+  std::vector<double> returns(T), variance(T);
+  double h = p.logvar0;
+  for (std::int64_t t = 0; t < T; ++t) {
+    const double v = std::exp(h);
+    const double z = normal(rng), eps = normal(rng);
+    returns[t] = (p.mu - 0.5 * v) * dt + std::sqrt(v * dt) * z;
+    variance[t] = v;
+    h = p.phi * h + (1.0 - p.phi) * p.logvar_mean + p.vol_of_logvar * std::sqrt(dt) * (p.rho * z + std::sqrt(1.0 - p.rho * p.rho) * eps);
+  }
+  return {pluss::make_series(returns, {T}, as_f64()), pluss::make_series(variance, {T}, as_f64())};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  vol::SvParams truth;
+  truth.logvar_mean = -3.0;
+  truth.phi = 0.9;
+  truth.vol_of_logvar = 6.0;
+  truth.rho = -0.9;
+  truth.logvar0 = -3.0;
+  const double dt = 1.0 / 252.0;
+  const auto returns = simulate(truth, 1500, dt, 11).returns;
+
+  vol::SvParams blind = truth;
+  blind.rho = 0.0;
+  out.writeln("seed   log-likelihood with rho = -0.9   with rho = 0");
+  for (std::uint64_t seed : {1, 2, 3}) {
+    out.writeln(seed, flt::sv_particle_filter(returns, truth, 600, dt, 0.5, as_f64(), seed).loglik, flt::sv_particle_filter(returns, blind, 600, dt, 0.5, as_f64(), seed).loglik);
+  }
+}
+```
+
+The log-likelihood with the true correlation is 4220.5, 4220.6 and 4220.4 for the three seeds of the particles, against 4132.6, 4131.2 and 4132.0 with the correlation set to zero: a gain of about 90 log-likelihood units, far beyond the Monte Carlo error of the particles (a few tenths), from using the leverage the data contain. A correlation near zero in the data would leave the two nearly equal. To estimate `rho` as a parameter, add it to the profile of Program 2 and keep the seed fixed. The standardised return is bounded at ten standard deviations before it enters the next shock, so that a particle whose variance is far too small for the return it must explain stays finite; its weight is negligible anyway.
+
+## Checklist
+
+1. Pass `dt` for the period of the returns, 1/252 for daily data.
+2. Choose `vol_of_logvar` for a log-variance that moves (of the order of 1 to 2 per root year with a daily {math}`\phi` near 0.98); the default 0.25 is almost constant.
+3. Read `filtered_mean` as a log-variance: the volatility is {math}`\sqrt{e^{h}}`.
+4. Look at `ess`: a minimum of a few per cent of the particles means the number of particles is too low.
+5. Use the same `seed` for every likelihood evaluation of a parameter search, and expect a Monte Carlo error of the order of 0.1 in the log-likelihood with 4,000 particles.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="particle_filters.html">
+    <span class="label">Previous</span>
+    <span class="title">Particle filters</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,88 @@
+# `robot::ik`
+
+Joint values that bring a link to a target.
+
+## Signature
+
+```cpp
+robot::IkResult robot::ik(const robot::Robot& robot, std::int64_t link, const pluss::Series& target_position, const pluss::Series& target_rotation, const pluss::Series& q0, const robot::IkOptions& options = {});
+```
+
+## What It Does
+
+Finds joint values for which the frame of `link` reaches `target_position` and, when `target_rotation` is defined, `target_rotation`, by Levenberg-Marquardt damped least squares: each iteration measures the error, builds the Jacobian and moves the joints by the damped pseudo-inverse step, accepting it only if the error falls (and otherwise raising the damping), within the joint limits of `options` if any. The orientation error is `0.5 (R_target R^T - R R_target^T)` read as a vector, which is the sine of the turning angle along the turning axis.
+
+## Parameters
+
+`robot`
+: The compiled robot.
+
+`link`
+: The index of the link whose frame is to reach the target.
+
+`target_position`
+: The wanted position of the link's origin in the world, a real floating `[..., 3]` array.
+
+`target_rotation`
+: The wanted orientation, `[..., 3, 3]`, or an undefined `Series` for a position-only target.
+
+`q0`
+: The starting joint values, `[..., links]`. The solution found depends on the start.
+
+`options`
+: The iteration controls; see `IkOptions`.
+
+## Returns
+
+An `IkResult` with the joint values, the remaining error, the iteration count and a convergence flag per target.
+
+## Errors
+
+Throws `pluss::Error` for a `link` outside the robot, a `target_position`, `target_rotation` or `q0` of the wrong shape, dtype or platform, or invalid `options`. A target that cannot be reached is not an error: the result reports `converged` false.
+
+## Interpretation and Use
+
+The iteration runs without recording the autodiff tape and the solution carries no sensitivity. Choose `q0` near the configuration you expect; a redundant robot (more joints than the task needs) has a family of solutions and the iteration finds the nearest. A batch of targets and starts is solved together.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A position target for a six-joint arm.
+
+@@example Eng/api/robot_ik_position.cpp@@
+
+### Example 2
+
+A position-and-orientation target.
+
+@@example Eng/api/robot_ik_pose.cpp@@
+
+### Example 3
+
+Two targets in one call.
+
+@@example Eng/api/robot_ik_batch.cpp@@
+
+### Example 4
+
+A target that is out of reach.
+
+@@example Eng/api/robot_ik_unreachable.cpp@@
+
+### Example 5
+
+Joint limits.
+
+@@example Eng/api/robot_ik_limits.cpp@@
+
+### Example 6
+
+Rejected arguments.
+
+@@example Eng/api/robot_ik_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

@@ -28,17 +28,6 @@ The loadability limit against its closed form.
 
 @@example Eng/api/power_ac_limit.cpp@@
 
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-flow/Options
-flow/DcResult
-flow/AcResult
-flow/dc
-flow/ac
-```
-
 <!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 2

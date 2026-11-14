@@ -1,0 +1,42 @@
+# Steady hydraulics
+
+This branch solves a network at one instant. `steady` finds the junction heads and the link flows as one coupled nonlinear system, with a choice of head-loss law and of fixed or pressure-driven demand.
+
+## Choosing A Surface
+
+Use `steady` for a single operating point, a family of scenarios, or a sensitivity. Check `converged` and, under fixed demands, the pressures.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Every field of a looped network.
+
+@@example Eng/api/fluid_steady_basic.cpp@@
+
+### Example 2
+
+Tolerances and iteration limits.
+
+@@example Eng/api/fluid_steady_options.cpp@@
+
+### Example 3
+
+Fixed and pressure-driven demand.
+
+@@example Eng/api/fluid_demand_modes.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+steady/LossModel
+steady/DemandMode
+steady/Options
+steady/SteadyResult
+steady/steady
+```
+<!-- apiref:toctree:end -->

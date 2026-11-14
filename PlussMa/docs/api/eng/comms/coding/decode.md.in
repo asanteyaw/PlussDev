@@ -1,0 +1,110 @@
+# `comms::decode`
+
+Decoding a convolutional, LDPC or turbo code from soft values.
+
+## Signature
+
+```cpp
+pluss::Series comms::decode(const comms::ConvolutionalCode& code, const pluss::Series& soft);
+
+comms::LdpcResult comms::decode(const comms::LdpcCode& code, const pluss::Series& soft, std::int64_t max_iterations = 50, double scale = 0.75);
+
+pluss::Series comms::decode(const comms::TurboCode& code, const pluss::Series& interleaver, const pluss::Series& soft, std::int64_t iterations = 8);
+```
+
+## What It Does
+
+**Convolutional:** runs the Viterbi algorithm over the trellis: at every step it keeps, for each of the `2^(K - 1)` states, the best path (the one that maximises the correlation of its coded bits with the soft values), and traces back from the zero state, where a terminated codeword ends; it is vectorized over the states and every frame. **LDPC:** runs normalised min-sum belief propagation: every check sends each variable the sign product and the smallest magnitude of the other variables' messages, attenuated by `scale`; every variable sums the channel value and the check messages; the loop stops when every frame satisfies every check or after `max_iterations`. **Turbo:** two max-log-MAP (BCJR) decoders exchange extrinsic information through the interleaver for `iterations` rounds, scaling the extrinsic values by `0.75`.
+
+## Parameters
+
+`code`
+: The code: a `ConvolutionalCode`, an `LdpcCode` or a `TurboCode`; the overload is chosen by its type.
+
+`interleaver`
+: Turbo only: the interleaver the encoder used.
+
+`soft`
+: A log-likelihood ratio per coded bit, positive favouring zero, a real floating array `[..., coded length]` in the layout of `encode`; use `+1` and `-1` for hard decisions. Values that are all exactly `0` or `1` (with at least one zero) are bits, not ratios, and are refused.
+
+`max_iterations`
+: LDPC only: the largest number of iterations, at least `1`.
+
+`scale`
+: LDPC only: the normalisation of the check messages, in `(0, 1]`; `0.75` is the usual choice and `1` is plain min-sum.
+
+`iterations`
+: Turbo only: the number of rounds, at least `1`.
+
+## Returns
+
+The convolutional and turbo overloads return an `Int64` array of the information bits, `[..., N]`. The LDPC overload returns an `LdpcResult` with the information bits `[..., k]`, the hard-decision codeword, a convergence flag per frame and the iteration count.
+
+## Errors
+
+Throws `pluss::Error` for an invalid code or interleaver, `soft` that is not real floating of the right layout or that holds bits instead of ratios, or iteration controls out of range.
+
+## Interpretation and Use
+
+Soft values decode better than hard decisions of the same symbols (about two decibels for the convolutional code). The convolutional decoder corrects any pattern of up to four scattered coded-bit errors for the default code and a long burst defeats it; its memory is proportional to the number of coded steps times the number of states. LDPC memory is `m x n` per frame, a frame that does not converge in a hundred iterations usually never will, and a scale below `0.6` slows convergence; `converged` says the output is a codeword, which is almost always the transmitted one. The turbo error rate falls with the iterations and flattens after about eight.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Noiseless Viterbi decoding.
+
+@@example Eng/api/comms_viterbi_noiseless.cpp@@
+
+### Example 2
+
+Isolated errors corrected, a burst not.
+
+@@example Eng/api/comms_viterbi_correction.cpp@@
+
+### Example 3
+
+Convolutional coding gain.
+
+@@example Eng/api/comms_viterbi_gain.cpp@@
+
+### Example 4
+
+Soft against hard decisions.
+
+@@example Eng/api/comms_viterbi_soft_hard.cpp@@
+
+### Example 5
+
+LDPC against uncoded BPSK.
+
+@@example Eng/api/comms_ldpc_gain.cpp@@
+
+### Example 6
+
+LDPC iterations and the scale.
+
+@@example Eng/api/comms_ldpc_iterations.cpp@@
+
+### Example 7
+
+Turbo against uncoded BPSK.
+
+@@example Eng/api/comms_turbo_gain.cpp@@
+
+### Example 8
+
+Turbo iterations.
+
+@@example Eng/api/comms_turbo_iterations.cpp@@
+
+### Example 9
+
+Rejected convolutional input.
+
+@@example Eng/api/comms_viterbi_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

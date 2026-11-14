@@ -49,4 +49,12 @@ The log-likelihood is the exact one for the model and the supplied noise levels.
 5. Use filtered states for real-time decisions and smoothed states for looking back.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ts_05_state_space_models/filtering_a_local_linear_trend
+ts_05_state_space_models/smoothing_across_a_gap_and_forecasting
+ts_05_state_space_models/simulation_as_a_check
+```
 <!-- apiref:toctree:end -->

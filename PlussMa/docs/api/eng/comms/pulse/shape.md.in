@@ -1,0 +1,67 @@
+# `comms::shape`
+
+Pulse shaping of a symbol stream.
+
+## Signature
+
+```cpp
+pluss::Series comms::shape(const pluss::Series& symbols, const pluss::Series& taps, std::int64_t samples_per_symbol);
+```
+
+## What It Does
+
+Places each symbol every `samples_per_symbol` samples, with zeros between, and filters the result with `taps`: the waveform that is actually transmitted.
+
+## Parameters
+
+`symbols`
+: The symbols, a real or complex `[..., N]` array.
+
+`taps`
+: The pulse, a real vector, for example from `rrc`.
+
+`samples_per_symbol`
+: The oversampling factor, at least `1`.
+
+## Returns
+
+A `[..., (N - 1) * samples_per_symbol + taps]` waveform of the dtype of `symbols`.
+
+## Errors
+
+Throws `pluss::Error` for undefined or scalar `symbols`, taps that are not a real vector, or `samples_per_symbol` below `1`.
+
+## Interpretation and Use
+
+The waveform is longer than the symbol stream by the length of the pulse. Real symbols give a real waveform, complex symbols a complex one.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A shaped QPSK waveform.
+
+@@example Eng/api/comms_shape_waveform.cpp@@
+
+### Example 2
+
+A batch of frames, and real symbols.
+
+@@example Eng/api/comms_shape_batch.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_shape_errors.cpp@@
+
+### Example 4
+
+Shaping then matching.
+
+@@example Eng/api/comms_match_chain.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

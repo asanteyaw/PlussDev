@@ -8,3 +8,16 @@
 @@example Probability/random_processes/guide/sde/21_jump_path.cpp@@
 
 Five of the 4000 steps contain a jump, and they dominate the quadratic variation: 0.7548, against 0.04 for a continuous path with volatility 0.2. The diagnostics of chapter 1 notice this and warn. A path like this is a legitimate integrator; the warning only says that Ito and Stratonovich values are not the standard ones.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_levy_measure_as_atoms.html">
+    <span class="label">Previous</span>
+    <span class="title">A Levy measure as atoms</span>
+  </a>
+  <a class="next-link" href="the_marcus_integral.html">
+    <span class="label">Next</span>
+    <span class="title">The Marcus integral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

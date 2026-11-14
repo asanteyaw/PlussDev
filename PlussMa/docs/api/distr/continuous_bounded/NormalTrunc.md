@@ -83,16 +83,16 @@ int main() {
   const std::vector<double> params = {-1.0, 2.0, 0.0, 1.0};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::NormalTrunc, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::NormalTrunc, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::NormalTrunc, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::NormalTrunc, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::NormalTrunc, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::NormalTrunc, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -132,7 +132,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::NormalTrunc, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({-0.5, 1.5}, f64);
-  const auto c = distr::cdf(dst::NormalTrunc, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::NormalTrunc, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::NormalTrunc, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= -0.5).to(pluss::ScalarType::Float64) * (draws <= 1.5).to(pluss::ScalarType::Float64)).mean());
@@ -173,16 +173,16 @@ int main() {
   const auto x = pluss::make_series({-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "mean -1:";
-  for (double v : distr::pdf(dst::NormalTrunc, x, {-1.0, 2.0, -1.0, 1.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::NormalTrunc, x, {-1.0, 2.0, -1.0, 1.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "mean 0 :";
-  for (double v : distr::pdf(dst::NormalTrunc, x, {-1.0, 2.0, 0.0, 1.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::NormalTrunc, x, {-1.0, 2.0, 0.0, 1.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "mean 3 :";
-  for (double v : distr::pdf(dst::NormalTrunc, x, {-1.0, 2.0, 3.0, 1.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::NormalTrunc, x, {-1.0, 2.0, 3.0, 1.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -204,3 +204,16 @@ Read down the rows: `mean -1` peaks on this grid at x = -1 (value 0.8); `mean 0`
 - [`Uniform`](../continuous_bounded/Uniform.md)
 - [`Beta`](../continuous_bounded/Beta.md)
 - [`distr::NormalTrunc`](../object_based/NormalTrunc.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="HalfCosine.html">
+    <span class="label">Previous</span>
+    <span class="title">HalfCosine</span>
+  </a>
+  <a class="next-link" href="Quadratic.html">
+    <span class="label">Next</span>
+    <span class="title">Quadratic</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

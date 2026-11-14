@@ -217,3 +217,12 @@ The gamma, the true family, has the highest log-likelihood and the lowest criter
 - **Check the support first.** The data must lie inside the support of the family (a negative value cannot be fitted by a lognormal); a value outside is an error, not a silent zero.
 
 Where next: [Numerical estimates, correlation and fixed parameters](numerical_estimates_correlation_and_fixed_parame.md) covers the families whose maximum has to be searched for.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="numerical_estimates_correlation_and_fixed_parame.html">
+    <span class="label">Next</span>
+    <span class="title">Numerical estimates, correlation and fixed parameters</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

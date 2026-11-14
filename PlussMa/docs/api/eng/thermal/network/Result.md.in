@@ -1,0 +1,59 @@
+# `thermal::Result`
+
+The solution of a thermal network.
+
+## Signature
+
+```cpp
+thermal::Result
+```
+
+## What It Does
+
+Holds the temperatures and the heat flows of a solved network. In `steady` every array has the batch shape followed by its element axis; in `tran` a time axis is inserted immediately before the element axis.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `temperature` | The temperature of every node, `[..., nodes]`. |  |
+| `link_flow` | The heat flow in W through every link from `a` to `b`, `[..., links]`. |  |
+| `fixed_flow` | The heat in W that every fixed node delivers into the network, `[..., fixed]`; negative when the boundary absorbs heat. |  |
+| `residual` | The defect of the nodal heat balance: `[...]` for `steady`, `[..., time]` for `tran`. |  |
+
+## Returns
+
+A value returned by `steady` and `tran`.
+
+## Errors
+
+None: a result is only constructed by a successful solve.
+
+## Interpretation and Use
+
+Energy checks are one line. In steady state the injected heats plus `fixed_flow` sum to zero. In `tran` the heat stored in the capacities makes up the difference, and at the first sample the stores sit at their start temperatures so the link flows there describe the initial imbalance.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The shapes of both results.
+
+@@example Eng/api/thermal_result_shapes.cpp@@
+
+### Example 2
+
+Heat flows and boundary exchange of a chain.
+
+@@example Eng/api/thermal_steady_series.cpp@@
+
+### Example 3
+
+The boundary exchange of a transient.
+
+@@example Eng/api/thermal_tran_drive.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

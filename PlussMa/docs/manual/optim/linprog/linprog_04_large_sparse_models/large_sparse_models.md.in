@@ -41,3 +41,8 @@ Presolve simplifies the model before the solver sees it. It turns a row with one
 - **Leave presolve on.** It changes the size of the problem and not the answer; turn it off only to debug.
 
 Where next: [Integer programming](../../milp.md) adds whole-number decisions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

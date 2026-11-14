@@ -222,3 +222,12 @@ The traced and the analytic constraint give the same run: 5 iterations, `x = y =
 - **Rounding differences are a pass.** The correct gradient differed from the traced one by about 1e-14; only a difference many orders larger is a failure.
 
 Where next: [Derivative tools, call counts and long loops](derivative_tools_and_costs.md) covers the derivative machinery on its own and its costs.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="derivative_tools_and_costs.html">
+    <span class="label">Next</span>
+    <span class="title">Derivative tools, call counts and long loops</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

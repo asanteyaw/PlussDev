@@ -56,7 +56,7 @@ Use defaults and inspect residual and conditioning diagnostics.
 
 #include <complex>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -96,7 +96,7 @@ See a structural controllability failure options cannot repair.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -138,8 +138,8 @@ Contrast exact pole assignment with cost-based feedback synthesis.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -166,7 +166,6 @@ value = [0.828427]
 gain = [0.828427]
 closed loop = [-2.828427]
 ```
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="PlaceResult.html">

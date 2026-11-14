@@ -12,7 +12,7 @@ The first program solves one problem with all four algorithms. It has a nonlinea
 
 @@example Numerical/optimization/guide/optima/41_compare_four.cpp@@
 
-All four exit with flag `1`, but they do not agree. Sequential QP, the working-set method and the interior method reach `17.0140`, the best known value for this problem, in 4, 4 and 8 iterations. The merit method needs 66 iterations and ends at `27.1464`. That second value is not a failure: the last line shows it is a different point, with `a` on its lower bound and `b` on its upper bound, and the solver certifies it as a local solution. A flag of `1` means "a local solution", and this table is the reason to remember it. The same row-by-row difference, fewer iterations for the quadratic-model methods, holds across the rest of the chapter.
+All four exit with flag `1`, but they do not agree. Sequential QP, the working-set method and the interior method reach `17.0140`, the best known value for this problem, in 4, 4 and 8 iterations. The merit method needs 68 iterations and ends at `27.1464`. That second value is not a failure: the last line shows it is a different point, with `a` on its lower bound and `b` on its upper bound, and the solver certifies it as a local solution. A flag of `1` means "a local solution", and this table is the reason to remember it. The same row-by-row difference, fewer iterations for the quadratic-model methods, holds across the rest of the chapter.
 
 ## Program 2: What happens to the constraints on the way
 
@@ -47,3 +47,12 @@ A start without a value is a failure for all four, flag `-4`, and the start is r
 - **Pick by the problem, then confirm.** SQP is the default for a reason (few evaluations on smooth problems); the working-set and interior methods earn their place on problems with many active inequalities.
 
 Where next: [Curvature, scaling and size](curvature_scaling_and_size.md) looks at what controls the cost of a step.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="curvature_scaling_and_size.html">
+    <span class="label">Next</span>
+    <span class="title">Curvature, scaling and size</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

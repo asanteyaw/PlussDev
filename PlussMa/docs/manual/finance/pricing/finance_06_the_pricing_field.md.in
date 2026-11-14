@@ -1,0 +1,58 @@
+# Finance 6: The Pricing Field
+
+The earlier chapters used a `module::Field` to price, always with one model and one engine at a time. This chapter treats the object itself: a `module::Field` bundles an instrument, a market, a model, the pricing controls and the simulated paths, so that one object prices, differentiates, simulates and calibrates. After this chapter you can build a `Field` for any of the six models, price a whole strip of options with any engine the model supports, read Greeks and know how each was obtained, move parameters in and out as a vector, define the loss and the objective for a fit, calibrate Heston and SABR to quotes, and use simulated paths to price path-dependent payoffs.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **A `Field` is data.** Its five members (`instrument`, `market`, `model`, `controls`, `paths`) are plain structs of `Series`; change any one and price again.
+- **The model is a value.** A `module::Model` holds one of `BlackScholes`, `Sabr`, `Heston`, `Bates`, `RoughHeston`, `RoughBergomi`, exposes its parameters as a flat vector, and can be replaced or priced as a candidate without touching the `Field`.
+- **The engine is a choice, not a consequence.** `Analytic`, `Fft`, `Cos`, `MonteCarlo` and `Lattice` price the models they support; a `Field` never switches silently and reports the engines a model supports when you ask for another.
+- **A fit is a loss plus a minimiser.** The `Field` prices every quote in one call and reduces the residuals to a number; any minimiser can use that as its objective.
+
+| Entry point | Purpose |
+|---|---|
+| `Field::price`, `Field::validate` | price the held model, or a candidate, by the chosen engine |
+| `Field::residuals`, `loss`, `loss_value`, `objective`, `bind_objective`, `bind_objective_typed` | the quantities a fit needs |
+| `Field::simulate`, `simulate_paths`, `clear_paths` | generate and keep the paths of the Monte Carlo engine |
+| `Model::parameters`, `holds`, `as`, `visit`, `name` | read, write and identify the held model |
+| `pricer::Analytic`, `Fft`, `COS`, `MonteCarlo`, `Lattice` | the engines, usable without a `Field` |
+| `instrument::american`, `instrument::bermudan` | instruments with early exercise (page 7) |
+| `instrument::make`, `market::make`, `model::make` | build the members from plain numbers |
+
+## Programs
+
+- [Building a Field](finance_06_the_pricing_field/building_a_field.md)
+- [Engines and Greeks](finance_06_the_pricing_field/engines_and_greeks.md)
+- [Models and parameters](finance_06_the_pricing_field/models_and_parameters.md)
+- [Losses and objectives](finance_06_the_pricing_field/losses_and_objectives.md)
+- [Calibration](finance_06_the_pricing_field/calibration.md)
+- [Simulated paths](finance_06_the_pricing_field/simulated_paths.md)
+- [Early exercise: American and Bermudan options](finance_06_the_pricing_field/early_exercise.md)
+
+## Checklist
+
+1. Build the `Field` once, change one member at a time, and use `price(candidate)` to try other models without altering it.
+2. Check that the engine supports the model (`validate()`), and check a transform price by changing its settings.
+3. Set `risk = PriceOnly` in any loop that does not need Greeks: for the closed forms and the COS engine they are free, the FFT, Monte Carlo, lattice and PDE engines read most of them off one grid or one set of paths, and the remaining engines reprice nine times for them.
+4. Compare models by implied-volatility smile, and test a new parameter set against put-call parity.
+5. Choose the loss for the errors in the quotes, and look at the residuals of a fit.
+6. Calibrate across the maturities you will use, keep the optimiser inside the model's domain, and fix what the data cannot identify.
+7. Keep simulated paths when several payoffs, maturities or strikes will be read from them.
+8. For early exercise set the style on the instrument and use `Lattice` (Black-Scholes) or `MonteCarlo` (any model).
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_06_the_pricing_field/building_a_field
+finance_06_the_pricing_field/engines_and_greeks
+finance_06_the_pricing_field/models_and_parameters
+finance_06_the_pricing_field/losses_and_objectives
+finance_06_the_pricing_field/calibration
+finance_06_the_pricing_field/simulated_paths
+finance_06_the_pricing_field/early_exercise
+```
+<!-- apiref:toctree:end -->

@@ -67,7 +67,7 @@ const std::string& DataFrame::DTypes::at(std::string_view feature) const {
   const auto it = std::find_if(entries_.begin(), entries_.end(), [&](const Entry& entry) {
     return entry.first == feature;
   });
-  PLUSS_CHECK(it != entries_.end(), "DataFrame::DTypes::at: unknown feature '" + std::string(feature) + "'");
+  PLUSS_CHECK(it != entries_.end(), "DataFrame::DTypes::at: unknown feature '" + std::string(feature) + "'", std::string(feature), pluss::exception::map_keys(entries_));
   return it->second;
 }
 
@@ -381,14 +381,14 @@ std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const 
   if (selector.kind == detail::CaseSelector::Kind::LabelScalar) {
     const auto& key = selector.label_values.front();
     const auto it = lookup.find(key);
-    PLUSS_CHECK(it != lookup.end(), "DataFrame::case_study: case label not found '" + key + "'");
+    PLUSS_CHECK(it != lookup.end(), "DataFrame::case_study: case label not found '" + key + "'", key, pluss::exception::map_keys(lookup));
     return it->second;
   }
 
   if (selector.kind == detail::CaseSelector::Kind::LabelList) {
     for (const auto& key : selector.label_values) {
       const auto it = lookup.find(key);
-      PLUSS_CHECK(it != lookup.end(), "DataFrame::case_study: case label not found '" + key + "'");
+      PLUSS_CHECK(it != lookup.end(), "DataFrame::case_study: case label not found '" + key + "'", key, pluss::exception::map_keys(lookup));
       indices.insert(indices.end(), it->second.begin(), it->second.end());
     }
     return indices;
@@ -398,8 +398,8 @@ std::vector<std::int64_t> resolve_case_positions_(const DataFrame& frame, const 
   const auto& stop_key = selector.label_values.at(1);
   const auto start_it = lookup.find(start_key);
   const auto stop_it = lookup.find(stop_key);
-  PLUSS_CHECK(start_it != lookup.end(), "DataFrame::case_study: case label not found '" + start_key + "'");
-  PLUSS_CHECK(stop_it != lookup.end(), "DataFrame::case_study: case label not found '" + stop_key + "'");
+  PLUSS_CHECK(start_it != lookup.end(), "DataFrame::case_study: case label not found '" + start_key + "'", start_key, pluss::exception::map_keys(lookup));
+  PLUSS_CHECK(stop_it != lookup.end(), "DataFrame::case_study: case label not found '" + stop_key + "'", stop_key, pluss::exception::map_keys(lookup));
   const auto start = start_it->second.front();
   const auto stop = stop_it->second.back();
   if (stop < start) {
@@ -452,7 +452,7 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
   if (selector.kind == detail::FeatureSelector::Kind::NameScalar) {
     const auto& key = selector.name_values.front();
     const auto it = by_name.find(key);
-    PLUSS_CHECK(it != by_name.end(), "DataFrame::case_study: unknown feature '" + key + "'");
+    PLUSS_CHECK(it != by_name.end(), "DataFrame::case_study: unknown feature '" + key + "'", key, pluss::exception::map_keys(by_name));
     indices.push_back(it->second);
     return indices;
   }
@@ -461,7 +461,7 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
     indices.reserve(selector.name_values.size());
     for (const auto& key : selector.name_values) {
       const auto it = by_name.find(key);
-      PLUSS_CHECK(it != by_name.end(), "DataFrame::case_study: unknown feature '" + key + "'");
+      PLUSS_CHECK(it != by_name.end(), "DataFrame::case_study: unknown feature '" + key + "'", key, pluss::exception::map_keys(by_name));
       indices.push_back(it->second);
     }
     return indices;
@@ -471,8 +471,8 @@ std::vector<std::size_t> resolve_feature_positions_(const DataFrame& frame, cons
   const auto& stop_key = selector.name_values.at(1);
   const auto start_it = by_name.find(start_key);
   const auto stop_it = by_name.find(stop_key);
-  PLUSS_CHECK(start_it != by_name.end(), "DataFrame::case_study: unknown feature '" + start_key + "'");
-  PLUSS_CHECK(stop_it != by_name.end(), "DataFrame::case_study: unknown feature '" + stop_key + "'");
+  PLUSS_CHECK(start_it != by_name.end(), "DataFrame::case_study: unknown feature '" + start_key + "'", start_key, pluss::exception::map_keys(by_name));
+  PLUSS_CHECK(stop_it != by_name.end(), "DataFrame::case_study: unknown feature '" + stop_key + "'", stop_key, pluss::exception::map_keys(by_name));
   const auto start = static_cast<std::int64_t>(start_it->second);
   const auto stop = static_cast<std::int64_t>(stop_it->second);
   if (stop < start) {
@@ -821,8 +821,8 @@ DataFrame DataFrameLabelAccessor::swap(std::string_view left, std::string_view r
   std::vector<std::string> ordered = current;
   auto lit = std::find(ordered.begin(), ordered.end(), lhs);
   auto rit = std::find(ordered.begin(), ordered.end(), rhs);
-  PLUSS_CHECK(lit != ordered.end(), "DataFrame::labels().swap: unknown label '" + lhs + "'");
-  PLUSS_CHECK(rit != ordered.end(), "DataFrame::labels().swap: unknown label '" + rhs + "'");
+  PLUSS_CHECK(lit != ordered.end(), "DataFrame::labels().swap: unknown label '" + lhs + "'", lhs, pluss::exception::map_keys(ordered));
+  PLUSS_CHECK(rit != ordered.end(), "DataFrame::labels().swap: unknown label '" + rhs + "'", rhs, pluss::exception::map_keys(ordered));
   std::iter_swap(lit, rit);
   std::vector<std::string_view> views;
   views.reserve(ordered.size());
@@ -1129,11 +1129,11 @@ detail::CaseSelector detail::CaseSelector::label(const char* value) {
 }
 
 detail::CaseSelector detail::CaseSelector::label(std::int64_t value) {
-  return label(fmt::format("{}", value));
+  return label(pluss::tils::OutputEngine::format("{}", value));
 }
 
 detail::CaseSelector detail::CaseSelector::label(double value) {
-  return label(fmt::format("{:.12g}", value));
+  return label(pluss::tils::OutputEngine::format("{:.12g}", value));
 }
 
 detail::CaseSelector detail::CaseSelector::labels(std::initializer_list<std::string_view> values) {
@@ -1161,7 +1161,7 @@ detail::CaseSelector detail::CaseSelector::labels(std::initializer_list<std::int
   out.kind = Kind::LabelList;
   out.label_values.reserve(values.size());
   for (const auto value : values) {
-    out.label_values.push_back(fmt::format("{}", value));
+    out.label_values.push_back(pluss::tils::OutputEngine::format("{}", value));
   }
   return out;
 }
@@ -1171,7 +1171,7 @@ detail::CaseSelector detail::CaseSelector::labels(pluss::RangeView<std::int64_t>
   out.kind = Kind::LabelList;
   out.label_values.reserve(values.size());
   for (const auto value : values) {
-    out.label_values.push_back(fmt::format("{}", value));
+    out.label_values.push_back(pluss::tils::OutputEngine::format("{}", value));
   }
   return out;
 }
@@ -1192,11 +1192,11 @@ detail::CaseSelector detail::CaseSelector::span(std::string_view start, std::str
 }
 
 detail::CaseSelector detail::CaseSelector::span(std::int64_t start, std::int64_t stop) {
-  return span(fmt::format("{}", start), fmt::format("{}", stop));
+  return span(pluss::tils::OutputEngine::format("{}", start), pluss::tils::OutputEngine::format("{}", stop));
 }
 
 detail::CaseSelector detail::CaseSelector::span(double start, double stop) {
-  return span(fmt::format("{:.12g}", start), fmt::format("{:.12g}", stop));
+  return span(pluss::tils::OutputEngine::format("{:.12g}", start), pluss::tils::OutputEngine::format("{:.12g}", stop));
 }
 
 detail::CaseSelector detail::CaseSelector::span(const Slate& start, const Slate& stop) {
@@ -1334,7 +1334,7 @@ Slate DataFrame::features(std::string_view name) {
   const auto& src = impl_ref_();
   const auto feature_name = owned_name(name);
   const auto it = src.name_to_idx_.find(feature_name);
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'");
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'", feature_name, pluss::exception::map_keys(src.name_to_idx_));
   return detail::with_display_labels(src.columns_[it->second], src.cases_)
       .name(std::move(feature_name));
 }
@@ -1343,7 +1343,7 @@ Slate DataFrame::features(std::string_view name) const {
   const auto& src = impl_ref_();
   const auto feature_name = owned_name(name);
   const auto it = src.name_to_idx_.find(feature_name);
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'");
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame: unknown column '" + feature_name + "'", feature_name, pluss::exception::map_keys(src.name_to_idx_));
   return detail::with_display_labels(src.columns_[it->second], src.cases_)
       .name(std::move(feature_name));
 }
@@ -1405,7 +1405,7 @@ DataFrame DataFrame::project_names_(pluss::msharp::RangeView::Of<std::string_vie
 
   for (const auto& n : picked) {
     const auto it = src.name_to_idx_.find(n);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::features: unknown column '" + n + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::features: unknown column '" + n + "'", n, pluss::exception::map_keys(src.name_to_idx_));
     out_names.push_back(n);
     out_cols.push_back(src.columns_[it->second]);
   }
@@ -1656,7 +1656,7 @@ DataFrame DataFrameCastAccessor::cast_all_(SlateCastTarget target) const {
     const auto key = owned_name(name);
     PLUSS_CHECK(!key.empty(), "DataFrame::cast: feature name cannot be empty");
     const auto it = src.name_to_idx_.find(key);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + key + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + key + "'", key, pluss::exception::map_keys(src.name_to_idx_));
     if (!seen.insert(key).second) {
       continue;
     }
@@ -2014,7 +2014,7 @@ DataFrame DataFrame::bucketize(pluss::msharp::RangeView::Of<std::string_view> fe
   auto out_cols = src.columns_;
   for (const auto& name : selected) {
     const auto it = src.name_to_idx_.find(name);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::bucketize: unknown feature '" + name + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::bucketize: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
     out_cols[it->second] = src.columns_[it->second].bucketize(bins, labels, right, include_lowest);
   }
 
@@ -2027,7 +2027,7 @@ DataFrame DataFrame::add_prefix(std::string_view prefix) const {
   std::vector<std::string> out_names;
   out_names.reserve(src.names_.size());
   for (const auto& name : src.names_) {
-    out_names.push_back(fmt::format("{}{}", prefix, name));
+    out_names.push_back(pluss::tils::OutputEngine::format("{}{}", prefix, name));
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), src.columns_, src.cases_, src.title_, src.case_axis_));
@@ -2038,7 +2038,7 @@ DataFrame DataFrame::add_suffix(std::string_view suffix) const {
   std::vector<std::string> out_names;
   out_names.reserve(src.names_.size());
   for (const auto& name : src.names_) {
-    out_names.push_back(fmt::format("{}{}", name, suffix));
+    out_names.push_back(pluss::tils::OutputEngine::format("{}{}", name, suffix));
   }
   return DataFrame(pluss::msharp::make_intrusive<detail::DataFrameImpl>(
       std::move(out_names), src.columns_, src.cases_, src.title_, src.case_axis_));
@@ -2642,7 +2642,7 @@ DataFrame DataFrame::reset_caselbl(const ResetLabelOptions& options) const {
         name = options.names[i];
       } else {
         name = src.case_axis_.levels[i].name.empty()
-                   ? fmt::format("{}{}", options.prefix, i)
+                   ? pluss::tils::OutputEngine::format("{}{}", options.prefix, i)
                    : src.case_axis_.levels[i].name;
       }
       PLUSS_CHECK(!out.get(name).has_value(), "DataFrame::reset_caselbl: feature already exists '" + name + "'");
@@ -3117,7 +3117,7 @@ std::vector<std::string> make_unify_keys(
 }
 
 [[noreturn]] void fail_unify_validate(std::string_view validate, std::string_view side) {
-  throw ::pluss::Error(fmt::format(
+  throw ::pluss::Error(pluss::tils::OutputEngine::format(
       "DataFrame::unify: validate='{}' requires unique {} keys",
       validate.empty() ? "many_to_many" : std::string(validate),
       side));
@@ -3341,7 +3341,7 @@ DataFrame DataFrame::encode(
   const auto& src = impl_ref_();
   const auto key = owned_name(feature);
   const auto it = src.name_to_idx_.find(key);
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::encode: unknown feature '" + key + "'");
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::encode: unknown feature '" + key + "'", key, pluss::exception::map_keys(src.name_to_idx_));
   const auto index = it->second;
 
   if (mode == EncodeMode::Ordinal) {
@@ -3591,7 +3591,7 @@ DataFrame DataFrame::rename(std::string_view old_name, std::string new_name) con
   const auto& src = impl_ref_();
   const auto old_key = owned_name(old_name);
   const auto it = src.name_to_idx_.find(old_key);
-  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::rename: unknown column '" + old_key + "'");
+  PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::rename: unknown column '" + old_key + "'", old_key, pluss::exception::map_keys(src.name_to_idx_));
   if (old_key != new_name) {
     PLUSS_CHECK(src.name_to_idx_.find(new_name) == src.name_to_idx_.end(), "DataFrame::rename: target name already exists");
   }
@@ -3606,7 +3606,7 @@ DataFrame& DataFrame::rename_(std::string_view old_name, std::string new_name) {
   auto& w = mut_impl_();
   const auto old_key = owned_name(old_name);
   const auto it = w.name_to_idx_.find(old_key);
-  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::rename_: unknown column '" + old_key + "'");
+  PLUSS_CHECK(it != w.name_to_idx_.end(), "DataFrame::rename_: unknown column '" + old_key + "'", old_key, pluss::exception::map_keys(w.name_to_idx_));
   if (old_key != new_name) {
     PLUSS_CHECK(w.name_to_idx_.find(new_name) == w.name_to_idx_.end(), "DataFrame::rename_: target name already exists");
   }
@@ -3673,7 +3673,7 @@ DataFrame DataFrame::conform(const DataFrame& other) const {
   for (const auto& n : ordered) {
     PLUSS_CHECK(seen.insert(n).second, "DataFrame::conform: duplicate feature in target '" + n + "'");
     const auto it = src.name_to_idx_.find(n);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::conform: missing feature '" + n + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::conform: missing feature '" + n + "'", n, pluss::exception::map_keys(src.name_to_idx_));
     out_names.push_back(n);
     out_cols.push_back(src.columns_[it->second]);
   }
@@ -3883,7 +3883,7 @@ DataFrame DataFrame::unify(pluss::msharp::RangeView::Of<std::string_view> left_o
       out_name = base + right_suffix;
       std::size_t k = 2;
       while (used_names.find(out_name) != used_names.end()) {
-        out_name = fmt::format("{}{}_{}", base, right_suffix, k++);
+        out_name = pluss::tils::OutputEngine::format("{}{}_{}", base, right_suffix, k++);
       }
     }
     used_names.insert(out_name);

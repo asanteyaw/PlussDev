@@ -1,0 +1,52 @@
+# Scribble: heterogeneous records
+
+[Back to PlussMic by example](../guide.md)
+
+Scribble is the model for data that is not one typed column per field: JSON whose fields change type, records that each hold a list, logs that mix text, times and durations, and configuration layers. A `Registry` is a set of named `Slot`s and each cell of a slot can be a whole `Series`, `Note`, `Timeline` or `Duration`, or null.
+
+## The mental model
+
+A `Slot` is a vector of values, and the values need not share a type or a size. A `Registry` is a named set of slots. You do the work on the cells, which are the ordinary Pluss types, and when the data is clean enough you cross to the typed world with `kindelize()` (to a catalog) and `tabelize()` (to a table). The crossing is a *contract check*: a field that is still mixed is refused.
+
+## JSON with mixed types
+
+Five records whose `value` is sometimes a float, sometimes an integer, a boolean or a string that is not a number.
+
+@@example scribble_json_events.cpp@@
+
+The profile counts the types in each field: `id` is all numbers, and `tag` and `value` are mixed (one null each). The value field's cells are `float64`, null, `int64`, `bool` and `float64`: the `"n/a"` did not survive as a number. Widening every cell to `float64` and filling the null with `0` makes the field one type; the raw registry is refused by `kindelize` (`slot 'value' is not stream-compatible`), and the cleaned one crosses to a table, where the mean of the value is `5.95`. The decision about what the null means, a zero here, is yours and is one line of the program.
+
+## Records that hold lists
+
+Four patients with a different number of glucose readings each; one has none.
+
+@@example scribble_ragged_records.cpp@@
+
+Each cell of the `glucose` field is a `Series`, so every record keeps its own length and nothing is padded. Per-record summaries use the ordinary `Series` vocabulary: readings per patient `3`, `1`, `5` and `0`, mean glucose `5.17`, `7.8`, `7.26` and `nan` for the patient without readings. The flags say that patient P-03 peaked above `7.8` and P-04 has no readings and needs a test. The final table has the ragged detail reduced to typed columns.
+
+## An event log
+
+Five job runs, appended one at a time, with text, timestamps and durations in the same structure.
+
+@@example scribble_event_log.cpp@@
+
+`push` appends a value to the end of a field, and a record is the same position in every field. The latest event, the failing job (`sync`, record 2) and the total run time (`857 s`, mean `171.4 s`) come straight from the cells, and the timestamps are `Timeline` cells, so formatting each one gives a per-day count: three runs and one failure on the 13th and two runs and no failure on the 14th.
+
+## Layered configuration
+
+Defaults, a site override and a user override.
+
+@@example scribble_layered_config.cpp@@
+
+`combine` keeps both versions of a clashing field (the second under a suffix, `timeout_site`), which is merging but not overriding. Overriding is `set`, applied layer by layer from the lowest priority up, and the program prints the final value of every setting with the layer it came from: `timeout` and `region` from the site, `log` and `colour` from the user and `retries` from the defaults. `has_all` then validates that the required settings are present, and the site and user layers alone are not enough.
+
+## Decisions
+
+- **Scribble or table:** Scribble while the data is irregular, a table once it is regular; cross with `kindelize()` and `tabelize()`.
+- **Mixed fields:** profile first, then decide the type and what a null means.
+- **Merging:** `combine` to keep both, `set` to override.
+- **Cells are ordinary types:** reach for the `Series`, `Note` and `Timeline` APIs inside the cells.
+
+## Where next
+
+Reference pages: [`load_json`](../api/registry/load_json.md), [`profiles`](../api/registry/profiles.md), [`get`](../api/registry/get.md), [`set`](../api/registry/set.md), [`push`](../api/registry/push.md), [`drop`](../api/registry/drop.md), [`combine`](../api/registry/combine.md), [`has_all`](../api/registry/has_all.md), [`kindelize`](../api/registry/kindelize.md), [`astype`](../api/slot/astype.md), [`fillnull`](../api/slot/fillnull.md). Next: [Bundle](bundle.md).

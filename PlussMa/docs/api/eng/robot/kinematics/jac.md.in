@@ -1,0 +1,67 @@
+# `robot::jac`
+
+The geometric Jacobian of a link.
+
+## Signature
+
+```cpp
+pluss::Series robot::jac(const robot::Robot& robot, const pluss::Series& q, std::int64_t link);
+```
+
+## What It Does
+
+Returns, for the origin of `link`'s frame, how its world velocity depends on the joint rates. Column `j` is `[z_j x (p - o_j); z_j]` for a revolute joint `j` that is an ancestor of the link (or the link itself), and `[z_j; 0]` for a prismatic one, where `z_j` is the joint axis in the world, `o_j` the joint's origin and `p` the link's origin. A joint that is not on the path from the base to the link has a zero column.
+
+## Parameters
+
+`robot`
+: The compiled robot.
+
+`q`
+: The joint values, a real floating `[..., links]` array.
+
+`link`
+: The index of the link, in `[0, links)`.
+
+## Returns
+
+A real `[..., 6, links]` array: three rows of linear velocity then three of angular velocity per unit joint rate, in the world frame.
+
+## Errors
+
+Throws `pluss::Error` for a `link` outside the robot, or a `q` that is not a real floating `[..., links]` array.
+
+## Interpretation and Use
+
+Multiply by joint rates to get the link's spatial velocity, by the transpose with a force to get the joint torques that balance it, and use it in inverse kinematics. Every row is expressed in the world frame, so a column for a joint of a branch not leading to `link` is zero.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The Jacobian of the elbow of a planar arm.
+
+@@example Eng/api/robot_jac_arm.cpp@@
+
+### Example 2
+
+A tree with a prismatic joint and a non-ancestor column.
+
+@@example Eng/api/robot_jac_tree.cpp@@
+
+### Example 3
+
+A batch of configurations.
+
+@@example Eng/api/robot_jac_batch.cpp@@
+
+### Example 4
+
+Rejected links and configurations.
+
+@@example Eng/api/robot_jac_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

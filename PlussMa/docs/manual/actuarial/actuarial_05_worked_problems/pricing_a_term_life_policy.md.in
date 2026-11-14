@@ -1,0 +1,281 @@
+# Pricing a Term Life Policy
+
+[Back to Worked Problems](../actuarial_05_worked_problems.md)
+
+**The problem.** A life insurer sells a ten-year level term policy to a man aged 40. It pays 100,000 at the end of the year of death if he dies within ten years, and nothing otherwise. Premiums are paid annually in advance for the ten years, as long as he lives. Mortality follows a Makeham law with {math}`a=0.0004`, {math}`b=0.000035` and {math}`c=1.10`; money earns 3.5% a year. The insurer needs three things: the **net premium** that covers the expected benefit, the **gross premium** that also covers expenses, and the **reserve** to hold in each policy year. A final question is how far the premium moves when the assumptions are wrong.
+
+This is a complete life-insurance pricing exercise in miniature, and it uses everything in [Actuarial 1](../actuarial_01_mortality_and_life_tables.md) and [Actuarial 2](../actuarial_02_life_contingencies_premiums_and_reserves.md): a mortality law, a discount, the expected present value of a death benefit and of an annuity, the equivalence principle, and the prospective reserve.
+
+## The plan
+
+Everything follows from one principle. A premium is fair, in the actuarial sense, when the expected present value of what the insurer receives equals the expected present value of what it pays out. With {math}`A` the expected present value of a death benefit of 1 and {math}`\ddot a` that of a premium annuity of 1 per year, both over the ten-year term, the **net annual premium** per unit insured is
+
+```{math}
+P=\frac{A_{40:\overline{10}\vert}^{1}}{\ddot a_{40:\overline{10}\vert}} ,
+```
+
+and the premium on a sum assured {math}`S` is {math}`SP`. Expenses are added by putting them into the same balance: the gross premium {math}`G` solves
+
+```{math}
+G\,\ddot a=S\,A+e_0+e_1\,\ddot a+c\,G\,\ddot a ,
+```
+
+where {math}`e_0` is a cost at issue, {math}`e_1` a cost each year the policy is in force and {math}`c` a commission rate on every premium. The reserve in year {math}`k` is the same balance struck at that date for the remaining term.
+
+The five programs below do this in order: price the policy, add expenses, check the price a second way, find the reserve, and stress the assumptions.
+
+## Step 1: the net premium
+
+The first program builds the ten Makeham death probabilities for ages 40 to 49, a mortality law from them, and a valuation at 3.5%. The death benefit is the standard `cashflow::death` and the premium annuity the standard `cashflow::annuity`; the premium is their ratio times the sum assured. The last line prices the same quantities with the contingent-value functions to confirm that they agree.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  std::vector<double> age_list;
+  for (int x = 40; x < 50; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0004, 0.000035, 1.10);
+  const double sum_assured = 100000.0;
+  const double i = 0.035;
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(i)});
+  const double A = value(actuarial::cashflow::death(10)).item<double>();
+  const double a_due = value(actuarial::cashflow::annuity(10)).item<double>();
+  const double net = sum_assured * A / a_due;
+  out.writeln("death probabilities =", qx.items<double>());
+  out.writeln("A (death benefit of 1)       =", A);
+  out.writeln("annuity-due of 1 a year      =", a_due);
+  out.writeln("net single premium           =", sum_assured * A);
+  out.writeln("net annual premium           =", net);
+  out.writeln("same, contingent-value functions =", sum_assured * actuarial::term_insurance(qx, i).item<double>() / actuarial::annuity_due(qx, i).item<double>());
+}
+```
+
+## Step 2: expenses and the gross premium
+
+The insurer's costs are 200 to issue the policy, 25 a year to administer it while it is in force, and a 5% commission on every premium. Solving the balance above for {math}`G` gives
+
+```{math}
+G=\frac{S\,A+e_0+e_1\,\ddot a}{(1-c)\,\ddot a} .
+```
+
+The numerator is what the premiums must pay for before commission, and dividing by {math}`(1-c)` leaves 95% of each premium to do it: the same gross-up that appears in [Indicated Premium and Rate Change](../actuarial_04_ratemaking_credibility_and_loss_reserving/indicated_premium_and_rate_change.md). The program prints the gross premium and splits it into the part that pays claims, the part that pays costs and the commission.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> age_list;
+  for (int x = 40; x < 50; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0004, 0.000035, 1.10);
+  const double sum_assured = 100000.0;
+  const double i = 0.035;
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(i)});
+  const double A = value(actuarial::cashflow::death(10)).item<double>();
+  const double a_due = value(actuarial::cashflow::annuity(10)).item<double>();
+  const double net = sum_assured * A / a_due;
+  const double issue_expense = 200.0, renewal_expense = 25.0, commission = 0.05;
+  const double gross = (sum_assured * A + issue_expense + renewal_expense * a_due) / ((1.0 - commission) * a_due);
+  out.writeln("net premium   =", net);
+  out.writeln("gross premium =", gross);
+  out.writeln("loading       =", gross / net - 1.0);
+  out.writeln("per policy year: claims", net, " costs", (issue_expense / a_due + renewal_expense), " commission", commission * gross);
+  out.writeln("sum of the parts =", net + issue_expense / a_due + renewal_expense + commission * gross);
+}
+```
+
+## Step 3: a check from the cashflow
+
+An answer that comes from one formula is only as good as the formula. The second route builds the whole policy as one cashflow and asks the valuation operator for its expected present value, which must be zero at the gross premium. Each year the insurer, if the life is alive, receives the premium and pays the costs; at issue it also pays 200; and at the end of each year of death it pays the sum assured. `cashflow::make` takes exactly these two vectors: the payments made on survival at times 0 to 10 (a premium counts as a negative payment) and the payments made on death at the ends of years 1 to 10.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  std::vector<double> age_list;
+  for (int x = 40; x < 50; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0004, 0.000035, 1.10);
+  const double sum_assured = 100000.0;
+  const double i = 0.035;
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(i)});
+  const double A = value(actuarial::cashflow::death(10)).item<double>();
+  const double a_due = value(actuarial::cashflow::annuity(10)).item<double>();
+  const double net = sum_assured * A / a_due;
+  const double issue_expense = 200.0, renewal_expense = 25.0, commission = 0.05;
+  const double gross = (sum_assured * A + issue_expense + renewal_expense * a_due) / ((1.0 - commission) * a_due);
+  std::vector<double> alive(11, 0.0), dead(10, sum_assured);
+  for (int t = 0; t < 10; ++t) alive[t] = -(gross * (1.0 - commission) - renewal_expense);
+  alive[0] += issue_expense;
+  const actuarial::Cashflow policy = actuarial::cashflow::make(pluss::make_series(alive), pluss::make_series(dead));
+  out.writeln("expected present value of the policy at the gross premium =", value(policy).item<double>());
+  std::vector<double> under = alive;
+  for (int t = 0; t < 10; ++t) under[t] += 0.95 * 10.0;  // premium 10 lower: 95% of it is no longer received
+  const actuarial::Cashflow short_of_premium = actuarial::cashflow::make(pluss::make_series(under), pluss::make_series(dead));
+  out.writeln("with a premium 10 lower the policy is worth", value(short_of_premium).item<double>(), " to the insurer as a cost; 9.5 x annuity =", 9.5 * a_due);
+}
+```
+
+## Step 4: the reserve
+
+After {math}`k` years the policy has {math}`10-k` years to run and the life is {math}`40+k`. The **net premium reserve** is the expected present value of the remaining benefit less that of the remaining net premiums,
+
+```{math}
+{}_kV=S\,A_{40+k:\overline{10-k}\vert}^{1}-SP\,\ddot a_{40+k:\overline{10-k}\vert},
+```
+
+which is the same balance struck again with the later death probabilities. It is zero at issue by the equivalence principle and zero at expiry because nothing remains; in between it is positive because the premium is level while the risk rises with age, so the early premiums are more than the early claims cost and the surplus is held against the later ones. The program computes the reserve each year by revaluing the tail of the death probabilities, and then checks the recursion that every reserve must satisfy,
+
+```{math}
+({}_kV+SP)(1+i)=q_{40+k}\,S+p_{40+k}\;{}_{k+1}V ,
+```
+
+which says that the reserve plus the premium, accumulated for a year at interest, pays the expected claim and funds the expected reserve of the survivors.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  std::vector<double> age_list;
+  for (int x = 40; x < 50; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0004, 0.000035, 1.10);
+  const double sum_assured = 100000.0;
+  const double i = 0.035;
+  const actuarial::Mortality mortality = actuarial::mortality::from_qx(qx);
+  const actuarial::Valuation value = actuarial::operators::value({mortality, actuarial::discount::flat(i)});
+  const double A = value(actuarial::cashflow::death(10)).item<double>();
+  const double a_due = value(actuarial::cashflow::annuity(10)).item<double>();
+  const double net = sum_assured * A / a_due;
+  std::vector<double> reserve(11, 0.0);
+  const auto q = qx.items<double>();
+  for (int k = 0; k < 10; ++k) {
+    const pluss::Series tail = qx.slice(0, k, 10, 1);
+    reserve[k] = sum_assured * actuarial::term_insurance(tail, i).item<double>() - net * actuarial::annuity_due(tail, i).item<double>();
+  }
+  double worst = 0.0;
+  for (int k = 0; k < 10; ++k) {
+    const double lhs = (reserve[k] + net) * (1.0 + i);
+    const double rhs = q[k] * sum_assured + (1.0 - q[k]) * reserve[k + 1];
+    worst = std::max(worst, std::abs(lhs - rhs));
+    out.writeln("year", k, " reserve", reserve[k]);
+  }
+  out.writeln("year", 10, " reserve", reserve[10]);
+  out.writeln("largest recursion residual =", worst);
+}
+```
+
+## Step 5: what if the assumptions are wrong?
+
+The premium rests on two assumptions that experience will not match exactly. The program recomputes the net premium for interest rates of 2.5%, 3.5% and 4.5% and for mortality at 100%, 125% and 150% of the assumed rates. It scales the death probabilities directly; because they are small the scaling stays inside the unit interval.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  std::vector<double> age_list;
+  for (int x = 40; x < 50; ++x) age_list.push_back(x);
+  const pluss::Series ages = pluss::make_series(age_list);
+  const pluss::Series qx = life::makeham_qx(ages, 0.0004, 0.000035, 1.10);
+  const double sum_assured = 100000.0;
+  const double i = 0.035;
+  out.writeln("net annual premium by interest rate (rows) and mortality level (columns 100%, 125%, 150%)");
+  for (const char *label : {"2.5%", "3.5%", "4.5%"}) {
+    const double rate = std::stod(std::string(label)) / 100.0;
+    out.write("i =", label, " :");
+    for (const double scale : {1.0, 1.25, 1.5}) {
+      const pluss::Series q = qx.mul(scale);
+      out.write(" ", sum_assured * actuarial::term_insurance(q, rate).item<double>() / actuarial::annuity_due(q, rate).item<double>());
+    }
+    out.writeln();
+  }
+}
+```
+
+## Reading the results
+
+The **net premium is 275.19** a year for a sum assured of 100,000, or 2.75 per thousand: the probability of dying in the term is small (about 2.9%: one minus the product of the complements of the printed death probabilities), and the benefit is paid at the end of the year of death, around six years out on average, so a single premium of 2,344 settles the expected cost. Spread over an annuity-due of 8.52 payments it becomes 275.19 a year. The two routes in Step 1 agree to every printed digit because `term_insurance` and `annuity_due` are the same valuation operator on the same basis.
+
+The **gross premium is 340.70**, 23.8% above the net. The split shows where the extra goes: the 200 issue cost is spread over the annuity (23.48 a year) and added to the 25 administration cost to give 48.48 a year of costs, and the commission takes 17.04. The three parts add back exactly to the gross premium, which is the balance equation read the other way. Because the commission is a share of the premium it grows with the premium, which is why the gross-up divides by 0.95 instead of adding 5% of the net.
+
+The cashflow check in Step 3 is the independent confirmation: the policy built as a pair of payment vectors has an expected present value of zero at the gross premium to eight decimal places, and lowering the premium by 10 a year makes it worth 9.5 times the annuity, so the 5% commission is genuinely taken out of the premium before it reaches the pool.
+
+The **reserve** starts at zero, climbs to a peak of **287.45 in year 6** and falls back to zero at expiry, the hump characteristic of a level-premium term policy. It grows while the level premium exceeds the rising cost of cover, peaks when the two balance, and declines because fewer years of cover remain to be paid for. The recursion residual is below the print precision in every year, which confirms the reserves are mutually consistent and not merely individually plausible.
+
+The sensitivity table shows what matters. Premium is **almost proportional to the mortality level**: raising mortality by 25% raises the premium by 24.9% (279.69 to 349.45 at 2.5%), because the death probabilities are small and the annuity barely changes. Interest matters far less: moving the rate by a point changes the premium by about 1.6%, because the term is short and the benefit is paid soon. A ten-year term is therefore a bet on mortality, not on interest, and the table spans 270.80 (4.5%, 100% mortality) to 419.14 (2.5%, 150% mortality). A longer term, or an endowment, would reverse the emphasis.
+
+## What to carry forward
+
+- One principle prices everything: equate the expected present value of premiums with that of benefits and expenses, and solve for the premium.
+- A policy is a `Cashflow`; build a standard benefit with `cashflow::death` and `cashflow::annuity`, and anything else, premiums and expenses included, with `cashflow::make`.
+- Always check an answer a second way. Here the contingent-value functions and a zero-valued cashflow confirm the closed form.
+- Reserves are the same balance struck later; the recursion is the test of a set of reserves.
+- Stress mortality before interest for short-term business.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="a_deferred_retirement_annuity.html">
+    <span class="label">Next</span>
+    <span class="title">A Deferred Retirement Annuity</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

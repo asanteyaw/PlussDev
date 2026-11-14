@@ -76,4 +76,30 @@ int main() {
 ```
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+volatility/Egarch
+volatility/EgarchFit
+volatility/EgarchOptions
+volatility/Garch
+volatility/Garch11
+volatility/Garch11Fit
+volatility/Garch11Options
+volatility/GarchFit
+volatility/GarchOptions
+volatility/Gjr
+volatility/GjrFit
+volatility/GjrOptions
+volatility/MvEgarch
+volatility/MvEgarchFit
+volatility/MvEgarchOptions
+volatility/MvGarch
+volatility/MvGarchFit
+volatility/MvGarchOptions
+volatility/MvGjr
+volatility/MvGjrFit
+volatility/MvGjrOptions
+```
 <!-- apiref:toctree:end -->

@@ -1,0 +1,121 @@
+# `circuit::tran`
+
+Computes the response of a circuit in time.
+
+## Signature
+
+```cpp
+circuit::Result circuit::tran(const circuit::Circuit& circuit, const pluss::Series& time, const circuit::Drive& drive = {}, const circuit::Start& start = {}, const circuit::TranOptions& options = {});
+```
+
+## What It Does
+
+Marches the circuit equations forward from the first instant of `time` to the last, at the fixed step of the grid, and returns every node voltage and branch current at every instant. The first sample is the starting state: a state that satisfies the circuit equations with each capacitor held at its `start` voltage and each inductor at its `start` current. The independent sources take the values of `drive` at each instant; a source with no drive value holds the value stored in the circuit. The two time-stepping rules and the controls of the Newton iteration are selected by `options`. A circuit with diodes or transistors solves the nonlinear step equation at every sample by Newton iteration, starting from the previous sample.
+
+## Parameters
+
+`circuit`
+: The compiled circuit. Its sources hold the values used wherever `drive` does not supply one, and its parameter batch becomes the leading axes of every result.
+
+`time`
+: The instants in seconds: a real floating vector of at least two strictly increasing, evenly spaced values on the circuit's platform. The step is `time[1] - time[0]` and the first value need not be zero. Spacing may differ from the step by rounding of the values themselves, which is much coarser for single precision.
+
+`drive`
+: The values of the independent sources at each instant; see `Drive`. The default holds every source at its stored value.
+
+`start`
+: The energy stored at the first instant; see `Start`. The default is a circuit at rest, with every capacitor voltage and inductor current zero.
+
+`options`
+: The time-stepping rule and, for circuits with devices, the iteration controls; see `TranOptions`. The default is the trapezoid rule.
+
+## Returns
+
+A `Result` whose arrays all gain a time axis immediately before the final element axis: `voltage` is `[..., time, nodes]` with node `0` zero, `source_current` is `[..., time, voltage sources]`, and likewise for the inductor, VCCS, VCVS and op-amp currents. `residual` is `[..., time]`: the largest defect of the equations solved for each sample (the starting-state equations at the first sample and the implicit step equation after it). For a circuit with devices, `diode_current` is `[..., time, diodes]`, `collector_current` and `base_current` are `[..., time, transistors]`, `iterations` is `[time]` with the Newton iterations of each sample (the first is the starting-state solve) and `refinements` is `[time]` with the number of sub-steps a sample needed (zero where the step was accepted as it was), and `residual` is the defect of the nonlinear step equation. The element type is that of the circuit.
+
+## Errors
+
+Throws `pluss::Error` for a time vector that is too short, not strictly increasing, not evenly spaced, not floating, or on another platform; for a `drive` or `start` array of the wrong shape, platform or element type, with non-finite values, or for elements the circuit does not have; for a device circuit whose Newton iteration does not converge at some sample within `options.solver.max_iterations`, for an invalid control, and for equations without a solution: a node with no path to ground, two ideal sources fixing the same voltage, a loop of ideal voltage sources, or a start state that contradicts what the sources impose (a capacitor directly across ideal voltage sources at another voltage). Checks run before anything is solved.
+
+## Interpretation and Use
+
+The step sets the accuracy: both rules are second order, so halving the step divides the error of a smooth response by about four. Use at least twenty samples per time constant or per period for the part of the response you care about. A step much longer than the fastest time constant makes the trapezoid rule overshoot and ring; `Scheme::Gear2` damps that instead. Sources are known only at the samples and are straight lines between them, so a jump that falls on a sample is a ramp one step long; give that sample the average of the two levels to centre the ramp on the jump. The step is adaptive where devices switch: each interval is compared with the same interval taken as two half steps, and when they differ by more than `options.solver.step_tolerance` it is subdivided with trapezoid sub-steps (up to `max_refinement` halvings), so a long sample interval does not make a switching circuit ring. `Result::refinements` says where that happened. The sources are still straight lines between samples, so sample a waveform finely enough to represent it. The run takes memory proportional to the number of samples times the number of unknowns times the batch size.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A step response and its closed form, with the shapes of the result.
+
+@@example Eng/api/circuit_tran_rc.cpp@@
+
+### Example 2
+
+The starting state: a charged capacitor and a flowing inductor current.
+
+@@example Eng/api/circuit_tran_start.cpp@@
+
+### Example 3
+
+A sinusoidal voltage drive and a current ramp.
+
+@@example Eng/api/circuit_tran_drive.cpp@@
+
+### Example 4
+
+The two time-stepping rules on an oscillator that must keep its energy.
+
+@@example Eng/api/circuit_tran_schemes.cpp@@
+
+### Example 5
+
+A parameter sweep and a single-precision circuit.
+
+@@example Eng/api/circuit_tran_batch.cpp@@
+
+### Example 6
+
+The shape of every result array for a circuit with every kind of element.
+
+@@example Eng/api/circuit_tran_all_elements.cpp@@
+
+### Example 7
+
+Rejected time vectors and an unreachable starting state.
+
+@@example Eng/api/circuit_tran_errors.cpp@@
+
+### Example 8
+
+A half-wave rectifier driven by a sine.
+
+@@example Eng/api/circuit_tran_rectifier.cpp@@
+
+### Example 9
+
+The Newton iterations of each sample.
+
+@@example Eng/api/circuit_tran_diode_iterations.cpp@@
+
+### Example 10
+
+A charged capacitor behind a blocking diode.
+
+@@example Eng/api/circuit_tran_diode_start.cpp@@
+
+### Example 11
+
+A coarse step is subdivided where the diode switches.
+
+@@example Eng/api/circuit_tran_coarse.cpp@@
+
+### Example 12
+
+An iteration limit that is too small, and invalid controls.
+
+@@example Eng/api/circuit_tran_solver_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

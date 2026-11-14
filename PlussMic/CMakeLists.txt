@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.28)
 project(PlussMic LANGUAGES CXX)
 find_package(SQLite3 REQUIRED)
+if(NOT TARGET SQLite3::SQLite3 AND TARGET SQLite::SQLite3)
+    add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
+endif()
 
 add_library(PlussMic STATIC)
 add_library(Pluss::PlussMic ALIAS PlussMic)
@@ -39,9 +42,9 @@ target_link_libraries(PlussMic PUBLIC
 # SDK's usr/include as an explicit system path puts C headers ahead of the
 # libc++ wrappers and breaks <cstddef>/<cmath> with recent Xcode toolchains.
 if(APPLE AND SQLite3_INCLUDE_DIR STREQUAL "${CMAKE_OSX_SYSROOT}/usr/include")
-    target_link_libraries(PlussMic PRIVATE "$<LINK_ONLY:SQLite::SQLite3>")
+    target_link_libraries(PlussMic PRIVATE "$<LINK_ONLY:SQLite3::SQLite3>")
 else()
-    target_link_libraries(PlussMic PRIVATE SQLite::SQLite3)
+    target_link_libraries(PlussMic PRIVATE SQLite3::SQLite3)
 endif()
 
 set_target_properties(PlussMic PROPERTIES CXX_STANDARD 20)

@@ -1,0 +1,239 @@
+# The NGARCH model for pricing
+
+[Back to The Volatility Bridge](../finance_10_volatility_bridge.md)
+
+The GARCH models of the last page describe returns under the real-world measure. To price an option the model has to be placed under a pricing measure, and the standard way to do it for a GARCH model is the **NGARCH-in-mean** model of Duan (1995). The log-return has a risk premium proportional to the volatility and the variance recursion has a leverage term:
+
+```{math}
+\begin{aligned}
+R_t&=r+\lambda\sqrt{h_t}-\tfrac12\,h_t+\sqrt{h_t}\,z_t, & z_t&\sim\mathcal N(0,1),\\
+h_{t+1}&=\omega+\beta\,h_t+\alpha\,h_t\,(z_t+\gamma)^2 .
+\end{aligned}
+```
+
+Here {math}`r` is the risk-free rate per period, {math}`\lambda` is the premium per unit of volatility, and the term {math}`-\tfrac12h_t` is the convexity correction that makes {math}`e^{R_t}` a martingale when {math}`\lambda=0`. The shock {math}`z_t` raises the variance through {math}`(z_t+\gamma)^2`; with {math}`\gamma>0` a negative shock raises it more, the leverage effect. With {math}`\gamma=0` the model is GARCH(1,1). The variance is stationary when the **persistence**
+
+```{math}
+\beta+\alpha\,(1+\gamma^2)<1,
+```
+
+and its long-run level is {math}`\omega/(1-\beta-\alpha(1+\gamma^2))`. The bridge provides the tools to work with this model on returns.
+
+```cpp
+double fin::volatility::unconditional_variance(const fin::volatility::Ngarch11Params &params);
+double fin::volatility::unconditional_variance(const fin::volatility::Garch11Params &params);
+fin::volatility::Ngarch11Params fin::volatility::to_pricing_params(const ts::GarchFit &fit, double r = 0.0, double lambda = 0.0);
+fin::volatility::Ngarch11Params fin::volatility::to_pricing_params(const ts::Garch11Fit &fit, double r = 0.0, double lambda = 0.0);
+fin::pricing::OptionVolMetrics fin::pricing::pricing_metrics(const Series &returns, const fin::volatility::Ngarch11Params &params, Config cfg = {});
+fin::pricing::OptionVolMetrics fin::pricing::pricing_metrics(const Series &returns, const fin::volatility::Garch11Params &params, Config cfg = {});
+Series fin::pricing::pricing_variance_forecast(std::int64_t horizon, const Series &returns, const fin::volatility::Ngarch11Params &params, Config cfg = {});
+Series fin::pricing::pricing_variance_forecast(std::int64_t horizon, const Series &returns, const fin::volatility::Garch11Params &params, Config cfg = {});
+double fin::bridge::weighted_joint_loglik(double returns_loglik, double options_loglik, const fin::bridge::JointLikelihoodWeights &weights = {});
+double fin::bridge::weighted_joint_nll(double returns_loglik, double options_loglik, const fin::bridge::JointLikelihoodWeights &weights = {});
+```
+
+| `Ngarch11Params` | Meaning | Default |
+|---|---|---|
+| `omega`, `alpha`, `beta` | the variance recursion; `omega` > 0 and `alpha`, `beta` ≥ 0 | 0.02, 0.08, 0.90 |
+| `gamma` | the leverage {math}`\gamma`; `Garch11Params` has none (it is 0) | 0 |
+| `lambda`, `r` | the risk premium per unit of volatility and the risk-free rate, per period | 0, 0 |
+| `variance_floor` | a floor under the variance | 10⁻¹² |
+| `stationarity_margin` | the persistence must be below 1 − this | 10⁻⁶ |
+
+| `OptionVolMetrics` member | Shape | Contents |
+|---|---|---|
+| `loglik`, `loglik_per_obs` | number, `[T]` | the log-likelihood of the returns and its terms |
+| `variance` | `[T]` | the conditional variance {math}`h_t` of each day; the first is the long-run variance |
+| `mean` | `[T]` | the conditional mean of each return, {math}`r+\lambda\sqrt{h_t}-\tfrac12h_t` |
+| `standardized_innovation` | `[T]` | {math}`z_t=(R_t-\text{mean}_t)/\sqrt{h_t}`; standard normal if the model is right |
+
+| `JointLikelihoodWeights` | Meaning | Default |
+|---|---|---|
+| `returns_weight`, `options_weight` | the weights of the returns and the options in a joint objective; non-negative | 1, 1 |
+
+The returns of this model are fractions (0.01 is 1%), so {math}`\omega` is a variance in fractions squared: of order 10⁻⁶ for daily returns.
+
+## Program 1: the parameters
+
+The program builds a daily NGARCH with a persistence of 0.975 and prints the long-run variance, the volatility it implies and the half-life of a variance shock, {math}`\ln(1/2)/\ln(\text{persistence})`; compares it with a GARCH of persistence 0.99; and shows what is rejected: a persistence above 1, a negative {math}`\omega`, a negative {math}`\alpha`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace vol = fin::volatility;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  vol::Ngarch11Params p;
+  p.omega = 2e-6;
+  p.alpha = 0.06;
+  p.beta = 0.90;
+  p.gamma = 0.5;
+  p.lambda = 0.05;
+  p.r = 0.0001;
+  const double persistence = p.beta + p.alpha * (1.0 + p.gamma * p.gamma);
+  const double unconditional = vol::unconditional_variance(p);
+  out.writeln("persistence beta + alpha (1 + gamma^2)", persistence, " unconditional daily variance", unconditional, " = omega / (1 - persistence)", p.omega / (1.0 - persistence));
+  out.writeln("long-run annualised volatility", std::sqrt(252.0 * unconditional), " half-life of a variance shock in days", std::log(0.5) / std::log(persistence));
+
+  vol::Garch11Params symmetric;
+  symmetric.omega = 2e-6;
+  symmetric.alpha = 0.06;
+  symmetric.beta = 0.93;
+  out.writeln("GARCH(1,1) with persistence 0.99: unconditional variance", vol::unconditional_variance(symmetric));
+
+  const auto attempt = [&](const char *what, vol::Ngarch11Params q) {
+    try {
+      out.writeln(std::string(what) + ": " + std::to_string(vol::unconditional_variance(q)));
+    } catch (const std::exception &e) {
+      std::string message = e.what();
+      out.writeln(std::string(what) + ": " + message.substr(0, message.find('\n')));
+    }
+  };
+  auto explosive = p;
+  explosive.beta = 0.95;
+  attempt("beta 0.95 (persistence above 1)", explosive);
+  auto negative = p;
+  negative.omega = -1e-6;
+  attempt("negative omega", negative);
+  auto bad_gamma = p;
+  bad_gamma.alpha = -0.1;
+  attempt("negative alpha", bad_gamma);
+}
+```
+
+The persistence {math}`0.90+0.06\,(1+0.5^2)=0.975` gives a long-run variance {math}`2\times10^{-6}/0.025=8\times10^{-5}`, equal to the library's value, an annualised volatility of 14.2%, and a half-life of 27 days: a variance shock loses half of its distance from the long-run level in a month. The symmetric GARCH with {math}`\alpha=0.06` and {math}`\beta=0.93` has persistence 0.99 and a long-run variance of {math}`2\times10^{-4}`, so a persistence closer to 1 gives a much higher long-run variance for the same {math}`\omega`. The three invalid sets are refused with a message that names the rule, including the persistence condition with its margin.
+
+## Program 2: the likelihood identifies the parameters
+
+`pricing_metrics` runs the recursion over the returns, starting from the long-run variance, and returns the likelihood and the standardised innovations. If the model is right the innovations are standard normal, which is a check of the model. The program simulates 6,000 daily returns from the NGARCH above, with a risk premium of 0.05 and a leverage of 0.5, computes the metrics at the true parameters, and then varies the risk premium and the leverage one at a time to see where the log-likelihood peaks.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace vol = fin::volatility;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  vol::Ngarch11Params p;
+  p.omega = 2e-6;
+  p.alpha = 0.06;
+  p.beta = 0.90;
+  p.gamma = 0.5;
+  p.lambda = 0.05;
+  p.r = 0.0001;
+  // 6000 daily log-returns: R = r + lambda sqrt(h) - h / 2 + sqrt(h) z,  h' = omega + beta h + alpha h (z + gamma)^2
+  const std::int64_t n = 6000;
+  const auto z = pluss::series::randn({n}, as_f64(), 7).items<double>();
+  std::vector<double> returns(n);
+  double h = vol::unconditional_variance(p);
+  for (std::int64_t t = 0; t < n; ++t) {
+    returns[t] = p.r + p.lambda * std::sqrt(h) - 0.5 * h + std::sqrt(h) * z[t];
+    h = p.omega + p.beta * h + p.alpha * h * (z[t] + p.gamma) * (z[t] + p.gamma);
+  }
+  const auto y = pluss::make_series(returns, {n}, as_f64());
+
+  const auto metrics = fin::pricing::pricing_metrics(y, p, as_f64());
+  out.writeln("mean", metrics.mean.sizes(), " variance", metrics.variance.sizes(), " standardized_innovation", metrics.standardized_innovation.sizes(), " loglik_per_obs", metrics.loglik_per_obs.sizes());
+  out.writeln("standardised innovations: mean", metrics.standardized_innovation.mean().item<double>(), " standard deviation", metrics.standardized_innovation.std().item<double>(), " (N(0,1) if the model is right)");
+  out.writeln("log-likelihood", metrics.loglik, " first day: variance", metrics.variance.select(0, 0).item<double>(), " mean return", metrics.mean.select(0, 0).item<double>());
+
+  out.writeln("risk premium lambda:   -0.10      0.00      0.05 (true)   0.10      0.20");
+  std::string row = "log-likelihood       ";
+  for (const double lambda : {-0.10, 0.0, 0.05, 0.10, 0.20}) {
+    auto q = p;
+    q.lambda = lambda;
+    row += std::to_string(fin::pricing::pricing_metrics(y, q, as_f64()).loglik).substr(0, 9) + "  ";
+  }
+  out.writeln(row);
+  out.writeln("leverage gamma:         0.0       0.25      0.5 (true)    0.75");
+  row = "log-likelihood       ";
+  for (const double gamma : {0.0, 0.25, 0.5, 0.75}) {  // gamma = 1 would make the persistence 1.02, which is rejected
+    auto q = p;
+    q.gamma = gamma;
+    row += std::to_string(fin::pricing::pricing_metrics(y, q, as_f64()).loglik).substr(0, 9) + "  ";
+  }
+  out.writeln(row);
+}
+```
+
+At the true parameters the standardised innovations have a mean of −0.013 and a standard deviation of 1.010, as a correct model implies, and the first day has the long-run variance, 8×10⁻⁵, and a mean return of {math}`r+\lambda\sigma-\tfrac12h=0.0005`. The log-likelihood peaks at the true values in both profiles. For the risk premium it is 19973.99, **19976.99** and 19961.79 at 0, 0.05 and 0.10, a drop of 3.0 and 15.2: twice the first is 6.0, above 3.84, so the data distinguish a premium of 0.05 from none, but not by much. The premium is the weakest parameter because it multiplies the volatility, which is small. For the leverage, it is 19898.7, 19939.9, **19977.0** and 19907.0 at 0, 0.25, 0.5 and 0.75, a much sharper peak. (A leverage of 1 is not tried: with these {math}`\alpha` and {math}`\beta` it would make the persistence 1.02, which `pricing_metrics` rejects.) Estimating the parameters is a matter of maximising `loglik` with an optimiser from Optimization.
+
+## Program 3: from a fitted GARCH to pricing parameters, and a forecast
+
+`to_pricing_params(fit, r, lambda)` turns a fitted GARCH model into pricing parameters: it copies {math}`\omega`, {math}`\alpha` and {math}`\beta`, sets the leverage to 0 (a GARCH has none), and takes the risk-free rate and the premium that you give it. Mind the units: a GARCH fitted to returns in per cent has a variance in per cent squared, so {math}`\omega` has to be multiplied by {math}`10^{-4}` for returns in fractions; {math}`\alpha` and {math}`\beta` are unit-free. The program fits a GARCH(1,1) to 2,000 simulated returns in per cent, converts it, and computes the likelihood of the returns as fractions. It then forecasts the variance 252 days ahead and checks that its distance from the long-run level shrinks by the persistence each day. It ends with `weighted_joint_loglik`, which combines the likelihood of the returns with that of an options calibration, for a given weight.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace vol = fin::volatility;
+namespace ts = pluss::subsp::stats::ts;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(3));
+  // fit a GARCH(1,1) to daily returns in per cent, then express it as pricing parameters for returns as fractions of 1
+  ts::Garch11Fit truth;
+  truth.omega = 0.02;
+  truth.alpha = 0.08;
+  truth.beta = 0.90;
+  const auto percent = truth.simulate(2000, as_f64(), 3);
+  const auto fit = ts::Garch11::fit_mle(percent, {}, as_f64());
+  out.writeln("fit in per cent: omega", fit.omega, " alpha", fit.alpha, " beta", fit.beta);
+
+  auto p = vol::to_pricing_params(fit, 0.0001, 0.04);
+  p.omega *= 1e-4;  // variance in per cent squared -> fractions squared
+  out.writeln("pricing parameters: omega", p.omega, " alpha", p.alpha, " beta", p.beta, " gamma", p.gamma, " lambda", p.lambda, " r", p.r);
+  const auto returns = percent / 100.0;
+  const auto metrics = fin::pricing::pricing_metrics(returns, p, as_f64());
+  out.writeln("log-likelihood of the returns under the pricing model", metrics.loglik);
+
+  const auto forecast = fin::pricing::pricing_variance_forecast(252, returns, p, as_f64()).items<double>();
+  const double unconditional = vol::unconditional_variance(p);
+  const double persistence = p.beta + p.alpha;
+  out.writeln("unconditional variance", unconditional, " annualised volatility", std::sqrt(252.0 * unconditional));
+  out.writeln("days ahead  daily variance  distance from the long run, relative to day 1 (persistence^(d-1) =)");
+  for (const std::int64_t d : {1, 2, 10, 50, 252}) {
+    out.writeln(d, forecast[d - 1], (forecast[d - 1] - unconditional) / (forecast[0] - unconditional), std::pow(persistence, static_cast<double>(d - 1)));
+  }
+
+  const double returns_ll = metrics.loglik;
+  out.writeln("joint log-likelihood = returns weight * returns log-likelihood + 0.5 * an options log-likelihood of -120:");
+  for (const double w : {0.0, 0.5, 1.0}) {
+    out.writeln("returns weight", w, " joint log-likelihood", fin::bridge::weighted_joint_loglik(returns_ll, -120.0, {.returns_weight = w, .options_weight = 0.5}), " negative", fin::bridge::weighted_joint_nll(returns_ll, -120.0, {.returns_weight = w, .options_weight = 0.5}));
+  }
+}
+```
+
+The fit in per cent has {math}`\omega=0.0097`, {math}`\alpha=0.055` and {math}`\beta=0.934`; as pricing parameters {math}`\omega=9.7\times10^{-7}`, and the long-run volatility is 15.0% a year. The log-likelihood of the returns as fractions is 6592.0. The forecast's distance from the long-run variance, relative to its value on day 1, is {math}`(\beta+\alpha)^{d-1}`: 0.989 after two days, 0.907 after 10, 0.586 after 50 and 0.065 after a year, equal to the formula to six digits. The last block shows the arithmetic of the joint objective {math}`w_r\ln L_{\text{returns}}+w_o\ln L_{\text{options}}`: with the returns weighted 0, 0.5 and 1 it is −60, 3236 and 6532 for an options likelihood of −120 at weight 0.5. The weights decide how much each source of information moves the parameters; a returns likelihood in the thousands overwhelms an options likelihood in the hundreds unless the weights compensate, so choose them with the sizes in mind.
+
+## Checklist
+
+1. Keep the units straight: the NGARCH takes returns as fractions, and a GARCH fitted in per cent needs {math}`\omega\times10^{-4}`.
+2. Check the persistence {math}`\beta+\alpha(1+\gamma^2)<1`; the library refuses a model that is not stationary.
+3. Test a model with its standardised innovations: mean 0 and standard deviation 1.
+4. Expect the risk premium to be hard to estimate from returns alone; this is where an options likelihood helps, with `weighted_joint_loglik`.
+5. Use `unconditional_variance` for the long-run level and {math}`\ln(1/2)/\ln(\text{persistence})` for the half-life.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="returns_and_variance_forecasts.html">
+    <span class="label">Previous</span>
+    <span class="title">From returns to variance forecasts</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

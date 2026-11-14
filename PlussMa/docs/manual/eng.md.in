@@ -1,0 +1,30 @@
+# Engineering
+
+Engineering problems are about signals and the systems that process them. The guides start with signals: windows, convolution, recursive filters, zero-phase filtering, frequency response and filter design. Linear systems follow: state-space models, controllability, poles and zeros, and exact simulation. Control follows: optimal feedback, estimation, classical design and model-predictive control. Circuits follow: linear networks in DC and AC. Structures follow: trusses, frames, vibration and buckling, and large displacements. Power systems follow: networks, power flow, sensitivities, dispatch, estimation and continuation. Fluid networks follow: pipe networks, pumps and valves, tanks and operation, and transport. Robots and communications come last: kinematics and dynamics of articulated robots, and modulation, noise and pulse shaping of digital links. Thermal engineering closes the list: heat networks and their transients, walls, fins and meshes, heat exchangers, moist air and fluid properties.
+
+- [Signal processing](eng/signal.md)
+- [Linear systems](eng/lti.md)
+- [Control](eng/control.md)
+- [Circuits](eng/circuit.md)
+- [Structures](eng/structure.md)
+- [Power systems](eng/power.md)
+- [Fluid networks](eng/fluid.md)
+- [Robotics](eng/robot.md)
+- [Communications](eng/comms.md)
+- [Thermal engineering](eng/thermal.md)
+
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+eng/signal
+eng/lti
+eng/control
+eng/circuit
+eng/structure
+eng/power
+eng/fluid
+eng/robot
+eng/comms
+eng/thermal
+```

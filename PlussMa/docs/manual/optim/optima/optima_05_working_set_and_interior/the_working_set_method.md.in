@@ -36,3 +36,12 @@ None of `add_constraint_tolerance`, `drop_multiplier_tolerance` or `max_working_
 - **The last iteration may be reported twice.** The `done` snapshot repeats the final iterate with its refreshed stationarity; do not read it as an extra iteration.
 
 Where next: [The interior-point method](the_interior_point_method.md) is the opposite strategy: stay strictly inside and let a barrier do the work.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_interior_point_method.html">
+    <span class="label">Next</span>
+    <span class="title">The interior-point method</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -89,7 +89,7 @@ Here `scalar()` borrows the sole output cell.
 ```cpp
 std::cout << "empty cells\n"
           << pluss::note::print(
-                 pluss::note::make({"", "x", ""}).join("|"))
+                              pluss::note::make({"", "x", ""}).join("|"))
           << '\n';
 ```
 

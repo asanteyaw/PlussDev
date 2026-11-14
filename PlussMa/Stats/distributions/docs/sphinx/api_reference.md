@@ -163,6 +163,37 @@ auto x = pluss::make_series({-8.0, -2.0, 0.0}).to(pluss::ScalarType::Float64);
 auto logtail = pluss::distr::logcdf("normal", x, {0.0, 1.0});
 ```
 
+## `icdf`
+
+### Signature
+
+```cpp
+pluss::Series pluss::distr::icdf(
+    pluss::distr::dst::Kind kind,
+    const pluss::Series& probability,
+    std::span<const double> params = {});
+```
+
+### Notes
+
+Returns the quantile whose cumulative probability is each value in
+`probability`. The operation is generic across distribution families and
+preserves the input shape and platform. Probabilities must be finite and
+strictly between zero and one.
+
+Unlike `probability.stat.icdf()`, which is always the normal inverse CDF, this
+surface requires `kind` and therefore makes the target distribution explicit.
+The probability Series is an input to the selected quantile function; it does
+not itself carry a distribution identity.
+
+### Example
+
+```cpp
+const pluss::Series probability = pluss::make_series({0.025, 0.5, 0.975});
+const pluss::Series quantile = pluss::distr::icdf(
+    pluss::distr::dst::Normal, probability, {0.0, 1.0});
+```
+
 ## `Object Wrappers`
 
 ### Signature

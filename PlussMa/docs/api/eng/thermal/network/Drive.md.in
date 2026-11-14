@@ -1,0 +1,57 @@
+# `thermal::Drive`
+
+Time-varying boundary temperatures and heat inflows.
+
+## Signature
+
+```cpp
+thermal::Drive
+```
+
+## What It Does
+
+Replaces the stored values of `Fixed::temperature` and `Heats::power` by arrays that change from sample to sample of a transient run. A member left undefined holds the stored value constant over the run.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `temperature` | Boundary temperatures `[..., time, fixed]`, one row per sample of the time vector. | undefined (the stored temperatures) |
+| `power` | Heat inflows `[..., time, heats]`, one row per sample. | undefined (the stored powers) |
+
+## Returns
+
+A value; read by `tran`.
+
+## Errors
+
+`tran` throws `pluss::Error` for a member without the matching group in the network, for a last axis that does not have one value per element, for a number of rows that differs from the number of time samples, and for a value that is not finite.
+
+## Interpretation and Use
+
+The value in row `k` applies at time sample `k`; a jump on a sample instant is a one-step ramp, so give the edge sample the average of the two levels if you need the exact energy.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A step in the surroundings and a heater pulse.
+
+@@example Eng/api/thermal_tran_drive.cpp@@
+
+### Example 2
+
+Stored values against driven values.
+
+@@example Eng/api/thermal_drive_defaults.cpp@@
+
+### Example 3
+
+Rejected drives.
+
+@@example Eng/api/thermal_tran_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

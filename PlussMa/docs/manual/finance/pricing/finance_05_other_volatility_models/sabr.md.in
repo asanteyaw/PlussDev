@@ -1,0 +1,155 @@
+# SABR
+
+[Back to Other Volatility Models](../finance_05_other_volatility_models.md)
+
+SABR models a forward F whose volatility α is itself random: dF = α F^β dW₁, dα = ν α dW₂, with correlation ρ between the two. The exponent β ∈ [0, 1] sets the backbone (β = 1 is lognormal, β = 0 normal), ν is the volatility of volatility and ρ tilts the smile. A `Field` with a SABR model has two engines: `Analytic` prices with Black's formula at the closed-form implied-volatility approximation of Hagan et al., and `MonteCarlo` simulates the two processes.
+
+```cpp
+market::State market::make(double spot, double rate, double dividend_yield, Config cfg = f64_default());
+module::Model model::make(model::Kind kind, std::initializer_list<double> params, Config cfg = f64_default());
+module::Engine module::Controls::engine = module::Engine::Analytic;
+module::Field::Result module::Field::price(Config cfg = {}) const;
+```
+
+SABR is a model of the forward, so the market is made with the forward as the spot and zero rates; the parameters are `alpha0, beta, nu, rho`:
+
+```cpp
+mod::Field field{.instrument = ..., .market = fin::market::make(forward, 0.0, 0.0),
+                 .model = fin::model::make(fin::model::Kind::Sabr, {alpha0, beta, nu, rho}),
+                 .controls = {.engine = mod::Engine::Analytic}};     // or Engine::MonteCarlo
+```
+
+The parameters are `alpha0` (the initial volatility), `beta`, `nu` and `rho`. A field prices options on the spot compounded at the carry `rate − dividend_yield`; with a zero rate and yield, as in the programs below, the spot is the forward. The programs share one helper, `forward_strip`, that builds the field for a list of strikes.
+
+## The smile
+
+The Analytic engine prices every strike with Black's formula at the SABR volatility, so the field's `implied_vol()` returns that volatility itself: the smile of the model. At the money the expansion of the Black volatility in the maturity is α(1 + (ρνα/4 + (2 − 3ρ²)ν²/24) T) for β = 1. The program compares it with the field's at-the-money volatility, then prints the smile.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+// A strip of calls on a forward of 100 (zero rate and yield, so spot = forward), priced by the given engine under the given model.
+mod::Field forward_strip(fin::model::Kind kind, const std::vector<double> &params, mod::Engine engine, const std::vector<double> &strikes, double maturity) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({maturity})},
+                    .market = fin::market::make(100.0, 0.0, 0.0),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const std::vector<double> params{0.25, 1.0, 0.5, -0.4};   // alpha0, beta, nu, rho
+  const double maturity = 1.0;
+  const double alpha = 0.25, nu = 0.5, rho = -0.4;
+  const double expansion = alpha * (1.0 + (rho * nu * alpha / 4.0 + (2.0 - 3.0 * rho * rho) * nu * nu / 24.0) * maturity);
+  const std::vector<double> strikes{80.0, 90.0, 100.0, 110.0, 120.0};
+  const auto smile = forward_strip(fin::model::Kind::Sabr, params, mod::Engine::Analytic, strikes, maturity).implied_vol().items<double>();
+  out.writeln("at the money", smile[2], " expansion", expansion);
+  out.writeln("strike  black vol");
+  for (std::size_t i = 0; i < strikes.size(); ++i) {
+    out.writeln(strikes[i], smile[i]);
+  }
+}
+```
+
+The at-the-money volatility 0.250833 equals the expansion to six decimals. With ρ = −0.4 the smile slopes down, from 0.278127 at strike 80 to 0.237521 at strike 120.
+
+## The backbone β
+
+β sets how the at-the-money volatility moves with the forward. The program keeps the at-the-money level fixed by scaling α₀ with F^(1−β), and prints the smile for β = 0, 0.5 and 1: the smaller β is, the steeper the downward slope.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+// A strip of calls on a forward of 100 (zero rate and yield, so spot = forward), priced by the given engine under the given model.
+mod::Field forward_strip(fin::model::Kind kind, const std::vector<double> &params, mod::Engine engine, const std::vector<double> &strikes, double maturity) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({maturity})},
+                    .market = fin::market::make(100.0, 0.0, 0.0),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  out.writeln("beta   vol at strikes 90, 100, 110");
+  for (double beta : {0.0, 0.5, 1.0}) {
+    const double alpha0 = 0.25 * std::pow(100.0, 1.0 - beta);
+    const auto v = forward_strip(fin::model::Kind::Sabr, {alpha0, beta, 0.5, -0.4}, mod::Engine::Analytic, {90.0, 100.0, 110.0}, 1.0).implied_vol().items<double>();
+    out.writeln(beta, v);
+  }
+}
+```
+
+The initial volatility is scaled so that α₀F^(β−1) = 0.25 in each row. The skew, the volatility at strike 90 less the one at 110, is 0.0460 for β = 0, 0.0328 for β = 0.5 and 0.0201 for β = 1: the closer the model is to normal, the steeper the smile slopes down, because the local volatility α F^(β−1) falls as the forward rises.
+
+## Prices: approximation against simulation
+
+The Analytic engine is an expansion in the maturity, so it is closest for short maturities; the MonteCarlo engine simulates the two processes. The program prices both at a quarter of a year and at one year.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+// A strip of calls on a forward of 100 (zero rate and yield, so spot = forward), priced by the given engine under the given model.
+mod::Field forward_strip(fin::model::Kind kind, const std::vector<double> &params, mod::Engine engine, const std::vector<double> &strikes, double maturity) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({maturity})},
+                    .market = fin::market::make(100.0, 0.0, 0.0),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> params{0.25, 1.0, 0.5, -0.4};
+  out.writeln("maturity strike  approximation  simulation  difference");
+  for (double maturity : {0.25, 1.0}) {
+    const std::vector<double> strikes{90.0, 100.0, 110.0};
+    const auto approximation = forward_strip(fin::model::Kind::Sabr, params, mod::Engine::Analytic, strikes, maturity).price().price.items<double>();
+    mod::Field simulated = forward_strip(fin::model::Kind::Sabr, params, mod::Engine::MonteCarlo, strikes, maturity);
+    simulated.controls.mc.paths = 400000;
+    simulated.controls.mc.steps = 200;
+    simulated.controls.mc.antithetic = true;
+    const auto mc = simulated.price().price.items<double>();
+    for (std::size_t i = 0; i < strikes.size(); ++i) {
+      out.writeln(maturity, strikes[i], approximation[i], mc[i], approximation[i] - mc[i]);
+    }
+  }
+}
+```
+
+At a quarter of a year the approximation and the simulation differ by 0.002 to 0.008, which is under 0.2% of the price at the money and within the simulation error. At one year the difference is 0.018 to 0.055. It does not shrink with more simulation steps or more paths, because it is the error of the expansion, which is of higher order in ν²T. Use the approximation for short maturities and the simulation when the maturity or ν is large.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="rough_volatility.html">
+    <span class="label">Next</span>
+    <span class="title">Rough volatility</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

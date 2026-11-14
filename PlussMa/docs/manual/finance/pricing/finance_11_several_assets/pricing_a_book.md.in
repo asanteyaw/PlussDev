@@ -1,0 +1,186 @@
+# Pricing a book of assets
+
+[Back to Several assets](../finance_11_several_assets.md)
+
+A `Chord` is given its assets as a dictionary of names and `Field`s, either at construction or with `add`, and `add(name, field)` also takes one asset at a time and returns the `Chord` so calls chain. [Building a Chord](building_a_chord.md) covers all the ways to build one, including from a table of model parameters. `price()` validates every asset, prices each with its own model and engine, and returns a `Chord::Result`: a `module::Field::Result` per asset, read by name, and every price laid end to end.
+
+```cpp
+module::Chord::Chord(std::initializer_list<module::Chord::Entry> assets);
+module::Chord &module::Chord::add(std::string name, module::Field field);
+module::Chord &module::Chord::add(pluss::RangeView<module::Chord::Entry> assets);
+bool module::Chord::contains(const std::string &name) const;
+module::Field &module::Chord::at(const std::string &name);
+void module::Chord::validate() const;
+module::Chord::Result module::Chord::price(Config cfg = {}) const;
+const module::Field::Result &module::Chord::Result::operator[](const std::string &name) const;
+```
+
+A name is unique and non-empty, and `add` with a name already present throws. `at` returns the asset's `Field` for reading or editing, and `operator[]` of the `Chord::Result` throws if no asset has that name. A book is built in one expression as a dictionary, `module::Chord chord{{"spx", spx_field}, {"ndx", ndx_field}}`, or added in one call, `chord.add({{"spx", spx_field}, {"ndx", ndx_field}})`; the dictionary keeps its order, and a list with a bad name adds nothing. Single adds still chain, `chord.add("spx", spx_field).add("ndx", ndx_field)`.
+
+| `Chord::Result` | Meaning |
+|---|---|
+| `names` | the asset names, in the order they were added |
+| `results` | one `module::Field::Result` per asset, parallel to `names`; `result["spx"]` is the entry of that name |
+| `price` | every asset's prices as one `Series`, laid end to end |
+| `offsets` | where each asset's prices start: asset *i* owns `price[offsets[i], offsets[i + 1])` |
+
+## Different models side by side
+
+The program prices a Black-Scholes index option, a three-strike Heston strip and an at-the-money Heston option with other parameters in one call, and reads each result by name. Each asset's Greeks are its own: the Black-Scholes asset has closed-form ones, and the Heston strips have none because they were built with `PriceOnly`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field black_scholes(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+mod::Field heston(double spot, std::vector<double> strikes, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04}) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, params), .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Chord chord{{"index", black_scholes(5000.0, 5000.0, 0.15)},
+                   {"tech", heston(100.0, {90.0, 100.0, 110.0})},
+                   {"calm", heston(100.0, {100.0}, {2.0, 0.09, 0.4, -0.5, 0.09})}};
+  const auto result = chord.price();
+  for (const auto &name : result.names) {
+    out.writeln(name, result[name].price.items<double>(), " delta defined:", result[name].greeks.delta.defined());
+  }
+  out.writeln("all prices end to end:", result.price.items<double>());
+  out.writeln("offsets:", result.offsets);
+}
+```
+
+Each asset comes back under its name, with the prices of its own strip (one, three and one) and its own Greeks setting: only the Black-Scholes asset has a delta, since the Heston strips were built with `PriceOnly`. `result.price` holds the five prices end to end and `offsets` is `[0, 1, 4, 5]`: the strip `tech` owns entries 1 to 3.
+
+## Changing one asset
+
+`chord.at(name)` is the asset's own `Field`: change a member in place and price again. The program bumps the spot of one asset and switches another to a different engine; the third is untouched.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field black_scholes(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+mod::Field heston(double spot, std::vector<double> strikes, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04}) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, params), .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Chord chord;
+  chord.add("a", black_scholes(100.0, 100.0, 0.2)).add("b", black_scholes(100.0, 100.0, 0.2)).add("h", heston(100.0, {100.0}));
+  const auto before = chord.price();
+  chord.at("a").market.spot = pluss::make_series({105.0});
+  chord.at("h").controls.engine = mod::Engine::Fft;
+  const auto after = chord.price();
+  for (const char *name : {"a", "b", "h"}) {
+    out.writeln(name, before[name].price.items<double>(), "->", after[name].price.items<double>());
+  }
+}
+```
+
+Raising the spot of `a` from 100 to 105 moves its call from 8.3494 to 11.3557 and leaves `b`, an identical option, at 8.3494. Switching `h` from the COS to the FFT engine leaves its price at 8.6281 to five decimals: the two engines are independent computations of the same value.
+
+## Smiles of every asset
+
+`implied_vol()` prices the whole `Chord` and inverts each asset's prices, giving one `Series` per asset in the order they were added: a flat line for Black-Scholes and a skew for Heston.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field black_scholes(double spot, double strike, double vol, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity), .market = fin::market::make(spot, 0.02, 0.01),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+mod::Field heston(double spot, std::vector<double> strikes, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04}) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({1.0})}, .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::make(fin::model::Kind::Heston, params), .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Chord chord;
+  chord.add("flat", black_scholes(100.0, 100.0, 0.25)).add("heston", heston(100.0, {90.0, 100.0, 110.0}));
+  const auto smiles = chord.implied_vol();
+  for (std::size_t i = 0; i < smiles.size(); ++i) {
+    out.writeln(chord.names()[i], smiles[i].items<double>());
+  }
+}
+```
+
+The Black-Scholes asset gives back its flat 25%, and the Heston strip its downward smile (21.0%, 19.3% and 17.7% at strikes 90, 100 and 110).
+
+## Validation
+
+A `Chord` validates every asset before it prices anything and reports all the problems of all the failing assets in one message, each line starting with the asset's name. Assets that are fine are not mentioned.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+mod::Field option(double spot, double strike, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(fin::pricing::Call, strike, 1.0), .market = fin::market::make(spot, 0.02, 0.0),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = mod::Engine::Analytic}};
+}
+
+int main() {
+  OutputEngine out;
+  mod::Chord chord{{"fine", option(100.0, 100.0, 0.2)}, {"negative spot", option(-1.0, 100.0, 0.2)}, {"zero strike and vol", option(100.0, 0.0, 0.0)}};
+  try {
+    (void)chord.price();
+  } catch (const std::exception &e) {
+    const std::string text(e.what());
+    out.writeln(text.substr(0, text.find("Triggered")));
+  }
+}
+```
+
+The asset called `fine` is not mentioned. The two others are reported together, the second with both of its problems, so the whole book can be fixed in one pass.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="building_a_chord.html">
+    <span class="label">Next</span>
+    <span class="title">Building a Chord</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

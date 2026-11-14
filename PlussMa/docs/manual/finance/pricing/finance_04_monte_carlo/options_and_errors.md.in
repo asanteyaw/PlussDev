@@ -4,7 +4,7 @@
 
 ## Every option
 
-| `MonteCarloOptions` | Meaning | Default | Requirement |
+| `field.controls.mc` | Meaning | Default | Requirement |
 |---|---|---|---|
 | `paths` | the number of simulated paths | 40000 | positive |
 | `steps` | the number of time steps per path | 252 | positive |
@@ -15,59 +15,91 @@
 | `antithetic` | antithetic pairs ([Variance reduction](variance_reduction.md)) | false | |
 | `control_variate` | the Black-Scholes control | false | |
 | `control_vol` | the control's volatility; 0 means the long-run volatility of the model | 0 | finite and non-negative |
-| `importance_sampling` | shift the spot shocks and reweight | false | |
-| `importance_shift` | the per-step shift of the spot shocks | 0 | finite |
+| `importance_sampling` | shift the asset shocks and reweight | false | |
+| `importance_shift` | the per-step shift of the asset shocks | 0 | finite |
 | `seed` | the random stream | 0 | |
 | `offset` | where a quasi-random sequence starts | 0 | |
+| `basis_degree` | American and Bermudan options only: the degree of the continuation-value regression ([The pricing field](../finance_06_the_pricing_field.md)) | 3 | positive |
 
 The estimate of one run is a single number; the number of paths and steps should be chosen against the error bar found by repeating with different seeds ([Pricing by simulation](pricing_by_simulation.md)). One path is allowed and returns that path's discounted payoff.
 
 ## Conditions and messages
 
+A field checks its Monte Carlo controls when it prices, and reports each violation by name.
+
 @@run@@
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
-
 #include <limits>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const vol::HestonParams params;
-  auto reason = [](const std::exception &e) {
-    const std::string message = e.what();
-    const auto start = message.find("_price_mc: ") + 11;
-    return message.substr(start, message.find('\n') - start);
-  };
   auto attempt = [&](const char *label, auto edit) {
-    prc::MonteCarloOptions options;
-    options.paths = 2000;
-    options.steps = 16;
-    edit(options);
+    mod::Field field = monte_carlo(fin::model::Kind::Heston, kHeston);
+    field.controls.mc.paths = 2000;
+    field.controls.mc.steps = 16;
+    edit(field.controls.mc);
     try {
-      out.writeln(label, "-> price", prc::heston_price_mc(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, params, options));
+      out.writeln(label, "-> price", price1(field));
     } catch (const std::exception &e) {
-      out.writeln(label, "->", reason(e));
+      const std::string message = e.what();
+      out.writeln(label, "->", message.substr(0, message.find('\n')));
     }
   };
-  attempt("paths = 0              ", [](prc::MonteCarloOptions &o) { o.paths = 0; });
-  attempt("steps = 0              ", [](prc::MonteCarloOptions &o) { o.steps = 0; });
-  attempt("paths = 1              ", [](prc::MonteCarloOptions &o) { o.paths = 1; });
-  attempt("importance_shift = NaN ", [](prc::MonteCarloOptions &o) { o.importance_sampling = true; o.importance_shift = std::numeric_limits<double>::quiet_NaN(); });
-  attempt("control_vol = -1       ", [](prc::MonteCarloOptions &o) { o.control_variate = true; o.control_vol = -1.0; });
-  attempt("sobol_scrambling = 7   ", [](prc::MonteCarloOptions &o) { o.rand_method = vol::RandMethod::Sobol; o.randomized_quasi = true; o.sobol_scrambling = 7; });
-  out.writeln("maturity 0 (intrinsic value) ->", prc::heston_price_mc(prc::Call, 110.0, 100.0, 0.03, 0.01, 0.0, params));
-  try {
-    prc::heston_price_mc(prc::OptionType::Auto, 100.0, 100.0, 0.03, 0.01, 1.0, params);
-  } catch (const std::exception &e) {
-    out.writeln("OptionType::Auto ->", reason(e));
-  }
+  attempt("paths = 0              ", [](auto &mc) { mc.paths = 0; });
+  attempt("steps = 0              ", [](auto &mc) { mc.steps = 0; });
+  attempt("paths = 1              ", [](auto &mc) { mc.paths = 1; });
+  attempt("importance_shift = NaN ", [](auto &mc) { mc.importance_sampling = true; mc.importance_shift = std::numeric_limits<double>::quiet_NaN(); });
+  attempt("control_vol = -1       ", [](auto &mc) { mc.control_variate = true; mc.control_vol = -1.0; });
+  attempt("sobol_scrambling = 7   ", [](auto &mc) { mc.rand_method = fin::volatility::RandMethod::Sobol; mc.randomized_quasi = true; mc.sobol_scrambling = 7; });
+  {{
+    mod::Field field = monte_carlo(fin::model::Kind::Heston, kHeston, 90.0, 0.0);
+    out.writeln("maturity 0 (intrinsic value, call struck at 90) ->", price1(field));
+  }}
 }
 ```
 
-Each invalid setting is rejected with the message shown. One path is a valid run, and it prices the option at that path's discounted payoff (0 here, as the single path ends below the strike). A zero maturity returns the intrinsic value, and `OptionType::Auto` is not valid for a pricer that takes no instrument.
+Each invalid setting is rejected with a message that names the control. One path is a valid run, and it prices the option at that path's discounted payoff (0 here, as the single path ends below the strike). A zero maturity returns the intrinsic value.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="pricing_by_simulation.html">
+    <span class="label">Next</span>
+    <span class="title">Pricing by simulation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

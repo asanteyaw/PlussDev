@@ -1,0 +1,76 @@
+# Kindle: catalogs
+
+[Back to PlussMic by example](../guide.md)
+
+Kindle is PlussMic's stream-first model. Where a `DataFrame` is a table, a `Catalog` is a named set of typed streams that you can transform one at a time, with reports on what every operation did. This page redoes the common table jobs the Kindle way: a sales report, an audited join, a text search, a file round trip, time-series features, feature preparation and change detection.
+
+## The mental model
+
+A `Stream` is one typed vector with an optional validity mask, labels and metadata. A `Catalog` is a set of streams with names, and its natural verbs are the stream verbs: `set` a stream, `keys` to pick some, `map` a function over streams, `group().by(key)` to split. Printing a catalog shows each stream's kind, dtype, length and a preview rather than a table; `tabelize()` converts to a `DataFrame` when you want rows and columns.
+
+## A sales report
+
+The same six cities and the same questions as the DataFrame report.
+
+@@example catalog_sales_report.cpp@@
+
+`set` adds the revenue stream, `where` keeps the four rows with revenue of at least 28, and `sort` orders them. The grouped summaries match the DataFrame report: middle `18` units and mean revenue `28.5`, north `5` and `25`, south `26` and `29.83`.
+
+## Joining with an audit
+
+Customers and orders, with an order for a customer who does not exist. The program audits the keys before joining and reads the report of the join afterwards.
+
+@@example catalog_join_audit.cpp@@
+
+The audit says the customer keys are unique with one orphan (Edsger has no order), the order keys repeat, and one order has no customer. The left join keeps all four customers and the join report counts what happened: five output records, four matched pairs, one customer without a partner and one order omitted. Declaring the relationship as one-to-one makes the join *fail* with `right keys repeat`: a wrong assumption about the data is an error, not a silently wrong table.
+
+## Searching text
+
+Five incident reports and a query. The program cleans the text, greps for a pattern, finds the most frequent words and ranks the reports by cosine similarity to the query.
+
+@@example catalog_text_search.cpp@@
+
+`clean` lower-cases and removes punctuation; `grep` finds the two reports that mention rain (ids 1 and 3). `keywords` gives the most frequent words in the whole collection, which here are `road`, `the` and `on`: stop words are not removed, so common words rank high. The similarity ranking is the useful result: reports 1 and 4, the two about the ring road, come first, and report 2, which shares no words with the query, comes last with a similarity of `0`.
+
+## Loading and saving files
+
+Six lines of a CSV with a missing reading and a missing count. The program loads it into streams, fills and drops, widens a dtype, summarises per sensor and saves.
+
+@@example catalog_load_clean_save.cpp@@
+
+Filling the counts and then `dropnull` keeps five of six rows: the row without a reading is dropped. The count stream is widened to `float64` so that sums and means are computed in floating point, and the per-sensor lines (sensor A mean `12.5` over three readings, sensor B mean `14.6` over two) are the report. The reloaded file has the same reading total as what was saved, `66.7`.
+
+## Time-series features
+
+Eight daily closing prices. The time stream gives calendar features and the value stream gives returns, a rolling mean and a lag.
+
+@@example catalog_time_series.cpp@@
+
+The returns are `nan` for the first day and then `0.04`, `-0.019` and so on. The rolling mean of three observations is `100`, `102`, `102`, `104.67`, ..., and the lag stream is the series shifted by one. The month names, a Note stream derived from the time stream, are the grouping key for a monthly summary: January has three observations with a mean close of `102` and a last close of `102`, February two with `109.5` and `111`, March three with `112.33` and `118`.
+
+## Preparing model inputs
+
+A household table with three numeric streams and an identifier. The program standardises the numeric streams only and crosses to a table.
+
+@@example catalog_feature_prep.cpp@@
+
+`keyaxis().series()` selects the three numeric streams and `map` applies the standardisation to each. Each stream's mean and standard deviation are one-record streams, so the lambda reads them out as numbers before the arithmetic. The check shows mean `0` (to rounding) and standard deviation `1` for every stream, and `tabelize()` returns a `DataFrame` that carries the identifier next to the prepared columns.
+
+## Detecting change
+
+Two loads of an inventory table. The program compares the streams and explains the difference, and then shows what a fingerprint is.
+
+@@example catalog_change_detection.cpp@@
+
+Comparing stream by stream finds that only `stock` changed, by `-3` for the second item, so only the reorder report needs rebuilding. The fingerprint lines are a different tool: a fingerprint identifies the *storage* a catalog shares. A copy has the same fingerprint, and a table built separately with identical content does not, so a fingerprint is a cache key and not a content check.
+
+## Decisions
+
+- **Stream or table:** use a catalog when the unit of work is a stream (clean, filter, fill, join per stream); convert with `tabelize()` for row-oriented reports.
+- **Joins:** audit the keys first, state the relationship you expect, and read the report afterwards.
+- **Reductions give streams:** `mean()` and `std()` return one-record streams; read them as numbers before using them in arithmetic.
+- **Change detection:** compare content, not fingerprints.
+
+## Where next
+
+Reference pages: [`set`](../api/catalog/set.md), [`where`](../api/catalog/where.md), [`sort`](../api/catalog/sort.md), [`group`](../api/catalog/group.md), [`audit_keys`](../api/catalog/audit_keys.md), [`join`](../api/catalog/join.md), [`join_detailed`](../api/catalog/join_detailed.md), [`clean`](../api/catalog/clean.md), [`grep`](../api/catalog/grep.md), [`similarity`](../api/catalog/similarity.md), [`keyaxis`](../api/catalog/keyaxis.md), [`tabelize`](../api/catalog/tabelize.md), [`load_csv`](../api/catalog/load_csv.md), [`save_csv`](../api/catalog/save_csv.md). Next: [Streams and archives](kindle_streams_archives.md).

@@ -1,0 +1,112 @@
+# Walls, fins and meshes
+
+[Back to Thermal 1: Conduction](../thermal_01_conduction.md)
+
+Before you can build a network you need its conductances, and before you trust a one-body model you need to know when it is allowed. This page gives the resistance of the standard shapes, the Biot number that says whether a body can be lumped, fins that extend a surface, and a layered wall that turns into a network of many nodes.
+
+## The mental model
+
+Conduction through a layer is a resistance, `R = L / (k A)` for a plane wall, and resistances in series add. Convection at a surface is another resistance, `1 / (h A)`. A body is **lumped** (one temperature) when its internal resistance is small against its surface resistance: the Biot number `h L / k` compares them. When it is not small the temperature varies inside the body, and the body has to be divided into cells. A fin is the opposite design question: how much heat does a protrusion lose, given that its own conduction limits how much of it is useful.
+
+## Resistances of the standard shapes
+
+A plane wall, with a sweep of thicknesses (the inputs broadcast):
+
+@@example Eng/api/thermal_wall_basic.cpp@@
+
+A pipe wall or its insulation is a cylindrical shell, with `R = ln(r_out / r_in) / (2 pi k L)`:
+
+@@example Eng/api/thermal_tube_basic.cpp@@
+
+A spherical shell, `(1 / r_in - 1 / r_out) / (4 pi k)`, tends to a finite limit as the outer radius grows:
+
+@@example Eng/api/thermal_shell_basic.cpp@@
+
+A convection film, `1 / (h A)`, completes the set:
+
+@@example Eng/api/thermal_film_basic.cpp@@
+
+The overall coefficient of a wall, `U`, is the reciprocal of the area times the sum of the films and the wall:
+
+@@example Eng/api/thermal_film_uvalue.cpp@@
+
+The films matter: the wall alone would pass 500 W for 25 K, but with the two films 392 W. A tank is the spherical version of the same sum:
+
+@@example Eng/api/thermal_shell_tank.cpp@@
+
+## The critical radius of insulation
+
+Insulation on a thin pipe has a counter-intuitive effect: it adds a wall resistance and also enlarges the outside surface, which lowers the film resistance. Below the radius `k / h` the second effect wins and adding insulation increases heat loss.
+
+@@example Eng/api/thermal_tube_critical.cpp@@
+
+The total resistance falls from 2.14 to 1.90 K/W as the outer radius grows to the critical radius of 0.02 m and then rises. The practical consequence: small pipes and wires may need a thick layer before insulation helps at all.
+
+## When may a body be lumped?
+
+The Biot number `h L / k`, with `L` the volume over the cooled area, compares internal and surface resistance.
+
+@@example Eng/api/thermal_biot_basic.cpp@@
+
+Copper and steel in this air stream are below 0.1 and may be lumped (steel only just); brick, at 1.43, may not. The program below tests the rule. A plate with an insulated back face cools through its front face, once with a conductor (Biot 0.002) and once with a poor conductor (Biot 0.8), and each is compared with the lumped exponential.
+
+@@example Eng/api/thermal_biot_lumped.cpp@@
+
+At Biot 0.002 the two faces and the lumped model agree to within 0.04 K. At Biot 0.8 the back face is still at 50 degrees while the cooled face is at 37, and the lumped value 36.8 describes neither the plate's inside nor its average.
+
+## Fins
+
+A fin is a rod or plate that carries heat away from a surface by conduction along itself and convection from its sides. With `m = sqrt(h P / (k A))`, the heat at the base depends on the tip.
+
+@@example Eng/api/thermal_fin_basic.cpp@@
+
+The heat is `M tanh(m L)`, the tip is much cooler than the base, and the efficiency (the heat divided by what an isothermal fin would lose) is 72 %. Three tip conditions at two lengths:
+
+@@example Eng/api/thermal_fin_tips.cpp@@
+
+On a short fin the tip matters: a convective tip adds 1.6 % and an infinite fin almost doubles the heat. On a fin of 0.3 m the three agree to within 0.3 %, because the tip is already at nearly the ambient temperature.
+
+Length is the design variable, and it saturates:
+
+@@example Eng/api/thermal_fin_length.cpp@@
+
+Going from 0.1 m to 0.3 m adds only 24 % more heat while the efficiency drops from 72 % to 30 %: the extra metal is mostly idle.
+
+## A layered wall as a network
+
+`mesh` divides each layer of a wall into cells and returns a ready network whose nodes are the inner surface, the cell centres and the outer surface.
+
+@@example Eng/api/thermal_mesh_layers.cpp@@
+
+Six conductances join seven nodes; the two half-cell links at the faces have double the cell conductance. The capacities sum to the exact `rho c L A` of the layers. The steady flux does not depend on how the layers are divided:
+
+@@example Eng/api/thermal_mesh_steady.cpp@@
+
+A transient is where cells matter. A slab at 0 degrees whose faces are suddenly held at 100 and 0 diffuses a temperature profile inward:
+
+@@example Eng/api/thermal_mesh_transient.cpp@@
+
+Twenty cells reproduce the series solution at the midplane to better than a thousandth of a kelvin.
+
+## Decisions
+
+- **Which resistance:** `wall` for planes, `tube` for pipes, `shell` for spheres, `film` at every surface that touches a fluid.
+- **Lump or mesh:** Biot below 0.1 lumps; above it mesh the body. Check the mesh by doubling the cells.
+- **How many cells:** more near the faces, where the temperature changes fastest; the steady flux does not care.
+- **Fin length:** about `3 / m` is enough; beyond that you pay for metal that does nothing.
+
+## Pitfalls
+
+Inputs that cannot be physical are refused: non-positive conductivities or lengths, outer radii below inner radii, a fin whose base is at the ambient temperature (efficiency would divide by zero), layers without cells.
+
+@@example Eng/api/thermal_wall_errors.cpp@@
+
+@@example Eng/api/thermal_tube_errors.cpp@@
+
+@@example Eng/api/thermal_fin_errors.cpp@@
+
+@@example Eng/api/thermal_mesh_errors.cpp@@
+
+## Where next
+
+Reference pages: [`wall`](../../../../api/eng/thermal/conduction/wall.md), [`tube`](../../../../api/eng/thermal/conduction/tube.md), [`shell`](../../../../api/eng/thermal/conduction/shell.md), [`film`](../../../../api/eng/thermal/conduction/film.md), [`biot`](../../../../api/eng/thermal/conduction/biot.md), [`fin`](../../../../api/eng/thermal/conduction/fin.md), [`Tip`](../../../../api/eng/thermal/conduction/Tip.md), [`mesh`](../../../../api/eng/thermal/conduction/mesh.md), [`Layers`](../../../../api/eng/thermal/conduction/Layers.md), [`Slab`](../../../../api/eng/thermal/conduction/Slab.md). Next chapter: [Thermal 2: Exchangers and Air](../thermal_02_exchangers_and_air.md).

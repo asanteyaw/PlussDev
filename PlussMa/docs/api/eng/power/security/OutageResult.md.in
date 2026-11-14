@@ -1,0 +1,68 @@
+# `power::OutageResult`
+
+Flows after every single-line outage.
+
+## Signature
+
+```cpp
+power::OutageResult
+```
+
+## What It Does
+
+The result of `outages`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `base_flow` | The DC flows before any outage, `[..., line]`. |  |
+| `flow` | The flows after each outage, `[..., outage line, monitored line]`; the row of an invalid outage is `NaN`. |  |
+| `valid` | True for each outage that is a valid single-line contingency, `[..., outage line]`. |  |
+
+## Returns
+
+Returned by `outages`.
+
+## Errors
+
+Reading a field does not compute again.
+
+## Interpretation and Use
+
+Compare `flow` with the line ratings in one array operation, and read `valid` with it: a comparison with `NaN` is false and would pass an invalid outage as safe.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Flows after each outage of a ring, checked against a new solve.
+
+@@example Eng/api/power_lodf_ring.cpp@@
+
+### Example 2
+
+N-1 screening against line ratings.
+
+@@example Eng/api/power_n1_screen.cpp@@
+
+### Example 3
+
+An outage that splits the network.
+
+@@example Eng/api/power_lodf_spur.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LodfResult.html">
+    <span class="label">Previous</span>
+    <span class="title">LodfResult</span>
+  </a>
+  <a class="next-link" href="ptdf.html">
+    <span class="label">Next</span>
+    <span class="title">ptdf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

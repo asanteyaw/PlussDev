@@ -25,7 +25,7 @@ Each lane stops when its residual falls below `absolute_tolerance + relative_tol
 ## Parameters
 
 `Apply &&apply`
-: `Series -> Series`: the product `A x`, same shape as `x`.
+: `Series (Series)`: the product `A x`, same shape as `x`.
 
 `const pluss::Series &rhs`
 : The right-hand side; leading axes are lanes.

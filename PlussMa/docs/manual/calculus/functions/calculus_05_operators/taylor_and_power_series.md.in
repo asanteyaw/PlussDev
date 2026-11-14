@@ -8,20 +8,20 @@ A truncated Taylor expansion is an operator in its own right: it takes a `Functi
 |---|---|
 | `taylor(x, a, n)` | `Σ_{k ≤ n} f⁽ᵏ⁾(a)/k! · (x − a)ᵏ`, a polynomial `Function` of `x` |
 | `taylor({x, y}, {a, b}, n)` | the multivariate polynomial `Σ_{|α| ≤ n} ∂ᵅf(a)/α! · Π (xᵢ − aᵢ)^αᵢ` |
-| `taylor_coefficients(x, a, n)` | the coefficients `f⁽ᵏ⁾(a)/k!`, `k = 0..n`, as a vector-valued `Function` of shape `[n + 1]` |
-| `taylor_remainder(x, n)` | the Lagrange factor `f⁽ⁿ⁺¹⁾(x)/(n + 1)!`, so that `|f(x) − Tₙ(x)| ≤ sup|factor| · |x − a|ⁿ⁺¹` |
-| `power_series(x, a)` | acts on a coefficient vector `c` and returns the polynomial `Σ c_k (x − a)ᵏ` |
-| `series_derivative()`, `series_integral()`, `series_product(g)` | termwise calculus on coefficient vectors |
+| `taylor().coefficients(x, a, n)` | the coefficients `f⁽ᵏ⁾(a)/k!`, `k = 0..n`, as a vector-valued `Function` of shape `[n + 1]` |
+| `taylor().remainder(x, n)` | the Lagrange factor `f⁽ⁿ⁺¹⁾(x)/(n + 1)!`, so that `|f(x) − Tₙ(x)| ≤ sup|factor| · |x − a|ⁿ⁺¹` |
+| `power(x, a)` | acts on a coefficient vector `c` and returns the polynomial `Σ c_k (x − a)ᵏ` |
+| `power().derivative()`, `power().integral()`, `power().product(g)` | termwise calculus on coefficient vectors |
 
 ```cpp
 operators::Operator operators::expansion::taylor(std::string_view variable, double center, std::int64_t order, DiffOptions options = {}, Engine engine = Engine::Auto);
 operators::Operator operators::expansion::taylor(StackArray<std::string_view> variables, RangeView<double> center, std::int64_t order, DiffOptions options = {});
-operators::Operator operators::expansion::taylor_coefficients(std::string_view variable, double center, std::int64_t order, DiffOptions options = {}, Engine engine = Engine::Auto);
-operators::Operator operators::expansion::taylor_remainder(std::string_view variable, std::int64_t order, DiffOptions options = {});
-operators::Operator operators::expansion::power_series(std::string_view variable, double center);
-operators::Operator operators::expansion::series_derivative();
-operators::Operator operators::expansion::series_integral();
-operators::Operator operators::expansion::series_product(math::Function other);
+operators::Operator operators::expansion::taylor().coefficients(std::string_view variable, double center, std::int64_t order, DiffOptions options = {}, Engine engine = Engine::Auto);
+operators::Operator operators::expansion::taylor().remainder(std::string_view variable, std::int64_t order, DiffOptions options = {});
+operators::Operator operators::expansion::power(std::string_view variable, double center);
+operators::Operator operators::expansion::power().derivative();
+operators::Operator operators::expansion::power().integral();
+operators::Operator operators::expansion::power().product(math::Function other);
 ```
 
 `Engine` chooses how the coefficients are found. `Structural` builds the derivative graph (exact, but the graph grows with the order). `Jet` carries truncated power series through the graph, so the cost grows with the square of the order instead of exponentially, for scalar elementwise functions. `Auto` uses `Structural` up to order 8 and `Jet` above it when the function allows. All three give an analytic result that evaluates, differentiates and saves.
@@ -48,7 +48,7 @@ int main() {
   // staged: keep the remainder operator, apply it once per order
   for (const std::int64_t order : {2, 4, 8}) {
     const math::Function poly = expansion::taylor("x", 0.0, order)(f);
-    const math::Function factor = expansion::taylor_remainder("x", order)(f);
+    const math::Function factor = expansion::taylor().remainder("x", order)(f);
     const double bound = factor({x}).item<double>() * std::pow(0.5, order + 1);
     out.writeln("order ", order, "  error ", std::exp(0.5) - poly({x}).item<double>(), "  Lagrange bound ", bound);
   }
@@ -86,7 +86,7 @@ int main() {
 
 ## Coefficients as data, and series arithmetic
 
-`taylor_coefficients` returns the coefficient vector as a `Function`, and the series operators act on such vectors, so a power series can be differentiated, integrated and multiplied termwise without ever building the polynomial. The program takes the order-6 coefficients of `1 / (1 − x)` (all ones), integrates them termwise to get the series of `−log(1 − x)`, rebuilds the polynomial with `power_series`, and compares at `x = 0.3`; it also multiplies the series of `exp` by itself and recovers the series of `exp(2x)`.
+`taylor().coefficients` returns the coefficient vector as a `Function`, and the series operators act on such vectors, so a power series can be differentiated, integrated and multiplied termwise without ever building the polynomial. The program takes the order-6 coefficients of `1 / (1 − x)` (all ones), integrates them termwise to get the series of `−log(1 − x)`, rebuilds the polynomial with `power`, and compares at `x = 0.3`; it also multiplies the series of `exp` by itself and recovers the series of `exp(2x)`.
 
 @@run@@
 ```cpp
@@ -102,23 +102,36 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(8));
   const math::Function geometric = math::function({"x"}, [](math::Function x) { return 1.0 / (1.0 - x); });
 
-  const math::Function coeffs = expansion::taylor_coefficients("x", 0.0, 6)(geometric);
-  const math::Function integrated = expansion::series_integral()(coeffs);
-  out.writeln("coefficients of 1/(1-x): ", coeffs().pull<double>());
-  out.writeln("termwise integral:       ", integrated().pull<double>());
-  out.writeln("series at 0.3 = ", expansion::power_series("x", 0.0)(integrated)({pluss::make_series(0.3)}).item<double>(), "   -log(0.7) = ", -std::log(0.7));
+  const math::Function coeffs = expansion::taylor().coefficients("x", 0.0, 6)(geometric);
+  const math::Function integrated = expansion::power().integral()(coeffs);
+  out.writeln("coefficients of 1/(1-x): ", coeffs().items<double>());
+  out.writeln("termwise integral:       ", integrated().items<double>());
+  out.writeln("series at 0.3 = ", expansion::power("x", 0.0)(integrated)({pluss::make_series(0.3)}).item<double>(), "   -log(0.7) = ", -std::log(0.7));
 
   const math::Function e = math::function({"x"}, [](math::Function x) { return x.exp(); });
   const math::Function e2 = math::function({"x"}, [](math::Function x) { return (x * 2.0).exp(); });
-  const math::Function e_coeffs = expansion::taylor_coefficients("x", 0.0, 6)(e);
-  out.writeln("exp * exp:   ", expansion::series_product(e_coeffs)(e_coeffs)().pull<double>());
-  out.writeln("exp(2x):     ", expansion::taylor_coefficients("x", 0.0, 6)(e2)().pull<double>());
+  const math::Function e_coeffs = expansion::taylor().coefficients("x", 0.0, 6)(e);
+  out.writeln("exp * exp:   ", expansion::power().product(e_coeffs)(e_coeffs)().items<double>());
+  out.writeln("exp(2x):     ", expansion::taylor().coefficients("x", 0.0, 6)(e2)().items<double>());
 }
 ```
 
 ## What can be saved
 
-All of these operators hold only names, numbers and options, so they save and load with `math::io::save` like the built-in operators (`series_product` holds a `Function` and does not). The functions they produce are ordinary analytic graphs and save too ([Saving and loading](saving_and_loading.md)).
+All of these operators hold only names, numbers and options, so they save and load with `math::io::save` like the built-in operators (`power().product` holds a `Function` and does not). The functions they produce are ordinary analytic graphs and save too ([Saving and loading](saving_and_loading.md)).
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="stochastic_operators.html">
+    <span class="label">Previous</span>
+    <span class="title">Stochastic operators</span>
+  </a>
+  <a class="next-link" href="fourier_series.html">
+    <span class="label">Next</span>
+    <span class="title">Fourier series operators</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

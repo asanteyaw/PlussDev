@@ -53,7 +53,7 @@ int main() {
   const double mse = sse / df_resid;
   const double f = ((sst - sse) / df_model) / mse;
   const double loglik = -0.5 * n * (std::log(2.0 * 3.14159265358979323846 * sse / n) + 1.0);
-  const auto f_tail = distr::FDistribution{df_model, df_resid}.cdf(pluss::make_series(std::vector<double>{f}, {1}, as_f64())).neg().add(1.0).pull<double>()[0];
+  const auto f_tail = distr::FDistribution{df_model, df_resid}.cdf(pluss::make_series(std::vector<double>{f}, {1}, as_f64())).neg().add(1.0).items<double>()[0];
 
   out.writeln("sse            ", fit.sse, " recomputed", sse);
   out.writeln("sst            ", fit.sst, " recomputed", sst);
@@ -126,7 +126,7 @@ int main() {
   auto fit_line = [&](const char *label, std::vector<double> xs, std::vector<double> ys) {
     const auto n = static_cast<std::int64_t>(xs.size());
     const auto fit = reg::ols_fit(pluss::make_series(ys, {n}, as_f64()), pluss::make_series(xs, {n}, as_f64()));
-    out.writeln(label, "df_resid", fit.df_resid, " mse", fit.mse, " std errors", fit.std_errors.pull<double>(), " p", fit.p_values.pull<double>());
+    out.writeln(label, "df_resid", fit.df_resid, " mse", fit.mse, " std errors", fit.std_errors.items<double>(), " p", fit.p_values.items<double>());
     out.writeln("      R2", fit.rsquared, " adj R2", fit.adj_rsquared, " F", fit.f_stat, " F p", fit.f_pvalue, " aic", fit.aic, " Durbin-Watson", fit.durbin_watson);
     out.writeln("      intervals", fit.conf_int.host<double>().array().data);
   };
@@ -137,3 +137,16 @@ int main() {
 ```
 
 Two points leave no residual degrees of freedom. The line passes through both, so R² is 1, but `mse`, the standard errors, the p-values, the intervals, the adjusted R², F and Durbin–Watson are `NaN`, and AIC is −∞ because a fit with zero residuals has an infinite log-likelihood. Points exactly on a line have degrees of freedom but zero residuals: the standard errors are zero, the intervals collapse onto the coefficients (1 and 2), and F is `NaN` because the residual variance it divides by is zero. For ordinary data every field is defined; the Durbin–Watson value of 3.60 reflects residuals that alternate in sign.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="several_predictors.html">
+    <span class="label">Previous</span>
+    <span class="title">Several predictors</span>
+  </a>
+  <a class="next-link" href="residual_diagnostics.html">
+    <span class="label">Next</span>
+    <span class="title">Residual diagnostics</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

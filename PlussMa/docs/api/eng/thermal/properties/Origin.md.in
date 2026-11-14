@@ -1,0 +1,60 @@
+# `thermal::Origin`
+
+The provenance of a fluid's properties.
+
+## Signature
+
+```cpp
+thermal::Origin
+```
+
+## What It Does
+
+Records where the properties of a fluid come from and where they are valid.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `name` | The name of the fluid. |  |
+| `reference` | The correlations and tables the properties come from. |  |
+| `state` | The state the properties describe and the reference state, if any. |  |
+| `t_min` | The lowest valid temperature in K. |  |
+| `t_max` | The highest valid temperature in K. |  |
+
+## Returns
+
+A value returned by `source`.
+
+## Errors
+
+None.
+
+## Interpretation and Use
+
+`t_min` and `t_max` are exactly the limits `props` enforces.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The provenance of water.
+
+@@example Eng/api/thermal_source_water.cpp@@
+
+### Example 2
+
+The provenance of air.
+
+@@example Eng/api/thermal_source_air.cpp@@
+
+### Example 3
+
+The valid ranges.
+
+@@example Eng/api/thermal_source_range.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

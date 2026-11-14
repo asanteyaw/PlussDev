@@ -1,0 +1,71 @@
+# `circuit::Transistors`
+
+Bipolar transistors of a circuit.
+
+## Signature
+
+```cpp
+circuit::Transistors
+```
+
+## What It Does
+
+Describes bipolar transistors by their three terminals and their model values. The model is the Ebers-Moll transport model: a base-emitter and a base-collector junction, each a diode of saturation current `Is`, with the forward current `Is (exp(vbe / Vt) - 1)` reaching the collector and `1 / beta_f` of it the base, and the reverse junction current `beta_r` times smaller at the base. It is deliberately limited: there is no terminal resistance and the stored charge is two constant capacitances, and the Early effect is optional (`early_voltage`). A PNP is the NPN model with every voltage and current reversed. Circuits with transistors are solved by Newton iteration in `op`, `ac` (around an operating point) and `tran`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `collector` | The collector node of each transistor. | empty |
+| `base` | The base node of each transistor. | empty |
+| `emitter` | The emitter node of each transistor. The three nodes of a transistor must differ. | empty |
+| `polarity` | `1` for an NPN and `-1` for a PNP, one per transistor. | required |
+| `saturation` | The saturation current `Is`, `[..., transistors]`; positive and finite. | required |
+| `forward_gain` | The forward current gain `beta_f`, `[..., transistors]`; positive and finite. | required |
+| `reverse_gain` | The reverse current gain `beta_r`, `[..., transistors]`; positive and finite. | `1` |
+| `base_emitter_capacitance` | A constant base-emitter capacitance in farads, `[..., transistors]`; non-negative. It is a linear capacitor appended to the net's capacitors. | undefined: none |
+| `base_collector_capacitance` | A constant base-collector capacitance in farads, `[..., transistors]`; non-negative. | undefined: none |
+| `early_voltage` | The Early voltage `VA` in volts, `[..., transistors]`; positive and finite. The transport current is scaled by `1 + vce / VA`. | undefined: no Early effect |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+`make` throws `pluss::Error` for a terminal outside the circuit, two terminals of one transistor on the same node, lists of different lengths, a polarity other than `1` or `-1`, a missing, non-positive or non-finite `saturation`, `forward_gain`, `reverse_gain` or `early_voltage`, values of a different dtype or platform than the other groups, or values with an incompatible batch axis.
+
+## Interpretation and Use
+
+While the transistor is active the collector current is `forward_gain` times the base current and does not depend on the collector voltage unless an Early voltage is given, in which case it rises with it; when the collector resistor can drop no more of the supply the transistor saturates and the ratio falls. `Result::collector_current` and `Result::base_current` are the currents flowing into those terminals; the emitter current is `-(Ic + Ib)`. A PNP is powered from supplies of the opposite sign.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+An NPN common-emitter bias point.
+
+@@example Eng/api/circuit_transistor_bias.cpp@@
+
+### Example 2
+
+A PNP is the mirror image of an NPN.
+
+@@example Eng/api/circuit_transistor_pnp.cpp@@
+
+### Example 3
+
+The Early effect.
+
+@@example Eng/api/circuit_transistor_early.cpp@@
+
+### Example 4
+
+Rejected transistors.
+
+@@example Eng/api/circuit_transistor_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

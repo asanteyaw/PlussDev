@@ -6,3 +6,12 @@
 @@example Numerical/linear_algebra/guide/906_matrix_exponential_action.cpp@@
 
 The exact answer is known from the eigen-expansion, so the table shows the accuracy honestly. The error falls steeply with the size of the Krylov space, from 5e-2 at 4 vectors to 5e-16 at 64, and `converged` flips only when the estimate meets the tolerance (at 64). The estimate tracks the true error, which makes it usable when no exact answer exists: grow `max_iterations` until it passes. Evolution to a longer time or a rougher start needs a larger space; for a long evolution, advance it in several shorter steps.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_restart_length.html">
+    <span class="label">Previous</span>
+    <span class="title">The restart length</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

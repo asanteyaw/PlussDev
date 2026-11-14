@@ -1,0 +1,74 @@
+# Networks and steady state
+
+[Back to Thermal 1: Conduction](../thermal_01_conduction.md)
+
+You have a few bodies that exchange heat with each other and with their surroundings, and you want to know where each settles, how much heat flows through each connection, and how much the surroundings supply. This page builds such a network, solves its steady state, and reads the answers.
+
+## The mental model
+
+A thermal network is an electrical network with different names. A node has a temperature (the voltage), a connection between two nodes has a conductance in watts per kelvin (the reciprocal of a resistance), and the heat that flows is the current. Heat flows from the warmer node to the cooler one at `G` times the temperature difference. At every node that is not held, the heat that arrives equals the heat that leaves, plus whatever a heater injects: that is the whole of steady state. Because the equations are the circuit equations, the solve is done by the circuit engine, and everything it knows (batches, differentiation, dtype) comes with it.
+
+A network is a `Net`: a count of nodes numbered from zero, `Links` between pairs, `Fixed` temperatures at boundary nodes, `Heats` injected into nodes, and `Stores` that matter only for time (next page). A steady state needs every node to reach a fixed node through links, since otherwise there is nothing to hold its temperature.
+
+## A chain between two temperatures
+
+Three nodes in a row, each link `2 W/K`, with the outer nodes held at 100 and 20 degrees. The middle node floats. The program reports the temperatures, the heat through each link, and the heat the two boundaries deliver.
+
+@@example Eng/api/thermal_steady_series.cpp@@
+
+The middle node settles at 60 degrees, halfway between the boundaries because the two links are equal. Each link carries `80 W`, which is `80 K` over the series resistance of `0.5 + 0.5 K/W`. The boundary at 100 degrees delivers 80 W into the network and the boundary at 20 degrees absorbs 80 W, which is why its `fixed_flow` is negative. The residual confirms the heat balance to rounding error.
+
+## Injecting heat
+
+A heater, an electronic part or solar gain is a heat source at a node. Putting 30 W into the middle node:
+
+@@example Eng/api/thermal_steady_heat.cpp@@
+
+The node warms by `30 W / (2 + 2 W/K) = 7.5 K`, and the two boundaries share the 30 W in proportion to their conductances: the boundary at 100 degrees now delivers less (65 W) and the one at 20 degrees absorbs more (95 W). The last line is the energy balance you should check in any network: injected heat plus the heat delivered by the boundaries is zero in steady state.
+
+## A room
+
+A real model has more than a chain. Here air (node 0) is heated by 1 kW, loses heat through a wall (node 1) to the outside (node 2) at -5 degrees, and also through ventilation, which is a second path from the air straight to the outside.
+
+@@example Eng/api/thermal_net_room.cpp@@
+
+The wall and the ventilation are in parallel, so their conductances add: the wall path is two links in series (`40` and `25 W/K`, which make `15.4 W/K`) and the ventilation is `30 W/K`. The air settles `22.0 K` above the outside. The closed-form line shows the same number from the series and parallel rules, which is the cross-check to make whenever a network is small enough.
+
+## Building conductances from the physics
+
+You rarely know a conductance; you know thicknesses and conductivities. The resistance functions give `K/W` and a network wants `W/K`, so a conductance is `resistance.reciprocal()`. Three layers of a wall, per square metre:
+
+@@example Eng/api/thermal_wall_composite.cpp@@
+
+The layer resistances add to `2.17 K/W` per square metre and 25 K across them drives `11.5 W` through each square metre. The insulation, with 92 % of the resistance, takes 92 % of the temperature drop, which you can see in the interface temperatures. The network and the hand calculation agree because they are the same mathematics.
+
+## Sweeping a design
+
+Leading axes of any group are a batch. Give the second link three conductances and one call solves three networks:
+
+@@example Eng/api/thermal_steady_batch.cpp@@
+
+The first axis of every result is the case, the second the node. The three middle temperatures and heat flows match the closed form on the last line. A batch costs almost nothing more than one solve, so sweep rather than loop.
+
+## Decisions
+
+- **Where a node goes:** wherever you need a temperature, or wherever the temperature changes (a surface, a mass, the air in a room). A node with no store is instantaneous and is right for a thin surface.
+- **Fixed temperature or heat:** use `Fixed` when the surroundings are so large that heat does not move them (outdoor air, the ground, a thermostat); use `Heats` when you know the power and want the temperature.
+- **One temperature scale:** conduction depends on differences only, so degrees Celsius or kelvin both work, but never both in one network.
+- **A parameter that varies:** give it a leading axis rather than writing a loop.
+
+## Pitfalls
+
+A network that cannot be solved is refused with the node named. Each call below breaks one rule: a node with no link, nothing fixed, a node index outside the network, a link from a node to itself, and a conductance that is not positive.
+
+@@example Eng/api/thermal_steady_errors.cpp@@
+
+The other mistake produces no error: temperature scales that disagree. The boundary below is in degrees Celsius, the starting temperature in kelvin, and the network faithfully cools a body from 293 degrees to 20.
+
+@@example Eng/api/thermal_pitfall_scales.cpp@@
+
+Pick one scale for the whole network and say so in the program.
+
+## Where next
+
+Reference pages: [`Net`](../../../../api/eng/thermal/network/Net.md), [`Links`](../../../../api/eng/thermal/network/Links.md), [`Fixed`](../../../../api/eng/thermal/network/Fixed.md), [`Heats`](../../../../api/eng/thermal/network/Heats.md), [`steady`](../../../../api/eng/thermal/network/steady.md), [`Result`](../../../../api/eng/thermal/network/Result.md), [`wall`](../../../../api/eng/thermal/conduction/wall.md). The next page adds time: [Transient response](transient_response.md).

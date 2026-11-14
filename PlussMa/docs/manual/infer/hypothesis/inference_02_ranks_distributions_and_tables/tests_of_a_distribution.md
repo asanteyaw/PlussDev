@@ -203,3 +203,16 @@ Kolmogorov-Smirnov, fitted parameters: share rejected 0.001
 - **The Kolmogorov–Smirnov test is most sensitive near the middle of the distribution** and has less power for differences in the tails.
 
 Where next: [Several groups, and tables](several_groups_and_tables.md) tests several means at once and tables of counts.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rank_and_sign_tests.html">
+    <span class="label">Previous</span>
+    <span class="title">Rank and sign tests</span>
+  </a>
+  <a class="next-link" href="several_groups_and_tables.html">
+    <span class="label">Next</span>
+    <span class="title">Several groups, and tables</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

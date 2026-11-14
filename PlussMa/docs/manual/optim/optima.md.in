@@ -12,4 +12,21 @@ Chapters, in reading order:
 - [Optima 8: Worked Problems](optima/optima_08_worked_problems.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima/optima_01_first_problems
+optima/optima_02_reading_results
+optima/optima_03_choosing_an_algorithm
+optima/optima_04_sequential_qp
+optima/optima_05_working_set_and_interior
+optima/optima_06_curvature_linear_algebra_scaling
+optima/optima_07_derivatives
+optima/optima_08_worked_problems
+optima/optima_algorithms
+optima/optima_sequential_qp
+optima/optimizer_surfaces
+optima/optima_internal_protocol
+```
 <!-- apiref:toctree:end -->

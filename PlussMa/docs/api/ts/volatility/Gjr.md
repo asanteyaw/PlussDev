@@ -152,3 +152,16 @@ fewer than 8 observations are rejected
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GarchOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">GarchOptions</span>
+  </a>
+  <a class="next-link" href="GjrFit.html">
+    <span class="label">Next</span>
+    <span class="title">GjrFit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

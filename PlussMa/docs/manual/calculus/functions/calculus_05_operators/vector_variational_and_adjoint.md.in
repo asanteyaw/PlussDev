@@ -44,7 +44,7 @@ int main() {
   const std::vector<pluss::Series> p{pluss::make_series(0.3), pluss::make_series(0.9), pluss::make_series(-1.2)};
 
   const operators::Operator curl = operators::curl({"x", "y", "z"});   // staged
-  out.writeln("curl grad f = ", curl(operators::gradient({"x", "y", "z"})(f))(p).pull<double>());
+  out.writeln("curl grad f = ", curl(operators::gradient({"x", "y", "z"})(f))(p).items<double>());
   out.writeln("div curl G  = ", operators::divergence({"x", "y", "z"})(curl(G))(p).item<double>());
   out.writeln("div F       = ", operators::divergence({"x", "y", "z"})(F)(p).item<double>(), "   2xy + z + x = ", 2 * 0.3 * 0.9 - 1.2 + 0.3);
 }
@@ -111,3 +111,16 @@ int main() {
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="measures.html">
+    <span class="label">Previous</span>
+    <span class="title">Integration against a measure</span>
+  </a>
+  <a class="next-link" href="fractional_calculus.html">
+    <span class="label">Next</span>
+    <span class="title">Fractional calculus</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

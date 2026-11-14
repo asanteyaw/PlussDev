@@ -50,7 +50,7 @@ int main() {
   options.family = reg::GLMFamily::Poisson;
   options.predictor_names = {"treated"};
   const auto fit = reg::glm_fit(y, x, options);
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
   const auto ci = fit.conf_int.host<double>().array().data;
 
   out.writeln("mean events per period: control", control, " treated", treated, " ratio", treated / control);
@@ -62,13 +62,13 @@ int main() {
   const auto null_fit = reg::glm_fit(y, pluss::series::zeros({24, 0}, as_f64()), null_options);
   const double lr = null_fit.deviance - fit.deviance;
   const distr::ChiSquare chi(1);
-  const double lr_p = 1.0 - chi.cdf(pluss::make_series(std::vector<double>{lr}, {1}, as_f64())).pull<double>()[0];
+  const double lr_p = 1.0 - chi.cdf(pluss::make_series(std::vector<double>{lr}, {1}, as_f64())).items<double>()[0];
   const double pearson = y.sub(fit.fitted_values).pow(2.0).div(fit.fitted_values).sum().item<double>();
   const double dispersion = pearson / static_cast<double>(fit.df_resid);
   const distr::Normal standard(0.0, 1.0);
-  const double z_quasi = fit.z_values.pull<double>()[1] / std::sqrt(std::max(dispersion, 1.0));
-  const double quasi_p = 2.0 * (1.0 - standard.cdf(pluss::make_series(std::vector<double>{std::abs(z_quasi)}, {1}, as_f64())).pull<double>()[0]);
-  out.writeln("Wald             z =", fit.z_values.pull<double>()[1], " p =", fit.p_values.pull<double>()[1]);
+  const double z_quasi = fit.z_values.items<double>()[1] / std::sqrt(std::max(dispersion, 1.0));
+  const double quasi_p = 2.0 * (1.0 - standard.cdf(pluss::make_series(std::vector<double>{std::abs(z_quasi)}, {1}, as_f64())).items<double>()[0]);
+  out.writeln("Wald             z =", fit.z_values.items<double>()[1], " p =", fit.p_values.items<double>()[1]);
   out.writeln("likelihood ratio chi2 =", lr, " p =", lr_p);
   out.writeln("Pearson dispersion", dispersion, " quasi-Wald z =", z_quasi, " p =", quasi_p);
 }
@@ -116,3 +116,16 @@ int main() {
 ```
 
 The report holds the same numbers: the `treated` coefficient is 0.5193 (standard error 0.1842, z = 2.82, p = 0.0048), the null deviance of 32.1 less the deviance of 23.89 is the likelihood-ratio statistic of 8.22, and the pseudo R² is 0.2559.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="dose_response_and_the_median_effective_dose.html">
+    <span class="label">Previous</span>
+    <span class="title">Dose-response and the median effective dose</span>
+  </a>
+  <a class="next-link" href="reference_curves_with_quantiles.html">
+    <span class="label">Next</span>
+    <span class="title">Reference curves with quantiles</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

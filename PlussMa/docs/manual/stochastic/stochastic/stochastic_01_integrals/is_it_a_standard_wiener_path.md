@@ -47,3 +47,12 @@ straight line: quadratic_variation_ratio = 0.0005, warnings = 1
     the path's realized quadratic variation is 0.000500 times the elapsed time; a standard Wiener path gives about 1, so this is not a standard Brownian path (another volatility, a smooth path, or jumps) and Ito and Stratonovich values are not the standard ones
 ```
 The standard path gives a ratio of 0.978837 and no warning. The tripled path gives 8.80953, close to `3² = 9`, and the straight line 0.0005; both draw a warning. Nothing is thrown, because a scaled or smooth path is a legitimate integrator; the warning is there so a wrong path is not mistaken for a standard one.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="integrands_that_look_into_the_future.html">
+    <span class="label">Previous</span>
+    <span class="title">Integrands that look into the future</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

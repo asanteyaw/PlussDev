@@ -1,0 +1,64 @@
+# `fluid::NodeKind`
+
+The three kinds of node of a pipe network.
+
+## Signature
+
+```cpp
+fluid::NodeKind
+```
+
+## What It Does
+
+Says what a node is. A `Junction` has an unknown head and a demand that leaves the network there. A `Reservoir` has a fixed head and supplies or absorbs whatever flow the network needs. A `Tank` is a fixed-grade node whose level changes in time under `run`; in a single `steady` solve it is held at its initial head.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Junction` | A variable-head node. Its demand is positive when water leaves the network. |  |
+| `Reservoir` | A fixed-head node of unlimited capacity. Its demand and emitter must be zero. |  |
+| `Tank` | A cylindrical store with a level. It needs an entry in `Net::tanks`. |  |
+
+## Returns
+
+An enumeration; one value per node in `Nodes::kind`.
+
+## Errors
+
+A network with no `Reservoir` or `Tank` in a connected component, a `Reservoir` or `Tank` with a non-zero demand or emitter, and a tank without a `Tanks` entry are rejected by `network`.
+
+## Interpretation and Use
+
+Every connected part of the network needs at least one `Reservoir` or `Tank`, because only a fixed head anchors the absolute level of the heads. Use a `Tank` for storage whose level matters and a `Reservoir` for a source that does not change.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Node counts of a network and of a network with a tank.
+
+@@example Eng/api/fluid_nodekind.cpp@@
+
+### Example 2
+
+A tank, with and without overflow.
+
+@@example Eng/api/fluid_tanks_build.cpp@@
+
+### Example 3
+
+The smallest network, a reservoir and a junction.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ValveKind.html">
+    <span class="label">Next</span>
+    <span class="title">ValveKind</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

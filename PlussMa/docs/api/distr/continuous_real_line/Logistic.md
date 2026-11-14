@@ -79,16 +79,16 @@ int main() {
   const std::vector<double> params = {0.5, 1.2};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::Logistic, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Logistic, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Logistic, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Logistic, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::Logistic, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Logistic, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -128,7 +128,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::Logistic, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({-2.0, 4.0}, f64);
-  const auto c = distr::cdf(dst::Logistic, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Logistic, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Logistic, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= -2.0).to(pluss::ScalarType::Float64) * (draws <= 4.0).to(pluss::ScalarType::Float64)).mean());
@@ -169,16 +169,16 @@ int main() {
   const auto x = pluss::make_series({-5.0, -2.0, 0.5, 3.0, 6.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "scale 0.5:";
-  for (double v : distr::pdf(dst::Logistic, x, {0.5, 0.5}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Logistic, x, {0.5, 0.5}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "scale 1  :";
-  for (double v : distr::pdf(dst::Logistic, x, {0.5, 1.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Logistic, x, {0.5, 1.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "scale 2  :";
-  for (double v : distr::pdf(dst::Logistic, x, {0.5, 2.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Logistic, x, {0.5, 2.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -218,13 +218,13 @@ int main() {
   const auto library = distr::cdf(dst::Logistic, x, params);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "formula:";
-  for (double v : formula.pull<double>()) std::cout << ' ' << v;
+  for (double v : formula.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "distr::cdf:";
-  for (double v : library.pull<double>()) std::cout << ' ' << v;
+  for (double v : library.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << std::scientific << std::setprecision(2) << "largest difference: " << as_f64((formula - library).abs().max()) << '\n';
 }
@@ -285,3 +285,16 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`StudentT`](../continuous_real_line/StudentT.md)
 - [`TukeyLambda`](../continuous_real_line/TukeyLambda.md)
 - [`distr::Logistic`](../object_based/Logistic.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Laplace.html">
+    <span class="label">Previous</span>
+    <span class="title">Laplace</span>
+  </a>
+  <a class="next-link" href="Nig.html">
+    <span class="label">Next</span>
+    <span class="title">Nig</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

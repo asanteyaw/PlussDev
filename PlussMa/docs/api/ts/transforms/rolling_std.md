@@ -158,3 +158,16 @@ ddof 0              nan      nan   0.8165   1.6997   1.6997   1.6997   1.6997
 
 - [`expanding_mean`](expanding_mean.md): the same with a window that grows
 - [`zscore_rolling`](zscore_rolling.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rolling_min.html">
+    <span class="label">Previous</span>
+    <span class="title">rolling_min</span>
+  </a>
+  <a class="next-link" href="rolling_sum.html">
+    <span class="label">Next</span>
+    <span class="title">rolling_sum</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

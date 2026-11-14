@@ -45,6 +45,9 @@
 :maxdepth: 2
 :hidden:
 
+manual/series
+manual/note
+manual/timeline
 api_reference
 ```
 

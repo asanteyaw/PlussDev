@@ -185,7 +185,7 @@ void test_heston_and_bates_transition_variance_moments() {
   vol::SimOptions opt;
   opt.scheme = vol::SimScheme::Transition;
   opt.seed = 2026031505ULL;
-  const auto hout = vol::heston_paths(1, paths, 100.0, dt, hp, opt, cfg, opt.seed);
+  const auto hout = vol::detail::heston_paths(1, paths, 100.0, dt, hp, opt, cfg, opt.seed);
   const Series hlast = terminal_row(hout.variance);
   const auto hm = cir_transition_moments(hp.v0, dt, hp.kappa, hp.theta, hp.sigma);
   expect(std::abs(mean_all(hlast) - hm.mean) <= tol_mean(hm.var, paths),
@@ -205,7 +205,7 @@ void test_heston_and_bates_transition_variance_moments() {
   bp.jump_vol = 0.2;
 
   opt.seed = 2026031506ULL;
-  const auto bout = vol::bates_paths(1, paths, 100.0, dt, bp, opt, cfg, opt.seed);
+  const auto bout = vol::detail::bates_paths(1, paths, 100.0, dt, bp, opt, cfg, opt.seed);
   const Series blast = terminal_row(bout.variance);
   expect(std::abs(mean_all(blast) - hm.mean) <= tol_mean(hm.var, paths),
          "Bates transition variance mean mismatch");
@@ -214,7 +214,7 @@ void test_heston_and_bates_transition_variance_moments() {
 
   opt.scheme = vol::SimScheme::QuadExp;
   opt.seed = 2026031507ULL;
-  const auto hqe = vol::heston_paths(1, paths, 100.0, dt, hp, opt, cfg, opt.seed);
+  const auto hqe = vol::detail::heston_paths(1, paths, 100.0, dt, hp, opt, cfg, opt.seed);
   const Series hqelast = terminal_row(hqe.variance);
   expect(std::abs(mean_all(hqelast) - hm.mean) <= tol_mean(hm.var, paths, 1.2e-3),
          "Heston QE variance mean mismatch");

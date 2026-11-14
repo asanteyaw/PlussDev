@@ -13,13 +13,13 @@
 #include <variant>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "MSharp/Parallel.h"
 #include "scribble/Slot.h"
 #include "kindle/display/Display.h"
 #include "pluss/codeh/timeline_factory.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::kindle {
 

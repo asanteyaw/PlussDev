@@ -563,7 +563,7 @@ Atlas Atlas::align_depth(const Slate& labels) const {
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     const auto key = label_string_at(labels, i);
     const auto it = pos.find(key);
-    PLUSS_CHECK(it != pos.end(), "Atlas::align_depth: label not found '" + key + "'");
+    PLUSS_CHECK(it != pos.end(), "Atlas::align_depth: label not found '" + key + "'", key, pluss::exception::map_keys(pos));
     out_frames.push_back(src.frames_[static_cast<std::size_t>(it->second)]);
     take_idx.push_back(i);
   }

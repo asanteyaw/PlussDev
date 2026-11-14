@@ -1,0 +1,227 @@
+<!-- generated from credibility.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Credibility
+
+[Back to Ratemaking, Credibility and Loss Reserving](../actuarial_04_ratemaking_credibility_and_loss_reserving.md)
+
+A rate from experience is only as reliable as the experience is large. A book of fifty exposure units has a pure premium that is mostly noise; a book of fifty thousand has one that is nearly the truth. **Credibility** blends the experience with a **manual** premium, a broader and steadier rate from a larger class, giving more weight to the experience the more of it there is:
+
+```{math}
+\hat P = Z\,\bar P_{\text{experience}} + (1-Z)\,P_{\text{manual}},\qquad
+Z=\frac{E}{E+k}.
+```
+
+{math}`E` is the exposure behind the experience and {math}`k` is a constant of the line of business, the exposure at which the experience and the manual rate each get half the weight. {math}`Z` rises from 0 with no exposure towards 1 as the exposure grows, and never reaches it: even a very large book leaves a little weight on the manual rate. A larger {math}`k` means a noisier line, which needs more experience before it is trusted.
+
+```cpp
+pluss::Series models::credibility_weight(const pluss::Series &exposure, double k);
+pluss::Series models::credibility_blend(const pluss::Series &experience_pure_premium, const pluss::Series &manual_pure_premium, const pluss::Series &exposure, double credibility_k);
+actuarial::Credibility actuarial::operators::credibility(double full_credibility);
+pluss::Series actuarial::Credibility::operator()(const actuarial::CredibilityInput &input) const;
+```
+
+| Function or type | Meaning |
+|---|---|
+| `credibility_weight(exposure, k)` | the weight `Z = exposure / (exposure + k)` element by element; `k` > 0, exposure ≥ 0 |
+| `credibility_blend(experience, manual, exposure, k)` | `Z · experience + (1 − Z) · manual` element by element |
+| `CredibilityInput{experience, manual, exposure}` | the three one-dimensional `Series` of one length |
+| `operators::credibility(k)` | a `Credibility` operator for the constant `k`, which the declaration names `full_credibility`; apply it to a `CredibilityInput` to get the blend. It requires `k` finite and positive |
+
+## The weight
+
+The weight for four books of 50, 200, 1,000 and 5,000 exposure units with `k = 500`: the smallest book has a weight of 9%, and the largest has 91%.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series exposure = pluss::make_series({50.0, 200.0, 1000.0, 5000.0});
+  out.writeln("Z for k = 500  =", models::credibility_weight(exposure, 500.0).items<double>());
+  out.writeln("by hand        =", 50.0 / 550.0, 200.0 / 700.0, 1000.0 / 1500.0, 5000.0 / 5500.0);
+  out.writeln("Z for k = 2000 =", models::credibility_weight(exposure, 2000.0).items<double>());
+}
+```
+
+Output
+
+```text
+Z for k = 500  = [0.090909, 0.285714, 0.666667, 0.909091]
+by hand        = 0.090909 0.285714 0.666667 0.909091
+Z for k = 2000 = [0.024390, 0.090909, 0.333333, 0.714286]
+```
+
+## Blending an experience rate with a manual rate
+
+Every book here has an experience pure premium of 700 against a manual premium of 500. The blended rate moves from the manual rate (for the small book) towards the experience (for the large book), and with a larger `k` it moves more slowly.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series exposure = pluss::make_series({50.0, 200.0, 1000.0, 5000.0});
+  const pluss::Series experience = pluss::make_series({700.0, 700.0, 700.0, 700.0});
+  const pluss::Series manual = pluss::make_series({500.0, 500.0, 500.0, 500.0});
+  out.writeln("blend, k = 500  =", models::credibility_blend(experience, manual, exposure, 500.0).items<double>());
+  out.writeln("blend, k = 2000 =", models::credibility_blend(experience, manual, exposure, 2000.0).items<double>());
+  const pluss::Series z = models::credibility_weight(exposure, 500.0);
+  out.writeln("by hand, k = 500=", z.mul(experience).add(z.neg().add(1.0).mul(manual)).items<double>());
+}
+```
+
+Output
+
+```text
+blend, k = 500  = [518.181818, 557.142857, 633.333333, 681.818182]
+blend, k = 2000 = [504.878049, 518.181818, 566.666667, 642.857143]
+by hand, k = 500= [518.181818, 557.142857, 633.333333, 681.818182]
+```
+
+## The operator
+
+The `Credibility` operator is built once from the constant and applied to experience, manual premium and exposure; it returns the blended premiums. The result is the same as `credibility_blend` with the same constant.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series exposure = pluss::make_series({50.0, 200.0, 1000.0, 5000.0});
+  const pluss::Series experience = pluss::make_series({700.0, 700.0, 700.0, 700.0});
+  const pluss::Series manual = pluss::make_series({500.0, 500.0, 500.0, 500.0});
+  const actuarial::Credibility blend = actuarial::operators::credibility(500.0);
+  out.writeln("operator =", blend(actuarial::CredibilityInput{experience, manual, exposure}).items<double>());
+  out.writeln("function =", models::credibility_blend(experience, manual, exposure, 500.0).items<double>());
+}
+```
+
+Output
+
+```text
+operator = [518.181818, 557.142857, 633.333333, 681.818182]
+function = [518.181818, 557.142857, 633.333333, 681.818182]
+```
+
+## Credibility and the rate change
+
+Credibility combines with the loads: blend the pure premium, then load it. The program shows how much of a +30% rate change from a small book survives when the experience is only partly trusted. The indicated premium comes from the credibility-weighted pure premium, with the loads of the previous page.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double experience = 520.0, manual = 450.0, exposure = 1000.0;
+  const double current = 600.0;
+  for (const double k : {250.0, 1000.0, 4000.0}) {
+    const double z = exposure / (exposure + k);
+    const double blended = z * experience + (1.0 - z) * manual;
+    const double indicated = models::indicated_premium(pluss::make_series({blended}), 25.0, 0.25, 0.05).items<double>()[0];
+    out.writeln("k", k, " credibility", z, " blended pure premium", blended, " indicated", indicated, " rate change", indicated / current - 1.0);
+  }
+}
+```
+
+Output
+
+```text
+k 250.000000  credibility 0.800000  blended pure premium 506.000000  indicated 758.571429  rate change 0.264286
+k 1000.000000  credibility 0.500000  blended pure premium 485.000000  indicated 728.571429  rate change 0.214286
+k 4000.000000  credibility 0.200000  blended pure premium 464.000000  indicated 698.571429  rate change 0.164286
+```
+
+## Invalid inputs fail explicitly
+
+The constant must be positive, the exposure non-negative, and the series of one length.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)models::credibility_weight(pluss::make_series({100.0}), -1.0); });
+  report([&] { (void)models::credibility_weight(pluss::make_series({-1.0}), 100.0); });
+  report([&] { (void)actuarial::operators::credibility(0.0); });
+}
+```
+
+Output
+
+```text
+credibility_weight: k must be > 0
+credibility_weight: exposure must be >= 0
+operators::credibility: full_credibility must be finite and > 0
+```
+
+## Where to go next
+
+Premiums for the future are set from experience; the money held for claims that have already happened is estimated from the way past claims developed ([Claims Triangles](claims_triangles.md)).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="indicated_premium_and_rate_change.html">
+    <span class="label">Previous</span>
+    <span class="title">Indicated Premium and Rate Change</span>
+  </a>
+  <a class="next-link" href="claims_triangles.html">
+    <span class="label">Next</span>
+    <span class="title">Claims Triangles</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

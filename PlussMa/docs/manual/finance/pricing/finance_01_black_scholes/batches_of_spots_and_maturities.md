@@ -4,28 +4,48 @@
 
 [Back to Black-Scholes](../finance_01_black_scholes.md)
 
-Every pricing function that takes a scalar spot has overloads that take a `Series` of spots, and a second form that takes a `Series` of times to maturity as well. A whole surface is then priced by one call, with no loop in the caller.
+A field prices a whole strip of options in one call, with no loop in the caller. Each of `spot`, `strike`, `maturity`, `rate`, `dividend_yield` and the model parameters is a `Series`; a `Series` of one element applies to every option, and a `Series` of *n* elements gives each option its own value. The vectors are paired element by element, not combined into a grid.
 
 ```cpp
-Series prc::black_scholes_price(type, const Series &spot, double strike, double rate, double dividend_yield,
-                                double maturity, double volatility, Config cfg = {});
-Series prc::black_scholes_price(type, const Series &spot, const Series &time_to_maturity, double strike, double rate,
-                                double dividend_yield, double volatility, Config cfg = {});
-prc::BlackScholesSeriesGreeks prc::black_scholes_greeks(type, const Series &spot, ...);      // the same two forms
+Series instrument::Vanilla::strike;
+Series instrument::Vanilla::maturity;
+Series market::State::spot;
+Series market::State::rate;
+Series market::State::dividend_yield;
+module::Field::Result module::Field::price(Config cfg = {}) const;
 ```
 
-The spot (and the times to maturity) may have shape `[n]` or `[n, 1]`, and the two must have the same length: they are paired element by element, not combined into a grid. The result is `[n]`, in `Float64`, on the platform of the inputs. Spots must be positive and times to maturity non-negative and finite, element by element; a bad element is an error naming the argument. The Greeks of a batch are returned as a `BlackScholesSeriesGreeks` whose members `delta`, `gamma`, `vega`, `theta` and `rho` are `Series`.
+The strike, maturity, spot, rate and dividend yield are `Series`, so a field holds a whole batch and `price` returns one entry per option. Set them directly:
+
+```cpp
+mod::Field field{.instrument = {.type = prc::Call, .strike = strikes, .maturity = maturities},
+                 .market = {.spot = spots, .rate = rate, .dividend_yield = dividend_yield},
+                 .model = fin::model::make(fin::model::Kind::BlackScholes, {volatility}),
+                 .controls = {.engine = mod::Engine::Analytic}};
+const auto result = field.price();   // result.price, result.greeks.delta, ... are Series of length n
+```
+
+The inputs may have shape `[n]` or `[n, 1]`, and those that are longer than one element must agree in length. The result is `[n]`, in `Float64`. Every element is validated, and a bad element is an error naming the input.
 
 ## One call for a payoff diagram
 
-The program prices a call and a put at 121 spots between 50 and 150, at 3 months to maturity, and compares each element with the scalar function.
+The program prices a call and a put at 121 spots between 50 and 150, at 3 months to maturity, and compares each element with a field of one option.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+
+mod::Field strip(prc::OptionType type, const pluss::Series &spots, double strike, double rate, double dividend, double maturity, double vol) {
+  return mod::Field{.instrument = {.type = type, .strike = pluss::make_series({strike}), .maturity = pluss::make_series({maturity})},
+                    .market = {.spot = spots, .rate = pluss::make_series({rate}), .dividend_yield = pluss::make_series({dividend})},
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+}
 
 int main() {
   OutputEngine out;
@@ -36,19 +56,20 @@ int main() {
     grid.push_back(50.0 + i);
   }
   const auto spot = pluss::make_series(grid, {121}, as_f64());
-  const auto call = prc::black_scholes_price(prc::Call, spot, strike, rate, dividend, maturity, vol);
-  const auto put = prc::black_scholes_price(prc::Put, spot, strike, rate, dividend, maturity, vol);
+  const auto call = strip(prc::Call, spot, strike, rate, dividend, maturity, vol).price().price;
+  const auto put = strip(prc::Put, spot, strike, rate, dividend, maturity, vol).price().price;
   out.writeln("shape", call.sizes(), " dtype", call.dtype());
 
   double worst = 0.0;
-  const auto c = call.pull<double>();
+  const auto c = call.items<double>();
   for (int i = 0; i <= 120; ++i) {
-    worst = std::max(worst, std::abs(c[i] - prc::black_scholes_price(prc::Call, grid[i], strike, rate, dividend, maturity, vol)));
+    const auto one = strip(prc::Call, pluss::make_series({grid[i]}), strike, rate, dividend, maturity, vol).price().price;
+    worst = std::max(worst, std::abs(c[i] - one.items<double>()[0]));
   }
-  out.writeln("largest difference from the scalar function", worst);
+  out.writeln("largest difference from a field of one option", worst);
   out.writeln("spot    call       put        intrinsic call");
   for (int i : {0, 30, 50, 60, 70, 90, 120}) {
-    out.writeln(grid[i], c[i], put.pull<double>()[i], std::max(grid[i] - strike, 0.0));
+    out.writeln(grid[i], c[i], put.items<double>()[i], std::max(grid[i] - strike, 0.0));
   }
 }
 ```
@@ -57,7 +78,7 @@ Output
 
 ```text
 shape [121]  dtype float64
-largest difference from the scalar function 0.000000
+largest difference from a field of one option 0.000000
 spot    call       put        intrinsic call
 50.000000 0.000005 49.377654 0.000000
 80.000000 0.432972 19.885527 0.000000
@@ -68,17 +89,19 @@ spot    call       put        intrinsic call
 170.000000 70.323580 0.000854 70.000000
 ```
 
-The batch has shape `[121]` and `Float64`, and differs from the scalar function by less than 10⁻⁶ at every point (zero at the digits shown). The call lies above its intrinsic value everywhere and approaches it at both ends, the put mirrors it, and put-call parity relates the two columns.
+The batch has shape `[121]` and `Float64`, and differs from the one-option fields by less than 10⁻⁶ at every point. The call lies above its intrinsic value everywhere and approaches it at both ends, the put mirrors it, and put-call parity relates the two columns.
 
 ## Spots and maturities together
 
-When `time_to_maturity` is a `Series`, element *i* prices spot *i* at maturity *i*. A term structure of at-the-money options is one call with a constant spot and a range of maturities, and a path of an option as time passes is a spot path with a falling time to maturity. The program does the second: a spot path over 10 days, the option's remaining maturity shrinking from 30 days to 21 days, and its delta, for a one-month at-the-money call.
+When the maturity is a `Series` of the same length as the spot, element *i* prices spot *i* at maturity *i*. A term structure of at-the-money options is one field with a constant spot and a range of maturities, and a path of an option as time passes is a spot path with a falling time to maturity. The program does the second: a spot path over 10 days, the option's remaining maturity shrinking from 30 days to 21 days, and its delta, for a one-month at-the-money call. It then does the first.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
 
 int main() {
@@ -90,20 +113,24 @@ int main() {
   for (int day = 0; day < 10; ++day) {
     remaining.push_back((30.0 - day) / 365.0);
   }
-  const auto spot = pluss::make_series(path, {10}, as_f64());
-  const auto ttm = pluss::make_series(remaining, {10}, as_f64());
 
-  const auto value = prc::black_scholes_price(prc::Call, spot, ttm, strike, rate, dividend, vol);
-  const auto greeks = prc::black_scholes_greeks(prc::Call, spot, ttm, strike, rate, dividend, vol);
+  mod::Field option{.instrument = {.type = prc::Call, .strike = pluss::make_series({strike}), .maturity = pluss::make_series(remaining, {10}, as_f64())},
+                    .market = {.spot = pluss::make_series(path, {10}, as_f64()), .rate = pluss::make_series({rate}), .dividend_yield = pluss::make_series({dividend})},
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+  const auto result = option.price();
   out.writeln("day  spot    days left   value   delta   gamma   theta per day");
   for (int day = 0; day < 10; ++day) {
-    out.writeln(day, path[day], 30 - day, value.pull<double>()[day], greeks.delta.pull<double>()[day], greeks.gamma.pull<double>()[day], greeks.theta.pull<double>()[day] / 365.0);
+    out.writeln(day, path[day], 30 - day, result.price.items<double>()[day], result.greeks.delta.items<double>()[day], result.greeks.gamma.items<double>()[day],
+                result.greeks.theta.items<double>()[day] / 365.0);
   }
 
   // A term structure: one spot, many maturities.
-  const auto terms = pluss::make_series(std::vector<double>{1.0 / 12, 0.25, 0.5, 1.0, 2.0}, {5}, as_f64());
-  const auto flat = pluss::make_series(std::vector<double>(5, 100.0), {5}, as_f64());
-  out.writeln("at-the-money call by maturity (1m, 3m, 6m, 1y, 2y):", prc::black_scholes_price(prc::Call, flat, terms, strike, rate, dividend, vol).pull<double>());
+  mod::Field terms{.instrument = {.type = prc::Call, .strike = pluss::make_series({strike}), .maturity = pluss::make_series({1.0 / 12, 0.25, 0.5, 1.0, 2.0})},
+                   .market = {.spot = pluss::make_series({100.0}), .rate = pluss::make_series({rate}), .dividend_yield = pluss::make_series({dividend})},
+                   .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                   .controls = {.engine = mod::Engine::Analytic, .risk = mod::Risk::PriceOnly}};
+  out.writeln("at-the-money call by maturity (1m, 3m, 6m, 1y, 2y):", terms.price().price.items<double>());
 }
 ```
 
@@ -128,14 +155,24 @@ As the days pass, the call's value follows the spot (2.98 at 100, 5.20 at 104.1)
 
 ## The Greeks of a batch, and the shape rules
 
-The Greeks come back with one `Series` per Greek. The program prints the delta and gamma surfaces' profile across spots, confirms each equals the scalar Greek, and shows the accepted shapes and the errors for mismatched sizes and bad elements.
+The Greeks come back with one `Series` per Greek. The program prints the delta, gamma and vega across five spots, confirms each equals the Greek of a field of one option, and shows the accepted shapes and the errors for mismatched sizes and bad elements.
 
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+mod::Field strip(prc::OptionType type, const Series &spots, const Series &maturities, double strike, double rate, double dividend, double vol) {
+  return mod::Field{.instrument = {.type = type, .strike = pluss::make_series({strike}), .maturity = maturities},
+                    .market = {.spot = spots, .rate = pluss::make_series({rate}), .dividend_yield = pluss::make_series({dividend})},
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
 
 int main() {
   OutputEngine out;
@@ -143,34 +180,35 @@ int main() {
   const double strike = 100.0, rate = 0.03, dividend = 0.01, maturity = 0.5, vol = 0.2;
   const std::vector<double> grid{70, 85, 100, 115, 130};
   const auto spot = pluss::make_series(grid, {5}, as_f64());
-  const auto g = prc::black_scholes_greeks(prc::Put, spot, strike, rate, dividend, maturity, vol);
-  out.writeln("delta", g.delta.pull<double>());
-  out.writeln("gamma", g.gamma.pull<double>());
-  out.writeln("vega ", g.vega.pull<double>());
+  const auto one_maturity = pluss::make_series({maturity});
+  const auto g = strip(prc::Put, spot, one_maturity, strike, rate, dividend, vol).price().greeks;
+  out.writeln("delta", g.delta.items<double>());
+  out.writeln("gamma", g.gamma.items<double>());
+  out.writeln("vega ", g.vega.items<double>());
   double worst = 0.0;
   for (std::size_t i = 0; i < grid.size(); ++i) {
-    const auto s = prc::black_scholes_greeks(prc::Put, grid[i], strike, rate, dividend, maturity, vol);
-    worst = std::max({worst, std::abs(g.delta.pull<double>()[i] - s.delta), std::abs(g.gamma.pull<double>()[i] - s.gamma), std::abs(g.vega.pull<double>()[i] - s.vega),
-                      std::abs(g.theta.pull<double>()[i] - s.theta), std::abs(g.rho.pull<double>()[i] - s.rho)});
+    const auto s = strip(prc::Put, pluss::make_series({grid[i]}), one_maturity, strike, rate, dividend, vol).price().greeks;
+    worst = std::max({worst, std::abs(g.delta.items<double>()[i] - s.delta.items<double>()[0]), std::abs(g.gamma.items<double>()[i] - s.gamma.items<double>()[0]),
+                      std::abs(g.vega.items<double>()[i] - s.vega.items<double>()[0]), std::abs(g.theta.items<double>()[i] - s.theta.items<double>()[0]),
+                      std::abs(g.rho.items<double>()[i] - s.rho.items<double>()[0])});
   }
-  out.writeln("largest difference from the scalar Greeks", worst);
+  out.writeln("largest difference from the Greeks of single options", worst);
 
-  out.writeln("shapes: [5] gives", prc::black_scholes_price(prc::Call, spot, strike, rate, dividend, maturity, vol).sizes(), " [5, 1] gives",
-              prc::black_scholes_price(prc::Call, spot.reshape({5, 1}), strike, rate, dividend, maturity, vol).sizes());
-  auto attempt = [&](const char *label, auto &&call) {
+  out.writeln("shapes: [5] gives", strip(prc::Call, spot, one_maturity, strike, rate, dividend, vol).price().price.sizes(), " [5, 1] gives",
+              strip(prc::Call, spot.reshape({5, 1}), one_maturity, strike, rate, dividend, vol).price().price.sizes());
+  auto attempt = [&](const char *label, const Series &spots, const Series &maturities) {
     try {
-      call();
+      (void)strip(prc::Call, spots, maturities, strike, rate, dividend, vol).price();
       out.writeln(label, "-> no error");
     } catch (const std::exception &e) {
       const std::string message = e.what();
-      out.writeln(label, "->", message.substr(message.find("black_scholes_price: ") + 21, message.find('\n') - message.find("black_scholes_price: ") - 21));
+      out.writeln(label, "->", message.substr(0, message.find('\n')));
     }
   };
-  const auto two = pluss::make_series(std::vector<double>{0.5, 1.0}, {2}, as_f64());
-  attempt("spot of 5, maturities of 2   ", [&] { prc::black_scholes_price(prc::Call, spot, two, strike, rate, dividend, vol); });
-  attempt("a NaN spot                   ", [&] { prc::black_scholes_price(prc::Call, pluss::make_series(std::vector<double>{80, std::nan(""), 100}, {3}, as_f64()), strike, rate, dividend, maturity, vol); });
-  attempt("a negative spot              ", [&] { prc::black_scholes_price(prc::Call, pluss::make_series(std::vector<double>{80, -1, 100}, {3}, as_f64()), strike, rate, dividend, maturity, vol); });
-  attempt("a negative time to maturity  ", [&] { prc::black_scholes_price(prc::Call, pluss::make_series(std::vector<double>{80, 90, 100}, {3}, as_f64()), pluss::make_series(std::vector<double>{1, -1, 2}, {3}, as_f64()), strike, rate, dividend, vol); });
+  attempt("spot of 5, maturities of 2   ", spot, pluss::make_series({0.5, 1.0}));
+  attempt("a NaN spot                   ", pluss::make_series({80.0, std::nan(""), 100.0}), one_maturity);
+  attempt("a negative spot              ", pluss::make_series({80.0, -1.0, 100.0}), one_maturity);
+  attempt("a negative time to maturity  ", pluss::make_series({80.0, 90.0, 100.0}), pluss::make_series({1.0, -1.0, 2.0}));
 }
 ```
 
@@ -180,12 +218,25 @@ Output
 delta [-0.986415, -0.839010, -0.441555, -0.128659, -0.022819]
 gamma [0.002357, 0.019873, 0.027789, 0.012894, 0.002942]
 vega  [1.155153, 14.358585, 27.789495, 17.052947, 4.971805]
-largest difference from the scalar Greeks 0.000000
+largest difference from the Greeks of single options 0.000000
 shapes: [5] gives [5]  [5, 1] gives [5]
-spot of 5, maturities of 2    -> spot and time_to_maturity size mismatch
-a NaN spot                    -> spot contains non-finite values
-a negative spot               -> spot values must be > 0
-a negative time to maturity   -> time_to_maturity values must be >= 0
+spot of 5, maturities of 2    -> subsp::math::finance::module::Field: instrument/market strike, maturity, spot, rate and dividend_yield must have one element or the same number of elements
+a NaN spot                    -> subsp::math::finance::module::Field: market.spot must be finite
+a negative spot               -> subsp::math::finance::module::Field: market.spot must be > 0
+a negative time to maturity   -> subsp::math::finance::module::Field: instrument.maturity must be >= 0
 ```
 
-The delta of the put is near −1 deep in the money and near 0 deep out of the money. Gamma and vega peak near the strike (0.0278 and 27.8 at spot 100), which is where the price is most sensitive. Every element equals the scalar Greek, shapes `[5]` and `[5, 1]` both give `[5]`, and each invalid input is rejected with a message that names the argument.
+The delta of the put is near −1 deep in the money and near 0 deep out of the money. Gamma and vega peak near the strike (0.0278 and 27.8 at spot 100), which is where the price is most sensitive. Every element equals the Greek of a single-option field, shapes `[5]` and `[5, 1]` both give `[5]`, and each invalid input is rejected with a message that names the input at fault.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_greeks.html">
+    <span class="label">Previous</span>
+    <span class="title">The Greeks</span>
+  </a>
+  <a class="next-link" href="edge_cases_and_errors.html">
+    <span class="label">Next</span>
+    <span class="title">Edge cases and errors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

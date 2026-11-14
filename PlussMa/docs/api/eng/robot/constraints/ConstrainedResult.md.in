@@ -1,0 +1,60 @@
+# `robot::ConstrainedResult`
+
+The result of constrained dynamics.
+
+## Signature
+
+```cpp
+robot::ConstrainedResult
+```
+
+## What It Does
+
+Holds the joint accelerations that satisfy the constraints and the forces that produce them.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `acceleration` | The joint accelerations, `[..., links]`. |  |
+| `contact_force` | The non-negative normal force of each contact, `[..., m]`, in newtons. |  |
+| `pin_force` | The world force on each pinned point, `[..., p, 3]`, in newtons. |  |
+| `friction_force` | The world friction force on each contact point, `[..., m, 3]`, in newtons; zero for frictionless contacts. |  |
+| `gap` | The gap of every contact, `[..., m]`. |  |
+
+## Returns
+
+Returned by `constrain`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+With nothing to constrain the force arrays have a zero-length axis and the acceleration is the plain forward dynamics. A contact that is out of range or being pulled away has zero force.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field for a slider.
+
+@@example Eng/api/robot_contact_rest.cpp@@
+
+### Example 2
+
+Pin forces.
+
+@@example Eng/api/robot_pin_arm.cpp@@
+
+### Example 3
+
+No constraints.
+
+@@example Eng/api/robot_constrained_none.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

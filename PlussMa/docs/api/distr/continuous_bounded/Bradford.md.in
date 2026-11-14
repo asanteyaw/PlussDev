@@ -212,3 +212,16 @@ The formula and `distr::cdf` agree to 1.11e-16 over the grid, so the library imp
 - [`Beta`](../continuous_bounded/Beta.md)
 - [`Uniform`](../continuous_bounded/Uniform.md)
 - [`Triangular`](../continuous_bounded/Triangular.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Beta.html">
+    <span class="label">Previous</span>
+    <span class="title">Beta</span>
+  </a>
+  <a class="next-link" href="Cosine.html">
+    <span class="label">Next</span>
+    <span class="title">Cosine</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

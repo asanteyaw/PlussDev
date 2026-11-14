@@ -140,19 +140,19 @@ int main() {
   const auto t = pluss::make_series({0.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : d.pdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.pdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : d.logpdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.logpdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : d.cdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.cdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logcdf:";
-  for (double v : d.logcdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.logcdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cgf at t = 0: " << as_f64(d.cgf(t)) << '\n';
 
@@ -239,3 +239,16 @@ variance of 200000 draws 1.35362 (cumulant(2) = 1.35417)
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Exponential.html">
+    <span class="label">Previous</span>
+    <span class="title">Exponential</span>
+  </a>
+  <a class="next-link" href="Gamma.html">
+    <span class="label">Next</span>
+    <span class="title">Gamma</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

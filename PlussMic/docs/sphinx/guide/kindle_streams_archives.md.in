@@ -1,0 +1,52 @@
+# Kindle: streams and archives
+
+[Back to PlussMic by example](../guide.md)
+
+The two other Kindle types: the `Stream` (one column with a mask, labels and metadata) and the `Archive` (a stack of catalogs, like an Atlas whose members may have different lengths). This page repairs a sensor stream, ranks named stations, scales train, validation and test sets and combines monthly catalogs of different sizes.
+
+## The mental model
+
+A stream is one vector with three optional extras: a validity mask, case labels and a metadata map. Every transformation returns a new stream; the mask and labels travel where they make sense, and the metadata does not (the first program shows it). An archive is a stack of catalogs addressed by a depth stream, and unlike an Atlas it allows catalogs of different record counts.
+
+## Repairing a sensor stream
+
+Eight readings with two dropouts and an impossible spike, labelled with a sensor name and a unit in the metadata.
+
+@@example stream_sensor_repair.cpp@@
+
+`clip` caps the spike at the 60 limit and `ffill` carries the last good value over each dropout. The program then looks at the metadata after the repair and finds it gone: transformations return a stream without the metadata attached to the original, so the program re-attaches the sensor and unit and adds a note of what was done. The last block keeps only the trusted readings with `filter`, five of eight, with a mean of `21.02`.
+
+## Named records
+
+A stream of wind speeds with a station name for each record.
+
+@@example stream_labelled_readings.cpp@@
+
+`with_label` names the records and the printed stream shows each reading beside its station. Ranking with `argsort` and reading the names through the labels gives the strongest winds, `summit` (`40.3`), `ridge` (`31`) and `airport` (`25.7`); `filter` keeps the labels with the values, so the three stations above `25` come out with their names; and `clear_label` returns the plain stream.
+
+## Train, validation and test
+
+Eight, two and three records: three catalogs of different sizes in one archive, scaled with the training statistics.
+
+@@example archive_splits.cpp@@
+
+The archive reports records per catalog from `2` to `8`: that is allowed here and refused by an Atlas. The scaler is fitted on the training catalog alone (mean `17`, standard deviation `4.9`) and applied to every catalog with `map_catalogs`. The training mean of the scaled feature is exactly `0`, and the validation and test means are `2.04` and `3.06`, outside the training range: in training units the new data are far from where the model was fitted, which is the signal you want to see and not hide.
+
+## Months of different sizes
+
+Three monthly catalogs where products appear and disappear.
+
+@@example archive_monthly_reports.cpp@@
+
+The archive holds `2` to `4` products per month. `aggregate_over_catalogs` sees all months and returns one row per month, units `240`, `305`, `150` and revenue `3600`, `4900`, `2100`. Intersecting the product names month by month finds the products sold in every month (`gizmo` and `widget`), and `loc` reads November alone.
+
+## Decisions
+
+- **Stream or catalog:** a stream for one column's cleaning and provenance, a catalog for several.
+- **Metadata:** attach it last, after the transformations, or re-attach it as the program does.
+- **Archive or Atlas:** an archive when sizes differ; an Atlas when they must not.
+- **Leakage:** fit scalers on the training catalog only, then map them over every catalog.
+
+## Where next
+
+Reference pages: [`clip`](../api/stream/clip.md), [`ffill`](../api/stream/ffill.md), [`with_meta`](../api/stream/with_meta.md), [`meta`](../api/stream/meta.md), [`filter`](../api/stream/filter.md), [`with_label`](../api/stream/with_label.md), [`clear_label`](../api/stream/clear_label.md), [`map_catalogs`](../api/archive/map_catalogs.md), [`aggregate_over_catalogs`](../api/archive/aggregate_over_catalogs.md), [`loc`](../api/archive/loc.md), [`minrecords`](../api/archive/minrecords.md), [`maxrecords`](../api/archive/maxrecords.md). Next: [Scribble](scribble.md).

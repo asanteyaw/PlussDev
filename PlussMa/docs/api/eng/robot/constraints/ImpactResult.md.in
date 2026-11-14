@@ -1,0 +1,59 @@
+# `robot::ImpactResult`
+
+The result of an impact.
+
+## Signature
+
+```cpp
+robot::ImpactResult
+```
+
+## What It Does
+
+Holds the joint velocities after an impact and the impulses that produced them.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `velocity` | The joint velocities after the impact, `[..., links]`. |  |
+| `contact_impulse` | The non-negative normal impulse of each contact, `[..., m]`, in newton-seconds. |  |
+| `pin_impulse` | The world impulse on each pinned point, `[..., p, 3]`. |  |
+| `friction_impulse` | The world friction impulse on each contact point, `[..., m, 3]`; zero for frictionless contacts. |  |
+
+## Returns
+
+Returned by `impact`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+A contact that is out of range, or not approaching its plane, has zero impulse. With no constraints the velocity is unchanged and the impulse arrays are empty.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of an impact.
+
+@@example Eng/api/robot_impact_restitution.cpp@@
+
+### Example 2
+
+Friction impulses.
+
+@@example Eng/api/robot_impact_friction.cpp@@
+
+### Example 3
+
+A batch of impacts.
+
+@@example Eng/api/robot_impact_batch.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

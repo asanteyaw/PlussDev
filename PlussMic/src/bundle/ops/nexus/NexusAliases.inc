@@ -24,7 +24,7 @@ PullSpec make_pull_spec(std::string_view source,
 std::string qualify_pull_source(std::string_view table, std::string_view feature) {
   PLUSS_CHECK(!table.empty(), "pull table scope cannot be empty");
   PLUSS_CHECK(!feature.empty(), "pull feature cannot be empty");
-  return fmt::format("{}.{}", table, feature);
+  return pluss::tils::OutputEngine::format("{}.{}", table, feature);
 }
 
 } // namespace

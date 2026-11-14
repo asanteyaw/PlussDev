@@ -166,7 +166,7 @@ int main() {
   const Series y = ts::Ssm::simulate(n, model, 1, f64, /*seed=*/6).observations.reshape({n, 1});
 
   const auto fit = ts::Ssm::filter(y, model);
-  const double last = y.select(0, n - 1).item<double>();
+  const double last = y.select(0, n - 1).squeeze().item<double>();
   const double threshold = last + 1.0;  // one unit above the last observation
 
   // The state after the last observation, as the starting point of the simulation.
@@ -186,7 +186,7 @@ int main() {
   }
 
   const auto f = ts::Ssm::forecast(horizon, y, model);
-  const double mean = f.observations.select(0, horizon - 1).item<double>();
+  const double mean = f.observations.select(0, horizon - 1).squeeze().item<double>();
   const double sd = std::sqrt(f.observations_cov.select(0, horizon - 1).select(0, 0).select(0, 0).item<double>());
   const double gaussian = 0.5 * std::erfc((threshold - mean) / (sd * std::sqrt(2.0)));
 
@@ -218,3 +218,12 @@ The first two numbers agree (0.433 simulated against 0.434 from the Gaussian for
 - **Simulation reuses the fitted noise levels.** If those are estimates, the answers inherit their error; simulate over the estimation uncertainty too when it matters.
 
 Where next: [Chapter 6](../ts_06_direct_forecasting.md) forecasts without a model of the data-generating process, by learning each horizon directly.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="smoothing_across_a_gap_and_forecasting.html">
+    <span class="label">Previous</span>
+    <span class="title">Smoothing across a gap, and forecasting</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

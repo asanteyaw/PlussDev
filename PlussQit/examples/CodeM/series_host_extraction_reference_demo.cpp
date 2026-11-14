@@ -38,8 +38,8 @@ int main() {
   std::cout << "== item ==\n";
   std::cout << scalar.item<std::int64_t>() << "\n\n";
 
-  std::cout << "== pull ==\n";
-  print_vector(vector.pull<std::int64_t>());
+  std::cout << "== items ==\n";
+  print_vector(vector.items<std::int64_t>());
   std::cout << "\n\n";
 
   std::cout << "== host ==\n";
@@ -58,17 +58,17 @@ int main() {
   }
   std::cout << '\n';
 
-  std::cout << "== pull rejects rank zero ==\n";
+  std::cout << "== items rejects rank zero ==\n";
   try {
-    static_cast<void>(scalar.pull<std::int64_t>());
+    static_cast<void>(scalar.items<std::int64_t>());
   } catch (const std::exception& error) {
     print_error(error);
   }
   std::cout << '\n';
 
-  std::cout << "== pull rejects rank two ==\n";
+  std::cout << "== items rejects rank two ==\n";
   try {
-    static_cast<void>(matrix.pull<std::int64_t>());
+    static_cast<void>(matrix.items<std::int64_t>());
   } catch (const std::exception& error) {
     print_error(error);
   }

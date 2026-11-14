@@ -1,16 +1,17 @@
 # Finance 2: Implied Volatility
 
-The implied volatility of an option is the volatility that makes the Black-Scholes price equal the observed price. It is the common language in which option prices are quoted and compared, and the quantity that richer models are calibrated to reproduce. After this chapter you can invert prices singly and in batches, choose and control the solver, and know exactly when the answer is `NaN`.
+The implied volatility of an option is the volatility that makes the Black-Scholes price equal the observed price. It is the common language in which option prices are quoted and compared, and the quantity that richer models are calibrated to reproduce. After this chapter you can invert a quote or a whole strip of them, choose and control the solver, and know exactly when the answer is `NaN`.
 
 Every program is complete, and its output is the output of that program.
 
-## The calls
+## The call
 
 ```cpp
-double prc::implied_vol(prc::OptionType type, double option_price, double spot, double strike, double rate, double dividend_yield, double maturity, const prc::ImpliedVolOptions &options = {});
-Series prc::implied_vol(type, const Series &option_price, const Series &spot, double strike, double rate, double dividend_yield, double maturity, const prc::ImpliedVolOptions &options = {}, Config cfg = {});
-Series prc::implied_vol(type, const Series &option_price, const Series &spot, const Series &time_to_maturity, double strike, double rate, double dividend_yield, const prc::ImpliedVolOptions &options = {}, Config cfg = {});
+Series module::Field::implied_vol(const pricing::ImpliedVolOptions &options = {}, Config cfg = {}) const;                         // implied by the field's own model prices
+Series module::Field::implied_vol(const Series &quotes, const pricing::ImpliedVolOptions &options = {}, Config cfg = {}) const;   // implied by market quotes
 ```
+
+`implied_vol` is a method of the `Field` of chapter 1. The field supplies the instrument and the market, one Black-Scholes price is inverted per option, and the answer is a `Series`. Without `quotes` it inverts the field's own prices, so the same call turns a Heston or SABR field into its smile.
 
 | `ImpliedVolOptions` | Meaning | Default |
 |---|---|---|
@@ -33,4 +34,11 @@ Series prc::implied_vol(type, const Series &option_price, const Series &spot, co
 4. The bracket is a plausibility filter as well as a search range.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_02_implied_volatility/recovering_a_volatility
+finance_02_implied_volatility/controls_and_the_no_arbitrage_bounds
+```
 <!-- apiref:toctree:end -->

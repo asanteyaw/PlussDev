@@ -23,7 +23,7 @@ int main() {
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "steps with a jump: " << jp.jump_mask.sum().item<double>() << " of " << jp.path.steps << "\n";
   const auto r = sde::ito_integral([](double, const pluss::Series& w) { return w; }, jp.path);
-  std::cout << "quadratic variation of the path: " << r.realized_quadratic_variation.item<double>()
+  std::cout << "quadratic variation of the path: " << r.realized_quadratic_variation.squeeze().item<double>()
             << " (a continuous path with volatility 0.2 would give 0.04)\n";
   std::cout << "ratio to elapsed time: " << r.quadratic_variation_ratio << "\n";
   for (const auto& w : r.warnings) std::cout << "warning: " << w << "\n";
@@ -40,3 +40,16 @@ ratio to elapsed time: 0.7548
 warning: the path's realized quadratic variation is 0.754848 times the elapsed time; a standard Wiener path gives about 1, so this is not a standard Brownian path (another volatility, a smooth path, or jumps) and Ito and Stratonovich values are not the standard ones
 ```
 Five of the 4000 steps contain a jump, and they dominate the quadratic variation: 0.7548, against 0.04 for a continuous path with volatility 0.2. The diagnostics of chapter 1 notice this and warn. A path like this is a legitimate integrator; the warning only says that Ito and Stratonovich values are not the standard ones.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_levy_measure_as_atoms.html">
+    <span class="label">Previous</span>
+    <span class="title">A Levy measure as atoms</span>
+  </a>
+  <a class="next-link" href="the_marcus_integral.html">
+    <span class="label">Next</span>
+    <span class="title">The Marcus integral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

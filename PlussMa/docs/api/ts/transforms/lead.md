@@ -110,3 +110,16 @@ lag(lead(x))        nan  12.0000  11.0000  15.0000  14.0000  18.0000  17.0000
 ## See Also
 
 - [`lag`](lag.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lag.html">
+    <span class="label">Previous</span>
+    <span class="title">lag</span>
+  </a>
+  <a class="next-link" href="log_returns.html">
+    <span class="label">Next</span>
+    <span class="title">log_returns</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

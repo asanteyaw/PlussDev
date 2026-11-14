@@ -139,3 +139,49 @@ TEST_CASE("unresolved quadrature retains MPS execution",
   CHECK(result.to(pluss::pCPU).item<double>() ==
         Catch::Approx(0.7468241328124271).epsilon(1e-5));
 }
+
+TEST_CASE("vector- and matrix-valued integrands are integrated componentwise",
+          "[calculus][integral][tensor]") {
+  const math::Function curve = math::function({"x", "p"}, [](math::Function x, math::Function p) {
+    return math::stack({x, x * x, p * x.exp()});
+  });
+  const pluss::Series p = pluss::make_series(2.0);
+
+  // definite: (3^2/2, 3^3/3, p (e^3 - 1))
+  const math::Function definite = operators::integral("x", 0.0, 3.0)(curve);
+  CHECK(definite.rank() == 1);
+  CHECK(close(definite({p}), pluss::make_series({4.5, 9.0, 2.0 * (std::exp(3.0) - 1.0)})));
+
+  // anchored and antiderivative keep the shape too
+  const math::Function anchored = operators::integral("x", 1.0)(curve);
+  CHECK(anchored.rank() == 1);
+  CHECK(close(anchored({pluss::make_series(3.0), p}), pluss::make_series({4.0, 26.0 / 3.0, 2.0 * (std::exp(3.0) - std::exp(1.0))})));
+  const math::Function primitive = operators::antiderivative("x")(curve);
+  CHECK(close(primitive({pluss::make_series(3.0), p}), pluss::make_series({4.5, 9.0, 2.0 * (std::exp(3.0) - 1.0)})));
+
+  // a matrix-valued integrand keeps both axes in order: [[x, 2x], [3x, 4x]] integrates to [[.5, 1], [1.5, 2]] on [0, 1]
+  const math::Function matrix = math::function({"x"}, [](math::Function x) {
+    return math::stack({math::stack({x, 3.0 * x}), math::stack({2.0 * x, 4.0 * x})});
+  });
+  const math::Function integrated = operators::integral("x", 0.0, 1.0)(matrix);
+  CHECK(integrated.rank() == 2);
+  CHECK(close(integrated().reshape({4}), matrix({pluss::make_series(1.0)}).reshape({4}).mul(0.5)));
+
+  // batches of the remaining variable evaluate in one call
+  const pluss::Series ps = pluss::make_series({1.0, 2.0, 3.0});
+  const pluss::Series batch = definite({ps});
+  CHECK(batch.sizes() == std::vector<std::int64_t>{3, 3});
+}
+
+TEST_CASE("compose takes one argument per variable the function still has",
+          "[calculus][integral][compose]") {
+  // integrating x out leaves a function of y only, although its trace still lists x
+  const math::Function f = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x * y; });
+  const math::Function over_x = operators::integral("x", 0.0, 2.0)(f);   // 2 y
+  REQUIRE(over_x.arity() == 1);
+  const math::Function g = math::function({"t"}, [](math::Function t) { return t * t; });
+  const math::Function composed = over_x.compose({g});
+  CHECK(composed.arity() == 1);
+  CHECK(close(composed({pluss::make_series({1.0, 2.0, 3.0})}), pluss::make_series({2.0, 8.0, 18.0})));
+  CHECK_THROWS_AS(over_x.compose({g, g}), pluss::Error);
+}

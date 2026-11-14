@@ -35,7 +35,7 @@ int main() {
   double worst = 0.0;
   for (std::int64_t i = 1; i <= n; ++i) worst = std::max(worst, std::abs(x[i - 1] - 0.5 * i * (n + 1 - i)));
   std::cout << "iterations        : " << r.iterations << " (the system has " << n << " unknowns)\n";
-  std::cout << std::scientific << std::setprecision(2) << "relative residual : " << r.relative_residual.item<double>() << "\n";
-  std::cout << "converged         : " << r.converged.item<bool>() << ", breakdown " << r.breakdown.item<bool>() << "\n";
+  std::cout << std::scientific << std::setprecision(2) << "relative residual : " << r.relative_residual.squeeze().item<double>() << "\n";
+  std::cout << "converged         : " << r.converged.squeeze().item<bool>() << ", breakdown " << r.breakdown.squeeze().item<bool>() << "\n";
   std::cout << "largest error     : " << worst << "\n";
 }

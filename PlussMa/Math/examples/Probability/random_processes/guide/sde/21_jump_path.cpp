@@ -17,7 +17,7 @@ int main() {
   std::cout << std::fixed << std::setprecision(4);
   std::cout << "steps with a jump: " << jp.jump_mask.sum().item<double>() << " of " << jp.path.steps << "\n";
   const auto r = sde::ito_integral([](double, const pluss::Series& w) { return w; }, jp.path);
-  std::cout << "quadratic variation of the path: " << r.realized_quadratic_variation.item<double>()
+  std::cout << "quadratic variation of the path: " << r.realized_quadratic_variation.squeeze().item<double>()
             << " (a continuous path with volatility 0.2 would give 0.04)\n";
   std::cout << "ratio to elapsed time: " << r.quadratic_variation_ratio << "\n";
   for (const auto& w : r.warnings) std::cout << "warning: " << w << "\n";

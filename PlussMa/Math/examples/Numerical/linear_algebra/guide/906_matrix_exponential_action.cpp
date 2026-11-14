@@ -43,6 +43,6 @@ int main() {
     const auto y = r.value.host<double>();
     double worst = 0.0;
     for (std::int64_t j = 0; j < n; ++j) worst = std::max(worst, std::abs(y[j] - exact[j]));
-    std::cout << std::left << std::setw(12) << size << std::setw(12) << r.converged.item<bool>() << std::scientific << std::setprecision(1) << std::setw(18) << r.residual_estimate.item<double>() << worst << "\n";
+    std::cout << std::left << std::setw(12) << size << std::setw(12) << r.converged.squeeze().item<bool>() << std::scientific << std::setprecision(1) << std::setw(18) << r.residual_estimate.squeeze().item<double>() << worst << "\n";
   }
 }

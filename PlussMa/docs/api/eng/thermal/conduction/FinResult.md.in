@@ -1,0 +1,58 @@
+# `thermal::FinResult`
+
+The heat, efficiency and tip temperature of a fin.
+
+## Signature
+
+```cpp
+thermal::FinResult
+```
+
+## What It Does
+
+Holds the three outputs of `fin`, each with the broadcast shape of the inputs.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `heat` | The heat in W that leaves the base of the fin. |  |
+| `efficiency` | The heat divided by the heat of an isothermal fin at the base temperature, `h A_surface (T_base - T_ambient)`. A convective tip adds the tip area to the surface. For an infinite fin the length does not enter the heat, but the efficiency is still measured against an isothermal fin of the stated length, so it exceeds one when that length is short. |  |
+| `tip` | The temperature at the tip; for an infinite fin the ambient temperature. |  |
+
+## Returns
+
+A value returned by `fin`.
+
+## Errors
+
+None: a result is only constructed by a successful call.
+
+## Interpretation and Use
+
+Efficiency tells how much metal is working: close to one for a short fin of a good conductor, falling as the fin gets longer than `1 / m`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Heat, tip temperature and efficiency of one fin.
+
+@@example Eng/api/thermal_fin_basic.cpp@@
+
+### Example 2
+
+Three tip conditions.
+
+@@example Eng/api/thermal_fin_tips.cpp@@
+
+### Example 3
+
+A batch over length.
+
+@@example Eng/api/thermal_fin_length.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

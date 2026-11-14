@@ -230,3 +230,12 @@ Scaling is derived from the bounds. Without bounds there is no range to read, so
 - **Compare the minimum and the evaluations together.** A cheaper poll may reach a worse point at the same iteration budget.
 
 Where next: [Constraints, budgets and the cache](constraints_budgets_and_the_cache.md) covers pattern search's main strength.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="constraints_budgets_and_the_cache.html">
+    <span class="label">Next</span>
+    <span class="title">Constraints, budgets and the cache</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

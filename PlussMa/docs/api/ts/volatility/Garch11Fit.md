@@ -269,3 +269,16 @@ same seed, same draws: true
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Garch11.html">
+    <span class="label">Previous</span>
+    <span class="title">Garch11</span>
+  </a>
+  <a class="next-link" href="Garch11Options.html">
+    <span class="label">Next</span>
+    <span class="title">Garch11Options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

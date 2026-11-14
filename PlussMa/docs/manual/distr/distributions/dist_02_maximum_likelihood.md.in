@@ -63,4 +63,11 @@ For the negative binomial, counts whose variance does not exceed their mean have
 5. Treat the uniform's and the boundary cases' intervals as approximate.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dist_02_maximum_likelihood/the_closed_form_families
+dist_02_maximum_likelihood/numerical_estimates_correlation_and_fixed_parame
+```
 <!-- apiref:toctree:end -->

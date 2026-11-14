@@ -20,13 +20,13 @@ With `stratified` on, each sample is drawn from its own equal-width stratum, whi
 ## Parameters
 
 `const integ::IntegrandFn &fn`
-: `Series -> Series`, evaluated once on all the sample points.
+: `Series (Series)`, evaluated once on all the sample points.
 
 `double a, double b`
 : The interval; either may be infinite.
 
 `const integ::IntegrandNdFn &fn`
-: `std::vector<Series> -> Series`: one `Series` of sample coordinates per axis.
+: `Series (std::vector<Series>)`: one `Series` of sample coordinates per axis.
 
 `const std::vector<std::pair<double, double>> &bounds`
 : One `(lower, upper)` pair per axis.

@@ -80,16 +80,16 @@ int main() {
   const std::vector<double> params = {1.5};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::Rayleigh, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Rayleigh, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Rayleigh, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Rayleigh, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::Rayleigh, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Rayleigh, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -129,7 +129,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::Rayleigh, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({0.5, 4.0}, f64);
-  const auto c = distr::cdf(dst::Rayleigh, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Rayleigh, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Rayleigh, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 0.5).to(pluss::ScalarType::Float64) * (draws <= 4.0).to(pluss::ScalarType::Float64)).mean());
@@ -170,16 +170,16 @@ int main() {
   const auto x = pluss::make_series({0.25, 0.75, 1.5, 3.0, 5.0, 8.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "scale 0.7:";
-  for (double v : distr::pdf(dst::Rayleigh, x, {0.7}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Rayleigh, x, {0.7}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "scale 1.5:";
-  for (double v : distr::pdf(dst::Rayleigh, x, {1.5}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Rayleigh, x, {1.5}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "scale 3  :";
-  for (double v : distr::pdf(dst::Rayleigh, x, {3.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Rayleigh, x, {3.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -219,13 +219,13 @@ int main() {
   const auto library = distr::cdf(dst::Rayleigh, x, params);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "formula:";
-  for (double v : formula.pull<double>()) std::cout << ' ' << v;
+  for (double v : formula.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "distr::cdf:";
-  for (double v : library.pull<double>()) std::cout << ' ' << v;
+  for (double v : library.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << std::scientific << std::setprecision(2) << "largest difference: " << as_f64((formula - library).abs().max()) << '\n';
 }
@@ -286,3 +286,16 @@ The two largest differences are 5.55e-17 for the density and 1.11e-16 for the di
 - [`Maxwell`](../continuous_positive/Maxwell.md)
 - [`Rice`](../continuous_positive/Rice.md)
 - [`distr::Rayleigh`](../object_based/Rayleigh.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Planck.html">
+    <span class="label">Previous</span>
+    <span class="title">Planck</span>
+  </a>
+  <a class="next-link" href="Rice.html">
+    <span class="label">Next</span>
+    <span class="title">Rice</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

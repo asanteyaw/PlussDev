@@ -1,0 +1,28 @@
+# Event streams on a clock
+
+[Back to Timeline and Duration by example](../timeline.md)
+
+Events do not arrive at regular intervals, yet reports are hourly. This page turns raw event timestamps and their values into per-hour totals, a rolling average whose window is a length of time rather than a number of rows, and a lookup of the latest reading at any moment.
+
+## The mental model
+
+A `Timeline` becomes an **axis** with `index()`: the call checks that it is one-dimensional, free of missing values and sorted, and returns an accessor whose operations take a value `Series` of the same length. The accessor does the clock arithmetic: `resample_sum(values, "1h")` assigns each value to its hour and adds, `rolling_mean(values, window)` averages the values inside a window given as a `Duration`, and `asof(moment)` finds the last event at or before a moment. The values stay an ordinary `Series`.
+
+## A traffic report
+
+Twelve events with request counts, spread over nearly three hours from 09:00 UTC. The program prints the event times, totals each hour, smooths over a half-hour window, and finds the latest event before 10:06:40.
+
+@@example timeline/hourly_traffic.cpp@@
+
+The totals `76`, `106` and `57` add up to the grand total of `239`: resampling moves every value into exactly one bin. The rolling mean is not a row-count window. Its value at 10:01 averages the events of the previous half hour (the 09:40 and 09:58 events and itself), so the same code behaves correctly when events bunch up or thin out, which a window of "the last three rows" cannot do. The as-of lookup answers "what was the latest known reading at 10:06:40": event number 5, at 10:01:40.
+
+## Decisions
+
+- **Window by rows or by time:** use the clock whenever events are irregular; a window of rows silently changes meaning when the spacing changes.
+- **Bins:** a frequency string such as `"1h"` fixes the bin width; empty hours appear as zero in a sum, so check the number of bins against what you expect.
+- **Sortedness:** `index()` insists on a sorted axis; sort the events (and carry the values with them) before you build it.
+- **As-of, not equality:** to align two streams, ask for the latest reading at or before each moment instead of requiring the same timestamp.
+
+## Where next
+
+Reference pages: [`from_epoch_seconds`](../../sphinx/api/timeline/from_epoch_seconds.md), [`index`](../../sphinx/api/timeline/index.md), [`strftime`](../../sphinx/api/timeline/strftime.md), [`resample_sum`](../../sphinx/api/timeline-index/resample_sum.md), [`rolling_mean`](../../sphinx/api/timeline-index/rolling_mean.md), [`asof`](../../sphinx/api/timeline-index/asof.md), [`minutes`](../../sphinx/api/duration/minutes.md). Next: [Reports from timestamps](reports_from_timestamps.md).

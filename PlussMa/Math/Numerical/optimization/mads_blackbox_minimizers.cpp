@@ -587,6 +587,7 @@ struct AdvancedEvalRecord {
 struct AdvancedState {
   Series incumbent{pluss::series::undefined()};
   Series incumbent_objectives{pluss::series::undefined()};
+  Series incumbent_constraints{pluss::series::undefined()};
   double best_merit{std::numeric_limits<double>::infinity()};
   double check_best{std::numeric_limits<double>::infinity()};
   double mesh_size{0.0};
@@ -604,9 +605,215 @@ struct AdvancedState {
 struct AdvancedBatchOutcome {
   Series best_point{pluss::series::undefined()};
   Series best_objectives{pluss::series::undefined()};
+  Series best_constraints{pluss::series::undefined()};
   double best_merit{std::numeric_limits<double>::infinity()};
   bool improved{false};
+  // Filled when the caller asks for them: the displacement of every evaluated point from the anchor and the constraint values
+  // there, which a failed poll turns into estimates of the constraint gradients.
+  std::vector<std::vector<double>> displacements{};
+  std::vector<std::vector<double>> constraint_values{};
 };
+
+// Directions along the boundary of the active constraints. When the incumbent sits on a constraint boundary, the only
+// improving moves lie in a narrow cone along the boundary, and a handful of evenly spread poll directions rarely lands in
+// it: the poll fails, the frame shrinks, and the run ends short of the constrained optimum. The poll that has just failed
+// has however already evaluated the constraints at 2n points around the incumbent, which is enough to estimate each
+// constraint's gradient by least squares. The unit directions returned are the tangents of the active constraints (an
+// orthonormal basis of the space orthogonal to their gradients), each in both senses, plus copies tilted inward, which
+// keep the step feasible when the boundary curves away.
+std::vector<std::vector<double>> boundary_tangent_directions(
+    const std::vector<std::vector<double>>& displacements,
+    const std::vector<std::vector<double>>& constraint_values,
+    const std::vector<double>& incumbent_constraints,
+    std::int64_t n) {
+  const std::size_t dim = static_cast<std::size_t>(n);
+  const std::size_t m = displacements.size();
+  const std::size_t n_con = incumbent_constraints.size();
+  if (m < dim || n_con == 0 || dim < 2) {
+    return {};
+  }
+
+  // Normal equations (D^T D) g = D^T y, solved by Cholesky with a tiny ridge.
+  std::vector<double> gram(dim * dim, 0.0);
+  for (const auto& d : displacements) {
+    for (std::size_t a = 0; a < dim; ++a) {
+      for (std::size_t b = 0; b < dim; ++b) {
+        gram[a * dim + b] += d[a] * d[b];
+      }
+    }
+  }
+  double trace = 0.0;
+  for (std::size_t a = 0; a < dim; ++a) {
+    trace += gram[a * dim + a];
+  }
+  if (!(trace > 0.0)) {
+    return {};
+  }
+  for (std::size_t a = 0; a < dim; ++a) {
+    gram[a * dim + a] += 1e-12 * trace;
+  }
+  std::vector<double> chol(dim * dim, 0.0);
+  for (std::size_t i = 0; i < dim; ++i) {
+    for (std::size_t j = 0; j <= i; ++j) {
+      double sum = gram[i * dim + j];
+      for (std::size_t k = 0; k < j; ++k) {
+        sum -= chol[i * dim + k] * chol[j * dim + k];
+      }
+      if (i == j) {
+        if (!(sum > 0.0)) {
+          return {};
+        }
+        chol[i * dim + i] = std::sqrt(sum);
+      } else {
+        chol[i * dim + j] = sum / chol[j * dim + j];
+      }
+    }
+  }
+  auto solve = [&](std::vector<double> rhs) {
+    for (std::size_t i = 0; i < dim; ++i) {
+      for (std::size_t k = 0; k < i; ++k) {
+        rhs[i] -= chol[i * dim + k] * rhs[k];
+      }
+      rhs[i] /= chol[i * dim + i];
+    }
+    for (std::size_t ii = dim; ii-- > 0;) {
+      for (std::size_t k = ii + 1; k < dim; ++k) {
+        rhs[ii] -= chol[k * dim + ii] * rhs[k];
+      }
+      rhs[ii] /= chol[ii * dim + ii];
+    }
+    return rhs;
+  };
+
+  std::vector<std::vector<double>> normals;  // unit gradients of the active constraints
+  for (std::size_t j = 0; j < n_con; ++j) {
+    std::vector<double> rhs(dim, 0.0);
+    double reach = 0.0;
+    bool usable = true;
+    std::vector<double> dc(m, 0.0);
+    for (std::size_t i = 0; i < m; ++i) {
+      if (constraint_values[i].size() != n_con || !std::isfinite(constraint_values[i][j])) {
+        usable = false;
+        break;
+      }
+      dc[i] = constraint_values[i][j] - incumbent_constraints[j];
+      reach = std::max(reach, std::abs(dc[i]));
+      for (std::size_t a = 0; a < dim; ++a) {
+        rhs[a] += displacements[i][a] * dc[i];
+      }
+    }
+    if (!usable || !(reach > 0.0) || !std::isfinite(incumbent_constraints[j])) {
+      continue;
+    }
+    // Active when the boundary lies within the reach of the poll: the constraint can change by `reach` over the poll.
+    if (incumbent_constraints[j] < -reach) {
+      continue;
+    }
+    std::vector<double> g = solve(std::move(rhs));
+    double norm = 0.0;
+    for (double v : g) {
+      norm += v * v;
+    }
+    norm = std::sqrt(norm);
+    if (!(norm > 1e-14) || !std::isfinite(norm)) {
+      continue;
+    }
+    for (double& v : g) {
+      v /= norm;
+    }
+    normals.push_back(std::move(g));
+  }
+  if (normals.empty()) {
+    return {};
+  }
+
+  // Orthonormal basis of the span of the normals, then of its complement (the tangent space), by Gram-Schmidt.
+  auto orthonormalise = [&](std::vector<double> v, const std::vector<std::vector<double>>& basis) {
+    for (int pass = 0; pass < 2; ++pass) {
+      for (const auto& b : basis) {
+        double dot = 0.0;
+        for (std::size_t a = 0; a < dim; ++a) {
+          dot += v[a] * b[a];
+        }
+        for (std::size_t a = 0; a < dim; ++a) {
+          v[a] -= dot * b[a];
+        }
+      }
+    }
+    double norm = 0.0;
+    for (double x : v) {
+      norm += x * x;
+    }
+    norm = std::sqrt(norm);
+    if (norm < 1e-6) {
+      v.clear();
+      return v;
+    }
+    for (double& x : v) {
+      x /= norm;
+    }
+    return v;
+  };
+  std::vector<std::vector<double>> span;
+  for (const auto& nrm : normals) {
+    std::vector<double> v = orthonormalise(nrm, span);
+    if (!v.empty()) {
+      span.push_back(std::move(v));
+    }
+  }
+  if (span.size() >= dim) {
+    return {};
+  }
+  std::vector<std::vector<double>> basis = span;
+  std::vector<std::vector<double>> tangents;
+  for (std::size_t i = 0; i < dim && basis.size() < dim; ++i) {
+    std::vector<double> e(dim, 0.0);
+    e[i] = 1.0;
+    std::vector<double> v = orthonormalise(std::move(e), basis);
+    if (!v.empty()) {
+      basis.push_back(v);
+      tangents.push_back(std::move(v));
+    }
+  }
+
+  // The outward normal common to the active constraints, for the inward tilt.
+  std::vector<double> outward(dim, 0.0);
+  for (const auto& nrm : normals) {
+    for (std::size_t a = 0; a < dim; ++a) {
+      outward[a] += nrm[a];
+    }
+  }
+  double outward_norm = 0.0;
+  for (double v : outward) {
+    outward_norm += v * v;
+  }
+  outward_norm = std::sqrt(outward_norm);
+  if (outward_norm > 0.0) {
+    for (double& v : outward) {
+      v /= outward_norm;
+    }
+  }
+
+  std::vector<std::vector<double>> directions;
+  for (const auto& t : tangents) {
+    for (const double sign : {1.0, -1.0}) {
+      std::vector<double> plain(dim), tilted(dim);
+      double tilted_norm = 0.0;
+      for (std::size_t a = 0; a < dim; ++a) {
+        plain[a] = sign * t[a];
+        tilted[a] = sign * t[a] - 0.5 * outward[a];
+        tilted_norm += tilted[a] * tilted[a];
+      }
+      tilted_norm = std::sqrt(tilted_norm);
+      for (double& v : tilted) {
+        v /= tilted_norm;
+      }
+      directions.push_back(std::move(plain));
+      directions.push_back(std::move(tilted));
+    }
+  }
+  return directions;
+}
 
 double positive_violation_sum(
     const Series& constraints,
@@ -1134,6 +1341,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
   state.best_merit = initial_eval.merit;
   state.check_best = state.best_merit;
   state.incumbent_objectives = initial_eval.objectives.to(setup.work_cfg.platform, setup.work_cfg.dtype);
+  state.incumbent_constraints = initial_eval.constraints;
   maybe_print_iteration(
       MadsState{
           .incumbent = state.incumbent,
@@ -1149,11 +1357,14 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
   RngState series_rng{config.rng_seed, 0ULL};
   std::mt19937_64 host_rng(config.rng_seed ^ 0xD1B54A32D192ED03ULL);
 
-  auto evaluate_offsets_batch = [&](const Series& offsets, const Series& anchor) {
+  auto evaluate_offsets_batch = [&](const Series& offsets, const Series& anchor, bool record = false) {
     AdvancedBatchOutcome out;
     out.best_point = state.incumbent;
     out.best_objectives = state.incumbent_objectives;
+    out.best_constraints = state.incumbent_constraints;
     out.best_merit = state.best_merit;
+    const std::vector<double> anchor_values = record ? anchor.to(ScalarType::Float64).contiguous().host<double>().array().data
+                                                     : std::vector<double>{};
 
     const std::int64_t n_rows = offsets.sizes()[0];
     const std::int64_t n_dim_local = offsets.sizes()[1];
@@ -1167,12 +1378,21 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       const Series candidate = project_to_bounds_and_mesh(
           candidates.select(0, i), bounds, anchor, state.mesh_size);
       const AdvancedEvalRecord eval = evaluate_point(candidate);
+      if (record && eval.evaluation_ok && eval.constraints.defined()) {
+        std::vector<double> displacement = candidate.to(ScalarType::Float64).contiguous().host<double>().array().data;
+        for (std::size_t a = 0; a < displacement.size(); ++a) {
+          displacement[a] -= anchor_values[a];
+        }
+        out.displacements.push_back(std::move(displacement));
+        out.constraint_values.push_back(eval.constraints.to(ScalarType::Float64).contiguous().host<double>().array().data);
+      }
       const double merit_floor = std::isfinite(out.best_merit)
           ? 8.0 * std::numeric_limits<double>::epsilon() * std::abs(out.best_merit) : 0.0;
       if (eval.merit + std::max(config.min_improvement, merit_floor) < out.best_merit) {
         out.best_merit = eval.merit;
         out.best_point = candidate;
         out.best_objectives = eval.objectives.to(setup.work_cfg.platform, setup.work_cfg.dtype);
+        out.best_constraints = eval.constraints;
         out.improved = true;
         if (config.opportunistic) {
           break;
@@ -1205,6 +1425,7 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
         improved = true;
         state.incumbent = search_out.best_point;
         state.incumbent_objectives = search_out.best_objectives;
+        state.incumbent_constraints = search_out.best_constraints;
         state.best_merit = search_out.best_merit;
         state.last_phase = "accept_search";
       }
@@ -1222,13 +1443,44 @@ BlackboxAdvancedOutcome mads_blackbox_minimizer(
       }
       poll_offsets = reorder_offsets_by_surrogate(poll_offsets, state.incumbent);
 
-      const AdvancedBatchOutcome poll_out = evaluate_offsets_batch(poll_offsets, state.incumbent);
+      const bool constrained = config.constraint_handling != ConstraintHandling::Ignore && state.constraint_dim > 0;
+      const AdvancedBatchOutcome poll_out = evaluate_offsets_batch(poll_offsets, state.incumbent, constrained);
       if (poll_out.improved) {
         improved = true;
         state.incumbent = poll_out.best_point;
         state.incumbent_objectives = poll_out.best_objectives;
+        state.incumbent_constraints = poll_out.best_constraints;
         state.best_merit = poll_out.best_merit;
         state.last_phase = "accept_poll";
+      } else if (constrained && n_dim >= 2 && state.incumbent_constraints.defined() &&
+                 state.evaluations < max_evaluations && state.total_evaluations < max_total_evaluations) {
+        // The poll failed: look along the boundary of the constraints it showed to be active (see the helper's comment).
+        const std::vector<double> incumbent_constraints =
+            state.incumbent_constraints.to(ScalarType::Float64).contiguous().host<double>().array().data;
+        const std::vector<std::vector<double>> directions = boundary_tangent_directions(
+            poll_out.displacements, poll_out.constraint_values, incumbent_constraints, n_dim);
+        if (!directions.empty()) {
+          std::vector<double> flat;
+          flat.reserve(directions.size() * static_cast<std::size_t>(n_dim));
+          for (const auto& d : directions) {
+            for (double v : d) {
+              flat.push_back(v * state.frame_size);
+            }
+          }
+          const Series tangent_offsets =
+              pluss::make_series(flat, {static_cast<std::int64_t>(directions.size()), n_dim},
+                                 Config{}.with_dtype(ScalarType::Float64).with_platform(pluss::pCPU))
+                  .to(setup.work_cfg.platform, setup.work_cfg.dtype);
+          const AdvancedBatchOutcome tangent_out = evaluate_offsets_batch(tangent_offsets, state.incumbent);
+          if (tangent_out.improved) {
+            improved = true;
+            state.incumbent = tangent_out.best_point;
+            state.incumbent_objectives = tangent_out.best_objectives;
+            state.incumbent_constraints = tangent_out.best_constraints;
+            state.best_merit = tangent_out.best_merit;
+            state.last_phase = "accept_boundary";
+          }
+        }
       }
     }
 
@@ -1660,13 +1912,16 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
     if (!ev.evaluation_ok || !ev.objectives.defined() || ev.objectives.numel() < 1) {
       return false;
     }
-    for (double v : ev.objectives.to(ScalarType::Float64).host<double>().array().data) {
+    // Held in a local: ranging over a member of the temporary host array would dangle and skip the finite check.
+    const std::vector<double> objective_values = ev.objectives.to(ScalarType::Float64).host<double>().array().data;
+    for (double v : objective_values) {
       if (!std::isfinite(v)) {
         return false;
       }
     }
     if (ev.constraints.defined()) {
-      for (double v : ev.constraints.to(ScalarType::Float64).host<double>().array().data) {
+      const std::vector<double> constraint_values = ev.constraints.to(ScalarType::Float64).host<double>().array().data;
+      for (double v : constraint_values) {
         if (!std::isfinite(v) || v > config.base.constraint_tolerance) {
           return false;
         }
@@ -1702,7 +1957,8 @@ BlackboxAdvancedOutcome discomads_blackbox_minimizer(
       const BlackboxEvaluation rescue = blackbox(shaped);
       ++rescue_calls;
       if (valid_eval(rescue) && rescue.objectives.numel() == 1) {
-        const double value = rescue.objectives.to(ScalarType::Float64).item<double>();
+        const std::vector<double> rescue_values = rescue.objectives.to(ScalarType::Float64).host<double>().array().data;
+        const double value = rescue_values.front();
         if (value < rescue_value) {
           have_rescue = true;
           rescue_value = value;

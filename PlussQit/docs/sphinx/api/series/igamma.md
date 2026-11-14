@@ -32,7 +32,7 @@ probabilities: the chi-square CDF with `k` degrees of freedom is
 
 Behaviour:
 
-- `P(a, 0) = 0` and `P(a, x) -> 1` as `x -> inf`; the function is monotone
+- `P(a, 0) = 0` and `1 P(a, x)` as `x -> inf`; the function is monotone
   increasing in `x`.
 - `P(a, x) + Q(a, x) = 1`, where `Q` is [`igammac`](igammac.md), the upper
   tail.

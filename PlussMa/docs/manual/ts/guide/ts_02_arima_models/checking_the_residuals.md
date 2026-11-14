@@ -197,3 +197,16 @@ The mean is adequately captured (the first test passes), yet the squared residua
 - **Plot them.** A residual plot shows level shifts, outliers and changing spread that no single statistic summarises; see Chapter 7.
 
 Where next: [Seasonal models](seasonal_models.md) handles dependence that repeats at a fixed period, which a plain ARMA cannot represent compactly.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="choosing_the_orders.html">
+    <span class="label">Previous</span>
+    <span class="title">Choosing the orders</span>
+  </a>
+  <a class="next-link" href="seasonal_models.html">
+    <span class="label">Next</span>
+    <span class="title">Seasonal models</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

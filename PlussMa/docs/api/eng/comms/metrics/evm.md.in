@@ -1,0 +1,58 @@
+# `comms::evm`
+
+The error vector magnitude.
+
+## Signature
+
+```cpp
+pluss::Series comms::evm(const pluss::Series& received, const pluss::Series& reference);
+```
+
+## What It Does
+
+Returns the root-mean-square distance between the received and reference symbols divided by the root-mean-square of the reference, over the last axis.
+
+## Parameters
+
+`received`
+: The received symbols, `[..., N]`.
+
+`reference`
+: The ideal symbols, of the same shape.
+
+## Returns
+
+A real array of shape `[...]`; zero when the received symbols equal the reference.
+
+## Errors
+
+Throws `pluss::Error` for arrays of different shapes or an undefined array.
+
+## Interpretation and Use
+
+For unit-energy symbols in noise of variance `N0` the result is `sqrt(N0)`. It reads gain and phase errors as well as noise, so it is a good quality measure of a transmitter or of a processing chain.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+EVM against the noise level.
+
+@@example Eng/api/comms_evm_noise.cpp@@
+
+### Example 2
+
+Frames, and a gain error.
+
+@@example Eng/api/comms_evm_batch.cpp@@
+
+### Example 3
+
+Rejected arrays.
+
+@@example Eng/api/comms_evm_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

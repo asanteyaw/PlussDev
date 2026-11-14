@@ -48,3 +48,12 @@ A single stage (plain MADS) settles in the nearest local minimum, value 0.995, o
 - **Run several seeds either way.** Both variants are random; report the spread.
 
 Where next: That completes the derivative-free chapters; [linear programming](../../linprog.md) is next.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="decomposition_variants.html">
+    <span class="label">Previous</span>
+    <span class="title">Variants for many variables: cooperative and partial-space MADS</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

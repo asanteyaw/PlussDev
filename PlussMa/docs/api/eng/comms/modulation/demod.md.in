@@ -1,0 +1,58 @@
+# `comms::demod`
+
+Hard-decision demodulation to bits.
+
+## Signature
+
+```cpp
+pluss::Series comms::demod(const comms::Constellation& constellation, const pluss::Series& received);
+```
+
+## What It Does
+
+Detects the nearest point of every received symbol and expands its label to bits: `to_bits(detect(constellation, received), constellation.bits)`.
+
+## Parameters
+
+`constellation`
+: The constellation the symbols were sent from.
+
+`received`
+: The received complex symbols, `[..., N]`.
+
+## Returns
+
+An `Int64` array of zeros and ones, `[..., N * bits]`.
+
+## Errors
+
+Throws `pluss::Error` for a constellation not made by `psk` or `qam` or an undefined or scalar `received`.
+
+## Interpretation and Use
+
+Use `llr` instead when a decoder follows: hard decisions discard how close each symbol was to the boundary.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Bit error rate against Eb/N0.
+
+@@example Eng/api/comms_demodulate_ber.cpp@@
+
+### Example 2
+
+Frames in a batch.
+
+@@example Eng/api/comms_demodulate_batch.cpp@@
+
+### Example 3
+
+A full round trip.
+
+@@example Eng/api/comms_modulate_batch.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

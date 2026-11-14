@@ -1,0 +1,43 @@
+# Circuit model
+
+This branch describes a circuit. A `Net` collects groups of elements, `Branches`, `Controls`, `Amps`, `Diodes` and `Transistors`, and `make` validates it and compiles an immutable `Circuit`.
+
+## Choosing A Surface
+
+Describe the circuit once; sweep component values through leading axes. Node `0` is the ground.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A voltage divider.
+
+@@example Eng/api/circuit_divider.cpp@@
+
+### Example 2
+
+Every element kind in one circuit.
+
+@@example Eng/api/circuit_all_elements.cpp@@
+
+### Example 3
+
+A batched resistor.
+
+@@example Eng/api/circuit_batch_net.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+model/Branches
+model/Controls
+model/Amps
+model/Net
+model/CircuitModel
+model/make
+```
+<!-- apiref:toctree:end -->

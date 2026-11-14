@@ -174,3 +174,16 @@ The walk's autocorrelation starts at 0.95 and loses only a few hundredths per la
 - **Prefer the biased normalisation** unless you have a reason; it is the one that guarantees a valid autocorrelation sequence.
 
 Where next: [White noise, unit roots, stationarity](white_noise_unit_roots_stationarity.md) turns the visual impression into formal tests.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_transforms.html">
+    <span class="label">Previous</span>
+    <span class="title">The transforms</span>
+  </a>
+  <a class="next-link" href="white_noise_unit_roots_stationarity.html">
+    <span class="label">Next</span>
+    <span class="title">White noise, unit roots, stationarity</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

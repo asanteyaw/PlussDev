@@ -1,0 +1,58 @@
+# `robot::inertia`
+
+The joint-space inertia matrix.
+
+## Signature
+
+```cpp
+pluss::Series robot::inertia(const robot::Robot& robot, const pluss::Series& q);
+```
+
+## What It Does
+
+Returns the matrix `M(q)` for which the kinetic energy is `0.5 qd^T M qd` and the torques of a motion are `M qdd` plus the bias. Column `j` is computed as the torque that gives a unit acceleration at joint `j` with no velocity and no gravity.
+
+## Parameters
+
+`robot`
+: The compiled robot, with mass properties.
+
+`q`
+: The joint values, a real floating `[..., links]` array.
+
+## Returns
+
+A real `[..., links, links]` array, symmetric and positive definite for a robot with positive masses and inertias.
+
+## Errors
+
+Throws `pluss::Error` when the robot has no mass properties or `q` is not a real floating `[..., links]` array on the robot's platform.
+
+## Interpretation and Use
+
+The matrix does not depend on joint rates or gravity. In a serial chain the inertia seen at a joint depends on the joints farther out, not on those nearer the base: the planar arm's matrix does not depend on the shoulder angle. It is what to invert for forward dynamics and the inertia a controller sees.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The planar-arm inertia matrix against its closed form.
+
+@@example Eng/api/robot_dyn_mass.cpp@@
+
+### Example 2
+
+The inertia as the elbow bends.
+
+@@example Eng/api/robot_dyn_mass_batch.cpp@@
+
+### Example 3
+
+Kinetic energy from the matrix.
+
+@@example Eng/api/robot_dyn_energy.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

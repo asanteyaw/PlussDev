@@ -18,7 +18,7 @@ int main() {
   // The drift of g(X) = X^2 from Ito's lemma, divided by g: the exponential growth rate of E[g(X)].
   const pluss::Series point = pluss::make_series(std::vector<double>{x0}, {1}).to(f64);
   const auto d = point.calc.diff.ito([](const pluss::Series& s) { return s.mul(s); }, point.mul(mu_c), point.mul(sg));
-  const double rate = d.drift.item<double>() / (x0 * x0);
+  const double rate = d.drift.squeeze().item<double>() / (x0 * x0);
   std::cout << std::fixed << std::setprecision(5);
   std::cout << "growth rate of E[X^2] from Ito's lemma: " << rate << "  (2 mu + sigma^2 = " << 2 * mu_c + sg * sg << ")\n";
 

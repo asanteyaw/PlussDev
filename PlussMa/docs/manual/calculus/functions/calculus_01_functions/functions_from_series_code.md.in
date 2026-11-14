@@ -44,13 +44,13 @@ int main() {
   const math::Function structural = math::function({"x"}, [](math::Function v) { return v.sin() * v.exp(); });
   const math::Function opaque = math::function({"x"}, [](const pluss::Series &v) { return v.sin().mul(v.exp()); });
 
-  out.writeln("structural values", structural({x}).pull<double>());
-  out.writeln("opaque values    ", opaque({x}).pull<double>());
+  out.writeln("structural values", structural({x}).items<double>());
+  out.writeln("opaque values    ", opaque({x}).items<double>());
   out.writeln("provenance: structural", name(structural.provenance()), " opaque", name(opaque.provenance()));
 
   const math::Function shifted = opaque + 1.0;
-  out.writeln("opaque + 1       ", shifted({x}).pull<double>(), name(shifted.provenance()));
-  out.writeln("sin(2 * opaque)  ", (opaque * 2.0).sin()({x}).pull<double>());
+  out.writeln("opaque + 1       ", shifted({x}).items<double>(), name(shifted.provenance()));
+  out.writeln("sin(2 * opaque)  ", (opaque * 2.0).sin()({x}).items<double>());
 
   const math::Function exact_primitive = operators::antiderivative("x")(math::function({"x"}, [](math::Function v) { return v.pow(3); }));
   const math::Function numeric_primitive = operators::antiderivative("x")(math::function({"x"}, [](math::Function v) { return (-v.pow(2)).exp(); }));
@@ -118,3 +118,12 @@ Prefer the `Function` vocabulary whenever the formula can be written in it. It i
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="domains_and_errors.html">
+    <span class="label">Previous</span>
+    <span class="title">Domains and errors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

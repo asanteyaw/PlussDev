@@ -51,7 +51,7 @@ Evaluate a continuous controller at two frequencies.
 #include <complex>
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -85,7 +85,7 @@ Evaluate a sampled controller using its stored substitutions.
 #include <complex>
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -128,7 +128,7 @@ Review controller validation that precedes response evaluation.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -162,7 +162,6 @@ Output
 uncontrollable plant rejected = eng::control::place: B must have non-zero numerical rank
 negative filter rejected = eng::control::pid: filter must be non-negative
 ```
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="pid.html">

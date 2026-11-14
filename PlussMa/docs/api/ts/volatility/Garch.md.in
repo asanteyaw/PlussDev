@@ -136,3 +136,20 @@ int main() {
 
 - [`GarchOptions`](GarchOptions.md)
 - [`GarchFit`](GarchFit.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="EgarchOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">EgarchOptions</span>
+  </a>
+  <a class="next-link" href="Garch11.html">
+    <span class="label">Next</span>
+    <span class="title">Garch11</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

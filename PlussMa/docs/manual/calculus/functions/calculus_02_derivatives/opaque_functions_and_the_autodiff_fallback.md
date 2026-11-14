@@ -45,8 +45,8 @@ int main() {
   for (const std::int64_t order : {1, 2, 3}) {
     const math::Function by_autodiff = operators::differential("x", order, autodiff)(opaque);
     const math::Function exact = operators::differential("x", order)(structural);
-    out.writeln("order", order, " autodiff", by_autodiff({x}).pull<double>());
-    out.writeln("        exact   ", exact({x}).pull<double>());
+    out.writeln("order", order, " autodiff", by_autodiff({x}).items<double>());
+    out.writeln("        exact   ", exact({x}).items<double>());
   }
 }
 ```
@@ -139,3 +139,16 @@ The fallback is a bridge, not a replacement. Use it when a derivative is needed 
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="non_smooth_points.html">
+    <span class="label">Previous</span>
+    <span class="title">Non-smooth points</span>
+  </a>
+  <a class="next-link" href="absolute_and_covariant_differentials.html">
+    <span class="label">Next</span>
+    <span class="title">Absolute and covariant differentials</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

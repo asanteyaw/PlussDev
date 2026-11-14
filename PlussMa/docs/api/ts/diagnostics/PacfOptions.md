@@ -21,3 +21,12 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`pacf`](pacf.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pacf.html">
+    <span class="label">Previous</span>
+    <span class="title">pacf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

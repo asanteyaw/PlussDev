@@ -55,4 +55,15 @@ Inputs are read as for least squares ([Shapes and inputs](regression_01_least_sq
 6. A prediction is a prediction of the τ-quantile, not of the mean.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+regression_03_quantile_regression/median_regression_and_outliers
+regression_03_quantile_regression/several_quantiles
+regression_03_quantile_regression/covariance_choices
+regression_03_quantile_regression/optimiser_controls
+regression_03_quantile_regression/case_weights
+regression_03_quantile_regression/prediction_summary_and_options
+```
 <!-- apiref:toctree:end -->

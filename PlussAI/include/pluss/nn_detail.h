@@ -174,6 +174,8 @@ inline Series affine_(const Series& input, const Series& weight, const Series& b
 inline Series apply_nonlinearity_(const Series& x, std::string_view nonlinearity) {
   if (nonlinearity == "tanh") return x.tanh();
   if (nonlinearity == "relu") return x.relu();
+  static const bool pluss_vocab_1 = pluss::exception::names::define("nonlinearity", {"tanh", "relu"});
+  (void)pluss_vocab_1;
   PLUSS_FAIL(std::string("pluss::rnn: unsupported nonlinearity '") + std::string(nonlinearity) + "'");
 }
 

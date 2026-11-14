@@ -9,7 +9,7 @@ Full Unicode normalization and case conversion use the Unicode backend discovere
 ### API Signature
 
 ```text
-Slate::map_elements(fn: function<SlateValue(const SlateValue&)>) -> Slate
+Slate Slate::map_elements(fn: function<SlateValue(const SlateValue&)>)
 ```
 
 ### Notes
@@ -97,7 +97,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::aggregate_with(fn: function<Slate(const Slate&)>, shape: ResultShape = Reduce) -> Slate
+Slate Slate::aggregate_with(fn: function<Slate(const Slate&)>, shape: ResultShape = Reduce)
 ```
 
 ### Notes
@@ -188,7 +188,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::flow(fn: function<Slate(const Slate&)>) -> Slate
+Slate Slate::flow(fn: function<Slate(const Slate&)>)
 ```
 
 ### Notes
@@ -276,7 +276,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::map_cases(fn: function<SlateValue(const DataFrame&)>) -> Slate
+Slate DataFrame::map_cases(fn: function<SlateValue(const DataFrame&)>)
 ```
 
 ### Notes
@@ -364,7 +364,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::apply_cases(fn: function<DataFrame(const DataFrame&)>, shape: ResultShape = Infer) -> DataFrame
+DataFrame DataFrame::apply_cases(fn: function<DataFrame(const DataFrame&)>, shape: ResultShape = Infer)
 ```
 
 ### Notes
@@ -455,7 +455,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::map_elements(fn: function<SlateValue(const SlateValue&)>, features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::map_elements(fn: function<SlateValue(const SlateValue&)>, features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -546,7 +546,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::aggregate_with(fn: function<Slate(const DataFrame&)>, shape: ResultShape = Reduce) -> Slate
+Slate DataFrame::aggregate_with(fn: function<Slate(const DataFrame&)>, shape: ResultShape = Reduce)
 ```
 
 ### Notes
@@ -637,7 +637,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::flow(fn: function<DataFrame(const DataFrame&)>) -> DataFrame
+DataFrame DataFrame::flow(fn: function<DataFrame(const DataFrame&)>)
 ```
 
 ### Notes
@@ -725,7 +725,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Atlas::map_elements(fn: function<SlateValue(const SlateValue&)>) -> Atlas
+Atlas Atlas::map_elements(fn: function<SlateValue(const SlateValue&)>)
 ```
 
 ### Notes
@@ -813,7 +813,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-AtlasTsAccessor::rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {}) -> Atlas
+Atlas AtlasTsAccessor::rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {})
 ```
 
 ### Notes
@@ -907,7 +907,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Atlas::flow(fn: function<Atlas(const Atlas&)>) -> Atlas
+Atlas Atlas::flow(fn: function<Atlas(const Atlas&)>)
 ```
 
 ### Notes
@@ -995,7 +995,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::upper() -> Slate
+Slate Slate::upper()
 ```
 
 ### Notes
@@ -1082,7 +1082,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::casefold() -> Slate
+Slate Slate::casefold()
 ```
 
 ### Notes
@@ -1169,7 +1169,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::title_case() -> Slate
+Slate Slate::title_case()
 ```
 
 ### Notes
@@ -1256,7 +1256,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::text_length() -> Slate
+Slate Slate::text_length()
 ```
 
 ### Notes
@@ -1343,7 +1343,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::starts_with(prefix: string_view) -> Slate
+Slate Slate::starts_with(prefix: string_view)
 ```
 
 ### Notes
@@ -1431,7 +1431,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::ends_with(suffix: string_view) -> Slate
+Slate Slate::ends_with(suffix: string_view)
 ```
 
 ### Notes
@@ -1519,7 +1519,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::regex_match(pattern: string_view) -> Slate
+Slate Slate::regex_match(pattern: string_view)
 ```
 
 ### Notes
@@ -1607,7 +1607,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::regex_fullmatch(pattern: string_view) -> Slate
+Slate Slate::regex_fullmatch(pattern: string_view)
 ```
 
 ### Notes
@@ -1695,7 +1695,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::regex_extract(pattern: string_view, names: RangeView<string_view> = {}) -> DataFrame
+DataFrame Slate::regex_extract(pattern: string_view, names: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -1786,7 +1786,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::split_text(delimiter: string_view, limit: int64 = -1, prefix: string = "part") -> DataFrame
+DataFrame Slate::split_text(delimiter: string_view, limit: int64 = -1, prefix: string = "part")
 ```
 
 ### Notes
@@ -1880,7 +1880,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::partition_text(separator: string_view, prefix: string = "part") -> DataFrame
+DataFrame Slate::partition_text(separator: string_view, prefix: string = "part")
 ```
 
 ### Notes
@@ -1971,7 +1971,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::pad_text(width: int64, align: TextAlign = Left, fill: char = ' ') -> Slate
+Slate Slate::pad_text(width: int64, align: TextAlign = Left, fill: char = ' ')
 ```
 
 ### Notes
@@ -2065,7 +2065,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::slice_text(start: int64, stop: optional<int64> = nullopt, step: int64 = 1) -> Slate
+Slate Slate::slice_text(start: int64, stop: optional<int64> = nullopt, step: int64 = 1)
 ```
 
 ### Notes
@@ -2159,7 +2159,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::normalize_text(form: UnicodeForm = NFC) -> Slate
+Slate Slate::normalize_text(form: UnicodeForm = NFC)
 ```
 
 ### Notes
@@ -2247,7 +2247,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::encode_text(encoding: string_view = "base64") -> Slate
+Slate Slate::encode_text(encoding: string_view = "base64")
 ```
 
 ### Notes
@@ -2335,7 +2335,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-Slate::text_indicators(delimiter: string_view = "|", prefix: string = "") -> DataFrame
+DataFrame Slate::text_indicators(delimiter: string_view = "|", prefix: string = "")
 ```
 
 ### Notes
@@ -2426,7 +2426,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_upper(features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_upper(features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2514,7 +2514,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_casefold(features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_casefold(features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2602,7 +2602,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_title(features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_title(features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2690,7 +2690,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_lengths(features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_lengths(features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2778,7 +2778,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_starts_with(prefix: string_view, features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_starts_with(prefix: string_view, features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2869,7 +2869,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_ends_with(suffix: string_view, features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_ends_with(suffix: string_view, features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -2960,7 +2960,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_matches(pattern: string_view, full: bool = false, features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_matches(pattern: string_view, full: bool = false, features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3054,7 +3054,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_pad(width: int64, align: TextAlign = Left, fill: char = ' ', features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_pad(width: int64, align: TextAlign = Left, fill: char = ' ', features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3151,7 +3151,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_slice(start: int64, stop: optional<int64> = nullopt, step: int64 = 1, features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_slice(start: int64, stop: optional<int64> = nullopt, step: int64 = 1, features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3248,7 +3248,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_normalize(form: UnicodeForm = NFC, features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_normalize(form: UnicodeForm = NFC, features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3339,7 +3339,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_encode(encoding: string_view = "base64", features: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::text_encode(encoding: string_view = "base64", features: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3430,7 +3430,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::regex_groups(feature: string_view, pattern: string_view, names: RangeView<string_view> = {}) -> DataFrame
+DataFrame DataFrame::regex_groups(feature: string_view, pattern: string_view, names: RangeView<string_view> = {})
 ```
 
 ### Notes
@@ -3524,7 +3524,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::split_feature(feature: string_view, delimiter: string_view, limit: int64 = -1, prefix: string = "part") -> DataFrame
+DataFrame DataFrame::split_feature(feature: string_view, delimiter: string_view, limit: int64 = -1, prefix: string = "part")
 ```
 
 ### Notes
@@ -3621,7 +3621,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::partition_feature(feature: string_view, separator: string_view, prefix: string = "part") -> DataFrame
+DataFrame DataFrame::partition_feature(feature: string_view, separator: string_view, prefix: string = "part")
 ```
 
 ### Notes
@@ -3715,7 +3715,7 @@ repeated calls are deterministic and produce identical values and validity
 ### API Signature
 
 ```text
-DataFrame::text_indicators(feature: string_view, delimiter: string_view = "|", prefix: string = "") -> DataFrame
+DataFrame DataFrame::text_indicators(feature: string_view, delimiter: string_view = "|", prefix: string = "")
 ```
 
 ### Notes

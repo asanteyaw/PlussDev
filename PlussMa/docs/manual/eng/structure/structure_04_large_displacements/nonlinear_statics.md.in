@@ -1,0 +1,391 @@
+# Large-displacement statics
+
+[Back to Structures 4: Large Displacements](../structure_04_large_displacements.md)
+
+Bend a slender cantilever far enough and the linear answer is wrong: the tip does not go as far down as the linear formula says, because the beam turns toward the load and shortens, and its tip moves inward. `solve` with `NonlinearOptions` finds the equilibrium of a frame whose members rotate by large angles, staying elastic. This page solves a cantilever under loads that bend it through a large angle and checks the result against the exact elastica, shows that a rigid rotation costs no strain energy, and explains the load-step controls and what a failed continuation looks like.
+
+## The mental model
+
+The formulation is **corotational**: each member carries a frame of reference that follows its rigid motion, and strains are measured against it, so a member that turns without deforming carries no force. The member itself stays a linear-elastic beam with axial stiffness `E A / L` and bending stiffness `E I / L`, relative to its current chord. Rotations may be large; strains are assumed small. That is the right model for slender flexible members, and not for yielding, or for strains that are themselves large.
+
+The equilibrium is nonlinear, so it is found by **load stepping**: the load is applied in steps, each solved by Newton's method from the previous equilibrium, with a line search to keep each iteration from overshooting. `solve(frame, load, fix, options)` with a `NonlinearOptions` returns a `NonlinearResult`:
+
+| Member | Shape | Meaning |
+|---|---|---|
+| `displacement` | `[..., node, 3]` | `(ux, uy, rz)` of each node, measured from the original position |
+| `reaction` | `[..., node, 3]` | support force and moment, zero at free degrees of freedom |
+| `end_force` | `[..., member, 6]` | end actions in the **current** local axes of each member |
+| `energy` | `[...]` | strain energy |
+| `residual_norm`, `converged` | `[...]` | the out-of-balance force and whether it met the tolerance |
+| `load_factor` | a number | the fraction of the load reached, `1` for a complete solve |
+| `iterations`, `steps`, `cutbacks` | numbers | Newton iterations in all, load steps taken, and step halvings forced |
+
+`NonlinearOptions` holds `load_steps` (the number of equal steps to aim for), `max_iterations` per step, `max_line_search`, `max_cutbacks` (the number of consecutive halvings allowed after a failed step), `relative_tolerance` and `absolute_tolerance` on the out-of-balance force, and `solve` for the inner linear solves. A step that fails to converge is halved and retried; a successful step lets the increment grow again towards its original size.
+
+## A cantilever bent through a large angle
+
+The exact solution for a cantilever with an end load is Euler's elastica. In terms of the dimensionless load `alpha = P L^2 / (E I)` it gives, for `alpha = 1.2`, a tip deflection of `0.34901 L` down and a tip that has moved `0.07640 L` toward the wall; for `alpha = 4.8`, `0.70629 L` and `0.37695 L`. The linear formula says `alpha / 3 = 0.4 L` and `1.6 L` of deflection and no inward motion; the second is more than the beam is long.
+
+The cantilever has `L = 2 m` and `E I = 16.67 kN m^2`, so these loads are about `5000 N` and `20000 N`. The program divides it into 16 members and solves each load in 20 steps, printing the tip position, the linear prediction, and the work done by the solver.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 16;
+  const double length = 2.0, stiffness = 200e9 * 8.333e-8;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(length * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to}, {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9))});
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  const std::size_t tip = 3 * members;
+
+  struct Case { double alpha, down, inward; };
+  for (const Case &c : {Case{1.2, 0.349010, 0.076400}, Case{4.8, 0.706293, 0.376948}}) {
+    const double load = c.alpha * stiffness / (length * length);
+    std::vector<double> nodal(3 * (members + 1), 0.0);
+    nodal[tip + 1] = -load;
+    st::NonlinearOptions options;
+    options.load_steps = 20;
+    const auto r = st::solve(frame, grid(nodal, 3), wall, options);
+    const auto linear = st::solve(frame, grid(nodal, 3), wall);
+    const auto u = flat(r.displacement);
+    out.writeln("alpha ", c.alpha, " (load ", load, " N):");
+    out.writeln("  tip down / L:   nonlinear ", -u[tip + 1] / length, "   elastica ", c.down, "   linear ", -flat(linear.displacement)[tip + 1] / length);
+    out.writeln("  tip inward / L: nonlinear ", -u[tip] / length, "   elastica ", c.inward, "   linear ", -flat(linear.displacement)[tip] / length);
+    out.writeln("  converged ", r.converged.item<bool>(), ", load factor ", r.load_factor, ", steps ", r.steps, ", cutbacks ", r.cutbacks, ", Newton iterations ", r.iterations);
+  }
+}
+```
+
+The nonlinear tip positions match the elastica to a fraction of a percent, with the finite-element model slightly stiffer, and the linear answers are far off. The nonlinear solution has an inward motion of the tip that the linear one cannot represent at all. The end actions reported are in the *current* axes of each member, so the axial force near the wall is no longer the horizontal component of the load.
+
+## A rigid rotation costs nothing
+
+A defining property of the corotational formulation is that rigid motion produces no strain. The program prescribes a rotation of a three-member beam by `60` degrees about its left end, giving every node the rotation and displacement of that rigid motion through `Fix::value`, with no load, and prints the largest end action and the strain energy. A linear model would report a large spurious force for such a rotation, since a rotation of `60` degrees displaces the tip by more than the beam's length.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2).with_sep(""));
+  const int members = 3;
+  const double length = 2.0, angle = M_PI / 3.0;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(length * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to}, {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9))});
+
+  // every degree of freedom of every node is prescribed to the rigid rotation of the whole beam about node 0
+  std::vector<std::int64_t> node, axis;
+  std::vector<double> value;
+  for (int i = 0; i <= members; ++i) {
+    const double x = length * i / members;
+    for (int a = 0; a < 3; ++a) {
+      node.push_back(i);
+      axis.push_back(a);
+    }
+    value.push_back(x * (std::cos(angle) - 1.0));
+    value.push_back(x * std::sin(angle));
+    value.push_back(angle);
+  }
+  const st::Fix rotation{node, axis, vec(value)};
+  const auto no_load = pluss::series::zeros({members + 1, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto r = st::solve(frame, no_load, rotation, st::NonlinearOptions{});
+
+  out.writeln("largest end action after a 60 degree rigid rotation (N or N m): ", r.end_force.abs().max().item<double>());
+  out.writeln("strain energy (J): ", r.energy.item<double>());
+  out.writeln("tip moved by (m): ", flat(r.displacement)[3 * members], " ", flat(r.displacement)[3 * members + 1]);
+}
+```
+
+The end actions and the strain energy are zero to rounding, while the tip has moved by `-1.0` m horizontally and `1.73` m vertically. This is also a good test of any large-displacement solver you meet: it must not produce force from motion that deforms nothing.
+
+## Load steps and failure
+
+How many steps are needed depends on how nonlinear the response is and how stiff the structure is axially compared with its bending. The program solves the `alpha = 4.8` cantilever with 1, 4 and 20 requested load steps, with `fail_on_nonconvergence` off so that a failure would return what was reached instead of throwing, and prints for each how far the continuation got and what it cost.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 8;
+  const double length = 2.0;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(length * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to}, {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9))});
+  std::vector<double> nodal(3 * (members + 1), 0.0);
+  nodal[3 * members + 1] = -20000.0;
+  const auto load = grid(nodal, 3);
+
+  for (int steps : {1, 4, 20}) {
+    st::NonlinearOptions options;
+    options.load_steps = steps;
+    options.fail_on_nonconvergence = false;
+    const auto r = st::solve(frame, load, {{0, 0, 0}, {0, 1, 2}, {}}, options);
+    out.writeln(steps, " load step(s): reached load factor ", r.load_factor, ", converged ", r.converged.item<bool>(), ", steps taken ", r.steps, ", cutbacks ", r.cutbacks, ", iterations ", r.iterations);
+  }
+}
+```
+
+All three reach the full load, because a step that fails is halved and retried (`cutbacks` counts the halvings) and the increment grows again after each success, so even a single requested step is rescued. The cost is what differs: asking for one step costs `1053` Newton iterations and `26` halvings, four steps `1005`, and twenty `767`, since a Newton iteration started from a nearby equilibrium converges in far fewer iterations. Give the continuation a good starting step count rather than relying on halving. If it still cannot reach a load factor of one, the displacement returned is the last equilibrium reached and `converged` is false; with the failure switched on, the call throws instead. Raise `load_steps`, or reduce the load, before concluding that the structure is unstable.
+
+## Tolerance, iteration limits and the failure switch
+
+The remaining `NonlinearOptions` fields set how precisely each step is solved and what happens when the continuation cannot finish. `relative_tolerance` is the out-of-balance force, as a fraction of the load, at which a step is accepted; `max_iterations` caps the Newton iterations of one step; `max_cutbacks` caps the consecutive halvings of the step; `fail_on_nonconvergence` chooses between throwing and returning what was reached. The program solves the `alpha = 1.2` cantilever with the defaults, with a tolerance of `1e-12` and five steps, and with only one Newton iteration per step and the failure switched off and on.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 16;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to}, {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9))});
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  std::vector<double> nodal(3 * (members + 1), 0.0);
+  nodal[3 * members + 1] = -4999.8;   // alpha = 1.2
+  const auto load = grid(nodal, 3);
+  const auto tip = [&](const st::NonlinearResult &r) { return -flat(r.displacement)[3 * members + 1] / 2.0; };
+
+  st::NonlinearOptions defaults;
+  defaults.load_steps = 20;
+  const auto a = st::solve(frame, load, wall, defaults);
+  out.writeln("20 steps, default tolerance: tip down / L ", tip(a), ", iterations ", a.iterations, ", converged ", a.converged.item<bool>());
+
+  st::NonlinearOptions tight = defaults;
+  tight.relative_tolerance = 1e-12;
+  tight.load_steps = 5;
+  const auto b = st::solve(frame, load, wall, tight);
+  out.writeln("5 steps, tolerance 1e-12:    tip down / L ", tip(b), ", iterations ", b.iterations, ", cutbacks ", b.cutbacks);
+
+  st::NonlinearOptions capped = defaults;
+  capped.max_iterations = 1;
+  capped.max_cutbacks = 2;
+  capped.fail_on_nonconvergence = false;
+  const auto c = st::solve(frame, load, wall, capped);
+  out.writeln("one iteration per step, failure off: load factor reached ", c.load_factor, ", converged ", c.converged.item<bool>(), ", cutbacks ", c.cutbacks);
+  capped.fail_on_nonconvergence = true;
+  try {
+    (void)st::solve(frame, load, wall, capped);
+  } catch (const std::exception &e) {
+    std::cout << "one iteration per step, failure on: " << e.what() << "\n";
+  }
+}
+```
+
+All three well-posed runs reach the same tip position; the tighter tolerance buys nothing visible here and costs iterations. With a single Newton iteration allowed per step, the continuation cannot make progress: with the failure switched off it returns at a load factor of zero with `converged` false, and with it on the same call throws. Check `load_factor` before using a result from a run with the failure off.
+
+## The line search and the step-size floor
+
+Each Newton iteration moves along a direction and shortens it, by `line_search_shrink`, until the out-of-balance force has fallen by at least a fraction `armijo` of what the full step predicted, trying at most `max_line_search` lengths. `max_cutbacks` and `min_load_step` bound the halving of a load step that fails. The program solves the `alpha = 1.2` cantilever with the defaults, with one line-search trial, with a gentler shrink of `0.9`, and with a strict `armijo` of `0.5`; and then makes every step fail by allowing one iteration per step, with the load-step floor at `1e-6` and at `0.1`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2).with_sep(""));
+  const int members = 16;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to}, {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9))});
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  std::vector<double> nodal(3 * (members + 1), 0.0);
+  nodal[3 * members + 1] = -4999.8;
+  const auto bend = [&](const char *label, const st::NonlinearOptions &options) {
+    const auto r = st::solve(frame, grid(nodal, 3), wall, options);
+    out.writeln(label, ": converged ", r.converged.item<bool>(), ", load factor ", r.load_factor, ", iterations ", r.iterations, ", cutbacks ", r.cutbacks);
+  };
+  st::NonlinearOptions base;
+  base.load_steps = 20;
+  base.fail_on_nonconvergence = false;
+  bend("defaults                   ", base);
+  st::NonlinearOptions one_search = base;
+  one_search.max_line_search = 1;
+  bend("max_line_search 1          ", one_search);
+  st::NonlinearOptions gentle = base;
+  gentle.line_search_shrink = 0.9;
+  bend("line_search_shrink 0.9     ", gentle);
+  st::NonlinearOptions strict = base;
+  strict.armijo = 0.5;
+  bend("armijo 0.5                 ", strict);
+  st::NonlinearOptions stalled = base;
+  stalled.max_iterations = 1;
+  stalled.max_cutbacks = 1000;
+  bend("1 iteration, min step 1e-6 ", stalled);
+  stalled.min_load_step = 0.1;
+  bend("1 iteration, min step 0.1  ", stalled);
+}
+```
+
+Allowing a single line-search trial roughly doubles the iterations and forces cutbacks, since a step that would have been shortened has to be abandoned; a gentler shrink saves a few iterations; a stricter `armijo` changes nothing here because the full Newton step is almost always good enough. With one iteration per step no step can converge, so the continuation halves the step until it reaches the floor: sixteen halvings down to `1e-6` of the load, and one halving to the floor `0.1`, after which it stops with a load factor of zero.
+
+## Decisions
+
+- **When to use it:** when the load turns the structure through more than a few degrees, or when the answer should include foreshortening; check by comparing with the linear solve. If the two agree to the accuracy you need, use the cheaper linear one.
+- **How many steps:** start with `10` to `20` for a flexible member bent through a large angle; in the run above, twenty steps cost fewer total iterations than one.
+- **A structure that is stiff in one direction and soft in another:** axial stiffness far above bending stiffness makes Newton's method slow, which load steps repair.
+
+## Pitfalls
+
+The program shows what each of the model's boundaries does. It reads the end actions of the bent `alpha = 4.8` cantilever at the wall, where the axial force is not the horizontal component of the load because the member axes have turned; it solves a load that bends the beam past `45` degrees with the linear solver, which reports a tip deflection of `1.6 L`, nearly twice what the elastica allows; and it applies a tensile end load to show the stiffening that a linear model cannot represent.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 16;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to}, {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9))});
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  const std::size_t tip = 3 * members;
+
+  std::vector<double> nodal(3 * (members + 1), 0.0);
+  nodal[tip + 1] = -19999.2;   // alpha = 4.8
+  st::NonlinearOptions options;
+  options.load_steps = 20;
+  const auto bent = st::solve(frame, grid(nodal, 3), wall, options);
+  const auto action = flat(bent.end_force);
+  out.writeln("load 19999.2 N down: axial and shear end action of the member at the wall (N): ", action[3], " ", action[4]);
+  out.writeln("wall reaction, horizontal and vertical (N): ", flat(bent.reaction)[0], " ", flat(bent.reaction)[1]);
+  out.writeln("linear tip deflection / L: ", -flat(st::solve(frame, grid(nodal, 3), wall).displacement)[tip + 1] / 2.0, "   nonlinear: ", -flat(bent.displacement)[tip + 1] / 2.0);
+
+  // a tensile end load: the beam straightens and the axial stretch is tiny, as it should be
+  std::vector<double> pull(3 * (members + 1), 0.0);
+  pull[tip] = 50000.0;
+  pull[tip + 1] = -1000.0;
+  const auto tension = st::solve(frame, grid(pull, 3), wall, options);
+  out.writeln("tension 50 kN with 1 kN sideways: tip deflection (mm) nonlinear ", 1000.0 * flat(tension.displacement)[tip + 1], "   linear ", 1000.0 * flat(st::solve(frame, grid(pull, 3), wall).displacement)[tip + 1]);
+}
+```
+
+The member at the wall has an axial end action of `1805 N` and a shear of `-19918 N`: together `19999 N`, the load, but split between the member's own axes, which have turned by about five degrees. The wall reaction, in the fixed global axes, is the load itself, `(0, 19999.2)`. The linear solve gives a tip deflection of `1.6 L`, more than twice the elastica's `0.71 L`. With a tensile `50 kN` pull the nonlinear tip deflection is `28.5 mm` against the linear `160 mm`: the pull straightens the beam against the sideways load, a coupling between axial force and bending that the linear model does not contain.
+
+Reference: [`solve`](../../../../api/eng/structure/statics/solve.md), [`NonlinearOptions`](../../../../api/eng/structure/statics/NonlinearOptions.md), [`NonlinearResult`](../../../../api/eng/structure/statics/NonlinearResult.md), [`Fix`](../../../../api/eng/structure/model/Fix.md).
+
+Where next: [Large-amplitude motion](large_amplitude_motion.md) integrates the same model through time.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="large_amplitude_motion.html">
+    <span class="label">Next</span>
+    <span class="title">Large-amplitude motion</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

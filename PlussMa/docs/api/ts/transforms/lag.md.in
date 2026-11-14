@@ -97,3 +97,16 @@ int main() {
 
 - [`lead`](lead.md)
 - [`diff`](diff.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fill_gaps.html">
+    <span class="label">Previous</span>
+    <span class="title">fill_gaps</span>
+  </a>
+  <a class="next-link" href="lead.html">
+    <span class="label">Next</span>
+    <span class="title">lead</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

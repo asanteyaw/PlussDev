@@ -1,0 +1,89 @@
+# `thermal::fin`
+
+The heat and temperature of a straight fin.
+
+## Signature
+
+```cpp
+thermal::FinResult thermal::fin(const Series& coefficient,
+                           const Series& conductivity,
+                           const Series& perimeter,
+                           const Series& area,
+                           const Series& length,
+                           const Series& base,
+                           const Series& ambient,
+                           thermal::Tip tip = thermal::Tip::Adiabatic);
+```
+
+## What It Does
+
+Solves a straight fin of constant cross-section: conduction along its length and convection from its sides. With `m = sqrt(h P / (k A))` the excess temperature decays as a combination of `cosh(m x)` and `sinh(m x)` and the heat that leaves the base follows from the tip condition.
+
+## Parameters
+
+`coefficient`
+: The film coefficient `h` in W/(m^2 K).
+
+`conductivity`
+: The conductivity of the fin in W/(m K).
+
+`perimeter`
+: The perimeter `P` of the cross-section in m.
+
+`area`
+: The cross-sectional area `A` in m^2.
+
+`length`
+: The fin length in m.
+
+`base`
+: The base temperature.
+
+`ambient`
+: The fluid temperature; must differ from `base`.
+
+`tip`
+: The tip condition, `Adiabatic` by default.
+
+## Returns
+
+A `FinResult` with the base heat, the efficiency and the tip temperature.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array, not finite, or not positive (the temperatures need only be finite), and when `base` equals `ambient` somewhere.
+
+## Interpretation and Use
+
+Inputs broadcast, so a vector of lengths or coefficients sweeps a design in one call. The heat saturates as the length grows past about `3 / m`: extra length is wasted metal.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pin fin with an adiabatic tip.
+
+@@example Eng/api/thermal_fin_basic.cpp@@
+
+### Example 2
+
+The three tip conditions.
+
+@@example Eng/api/thermal_fin_tips.cpp@@
+
+### Example 3
+
+A batch of lengths.
+
+@@example Eng/api/thermal_fin_length.cpp@@
+
+### Example 4
+
+Rejected inputs.
+
+@@example Eng/api/thermal_fin_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

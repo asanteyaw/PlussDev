@@ -201,3 +201,16 @@ Read down the rows: `lambda -0.5` peaks on this grid at x = 0.4 (value 1.1636); 
 - [`Gamma`](../continuous_positive/Gamma.md)
 - [`Gh`](../continuous_real_line/Gh.md)
 - [`Wald`](../continuous_positive/Wald.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Gamma.html">
+    <span class="label">Previous</span>
+    <span class="title">Gamma</span>
+  </a>
+  <a class="next-link" href="Gompertz.html">
+    <span class="label">Next</span>
+    <span class="title">Gompertz</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

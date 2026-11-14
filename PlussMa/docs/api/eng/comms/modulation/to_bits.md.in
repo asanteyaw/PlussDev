@@ -1,0 +1,58 @@
+# `comms::to_bits`
+
+Labels to bits.
+
+## Signature
+
+```cpp
+pluss::Series comms::to_bits(const pluss::Series& labels, std::int64_t bits_per_symbol);
+```
+
+## What It Does
+
+Expands each label into its `bits_per_symbol` binary digits, most significant first.
+
+## Parameters
+
+`labels`
+: Integer labels in `[0, 2^bits_per_symbol)`, a real `[..., N]` array.
+
+`bits_per_symbol`
+: The number of bits per label, at least `1`.
+
+## Returns
+
+An `Int64` array of zeros and ones, `[..., N * bits_per_symbol]`.
+
+## Errors
+
+Throws `pluss::Error` for `bits_per_symbol` below `1` or labels outside `[0, 2^bits_per_symbol)`.
+
+## Interpretation and Use
+
+The inverse of `to_labels`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Labels and bits round trip.
+
+@@example Eng/api/comms_bits_labels_roundtrip.cpp@@
+
+### Example 2
+
+A batch of frames.
+
+@@example Eng/api/comms_bits_labels_batch.cpp@@
+
+### Example 3
+
+Rejected labels.
+
+@@example Eng/api/comms_bits_labels_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

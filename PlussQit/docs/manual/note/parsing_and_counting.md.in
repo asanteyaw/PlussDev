@@ -1,0 +1,44 @@
+# Parsing, counting and reading text
+
+[Back to Note by example](../note.md)
+
+Logs and reviews hold facts inside sentences. This page pulls fields out of a server log, selects the failing requests, finds the slowest one, and then tokenises product reviews to count what people talk about.
+
+## The mental model
+
+Parsing is replacement with intent: a regular expression with a capture group, replaced by `$1`, keeps only the part you want and discards the rest, for every cell at once. Tokenising is different: each cell becomes a *variable number* of words, which a rectangular `Note` cannot hold, so the result is a **token batch**, a flat `Note` of all the words plus an `offsets` array that says where each cell's words start and end. When you need to leave Pluss, say so: `host()` copies the cells into ordinary C++ values.
+
+## Triaging a server log
+
+Six request lines with a time, a method, a path, a status code and a latency. The program isolates the status, selects the server errors, lists the distinct paths and finds the slowest request.
+
+@@example note/log_triage.cpp@@
+
+The pattern `^.* (\d{3}) \d+ms$` matches the whole line and captures the three-digit status; replacing the line by `$1` leaves just the status for each of the six lines. `starts_with("5")` flags the codes beginning with 5, and `take` selects the two failing lines (500 and 503, both on `/api/orders`), which immediately says where to look. The same technique extracts the paths, and `unique` reduces six to four distinct paths. The latency is extracted as text; the program converts it with `std::stod` on the host copy and finds `1200 ms`. Two details of that last step matter. Text is not parsed into numbers by Pluss, because a `Note` is closed over its type, so the conversion is yours to write; and the owning copy returned by `host()` must be kept in a variable while you read from it, as the program does.
+
+## Reading reviews
+
+Four reviews of a gadget. The program lower-cases them, drops stop words and tokenises, counts the words across all reviews, and checks how many mention the battery.
+
+@@example note/review_analysis.cpp@@
+
+The token batch holds `24` words in `4` rows, of `5`, `7`, `5` and `7` words, and the offsets recover that structure exactly. Counting is ordinary C++ over the flat token list: `battery` is the most mentioned word (three reviews), then `screen` (two). The last line asks the same question the other way round: `contains` flags the reviews that mention the battery, and three of four do. A list of the most common words is the quickest way to find what to look at next, but it is only a start: it cannot tell you whether the mentions are good or bad.
+
+## A Markdown document: outline and links
+
+A short Markdown file with headings and links. The program lists the headings as an indented contents list and then collects the link targets and sorts them into external and local.
+
+@@example note/markdown_outline.cpp@@
+
+`split_lines` turns the document into eight lines, and `starts_with("#")` flags four headings; the number of leading hashes is the level, which the program turns into the indentation. For links, the pattern `\[[^\]]*\]\(([^)]+)\)` has a capture group, and `findall` returns what the group captured, the targets, rather than the whole match. Two of the six targets are external; the four local ones name three distinct files (`linking.md` is linked twice), which is the list to check against the file system. A pattern that matches the whole link would have returned `[text](target)` and needed another replace to peel it.
+
+## Decisions
+
+- **Capture groups for extraction:** `regex().replace(pattern, "$1")` with the whole line in the pattern is the shortest way to pull one field from every line.
+- **Fields to numbers:** extract as text, convert on the host, and decide there what a failed conversion means.
+- **Ragged results:** expect a token batch from tokenisers and keep both the tokens and the offsets.
+- **Counting words:** tokenise, drop stop words, count on the host; use `unique` when you only need the vocabulary.
+
+## Where next
+
+Reference pages: [`replace`](../../sphinx/api/note-regex/replace.md), [`findall`](../../sphinx/api/note-regex/findall.md), [`starts_with`](../../sphinx/api/note/starts_with.md), [`take`](../../sphinx/api/note/take.md), [`unique`](../../sphinx/api/note/unique.md), [`contains`](../../sphinx/api/note/contains.md), [`host`](../../sphinx/api/note/host.md), [`lower`](../../sphinx/api/note/lower.md), [`split_lines`](../../sphinx/api/note/split_lines.md), [`without_stopwords`](../../sphinx/api/note-nlp/without_stopwords.md), [`tokens`](../../sphinx/api/note-nlp/tokens.md), and the [TokenBatch reference](../../sphinx/tokenbatch_api_reference.md). Next: [Comparing and matching text](comparing_and_matching.md).

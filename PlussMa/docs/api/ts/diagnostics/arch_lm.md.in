@@ -172,3 +172,16 @@ int main() {
 - [`ArchLmOptions`](ArchLmOptions.md)
 - [`ArchLmResult`](ArchLmResult.md)
 - [`ljung_box`](ljung_box.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="AdfResult.html">
+    <span class="label">Previous</span>
+    <span class="title">AdfResult</span>
+  </a>
+  <a class="next-link" href="ArchLmOptions.html">
+    <span class="label">Next</span>
+    <span class="title">ArchLmOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

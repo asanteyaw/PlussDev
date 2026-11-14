@@ -1,0 +1,37 @@
+# Simulation
+
+[Back to Series by example](../series.md)
+
+When there is no formula, simulate. This page prices an option whose payoff depends on the whole price path, with fifty thousand paths generated at once, and reports the answer with its Monte Carlo error.
+
+## The mental model
+
+A simulation is an array of random numbers with one axis for the *scenario* and one for *time*, followed by a few array operations that turn shocks into prices and prices into payoffs. `cumsum` along the time axis turns a series of steps into a path; reductions along the scenario axis turn many payoffs into one estimate and its error. No loop over scenarios is ever written.
+
+## An Asian option
+
+A stock starts at 100 and follows geometric Brownian motion with 20 % volatility and 3 % interest. The option pays the average price over the year above 100. The program simulates weekly prices for 50 000 paths.
+
+@@example series/monte_carlo.cpp@@
+
+The `randn` call produces a `50000 x 52` table of shocks. Scaling and shifting turn them into log-returns, `cumsum(1)` accumulates them along each path, and `exp` returns to prices. The first sanity check is the mean final price, 102.99, against the forward price `100 e^0.03 = 103.05`: they agree to within sampling error, which tells you the dynamics are right before any payoff is computed. The payoff is the average of each path minus the strike, clamped at zero; the estimate is `5.35`, and its standard error `0.035` (the standard deviation of the discounted payoffs over the square root of the number of paths) says the price is `5.35` give or take `0.07` at two standard errors. About 52 % of paths end in the money, and the 95th percentile of the payoff is `21.8`, a reminder that an option is a bet on the tail.
+
+## Integration by random sampling
+
+Monte Carlo is also the way to integrate when a grid is hopeless. The integral of a function over a region is the region's size times the average of the function at random points, and the standard deviation of the function over the square root of the number of points is the error. The program integrates `4 / (1 + x^2)` over `[0, 1]`, whose value is pi, at three sample sizes; measures the volume of the unit ball in five dimensions by counting random points of a cube that fall inside it; and finishes with antithetic variates, a way to cut the error without drawing more points.
+
+@@example series/monte_carlo_integration.cpp@@
+
+Each hundredfold increase in `N` shrinks the error tenfold, from `0.068` to `0.0064` to `0.00064`, and the estimates stay within about one error of pi. The five-dimensional volume, `5.267 +/- 0.008`, agrees with the exact `8 pi^2 / 15 = 5.264` to within half an error; a grid with only ten points per axis would already need a hundred thousand evaluations, and the cost of sampling does not grow with the dimension. The antithetic pairing, where each `x` is used together with `1 - x`, estimates the integral of `exp(x)` with an error of `0.00044` against `0.0035` for plain sampling: eight times smaller, the same as drawing about sixty times as many points. It works because `exp(x)` and `exp(1 - x)` move in opposite directions, so their average varies far less than either alone.
+
+## Decisions
+
+- **Axes:** scenarios on one axis, time on the next; reductions along time build the payoff and along scenarios the estimate.
+- **Check the dynamics first:** compare a quantity with a known answer (the forward, a variance) before trusting a payoff.
+- **Report the error:** the standard error shrinks with the square root of the path count, so ten times the accuracy costs a hundred times the paths.
+- **Seeds:** fix the seed for a result you must reproduce, change it to see how much the answer moves.
+- **Variance reduction:** before buying more paths, ask whether a pairing or a control variate with a known mean removes the variation you do not care about.
+
+## Where next
+
+Reference pages: [`randn`](../../sphinx/api/series_factory/randn.md), [`rand`](../../sphinx/api/series_factory/rand.md), [`cumsum`](../../sphinx/api/series/cumsum.md), [`exp`](../../sphinx/api/series/exp.md), [`mean`](../../sphinx/api/series/mean.md), [`std`](../../sphinx/api/series/std.md), [`clamp_min`](../../sphinx/api/series/clamp_min.md), [`quantile`](../../sphinx/api/series/quantile.md), [`reciprocal`](../../sphinx/api/series/reciprocal.md). Next: [Signals](signals.md).

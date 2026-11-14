@@ -111,12 +111,12 @@ Output
 ```text
 setup                       exit          iters   evals   objective   x, y
 Adam, learning rate 0.02    MaxIterations 3000    3000    2.9e-07     0.99947, 0.99893
-L-BFGS, no line search      NoProgress    102     102     5.6e-11     1.00000, 0.99999
-L-BFGS, strong Wolfe        NoProgress    696     2062    3.1e-10     0.99999, 0.99998
+L-BFGS, no line search      Converged     81      81      1.7e-24     1.00000, 1.00000
+L-BFGS, strong Wolfe        Converged     39      144     9.8e-22     1.00000, 1.00000
 ```
-Adam with a learning rate of 0.02 uses all 3000 iterations and ends at an objective of 2.9e-07, at `(0.99947, 0.99893)`: close, and still creeping. L-BFGS without a line search reaches 5.6e-11 at `(1.00000, 0.99999)` in 102 iterations. With the strong-Wolfe line search it takes 696 iterations and 2062 evaluations, about three evaluations per iteration, and ends at 3.1e-10: on this problem the line search buys nothing, and chapter 3 says when it does.
+Adam with a learning rate of 0.02 uses all 3000 iterations and ends at an objective of 2.9e-07, at `(0.99947, 0.99893)`: close, and still creeping. L-BFGS without a line search converges in 81 iterations to an objective of 1.7e-24. With the strong-Wolfe line search it takes 39 iterations and 144 evaluations, about four evaluations per iteration, and ends at 9.8e-22. The line search lengthens a step that is still descending steeply and narrows a bracket around an acceptable step, so it takes fewer, better-scaled steps; each iteration costs more evaluations, and chapter 3 says when that trade is worth it.
 
-Two things to notice. Both L-BFGS runs end with `NoProgress`, not `Converged`, at an objective of about 1e-10. That flag means the objective and the step stopped changing before all three tolerances were met; here the gradient was a few times 1e-4 against a tolerance of 1e-6. It is not a failure. When a run ends this way, look at the objective and the gradient it reports and decide whether the answer is good enough, instead of reading the flag alone. And the iteration counts differ by a factor of thirty, which is the usual gap between a first-order step and one that uses curvature.
+Both L-BFGS runs end with `Converged`, and the iteration counts differ from Adam's by a factor of about thirty, which is the usual gap between a first-order step and one that uses curvature.
 
 ## Program 3: Three ways to hand over the same objective
 
@@ -198,7 +198,16 @@ The three forms find the same point, `a = 1`, `b = -2`, in the same 191 iteratio
 
 - **The learning rate is the setting that matters most for Adam.** Too small wastes the whole budget (a default of 0.001 cannot cross a distance of 3 in 200 steps); too large overshoots. Chapter 3 shows how to choose it.
 - **Prefer L-BFGS when the objective is smooth.** It learns the curvature itself and needs far fewer iterations than Adam on a curved valley; Adam divides each coordinate's step by that coordinate's own gradient scale, which is its strength on noisy or badly scaled objectives.
-- **`NoProgress` at an objective of 1e-10 is not a failure.** It means the objective and the step stopped changing before all three tolerances were met; look at the gradient before deciding.
+- **Read the flag, then the gradient.** `Converged` means the gradient, the step and the violation are all within tolerance; `MaxIterations` means the budget ran out, which can still be a good answer, as Adam's run above shows.
 - **Use named blocks when the parameters mean different things.** Weights, biases and scales are clearer by name, and the three forms of the objective find the same point: the form changes what you write, not what the solver does.
 
 Where next: [Reading a run](reading_a_run.md) covers the result object, the exit flags and the progress hook.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="reading_a_run.html">
+    <span class="label">Next</span>
+    <span class="title">Reading and watching a run</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

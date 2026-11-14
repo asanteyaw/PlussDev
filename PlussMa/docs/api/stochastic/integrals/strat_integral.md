@@ -20,10 +20,10 @@ For the integrand `f = W` the Stratonovich integral exceeds the Itô one by exac
 ## Parameters
 
 `const sde::WienerIntegrandFn &f`
-: `(double t, const Series &w) -> Series`, averaged over both ends of each step.
+: `Series (double t, const Series &w)`, averaged over both ends of each step.
 
 `const sde::SampledIntegrandFn &make`
-: `(const Series &path) -> Series`, checked for adaptedness.
+: `Series (const Series &path)`, checked for adaptedness.
 
 `const sde::WienerPath &path`
 : The path to integrate along.

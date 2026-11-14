@@ -1,0 +1,72 @@
+# `robot::Robot`
+
+An immutable compiled robot.
+
+## Signature
+
+```cpp
+std::int64_t robot::Robot::links() const noexcept;
+pluss::ScalarType robot::Robot::dtype() const noexcept;
+pluss::Platform robot::Robot::platform() const noexcept;
+bool robot::Robot::has_mass() const noexcept;
+const std::vector<std::int64_t>& robot::Robot::parent() const noexcept;
+```
+
+## What It Does
+
+What `robot::make` returns: the validated tree with its constant transforms compiled, ready for any number of kinematic and dynamic calls on any batch of configurations.
+
+## Methods
+
+`links()`
+: The number of links, which is also the number of joint values of a configuration.
+
+`dtype(), platform()`
+: The element type and device of the compiled data. Configurations are converted to this dtype.
+
+`has_mass()`
+: Whether mass properties were given. The dynamics functions need them; the kinematics functions do not.
+
+`parent()`
+: The parent index of every link, `-1` for the base.
+
+## Returns
+
+Accessors return counts, flags and the parent list.
+
+## Errors
+
+Accessors do not fail. Invalid descriptions are rejected by `make`.
+
+## Changelog
+
+- **0.1** — Initial public contract.
+
+## Interpretation and Use
+
+A `Robot` is immutable and cheap to copy; build it once and reuse it. Its compiled transforms carry reverse sensitivity to the values they were built from.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The accessors of a tree.
+
+@@example Eng/api/robot_robot_accessors.cpp@@
+
+### Example 2
+
+A planar arm and its parents.
+
+@@example Eng/api/robot_make_arm.cpp@@
+
+### Example 3
+
+A tree.
+
+@@example Eng/api/robot_make_tree.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

@@ -9,10 +9,10 @@
 
 ```cpp
 std::unordered_map<std::string, pluss::table::DataFrame>
-CatalogNoteAccessor::findall(std::string_view pattern) const
+std::unordered_map<std::string, pluss::table::DataFrame> CatalogNoteAccessor::findall(std::string_view pattern) const
 
 std::unordered_map<std::string, pluss::table::DataFrame>
-CatalogNoteAccessor::findall(
+std::unordered_map<std::string, pluss::table::DataFrame> CatalogNoteAccessor::findall(
     std::string_view pattern, const pluss::table::TextOptions& options) const
 ```
 

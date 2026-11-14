@@ -8,3 +8,16 @@
 @@example Numerical/linear_algebra/guide/902_preconditioning.cpp@@
 
 The matrix has diagonal entries spanning four decades, so its eigenvalues are spread over four decades and plain conjugate gradients needs 664 iterations. Dividing by the diagonal (Jacobi) rescales the system so its eigenvalues cluster near 1, and 16 iterations suffice, a fortyfold saving for a preconditioner that costs one elementwise multiply. A good preconditioner is the biggest lever on iteration count; the best one is cheap to apply and resembles `A⁻¹`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="conjugate_gradients_with_an_operator.html">
+    <span class="label">Previous</span>
+    <span class="title">Conjugate gradients with an operator</span>
+  </a>
+  <a class="next-link" href="batches.html">
+    <span class="label">Next</span>
+    <span class="title">Batches</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -30,13 +30,13 @@ other range whose elements convert to `std::string_view`)
     validation as [`select()`](select.md)'s key list: non-empty, unique, and each must
     already exist in the workspace.
 
-```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
 See [`Nexus::select`](select.md)'s own note on this — the same
 three-overload pattern (brace literal / named `RangeView`-convertible
 container / any other qualifying range) applies here identically, including
 the same "iteration order becomes output order" rule (an ordered container
 like `std::set` iterates sorted, not in insertion order).
-```
+:::
 
 **labels** (`std::optional<Slate>`, default `std::nullopt`)
     Axis-0 labels for the resulting atlas. Left at the default, `to_atlas()` uses the

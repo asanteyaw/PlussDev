@@ -102,3 +102,16 @@ int main() {
 
 - [`expanding_mean`](expanding_mean.md)
 - [`rolling_std`](rolling_std.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="expanding_mean.html">
+    <span class="label">Previous</span>
+    <span class="title">expanding_mean</span>
+  </a>
+  <a class="next-link" href="fill_gaps.html">
+    <span class="label">Next</span>
+    <span class="title">fill_gaps</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

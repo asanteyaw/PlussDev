@@ -1,7 +1,7 @@
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {

@@ -55,4 +55,11 @@ Bounds and constraints are optional everywhere. Leave `lower_bounds`, `upper_bou
 5. If the function is smooth and differentiable, ask whether a gradient-based solver would do the job in a fraction of the evaluations.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_01_first_problems/first_solves
+dfo_01_first_problems/budgets_statuses_and_repeatability
+```
 <!-- apiref:toctree:end -->

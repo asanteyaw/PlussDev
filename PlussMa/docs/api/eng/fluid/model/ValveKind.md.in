@@ -1,0 +1,69 @@
+# `fluid::ValveKind`
+
+The four control valves and the equation each enforces.
+
+## Signature
+
+```cpp
+fluid::ValveKind
+```
+
+## What It Does
+
+Chooses the equation that replaces the ordinary head-loss law of a valve link. `Throttle` adds a known loss, `Flow` fixes the flow through the valve, `Reduce` fixes the pressure head downstream and `Sustain` fixes it upstream.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Throttle` | `h_from - h_to = K v ∣v∣ / (2 g)`, with `K` from `Valves::minor`. |  |
+| `Flow` | The flow through the valve equals `Valves::setting`, in m³/s. |  |
+| `Reduce` | The head downstream equals the downstream elevation plus `setting`, a pressure head in m. |  |
+| `Sustain` | The head upstream equals the upstream elevation plus `setting`, a pressure head in m. |  |
+
+## Returns
+
+An enumeration; one value per valve in `Valves::kind`.
+
+## Errors
+
+A pressure valve that does not regulate a junction is rejected by `network`. A setting that the network cannot satisfy is rejected by `steady`: it needs a valve that adds head or a flow that runs backwards.
+
+## Interpretation and Use
+
+A valve never adds head. Use `Reduce` on the only path into the zone it protects, `Sustain` on a junction that has another way to be supplied, and `Flow` only for a rate that the head difference can pass.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+All four valve kinds solved against their equations.
+
+@@example Eng/api/fluid_valves_build.cpp@@
+
+### Example 2
+
+A throttle valve against `K v²/2g`.
+
+@@example Eng/api/fluid_valves_throttle.cpp@@
+
+### Example 3
+
+Settings the network cannot satisfy.
+
+@@example Eng/api/fluid_valves_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="NodeKind.html">
+    <span class="label">Previous</span>
+    <span class="title">NodeKind</span>
+  </a>
+  <a class="next-link" href="Nodes.html">
+    <span class="label">Next</span>
+    <span class="title">Nodes</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

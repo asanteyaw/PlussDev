@@ -49,14 +49,14 @@ depends only on what shape of *field list* you're describing:
   `"regions."` on every entry. This is the two-argument family; the table
   name is a real parameter, not baked into the string.
 
-```{note} `RangeView` is never spelled out; brace calls resolve unambiguously
+:::{note} `RangeView` is never spelled out; brace calls resolve unambiguously
 Every batch form above also accepts a plain `{...}` brace list directly
 (that's exactly what the dedicated `initializer_list` overloads are for —
 see the [index page](../../nexus_pull_api_reference.md)'s note on this).
 The examples below write braces for the brace-literal forms and pass a
 named container variable (`std::vector`, `std::map`, `std::unordered_map`)
 for every other form, never naming `RangeView` itself.
-```
+:::
 
 ```{important} The unscoped rename-pairs form needs a named container, not a literal double-brace list
 `.take({{"a", "x"}, {"b", "y"}})` — braces around a list of pairs, with no

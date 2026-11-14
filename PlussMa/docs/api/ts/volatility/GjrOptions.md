@@ -31,3 +31,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`Gjr`](Gjr.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GjrFit.html">
+    <span class="label">Previous</span>
+    <span class="title">GjrFit</span>
+  </a>
+  <a class="next-link" href="MvEgarch.html">
+    <span class="label">Next</span>
+    <span class="title">MvEgarch</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

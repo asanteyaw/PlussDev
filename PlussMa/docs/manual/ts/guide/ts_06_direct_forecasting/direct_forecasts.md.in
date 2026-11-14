@@ -263,3 +263,16 @@ OLS with twelve lags and 50 observations estimates thirteen coefficients from ab
 - **Evaluate out of sample.** The in-sample error of a direct model always flatters it; use a partition ([Partitions](partitions.md)) and compare against alternatives ([Comparing models out of sample](comparing_models_out_of_sample.md)).
 
 Where next: [Comparing models out of sample](comparing_models_out_of_sample.md) gives the tools to decide whether one forecaster is really better than another.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="partitions.html">
+    <span class="label">Previous</span>
+    <span class="title">Partitions</span>
+  </a>
+  <a class="next-link" href="comparing_models_out_of_sample.html">
+    <span class="label">Next</span>
+    <span class="title">Comparing models out of sample</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

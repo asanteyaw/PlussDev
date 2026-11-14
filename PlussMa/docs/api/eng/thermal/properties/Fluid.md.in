@@ -1,0 +1,57 @@
+# `thermal::Fluid`
+
+A fluid of the property provider.
+
+## Signature
+
+```cpp
+thermal::Fluid
+```
+
+## What It Does
+
+Selects the fluid for `props` and `source`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Water` | Liquid water, saturated, from 273.15 K to 373.15 K. |  |
+| `Air` | Dry air as an ideal gas, from 250 K to 600 K. |  |
+
+## Returns
+
+A choice of two fluids.
+
+## Errors
+
+None: both values are always valid.
+
+## Interpretation and Use
+
+Each fluid carries its range and its provenance; `source` returns them.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Liquid water.
+
+@@example Eng/api/thermal_props_water.cpp@@
+
+### Example 2
+
+Dry air.
+
+@@example Eng/api/thermal_props_air.cpp@@
+
+### Example 3
+
+The provenance of each.
+
+@@example Eng/api/thermal_source_range.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

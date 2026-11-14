@@ -190,7 +190,7 @@ int main() {
   const auto x = pluss::make_series({0.1, 0.3, 0.6, 1.0, 2.0, 5.0}, f64);
   const std::vector<double> params = {2.0, 1.0};
 
-  const auto formula = distr::cdf(dst::Normal, x.reciprocal() * -1.0 + 2.0, {}) * (1.0 / distr::cdf(dst::Normal, pluss::make_series({2.0}, f64), {}).item<double>());
+  const auto formula = distr::cdf(dst::Normal, x.reciprocal() * -1.0 + 2.0, {}) * (1.0 / distr::cdf(dst::Normal, pluss::make_series({2.0}, f64), {}).squeeze().item<double>());
   const auto library = distr::cdf(dst::Alpha, x, params);
 
   std::cout << "x:";
@@ -213,3 +213,12 @@ The formula and `distr::cdf` agree to 1.11e-16 over the grid, so the library imp
 - [`Lognormal`](../continuous_positive/Lognormal.md)
 - [`InverseGaussian`](../continuous_positive/InverseGaussian.md)
 - [`Pareto`](../continuous_positive/Pareto.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Burr.html">
+    <span class="label">Next</span>
+    <span class="title">Burr</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

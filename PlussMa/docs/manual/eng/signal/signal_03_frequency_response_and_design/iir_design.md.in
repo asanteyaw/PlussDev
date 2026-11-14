@@ -1,0 +1,438 @@
+# IIR design
+
+[Back to Signals 3: Frequency Response and Design](../signal_03_frequency_response_and_design.md)
+
+You need a low-pass, high-pass, band-pass or band-stop filter with a given cutoff, and you do not want to derive coefficients by hand. `butter`, `cheby1` and `cheby2` design infinite-impulse-response filters of a chosen order and return them as poles, zeros and a gain, which `lti::to_sos` turns into the section matrix that [`sos`](../signal_02_recursive_filters/second_order_sections.md) runs. This page shows what each family guarantees, how to choose the band and the units of the cutoff, and how to read the result.
+
+## The mental model
+
+All three families start from a low-pass **analogue prototype** with its cutoff at 1 rad/s, move its cutoff to where you asked, transform it to the band you asked for, and (for a digital filter) map it to the sampled domain with the bilinear transform. What differs is the shape of the prototype, and so the trade you make:
+
+| Family | Pass band | Stop band | Parameter besides order | Cutoff means |
+|---|---|---|---|---|
+| `butter` | monotonic, as flat as possible | monotonic | none | gain falls to `1/sqrt(2)` (half power) |
+| `cheby1` | ripples between `1` and `10^(-ripple/20)` | monotonic | `ripple`, in dB | the edge of the pass band: gain equals the ripple floor |
+| `cheby2` | monotonic | ripples below `10^(-attenuation/20)` | `attenuation`, in dB | the edge of the stop band: gain equals the attenuation level |
+
+For the same order, the Chebyshev designs have a steeper transition than the Butterworth design, bought with ripple in one of the two bands. A Butterworth filter is the safe default when no ripple can be tolerated.
+
+The result is a `lti::PoleZero`: `zeros()`, `poles()` and `gain()`, and the sample time (zero for an analogue filter). The three together are the factored form of the transfer function, which is the numerically sound representation of a filter.
+
+## Units, and digital against analogue
+
+`IirOptions::sample_rate` decides what the cutoff means:
+
+- **A number `fs` (the default is `2`):** a *digital* filter. The cutoff is in the same units as `fs`, and the Nyquist frequency is `fs / 2`. With the default `fs = 2` the cutoff is a fraction of Nyquist from `0` to `1`. With `fs = 1000` the cutoff is in hertz.
+- **No value (`std::nullopt`):** an *analogue* filter. The cutoff is an angular frequency in radians per second, and the result has sample time `0`.
+
+The program designs the same fourth-order Butterworth low-pass three ways, with the cutoff at one fifth of the Nyquist frequency, and shows that the first two are the same filter. It reports sample times, and the gain of the digital designs at the cutoff, found as the product of the section responses.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+// |H| of a designed digital filter at the given angular frequency.
+static double gain_at(const lti::PoleZero &design, double omega) {
+  const pluss::Series sections = lti::to_sos(design);
+  const pluss::Series w = pluss::series::make(std::vector<double>{omega});
+  pluss::Series response = pluss::series::ones({1}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series s = sections.select(0, row);
+    response = response * sig::freqz(s.slice(0, 0, 3), s.slice(0, 3, 6), w);
+  }
+  return response.abs().select(0, 0).item<double>();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto fraction = sig::butter(4, 0.2);
+
+  sig::IirOptions in_hertz;
+  in_hertz.sample_rate = 1000.0;
+  const auto hertz = sig::butter(4, 100.0, in_hertz);
+
+  sig::IirOptions analogue;
+  analogue.sample_rate = std::nullopt;
+  const auto radians = sig::butter(4, 1.0, analogue);
+
+  out.writeln("fraction of Nyquist: sample time", fraction.sample_time(), " discrete", fraction.is_disc(), " gain at the cutoff", gain_at(fraction, M_PI * 0.2));
+  out.writeln("100 Hz at 1000 Hz  : sample time", hertz.sample_time(), " discrete", hertz.is_disc(), " gain at the cutoff", gain_at(hertz, M_PI * 0.2));
+  out.writeln("largest difference of the two section matrices:", (lti::to_sos(fraction) - lti::to_sos(hertz)).abs().max().item<double>());
+  out.writeln("analogue: sample time", radians.sample_time(), " continuous", radians.is_cont(), " poles", radians.poles().sizes(), " zeros", radians.zeros().sizes());
+}
+```
+
+Both digital designs have a gain of `0.70711` at the cutoff, which is `0.2 pi` radians per sample whichever units you gave. The sample time of the second is `1 / 1000 = 0.001`, and the section matrices are identical. The analogue design has no zeros (a Butterworth prototype is all-pole), four poles, and `is_cont()` is true.
+
+## Low-pass and high-pass
+
+`IirOptions::band` selects `Low` (the default), `High`, `Pass` or `Stop`. For `Low` and `High` there is one cutoff. The program prints the gain of a fourth-order Butterworth low-pass and high-pass at seven frequencies.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series gain(const lti::PoleZero &design, const std::vector<double> &fractions) {
+  std::vector<double> radians;
+  for (const double f : fractions) radians.push_back(M_PI * f);
+  const pluss::Series sections = lti::to_sos(design);
+  const pluss::Series w = pluss::series::make(radians);
+  pluss::Series response = pluss::series::ones({static_cast<long>(radians.size())}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series s = sections.select(0, row);
+    response = response * sig::freqz(s.slice(0, 0, 3), s.slice(0, 3, 6), w);
+  }
+  return response.abs();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> at = {0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0};
+  sig::IirOptions high;
+  high.band = sig::Band::High;
+  out.writeln("frequency / Nyquist", at);
+  out.writeln("low-pass  0.3      ", gain(sig::butter(4, 0.3), at).items<double>());
+  out.writeln("high-pass 0.3      ", gain(sig::butter(4, 0.3, high), at).items<double>());
+}
+```
+
+The two rows are mirror images that cross at the cutoff `0.3`, where both have gain `0.70711`. The low-pass is `1` at DC and zero at Nyquist; the high-pass is the reverse. For a fourth-order design the stop-band gain falls steeply: `0.00075` at `0.8` for the low-pass.
+
+## Band-pass and band-stop
+
+For `Pass` and `Stop` you give a pair of cutoffs, a `std::pair<double, double>` of the lower and upper edges, with the options as the third argument (there is no default, because a band needs to be named). A design of order `n` has `2n` poles. The program designs second-order band-pass and band-stop filters with edges at `0.2` and `0.4` of Nyquist.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series gain(const lti::PoleZero &design, const std::vector<double> &fractions) {
+  std::vector<double> radians;
+  for (const double f : fractions) radians.push_back(M_PI * f);
+  const pluss::Series sections = lti::to_sos(design);
+  const pluss::Series w = pluss::series::make(radians);
+  pluss::Series response = pluss::series::ones({static_cast<long>(radians.size())}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series s = sections.select(0, row);
+    response = response * sig::freqz(s.slice(0, 0, 3), s.slice(0, 3, 6), w);
+  }
+  return response.abs();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> at = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0};
+  sig::IirOptions pass;
+  pass.band = sig::Band::Pass;
+  sig::IirOptions stop;
+  stop.band = sig::Band::Stop;
+  const auto band_pass = sig::butter(2, {0.2, 0.4}, pass);
+  const auto band_stop = sig::butter(2, {0.2, 0.4}, stop);
+
+  out.writeln("frequency / Nyquist", at);
+  out.writeln("band-pass 0.2 to 0.4", gain(band_pass, at).items<double>());
+  out.writeln("band-stop 0.2 to 0.4", gain(band_stop, at).items<double>());
+  out.writeln("poles of an order-2 band design:", band_pass.poles().sizes(), " zeros:", band_pass.zeros().sizes());
+}
+```
+
+Both edges have the half-power gain `0.70711`, in both designs. The band-pass is nearly 1 at the centre of the band (`0.99991` at `0.3`) and small at DC and Nyquist, where it has zeros. The band-stop is nearly 0 at the centre (`0.01324`) and 1 at the ends. An order-2 band design has four poles and four zeros, twice the order.
+
+## Chebyshev type I: ripple in the pass band
+
+`cheby1(order, ripple, cutoff, options)` allows the pass-band gain to vary between `1` and `10^(-ripple/20)` in exchange for a sharper transition. The cutoff is the pass-band edge, where the gain equals the ripple floor. The program designs order 3 and order 4 filters with 1 dB of ripple (floor `10^(-1/20) = 0.89125`). An odd order starts at `1` and an even order starts at the floor, because the Chebyshev polynomial is even or odd with the order.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series gain(const lti::PoleZero &design, const std::vector<double> &fractions) {
+  std::vector<double> radians;
+  for (const double f : fractions) radians.push_back(M_PI * f);
+  const pluss::Series sections = lti::to_sos(design);
+  const pluss::Series w = pluss::series::make(radians);
+  pluss::Series response = pluss::series::ones({static_cast<long>(radians.size())}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series s = sections.select(0, row);
+    response = response * sig::freqz(s.slice(0, 0, 3), s.slice(0, 3, 6), w);
+  }
+  return response.abs();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> at = {0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0};
+  out.writeln("frequency / Nyquist     ", at);
+  out.writeln("order 3, 1 dB ripple    ", gain(sig::cheby1(3, 1.0, 0.3), at).items<double>());
+  out.writeln("order 4, 1 dB ripple    ", gain(sig::cheby1(4, 1.0, 0.3), at).items<double>());
+  out.writeln("order 4 Butterworth     ", gain(sig::butter(4, 0.3), at).items<double>());
+  out.writeln("ripple floor 10^(-1/20) ", std::pow(10.0, -1.0 / 20.0));
+}
+```
+
+Both Chebyshev designs touch the floor `0.89125` at the cutoff `0.3`. At `0.5` the order-4 Chebyshev design is down to `0.02211`, against `0.06725` for the Butterworth filter of the same order: the price of ripple buys a steeper fall. The pass band wobbles: `0.98842` at `0.1`, then `0.90385` at `0.2`.
+
+## Chebyshev type II: ripple in the stop band
+
+`cheby2(order, attenuation, cutoff, options)` keeps the pass band flat and lets the stop band ripple, but never above `10^(-attenuation/20)`. The cutoff is the **stop-band edge**: the gain there equals the attenuation level, and beyond it the gain never exceeds it. The design has finite zeros on the unit circle, which are the places where the ripple touches zero. The program designs order 4 with 40 dB of attenuation (level `0.01`) at the cutoff `0.3`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series gain(const lti::PoleZero &design, const std::vector<double> &fractions) {
+  std::vector<double> radians;
+  for (const double f : fractions) radians.push_back(M_PI * f);
+  const pluss::Series sections = lti::to_sos(design);
+  const pluss::Series w = pluss::series::make(radians);
+  pluss::Series response = pluss::series::ones({static_cast<long>(radians.size())}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series s = sections.select(0, row);
+    response = response * sig::freqz(s.slice(0, 0, 3), s.slice(0, 3, 6), w);
+  }
+  return response.abs();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> at = {0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0};
+  const auto design = sig::cheby2(4, 40.0, 0.3);
+  out.writeln("frequency / Nyquist", at);
+  out.writeln("gain               ", gain(design, at).items<double>());
+  out.writeln("attenuation level 10^(-40/20):", std::pow(10.0, -40.0 / 20.0));
+  out.writeln("zeros", design.zeros().sizes(), " poles", design.poles().sizes());
+}
+```
+
+The gain is `0.99178` at `0.1`, falls to `0.28477` at `0.2`, and reaches the level `0.01000` exactly at the cutoff `0.3`. Beyond it the gain stays at or below `0.01`: `0.00538` at `0.5`, `0.00787` at `0.8`, and back up to `0.01000` at Nyquist. Where the Butterworth design keeps falling, this design holds a fixed floor.
+
+## Chebyshev designs in the other bands
+
+`cheby1` and `cheby2` take the same band options as `butter`, with a pair of cutoffs for `Pass` and `Stop`. The cutoffs keep their meaning: for `cheby1` they are the edges of the pass band, where the gain equals the ripple floor, and for `cheby2` they are the edges of the stop band, where the gain equals the attenuation level. The program designs a second-order Chebyshev I band-pass with 1 dB of ripple (floor `0.89125`) and a second-order Chebyshev II band-stop with 30 dB of attenuation (level `0.03162`), both with edges at `0.2` and `0.4` of Nyquist.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series gain(const lti::PoleZero &design, const std::vector<double> &fractions) {
+  std::vector<double> radians;
+  for (const double f : fractions) radians.push_back(M_PI * f);
+  const pluss::Series sections = lti::to_sos(design);
+  const pluss::Series w = pluss::series::make(radians);
+  pluss::Series response = pluss::series::ones({static_cast<long>(radians.size())}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series s = sections.select(0, row);
+    response = response * sig::freqz(s.slice(0, 0, 3), s.slice(0, 3, 6), w);
+  }
+  return response.abs();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::vector<double> at = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0};
+  sig::IirOptions pass;
+  pass.band = sig::Band::Pass;
+  sig::IirOptions stop;
+  stop.band = sig::Band::Stop;
+  out.writeln("frequency / Nyquist              ", at);
+  out.writeln("cheby1 band-pass, 1 dB           ", gain(sig::cheby1(2, 1.0, {0.2, 0.4}, pass), at).items<double>());
+  out.writeln("cheby2 band-stop, 30 dB          ", gain(sig::cheby2(2, 30.0, {0.2, 0.4}, stop), at).items<double>());
+  out.writeln("ripple floor and attenuation level", std::pow(10.0, -1.0 / 20.0), std::pow(10.0, -30.0 / 20.0));
+}
+```
+
+The band-pass has gain `0.89125` at both edges (`0.2` and `0.4`) and `0.89608` at the centre, inside the ripple band between the floor and 1; it falls to `0.0932` at `0.1` and to `0.0178` at `0.8`. The band-stop has gain `0.03162` at both edges, a dip to `0.03079` in the centre of the stop band, and returns to `1` at both ends.
+
+## Errors
+
+The designs refuse an order below one, a cutoff outside the valid range for the sample rate, a band pair whose lower edge is not below the upper edge, a single cutoff for a band design (or a pair for a single-cutoff band), and non-positive ripple or attenuation. The program shows the messages.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  sig::IirOptions pass;
+  pass.band = sig::Band::Pass;
+  report([] { (void)sig::butter(0, 0.3); });
+  report([] { (void)sig::butter(4, 1.2); });
+  report([&] { (void)sig::butter(4, {0.4, 0.2}, pass); });
+  report([&] { (void)sig::butter(4, 0.3, pass); });
+  report([] { (void)sig::cheby1(4, -1.0, 0.3); });
+  report([] { (void)sig::cheby2(4, 0.0, 0.3); });
+}
+```
+
+## Decisions
+
+- **No ripple tolerated:** `butter`. It is the right first design.
+- **Narrowest transition for a given order, with pass-band ripple acceptable:** `cheby1`.
+- **A guaranteed attenuation in the stop band, with a flat pass band:** `cheby2`.
+- **Choosing the order:** raise it until the gain at the edge of the stop band meets your specification, checking with [`freqz`](frequency_response.md). Each order adds about 6 dB per octave of roll-off.
+- **Running the result:** keep the `PoleZero`, convert once with `lti::to_sos`, and use [`sos`](../signal_02_recursive_filters/second_order_sections.md) or [`zero_phase`](../signal_02_recursive_filters/zero_phase_filtering.md).
+
+## Pitfalls
+
+The program makes four mistakes with a design: reading a Chebyshev cutoff as a half-power point, giving a cutoff in hertz without a sample rate, specifying a band wrongly, and expanding a high-order design to one polynomial.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+#include <vector>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using Complex = std::complex<double>;
+
+// |H| of a designed digital filter at the given angular frequency, in radians per sample
+static double gain_at(const lti::PoleZero &design, double omega) {
+  const pluss::Series sections = lti::to_sos(design);
+  const pluss::Series w = pluss::series::make(std::vector<double>{omega});
+  pluss::Series response = pluss::series::ones({1}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series s = sections.select(0, row);
+    response = response * sig::freqz(s.slice(0, 0, 3), s.slice(0, 3, 6), w);
+  }
+  return response.abs().select(0, 0).item<double>();
+}
+// the coefficients of the monic polynomial with the given roots, highest power first
+static std::vector<double> polynomial(const std::vector<Complex> &roots) {
+  std::vector<Complex> c{1.0};
+  for (const Complex &r : roots) {
+    std::vector<Complex> next(c.size() + 1, 0.0);
+    for (std::size_t i = 0; i < c.size(); ++i) {
+      next[i] += c[i];
+      next[i + 1] -= r * c[i];
+    }
+    c = next;
+  }
+  std::vector<double> real;
+  for (const Complex &v : c) real.push_back(v.real());
+  return real;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const auto report = [&](const char *label, const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(std::string(label) + ": " + text);
+    }
+  };
+  const double cutoff = M_PI * 0.2;
+
+  // 1. the cutoff of a Chebyshev design is the edge of a band, not a half-power point
+  out.writeln("gain at the cutoff 0.2 of Nyquist: butter ", gain_at(sig::butter(4, 0.2), cutoff), "   cheby1 with 1 dB of ripple ", gain_at(sig::cheby1(4, 1.0, 0.2), cutoff), "   cheby2 with 40 dB of attenuation ", gain_at(sig::cheby2(4, 40.0, 0.2), cutoff));
+  out.writeln("10^(-1/20) = ", std::pow(10.0, -1.0 / 20.0), "   10^(-40/20) = ", std::pow(10.0, -40.0 / 20.0));
+
+  // 2. a cutoff in hertz needs the sample rate
+  report("butter(4, 100) with the default sample rate of 2", [&] { (void)sig::butter(4, 100.0); });
+  sig::IirOptions in_hertz;
+  in_hertz.sample_rate = 1000.0;
+  out.writeln("butter(4, 100) at 1000 Hz: gain at 100 Hz ", gain_at(sig::butter(4, 100.0, in_hertz), M_PI * 0.2));
+
+  // 3. a band design needs the pair form, lower edge first
+  sig::IirOptions band;
+  band.band = sig::Band::Pass;
+  report("a band design with a single cutoff", [&] { (void)sig::butter(4, 0.3, band); });
+  report("a band design with the edges reversed", [&] { (void)sig::butter(4, std::pair<double, double>{0.4, 0.2}, band); });
+  const auto pass = sig::butter(4, std::pair<double, double>{0.2, 0.4}, band);
+  out.writeln("with the edges in order, gain at 0.1, 0.3 and 0.6 of Nyquist: ", std::vector<double>{gain_at(pass, M_PI * 0.1), gain_at(pass, M_PI * 0.3), gain_at(pass, M_PI * 0.6)});
+
+  // 4. one numerator and denominator for a high order and a narrow band
+  const pluss::Series step = pluss::series::ones({4000}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  const auto design = sig::butter(10, 0.02);
+  std::vector<double> numerator = polynomial(design.zeros().to(pluss::ScalarType::Complex128).items<Complex>());
+  const std::vector<double> denominator = polynomial(design.poles().to(pluss::ScalarType::Complex128).items<Complex>());
+  for (double &v : numerator) v *= design.gain().item<double>();
+  out.writeln("final value of the step response, order 10 at 0.02 of Nyquist: sections ", sig::sos(step, lti::to_sos(design)).values.select(0, 3999).item<double>(), "   one polynomial ", sig::filter(step, pluss::series::make(numerator), pluss::series::make(denominator)).values.select(0, 3999).item<double>(), "   exact 1");
+}
+```
+
+At a cutoff of `0.2` of Nyquist a Butterworth design has the half-power gain `0.70711`, but a Chebyshev type I design with `1` dB of ripple has `0.89125`, which is `10^(-1/20)`, and a type II design with `40` dB of attenuation has `0.01000`: the cutoff of those designs is the edge of a band. A cutoff of `100` with the default sample rate of `2` is beyond Nyquist and is refused; with `sample_rate = 1000` it is the half-power frequency, `0.70711`. A band design needs the pair form: a single cutoff is refused, and so are edges in the wrong order; with `(0.2, 0.4)` the gain is `0.00826`, `1.00000` and `0.01234` at `0.1`, `0.3` and `0.6` of Nyquist. And a design expanded to one numerator and denominator loses its accuracy: for order `10` at `0.02` of Nyquist the sections reach the exact final value of `1`, the polynomial form `0.95961`.
+
+Reference: [`PoleZero`](../../../../api/eng/lti/response/PoleZero.md), [`to_sos`](../../../../api/eng/lti/response/to_sos.md), [`freqz`](../../../../api/eng/signal/filtering/freqz.md), [`butter`](../../../../api/eng/signal/design/butter.md), [`IirOptions`](../../../../api/eng/signal/design/IirOptions.md), [`Band`](../../../../api/eng/signal/design/Band.md), [`cheby1`](../../../../api/eng/signal/design/cheby1.md), [`cheby2`](../../../../api/eng/signal/design/cheby2.md).
+
+Where next: the signal chapters end here. The [linear systems](../../../../api/eng/lti.md) reference covers the `PoleZero` type that every design returns.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="frequency_response.html">
+    <span class="label">Previous</span>
+    <span class="title">Frequency response</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

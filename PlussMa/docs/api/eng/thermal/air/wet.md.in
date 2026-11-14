@@ -1,0 +1,69 @@
+# `thermal::wet`
+
+The thermodynamic wet-bulb temperature of moist air.
+
+## Signature
+
+```cpp
+Series thermal::wet(const Series& temperature,
+                    const Series& w,
+                    const Series& pressure);
+```
+
+## What It Does
+
+Returns the temperature at which water evaporating adiabatically into the air saturates it: the solution of the ASHRAE energy balance between the dry-bulb state and the saturated state at the wet-bulb temperature. Above 0 degrees the balance uses liquid water; below it, ice. The root is searched between just below the dew point and the dry-bulb temperature for the whole batch.
+
+## Parameters
+
+`temperature`
+: The dry-bulb temperature in degrees Celsius, between -50 and 100.
+
+`w`
+: The humidity ratio in kg/kg, positive.
+
+`pressure`
+: The total pressure in Pa, positive.
+
+## Returns
+
+The wet-bulb temperature in degrees Celsius with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for a temperature outside -50 to 100, a humidity ratio or pressure that is not positive or not finite, and for supersaturated air (a dew point above the dry-bulb temperature).
+
+## Interpretation and Use
+
+Dew point, wet bulb and dry bulb coincide for saturated air and separate as the air gets drier, always in the order dew point, wet bulb, dry bulb. The thermodynamic wet bulb equals what a wetted thermometer reads in a fast stream.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The wet bulb of air at 25 degrees and 50 %.
+
+@@example Eng/api/thermal_wet_basic.cpp@@
+
+### Example 2
+
+Saturated and drier air.
+
+@@example Eng/api/thermal_wet_saturated.cpp@@
+
+### Example 3
+
+Below freezing.
+
+@@example Eng/api/thermal_wet_ice.cpp@@
+
+### Example 4
+
+Rejected inputs.
+
+@@example Eng/api/thermal_wet_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

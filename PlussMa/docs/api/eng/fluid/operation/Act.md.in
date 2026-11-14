@@ -1,0 +1,68 @@
+# `fluid::Act`
+
+What an action does to a device.
+
+## Signature
+
+```cpp
+fluid::Act
+```
+
+## What It Does
+
+The change an `Action` makes. `Close` shuts the link. `Open` reopens it and clears a value that an earlier `Set` had latched, returning the device to its pattern baseline. `Set` opens the device and latches `Action::value`: a relative speed for a pump, the loss coefficient for a throttle valve, the flow for a flow valve, the pressure head for a pressure valve.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Open` | Reopen the link and release a latched setting. |  |
+| `Close` | Shut the link; it carries no flow. |  |
+| `Set` | Open the link and latch `value`. |  |
+
+## Returns
+
+An enumeration; `Action::act`.
+
+## Errors
+
+A `Set` value that is invalid for the device is rejected by `run`.
+
+## Interpretation and Use
+
+Actions are persistent: they stay in effect until another action changes the device. Every `Close` needs an `Open` or the device stays closed for the rest of the run.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Set, close and open on a clock.
+
+@@example Eng/api/fluid_controls_actions.cpp@@
+
+### Example 2
+
+Close and open by level.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 3
+
+A pump closed and never reopened.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Sense.html">
+    <span class="label">Previous</span>
+    <span class="title">Sense</span>
+  </a>
+  <a class="next-link" href="Action.html">
+    <span class="label">Next</span>
+    <span class="title">Action</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

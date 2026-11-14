@@ -1,0 +1,71 @@
+# `fluid::Pumps`
+
+The curve and speed of the pumps.
+
+## Signature
+
+```cpp
+fluid::Pumps
+```
+
+## What It Does
+
+Describes the pumps of a `Net`. A pump adds head `s² H0 - R s^(2-n) q^n` between its `from` and `to` nodes at a relative speed `s`, shutoff head `H0`, resistance `R` and exponent `n`. It is one-way: a flow that would run backwards through it is refused.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `from` | The suction node index of each pump. | required |
+| `to` | The discharge node index of each pump. | required |
+| `shutoff_head` | The head at zero flow and unit speed, m, `[..., pump]`. | required |
+| `resistance` | The curve resistance `R`, m / (m³/s)^n, `[..., pump]`. | required |
+| `exponent` | The positive curve exponent `n`, `[..., pump]`. | required |
+| `speed` | The relative speed, `[..., pump]`. | undefined (1) |
+
+## Returns
+
+A value; validated by `network` and `steady`.
+
+## Errors
+
+An endpoint outside the node range, a pump from a node to itself, mixed precision, and curve values that are not finite or not positive are rejected. `steady` refuses a solution in which an active pump would run backwards.
+
+## Interpretation and Use
+
+Links are numbered pipes first, then pumps, then valves. A pump has no velocity (it reports 0) and its head loss is negative. The flow through a pump is set by the rest of the network: with a demand it is the demand, and between two reservoirs it is where the pump curve meets the system curve.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pump lifting water between reservoirs.
+
+@@example Eng/api/fluid_pump_build.cpp@@
+
+### Example 2
+
+The affinity law and a sensitivity to the speed.
+
+@@example Eng/api/fluid_pump_speed.cpp@@
+
+### Example 3
+
+A pump switched by tank level.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Pipes.html">
+    <span class="label">Previous</span>
+    <span class="title">Pipes</span>
+  </a>
+  <a class="next-link" href="Valves.html">
+    <span class="label">Next</span>
+    <span class="title">Valves</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

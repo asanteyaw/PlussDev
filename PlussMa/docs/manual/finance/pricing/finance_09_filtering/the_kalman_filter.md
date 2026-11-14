@@ -1,0 +1,311 @@
+<!-- generated from the_kalman_filter.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# The Kalman filter
+
+[Back to Filtering](../finance_09_filtering.md)
+
+A filter estimates a hidden quantity from noisy observations, one observation at a time. The hidden quantity is the **state** {math}`x_t`, a vector that is never seen: the level of a rate, the volatility of an asset, the trend of a price. What is seen is the **observation** {math}`y_t`, a noisy function of the state. The Kalman filter is the exact solution when everything is linear and Gaussian:
+
+```{math}
+\begin{aligned}
+x_t&=F\,x_{t-1}+G\,u_t+w_t, & w_t&\sim\mathcal N(0,Q) &&\text{(the state moves)}\\
+y_t&=H\,x_t+v_t, & v_t&\sim\mathcal N(0,R) &&\text{(what is observed)}
+\end{aligned}
+```
+
+where {math}`u_t` is an optional known input. The filter computes the law of {math}`x_t` given the observations up to {math}`t`, which is Gaussian with a mean {math}`\hat x_t` and a covariance {math}`P_t`, by repeating two steps. The **prediction** moves the previous estimate through the model, and the **update** corrects it with the new observation:
+
+```{math}
+\begin{aligned}
+\hat x_{t|t-1}&=F\hat x_{t-1}+Gu_t, & P_{t|t-1}&=FP_{t-1}F^\top+Q,\\
+e_t&=y_t-H\hat x_{t|t-1}, & S_t&=HP_{t|t-1}H^\top+R,\\
+K_t&=P_{t|t-1}H^\top S_t^{-1}, & \hat x_t&=\hat x_{t|t-1}+K_te_t,\qquad P_t=(I-K_tH)P_{t|t-1}.
+\end{aligned}
+```
+
+The **innovation** {math}`e_t` is the surprise in the observation, {math}`S_t` its variance, and the **gain** {math}`K_t` says how much of the surprise is believed. The innovations are what gives the model a likelihood: {math}`\ln L=\sum_t-\tfrac12\big(\ln|2\pi S_t|+e_t^\top S_t^{-1}e_t\big)`, which is how a filter is used to estimate parameters.
+
+```cpp
+filtering::KalmanResult filtering::kalman_filter(const Series &observations, const filtering::KalmanModel &model, Config cfg = {});
+```
+
+| `KalmanModel` member | Shape | Meaning |
+|---|---|---|
+| `transition` | `[n, n]` | {math}`F` |
+| `observation` | `[m, n]` | {math}`H` |
+| `process_cov` | `[n, n]` | {math}`Q` |
+| `observation_cov` | `[m, m]` | {math}`R` |
+| `initial_mean`, `initial_cov` | `[n]`, `[n, n]` | the law of the state before the first observation |
+| `control`, `control_matrix` | `[T, k]`, `[n, k]` | the known inputs {math}`u_t` and {math}`G`; optional |
+| `info_tol` | number | an observation channel whose forecast variance is at most this is not used (default 0) |
+
+`observations` has shape `[T]` for one observed quantity and `[T, m]` for several; a `NaN` marks a missing value.
+
+| `KalmanResult` member | Shape | Contents |
+|---|---|---|
+| `filtered_mean`, `filtered_cov` | `[T, n]`, `[T, n, n]` | {math}`\hat x_t` and {math}`P_t`, after the observation of date {math}`t` |
+| `predicted_mean`, `predicted_cov` | `[T, n]`, `[T, n, n]` | {math}`\hat x_{t|t-1}` and {math}`P_{t|t-1}`, before it |
+| `innovation`, `innovation_cov` | `[T, m]`, `[T, m, m]` | {math}`e_t` and {math}`S_t` |
+| `data_used` | `[T, m]` | 1 where the channel entered the update, 0 where it was missing or ignored |
+| `loglik` | number | {math}`\ln L` of the sample |
+
+The initial mean and covariance describe the state *before* the first observation, so the first step is a prediction: the predicted covariance at the first date is {math}`FP_0F^\top+Q`.
+
+## Program 1: a local level
+
+The simplest state is a level that moves as a random walk, {math}`F=H=1`, observed with noise. The program simulates 400 observations with process variance {math}`q=0.01` and observation variance {math}`r=0.04`, filters them, and checks the filter against theory. After a few dates the variances stop changing, and the steady state solves a quadratic: the prediction variance is {math}`P=\tfrac12\big(q+\sqrt{q^2+4qr}\big)`, the gain is {math}`K=P/(P+r)`, and the filtered variance is {math}`Kr`. The program also recomputes the log-likelihood from the innovations.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const double q = 0.01, r = 0.04;
+  const std::int64_t T = 400;
+  // a hidden random walk x and noisy observations y = x + noise
+  const auto x = (pluss::series::randn({T}, as_f64(), 1) * std::sqrt(q)).cumsum(0, false);
+  const auto y = x + pluss::series::randn({T}, as_f64(), 2) * std::sqrt(r);
+
+  flt::KalmanModel model;
+  model.transition = pluss::series::full({1, 1}, 1.0, as_f64());
+  model.observation = pluss::series::full({1, 1}, 1.0, as_f64());
+  model.process_cov = pluss::series::full({1, 1}, q, as_f64());
+  model.observation_cov = pluss::series::full({1, 1}, r, as_f64());
+  model.initial_mean = pluss::series::full({1}, 0.0, as_f64());
+  model.initial_cov = pluss::series::full({1, 1}, 1.0, as_f64());
+  const auto result = flt::kalman_filter(y, model, as_f64());
+
+  out.writeln("filtered_mean", result.filtered_mean.sizes(), " filtered_cov", result.filtered_cov.sizes(), " innovation", result.innovation.sizes(), " data_used", result.data_used.sizes());
+  const double prior = (q + std::sqrt(q * q + 4.0 * q * r)) / 2.0, gain = prior / (prior + r);
+  out.writeln("steady-state prediction variance", prior, " filtered variance K r =", gain * r, " last filtered variance", result.filtered_cov.select(0, T - 1).reshape({1}).items<double>()[0]);
+  out.writeln("predicted variance at the first date", result.predicted_cov.select(0, 0).reshape({1}).items<double>()[0], " (initial 1 + process 0.01)");
+
+  const auto e = result.innovation.reshape({T}).items<double>(), s = result.innovation_cov.reshape({T}).items<double>();
+  double loglik = 0.0;
+  for (std::int64_t t = 0; t < T; ++t) loglik += -0.5 * (std::log(2.0 * M_PI * s[t]) + e[t] * e[t] / s[t]);
+  out.writeln("log-likelihood: library", result.loglik, " from the innovations", loglik);
+  out.writeln("rmse of the state: filtered", (result.filtered_mean.reshape({T}) - x).square().mean().sqrt().item<double>(), " raw observation", (y - x).square().mean().sqrt().item<double>());
+}
+```
+
+Output
+
+```text
+filtered_mean [400, 1]  filtered_cov [400, 1, 1]  innovation [400, 1]  data_used [400, 1]
+steady-state prediction variance 0.025616  filtered variance K r = 0.015616  last filtered variance 0.015616
+predicted variance at the first date 1.010000  (initial 1 + process 0.01)
+log-likelihood: library -37.766814  from the innovations -37.766814
+rmse of the state: filtered 0.135182  raw observation 0.205988
+```
+
+Every array has the shape of the table: 400 dates by one state. The filtered variance settles at 0.015616, the theoretical {math}`Kr` for these noise levels (prediction variance 0.025616, gain 0.39), and the filtered estimate has an error of 0.135 against 0.206 for the raw observations, the standard deviation of which is {math}`\sqrt r=0.2`: the filter removes about a third of the noise by averaging over the past. The first predicted variance, 1.01, is the initial variance 1 plus the process variance 0.01, which shows the convention. The library's log-likelihood, −37.766814, is the sum computed here from the innovations to every digit.
+
+## Program 2: missing observations and `info_tol`
+
+A missing observation is a `NaN`. The filter then skips the update: the estimate is the prediction and the variance grows by the process noise. A channel is also skipped when its forecast variance is at most `info_tol`, which switches off a channel that is known to carry no information. The program filters a constant series with two missing values and prints the dates around them, then filters with `info_tol = 10⁹` so that nothing is used.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::int64_t T = 12;
+  flt::KalmanModel model;
+  model.transition = pluss::series::full({1, 1}, 1.0, as_f64());
+  model.observation = pluss::series::full({1, 1}, 1.0, as_f64());
+  model.process_cov = pluss::series::full({1, 1}, 0.01, as_f64());
+  model.observation_cov = pluss::series::full({1, 1}, 0.04, as_f64());
+  model.initial_mean = pluss::series::full({1}, 0.0, as_f64());
+  model.initial_cov = pluss::series::full({1, 1}, 1.0, as_f64());
+
+  std::vector<double> data(T, 1.0);
+  data[5] = data[6] = std::nan("");  // two missing observations
+  const auto result = flt::kalman_filter(pluss::make_series(data, {T}, as_f64()), model, as_f64());
+  out.writeln("date  data  used  predicted mean  filtered mean  filtered variance");
+  for (std::int64_t t = 3; t < 10; ++t) {
+    out.writeln(t, data[t], result.data_used.select(0, t).reshape({1}).items<double>()[0], result.predicted_mean.select(0, t).reshape({1}).items<double>()[0],
+                result.filtered_mean.select(0, t).reshape({1}).items<double>()[0], result.filtered_cov.select(0, t).reshape({1}).items<double>()[0]);
+  }
+  out.writeln("log-likelihood with the gap", result.loglik);
+
+  model.info_tol = 1e9;  // no observation channel is informative enough
+  const auto ignored = flt::kalman_filter(pluss::series::full({T}, 3.0, as_f64()), model, as_f64());
+  out.writeln("info_tol = 1e9: data used", ignored.data_used.sum().item<double>(), " filtered mean at the last date", ignored.filtered_mean.select(0, T - 1).reshape({1}).items<double>()[0]);
+}
+```
+
+Output
+
+```text
+date  data  used  predicted mean  filtered mean  filtered variance
+3 1.00000 1.00000 0.99042 0.99434 0.01638
+4 1.00000 1.00000 0.99434 0.99659 0.01590
+5 nan 0.00000 0.99659 0.99659 0.02590
+6 nan 0.00000 0.99659 0.99659 0.03590
+7 1.00000 1.00000 0.99659 0.99841 0.02137
+8 1.00000 1.00000 0.99841 0.99911 0.01758
+9 1.00000 1.00000 0.99911 0.99947 0.01633
+log-likelihood with the gap 2.14049
+info_tol = 1e9: data used 0.00000  filtered mean at the last date 0.00000
+```
+
+The two `NaN` observations (dates 5 and 6) have `data_used = 0`: the filtered mean equals the predicted mean there (0.99659 at both), and the filtered variance rises from 0.0159 to 0.0259 to 0.0359, one process variance 0.01 at each skipped date. When data returns at date 7 the variance falls back, to 0.0214 and then 0.0176, towards its steady value. The log-likelihood of 2.14 counts only the observations that were used. With `info_tol = 10⁹` no observation is used, `data_used` sums to 0 and the filtered mean stays at the initial value 0.
+
+## Program 3: a known input
+
+If something known moves the state, it enters as an input. The program has a state that moves by {math}`b\,u_t` each date, with {math}`b=0.5` and a known {math}`u_t` of 1, 1, 0, 0, 2, 2, 1, 0, with almost no noise, so that the filter must follow the deterministic path. `control` holds the inputs, one row per date, and `control_matrix` holds {math}`G`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::int64_t T = 8;
+  // x_t = x_{t-1} + b u_t + noise, observed with noise; the input u_t is known
+  const double b = 0.5;
+  flt::KalmanModel model;
+  model.transition = pluss::series::full({1, 1}, 1.0, as_f64());
+  model.observation = pluss::series::full({1, 1}, 1.0, as_f64());
+  model.process_cov = pluss::series::full({1, 1}, 1e-6, as_f64());
+  model.observation_cov = pluss::series::full({1, 1}, 1e-6, as_f64());
+  model.initial_mean = pluss::series::full({1}, 0.0, as_f64());
+  model.initial_cov = pluss::series::full({1, 1}, 1e-6, as_f64());
+  model.control = pluss::make_series({1.0, 1.0, 0.0, 0.0, 2.0, 2.0, 1.0, 0.0}, {T, 1}, as_f64());
+  model.control_matrix = pluss::series::full({1, 1}, b, as_f64());
+
+  std::vector<double> truth(T);
+  double state = 0.0;
+  const auto u = model.control.reshape({T}).items<double>();
+  for (std::int64_t t = 0; t < T; ++t) {
+    state += b * u[t];
+    truth[t] = state;
+  }
+  const auto observed = pluss::make_series(truth, {T}, as_f64());
+  const auto result = flt::kalman_filter(observed, model, as_f64());
+  out.writeln("date  input  true state  filtered mean  predicted mean");
+  for (std::int64_t t = 0; t < T; ++t) {
+    out.writeln(t, u[t], truth[t], result.filtered_mean.select(0, t).reshape({1}).items<double>()[0], result.predicted_mean.select(0, t).reshape({1}).items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+date  input  true state  filtered mean  predicted mean
+0 1.00000 0.50000 0.50000 0.50000
+1 1.00000 1.00000 1.00000 1.00000
+2 0.00000 1.00000 1.00000 1.00000
+3 0.00000 1.00000 1.00000 1.00000
+4 2.00000 2.00000 2.00000 2.00000
+5 2.00000 3.00000 3.00000 3.00000
+6 1.00000 3.50000 3.50000 3.50000
+7 0.00000 3.50000 3.50000 3.50000
+```
+
+The filtered state follows the cumulative effect of the inputs exactly: 0.5, 1.0, 1.0, 1.0, 2.0, 3.0, 3.5, 3.5, which is {math}`\sum_{s\le t}b\,u_s`. The input of date {math}`t` acts on the state of date {math}`t` itself ({math}`x_t=Fx_{t-1}+Gu_t`), so the first filtered value is already 0.5. The same mechanism carries a constant, which the next page needs: a state that reverts to a level {math}`\theta` has the intercept {math}`\theta(1-F)`, a constant input.
+
+## Program 4: two states
+
+A state can have several components. The **local linear trend** is a level and a slope: the level moves with the slope, {math}`\ell_t=\ell_{t-1}+s_{t-1}+w^\ell_t`, and the slope is itself a random walk, {math}`s_t=s_{t-1}+w^s_t`. Only the level is observed, with noise, and the filter infers the slope that is never seen:
+
+```{math}
+F=\begin{pmatrix}1&1\\0&1\end{pmatrix},\qquad H=\begin{pmatrix}1&0\end{pmatrix},\qquad Q=\begin{pmatrix}q_\ell&0\\0&q_s\end{pmatrix}.
+```
+
+The program simulates 300 observations with a slope that drifts around 0.05 to 0.27, and prints the filtered slope and its standard error, the square root of the (2,2) entry of the filtered covariance, at five dates.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace flt = fin::filtering;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const std::int64_t T = 300;
+  const double level_noise = 0.01, slope_noise = 0.0004, obs_noise = 0.25;
+  // state (level, slope): level_t = level_{t-1} + slope_{t-1} + noise, slope_t = slope_{t-1} + noise; only the level is observed
+  const auto w1 = pluss::series::randn({T}, as_f64(), 3) * std::sqrt(level_noise), w2 = pluss::series::randn({T}, as_f64(), 4) * std::sqrt(slope_noise);
+  std::vector<double> level(T), slope(T);
+  double l = 0.0, s = 0.05;
+  const auto a = w1.items<double>(), c = w2.items<double>();
+  for (std::int64_t t = 0; t < T; ++t) {
+    l += s + a[t];
+    s += c[t];
+    level[t] = l;
+    slope[t] = s;
+  }
+  const auto y = pluss::make_series(level, {T}, as_f64()) + pluss::series::randn({T}, as_f64(), 5) * std::sqrt(obs_noise);
+
+  flt::KalmanModel model;
+  model.transition = pluss::make_series({1.0, 1.0, 0.0, 1.0}, {2, 2}, as_f64());
+  model.observation = pluss::make_series({1.0, 0.0}, {1, 2}, as_f64());
+  model.process_cov = pluss::make_series({level_noise, 0.0, 0.0, slope_noise}, {2, 2}, as_f64());
+  model.observation_cov = pluss::series::full({1, 1}, obs_noise, as_f64());
+  model.initial_mean = pluss::make_series({0.0, 0.0}, {2}, as_f64());
+  model.initial_cov = pluss::make_series({10.0, 0.0, 0.0, 1.0}, {2, 2}, as_f64());
+  const auto result = flt::kalman_filter(y, model, as_f64());
+
+  out.writeln("filtered_mean", result.filtered_mean.sizes(), " filtered_cov", result.filtered_cov.sizes());
+  out.writeln("date  true slope  filtered slope  standard error of the slope");
+  for (const std::int64_t t : {10, 50, 100, 200, 299}) {
+    out.writeln(t, slope[t], result.filtered_mean.select(0, t).select(0, 1).item<double>(), std::sqrt(result.filtered_cov.select(0, t).select(0, 1).select(0, 1).item<double>()));
+  }
+  const auto level_hat = result.filtered_mean.select(1, 0);
+  out.writeln("rmse of the level: filtered", (level_hat - pluss::make_series(level, {T}, as_f64())).square().mean().sqrt().item<double>(), " raw observation", std::sqrt(obs_noise));
+}
+```
+
+Output
+
+```text
+filtered_mean [300, 2]  filtered_cov [300, 2, 2]
+date  true slope  filtered slope  standard error of the slope
+10 -0.04805 -0.01185 0.07043
+50 0.06977 0.06502 0.05900
+100 0.19119 0.21664 0.05900
+200 0.26517 0.24458 0.05900
+299 0.24747 0.24544 0.05900
+rmse of the level: filtered 0.20764  raw observation 0.50000
+```
+
+`filtered_mean` has shape `[300, 2]` (level and slope) and `filtered_cov` `[300, 2, 2]`. The filtered slope follows the true one, 0.065 for 0.070 at date 50 and 0.245 for 0.247 at date 299, with a standard error of 0.059 once the filter has settled; the estimate at date 100 is 0.217 for 0.191, 0.4 standard errors away. At date 10 it has not yet learned the slope (−0.012 for −0.048, standard error 0.070). The level estimate has an error of 0.208 against 0.5 for the observations.
+
+## Checklist
+
+1. Write the model as {math}`F,H,Q,R` and the initial law before the first observation; the first step is a prediction.
+2. Use `NaN` for missing observations; `data_used` shows what was used.
+3. Put known inputs, constants included, in `control` and `control_matrix`.
+4. Read the uncertainty from `filtered_cov`: the square root of its diagonal is the standard error of each component.
+5. Compare models with `loglik`, on the same observations.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="yield_curve_filtering.html">
+    <span class="label">Next</span>
+    <span class="title">Filtering the short rate from bond prices</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

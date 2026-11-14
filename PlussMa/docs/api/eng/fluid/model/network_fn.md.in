@@ -1,0 +1,64 @@
+# `fluid::network`
+
+Validates a description and compiles it into a `Network`.
+
+## Signature
+
+```cpp
+Network network(const Net &net, const Liquid &liquid = {});
+```
+
+## What It Does
+
+Checks the description for consistency and builds the constant topology maps once: the node-pipe incidence, the selection of the variable-head nodes, and the device masks. Host work is limited to integer connectivity checks; every physical array stays a `Series`.
+
+## Parameters
+
+`net`
+: The `Net` to compile.
+
+`liquid`
+: The `Liquid`; water at 20 °C by default.
+
+## Returns
+
+An immutable `Network`.
+
+## Errors
+
+Throws `std::invalid_argument` for a malformed description: a component with no reservoir or tank, an endpoint outside the range, a self-loop, non-positive dimensions, a demand at a reservoir, non-floating or non-finite values, mixed precision or platform, and leading axes that disagree.
+
+## Interpretation and Use
+
+Compile once and solve many times. The error text names the rule that was broken. Compilation does not solve anything, so a description that compiles can still fail in `steady`, for example for a setting the network cannot satisfy.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Compile and solve the smallest network.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 2
+
+Compile a batch of scenarios.
+
+@@example Eng/api/fluid_net_batch.cpp@@
+
+### Example 3
+
+Descriptions that are refused.
+
+@@example Eng/api/fluid_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Network.html">
+    <span class="label">Previous</span>
+    <span class="title">Network</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

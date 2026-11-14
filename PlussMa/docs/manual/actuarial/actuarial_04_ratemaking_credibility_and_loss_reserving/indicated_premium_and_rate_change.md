@@ -1,0 +1,209 @@
+<!-- generated from indicated_premium_and_rate_change.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Indicated Premium and Rate Change
+
+[Back to Ratemaking, Credibility and Loss Reserving](../actuarial_04_ratemaking_credibility_and_loss_reserving.md)
+
+The pure premium covers losses only. The premium a policy is charged must also pay for the expenses of selling and running it and leave a profit. Some expenses are a fixed amount per exposure unit {math}`F` (a policy fee); others, such as commissions and taxes, are a share {math}`V` of the premium; and the target profit is a share {math}`Q` of the premium. The premium {math}`P` that covers all of them satisfies {math}`P = \text{pure premium} + F + (V+Q)\,P`, so
+
+```{math}
+P_{\text{indicated}}=\frac{\text{pure premium}+F}{1-V-Q},\qquad
+\text{rate change}=\frac{P_{\text{indicated}}}{P_{\text{current}}}-1.
+```
+
+The **indicated premium** is what experience says the rate should be, and the **rate change** is the adjustment from the premium currently charged: +10% means the rate should rise by a tenth. The denominator requires {math}`V+Q<1`, since expenses and profit that consume the whole premium leave nothing for losses.
+
+```cpp
+pluss::Series models::indicated_premium(const pluss::Series &pure_premium, double fixed_expense, double variable_expense_ratio, double profit_ratio);
+pluss::Series models::rate_change(const pluss::Series &current_premium, const pluss::Series &indicated_premium);
+pluss::Series models::experience_change(const pluss::Series &incurred_losses, const pluss::Series &exposure, const pluss::Series &current_premium, double fixed_expense, double variable_expense_ratio, double profit_ratio);
+actuarial::Pricing actuarial::operators::price(actuarial::Loads loads = {});
+actuarial::PricingResult actuarial::Pricing::operator()(const actuarial::Experience &experience) const;
+```
+
+| Function or type | Meaning |
+|---|---|
+| `indicated_premium(pure_premium, F, V, Q)` | `(pure premium + F) / (1 − V − Q)`, element by element |
+| `rate_change(current_premium, indicated_premium)` | `indicated / current − 1`, element by element |
+| `experience_change(losses, exposure, current_premium, F, V, Q)` | the workflow in one call: `premium_curve`, then `indicated_premium`, then `rate_change` |
+| `Loads{fixed_expense, variable_expense_ratio, profit_ratio}` | the three assumptions: `F` ≥ 0, `V` and `Q` ≥ 0 with `V + Q` < 1 |
+| `Experience{losses, exposure, current_premium}` | the experience of the periods, three one-dimensional `Series` of one length |
+| `operators::price(loads)` | a `Pricing` operator for the loads; apply it to an `Experience` |
+| `PricingResult{pure_premium, indicated_premium, rate_change}` | what the operator returns, three `Series` of the periods' length |
+
+## The indicated premium of four years
+
+With a fixed expense of 25 per exposure unit, a variable expense ratio of 25% and a profit of 5%, the denominator is 0.70. The program derives each year's indicated premium and the rate change against the premium currently charged, and checks the first year by hand: (520 + 25) / 0.70 = 778.57.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series current = pluss::make_series({600.0, 640.0, 700.0, 720.0});
+  const pluss::Series pure = models::premium_curve(losses, exposure);
+  const pluss::Series indicated = models::indicated_premium(pure, 25.0, 0.25, 0.05);
+  out.writeln("pure premium       =", pure.items<double>());
+  out.writeln("indicated premium  =", indicated.items<double>(), " first year by hand", (520.0 + 25.0) / 0.70);
+  out.writeln("current premium    =", current.items<double>());
+  out.writeln("rate change        =", models::rate_change(current, indicated).items<double>());
+}
+```
+
+Output
+
+```text
+pure premium       = [520.000000, 575.000000, 540.000000, 611.111111]
+indicated premium  = [778.571429, 857.142857, 807.142857, 908.730159]  first year by hand 778.571429
+current premium    = [600.000000, 640.000000, 700.000000, 720.000000]
+rate change        = [0.297619, 0.339286, 0.153061, 0.262125]
+```
+
+## The same workflow in one call, and as an operator
+
+`experience_change` runs the three steps from the experience. The `Pricing` operator does the same for any experience and returns all three results; it is created once from the loads and reused, for example across lines of business with the same loads.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series exposure = pluss::make_series({1000.0, 1200.0, 1500.0, 1800.0});
+  const pluss::Series losses = pluss::make_series({520000.0, 690000.0, 810000.0, 1100000.0});
+  const pluss::Series current = pluss::make_series({600.0, 640.0, 700.0, 720.0});
+  const actuarial::Pricing pricing = actuarial::operators::price(actuarial::Loads{25.0, 0.25, 0.05});
+  const actuarial::PricingResult result = pricing(actuarial::Experience{losses, exposure, current});
+  out.writeln("experience_change =", models::experience_change(losses, exposure, current, 25.0, 0.25, 0.05).items<double>());
+  out.writeln("operator          =", result.rate_change.items<double>());
+  out.writeln("pure premium      =", result.pure_premium.items<double>());
+  out.writeln("indicated premium =", result.indicated_premium.items<double>());
+}
+```
+
+Output
+
+```text
+experience_change = [0.297619, 0.339286, 0.153061, 0.262125]
+operator          = [0.297619, 0.339286, 0.153061, 0.262125]
+pure premium      = [520.000000, 575.000000, 540.000000, 611.111111]
+indicated premium = [778.571429, 857.142857, 807.142857, 908.730159]
+```
+
+## What the loads do
+
+The indicated premium grows with each load, and grows faster the closer the proportional loads come to one, because the denominator shrinks. The program varies the profit margin on the first year's pure premium.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series pure = pluss::make_series({520.0});
+  for (const double profit : {0.0, 0.05, 0.10, 0.20, 0.40}) {
+    out.writeln("profit", profit, " denominator", 1.0 - 0.25 - profit, " indicated premium", models::indicated_premium(pure, 25.0, 0.25, profit).items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+profit 0.000000  denominator 0.750000  indicated premium 726.666667
+profit 0.050000  denominator 0.700000  indicated premium 778.571429
+profit 0.100000  denominator 0.650000  indicated premium 838.461538
+profit 0.200000  denominator 0.550000  indicated premium 990.909091
+profit 0.400000  denominator 0.350000  indicated premium 1557.142857
+```
+
+## Invalid loads fail explicitly
+
+The loads are checked when the operator is built: a negative fixed expense, and proportional loads that sum to one or more, are refused. The experience is checked when the operator is applied: the three series must have one length. A period with no exposure is not an error: its pure premium is zero and its indicated premium is the loaded fixed expense, 25 / 0.70.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::operators::price(actuarial::Loads{-1.0, 0.2, 0.05}); });
+  report([&] { (void)actuarial::operators::price(actuarial::Loads{0.0, 0.7, 0.4}); });
+  const actuarial::Pricing pricing = actuarial::operators::price(actuarial::Loads{25.0, 0.25, 0.05});
+  const pluss::Series one = pluss::make_series({1.0});
+  report([&] { (void)pricing(actuarial::Experience{one, pluss::make_series({1.0, 2.0}), one}); });
+  const actuarial::PricingResult empty = pricing(actuarial::Experience{one, pluss::make_series({0.0}), one});
+  out.writeln("a period with no exposure: pure premium", empty.pure_premium.items<double>(), " indicated premium", empty.indicated_premium.items<double>(), " = 25 / 0.70 =", 25.0 / 0.70);
+}
+```
+
+Output
+
+```text
+operators::price: fixed_expense must be finite and >= 0
+operators::price: variable_expense_ratio + profit_ratio must be < 1
+premium_curve: numerator and exposure must have same length
+a period with no exposure: pure premium [0.000000]  indicated premium [35.714286]  = 25 / 0.70 = 35.714286
+```
+
+## Where to go next
+
+A rate indicated from a small book is noisy. Credibility blends it with a manual rate in proportion to how much experience supports it ([Credibility](credibility.md)).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pure_premium_loss_ratio_and_claim_cost.html">
+    <span class="label">Previous</span>
+    <span class="title">Pure Premium, Loss Ratio and Claim Cost</span>
+  </a>
+  <a class="next-link" href="credibility.html">
+    <span class="label">Next</span>
+    <span class="title">Credibility</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

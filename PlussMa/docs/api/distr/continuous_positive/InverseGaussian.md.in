@@ -80,16 +80,16 @@ int main() {
   const std::vector<double> params = {1.0, 2.0};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::InverseGaussian, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::InverseGaussian, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::InverseGaussian, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::InverseGaussian, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::InverseGaussian, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::InverseGaussian, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -121,7 +121,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::InverseGaussian, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({0.3, 2.5}, f64);
-  const auto c = distr::cdf(dst::InverseGaussian, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::InverseGaussian, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::InverseGaussian, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 0.3).to(pluss::ScalarType::Float64) * (draws <= 2.5).to(pluss::ScalarType::Float64)).mean());
@@ -155,16 +155,16 @@ int main() {
   const auto x = pluss::make_series({0.1, 0.4, 0.8, 1.0, 1.5, 3.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 0.5:";
-  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 0.5}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 0.5}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 2  :";
-  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 2.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 2.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "shape 10 :";
-  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 10.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::InverseGaussian, x, {1.0, 10.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -210,3 +210,16 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`Lognormal`](../continuous_positive/Lognormal.md)
 - [`Nig`](../continuous_real_line/Nig.md)
 - [`distr::InverseGaussian`](../object_based/InverseGaussian.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Gompertz.html">
+    <span class="label">Previous</span>
+    <span class="title">Gompertz</span>
+  </a>
+  <a class="next-link" href="Lognormal.html">
+    <span class="label">Next</span>
+    <span class="title">Lognormal</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

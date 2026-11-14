@@ -38,4 +38,39 @@ The object surface has two layers. [`Distribution`](object_based/Distribution.md
 | [`Zeta`](object_based/Zeta.md) | The object form of the zeta (Zipf) distribution: a discrete power law on the positive integers, with exact cumulants below the tail index. |
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+object_based/Bernoulli
+object_based/Beta
+object_based/Binomial
+object_based/Burr
+object_based/ChiSquare
+object_based/Distribution
+object_based/Exponential
+object_based/FDistribution
+object_based/Gamma
+object_based/GaussianMixture
+object_based/Geometric
+object_based/Gh
+object_based/InverseGaussian
+object_based/Laplace
+object_based/Logistic
+object_based/Lognormal
+object_based/Lomax
+object_based/NegativeBinomial
+object_based/Nig
+object_based/Normal
+object_based/NormalTrunc
+object_based/Pareto
+object_based/Poisson
+object_based/Rayleigh
+object_based/Skellam
+object_based/StudentT
+object_based/Uniform
+object_based/Weibull
+object_based/Yule
+object_based/Zeta
+```
 <!-- apiref:toctree:end -->

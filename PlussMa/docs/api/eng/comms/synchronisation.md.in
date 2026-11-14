@@ -1,0 +1,46 @@
+# Synchronisation
+
+This branch recovers timing and carrier. `timing` and `delay` find and remove a symbol-timing offset, `cfo` and `derot` find and remove a carrier offset, `pll` tracks the phase with a phase-locked loop, and `matched` and `gardner` recover the symbol timing continuously with a Gardner loop.
+
+## Choosing A Surface
+
+Estimate and remove timing on the waveform before `match`; estimate and remove the carrier offset on the symbols after it, then let `pll` track what is left.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Timing estimates.
+
+@@example Eng/api/comms_timing_estimate.cpp@@
+
+### Example 2
+
+Frequency offset estimates.
+
+@@example Eng/api/comms_freq_estimate.cpp@@
+
+### Example 3
+
+A locked carrier loop.
+
+@@example Eng/api/comms_carrier_lock.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+synchronisation/timing
+synchronisation/delay
+synchronisation/cfo
+synchronisation/derot
+synchronisation/CarrierResult
+synchronisation/pll
+synchronisation/matched
+synchronisation/TimingResult
+synchronisation/gardner
+```
+<!-- apiref:toctree:end -->

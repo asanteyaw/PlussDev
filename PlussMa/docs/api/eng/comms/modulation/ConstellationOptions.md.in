@@ -1,0 +1,64 @@
+# `comms::ConstellationOptions`
+
+Choices of the constellation builders.
+
+## Signature
+
+```cpp
+comms::ConstellationOptions
+```
+
+## What It Does
+
+Selects the labelling, the rotation and the precision of the points made by `psk` and `qam`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `gray` | Gray labelling: points that are neighbours differ in exactly one bit, so the usual symbol error flips one bit. `false` labels the points in natural order. | `true` |
+| `phase` | A rotation of every point in radians. | `0` |
+| `dtype` | The element type of the points, `Complex128` or `Complex64`. | `Complex128` |
+
+## Returns
+
+A value; read by `psk` and `qam`.
+
+## Errors
+
+`psk` and `qam` throw `pluss::Error` for a non-finite `phase` or a `dtype` that is not complex.
+
+## Interpretation and Use
+
+With Gray labels a decision for a neighbouring point costs one bit error; with natural labels it can cost several (on 8-PSK up to three). Gray is the default. A phase offset models a rotated constellation such as pi/4-QPSK. Symbols made from a `Complex64` constellation, and noise added to them, stay in single precision.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Gray against natural labels on 8-PSK.
+
+@@example Eng/api/comms_psk_gray.cpp@@
+
+### Example 2
+
+A phase offset and single-precision points.
+
+@@example Eng/api/comms_psk_phase.cpp@@
+
+### Example 3
+
+Gray against natural labels on 16-QAM.
+
+@@example Eng/api/comms_qam_gray.cpp@@
+
+### Example 4
+
+Single precision through a transmission.
+
+@@example Eng/api/comms_constellation_dtype.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

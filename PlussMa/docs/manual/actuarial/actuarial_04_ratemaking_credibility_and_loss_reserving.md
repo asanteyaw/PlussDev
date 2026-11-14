@@ -1,0 +1,26 @@
+<!-- generated from actuarial_04_ratemaking_credibility_and_loss_reserving.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Actuarial 4: Ratemaking, Credibility and Loss Reserving
+
+Premiums look forward and reserves look back. This chapter turns experience into rates, from the pure premium through the expense loads to the rate change, blends a small book's experience with a manual rate by credibility, and estimates the reserves for claims that have already occurred from the way earlier claims developed, by the chain ladder and Bornhuetter-Ferguson methods.
+
+- [Pure Premium, Loss Ratio and Claim Cost](actuarial_04_ratemaking_credibility_and_loss_reserving/pure_premium_loss_ratio_and_claim_cost.md)
+- [Indicated Premium and Rate Change](actuarial_04_ratemaking_credibility_and_loss_reserving/indicated_premium_and_rate_change.md)
+- [Credibility](actuarial_04_ratemaking_credibility_and_loss_reserving/credibility.md)
+- [Claims Triangles](actuarial_04_ratemaking_credibility_and_loss_reserving/claims_triangles.md)
+- [Chain Ladder](actuarial_04_ratemaking_credibility_and_loss_reserving/chain_ladder.md)
+- [Bornhuetter-Ferguson](actuarial_04_ratemaking_credibility_and_loss_reserving/bornhuetter_ferguson.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+actuarial_04_ratemaking_credibility_and_loss_reserving/pure_premium_loss_ratio_and_claim_cost
+actuarial_04_ratemaking_credibility_and_loss_reserving/indicated_premium_and_rate_change
+actuarial_04_ratemaking_credibility_and_loss_reserving/credibility
+actuarial_04_ratemaking_credibility_and_loss_reserving/claims_triangles
+actuarial_04_ratemaking_credibility_and_loss_reserving/chain_ladder
+actuarial_04_ratemaking_credibility_and_loss_reserving/bornhuetter_ferguson
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,354 @@
+<!-- generated from frequency_response.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Frequency response
+
+[Back to Signals 3: Frequency Response and Design](../signal_03_frequency_response_and_design.md)
+
+You have a filter, as coefficients or as sections, and you want to know what it does to each frequency: how much it passes, and how much it shifts the phase. `freqz` evaluates the response at the frequencies you choose, so you can check a design against its specification before it touches any data, and compare two filters on one grid.
+
+## The mental model
+
+The **frequency response** of a filter with coefficients `b` and `a` at the angular frequency `w` (radians per sample, from `0` to `pi`, where `pi` is the Nyquist frequency) is the ratio of two polynomials in `e^{-jw}`:
+
+```{math}
+H(w) = \frac{\sum_k b_k\,e^{-jwk}}{\sum_k a_k\,e^{-jwk}}.
+```
+
+`H(w)` is a complex number for each `w`. Its magnitude `abs(H)` is the gain at that frequency, and its angle is the phase shift in radians. A sinusoid of frequency `w` entering the filter comes out as a sinusoid of the same frequency, scaled by the gain and shifted by the phase.
+
+`freqz` takes a numerator, optionally a denominator, and a vector of frequencies `omega`, and returns the response at those points. Without a denominator the filter is FIR, and `freqz(numerator, omega)` evaluates a polynomial only. The result is always complex, in `Complex128` unless every input is single precision.
+
+## An FIR filter
+
+The two-point average `[0.5, 0.5]` has `H(w) = 0.5 + 0.5 e^{-jw} = e^{-jw/2} cos(w/2)`. Its gain is `cos(w/2)` and its phase is exactly `-w/2`: a pure delay of half a sample, which is what averaging two neighbours does. The program evaluates it at four frequencies from a quarter of the way to Nyquist and prints the analytic values next to the computed ones.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series omega = pluss::series::linspace(M_PI / 4, M_PI, 4, f64);
+  const pluss::Series h = sig::freqz(pluss::series::make(std::vector<double>{0.5, 0.5}), omega);
+
+  out.writeln("omega              ", omega.items<double>());
+  out.writeln("gain               ", h.abs().items<double>());
+  out.writeln("cos(omega / 2)     ", (omega * 0.5).cos().items<double>());
+  out.writeln("phase              ", h.angle().items<double>());
+  out.writeln("-omega / 2         ", (omega * -0.5).items<double>());
+}
+```
+
+Output
+
+```text
+omega               [0.78540, 1.57080, 2.35619, 3.14159]
+gain                [0.92388, 0.70711, 0.38268, 0.00000]
+cos(omega / 2)      [0.92388, 0.70711, 0.38268, 0.00000]
+phase               [-0.39270, -0.78540, -1.17810, -1.57080]
+-omega / 2          [-0.39270, -0.78540, -1.17810, -1.57080]
+```
+
+At `w = pi` the gain is zero: the filter removes the highest frequency, a signal that alternates `+1, -1`, completely. The computed and analytic rows agree to the printed digits.
+
+## An IIR filter
+
+With a denominator the response is the ratio. The smoother `y[n] = 0.5 y[n-1] + 0.5 x[n]` has `b = [0.5]` and `a = [1, -0.5]`, so `|H(w)| = 0.5 / |1 - 0.5 e^{-jw}|`. At `w = 0` that is `0.5 / 0.5 = 1` (a constant passes unchanged) and at `w = pi` it is `0.5 / 1.5 = 1/3`. The program prints the gain over the full range.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series omega = pluss::series::linspace(0, M_PI, 5, f64);
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.5});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.5});
+  out.writeln("omega ", omega.items<double>());
+  out.writeln("gain  ", sig::freqz(b, a, omega).abs().items<double>());
+
+  std::vector<double> analytic;
+  for (const double w : omega.items<double>()) analytic.push_back(0.5 / std::abs(1.0 - 0.5 * std::exp(std::complex<double>(0.0, -w))));
+  out.writeln("0.5 / |1 - 0.5 e^(-jw)|", analytic);
+}
+```
+
+Output
+
+```text
+omega  [0.00000, 0.78540, 1.57080, 2.35619, 3.14159]
+gain   [1.00000, 0.67860, 0.44721, 0.35741, 0.33333]
+0.5 / |1 - 0.5 e^(-jw)| [1.00000, 0.67860, 0.44721, 0.35741, 0.33333]
+```
+
+## A cascade of sections
+
+The response of a cascade is the product of the responses of its sections. The program designs a fourth-order Butterworth low-pass at `0.25` of Nyquist and multiplies the two section responses. The gain is `1` at zero, `0.70711` (half power) at the cutoff `w = 0.25 pi`, and falls away beyond it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series omega = pluss::series::linspace(0, M_PI, 9, f64);
+  const pluss::Series sections = lti::to_sos(sig::butter(4, 0.25));
+
+  pluss::Series response = pluss::series::ones({9}, f64).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series section = sections.select(0, row);
+    response = response * sig::freqz(section.slice(0, 0, 3), section.slice(0, 3, 6), omega);
+  }
+  out.writeln("omega / pi", (omega * (1.0 / M_PI)).items<double>());
+  out.writeln("gain      ", response.abs().items<double>());
+}
+```
+
+Output
+
+```text
+omega / pi [0.00000, 0.12500, 0.25000, 0.37500, 0.50000, 0.62500, 0.75000, 0.87500, 1.00000]
+gain       [1.00000, 0.99859, 0.70711, 0.14610, 0.02942, 0.00587, 0.00087, 0.00005, 0.00000]
+```
+
+The nine points are spaced `0.125 pi` apart, so the third entry is the cutoff, with gain `0.70711`. At `0.5 pi` the gain is `0.0294`, at the Nyquist frequency `0.0000`. The gain falls by about 24 decibels per octave, the rate of a fourth-order Butterworth.
+
+## Several filters at once
+
+The coefficient vector can carry a batch axis: a `numerator` of shape `[3, 2]` is three filters, and the result has shape `[3, number of frequencies]`. `dim` says which axis holds the coefficients. The program evaluates a two-point average, a first difference `[1, -1]` and a sum `[1, 1]`, in one call.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series omega = pluss::series::linspace(0, M_PI, 5, f64);
+  const pluss::Series rows = pluss::series::make(std::vector<double>{0.5, 0.5, 1, -1, 1, 1}).reshape({3, 2});
+
+  const pluss::Series h = sig::freqz(rows, omega, 1);
+  out.writeln("shape", h.sizes());
+  out.writeln("average    ", h.abs().select(0, 0).items<double>());
+  out.writeln("difference ", h.abs().select(0, 1).items<double>());
+  out.writeln("sum        ", h.abs().select(0, 2).items<double>());
+
+  const pluss::Series by_columns = sig::freqz(rows.transpose(0, 1), omega, 0);
+  out.writeln("coefficients down the columns: shape", by_columns.sizes());
+}
+```
+
+Output
+
+```text
+shape [3, 5]
+average     [1.00000, 0.92388, 0.70711, 0.38268, 0.00000]
+difference  [0.00000, 0.76537, 1.41421, 1.84776, 2.00000]
+sum         [2.00000, 1.84776, 1.41421, 0.76537, 0.00000]
+coefficients down the columns: shape [3, 5]
+```
+
+The difference has gain `2 sin(w/2)`, zero at DC and `2` at Nyquist, the opposite of the sum `2 cos(w/2)`. With the coefficients down the columns (`dim = 0`) the result has the same shape, because the coefficient axis is always the one removed.
+
+## Complex coefficients and precision
+
+Complex coefficients give a response that is not symmetric about zero frequency. The two-tap filter `[1, i]` has gain `|1 + i e^{-jw}|`, and the program shows five points. The result type is complex, and is single precision (`Complex64`) only when the inputs are.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  using C = std::complex<double>;
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series omega = pluss::series::linspace(0, M_PI, 5, f64);
+  const pluss::Series taps = pluss::make_series(std::vector<C>{{1, 0}, {0, 1}}, {2});
+  const pluss::Series h = sig::freqz(taps, omega);
+  out.writeln("complex taps: gain", h.abs().items<double>(), " dtype", h.dtype().name);
+
+  const pluss::Series single = sig::freqz(pluss::series::make(std::vector<double>{0.5, 0.5}).to(pluss::ScalarType::Float32), omega.to(pluss::ScalarType::Float32));
+  out.writeln("single-precision inputs: dtype", single.dtype().name);
+}
+```
+
+Output
+
+```text
+complex taps: gain [1.41421, 1.84776, 2.00000, 1.84776, 1.41421]  dtype complex128
+single-precision inputs: dtype complex64
+```
+
+## Poles on the unit circle
+
+A denominator that is zero at a frequency makes the response infinite there; `freqz` returns infinity instead of raising an error. The integrator `1 / (1 - z^-1)` has a pole at `w = 0`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series omega = pluss::series::make(std::vector<double>{0.0, 1.0});
+  const pluss::Series one = pluss::series::make(std::vector<double>{1.0});
+  const pluss::Series denominator = pluss::series::make(std::vector<double>{1.0, -1.0});
+  out.writeln("integrator gain at omega = 0 and 1:", sig::freqz(one, denominator, omega).abs().items<double>());
+}
+```
+
+Output
+
+```text
+integrator gain at omega = 0 and 1: [inf, 1.04291]
+```
+
+At `w = 1` the gain is `1 / (2 sin(1/2)) = 1.04291`.
+
+## Errors
+
+`freqz` refuses a complex `omega` (frequencies are real), an `omega` that is a matrix, an empty `omega`, and an empty coefficient axis.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series taps = pluss::series::make(std::vector<double>{0.5, 0.5});
+  report([&] { (void)sig::freqz(taps, pluss::make_series(std::vector<std::complex<double>>{{0.0, 1.0}}, {1})); });
+  report([&] { (void)sig::freqz(taps, pluss::series::zeros({2, 2})); });
+  report([&] { (void)sig::freqz(taps, pluss::series::zeros({0})); });
+  report([&] { (void)sig::freqz(pluss::series::zeros({0}), pluss::series::make(std::vector<double>{0.0, 1.0})); });
+}
+```
+
+Output
+
+```text
+eng::signal::freqz: omega must be real-valued
+eng::signal::freqz: omega must be a non-empty vector
+eng::signal::freqz: omega must be a non-empty vector
+eng::signal::freqz: coefficient axis must be non-empty
+```
+
+## Decisions
+
+- **Checking a design against a specification:** evaluate on a dense grid (a few hundred points) and look at the gain at the band edges, in the pass band and in the stop band.
+- **Checking one frequency:** a grid of one point is fine; `omega` is any non-empty vector.
+- **A cascade:** multiply the responses of the sections, as above; do not multiply the sections out into one polynomial.
+
+## Pitfalls
+
+The frequency in `freqz` is in **radians per sample**, from `0` to `pi`. The design functions take a **fraction of the Nyquist frequency** by default. Mixing the two is the classic mistake. The program designs a fourth-order Butterworth low-pass with its cutoff at `0.2` of Nyquist, and evaluates its gain at the right radian frequency, `0.2 pi`, and at the number `0.2` taken as radians.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+static double gain_at(const lti::PoleZero &design, double omega) {
+  const pluss::Series sections = lti::to_sos(design);
+  const pluss::Series w = pluss::series::make(std::vector<double>{omega});
+  pluss::Series response = pluss::series::ones({1}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(pluss::ScalarType::Complex128);
+  for (long row = 0; row < sections.size(0); ++row) {
+    const pluss::Series s = sections.select(0, row);
+    response = response * sig::freqz(s.slice(0, 0, 3), s.slice(0, 3, 6), w);
+  }
+  return response.abs().select(0, 0).item<double>();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto design = sig::butter(4, 0.2);
+  out.writeln("gain at omega = 0.2 pi (the cutoff):", gain_at(design, 0.2 * M_PI));
+  out.writeln("gain at omega = 0.2 (a fraction taken as radians):", gain_at(design, 0.2));
+}
+```
+
+Output
+
+```text
+gain at omega = 0.2 pi (the cutoff): 0.707107
+gain at omega = 0.2 (a fraction taken as radians): 0.999959
+```
+
+At the cutoff the gain is the half-power `0.707107`; at `0.2` radians, which is only `0.064` of the way to Nyquist, it is `0.999959`, and the filter would look like a pass-through. Convert with `omega = pi * f / nyquist`.
+
+Two smaller points:
+
+- **The phase of an infinite response wraps** into `(-pi, pi]`. Unwrap before differentiating it to get the group delay.
+- **Gain in decibels** is `20 log10 |H|`; do not apply the formula to the squared magnitude.
+
+Reference: [`freqz`](../../../../api/eng/signal/filtering/freqz.md), [`to_sos`](../../../../api/eng/lti/response/to_sos.md), [`butter`](../../../../api/eng/signal/design/butter.md), [`PoleZero`](../../../../api/eng/lti/response/PoleZero.md).
+
+Where next: [IIR design](iir_design.md) produces the filters whose responses are checked here.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="iir_design.html">
+    <span class="label">Next</span>
+    <span class="title">IIR design</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

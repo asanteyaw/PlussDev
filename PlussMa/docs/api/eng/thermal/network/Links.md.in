@@ -1,0 +1,58 @@
+# `thermal::Links`
+
+Thermal conductances between pairs of nodes.
+
+## Signature
+
+```cpp
+thermal::Links
+```
+
+## What It Does
+
+Lists the conduction paths of a network. Link `k` joins nodes `a[k]` and `b[k]` with the conductance `conductance[k]`, the heat flow in watts per kelvin of temperature difference. Heat flows from `a` to `b` when `a` is warmer, and the sign of every reported link flow follows that direction. A conductance is the reciprocal of a resistance, so the closed-form resistances of `wall`, `tube`, `shell` and `film` enter a network through `reciprocal()`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `a` | The first node of each link, an integer in `0 .. nodes - 1`. | empty |
+| `b` | The second node of each link; a link may not join a node to itself. | empty |
+| `conductance` | The conductance of each link in W/K, positive. The last axis has one value per link; leading axes are parameter-sweep batches. | undefined (no links) |
+
+## Returns
+
+A value; read by `steady` and `tran`.
+
+## Errors
+
+`steady` and `tran` throw `pluss::Error` for `a` and `b` of different lengths, a node index outside the network, a link from a node to itself, a conductance array whose last axis does not have one value per link, a conductance that is not positive or not finite, or conductances without links.
+
+## Interpretation and Use
+
+Several links may join the same pair of nodes; they add. A leading axis on `conductance` sweeps a design variable (insulation thickness, a film coefficient) through one call; every other group of the network either shares the batch shape or has none.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A series chain of two links.
+
+@@example Eng/api/thermal_steady_series.cpp@@
+
+### Example 2
+
+A sweep of the conductance of one link.
+
+@@example Eng/api/thermal_steady_batch.cpp@@
+
+### Example 3
+
+Rejected link descriptions.
+
+@@example Eng/api/thermal_errors_links.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

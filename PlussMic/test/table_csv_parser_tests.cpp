@@ -19,7 +19,6 @@
 #include <variant>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/ScalarType.h"
 #include "pluss/codem/codem.h"
@@ -31,6 +30,7 @@
 #include "pluss/codeh/timeline_factory.h"
 #include "pluss/mic.h"
 #include "pluss/tils.h"
+#include <pluss/tils/kit/output.h>
 
 namespace {
 
@@ -75,7 +75,7 @@ std::filesystem::path write_temp_csv(const std::string& stem, const std::string&
   const auto dir = std::filesystem::temp_directory_path() / "plussmic_csv_tests";
   std::filesystem::create_directories(dir);
   const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
-  const auto filename = fmt::format("{}_{}.csv", stem, stamp);
+  const auto filename = pluss::tils::OutputEngine::format("{}_{}.csv", stem, stamp);
   const auto path = dir / filename;
 
   std::ofstream out(path, std::ios::out | std::ios::trunc | std::ios::binary);
@@ -91,7 +91,7 @@ std::filesystem::path write_temp_text_file(const std::string& stem,
   const auto dir = std::filesystem::temp_directory_path() / "plussmic_text_tests";
   std::filesystem::create_directories(dir);
   const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
-  const auto filename = fmt::format("{}_{}.{}", stem, stamp, ext);
+  const auto filename = pluss::tils::OutputEngine::format("{}_{}.{}", stem, stamp, ext);
   const auto path = dir / filename;
 
   std::ofstream out(path, std::ios::out | std::ios::trunc | std::ios::binary);
@@ -212,7 +212,7 @@ void test_dataframe_axis_reductions() {
     }
     for (std::size_t i = 0; i < actual.size(); ++i) {
       if (std::fabs(actual[i] - expected[i]) > 1e-10) {
-        fail(fmt::format("{} at {}: expected {}, got {}", message, i, expected[i], actual[i]));
+        fail(pluss::tils::OutputEngine::format("{} at {}: expected {}, got {}", message, i, expected[i], actual[i]));
       }
     }
   };
@@ -1232,7 +1232,7 @@ void test_temporal_save_csv_preserves_human_readable_dates() {
   const std::string saved((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
   expect(saved.find("1999-09-24") != std::string::npos
              && saved.find("2000-01-05") != std::string::npos,
-         fmt::format("save_csv should persist formatted timeline text; got [{}]", saved));
+         pluss::tils::OutputEngine::format("save_csv should persist formatted timeline text; got [{}]", saved));
   expect(saved.find("5395830287000004") == std::string::npos,
          "save_csv should not persist raw timeline epoch nanos");
 }
@@ -3441,7 +3441,7 @@ void test_slate_bucketize_correctness() {
   const auto c4 = (bucketed == 4.0).count().as_series().host<std::int64_t>().front();
   const auto c5 = (bucketed == 5.0).count().as_series().host<std::int64_t>().front();
   expect(c1 == 3 && c2 == 2 && c3 == 2 && c4 == 2 && c5 == 2,
-         fmt::format("Slate::bucketize counts mismatch (c1={}, c2={}, c3={}, c4={}, c5={})",
+         pluss::tils::OutputEngine::format("Slate::bucketize counts mismatch (c1={}, c2={}, c3={}, c4={}, c5={})",
                      c1,
                      c2,
                      c3,
@@ -3703,7 +3703,7 @@ void test_select_and_place_helpers() {
          "Slate::select(null) should mark unmatched rows as null");
   const auto slate_selected_null_valid = pluss::table::detail::validity_mask(slate_selected_null)->host<bool>();
   expect(slate_selected_null_valid == std::vector<bool>({true, true, true, false}),
-         fmt::format(
+         pluss::tils::OutputEngine::format(
              "Slate::select(null) should preserve validity only on matched rows; got [{}, {}, {}, {}]",
              static_cast<int>(slate_selected_null_valid[0]),
              static_cast<int>(slate_selected_null_valid[1]),
@@ -3820,7 +3820,7 @@ void test_series_nan_participates_in_table_missing_semantics() {
   expect(in.is_open(), "failed to reopen saved csv for NaN missing export test");
   std::string saved((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
   expect(saved == "score\n1\n\n3\n",
-         fmt::format("save_csv should serialize floating NaN as the default blank missing marker; got [{}]", saved));
+         pluss::tils::OutputEngine::format("save_csv should serialize floating NaN as the default blank missing marker; got [{}]", saved));
 }
 
 void test_dataframe_shownull_and_zoom() {
@@ -3924,7 +3924,7 @@ void test_slate_arrange_and_corr_stability() {
   const auto actual = lhs.corr(rhs);
   expect(std::isfinite(actual), "Slate::corr should remain finite for large-offset data");
   expect(actual > 0.99,
-         fmt::format("Slate::corr should remain strongly positive on monotone data (actual={})", actual));
+         pluss::tils::OutputEngine::format("Slate::corr should remain strongly positive on monotone data (actual={})", actual));
 
   const auto centered = lhs.as_series().sub(lhs.as_series().mean().item<double>(), 1.0);
   const auto centered_values = centered.host<double>();
@@ -5009,7 +5009,7 @@ void test_nexus_raw_directory_loader() {
   });
 
   const auto dir = std::filesystem::temp_directory_path() /
-      fmt::format("plussmic_nexus_raw_loader_{}", std::chrono::steady_clock::now().time_since_epoch().count());
+      pluss::tils::OutputEngine::format("plussmic_nexus_raw_loader_{}", std::chrono::steady_clock::now().time_since_epoch().count());
   std::filesystem::create_directories(dir);
 
   customers.save_csv((dir / "customers.csv").string());
@@ -5115,6 +5115,7 @@ void test_nexus_cache_invalidation_on_mutation() {
 } // namespace
 
 int main(int argc, char** argv) {
+  pluss::tils::OutputEngine console;
   using Test = std::pair<std::string, std::function<void()>>;
   const std::vector<Test> tests{
       {"comma_fixture_load_and_cases", test_comma_fixture_load_and_cases},
@@ -5192,17 +5193,17 @@ int main(int argc, char** argv) {
     try {
       fn();
       ++passed;
-      fmt::print("[PASS] {}\n", name);
+      console.writef("[PASS] {}\n", name);
     } catch (const std::exception& e) {
-      fmt::print("[FAIL] {}\n{}\n", name, e.what());
+      console.writef("[FAIL] {}\n{}\n", name, e.what());
       return 1;
     }
   }
 
   if (argc > 1 && passed == 0) {
-    fmt::print("[FAIL] no requested test name matched\n");
+    console.writef("[FAIL] no requested test name matched\n");
     return 1;
   }
-  fmt::print("{} tests passed\n", passed);
+  console.writef("{} tests passed\n", passed);
   return 0;
 }

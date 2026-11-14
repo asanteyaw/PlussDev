@@ -174,3 +174,20 @@ TEST_CASE("exponential polynomials have closed-form transforms", "[calculus][tra
   CHECK(Lr.provenance() == math::Provenance::Quadrature);
   CHECK(std::abs(real_at(Lr, {1.0}) - 0.5963473623231940) < 1e-6);
 }
+
+TEST_CASE("the Laplace transform of a real function is complex for complex frequencies",
+          "[calculus][laplace][complex]") {
+  const math::Function g = math::function({"t"}, [](math::Function t) { return t * (-t).exp(); });
+  const math::Function G = operators::laplace::transform("t", "s")(g);   // 1 / (s + 1)^2
+  // real s keeps a real result; complex s keeps the imaginary part: 1 / (2 + 2i)^2 = -i / 8
+  CHECK(std::abs(G(2.0).item<double>() - 1.0 / 9.0) < 1e-12);
+  const std::complex<double> value = G(std::complex<double>{1.0, 2.0}).item<std::complex<double>>();
+  CHECK(std::abs(value.real()) < 1e-12);
+  CHECK(std::abs(value.imag() + 0.125) < 1e-12);
+
+  // inverting the transform of a function returns the function
+  const math::Function back = operators::laplace::inverse_transform("s", "u")(G);
+  for (const double t : {0.5, 1.5, 3.0}) {
+    CHECK(std::abs(back(t).item<double>() - t * std::exp(-t)) < 1e-8);
+  }
+}

@@ -61,4 +61,17 @@ Inputs are read as for least squares ([Shapes and inputs](regression_01_least_sq
 7. With few degrees of freedom prefer least squares to the normal-family GLM: its *t* intervals are the right ones.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+regression_02_generalised_linear_models/logistic_regression
+regression_02_generalised_linear_models/poisson_regression
+regression_02_generalised_linear_models/families_and_links
+regression_02_generalised_linear_models/the_normal_family_and_least_squares
+regression_02_generalised_linear_models/iteration_controls_and_separation
+regression_02_generalised_linear_models/deviance_and_model_comparison
+regression_02_generalised_linear_models/weights_and_offsets
+regression_02_generalised_linear_models/responses_summary_and_errors
+```
 <!-- apiref:toctree:end -->

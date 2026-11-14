@@ -42,7 +42,7 @@ int main() {
     reg::QuantileOptions options;
     options.max_iter = limit;
     const auto fit = reg::quantile_fit(y, x, options);
-    out.writeln("  max_iter", limit, " iterations", fit.iterations, " converged", fit.converged, " coefficients", fit.coefficients.pull<double>(), " objective", fit.objective, " warnings", fit.warnings.size());
+    out.writeln("  max_iter", limit, " iterations", fit.iterations, " converged", fit.converged, " coefficients", fit.coefficients.items<double>(), " objective", fit.objective, " warnings", fit.warnings.size());
   }
   out.writeln("by tolerance");
   const std::vector<std::pair<const char *, double>> tolerances{{"1e-3 ", 1e-3}, {"1e-5 ", 1e-5}, {"1e-7 ", 1e-7}, {"1e-10", 1e-10}};
@@ -50,7 +50,7 @@ int main() {
     reg::QuantileOptions options;
     options.tol = tol;
     const auto fit = reg::quantile_fit(y, x, options);
-    out.writeln("  tol", label, " iterations", fit.iterations, " converged", fit.converged, " coefficients", fit.coefficients.pull<double>(), " objective", fit.objective);
+    out.writeln("  tol", label, " iterations", fit.iterations, " converged", fit.converged, " coefficients", fit.coefficients.items<double>(), " objective", fit.objective);
   }
 }
 ```
@@ -89,9 +89,9 @@ int main() {
     reg::QuantileOptions options;
     options.eps = eps;
     const auto fit = reg::quantile_fit(y, x, options);
-    auto r = fit.residuals.abs().pull<double>();
+    auto r = fit.residuals.abs().items<double>();
     std::sort(r.begin(), r.end());
-    out.writeln("eps", label, " iterations", fit.iterations, " coefficients", fit.coefficients.pull<double>(), " objective", fit.objective, " smallest |residuals|", std::vector<double>(r.begin(), r.begin() + 3));
+    out.writeln("eps", label, " iterations", fit.iterations, " coefficients", fit.coefficients.items<double>(), " objective", fit.objective, " smallest |residuals|", std::vector<double>(r.begin(), r.begin() + 3));
   }
 }
 ```
@@ -137,3 +137,16 @@ int main() {
 ```
 
 Each invalid setting is rejected with its message. The range of `tau` is the open interval (0, 1), so 0.999 is accepted.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="covariance_choices.html">
+    <span class="label">Previous</span>
+    <span class="title">Covariance choices</span>
+  </a>
+  <a class="next-link" href="case_weights.html">
+    <span class="label">Next</span>
+    <span class="title">Case weights</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

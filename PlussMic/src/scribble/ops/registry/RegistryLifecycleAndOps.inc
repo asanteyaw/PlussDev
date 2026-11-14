@@ -308,7 +308,7 @@ void Registry::ensure_stream_compatible(std::string_view where) const {
   const std::string where_name = where.empty() ? std::string("Registry") : std::string(where);
   for (std::size_t i = 0; i < impl_ref_().slots_.size(); ++i) {
     impl_ref_().slots_[i].ensure_stream_compatible(
-        fmt::format("{}: slot '{}'", where_name, impl_ref_().keys_[i]));
+        pluss::tils::OutputEngine::format("{}: slot '{}'", where_name, impl_ref_().keys_[i]));
   }
 }
 

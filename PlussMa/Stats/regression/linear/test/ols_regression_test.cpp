@@ -263,6 +263,17 @@ int main() {
       expect(fit.warnings.empty(), "a well-conditioned fit has no warnings");
     }
 
+    {
+      // a default-constructed fit has nothing to report: the summary names the missing coefficients instead of failing inside the formatter
+      bool threw = false;
+      try {
+        (void)reg::ols_summary(reg::OLSFitResult{});
+      } catch (const std::exception& e) {
+        threw = std::string(e.what()).find("print_ols_summary: fit.coefficients is undefined") != std::string::npos;
+      }
+      expect(threw, "ols_summary of an undefined fit reports the undefined coefficients");
+    }
+
     std::cout << "ols_regression_test passed\n";
     return 0;
   } catch (const std::exception& e) {

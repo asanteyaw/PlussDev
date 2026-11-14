@@ -38,8 +38,8 @@ int main() {
   const auto x = pluss::make_series({-1.0, 0.5, 2.0});
 
   out.writeln("applications so far:", applications, "(the callable ran once, when the operator met the function)");
-  out.writeln("f'/f for exp(-x^2)    ", rate({x}).pull<double>(), " = -2x:", x.mul(-2.0).pull<double>());
-  out.writeln("evaluated again       ", rate({x}).pull<double>());
+  out.writeln("f'/f for exp(-x^2)    ", rate({x}).items<double>(), " = -2x:", x.mul(-2.0).items<double>());
+  out.writeln("evaluated again       ", rate({x}).items<double>());
   out.writeln("applications:", applications);
   out.writeln("key", log_derivative.key(), " version", log_derivative.version());
 }
@@ -76,16 +76,16 @@ int main() {
   // Move-only state: the exponent lives in a unique_ptr that the operator now owns.
   auto exponent = std::make_unique<double>(3.0);
   const operators::Operator power = operators::define([exponent = std::move(exponent)](const math::Function &g) { return g.pow(*exponent); });
-  out.writeln("g^3 for g = x^2 + x ", power(f)({x}).pull<double>());
+  out.writeln("g^3 for g = x^2 + x ", power(f)({x}).items<double>());
 
   // A custom operator composes with built-in ones: the derivative of g^3.
   const operators::Operator d_of_power = operators::compose(operators::differential("x"), power);
-  out.writeln("d/dx (g^3)          ", d_of_power(f)({x}).pull<double>(), " = 3 g^2 g':", x.pow(2).add(x).pow(2).mul(x.mul(2.0).add(1.0)).mul(3.0).pull<double>());
+  out.writeln("d/dx (g^3)          ", d_of_power(f)({x}).items<double>(), " = 3 g^2 g':", x.pow(2).add(x).pow(2).mul(x.mul(2.0).add(1.0)).mul(3.0).items<double>());
 
   // A parameterised operator from a factory, composed with another operator.
   const operators::Operator lifted = plus_constant(10.0);
-  out.writeln("g + 10              ", lifted(f)({x}).pull<double>());
-  out.writeln("d/dx (g + 10)       ", operators::compose(operators::differential("x"), lifted)(f)({x}).pull<double>(), " = g':", x.mul(2.0).add(1.0).pull<double>());
+  out.writeln("g + 10              ", lifted(f)({x}).items<double>());
+  out.writeln("d/dx (g + 10)       ", operators::compose(operators::differential("x"), lifted)(f)({x}).items<double>(), " = g':", x.mul(2.0).add(1.0).items<double>());
   out.writeln("lifted is linear:", lifted.capabilities().linear ? "yes" : "no", "(adding a constant is affine, not linear)");
 }
 ```
@@ -102,7 +102,7 @@ The power operator owns the `unique_ptr` it captured; the operator can be copied
 | `structural` | true | the callable builds the result from the graph of `f` |
 | `evaluated_only` | false | the callable works on values only; cannot be combined with `structural` |
 | `linear` | false | the callable is linear in `f` |
-| `adjoint_known` | false | the adjoint is known |
+| `adjoint_known` | false | the adjoint is known; declaring it requires passing the adjoint operator as the fourth argument of `define`, and passing one sets the flag by itself |
 | `serializable` | false | the operator can be saved; requires a key, and a loader bound with `operators::bind` for loading |
 | `platform_pure` | true | the callable does not move data between platforms |
 | `payload` | empty | text saved with the operator and handed back to its loader |
@@ -157,3 +157,16 @@ The first six rows are contracts the library checks, and each message says which
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="composing_and_combining.html">
+    <span class="label">Previous</span>
+    <span class="title">Composing and combining operators</span>
+  </a>
+  <a class="next-link" href="saving_and_loading.html">
+    <span class="label">Next</span>
+    <span class="title">Saving and loading</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

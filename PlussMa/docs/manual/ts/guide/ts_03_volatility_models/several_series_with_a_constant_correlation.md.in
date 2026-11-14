@@ -186,3 +186,12 @@ The asymmetric model's likelihood is no better, and its leverage coefficients ar
 - **Check each marginal.** Run [the checks](checking_the_fit.md) on each series' standardised residuals before trusting the joint model.
 
 Where next: [Chapter 4](../ts_04_vector_models.md) models the *means* of several series jointly, with vector autoregressions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="checking_the_fit.html">
+    <span class="label">Previous</span>
+    <span class="title">Checking the fit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

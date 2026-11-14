@@ -126,23 +126,6 @@ void example_from_frame_timeindex() {
   std::cout << "\n";
 }
 
-void example_from_frame_timeindex_disabled() {
-  std::cout << "== from_frame_timeindex_disabled ==\n";
-  const auto frame = DataFrame({
-      {"event_idx", make_timeline({
-          "2026-01-01T09:00:00Z",
-          "2026-01-01T10:00:00Z",
-      })},
-  });
-
-  try {
-    (void)Dataset::from_table(frame, {.include_timeindex_as_timeline = false});
-  } catch (const pluss::Error& err) {
-    std::cout << "error=" << first_line(err) << "\n";
-  }
-  std::cout << "\n";
-}
-
 void example_from_frame_text_disabled() {
   std::cout << "== from_frame_text_disabled ==\n";
   const auto frame = DataFrame({
@@ -249,7 +232,6 @@ int main() {
   example_from_frame_basic();
   example_from_frame_subset();
   example_from_frame_timeindex();
-  example_from_frame_timeindex_disabled();
   example_from_frame_text_disabled();
   example_frame_rectangular();
   example_frame_padnull();

@@ -180,3 +180,12 @@ The solve converges with the quantities 15.71, 6.68, 7.61, 18.07 and 10.50, a vi
 - **Pass the whole checklist.** Flag, violation, optimality, a check the solver did not use, and the multipliers: a result that skips any of these is not yet an answer.
 
 Where next: [Fitting and portfolio problems](fitting_and_portfolio_problems.md) apply the same checklist to estimation and finance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="fitting_and_portfolio_problems.html">
+    <span class="label">Next</span>
+    <span class="title">A portfolio and a maximum-likelihood fit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

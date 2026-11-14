@@ -161,7 +161,9 @@ Series sigma_points_(const Series& mean, const Series& cov, const UkfOptions& op
   const double lambda = opt.alpha * opt.alpha * (static_cast<double>(n) + opt.kappa) - static_cast<double>(n);
   const double scale = static_cast<double>(n) + lambda;
 
-  const Series p_scaled = stabilize_cov_(cov.mul(scale), opt.jitter, cfg);
+  // the jitter is a perturbation of the covariance itself, applied before the scaling: after it, alpha^2 n P and the jitter would be of the
+  // same size for a state of small variance (an interest rate), and the sigma points would no longer reproduce P
+  const Series p_scaled = stabilize_cov_(cov, opt.jitter, cfg).mul(scale);
   const Series root = pluss::subsp::math::linalg::cholesky(p_scaled).to(cfg.platform, cfg.dtype);
   const Series x = mean.reshape({n});
 
@@ -540,17 +542,21 @@ KalmanResult ukf_filter(const Series& observations, const UkfModel& model, Confi
     const Series x_pred = weighted_mean_(x_sigma_pred, w_m); // [n,1]
     const Series P_pred = stabilize_cov_(weighted_cov_(x_sigma_pred, x_pred, w_c, Q), kTiny, out_cfg);
 
+    // The sigma points of the measurement update are drawn again from the predicted law N(x_pred, P_pred): the propagated points above carry
+    // the spread of the previous covariance P without the process noise Q, so using them would leave the gain and the innovation covariance
+    // inconsistent with P_pred (the filtered covariance of a linear model came out too large by exactly Q).
+    const Series x_sigma_obs = sigma_points_(x_pred, P_pred, model.options, out_cfg); // [k,n]
     std::vector<Series> z_rows;
     z_rows.reserve(static_cast<std::size_t>(k_sigma));
     for (std::int64_t i = 0; i < k_sigma; ++i) {
-      const Series xi = x_sigma_pred.select(0, i).reshape({n, 1});
+      const Series xi = x_sigma_obs.select(0, i).reshape({n, 1});
       z_rows.push_back(as_vector_col_(model.observation(xi, t), op, "observation output").reshape({1, m}));
     }
     const Series z_sigma = stack_rows_(z_rows).to(out_cfg.platform, out_cfg.dtype); // [k,m]
     const Series z_pred = weighted_mean_(z_sigma, w_m); // [m,1]
     const Series S_full = stabilize_cov_(weighted_cov_(z_sigma, z_pred, w_c, R), kTiny, out_cfg);
 
-    const Series x_centered = x_sigma_pred.sub(x_pred.reshape({1, n}));
+    const Series x_centered = x_sigma_obs.sub(x_pred.reshape({1, n}));
     const Series z_centered = z_sigma.sub(z_pred.reshape({1, m}));
     const Series Pxz = x_centered.transpose(0, 1).matmul(z_centered.mul(w_c)); // [n,m]
 
@@ -750,11 +756,24 @@ ParticleFilterResult sv_particle_filter(const Series& log_returns,
   model.options.resample = true;
   model.options.store_particles = true;
 
+  // Timing follows sv_paths: the return of period t is generated with the variance exp(h_t), and the log-variance moves to h_{t+1} with a
+  // shock correlated (rho) with the standardized return of period t. So the particles at t = 0 are the initial log-variance itself, and the
+  // transition into period t > 0 conditions on the previous return, which is observed: its standardized shock z is recovered from it and the
+  // previous particle, and enters the log-variance shock as rho z + sqrt(1 - rho^2) eps (the leverage effect).
+  const double rho = params.rho;
+  const double rho_scale = std::sqrt(std::max(0.0, 1.0 - rho * rho));
   model.transition = [=](const Series& particles, std::int64_t t) {
+    if (t == 0) return particles;
     const Series eps = pluss::series::randn({num_particles, 1}, out_cfg, base_seed + 4099U * static_cast<std::uint64_t>(t + 1));
+    const Series v_prev = particles.exp().mul(dt).clamp_min(params.variance_floor);
+    const Series previous_return = yv.select(0, t - 1).reshape({1, 1});
+    // A particle whose variance is far too small for the observed return would get an enormous z and send its log-variance to infinity; its
+    // weight is negligible anyway, so bound z at ten standard deviations to keep every particle finite.
+    const Series z = previous_return.sub(v_prev.mul(-0.5).add(params.mu * dt)).div(v_prev.sqrt()).clamp_min(-10.0).clamp_max(10.0);
+    const Series shock = z.mul(rho).add(eps.mul(rho_scale));
     return particles.mul(phi)
         .add(mean_h * (1.0 - phi))
-        .add(eps.mul(sigma_h * std::sqrt(dt)));
+        .add(shock.mul(sigma_h * std::sqrt(dt)));
   };
 
   model.loglik = [=](const Series& particles, const Series& obs, std::int64_t) {

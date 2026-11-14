@@ -8,6 +8,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace pluss::validate {
 
@@ -44,6 +45,39 @@ inline void check(
     std::string_view message = "validation failed",
     const std::source_location& loc = std::source_location::current()) {
   ::pluss::codem::throw_error(detail::normalized_message(message, "validation failed"), loc);
+}
+
+// A condition with a suggestion: when it fails, the message gains "Did you mean 'x'?" if `given` is close
+// to one of `options` (any range of strings, or a map: use pluss::exception::map_keys(map)).
+//   pluss::validate::check(columns.contains(name), "unknown column '" + name + "'", name, columns);
+template <typename Options>
+inline void check(
+    bool condition,
+    std::string_view message,
+    std::string_view given,
+    const Options& options,
+    const std::source_location& loc = std::source_location::current()) {
+  if (condition) return;
+  ::pluss::codem::throw_error(detail::normalized_message(message, "validation check failed"), loc, nullptr,
+                              ::pluss::exception::make_hint(given, options));
+}
+
+// The whole unknown-name check in one call: passes when `given` is one of `options`, otherwise fails with
+//   unknown <what> 'given'. Did you mean 'x'?  Valid values: a, b, c
+// so the caller writes no message at all.
+//   pluss::validate::one_of(palette, palettes, "palette");
+template <typename Options>
+inline void one_of(
+    std::string_view given,
+    const Options& options,
+    std::string_view what = "value",
+    const std::source_location& loc = std::source_location::current()) {
+  std::vector<std::string> names;
+  for (const auto& option : options) {
+    if (std::string_view(option) == given) return;
+    names.emplace_back(option);
+  }
+  ::pluss::codem::throw_error(::pluss::exception::unknown_name_message(std::string(what), std::string(given), names), loc);
 }
 
 inline void warn(

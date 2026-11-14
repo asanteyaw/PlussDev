@@ -1,0 +1,28 @@
+# Heat exchangers
+
+The effectiveness-NTU method for five flow arrangements, its inverse for sizing, a rating that returns duty and outlet temperatures, and the log-mean temperature difference.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+All arrangements at one operating point.
+
+@@example Eng/api/thermal_eff_flows.cpp@@
+
+### Example 2
+
+A rated counter-flow exchanger.
+
+@@example Eng/api/thermal_rate_basic.cpp@@
+
+### Example 3
+
+Sizing for a required effectiveness.
+
+@@example Eng/api/thermal_ntu_roundtrip.cpp@@
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

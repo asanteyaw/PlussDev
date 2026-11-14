@@ -1,0 +1,249 @@
+<!-- generated from annuities_insurance_and_endowments.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Annuities, Insurance and Endowments
+
+[Back to Life Contingencies, Premiums and Reserves](../actuarial_02_life_contingencies_premiums_and_reserves.md)
+
+A contingent payment is worth its amount, discounted for time and weighted by the probability that it is paid. This page prices the five basic benefits of a life aged `x` over an `n`-year term, with mortality given as the one-year probabilities of the previous chapter and interest as one level annual effective rate `i`.
+
+Let `qx[k]` be the probability of dying in year `k + 1` given alive at the start of year `k`, let
+
+```{math}
+{}_kp_x = \prod_{j<k}\bigl(1-q_{x+j}\bigr)
+```
+
+be the probability of surviving `k` years, let `v = 1/(1+i)` be the discount factor for one year, and let `d = i/(1+i)` be the discount rate. A payment made at time `t` is worth `v^t`; a benefit paid at the end of the year of death is paid at time `k + 1` with probability {math}`{}_kp_x\,q_{x+k}`.
+
+## The five benefits
+
+| Benefit | Pays | Expected present value | Function |
+|---|---|---|---|
+| Temporary annuity-due | 1 at times 0, 1, ..., n−1 while alive | {math}`\ddot a_{x:\overline n\vert }=\sum_{k=0}^{n-1}v^k\,{}_kp_x` | `annuity_due` |
+| Temporary annuity-immediate | 1 at times 1, ..., n while alive | {math}`a_{x:\overline n\vert }=\sum_{k=1}^{n}v^k\,{}_kp_x` | `annuity_immediate` |
+| Term insurance | 1 at the end of the year of death, if within n years | {math}`A^1_{x:\overline n\vert }=\sum_{k=0}^{n-1}v^{k+1}\,{}_kp_x\,q_{x+k}` | `term_insurance` |
+| Pure endowment | 1 at time n if alive | {math}`{}_nE_x=v^n\,{}_np_x` | `pure_endowment` |
+| Endowment insurance | term insurance plus the pure endowment | {math}`A_{x:\overline n\vert }=A^1_{x:\overline n\vert }+{}_nE_x` | `endowment_insurance` |
+
+The term is the length of `qx`: ten probabilities describe a ten-year term. Each function returns one number, the expected present value of a benefit of one unit, as a rank-zero `Series`.
+
+```cpp
+pluss::Series actuarial::survival_curve(const pluss::Series &qx);
+pluss::Series actuarial::annuity_due(const pluss::Series &qx, double interest_rate);
+pluss::Series actuarial::annuity_immediate(const pluss::Series &qx, double interest_rate);
+pluss::Series actuarial::term_insurance(const pluss::Series &qx, double interest_rate);
+pluss::Series actuarial::pure_endowment(const pluss::Series &qx, double interest_rate);
+pluss::Series actuarial::endowment_insurance(const pluss::Series &qx, double interest_rate);
+```
+
+| Argument | Meaning |
+|---|---|
+| `qx` | one-dimensional, every value in [0, 1]; `qx[k]` is the probability of dying in year `k + 1` given alive at its start |
+| `interest_rate` | the annual effective rate `i`; the discount rate must be above −1 |
+
+`survival_curve(qx)` returns `[1, p0, p0 p1, ...]`, the survival probabilities {math}`{}_kp_x` for `k = 0, ..., n`: one more value than `qx`.
+
+## Pricing the five benefits
+
+Mortality is a Makeham law, `μ = 0.0002 + 0.0001 · 1.08^age`, for a life aged 60 over ten years, and interest is 4%. The program prints the mortality, the survival curve and the five values, and then recomputes the annuity-due and the term insurance by the sums of the table from the survival curve, to show that the functions are those sums.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0, 64.0, 65.0, 66.0, 67.0, 68.0, 69.0});
+  const pluss::Series qx = life::makeham_qx(ages, 0.0002, 0.0001, 1.08);
+  const double i = 0.04;
+  const pluss::Series survival = actuarial::survival_curve(qx);
+  out.writeln("qx            =", qx.items<double>());
+  out.writeln("survival      =", survival.items<double>());
+
+  out.writeln("annuity-due   =", actuarial::annuity_due(qx, i).item<double>());
+  out.writeln("annuity-imm   =", actuarial::annuity_immediate(qx, i).item<double>());
+  out.writeln("term          =", actuarial::term_insurance(qx, i).item<double>());
+  out.writeln("pure          =", actuarial::pure_endowment(qx, i).item<double>());
+  out.writeln("endowment     =", actuarial::endowment_insurance(qx, i).item<double>());
+
+  const auto p = survival.items<double>();
+  const auto q = qx.items<double>();
+  const double v = 1.0 / (1.0 + i);
+  double annuity = 0.0, term = 0.0;
+  for (std::size_t k = 0; k < q.size(); ++k) {
+    annuity += std::pow(v, static_cast<double>(k)) * p[k];
+    term += std::pow(v, static_cast<double>(k + 1)) * p[k] * q[k];
+  }
+  out.writeln("by the sums   =", annuity, term);
+}
+```
+
+Output
+
+```text
+qx            = [0.010273, 0.011074, 0.011939, 0.012872, 0.013879, 0.014965, 0.016137, 0.017401, 0.018764, 0.020234]
+survival      = [1.000000, 0.989727, 0.978767, 0.967082, 0.954634, 0.941385, 0.927297, 0.912333, 0.896458, 0.879638, 0.861839]
+annuity-due   = 8.005303
+annuity-imm   = 7.587530
+term          = 0.109876
+pure          = 0.582228
+endowment     = 0.692104
+by the sums   = 8.005303 0.109876
+```
+
+A life of 60 expects 8.0053 years of payments worth a unit each under annuity-due, 7.5875 under annuity-immediate (each payment a year later and each survival condition one year longer), pays an expected 0.1099 under term insurance, and receives 0.5822 for the pure endowment, which is mostly the discounted probability 0.8618 of surviving ten years. Their sum 0.1099 + 0.5822 is the endowment insurance 0.6921.
+
+## Relations that must hold
+
+The benefits are connected by identities that do not depend on the mortality or the rate, so each is a check on a calculation. An endowment insurance is a term insurance plus a pure endowment. A unit paid at the end of the term whether the life dies or survives is worth `v^n` for certain, and a unit paid at the end of the year of death or at the end of the term is worth one less the discount `d` earned on every year the life is still alive to pay for the cover:
+
+```{math}
+A_{x:\overline n|} = 1 - d\,\ddot a_{x:\overline n|}.
+```
+
+And an annuity-due differs from an annuity-immediate by the payment at time 0 and the missing payment at time `n`:
+
+```{math}
+\ddot a_{x:\overline n|} = a_{x:\overline n|} + 1 - {}_nE_x.
+```
+
+The program evaluates each relation from the functions of the table.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0, 64.0, 65.0, 66.0, 67.0, 68.0, 69.0});
+  const pluss::Series qx = life::makeham_qx(ages, 0.0002, 0.0001, 1.08);
+  const double i = 0.04;
+  const double v = 1.0 / (1.0 + i), d = i / (1.0 + i);
+  const double n = static_cast<double>(qx.numel());
+  const double due = actuarial::annuity_due(qx, i).item<double>();
+  const double immediate = actuarial::annuity_immediate(qx, i).item<double>();
+  const double term = actuarial::term_insurance(qx, i).item<double>();
+  const double pure = actuarial::pure_endowment(qx, i).item<double>();
+  const double endowment = actuarial::endowment_insurance(qx, i).item<double>();
+  out.writeln("endowment            =", endowment, " term + pure          =", term + pure);
+  out.writeln("endowment            =", endowment, " 1 - d * annuity-due  =", 1.0 - d * due);
+  out.writeln("annuity-due          =", due, " immediate + 1 - nE =", immediate + 1.0 - pure);
+  out.writeln("n =", n, " v^n =", std::pow(v, n));
+}
+```
+
+Output
+
+```text
+endowment            = 0.692104  term + pure          = 0.692104
+endowment            = 0.692104  1 - d * annuity-due  = 0.692104
+annuity-due          = 8.005303  immediate + 1 - nE = 8.005303
+n = 10.000000  v^n = 0.675564
+```
+
+## What the rate and the age do
+
+Discounting lowers every present value as the rate rises, and the insurance, which is paid later on average than the annuity, loses the larger share: from 2% to 6% the annuity-due falls by about 14% and the term insurance by about 20%. Mortality works the other way for annuities and insurances: a life that is older, and so dies sooner, is worth less as an annuity and more as an insurance. The program values the same ten-year term at three rates, and then at three starting ages with the rate held at 4%; the annuity-due falls from 8.2280 at 50 to 7.5563 at 70 while the term insurance rises from 0.0536 to 0.2182.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0, 64.0, 65.0, 66.0, 67.0, 68.0, 69.0});
+  const pluss::Series qx = life::makeham_qx(ages, 0.0002, 0.0001, 1.08);
+  const double i = 0.04;
+  for (const double rate : {0.02, 0.04, 0.06}) {
+    out.writeln("i =", rate, " annuity-due", actuarial::annuity_due(qx, rate).item<double>(), " term", actuarial::term_insurance(qx, rate).item<double>());
+  }
+  for (const double start : {50.0, 60.0, 70.0}) {
+    std::vector<double> grid;
+    for (int k = 0; k < 10; ++k) grid.push_back(start + k);
+    const pluss::Series q = life::makeham_qx(pluss::make_series(grid), 0.0002, 0.0001, 1.08);
+    out.writeln("age", start, " annuity-due", actuarial::annuity_due(q, i).item<double>(), " term", actuarial::term_insurance(q, i).item<double>());
+  }
+}
+```
+
+Output
+
+```text
+i = 0.020000  annuity-due 8.675774  term 0.122879
+i = 0.040000  annuity-due 8.005303  term 0.109876
+i = 0.060000  annuity-due 7.419969  term 0.098755
+age 50.000000  annuity-due 8.228049  term 0.053610
+age 60.000000  annuity-due 8.005303  term 0.109876
+age 70.000000  annuity-due 7.556258  term 0.218169
+```
+
+## Invalid inputs fail explicitly
+
+`qx` must be one-dimensional with values in `[0, 1]`, and the rate must be above −1: a rate of −1 or below has no discount factor. A rate between −1 and 0 is accepted, and gives the accumulation of money, which is allowed because some models need it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series ages = pluss::make_series({60.0, 61.0, 62.0, 63.0, 64.0, 65.0, 66.0, 67.0, 68.0, 69.0});
+  const pluss::Series qx = life::makeham_qx(ages, 0.0002, 0.0001, 1.08);
+  const double i = 0.04;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  report([&] { (void)actuarial::annuity_due(pluss::make_series({0.1, 1.5}), i); });
+  report([&] { (void)actuarial::annuity_due(pluss::make_series({0.1, 0.2, 0.3, 0.4}, {2, 2}), i); });
+  report([&] { (void)actuarial::annuity_due(qx, -1.0); });
+  out.writeln("a rate of -0.5 is accepted:", actuarial::annuity_due(qx, -0.5).item<double>());
+}
+```
+
+Output
+
+```text
+survival_curve: qx values must lie in [0, 1]
+survival_curve: qx must be 1D
+discount::flat: rate must be > -1
+a rate of -0.5 is accepted: 916.023091
+```
+
+## Where to go next
+
+The same five numbers can be obtained from the operator surface, where the benefit is an object that can be varied ([The Valuation Operator](the_valuation_operator.md)), or from the classical commutation columns ([Commutation Columns](commutation_columns.md)). Level premiums and reserves are built from these benefits ([Net Premiums](net_premiums.md), [Reserves](reserves.md)).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_valuation_operator.html">
+    <span class="label">Next</span>
+    <span class="title">The valuation operator</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

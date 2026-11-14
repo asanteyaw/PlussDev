@@ -1,0 +1,73 @@
+# `power::trace`
+
+Continuation power flow through the voltage-collapse point.
+
+## Signature
+
+```cpp
+power::TraceResult power::trace(const power::Grid& grid, const power::LoadPath& path, const power::TraceOptions& options = {});
+```
+
+## What It Does
+
+Follows the solution of the power-flow equations along the load, with the loading factor as an additional unknown, by a predictor-corrector method: a tangent step along the curve and Newton iterations at a fixed factor, with an adaptive step. Through the nose the ordinary Jacobian is singular but the extended system is not, so the curve is followed round the nose.
+
+## Parameters
+
+`grid`
+: The compiled network at loading factor 0.
+
+`path`
+: The target injections at loading factor 1.
+
+`options`
+: The stopping rule and stepping controls.
+
+## Returns
+
+A `TraceResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for step bounds, tolerance or iteration limits that are not positive and ordered, or arrays of the wrong length. A target beyond the nose does not throw: the trace ends at the nose with `reached` false.
+
+## Interpretation and Use
+
+Use it for the voltage at a load that might be near collapse, and with `TraceStop::Nose` for the loading margin. The ordinary power flow only reports failure beyond the limit; the trace tells where the limit is.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A line against its closed-form nose.
+
+@@example Eng/api/power_trace_nose.cpp@@
+
+### Example 2
+
+A target load checked against the ordinary power flow.
+
+@@example Eng/api/power_trace_target.cpp@@
+
+### Example 3
+
+A generator network checked by bisection.
+
+@@example Eng/api/power_trace_generator.cpp@@
+
+### Example 4
+
+A target beyond the nose.
+
+@@example Eng/api/power_trace_beyond.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="TraceResult.html">
+    <span class="label">Previous</span>
+    <span class="title">TraceResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

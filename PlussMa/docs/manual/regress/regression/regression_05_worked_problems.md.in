@@ -18,4 +18,14 @@ Five problems that combine the families of the guide with the quantities in thei
 6. Predictions beyond the range of the data depend entirely on the form of the model.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+regression_05_worked_problems/a_calibration_line_and_its_uncertainty
+regression_05_worked_problems/dose_response_and_the_median_effective_dose
+regression_05_worked_problems/comparing_two_event_rates
+regression_05_worked_problems/reference_curves_with_quantiles
+regression_05_worked_problems/the_same_data_four_ways
+```
 <!-- apiref:toctree:end -->

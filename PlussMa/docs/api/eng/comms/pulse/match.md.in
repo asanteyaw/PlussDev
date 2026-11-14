@@ -1,0 +1,64 @@
+# `comms::match`
+
+Matched filtering and symbol-rate sampling.
+
+## Signature
+
+```cpp
+pluss::Series comms::match(const pluss::Series& waveform, const pluss::Series& taps, std::int64_t samples_per_symbol, std::int64_t count);
+```
+
+## What It Does
+
+Filters `waveform` with the time-reversed taps (the matched filter, also available unsampled as `matched`) and keeps `count` samples at the symbol instants, starting at the combined delay of the two pulses, `taps - 1` samples. With the transmit pulse of `shape` it recovers the symbols when the pair is a Nyquist pulse such as `rrc`.
+
+## Parameters
+
+`waveform`
+: The received waveform, `[..., samples]`.
+
+`taps`
+: The same pulse the transmitter used.
+
+`samples_per_symbol`
+: The oversampling factor.
+
+`count`
+: The number of symbols to recover.
+
+## Returns
+
+A `[..., count]` array of symbol estimates.
+
+## Errors
+
+Throws `pluss::Error` for `samples_per_symbol` or `count` below `1`, taps that are not a real vector, or a waveform too short for `count` symbols.
+
+## Interpretation and Use
+
+The matched filter maximises the signal-to-noise ratio at the sampling instants, and with unit-energy taps white noise keeps its variance. Timing is assumed known: the first symbol is at the combined filter delay.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Shape then match.
+
+@@example Eng/api/comms_match_chain.cpp@@
+
+### Example 2
+
+Noise through the chain against theory.
+
+@@example Eng/api/comms_match_noise.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_match_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

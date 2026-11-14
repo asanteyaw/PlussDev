@@ -74,7 +74,12 @@ template <class T>
 requires(std::is_arithmetic_v<std::remove_cv_t<T>> && !std::is_same_v<std::remove_cv_t<T>, bool>)
 Series& operator/=(T scalar) { div_(static_cast<double>(scalar)); return *this; }
 
-// In-place bitwise
+// Out-of-place bitwise
+Series operator~() const { return bitwise_not(); }
+Series operator&(const Series& other) const { return bitwise_and(other); }
+Series operator|(const Series& other) const { return bitwise_or(other); }
+
+  // In-place bitwise
 Series& operator&=(const Series& other) { bitwise_and_(other); return *this; }
 Series& operator|=(const Series& other) { bitwise_or_(other); return *this; }
 Series& operator^=(const Series& other) { bitwise_xor_(other); return *this; }

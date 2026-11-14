@@ -163,3 +163,16 @@ int main() {
 
 - [`acf`](acf.md)
 - [`PacfOptions`](PacfOptions.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LjungBoxResult.html">
+    <span class="label">Previous</span>
+    <span class="title">LjungBoxResult</span>
+  </a>
+  <a class="next-link" href="PacfOptions.html">
+    <span class="label">Next</span>
+    <span class="title">PacfOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

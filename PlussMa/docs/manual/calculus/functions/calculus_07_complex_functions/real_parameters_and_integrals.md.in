@@ -97,3 +97,12 @@ int main() {
 ```
 
 The saved and restored derivative give the same value, −1.55 + 1.26i, which is also 3z² + z̄ computed by hand.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="wirtinger_derivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">Wirtinger derivatives</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,915 @@
+# apiref_manifest_actuarialapi.toml -- the actuarial mathematics API reference.
+
+[framework.actuarial_api]
+title = "Actuarial mathematics"
+nav_title = "Actuarial API"
+nav_prefix = "api/actuarial/"
+root_page = "api/plussma_actuarial.html"
+summary = "Typed actuarial operators for mortality, contingent cashflows, loss contracts, pricing and reserving."
+include = "<pluss/ma.h>"
+header = ""
+min_examples = 3
+
+[[family]]
+path = "actuarial/foundation"
+page = "api/actuarial/foundation.md"
+title = "Foundation"
+maxdepth = 2
+children = ["foundation/Operator", "foundation/make_operator"]
+
+[[family]]
+path = "actuarial/mortality"
+page = "api/actuarial/mortality.md"
+title = "Mortality"
+maxdepth = 2
+children = ["mortality/Mortality", "mortality/MortalityModel", "mortality/from_qx", "mortality/from_px", "mortality/from_force", "mortality/from_lx", "mortality/select_ultimate", "mortality/gompertz", "mortality/makeham"]
+
+[[family]]
+path = "actuarial/valuation"
+page = "api/actuarial/valuation.md"
+title = "Valuation"
+maxdepth = 2
+children = ["valuation/Discount", "valuation/Basis", "valuation/Cashflow", "valuation/PaymentTiming", "valuation/Valuation", "valuation/flat", "valuation/curve", "valuation/make", "valuation/annuity", "valuation/death", "valuation/survival", "valuation/endowment", "valuation/value"]
+
+[[family]]
+path = "actuarial/loss"
+page = "api/actuarial/loss.md"
+title = "Loss contracts"
+maxdepth = 2
+children = ["loss/LossTransform", "loss/LossMeasure", "loss/deductible", "loss/limit", "loss/coinsurance", "loss/layer", "loss/mean"]
+
+[[family]]
+path = "actuarial/pricing"
+page = "api/actuarial/pricing.md"
+title = "Pricing"
+maxdepth = 2
+children = ["pricing/Experience", "pricing/Loads", "pricing/PricingResult", "pricing/CredibilityInput", "pricing/Pricing", "pricing/Credibility", "pricing/price", "pricing/credibility_operator"]
+
+[[family]]
+path = "actuarial/reserving"
+page = "api/actuarial/reserving.md"
+title = "Reserving"
+maxdepth = 2
+children = ["reserving/Triangle", "reserving/ReserveResult", "reserving/Reserving", "reserving/cumulative", "reserving/chain_ladder", "reserving/bornhuetter_ferguson"]
+
+[[family]]
+path = "actuarial/core"
+page = "api/actuarial/core.md"
+title = "Contingent values"
+maxdepth = 2
+children = ["core/survival_curve", "core/annuity_due", "core/annuity_immediate", "core/term_insurance", "core/pure_endowment", "core/endowment_insurance", "core/lx_qx", "core/commutation_table", "core/CommutationTable", "core/endowment_premium", "core/endowment_reserve"]
+
+[[family]]
+path = "actuarial/losses"
+page = "api/actuarial/losses.md"
+title = "Frequency, severity and layers"
+maxdepth = 2
+children = ["losses/AggregateMoments", "losses/poisson_moments", "losses/negbin_moments", "losses/lognormal_moments", "losses/gamma_moments", "losses/aggregate_moments", "losses/compound_poisson", "losses/compound_negbin", "losses/poisson_pmf", "losses/negbin_pmf", "losses/excess_loss", "losses/loss_layer", "losses/layer_premium", "losses/stoploss", "losses/lognormal_lev", "losses/gamma_lev", "losses/lognormal_layer", "losses/gamma_layer"]
+
+[[family]]
+path = "actuarial/models"
+page = "api/actuarial/models.md"
+title = "Rating and reserving formulas"
+maxdepth = 2
+children = ["models/claim_cost", "models/pure_premium", "models/loss_ratio", "models/premium_curve", "models/ratio_curve", "models/credibility_weight", "models/credibility_blend", "models/indicated_premium", "models/rate_change", "models/experience_change", "models/bf_ultimate", "models/bf_reserve", "models/age_factors", "models/ladder_cdf", "models/ladder_ultimate", "models/ladder_reserve"]
+
+[[symbol]]
+qualname = "actuarial::Operator"
+kind = "class"
+family = "actuarial/foundation"
+page = "api/actuarial/foundation/Operator.md"
+summary = "A small type-safe callable that gives an actuarial transformation a stable name and signature."
+methods = ["defined", "key", "operator_bool", "operator_call"]
+
+[[symbol]]
+qualname = "actuarial::make_operator"
+kind = "function"
+family = "actuarial/foundation"
+page = "api/actuarial/foundation/make_operator.md"
+summary = "Creates a user-defined typed actuarial operator."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::Mortality"
+kind = "class"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/Mortality.md"
+summary = "A validated discrete mortality law represented by annual death probabilities."
+methods = ["defined", "horizon", "qx", "px", "force", "survival", "lifetime_pmf", "life_table"]
+
+[[symbol]]
+qualname = "actuarial::MortalityModel"
+kind = "class"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/MortalityModel.md"
+summary = "A reusable operator that maps attained ages to a Mortality value."
+
+[[symbol]]
+qualname = "actuarial::mortality::from_qx"
+kind = "function"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/from_qx.md"
+summary = "Builds mortality directly from annual death probabilities."
+
+[[symbol]]
+qualname = "actuarial::mortality::from_px"
+kind = "function"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/from_px.md"
+summary = "Builds mortality from annual survival probabilities."
+
+[[symbol]]
+qualname = "actuarial::mortality::from_force"
+kind = "function"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/from_force.md"
+summary = "Builds annual mortality from a piecewise-constant force of mortality."
+
+[[symbol]]
+qualname = "actuarial::mortality::from_lx"
+kind = "function"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/from_lx.md"
+summary = "Builds mortality from successive life-table survivor counts."
+
+[[symbol]]
+qualname = "actuarial::mortality::select_ultimate"
+kind = "function"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/select_ultimate.md"
+summary = "Combines a select period with an ultimate mortality curve."
+
+[[symbol]]
+qualname = "actuarial::mortality::gompertz"
+kind = "function"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/gompertz.md"
+summary = "Evaluates or stores a Gompertz mortality law."
+overloads = 2
+
+[[symbol]]
+qualname = "actuarial::mortality::makeham"
+kind = "function"
+family = "actuarial/mortality"
+page = "api/actuarial/mortality/makeham.md"
+summary = "Evaluates or stores a Makeham mortality law."
+overloads = 2
+
+[[symbol]]
+qualname = "actuarial::Discount"
+kind = "class"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/Discount.md"
+summary = "A flat annual rate or an explicit discount-factor curve."
+methods = ["defined", "factors"]
+
+[[symbol]]
+qualname = "actuarial::Basis"
+kind = "options"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/Basis.md"
+summary = "The mortality and discount assumptions used by a valuation operator."
+
+[[symbol]]
+qualname = "actuarial::Cashflow"
+kind = "class"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/Cashflow.md"
+summary = "Survival-contingent and death-contingent payment schedules on one horizon."
+methods = ["defined", "horizon", "survival_payments", "death_payments"]
+
+[[symbol]]
+qualname = "actuarial::PaymentTiming"
+kind = "options"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/PaymentTiming.md"
+summary = "Whether annuity payments occur at the start or end of each year."
+
+[[symbol]]
+qualname = "actuarial::Valuation"
+kind = "class"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/Valuation.md"
+summary = "A reusable basis-bound operator that values any compatible Cashflow."
+
+[[symbol]]
+qualname = "actuarial::discount::flat"
+kind = "function"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/flat.md"
+summary = "Creates a level annual-effective discount assumption."
+
+[[symbol]]
+qualname = "actuarial::discount::curve"
+kind = "function"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/curve.md"
+summary = "Creates a discount assumption from explicit time-zero factors."
+
+[[symbol]]
+qualname = "actuarial::cashflow::make"
+kind = "function"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/make.md"
+summary = "Creates a general contingent cashflow from two payment schedules."
+
+[[symbol]]
+qualname = "actuarial::cashflow::annuity"
+kind = "function"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/annuity.md"
+summary = "Creates an annual survival-contingent annuity."
+
+[[symbol]]
+qualname = "actuarial::cashflow::death"
+kind = "function"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/death.md"
+summary = "Creates a term death benefit paid at the end of the year of death."
+
+[[symbol]]
+qualname = "actuarial::cashflow::survival"
+kind = "function"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/survival.md"
+summary = "Creates a pure endowment payable on survival to the horizon."
+
+[[symbol]]
+qualname = "actuarial::cashflow::endowment"
+kind = "function"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/endowment.md"
+summary = "Creates a combined term death benefit and survival benefit."
+
+[[symbol]]
+qualname = "actuarial::operators::value"
+kind = "function"
+family = "actuarial/valuation"
+page = "api/actuarial/valuation/value.md"
+summary = "Binds a Basis into a reusable Valuation operator."
+
+[[symbol]]
+qualname = "actuarial::LossTransform"
+kind = "class"
+family = "actuarial/loss"
+page = "api/actuarial/loss/LossTransform.md"
+summary = "An operator that maps a loss sample to transformed contract losses."
+
+[[symbol]]
+qualname = "actuarial::LossMeasure"
+kind = "class"
+family = "actuarial/loss"
+page = "api/actuarial/loss/LossMeasure.md"
+summary = "An operator that reduces a loss sample to a scalar actuarial measure."
+
+[[symbol]]
+qualname = "actuarial::operators::deductible"
+kind = "function"
+family = "actuarial/loss"
+page = "api/actuarial/loss/deductible.md"
+summary = "Creates the ordinary-deductible transform (X-d)+."
+
+[[symbol]]
+qualname = "actuarial::operators::limit"
+kind = "function"
+family = "actuarial/loss"
+page = "api/actuarial/loss/limit.md"
+summary = "Creates the ordinary policy-limit transform min(X, u)."
+
+[[symbol]]
+qualname = "actuarial::operators::coinsurance"
+kind = "function"
+family = "actuarial/loss"
+page = "api/actuarial/loss/coinsurance.md"
+summary = "Creates a proportional participation transform."
+
+[[symbol]]
+qualname = "actuarial::operators::layer"
+kind = "function"
+family = "actuarial/loss"
+page = "api/actuarial/loss/layer.md"
+summary = "Creates a limited excess-of-loss layer with optional participation."
+
+[[symbol]]
+qualname = "actuarial::operators::mean"
+kind = "function"
+family = "actuarial/loss"
+page = "api/actuarial/loss/mean.md"
+summary = "Creates the empirical-mean loss measure."
+
+[[symbol]]
+qualname = "actuarial::Experience"
+kind = "options"
+family = "actuarial/pricing"
+page = "api/actuarial/pricing/Experience.md"
+summary = "Observed losses, exposure and current premium supplied to pricing."
+
+[[symbol]]
+qualname = "actuarial::Loads"
+kind = "options"
+family = "actuarial/pricing"
+page = "api/actuarial/pricing/Loads.md"
+summary = "Fixed expense, variable expense and profit assumptions."
+
+[[symbol]]
+qualname = "actuarial::PricingResult"
+kind = "options"
+family = "actuarial/pricing"
+page = "api/actuarial/pricing/PricingResult.md"
+summary = "Pure premium, indicated premium and indicated rate change."
+
+[[symbol]]
+qualname = "actuarial::CredibilityInput"
+kind = "options"
+family = "actuarial/pricing"
+page = "api/actuarial/pricing/CredibilityInput.md"
+summary = "Experience, manual rate and exposure supplied to credibility blending."
+
+[[symbol]]
+qualname = "actuarial::Pricing"
+kind = "class"
+family = "actuarial/pricing"
+page = "api/actuarial/pricing/Pricing.md"
+summary = "A reusable loading-bound pricing operator."
+
+[[symbol]]
+qualname = "actuarial::Credibility"
+kind = "class"
+family = "actuarial/pricing"
+page = "api/actuarial/pricing/Credibility.md"
+summary = "A reusable full-credibility-bound blending operator."
+
+[[symbol]]
+qualname = "actuarial::operators::price"
+kind = "function"
+family = "actuarial/pricing"
+page = "api/actuarial/pricing/price.md"
+summary = "Creates a pricing operator from expense and profit loads."
+
+[[symbol]]
+qualname = "actuarial::operators::credibility"
+kind = "function"
+family = "actuarial/pricing"
+page = "api/actuarial/pricing/credibility_operator.md"
+summary = "Creates a limited-fluctuation credibility blending operator."
+
+[[symbol]]
+qualname = "actuarial::Triangle"
+kind = "class"
+family = "actuarial/reserving"
+page = "api/actuarial/reserving/Triangle.md"
+summary = "A cumulative claims triangle with an explicit observation mask and optional labels."
+methods = ["defined", "values", "observed", "origins", "development", "norigins", "ndevelopment"]
+
+[[symbol]]
+qualname = "actuarial::ReserveResult"
+kind = "options"
+family = "actuarial/reserving"
+page = "api/actuarial/reserving/ReserveResult.md"
+summary = "Development factors, cumulative factors, ultimates and reserves."
+
+[[symbol]]
+qualname = "actuarial::Reserving"
+kind = "class"
+family = "actuarial/reserving"
+page = "api/actuarial/reserving/Reserving.md"
+summary = "A reusable estimator that maps a Triangle to a ReserveResult."
+
+[[symbol]]
+qualname = "actuarial::triangle::cumulative"
+kind = "function"
+family = "actuarial/reserving"
+page = "api/actuarial/reserving/cumulative.md"
+summary = "Validates and labels a cumulative claims triangle."
+
+[[symbol]]
+qualname = "actuarial::operators::chain_ladder"
+kind = "function"
+family = "actuarial/reserving"
+page = "api/actuarial/reserving/chain_ladder.md"
+summary = "Creates a volume-weighted chain-ladder estimator."
+
+[[symbol]]
+qualname = "actuarial::operators::bornhuetter_ferguson"
+kind = "function"
+family = "actuarial/reserving"
+page = "api/actuarial/reserving/bornhuetter_ferguson.md"
+summary = "Creates a Bornhuetter-Ferguson reserving estimator."
+
+[[family]]
+path = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies.md"
+title = "Life-table functions"
+maxdepth = 2
+children = ["life_contingencies/curtate_curve", "life_contingencies/curtate_mean", "life_contingencies/dx_lx", "life_contingencies/force_qx", "life_contingencies/gompertz_force", "life_contingencies/gompertz_qx", "life_contingencies/hazard_qx", "life_contingencies/lifetime_pmf", "life_contingencies/lx_px", "life_contingencies/lx_qx", "life_contingencies/makeham_force", "life_contingencies/makeham_qx", "life_contingencies/px_lx", "life_contingencies/px_qx", "life_contingencies/qx_force", "life_contingencies/qx_lx", "life_contingencies/qx_px", "life_contingencies/select_qx", "life_contingencies/survival_force"]
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::px_qx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/px_qx.md"
+summary = "One-year survival probabilities from one-year mortality probabilities."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::qx_px"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/qx_px.md"
+summary = "One-year mortality probabilities from one-year survival probabilities."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::force_qx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/force_qx.md"
+summary = "The one-year force of mortality implied by one-year mortality probabilities."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::qx_force"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/qx_force.md"
+summary = "One-year mortality probabilities from a force of mortality."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::hazard_qx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/hazard_qx.md"
+summary = "The cumulative hazard over successive years from one-year mortality probabilities."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::survival_force"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/survival_force.md"
+summary = "A survival path from a vector of one-year forces."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::lifetime_pmf"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/lifetime_pmf.md"
+summary = "The distribution of the curtate future lifetime over the supplied horizon."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::curtate_mean"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/curtate_mean.md"
+summary = "The expected curtate lifetime over the supplied horizon."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::curtate_curve"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/curtate_curve.md"
+summary = "The expected remaining curtate lifetime at every duration of the horizon."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::lx_qx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/lx_qx.md"
+summary = "A life table of survivors from one-year mortality probabilities and a starting number of lives."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::lx_px"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/lx_px.md"
+summary = "A life table of survivors from one-year survival probabilities and a starting number of lives."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::dx_lx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/dx_lx.md"
+summary = "The deaths in each year of a life table."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::px_lx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/px_lx.md"
+summary = "One-year survival probabilities from a life table of survivors."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::qx_lx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/qx_lx.md"
+summary = "One-year mortality probabilities from a life table of survivors."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::select_qx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/select_qx.md"
+summary = "One mortality path made of a select period followed by an ultimate table."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::gompertz_force"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/gompertz_force.md"
+summary = "The Gompertz force of mortality at attained ages."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::makeham_force"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/makeham_force.md"
+summary = "The Makeham force of mortality at attained ages."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::gompertz_qx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/gompertz_qx.md"
+summary = "The Gompertz one-year mortality probability at attained ages."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::life_contingencies::makeham_qx"
+kind = "function"
+family = "actuarial/life_contingencies"
+page = "api/actuarial/life_contingencies/makeham_qx.md"
+summary = "The Makeham one-year mortality probability at attained ages."
+overloads = 1
+
+
+[[symbol]]
+qualname = "actuarial::survival_curve"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/survival_curve.md"
+summary = "Survival probabilities from death probabilities."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::annuity_due"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/annuity_due.md"
+summary = "Expected present value of a temporary annuity-due."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::annuity_immediate"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/annuity_immediate.md"
+summary = "Expected present value of a temporary annuity-immediate."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::term_insurance"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/term_insurance.md"
+summary = "Expected present value of a term insurance."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::pure_endowment"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/pure_endowment.md"
+summary = "Expected present value of a pure endowment."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::endowment_insurance"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/endowment_insurance.md"
+summary = "Expected present value of an endowment insurance."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::lx_qx"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/lx_qx.md"
+summary = "Expected lives of a cohort from death probabilities."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::commutation_table"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/commutation_table.md"
+summary = "The commutation columns of a life table at a rate of interest."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::CommutationTable"
+kind = "options"
+family = "actuarial/core"
+page = "api/actuarial/core/CommutationTable.md"
+summary = "The six commutation columns of a life table."
+
+[[symbol]]
+qualname = "actuarial::endowment_premium"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/endowment_premium.md"
+summary = "The level net premium of an endowment insurance."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::endowment_reserve"
+kind = "function"
+family = "actuarial/core"
+page = "api/actuarial/core/endowment_reserve.md"
+summary = "The net premium reserve of an endowment insurance at every duration."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::AggregateMoments"
+kind = "options"
+family = "actuarial/losses"
+page = "api/actuarial/losses/AggregateMoments.md"
+summary = "The mean and variance of a count, a claim size or an aggregate."
+
+[[symbol]]
+qualname = "actuarial::losses::poisson_moments"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/poisson_moments.md"
+summary = "Mean and variance of a Poisson claim count."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::negbin_moments"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/negbin_moments.md"
+summary = "Mean and variance of a negative binomial claim count."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::lognormal_moments"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/lognormal_moments.md"
+summary = "Mean and variance of a lognormal claim severity."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::gamma_moments"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/gamma_moments.md"
+summary = "Mean and variance of a gamma claim severity."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::aggregate_moments"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/aggregate_moments.md"
+summary = "Mean and variance of aggregate losses from frequency and severity moments."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::compound_poisson"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/compound_poisson.md"
+summary = "Mean and variance of a compound Poisson aggregate loss."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::compound_negbin"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/compound_negbin.md"
+summary = "Mean and variance of a compound negative binomial aggregate loss."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::poisson_pmf"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/poisson_pmf.md"
+summary = "Poisson probabilities of 0 to a maximum count."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::negbin_pmf"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/negbin_pmf.md"
+summary = "Negative binomial probabilities of 0 to a maximum count."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::excess_loss"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/excess_loss.md"
+summary = "The part of each loss above an attachment."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::loss_layer"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/loss_layer.md"
+summary = "The part of each loss falling in an excess-of-loss layer."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::layer_premium"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/layer_premium.md"
+summary = "The expected loss to a layer, estimated from a sample."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::stoploss"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/stoploss.md"
+summary = "The expected excess over a deductible, estimated from a sample."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::lognormal_lev"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/lognormal_lev.md"
+summary = "Limited expected value of a lognormal severity."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::gamma_lev"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/gamma_lev.md"
+summary = "Limited expected value of a gamma severity."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::lognormal_layer"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/lognormal_layer.md"
+summary = "Expected loss to a layer under a lognormal severity."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::losses::gamma_layer"
+kind = "function"
+family = "actuarial/losses"
+page = "api/actuarial/losses/gamma_layer.md"
+summary = "Expected loss to a layer under a gamma severity."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::claim_cost"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/claim_cost.md"
+summary = "Expected claim cost from exposure, frequency and severity."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::pure_premium"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/pure_premium.md"
+summary = "Aggregate pure premium of a book."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::loss_ratio"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/loss_ratio.md"
+summary = "Aggregate loss ratio of a book."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::premium_curve"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/premium_curve.md"
+summary = "The pure premium of each cell."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::ratio_curve"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/ratio_curve.md"
+summary = "The loss ratio of each cell."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::credibility_weight"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/credibility_weight.md"
+summary = "The credibility weight of each cell."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::credibility_blend"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/credibility_blend.md"
+summary = "Blend experience and manual pure premiums by credibility."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::indicated_premium"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/indicated_premium.md"
+summary = "The premium indicated by a pure premium and loads."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::rate_change"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/rate_change.md"
+summary = "The change from the current premium to the indicated one."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::experience_change"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/experience_change.md"
+summary = "The rate change indicated by loss experience."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::bf_ultimate"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/bf_ultimate.md"
+summary = "Bornhuetter-Ferguson ultimate losses."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::bf_reserve"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/bf_reserve.md"
+summary = "Bornhuetter-Ferguson reserve."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::age_factors"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/age_factors.md"
+summary = "Volume-weighted age-to-age factors of a cumulative triangle."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::ladder_cdf"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/ladder_cdf.md"
+summary = "Cumulative development factors from age-to-age factors."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::ladder_ultimate"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/ladder_ultimate.md"
+summary = "Chain-ladder ultimate for a triangle and a pattern."
+overloads = 1
+
+[[symbol]]
+qualname = "actuarial::models::ladder_reserve"
+kind = "function"
+family = "actuarial/models"
+page = "api/actuarial/models/ladder_reserve.md"
+summary = "Chain-ladder reserve for a triangle and a pattern."
+overloads = 1

@@ -254,6 +254,52 @@ Series Distribution::logpdf(const Series& x) const { return dispatch_(*this, x, 
 Series Distribution::cdf(const Series& x) const { return dispatch_(*this, x, 2); }
 Series Distribution::logcdf(const Series& x) const { return dispatch_(*this, x, 3); }
 
+Series Distribution::icdf(const Series& probability) const {
+  require_scalar_params_(*this, "icdf");
+  const Series flat = probability.to(pluss::pCPU, ScalarType::Float64)
+                          .contiguous()
+                          .reshape({probability.numel()});
+  const std::vector<double> values = to_doubles_(flat);
+  for (double value : values) {
+    if (!std::isfinite(value) || value <= 0.0 || value >= 1.0) {
+      throw std::invalid_argument(
+          "distr::Distribution::icdf: probabilities must be strictly between 0 and 1");
+    }
+  }
+
+  std::vector<double> result(values.size());
+  std::vector<double> interior;
+  std::vector<std::size_t> positions;
+  interior.reserve(values.size());
+  positions.reserve(values.size());
+  for (std::size_t i = 0; i < values.size(); ++i) {
+    positions.push_back(i);
+    interior.push_back(values[i]);
+  }
+  if (!interior.empty()) {
+    const std::vector<double> cuts = quantiles_(*this, interior);
+    for (std::size_t i = 0; i < positions.size(); ++i) result[positions[i]] = cuts[i];
+  }
+
+  const std::vector<std::int64_t> shape(probability.sizes().begin(),
+                                        probability.sizes().end());
+  return f64_series_(result)
+      .reshape(shape)
+      .to(probability.platform(), ScalarType::Float64);
+}
+
+Series icdf(dst::Kind kind, const Series& probability,
+            std::span<const double> params) {
+  return Distribution(kind, std::vector<double>(params.begin(), params.end()))
+      .icdf(probability);
+}
+
+Series icdf(dst::Kind kind, const Series& probability,
+            std::initializer_list<double> params) {
+  return icdf(kind, probability,
+              std::span<const double>(params.begin(), params.size()));
+}
+
 Series Distribution::sample(std::span<const std::int64_t> sizes, pluss::Config cfg, std::uint64_t seed) const {
   require_scalar_params_(*this, "sample");
   return distr::sample(kind, std::span<const double>(params), pluss::msharp::RangeView::Int{sizes.data(), sizes.size()}, cfg, seed);

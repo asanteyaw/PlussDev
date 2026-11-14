@@ -1,0 +1,305 @@
+<!-- generated from large_amplitude_motion.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Large-amplitude motion
+
+[Back to Structures 4: Large Displacements](../structure_04_large_displacements.md)
+
+A pendulum swinging through a large angle, a flexible arm whipping around, a cable-like member swaying widely: all move through large rotations while their members stay elastic. `motion` with `NonlinearMotionOptions` integrates the corotational frame through time. This page swings a rod pendulum through small and large angles and checks the period against the exact elliptic-integral result, and shows the one setting without which a large-amplitude run fails: some numerical damping.
+
+## The mental model
+
+The inputs are the same as for the linear [transient response](../structure_03_dynamics/transient_response.md): a load history `[time, node, 3]`, sample times, supports, an optional `MotionState` and an options structure. The difference is the options, `NonlinearMotionOptions`, and what they imply: the equations of motion are the nonlinear equations of the corotational model, solved at every step by Newton's method with a line search, and the generalised-alpha integrator takes its `spectral_radius` (default one) as in the linear case. The result is a `NonlinearMotionResult` with the same time histories of `displacement`, `velocity`, `acceleration`, `reaction`, `kinetic`, `strain_energy`, `residual_norm` and `converged` as the linear result, and `iterations` giving the largest Newton iteration count at each step.
+
+A load that is constant in space, such as gravity, is an acceleration field. The consistent weight of the frame is `mass(frame, g)`: the inertial force the mass matrix gives for a uniform acceleration `g`, with the sign chosen to point in the direction of gravity.
+
+## A pendulum
+
+A rod of length `L` hanging from a frictionless pin at its end swings with the equation of a pendulum, `theta'' = -(3 g / (2 L)) sin(theta)`. Its small-angle period is `T_0 = 2 pi sqrt(2 L / (3 g))`, and for an amplitude `theta_0` the exact period is `T = T_0 * 2 K(k) / pi`, with `K` the complete elliptic integral of the first kind and `k = sin(theta_0 / 2)`. The ratio `T / T_0` is `1.0006` at `0.1 rad`, `1.0663` at `1 rad` and `1.3289` at `2 rad`: the period lengthens as the swing widens.
+
+The rod is `1 m` of steel, `20 mm` square, in eight members, pinned at its top node (fixed in x and y, free to rotate), starting at rest at an angle `theta_0`. The initial displacement of every node is the rigid rotation of the rod about the pin. The load is its own weight. The program integrates a quarter of the cycle plus margin with the default options, finds the time at which the rod first swings through the vertical (a quarter period), and compares four times that with the exact period. The elliptic integral is computed in the program by the arithmetic-geometric mean.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// the complete elliptic integral of the first kind, by the arithmetic-geometric mean
+static double elliptic_k(double k) {
+  double a = 1.0, b = std::sqrt(1.0 - k * k);
+  for (int i = 0; i < 30; ++i) {
+    const double next = 0.5 * (a + b);
+    b = std::sqrt(a * b);
+    a = next;
+  }
+  return M_PI / (2.0 * a);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const int members = 8;
+  const double length = 1.0, gravity = 9.81;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(0.0);
+    position.push_back(-length * i / members);   // hanging down from the pin at the origin
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto rod = st::frame({grid(position, 2), from, to},
+                             {vec(std::vector<double>(members, 4e-4)), vec(std::vector<double>(members, 1.333e-8)), vec(std::vector<double>(members, 200e9)), vec(std::vector<double>(members, 7850.0))});
+  const st::Fix pin{{0, 0}, {0, 1}, {}};
+
+  // the weight: the mass matrix applied to the acceleration of gravity
+  std::vector<double> downward(3 * (members + 1), 0.0);
+  for (int i = 0; i <= members; ++i) downward[3 * i + 1] = -gravity;
+  const auto weight = flat(st::mass(rod, grid(downward, 3)));
+
+  const double period0 = 2.0 * M_PI * std::sqrt(2.0 * length / (3.0 * gravity));
+  const int steps = 350;
+  const double dt = 0.005;
+  std::vector<double> times, history;
+  for (int i = 0; i <= steps; ++i) {
+    times.push_back(dt * i);
+    history.insert(history.end(), weight.begin(), weight.end());
+  }
+  const auto load = pluss::series::make(history).reshape({steps + 1, members + 1, 3});
+
+  out.writeln("small-angle period T0 = ", period0, " s");
+  for (double theta0 : {0.1, 1.0}) {
+    // start at rest, rotated rigidly by theta0 about the pin
+    std::vector<double> start(3 * (members + 1), 0.0);
+    for (int i = 0; i <= members; ++i) {
+      const double x = length * i / members;
+      start[3 * i] = x * std::sin(theta0);
+      start[3 * i + 1] = x * (1.0 - std::cos(theta0));
+      start[3 * i + 2] = theta0;
+    }
+    st::MotionState initial;
+    initial.displacement = grid(start, 3);
+    st::NonlinearMotionOptions options;
+    const auto r = st::motion(rod, load, vec(times), pin, initial, options);
+
+    // the tip rotation first crosses zero a quarter of a period after the release
+    const auto u = flat(r.displacement);
+    double quarter = -1.0;
+    for (int i = 1; i <= steps && quarter < 0.0; ++i) {
+      const double before = u[(i - 1) * 3 * (members + 1) + 3 * members + 2], after = u[i * 3 * (members + 1) + 3 * members + 2];
+      if (before > 0.0 && after <= 0.0) quarter = times[i - 1] + dt * before / (before - after);
+    }
+    out.writeln("amplitude ", theta0, " rad: T / T0 from the solver ", 4.0 * quarter / period0, ", exact ", 2.0 * elliptic_k(std::sin(theta0 / 2.0)) / M_PI,
+                ";  every step converged: ", r.converged.all().item<bool>(), ", at most ", r.iterations.max().item<double>(), " Newton iterations per step");
+  }
+}
+```
+
+Output
+
+```text
+small-angle period T0 = 1.63795 s
+amplitude 0.10000 rad: T / T0 from the solver 1.00059, exact 1.00063;  every step converged: true, at most 3.00000 Newton iterations per step
+amplitude 1.00000 rad: T / T0 from the solver 1.06633, exact 1.06633;  every step converged: true, at most 3.00000 Newton iterations per step
+```
+
+The solver reproduces the exact period to about five digits at both amplitudes. The lengthening of the period at `1 rad` is a purely geometric nonlinearity, invisible to a linear model, which predicts the same period at every amplitude.
+
+## Numerical damping
+
+A large rotation of a stiff member excites its high-frequency axial and bending modes, which the mesh barely resolves. `spectral_radius` sets how strongly the integrator damps them: the response factor of the highest modes per step, `1` for none and smaller values for more. The nonlinear options default to `0.9`, which keeps the swing itself almost untouched while taking the energy out of the poorly resolved modes. The program swings the `1 rad` pendulum for one and a half periods with `spectral_radius` of `0.9` and of `0.5` and prints the largest rotation of the tip in the second half of the run, and the rod's total energy, kinetic plus strain plus gravitational, at the start and at the end.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 8;
+  const double length = 1.0, gravity = 9.81, theta0 = 1.0;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(0.0);
+    position.push_back(-length * i / members);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto rod = st::frame({grid(position, 2), from, to},
+                             {vec(std::vector<double>(members, 4e-4)), vec(std::vector<double>(members, 1.333e-8)), vec(std::vector<double>(members, 200e9)), vec(std::vector<double>(members, 7850.0))});
+  const st::Fix pin{{0, 0}, {0, 1}, {}};
+  std::vector<double> downward(3 * (members + 1), 0.0);
+  for (int i = 0; i <= members; ++i) downward[3 * i + 1] = -gravity;
+  const auto weight = flat(st::mass(rod, grid(downward, 3)));
+
+  const int steps = 500;
+  const double dt = 0.005;
+  std::vector<double> times, history;
+  for (int i = 0; i <= steps; ++i) {
+    times.push_back(dt * i);
+    history.insert(history.end(), weight.begin(), weight.end());
+  }
+  const auto load = pluss::series::make(history).reshape({steps + 1, members + 1, 3});
+  std::vector<double> start(3 * (members + 1), 0.0);
+  for (int i = 0; i <= members; ++i) {
+    const double x = length * i / members;
+    start[3 * i] = x * std::sin(theta0);
+    start[3 * i + 1] = x * (1.0 - std::cos(theta0));
+    start[3 * i + 2] = theta0;
+  }
+  st::MotionState initial;
+  initial.displacement = grid(start, 3);
+
+  // the gravitational energy of the whole rod, from the vertical displacement of every node and the weight at every node
+  const auto potential = [&](const std::vector<double> &u) {
+    double energy = 0.0;
+    for (int i = 0; i <= members; ++i) energy -= weight[3 * i + 1] * u[3 * i + 1];
+    return energy;
+  };
+
+  for (double radius : {0.9, 0.5}) {
+    st::NonlinearMotionOptions options;
+    options.spectral_radius = radius;
+    const auto r = st::motion(rod, load, vec(times), pin, initial, options);
+    const auto u = flat(r.displacement), kinetic = flat(r.kinetic), strain = flat(r.strain_energy);
+    const std::size_t stride = 3 * (members + 1);
+    double late_amplitude = 0.0;
+    for (int i = steps / 2; i <= steps; ++i) late_amplitude = std::max(late_amplitude, std::abs(u[i * stride + 3 * members + 2]));
+    const auto total = [&](int i) { return kinetic[i] + strain[i] + potential(std::vector<double>(u.begin() + i * stride, u.begin() + (i + 1) * stride)); };
+    out.writeln("spectral radius ", radius, ": largest tip rotation in the second half (rad) ", late_amplitude, ", total energy at the start and at the end (J) ", total(0), " ", total(steps));
+  }
+}
+```
+
+Output
+
+```text
+spectral radius 0.9000: largest tip rotation in the second half (rad) 1.0001, total energy at the start and at the end (J) 7.0801 7.0818
+spectral radius 0.5000: largest tip rotation in the second half (rad) 1.0001, total energy at the start and at the end (J) 7.0801 7.0814
+```
+
+Both runs keep the swing's amplitude and energy to within a fraction of a percent over this time, and the stronger damping removes a little more. Leave `spectral_radius` at its default unless you are after accelerations or reactions, where a smaller value suppresses the ringing of the poorly resolved modes, or you need the least possible energy loss over a long run.
+
+## Decisions
+
+- **Small or large rotations:** if the rotations stay below a few degrees, use the linear `motion`, which is cheaper; for larger swings use the nonlinear one.
+- **Time step:** a tenth of the shortest period you need, and small enough that the structure's motion within one step is modest.
+- **Gravity and other body forces:** `mass(frame, acceleration)` gives the consistent nodal loads.
+
+## Pitfalls
+
+The program shows two mistakes whose results look like a motion: leaving gravity out of the load, so the rod released at an angle stays where it was put, and leaving out the initial state, so that a rod meant to be released at an angle is started hanging at rest.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 8;
+  const double length = 1.0, gravity = 9.81, theta0 = 1.0;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(0.0);
+    position.push_back(-length * i / members);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto rod = st::frame({grid(position, 2), from, to},
+                             {vec(std::vector<double>(members, 4e-4)), vec(std::vector<double>(members, 1.333e-8)), vec(std::vector<double>(members, 200e9)), vec(std::vector<double>(members, 7850.0))});
+  const st::Fix pin{{0, 0}, {0, 1}, {}};
+  std::vector<double> downward(3 * (members + 1), 0.0);
+  for (int i = 0; i <= members; ++i) downward[3 * i + 1] = -gravity;
+  const auto weight = flat(st::mass(rod, grid(downward, 3)));
+  std::vector<double> start(3 * (members + 1), 0.0);
+  for (int i = 0; i <= members; ++i) {
+    const double x = length * i / members;
+    start[3 * i] = x * std::sin(theta0);
+    start[3 * i + 1] = x * (1.0 - std::cos(theta0));
+    start[3 * i + 2] = theta0;
+  }
+  st::MotionState initial;
+  initial.displacement = grid(start, 3);
+  const std::size_t stride = 3 * (members + 1), tip_rotation = 3 * members + 2;
+  const double quarter = 0.25 * 2.0 * M_PI * std::sqrt(2.0 * length / (3.0 * gravity)) * 1.06633;   // the exact quarter period at this amplitude
+
+  // a run with a given load and starting state; reports where the tip ends up and when it first swings through the vertical
+  const auto crossing = [&](double dt, double scale, const st::MotionState &state, const char *label) {
+    const int steps = static_cast<int>(std::lround(1.3 * quarter / dt));
+    std::vector<double> times, history;
+    for (int i = 0; i <= steps; ++i) {
+      times.push_back(dt * i);
+      for (double w : weight) history.push_back(scale * w);
+    }
+    const auto r = st::motion(rod, pluss::series::make(history).reshape({steps + 1, members + 1, 3}), vec(times), pin, state, st::NonlinearMotionOptions{});
+    const auto u = flat(r.displacement);
+    double when = -1.0;
+    for (int i = 1; i <= steps && when < 0.0; ++i) {
+      const double before = u[(i - 1) * stride + tip_rotation], after = u[i * stride + tip_rotation];
+      if (before > 0.0 && after <= 0.0) when = times[i - 1] + dt * before / (before - after);
+    }
+    out.writeln(label, ": tip rotation at the end (rad) ", u[steps * stride + tip_rotation], ", time to swing through the vertical (s) ", when, "   exact ", quarter);
+  };
+  crossing(0.005, 1.0, initial, "released at 1 rad, with gravity       ");
+  crossing(0.005, 0.0, initial, "released at 1 rad, gravity left out   ");
+  crossing(0.005, 1.0, st::MotionState{}, "no initial state, with gravity       ");
+}
+```
+
+Output
+
+```text
+released at 1 rad, with gravity       : tip rotation at the end (rad) -0.4696, time to swing through the vertical (s) 0.4366   exact 0.4366
+released at 1 rad, gravity left out   : tip rotation at the end (rad) 1.0000, time to swing through the vertical (s) -1.0000   exact 0.4366
+no initial state, with gravity       : tip rotation at the end (rad) 0.0000, time to swing through the vertical (s) -1.0000   exact 0.4366
+```
+
+Without the weight in the load the rod stays at its starting angle of one radian: the structure has nothing to move it. Without the `MotionState` the rod starts hanging straight down at rest, which is already in equilibrium, so it never moves and never crosses the vertical. In both cases the run converges and returns an orderly history, which is why the result must be checked against a case you know, as the pendulum here is.
+
+Reference: [`motion`](../../../../api/eng/structure/dynamics/motion.md), [`NonlinearMotionOptions`](../../../../api/eng/structure/dynamics/NonlinearMotionOptions.md), [`NonlinearMotionResult`](../../../../api/eng/structure/dynamics/NonlinearMotionResult.md), [`MotionState`](../../../../api/eng/structure/dynamics/MotionState.md), [`mass`](../../../../api/eng/structure/spectral/mass.md).
+
+Where next: this completes the structures chapters. The signal, systems, control and circuit guides in [Engineering](../../../eng.md) treat the other engineering areas.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="nonlinear_statics.html">
+    <span class="label">Previous</span>
+    <span class="title">Large-displacement statics</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

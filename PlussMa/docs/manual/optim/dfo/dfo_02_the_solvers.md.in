@@ -37,4 +37,10 @@ Every program is complete and its output is the output of that program. Counts a
 If you can differentiate the function, use the gradient-based solvers of the earlier chapters; they will take far fewer evaluations than anything in this chapter.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_02_the_solvers/comparing_the_methods
+```
 <!-- apiref:toctree:end -->

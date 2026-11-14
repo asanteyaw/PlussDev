@@ -56,8 +56,8 @@ Inspect all three responses from a state-space plant.
 
 #include <complex>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -94,8 +94,8 @@ Verify `S + T = 1` through the pole-zero overload.
 
 #include <complex>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -131,8 +131,8 @@ See why this result is restricted to SISO loops.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -165,7 +165,6 @@ Output
 MIMO margin rejected = eng::control::margin: classical margins require a SISO system
 real response rejected = eng::control::margin: response must have a complex dtype
 ```
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="MarginResult.html">

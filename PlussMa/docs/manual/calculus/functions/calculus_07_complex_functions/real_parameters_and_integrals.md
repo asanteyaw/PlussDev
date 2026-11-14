@@ -77,7 +77,7 @@ int main() {
 Output
 
 ```text
-integral of exp(ix) over [0, pi]  (-1.85929e-16,2)  exact (0,2)
+integral of exp(ix) over [0, pi]  (3.51282e-16,2)  exact (0,2)
 real part is the integral of cos  0.00000000  exact 0
 over [0, pi/2]  (1,1)  exact (1,1)
 ```
@@ -119,3 +119,12 @@ original  (-1.55,1.26)  restored (-1.55,1.26)  by hand (-1.55,1.26)
 ```
 
 The saved and restored derivative give the same value, −1.55 + 1.26i, which is also 3z² + z̄ computed by hand.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="wirtinger_derivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">Wirtinger derivatives</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

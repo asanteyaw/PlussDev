@@ -1,0 +1,42 @@
+# State estimation
+
+This branch estimates the voltages of a network from redundant, weighted measurements by Gauss-Newton, and returns the residuals and covariance that expose bad data.
+
+## Choosing A Surface
+
+Use `estimate` when the measured quantities are redundant and noisy. Read the objective and the normalised residuals after every estimate.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Ten measurements of a three-bus network.
+
+@@example Eng/api/power_est_state.cpp@@
+
+### Example 2
+
+Detecting a gross error.
+
+@@example Eng/api/power_est_residuals.cpp@@
+
+### Example 3
+
+Options.
+
+@@example Eng/api/power_est_options.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+estimation/MeasureKind
+estimation/Measurements
+estimation/EstimateOptions
+estimation/EstimateResult
+estimation/estimate
+```
+<!-- apiref:toctree:end -->

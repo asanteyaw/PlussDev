@@ -80,16 +80,16 @@ int main() {
   const std::vector<double> params = {2.0, 1.5};
 
   std::cout << "x:";
-  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).items<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pmf:";
-  for (double v : distr::pdf(dst::Skellam, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Skellam, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Skellam, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Skellam, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpmf:";
-  for (double v : distr::logpdf(dst::Skellam, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Skellam, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -121,7 +121,7 @@ int main() {
   const double mass_sum = as_f64(distr::pdf(dst::Skellam, grid, params).sum());
 
   const auto edges = pluss::make_series({-4.0, 6.0}, f64);
-  const auto c = distr::cdf(dst::Skellam, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Skellam, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Skellam, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= -3.0).to(pluss::ScalarType::Float64) * (draws <= 6.0).to(pluss::ScalarType::Float64)).mean());
@@ -155,16 +155,16 @@ int main() {
   const auto x = pluss::make_series({-4.0, -2.0, 0.0, 2.0, 4.0, 6.0}, f64);
 
   std::cout << "x:";
-  for (std::int64_t v : x.to(pluss::ScalarType::Int64).pull<std::int64_t>()) std::cout << ' ' << v;
+  for (std::int64_t v : x.to(pluss::ScalarType::Int64).items<std::int64_t>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "mu1 1, mu2 1:";
-  for (double v : distr::pdf(dst::Skellam, x, {1.0, 1.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Skellam, x, {1.0, 1.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "mu1 2, mu2 1.5:";
-  for (double v : distr::pdf(dst::Skellam, x, {2.0, 1.5}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Skellam, x, {2.0, 1.5}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "mu1 5, mu2 1:";
-  for (double v : distr::pdf(dst::Skellam, x, {5.0, 1.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Skellam, x, {5.0, 1.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -177,3 +177,16 @@ Read down the rows: `mu1 1, mu2 1` peaks on this grid at x = 0 (value 0.3085); `
 - [`Binomial`](../discrete/Binomial.md)
 - [`Normal`](../continuous_real_line/Normal.md)
 - [`distr::Skellam`](../object_based/Skellam.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Rademacher.html">
+    <span class="label">Previous</span>
+    <span class="title">Rademacher</span>
+  </a>
+  <a class="next-link" href="Yule.html">
+    <span class="label">Next</span>
+    <span class="title">Yule</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

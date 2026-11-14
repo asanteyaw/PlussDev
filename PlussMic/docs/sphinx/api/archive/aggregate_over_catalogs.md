@@ -101,7 +101,7 @@ Archive::aggregate_over_catalogs: reducer function is empty
 
 - [`Archive::map_catalogs`](map_catalogs.md): transform each catalog independently,
   preserving depth, instead of reducing to one.
-- [`Catalog::at`](../catalog/at.md) plus [`Stream::sum`](../stream/sum.md): a
+- [`Catalog::keys`](../catalog/keys.md) (`keys(key)`) plus [`Stream::sum`](../stream/sum.md): a
   common per-stream reduction path used inside a reducer like the one shown above.
 
 <div class="pluss-inline-prev-next">

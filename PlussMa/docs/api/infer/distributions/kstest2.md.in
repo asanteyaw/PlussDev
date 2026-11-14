@@ -125,5 +125,18 @@ With repeated values the empirical distribution functions have jumps, and the te
 ## See Also
 
 - [`kstest`](kstest.md)
-- [`ranksum`](ranksum.md)
-- [`ttest2`](ttest2.md)
+- [`ranksum`](../ranks_and_signs/ranksum.md)
+- [`ttest2`](../means_and_variances/ttest2.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="kstest.html">
+    <span class="label">Previous</span>
+    <span class="title">kstest</span>
+  </a>
+  <a class="next-link" href="jbtest.html">
+    <span class="label">Next</span>
+    <span class="title">jbtest</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

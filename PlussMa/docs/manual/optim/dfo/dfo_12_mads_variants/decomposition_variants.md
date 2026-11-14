@@ -150,3 +150,12 @@ The chain function couples every variable to its neighbours, which is the case d
 - **For strongly coupled variables use plain MADS or a population method.** Decomposition is a property of the method, not a defect.
 
 Where next: [Failures and several basins](failures_and_several_basins.md) covers the other two variants.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="failures_and_several_basins.html">
+    <span class="label">Next</span>
+    <span class="title">Variants for failing evaluations and several basins</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

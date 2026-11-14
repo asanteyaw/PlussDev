@@ -74,4 +74,19 @@ int main() {
          "batched MPC violates a bound");
 
   std::cout << "Condensed linear MPC checks passed\n";
+
+  // crossed bounds are refused with a message that names them
+  {
+    const auto a = pluss::series::make({1.0, 0.1, 0.0, 1.0}).reshape({2, 2});
+    const auto b = pluss::series::make({0.005, 0.1}).reshape({2, 1});
+    const auto plant = lti::state(a, b, pluss::series::make({1.0, 0.0}).reshape({1, 2}), pluss::series::make({0.0}).reshape({1, 1}), 0.1);
+    control::mpc::Weights weights{.state = pluss::series::eye(2, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)), .input = pluss::series::make({0.1}).reshape({1, 1})};
+    bool named = false;
+    try {
+      (void)control::mpc::build(plant, weights, control::mpc::Bounds{.input_lower = pluss::series::make({1.0}), .input_upper = pluss::series::make({-1.0})});
+    } catch (const pluss::Error &error) {
+      named = std::string(error.what()).find("bounds.input_lower must not exceed bounds.input_upper") != std::string::npos;
+    }
+    expect(named, "crossed input bounds were not refused by name");
+  }
 }

@@ -8,6 +8,7 @@
 #include <string>
 
 namespace pluss::subsp::math::finance::pricing {
+using namespace detail;
 namespace {
 
 using volatility::SabrParams;
@@ -82,7 +83,7 @@ double bachelier_price_(OptionType type,
 
 } // namespace
 
-double sabr_black_vol(double forward,
+double detail::sabr_black_vol(double forward,
                       double strike,
                       double maturity,
                       const SabrParams& params,
@@ -140,7 +141,7 @@ double sabr_black_vol(double forward,
   return alpha * ratio * (1.0 + v2 * maturity) / (v1 * (1.0 + v3));
 }
 
-double sabr_normal_vol(double forward,
+double detail::sabr_normal_vol(double forward,
                        double strike,
                        double maturity,
                        const SabrParams& params,
@@ -210,7 +211,7 @@ double sabr_normal_vol(double forward,
   return alpha * (f - k) * (1.0 - beta) * ratio / pow_diff * v2;
 }
 
-double sabr_price_approx(OptionType type,
+double detail::sabr_price_approx(OptionType type,
                          double forward,
                          double strike,
                          double rate,
@@ -234,6 +235,66 @@ double sabr_price_approx(OptionType type,
 
   const double sigma_b = sabr_black_vol(forward, strike, maturity, params, options);
   return black_scholes_price(type, forward, strike, rate, rate, maturity, sigma_b);
+}
+
+ScalarGreeks detail::sabr_greeks(OptionType type, double spot, double strike, double rate, double dividend_yield, double maturity, const SabrParams& params,
+                                 SabrVolType vol_type, const SabrApproxOptions& options) {
+  const double forward = spot * std::exp((rate - dividend_yield) * maturity);
+  ScalarGreeks g;
+  g.price = sabr_price_approx(type, forward, strike, rate, maturity, params, vol_type, options);
+  if (!(maturity > 0.0)) {
+    g.delta = type == OptionType::Call ? (spot > strike ? 1.0 : 0.0) : (spot < strike ? -1.0 : 0.0);
+    return g;
+  }
+  // The price is G(S, tau) = Price(F, K, r, tau, sigma(F, tau, alpha0)) with the forward F = S exp((r - q) tau). The smile sigma(F, tau, alpha0) is a smooth scalar
+  // function: its derivatives come from fourth-order stencils on the expansion itself (no pricing involved), and the derivatives of Black's (or Bachelier's)
+  // formula are exact.
+  const bool normal = vol_type == SabrVolType::Normal;
+  const auto sigma_of = [&](double f, double t, double a) {
+    SabrParams p = params;
+    p.alpha0 = a;
+    return normal ? sabr_normal_vol(f, strike, t, p, options) : sabr_black_vol(f, strike, t, p, options);
+  };
+  const auto stencil = [&](double x, double h, const auto& value, double& d1, double& d2) {
+    const double f0 = value(x), fp1 = value(x + h), fm1 = value(x - h), fp2 = value(x + 2.0 * h), fm2 = value(x - 2.0 * h);
+    d1 = (-fp2 + 8.0 * fp1 - 8.0 * fm1 + fm2) / (12.0 * h);
+    d2 = (-fp2 + 16.0 * fp1 - 30.0 * f0 + 16.0 * fm1 - fm2) / (12.0 * h * h);
+  };
+  double sig_f = 0.0, sig_ff = 0.0, sig_t = 0.0, sig_a = 0.0, unused = 0.0;
+  stencil(forward, 1e-3 * forward, [&](double f) { return sigma_of(f, maturity, params.alpha0); }, sig_f, sig_ff);
+  stencil(maturity, 1e-3 * maturity, [&](double t) { return sigma_of(forward, t, params.alpha0); }, sig_t, unused);
+  stencil(params.alpha0, 1e-3 * params.alpha0, [&](double a) { return sigma_of(forward, maturity, a); }, sig_a, unused);
+  const double sigma = sigma_of(forward, maturity, params.alpha0);
+
+  const double disc = std::exp(-rate * maturity), sqrt_t = std::sqrt(maturity), st = sigma * sqrt_t;
+  const bool call = type == OptionType::Call;
+  double b_f, b_ff, b_s, b_fs, b_ss, b_t;   // derivatives of the price formula: in F, twice in F, in sigma, mixed, twice in sigma, explicit in tau
+  if (!normal) {
+    const double d1 = (std::log(forward / strike) + 0.5 * sigma * sigma * maturity) / st, d2 = d1 - st, phi = norm_pdf_(d1);
+    b_f = call ? disc * norm_cdf_(d1) : -disc * norm_cdf_(-d1);
+    b_ff = disc * phi / (forward * st);
+    b_s = disc * forward * phi * sqrt_t;
+    b_fs = -disc * phi * d2 / sigma;
+    b_ss = b_s * d1 * d2 / sigma;
+    b_t = -rate * g.price + disc * forward * phi * sigma / (2.0 * sqrt_t);
+  } else {
+    const double d = (forward - strike) / st, phi = norm_pdf_(d);
+    b_f = call ? disc * norm_cdf_(d) : -disc * norm_cdf_(-d);
+    b_ff = disc * phi / st;
+    b_s = disc * sqrt_t * phi;
+    b_fs = -disc * phi * d / sigma;
+    b_ss = b_s * d * d / sigma;
+    b_t = -rate * g.price + disc * sigma * phi / (2.0 * sqrt_t);
+  }
+  const double g_f = b_f + b_s * sig_f;
+  const double g_ff = b_ff + 2.0 * b_fs * sig_f + b_ss * sig_f * sig_f + b_s * sig_ff;
+  const double growth = forward / spot;
+  g.delta = g_f * growth;
+  g.gamma = g_ff * growth * growth;
+  g.vega = b_s * sig_a;
+  g.theta = -(b_t + b_s * sig_t + g_f * (rate - dividend_yield) * forward);
+  g.rho = -maturity * g.price + g_f * maturity * forward;
+  return g;
 }
 
 } // namespace pluss::subsp::math::finance::pricing

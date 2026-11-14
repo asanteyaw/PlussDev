@@ -1,0 +1,578 @@
+# apiref_manifest_numericsapi.toml -- the `Numerical methods` API reference of PlussMa.
+
+[framework.numerics_api]
+title = "Numerical methods"
+nav_title = "Numerical methods API"
+nav_prefix = "api/numerics/"
+root_page = "api/plussma_numerics.html"
+summary = "Numerical integration, differential equations, Krylov solvers and interpolation over Series data."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "numerics/integ"
+page = "api/numerics/integ.md"
+title = "Numerical integration"
+maxdepth = 2
+children = ["integ/AleatoriaOptions", "integ/AleatoriaResult", "integ/IntegraOptions", "integ/IntegraResult", "integ/IntegraStrategy", "integ/LebesgueOptions", "integ/LebesgueResult", "integ/MeasureResult", "integ/QuadraNdOptions", "integ/QuadraNdResult", "integ/QuadraOptions", "integ/QuadraResult", "integ/QuadraRule", "integ/QuadraScalarOptions", "integ/QuadraScalarResult", "integ/aleatoria", "integ/analytica_arcsine_kernel", "integ/analytica_cosine", "integ/analytica_exponential", "integ/analytica_gaussian", "integ/analytica_gaussian_moment", "integ/analytica_gaussian_probability", "integ/analytica_hyperbolic_cosine", "integ/analytica_hyperbolic_sine", "integ/analytica_hyperbolic_tangent", "integ/analytica_lorentzian", "integ/analytica_polynomial", "integ/analytica_power", "integ/analytica_sigmoid", "integ/analytica_sine", "integ/cumulative_trapezoid", "integ/integra", "integ/lebesgue", "integ/measure_of", "integ/quadra", "integ/quadra_scalar", "integ/trapezoid"]
+
+[[family]]
+path = "numerics/ode"
+page = "api/numerics/ode.md"
+title = "Ordinary differential equations"
+maxdepth = 2
+children = ["ode/LinearOdeOptions", "ode/OdeAdjointResult", "ode/OdeEventDirection", "ode/OdeEventOptions", "ode/OdeEventResult", "ode/OdeMethod", "ode/OdeOptions", "ode/OdeResult", "ode/fluxa", "ode/fluxa_adjoint", "ode/fluxa_linear", "ode/fluxa_until"]
+
+[[family]]
+path = "numerics/krylov"
+page = "api/numerics/krylov.md"
+title = "Krylov solvers"
+maxdepth = 2
+children = ["krylov/CgOptions", "krylov/CgResult", "krylov/ExpOptions", "krylov/ExpResult", "krylov/GmresOptions", "krylov/GmresResult", "krylov/cg", "krylov/exp_action", "krylov/gmres", "krylov/pcg"]
+
+[[family]]
+path = "numerics/interp"
+page = "api/numerics/interp.md"
+title = "Interpolation"
+maxdepth = 2
+children = ["interp/EdgeMode", "interp/linear"]
+
+[[family]]
+path = "numerics/multigrid"
+page = "api/numerics/multigrid.md"
+title = "Multigrid"
+maxdepth = 2
+children = ["multigrid/Axis", "multigrid/Edge", "multigrid/Hierarchy", "multigrid/Options", "multigrid/Problem"]
+
+[[symbol]]
+qualname = "integ::trapezoid"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/trapezoid.md"
+summary = "Integrates sampled values by the trapezoidal rule, along one axis."
+overloads = 3
+toggles = ["points x", "spacing dx", "unit spacing"]
+
+[[symbol]]
+qualname = "integ::cumulative_trapezoid"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/cumulative_trapezoid.md"
+summary = "The running trapezoidal integral of sampled values: the area up to each point."
+overloads = 3
+toggles = ["points x", "spacing dx", "unit spacing"]
+
+[[symbol]]
+qualname = "integ::QuadraRule"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/QuadraRule.md"
+summary = "The composite rule `quadra` applies on an interval."
+fields = ["Trapezoidal", "Simpson", "GaussLegendre", "Auto"]
+
+[[symbol]]
+qualname = "integ::quadra"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/quadra.md"
+summary = "Integrates a function over an interval, or over a box, by a quadrature rule that refines itself until it converges."
+overloads = 2
+toggles = ["one variable", "several variables"]
+
+[[symbol]]
+qualname = "integ::QuadraOptions"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/QuadraOptions.md"
+summary = "Rule, resolution, tolerance and precision of one-variable quadrature."
+fields = ["rule", "nodes", "panels", "gauss_points", "adaptive", "tolerance", "max_refinements", "dtype", "platform", "infinite_domain_epsilon"]
+
+[[symbol]]
+qualname = "integ::QuadraResult"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/QuadraResult.md"
+summary = "The value of a one-variable integral with its error estimate and the work spent."
+fields = ["value", "error_estimate", "evaluations", "refinements", "converged", "rule_used"]
+
+[[symbol]]
+qualname = "integ::QuadraNdOptions"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/QuadraNdOptions.md"
+summary = "Rule and per-axis resolution of the multi-dimensional tensor-product rule."
+fields = ["rule", "resolution", "gauss_points", "dtype", "platform", "max_total_nodes"]
+
+[[symbol]]
+qualname = "integ::QuadraNdResult"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/QuadraNdResult.md"
+summary = "The value of a multi-dimensional integral and the size of the grid it used."
+fields = ["value", "dimensions", "evaluations"]
+
+[[symbol]]
+qualname = "integ::quadra_scalar"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/quadra_scalar.md"
+summary = "Integrates an ordinary `double(double)` function over an interval by composite Simpson."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::QuadraScalarOptions"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/QuadraScalarOptions.md"
+summary = "Node count and adaptivity of the scalar Simpson rule."
+fields = ["nodes", "adaptive", "tolerance", "max_refinements"]
+
+[[symbol]]
+qualname = "integ::QuadraScalarResult"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/QuadraScalarResult.md"
+summary = "The value of a scalar integral with its error estimate."
+fields = ["value", "error_estimate", "evaluations", "converged"]
+
+[[symbol]]
+qualname = "integ::aleatoria"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/aleatoria.md"
+summary = "Estimates an integral by Monte Carlo: the average of the integrand at random points, with its standard error."
+overloads = 2
+toggles = ["one variable", "several variables"]
+
+[[symbol]]
+qualname = "integ::AleatoriaOptions"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/AleatoriaOptions.md"
+summary = "Sample count, seed and variance-reduction setting of Monte Carlo integration."
+fields = ["samples", "seed", "dtype", "platform", "stratified", "infinite_domain_epsilon"]
+
+[[symbol]]
+qualname = "integ::AleatoriaResult"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/AleatoriaResult.md"
+summary = "A Monte Carlo estimate with its standard error."
+fields = ["value", "standard_error", "samples"]
+
+[[symbol]]
+qualname = "integ::integra"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/integra.md"
+summary = "Integrates a function over an interval, choosing between quadrature and Monte Carlo itself."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::IntegraStrategy"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/IntegraStrategy.md"
+summary = "Which engine `integra` runs."
+fields = ["Quadrature", "MonteCarlo", "Auto"]
+
+[[symbol]]
+qualname = "integ::IntegraOptions"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/IntegraOptions.md"
+summary = "The strategy of `integra` and the settings of its two engines."
+fields = ["strategy", "quadrature", "monte_carlo"]
+
+[[symbol]]
+qualname = "integ::IntegraResult"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/IntegraResult.md"
+summary = "The value `integra` found, its error estimate and which engine produced it."
+fields = ["value", "error_estimate", "evaluations", "strategy_used", "converged"]
+
+[[symbol]]
+qualname = "integ::lebesgue"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/lebesgue.md"
+summary = "Integrates a function by partitioning its range instead of its domain, and returns a bracket the exact value must lie in."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::LebesgueOptions"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/LebesgueOptions.md"
+summary = "Cell count, refinement budget, grading and tolerance of Lebesgue integration."
+fields = ["cells", "max_refinements", "grading", "tolerance", "dtype", "platform"]
+
+[[symbol]]
+qualname = "integ::LebesgueResult"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/LebesgueResult.md"
+summary = "A Lebesgue integral with the bracket that encloses it."
+fields = ["value", "lower", "upper", "error_estimate", "evaluations", "refinements", "converged", "history", "monotone"]
+
+[[symbol]]
+qualname = "integ::measure_of"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/measure_of.md"
+summary = "The Lebesgue measure of the set where a function exceeds a level: the length of `{x : f(x) > level}`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::MeasureResult"
+kind = "options"
+family = "numerics/integ"
+page = "api/numerics/integ/MeasureResult.md"
+summary = "The measure of a level set with its error estimate."
+fields = ["value", "error_estimate", "evaluations", "refinements", "converged"]
+
+[[symbol]]
+qualname = "integ::analytica::exponential"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_exponential.md"
+summary = "The integral of `exp(k x)` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::power"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_power.md"
+summary = "The integral of `x^n` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::polynomial"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_polynomial.md"
+summary = "The integral of a polynomial `c₀ + c₁x + c₂x² + …` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::gaussian"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_gaussian.md"
+summary = "The integral of the unnormalised Gaussian `exp(−(x − mean)² / (2 stddev²))`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::gaussian_probability"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_gaussian_probability.md"
+summary = "The probability a normal variable falls between `a` and `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::sine"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_sine.md"
+summary = "The integral of `sin(k x)` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::cosine"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_cosine.md"
+summary = "The integral of `cos(k x)` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::lorentzian"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_lorentzian.md"
+summary = "The integral of the Lorentzian kernel `1 / (x² + scale²)` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::hyperbolic_sine"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_hyperbolic_sine.md"
+summary = "The integral of `sinh(k x)` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::hyperbolic_cosine"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_hyperbolic_cosine.md"
+summary = "The integral of `cosh(k x)` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::hyperbolic_tangent"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_hyperbolic_tangent.md"
+summary = "The integral of `tanh x` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::sigmoid"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_sigmoid.md"
+summary = "The integral of the logistic sigmoid `1 / (1 + e^{−x})` from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::gaussian_moment"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_gaussian_moment.md"
+summary = "The integral of `(x − mean)` times the unnormalised Gaussian, from `a` to `b`."
+overloads = 1
+
+[[symbol]]
+qualname = "integ::analytica::arcsine_kernel"
+kind = "function"
+family = "numerics/integ"
+page = "api/numerics/integ/analytica_arcsine_kernel.md"
+summary = "The integral of `1 / sqrt(1 − x²)` from `a` to `b`, both in `[−1, 1]`."
+overloads = 1
+
+[[symbol]]
+qualname = "ode::fluxa"
+kind = "function"
+family = "numerics/ode"
+page = "api/numerics/ode/fluxa.md"
+summary = "Solves an initial-value problem `dy/dt = f(t, y, θ)` from `t0` to `t1` and returns the state at `t1`."
+overloads = 1
+
+[[symbol]]
+qualname = "ode::OdeMethod"
+kind = "options"
+family = "numerics/ode"
+page = "api/numerics/ode/OdeMethod.md"
+summary = "The step rule of `fluxa`."
+fields = ["RK4", "RK45"]
+
+[[symbol]]
+qualname = "ode::OdeOptions"
+kind = "options"
+family = "numerics/ode"
+page = "api/numerics/ode/OdeOptions.md"
+summary = "The method, step count and adaptive-step controls of `fluxa`."
+fields = ["method", "steps", "relative_tolerance", "absolute_tolerance", "initial_step", "minimum_step", "maximum_step", "max_steps"]
+
+[[symbol]]
+qualname = "ode::OdeResult"
+kind = "options"
+family = "numerics/ode"
+page = "api/numerics/ode/OdeResult.md"
+summary = "The state at the end time and the work the solver did."
+fields = ["y_final", "steps", "function_evaluations", "rejected_steps", "converged"]
+
+[[symbol]]
+qualname = "ode::fluxa_linear"
+kind = "function"
+family = "numerics/ode"
+page = "api/numerics/ode/fluxa_linear.md"
+summary = "Solves a linear system `y' = A(t) y`, stiff or not, by an adaptive implicit method that never forms the matrix."
+overloads = 1
+
+[[symbol]]
+qualname = "ode::LinearOdeOptions"
+kind = "options"
+family = "numerics/ode"
+page = "api/numerics/ode/LinearOdeOptions.md"
+summary = "Tolerances, step bounds and inner-solver settings of `fluxa_linear`."
+fields = ["steps", "relative_tolerance", "absolute_tolerance", "initial_step", "minimum_step", "maximum_step", "max_steps", "solve_dims", "linear"]
+
+[[symbol]]
+qualname = "ode::OdeEventDirection"
+kind = "options"
+family = "numerics/ode"
+page = "api/numerics/ode/OdeEventDirection.md"
+summary = "Which sign changes of the event function count."
+fields = ["Any", "Rising", "Falling"]
+
+[[symbol]]
+qualname = "ode::fluxa_until"
+kind = "function"
+family = "numerics/ode"
+page = "api/numerics/ode/fluxa_until.md"
+summary = "Solves an initial-value problem until an event function changes sign, and returns the state and time of the event."
+overloads = 1
+
+[[symbol]]
+qualname = "ode::OdeEventOptions"
+kind = "options"
+family = "numerics/ode"
+page = "api/numerics/ode/OdeEventOptions.md"
+summary = "Direction and refinement tolerances of event location."
+fields = ["direction", "time_tolerance", "value_tolerance", "max_refinements"]
+
+[[symbol]]
+qualname = "ode::OdeEventResult"
+kind = "options"
+family = "numerics/ode"
+page = "api/numerics/ode/OdeEventResult.md"
+summary = "The outcome of an event-terminated solve: everything in `OdeResult`, plus whether and when the event happened."
+fields = ["triggered", "t_final", "event_value", "event_evaluations"]
+
+[[symbol]]
+qualname = "ode::fluxa_adjoint"
+kind = "function"
+family = "numerics/ode"
+page = "api/numerics/ode/fluxa_adjoint.md"
+summary = "Solves an initial-value problem and returns the gradients of a loss with respect to the initial state and the parameters, by the adjoint method."
+overloads = 1
+
+[[symbol]]
+qualname = "ode::OdeAdjointResult"
+kind = "options"
+family = "numerics/ode"
+page = "api/numerics/ode/OdeAdjointResult.md"
+summary = "The final state and the gradients returned by the adjoint solve."
+fields = ["y_final", "grad_y0", "grad_theta", "forward_steps", "backward_steps"]
+
+[[symbol]]
+qualname = "krylov::cg"
+kind = "function"
+family = "numerics/krylov"
+page = "api/numerics/krylov/cg.md"
+summary = "Solves `A x = b` for a symmetric positive-definite operator by conjugate gradients."
+overloads = 1
+
+[[symbol]]
+qualname = "krylov::pcg"
+kind = "function"
+family = "numerics/krylov"
+page = "api/numerics/krylov/pcg.md"
+summary = "Solves `A x = b` by preconditioned conjugate gradients, for a symmetric positive-definite operator and a preconditioner."
+overloads = 1
+
+[[symbol]]
+qualname = "krylov::CgOptions"
+kind = "options"
+family = "numerics/krylov"
+page = "api/numerics/krylov/CgOptions.md"
+summary = "Iteration limit, tolerances and convergence-check cadence of conjugate gradients."
+fields = ["max_iterations", "relative_tolerance", "absolute_tolerance", "curvature_tolerance", "check_interval"]
+
+[[symbol]]
+qualname = "krylov::CgResult"
+kind = "options"
+family = "numerics/krylov"
+page = "api/numerics/krylov/CgResult.md"
+summary = "The solution of a conjugate-gradient solve with per-lane residuals and flags."
+fields = ["solution", "residual_norm", "relative_residual", "converged", "breakdown", "iterations"]
+
+[[symbol]]
+qualname = "krylov::gmres"
+kind = "function"
+family = "numerics/krylov"
+page = "api/numerics/krylov/gmres.md"
+summary = "Solves `A x = b` for a general, possibly non-symmetric or complex operator by restarted GMRES."
+overloads = 1
+
+[[symbol]]
+qualname = "krylov::GmresOptions"
+kind = "options"
+family = "numerics/krylov"
+page = "api/numerics/krylov/GmresOptions.md"
+summary = "Iteration limit, restart length and tolerances of GMRES."
+fields = ["max_iterations", "restart", "relative_tolerance", "absolute_tolerance", "rank_tolerance"]
+
+[[symbol]]
+qualname = "krylov::GmresResult"
+kind = "options"
+family = "numerics/krylov"
+page = "api/numerics/krylov/GmresResult.md"
+summary = "The solution of a GMRES solve with per-lane residuals and the work done."
+fields = ["solution", "residual_norm", "relative_residual", "converged", "iterations", "operator_evaluations", "restarts"]
+
+[[symbol]]
+qualname = "krylov::exp_action"
+kind = "function"
+family = "numerics/krylov"
+page = "api/numerics/krylov/exp_action.md"
+summary = "Applies the matrix exponential `exp(t A)` to a vector without forming the matrix."
+overloads = 1
+
+[[symbol]]
+qualname = "krylov::ExpOptions"
+kind = "options"
+family = "numerics/krylov"
+page = "api/numerics/krylov/ExpOptions.md"
+summary = "Krylov dimension and convergence tolerances of `exp_action`."
+fields = ["max_iterations", "relative_tolerance", "absolute_tolerance"]
+
+[[symbol]]
+qualname = "krylov::ExpResult"
+kind = "options"
+family = "numerics/krylov"
+page = "api/numerics/krylov/ExpResult.md"
+summary = "The result of `exp_action` with its residual estimate and the work done."
+fields = ["value", "residual_estimate", "converged", "iterations", "operator_evaluations"]
+
+[[symbol]]
+qualname = "interp::linear"
+kind = "function"
+family = "numerics/interp"
+page = "api/numerics/interp/linear.md"
+summary = "Evaluates the piecewise-linear interpolant of one or many curves at one or many query points."
+overloads = 1
+
+[[symbol]]
+qualname = "interp::EdgeMode"
+kind = "options"
+family = "numerics/interp"
+page = "api/numerics/interp/EdgeMode.md"
+summary = "What `interp::linear` does for a query outside the coordinate grid."
+fields = ["Clamp", "Linear", "Error"]
+
+[[symbol]]
+qualname = "multigrid::Edge"
+kind = "options"
+family = "numerics/multigrid"
+page = "api/numerics/multigrid/Edge.md"
+summary = "The condition at one end of an axis: periodic, Dirichlet or Neumann."
+fields = ["Periodic", "Dirichlet", "Neumann"]
+
+[[symbol]]
+qualname = "multigrid::Axis"
+kind = "options"
+family = "numerics/multigrid"
+page = "api/numerics/multigrid/Axis.md"
+summary = "One spatial axis of the grid: its number of cells, spacing and the conditions at its two ends."
+fields = ["cells", "spacing", "low", "high"]
+
+[[symbol]]
+qualname = "multigrid::Problem"
+kind = "options"
+family = "numerics/multigrid"
+page = "api/numerics/multigrid/Problem.md"
+summary = "Everything that defines the operator: the axes, the face coefficients and an optional mass term."
+fields = ["axes", "face_low", "face_high", "mass"]
+
+[[symbol]]
+qualname = "multigrid::Options"
+kind = "options"
+family = "numerics/multigrid"
+page = "api/numerics/multigrid/Options.md"
+summary = "Tuning of the smoother, the coarsening and the execution path of the V-cycle."
+fields = ["smoothing_degree", "coarsest_cells", "smoothing_ratio", "max_levels", "dense_limit", "native_smoother", "native_cycle"]
+
+[[symbol]]
+qualname = "multigrid::Hierarchy"
+kind = "class"
+family = "numerics/multigrid"
+page = "api/numerics/multigrid/Hierarchy.md"
+summary = "The multigrid levels of one problem, with the operator, the V-cycle and the grid transfers."
+methods = ["apply", "coarsest_cells", "levels", "prolong_from_coarse", "restrict_to_coarse", "singular", "vcycle"]
+

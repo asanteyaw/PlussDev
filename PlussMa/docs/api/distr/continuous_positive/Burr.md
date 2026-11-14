@@ -248,3 +248,16 @@ The formula and `distr::cdf` agree to 0 over the grid, so the library implements
 - [`Lomax`](../continuous_positive/Lomax.md)
 - [`Weibull`](../continuous_positive/Weibull.md)
 - [`Lognormal`](../continuous_positive/Lognormal.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Alpha.html">
+    <span class="label">Previous</span>
+    <span class="title">Alpha</span>
+  </a>
+  <a class="next-link" href="Chi.html">
+    <span class="label">Next</span>
+    <span class="title">Chi</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

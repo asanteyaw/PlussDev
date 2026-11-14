@@ -151,8 +151,8 @@ inline void lsr1_validate_options_(const Lsr1Options& o) {
   if (!(o.initial_radius > 0.0) || !std::isfinite(o.initial_radius)) {
     ::pluss::throw_error("optim::l_sr1_trust_region: initial_radius must be positive and finite");
   }
-  if (!(o.max_radius >= o.initial_radius) || !std::isfinite(o.max_radius)) {
-    ::pluss::throw_error("optim::l_sr1_trust_region: max_radius must be finite and >= initial_radius");
+  if (!(o.max_radius > 0.0) || !std::isfinite(o.max_radius)) {
+    ::pluss::throw_error("optim::l_sr1_trust_region: max_radius must be positive and finite");
   }
   if (!(o.initial_gamma > 0.0) || !std::isfinite(o.initial_gamma)) {
     ::pluss::throw_error("optim::l_sr1_trust_region: initial_gamma must be positive and finite");
@@ -734,7 +734,8 @@ inline Lsr1Result l_sr1_trust_region_core_(
 
   Lsr1State state;
   state.gamma = opts.initial_gamma;
-  state.radius = opts.initial_radius;
+  // An initial radius above the cap starts at the cap.
+  state.radius = std::min(opts.initial_radius, opts.max_radius);
 
   Lsr1Result result;
   std::int64_t function_evaluations = 0;
@@ -975,6 +976,7 @@ inline Lsr1Result l_sr1_trust_region_core_(
     }
     state.gamma = gamma;
 
+    const double radius_before = state.radius;
     if (rho < opts.tau_2) {
       state.radius = std::min(opts.eta_1 * state.radius, opts.eta_2 * s_norm);
     } else if (rho >= opts.tau_3 && s_norm >= opts.eta_3 * state.radius) {
@@ -984,8 +986,13 @@ inline Lsr1Result l_sr1_trust_region_core_(
 
     g = grad_next_vec;
     objective_value = objective_next;
+    // A radius that is still growing toward the scale of the problem is progress too: with a far-too-small initial radius
+    // the first steps change the objective by less than the tolerance, and counting them would end the run before the
+    // radius had a chance to grow.
     if (objective_value < best_objective - solve_options.step_tolerance) {
       best_objective = objective_value;
+      no_progress_iterations = 0;
+    } else if (state.radius > radius_before) {
       no_progress_iterations = 0;
     } else {
       ++no_progress_iterations;
@@ -1001,7 +1008,7 @@ inline Lsr1Result l_sr1_trust_region_core_(
       snapshot.gradient_norm = detail::lsr1_norm_(g);
       snapshot.trust_radius = state.radius;
       snapshot.step_norm = s_norm;
-      if (!solve_options.progress_hook(snapshot)) {
+      if (solve_options.progress_hook(snapshot)) {
         result.exit_flag = Lsr1ExitFlag::Stopped;
         result.message = "l_sr1_trust_region: stopped by progress_hook";
         break;

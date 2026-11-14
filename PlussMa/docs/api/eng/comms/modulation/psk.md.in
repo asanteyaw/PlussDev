@@ -1,0 +1,64 @@
+# `comms::psk`
+
+An M-ary phase-shift-keying constellation.
+
+## Signature
+
+```cpp
+comms::Constellation comms::psk(std::int64_t order, const comms::ConstellationOptions& options = {});
+```
+
+## What It Does
+
+Builds `order` points on the unit circle, point `k` at the angle `2 pi k / order + phase`. With Gray labelling (the default) the label of point `k` is `k ^ (k >> 1)`, so neighbouring points differ in one bit. Order 2 is BPSK and order 4 is QPSK.
+
+## Parameters
+
+`order`
+: The number of points, a power of two of at least `2`.
+
+`options`
+: The labelling, rotation and precision; see `ConstellationOptions`.
+
+## Returns
+
+A `Constellation` with `bits = log2(order)` and unit average energy.
+
+## Errors
+
+Throws `pluss::Error` when `order` is not a power of two, `options.phase` is not finite or `options.dtype` is not complex.
+
+## Interpretation and Use
+
+BPSK and QPSK have the same bit error probability at the same Eb/N0; higher orders pack more bits per symbol but need more energy per bit for the same error rate.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+QPSK points by label.
+
+@@example Eng/api/comms_psk_points.cpp@@
+
+### Example 2
+
+Gray against natural labels.
+
+@@example Eng/api/comms_psk_gray.cpp@@
+
+### Example 3
+
+Rotation and single precision.
+
+@@example Eng/api/comms_psk_phase.cpp@@
+
+### Example 4
+
+Rejected orders.
+
+@@example Eng/api/comms_psk_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

@@ -132,7 +132,7 @@ int main() {
   // state A = [1,0] (good action is 1), state B = [0,1] (good action is 0).
   const auto stacked = pluss::make_series(std::vector<float>{1.0f, 0.0f, 0.0f, 1.0f}, {2, 2}, f32);
   const auto q = agent.predict(stacked).to(pluss::pCPU, ScalarType::Float64);
-  const auto qv = q.reshape({4}).pull<double>();
+  const auto qv = q.reshape({4}).items<double>();
 
   std::cout << "q.sizes() = [" << q.reshape({2, 2}).sizes()[0] << ", " << q.reshape({2, 2}).sizes()[1] << "]\n";
   std::cout << "state A scores action 1 highest: " << (qv[1] > qv[0]) << "\n";

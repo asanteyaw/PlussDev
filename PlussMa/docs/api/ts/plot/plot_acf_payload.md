@@ -196,3 +196,16 @@ lags: 0 1 2 3
 
 - [`acf`](plot_acf.md)
 - [`CorrPlotOptions`](CorrPlotOptions.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="plot_acf.html">
+    <span class="label">Previous</span>
+    <span class="title">plot_acf</span>
+  </a>
+  <a class="next-link" href="plot_pacf.html">
+    <span class="label">Next</span>
+    <span class="title">plot_pacf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

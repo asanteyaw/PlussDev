@@ -1,0 +1,58 @@
+# `comms::modulate`
+
+Bits to symbols.
+
+## Signature
+
+```cpp
+pluss::Series comms::modulate(const comms::Constellation& constellation, const pluss::Series& bits);
+```
+
+## What It Does
+
+Groups the bits `bits` at a time (the first bit of a group is the most significant), reads each group as a label, and returns the label's point.
+
+## Parameters
+
+`constellation`
+: The constellation to map to.
+
+`bits`
+: Zeros and ones, a real `[..., N]` array whose last length is a multiple of `constellation.bits`. Leading axes are independent frames.
+
+## Returns
+
+A complex `[..., N / bits]` array of symbols, of the constellation's dtype.
+
+## Errors
+
+Throws `pluss::Error` for a constellation not made by `psk` or `qam`, bits that are not a real array of zeros and ones, or a bit count that is not a multiple of the bits per symbol.
+
+## Interpretation and Use
+
+This is the transmitter side of the chain `modulate`, `shape`, `noise`, `match`, `demod`. Any real dtype of bits is accepted.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+QPSK and 16-QAM mappings.
+
+@@example Eng/api/comms_modulate_bits.cpp@@
+
+### Example 2
+
+Frames in a batch.
+
+@@example Eng/api/comms_modulate_batch.cpp@@
+
+### Example 3
+
+Rejected bit arrays.
+
+@@example Eng/api/comms_modulate_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

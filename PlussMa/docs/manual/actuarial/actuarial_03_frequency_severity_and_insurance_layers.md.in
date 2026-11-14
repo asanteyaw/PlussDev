@@ -1,0 +1,24 @@
+# Actuarial 3: Frequency, Severity and Insurance Layers
+
+A portfolio's losses have two sources of randomness, how many claims arrive and how large each one is, and insurance contracts act on the second. This chapter describes the standard frequency and severity laws, combines them into the aggregate loss of a period, applies deductibles, limits, coinsurance and layers to losses, and prices a policy from its frequency, severity and terms.
+
+- [Claim Frequency and Severity](actuarial_03_frequency_severity_and_insurance_layers/claim_frequency_and_severity.md)
+- [Aggregate Losses](actuarial_03_frequency_severity_and_insurance_layers/aggregate_losses.md)
+- [Deductibles, Limits and Coinsurance](actuarial_03_frequency_severity_and_insurance_layers/deductibles_limits_and_coinsurance.md)
+- [Layers and Stop-Loss](actuarial_03_frequency_severity_and_insurance_layers/layers_and_stop_loss.md)
+- [Limited Expected Values and Parametric Layers](actuarial_03_frequency_severity_and_insurance_layers/limited_expected_values_and_parametric_layers.md)
+- [A Policy from Frequency, Severity and Terms](actuarial_03_frequency_severity_and_insurance_layers/a_policy_from_frequency_severity_and_terms.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+actuarial_03_frequency_severity_and_insurance_layers/claim_frequency_and_severity
+actuarial_03_frequency_severity_and_insurance_layers/aggregate_losses
+actuarial_03_frequency_severity_and_insurance_layers/deductibles_limits_and_coinsurance
+actuarial_03_frequency_severity_and_insurance_layers/layers_and_stop_loss
+actuarial_03_frequency_severity_and_insurance_layers/limited_expected_values_and_parametric_layers
+actuarial_03_frequency_severity_and_insurance_layers/a_policy_from_frequency_severity_and_terms
+```
+<!-- apiref:toctree:end -->

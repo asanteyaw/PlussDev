@@ -15,4 +15,16 @@ Tests of means (one sample, paired, two samples), of a mean with known spread, a
 | [`f_ratio`](means_and_variances/f_ratio.md) | The F test for two variances, under its other name. |
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+means_and_variances/ttest
+means_and_variances/ttest_paired
+means_and_variances/ttest2
+means_and_variances/ztest
+means_and_variances/vartest
+means_and_variances/vartest2
+means_and_variances/f_ratio
+```
 <!-- apiref:toctree:end -->

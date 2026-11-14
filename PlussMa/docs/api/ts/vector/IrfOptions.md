@@ -20,3 +20,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`VarFit`](VarFit.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GrangerResult.html">
+    <span class="label">Previous</span>
+    <span class="title">GrangerResult</span>
+  </a>
+  <a class="next-link" href="johansen_test.html">
+    <span class="label">Next</span>
+    <span class="title">johansen_test</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

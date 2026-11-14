@@ -1,0 +1,377 @@
+<!-- generated from simulated_paths.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Simulated paths
+
+[Back to The Pricing Field](../finance_06_the_pricing_field.md)
+
+A price answers one question about a model: the expected discounted payoff of one particular option. Simulated **paths** keep the whole random future, and with them every path-dependent question: an Asian option on the average, a barrier on the maximum, a lookback on the minimum, the hedging error of a strategy, the distribution of the drawdown. A `Field` that uses the `MonteCarlo` engine can generate its paths with `simulate()` and keep them in `field.paths`, so the same paths serve many payoffs.
+
+## What is simulated
+
+The paths live on a uniform time grid from 0 to the **longest maturity** in the `Field`, with `controls.mc.steps` steps of length {math}`\Delta t=T_{\max}/\text{steps}`; there are `controls.mc.paths` paths. For the Heston family the default scheme (`Euler`) steps the log-asset with the variance at the start of the step and the variance with a floor:
+
+```{math}
+\begin{aligned}
+\ln S_{t+\Delta t}&=\ln S_t+\big(r-q-\tfrac12 v_t\big)\Delta t+\sqrt{v_t\Delta t}\;Z^S,\\
+v_{t+\Delta t}&=\max\!\Big(v_t+\kappa(\theta-v_t)\Delta t+\sigma\sqrt{v_t\Delta t}\;Z^v,\;v_{\text{floor}}\Big),\qquad Z^v=\rho Z^S+\sqrt{1-\rho^2}\,Z^\perp,
+\end{aligned}
+```
+
+with {math}`Z^S` and {math}`Z^\perp` independent standard normals. For Black-Scholes the step is exact: {math}`\ln S_{t+\Delta t}=\ln S_t+(r-q-\tfrac12\sigma^2)\Delta t+\sigma\sqrt{\Delta t}\,Z`, which is the solution {math}`S_t=S_0\exp\big((r-q-\tfrac12\sigma^2)t+\sigma W_t\big)` sampled at the grid. The other schemes of `controls.mc.scheme` (`Milstein`, `QuadExp`, ...) change the variance step; the random numbers come from `rand_method`, with `antithetic`, `seed` and the rest as in Chapter 4.
+
+`field.paths` holds five `Series`:
+
+| Member | Shape | Contents |
+|---|---|---|
+| `asset` | `[paths, steps + 1]` | {math}`S_t` on the grid; column 0 is the spot |
+| `variance` | `[paths, steps + 1]` | {math}`v_t` (for Black-Scholes, the constant {math}`\sigma^2`) |
+| `vol` | `[paths, steps + 1]` | {math}`\sqrt{\max(v_t,0)}` |
+| `asset_shocks` | `[paths, steps]` | the standard normals {math}`Z^S` that drove the asset |
+| `vol_shocks` | `[paths, steps]` | the correlated normals {math}`Z^v` that drove the variance |
+
+Row {math}`i` is one path; column {math}`j` is the time {math}`j\Delta t`. Reductions along the time axis are `axis = 1`, and across paths `axis = 0`.
+
+```cpp
+module::Paths module::Field::simulate_paths(Config cfg = {}) const;
+module::Paths module::Field::simulate_paths(const Model &candidate, Config cfg = {}) const;
+void module::Field::simulate(Config cfg = {});
+void module::Field::simulate(const Model &candidate, Config cfg = {});
+void module::Field::clear_paths();
+```
+
+| Call | Effect |
+|---|---|
+| `simulate_paths(cfg)`, `simulate_paths(candidate, cfg)` | returns the paths of the held model, or of a candidate; the `Field` is not changed |
+| `simulate(cfg)`, `simulate(candidate, cfg)` | the same, and stores the result in `field.paths` |
+| `clear_paths()` | empties `field.paths` |
+
+Three rules come with the design. The engine must be `MonteCarlo`. The **model parameters must be single numbers** (one element each), because one set of parameters is simulated. And the **market is read from its first element**: the spot, rate and dividend yield of the first entry drive the drift, whatever the lengths of the vectors. The strikes play no part, which is why one simulation serves every strike.
+
+## Program 1: simulate and inspect
+
+The program simulates 50,000 Heston paths of 100 steps, prints the shapes, and checks the simulation against what the model implies. Under the pricing measure {math}`\mathbb{E}[S_T]=S_0e^{(r-q)T}` and, from the variance equation, {math}`\mathbb{E}[v_T]=\theta+(v_0-\theta)e^{-\kappa T}`; the shocks should be standard normals with correlation {math}`\rho` between the two streams.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.01),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 50000;
+  field.controls.mc.steps = 100;
+  field.controls.mc.seed = 11;
+  out.writeln("paths defined before simulate()?", field.paths.asset.defined());
+  field.simulate();
+  out.writeln("asset", field.paths.asset.sizes(), " vol", field.paths.vol.sizes(), " variance", field.paths.variance.sizes());
+  out.writeln("asset_shocks", field.paths.asset_shocks.sizes(), " vol_shocks", field.paths.vol_shocks.sizes());
+
+  const double spot = 100.0, r = 0.02, q = 0.01, T = 1.0, kappa = 1.5, theta = 0.04, v0 = 0.04;
+  out.writeln("first column of asset:", field.paths.asset.select(1, 0).mean().item<double>(), " (all paths start at the spot)");
+  out.writeln("mean S_T      ", field.paths.asset.select(1, 100).mean().item<double>(), " expected", spot * std::exp((r - q) * T));
+  out.writeln("mean v_T      ", field.paths.variance.select(1, 100).mean().item<double>(), " expected", theta + (v0 - theta) * std::exp(-kappa * T));
+  out.writeln("mean of vol^2 ", field.paths.vol.select(1, 100).square().mean().item<double>(), " (vol is the square root of the variance)");
+  out.writeln("shocks: mean", field.paths.asset_shocks.mean().item<double>(), " std", field.paths.asset_shocks.std().item<double>());
+  out.writeln("correlation of the two shock streams", (field.paths.asset_shocks * field.paths.vol_shocks).mean().item<double>(), " expected rho = -0.7");
+}
+```
+
+Output
+
+```text
+paths defined before simulate()? false
+asset [50000, 101]  vol [50000, 101]  variance [50000, 101]
+asset_shocks [50000, 100]  vol_shocks [50000, 100]
+first column of asset: 100.00000  (all paths start at the spot)
+mean S_T       100.97535  expected 101.00502
+mean v_T       0.04002  expected 0.04000
+mean of vol^2  0.04002  (vol is the square root of the variance)
+shocks: mean -0.00004  std 0.99984
+correlation of the two shock streams -0.70002  expected rho = -0.7
+```
+
+The shapes follow the table: 50,000 paths by 101 grid points for the levels, by 100 steps for the shocks, and `paths` is empty before `simulate()` is called. The mean terminal asset, 100.975, is the expected 101.005 to within the simulation error ({math}`\approx20/\sqrt{50000}\approx0.09`); the mean terminal variance, 0.04002, is the expected 0.04000; and the shocks are standard normals, mean −0.00004 and standard deviation 0.99984, with correlation −0.70002 between the asset's and the variance's streams. These are the same checks as for any path generator (Chapter 4's checklist): a simulation that fails the martingale or the moment test has a bug, and it is cheap to run them first.
+
+## Program 2: the shocks are the paths
+
+`asset_shocks` is not just a by-product. In the Black-Scholes model the asset is the exact solution of the stochastic differential equation, and the stored shocks are the increments of the Brownian motion that produced it:
+
+```{math}
+S_T=S_0\exp\Big(\big(r-q-\tfrac12\sigma^2\big)T+\sigma\sqrt{\Delta t}\sum_{j=1}^{\text{steps}}Z_j\Big),
+```
+
+since {math}`W_T=\sqrt{\Delta t}\sum_jZ_j`. The program draws six paths of four steps, rebuilds the terminal values from their stored shocks with this formula, and compares.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(8));
+  const double spot = 100.0, r = 0.02, q = 0.01, sigma = 0.2, T = 1.0;
+  const std::int64_t steps = 4, paths = 6;
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, T),
+                   .market = fin::market::make(spot, r, q),
+                   .model = fin::model::BlackScholes{.volatility = pluss::make_series({sigma})},
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = paths;
+  field.controls.mc.steps = steps;
+  field.controls.mc.seed = 5;
+  field.simulate();
+
+  const double dt = T / static_cast<double>(steps);
+  const auto simulated = field.paths.asset.select(1, steps).items<double>();
+  const auto z = field.paths.asset_shocks.sum(1).items<double>();  // sum of the steps' standard normals, per path
+  out.writeln("path   S_T simulated   S_T from the exact solution   difference");
+  for (std::int64_t i = 0; i < paths; ++i) {
+    const double exact = spot * std::exp((r - q - 0.5 * sigma * sigma) * T + sigma * std::sqrt(dt) * z[i]);
+    out.writeln(i, simulated[i], exact, simulated[i] - exact);
+  }
+}
+```
+
+Output
+
+```text
+path   S_T simulated   S_T from the exact solution   difference
+0 131.76560584 131.76560584 0.00000000
+1 91.05541176 91.05541176 0.00000000
+2 118.37341652 118.37341652 0.00000000
+3 117.37567720 117.37567720 0.00000000
+4 118.57038362 118.57038362 0.00000000
+5 91.09946543 91.09946543 0.00000000
+```
+
+The two columns agree to the eight decimals printed, path by path. This is the strongest test a generator can have: the stored shocks reproduce the stored asset, so the shocks are what they say they are. It also makes them usable: with them you can build a control variate, compute a pathwise derivative, or re-run the same randomness through a different payoff.
+
+## Program 3: pricing path-dependent payoffs
+
+One set of paths prices many payoffs. For a payoff {math}`g` of the path the estimate and its standard error are
+
+```{math}
+\hat V=\frac{e^{-rT}}{N}\sum_{i=1}^{N}g\big(S^{(i)}\big),\qquad
+\operatorname{se}(\hat V)=\frac{e^{-rT}}{\sqrt N}\,\hat s_g,
+```
+
+with {math}`\hat s_g` the sample standard deviation of the payoffs. The program simulates 100,000 Heston paths with antithetic sampling and prices four contracts with ordinary `Series` operations along the time axis: the European call {math}`(S_T-K)^+`; an Asian call on the arithmetic average of the grid values, {math}`(\bar S-K)^+`; an up-and-out call, which pays {math}`(S_T-K)^+` only if {math}`\max_tS_t<130` over the grid; and a floating-strike lookback call, {math}`S_T-\min_tS_t`. It prints the standard error of each and, for the European call, compares with the price the `Field` returns through `price()` under the same controls.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double strike = 100.0, r = 0.02, T = 1.0, barrier = 130.0;
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, strike, T),
+                   .market = fin::market::make(100.0, r, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 100000;
+  field.controls.mc.steps = 100;
+  field.controls.mc.seed = 3;
+  field.controls.mc.antithetic = true;
+  field.simulate();
+
+  const double discount = std::exp(-r * T), n = static_cast<double>(field.controls.mc.paths);
+  const auto report = [&](const std::string &name, const pluss::Series &payoff) {
+    const auto discounted = payoff * discount;
+    out.writeln(name, discounted.mean().item<double>(), " standard error", discounted.std().item<double>() / std::sqrt(n));
+  };
+  const auto& asset = field.paths.asset;
+  const auto terminal = asset.select(1, field.controls.mc.steps);
+  report("european call                ", (terminal - strike).clamp_min(0.0));
+  out.writeln("field.price() with the same controls", field.price().price.items<double>()[0]);
+  report("asian call (average of all dates)", (asset.mean(1) - strike).clamp_min(0.0));
+  report("up-and-out call, barrier 130 ", (terminal - strike).clamp_min(0.0) * (asset.amax(1) < barrier).to(pluss::ScalarType::Float64));
+  report("floating-strike lookback call", terminal - asset.amin(1));
+}
+```
+
+Output
+
+```text
+european call                 8.6182  standard error 0.0347
+field.price() with the same controls 8.6182
+asian call (average of all dates) 4.9334  standard error 0.0199
+up-and-out call, barrier 130  5.7388  standard error 0.0250
+floating-strike lookback call 15.3783  standard error 0.0352
+```
+
+The European estimate, 8.6182 ± 0.035, is exactly the number `field.price()` returns under the same seed, 8.6182: `price()` with the Monte Carlo engine is this computation. The exact value (COS) is 8.6281, 0.3 standard errors away. The other three have the rankings the contracts imply:
+
+- The **Asian** call (4.93) is worth much less than the European, since averaging the asset reduces its variance.
+- The **up-and-out** call (5.74) is worth less than the European (8.62) because the paths that end well in the money are the ones most likely to cross 130 on the way and be cancelled. Monitoring is on the grid, only at the 101 simulated dates; between dates a path may cross unseen, so a finer grid (more `steps`) gives a lower price.
+- The **lookback** (15.38) is the most valuable: it pays the whole rise from the lowest value.
+
+Each is a few lines of `Series` arithmetic, with `mean(1)`, `amax(1)` and `amin(1)` reducing along time, and a boolean `<` converted to a number to mask. That is the reason to keep the paths in the `Field` rather than computing prices inside a loop.
+
+## Program 4: several maturities from one simulation
+
+The grid extends to the longest maturity, so a shorter maturity is a column of the same paths: maturity {math}`T_k` is column {math}`T_k/\Delta t`. A `Field` with three maturities (0.25, 0.5, 1) simulates once, to maturity 1 in 100 steps, so that the three maturities fall on columns 25, 50 and 100. The program reads the terminal asset at each column, discounts the payoff at that maturity, and compares with `field.price()`, which prices all three at once, and with the COS price.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::make_series({100.0, 100.0, 100.0}), .maturity = pluss::make_series({0.25, 0.5, 1.0})},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 100000;
+  field.controls.mc.steps = 100;
+  field.controls.mc.seed = 21;
+  field.controls.mc.antithetic = true;
+  field.simulate();
+
+  mod::Field exact = field;
+  exact.controls.engine = mod::Engine::Cos;
+  const auto reference = exact.price().price.items<double>();
+  const auto monte_carlo = field.price().price.items<double>();
+  out.writeln("maturity  column  from the paths  field.price()  cos");
+  for (const auto [i, maturity] : std::vector<std::pair<int, double>>{{0, 0.25}, {1, 0.5}, {2, 1.0}}) {
+    const std::int64_t column = static_cast<std::int64_t>(std::llround(maturity / 1.0 * field.controls.mc.steps));
+    const auto payoff = (field.paths.asset.select(1, column) - 100.0).clamp_min(0.0) * std::exp(-0.02 * maturity);
+    out.writeln(maturity, column, payoff.mean().item<double>(), monte_carlo[i], reference[i]);
+  }
+}
+```
+
+Output
+
+```text
+maturity  column  from the paths  field.price()  cos
+0.2500 25 4.1745 4.1664 4.1657
+0.5000 50 5.9754 5.9692 5.9679
+1.0000 100 8.6326 8.6326 8.6281
+```
+
+The three columns agree within the Monte Carlo error (0.02 or so): at maturity 1 the path estimate and `price()` are the same number, 8.6326, as both use the grid of the full year; at 0.25 and 0.5, `price()` prices each maturity on its own, so the two estimates are made from different draws and differ by 0.008 and 0.006, well within the error; and all are within 0.01 of COS (4.1657, 5.9679, 8.6281). A simulation shared by several maturities and strikes, as here, is what you use for a term structure of path-dependent payoffs, since every payoff is read from the same paths and so they are consistent with each other.
+
+Check that the maturity falls on the grid: with a maturity that is not a multiple of {math}`\Delta t` the column is rounded, and the price is that of a slightly different maturity.
+
+## Program 5: scratch paths, candidates and errors
+
+`simulate()` writes `field.paths`; `simulate_paths()` returns the paths and leaves the `Field` alone, which is what you want inside a loop that tries many models. Both have an overload taking a candidate `Model`, as `price` does. The seed fixes the random numbers: the same seed gives the same paths for the same model, and a candidate that differs only in its parameters sees the same shocks as the held one, which makes comparisons between parameter sets sharp (common random numbers). `clear_paths()` releases the memory: 50,000 paths of 100 steps is 5 million doubles for each of three level arrays.
+
+The program shows each of these, using a Bates candidate with intensity 0.3 and mean log-jump −0.15, and then four ways to fail.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 1.0),
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+  field.controls.mc.paths = 20000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.seed = 9;
+  const auto mean_terminal = [](const mod::Paths &p) { return p.asset.select(1, 50).mean().item<double>(); };
+
+  const mod::Paths scratch = field.simulate_paths();
+  out.writeln("simulate_paths() returns the paths and leaves the Field alone: field.paths defined?", field.paths.asset.defined(), " mean S_T", mean_terminal(scratch));
+  field.simulate();
+  out.writeln("simulate() stores them: field.paths defined?", field.paths.asset.defined(), " mean S_T", mean_terminal(field.paths));
+  field.simulate();
+  out.writeln("same seed, same paths: mean S_T", mean_terminal(field.paths));
+
+  const mod::Model bates = fin::model::make(fin::model::Kind::Bates, {1.5, 0.04, 0.3, -0.7, 0.04, 0.3, -0.15, 0.1});
+  const mod::Paths jumpy = field.simulate_paths(bates);
+  out.writeln("simulate_paths(candidate): mean S_T", mean_terminal(jumpy), " min S_T", jumpy.asset.select(1, 50).amin().item<double>(), "versus Heston", field.paths.asset.select(1, 50).amin().item<double>());
+  out.writeln("field.model still", field.model_name());
+
+  field.clear_paths();
+  out.writeln("after clear_paths(): defined?", field.paths.asset.defined());
+
+  field.controls.engine = mod::Engine::Cos;
+  const auto attempt = [&](const char *what, auto &&fix) {
+    mod::Field broken = field;
+    fix(broken);
+    try {
+      broken.simulate();
+      out.writeln(std::string(what) + ": simulated");
+    } catch (const std::exception &e) {
+      std::string message = e.what();
+      out.writeln(std::string(what) + ": " + message.substr(0, message.find('\n')));
+    }
+  };
+  attempt("engine Cos", [](mod::Field &) {});
+  attempt("two kappas", [](mod::Field &f) { f.controls.engine = mod::Engine::MonteCarlo; f.model.as<fin::model::Heston>().kappa = pluss::make_series({1.5, 1.0}); });
+  attempt("zero paths", [](mod::Field &f) { f.controls.engine = mod::Engine::MonteCarlo; f.controls.mc.paths = 0; });
+  attempt("no maturity", [](mod::Field &f) { f.controls.engine = mod::Engine::MonteCarlo; f.instrument.maturity = pluss::series::undefined(); });
+}
+```
+
+Output
+
+```text
+simulate_paths() returns the paths and leaves the Field alone: field.paths defined? false  mean S_T 101.7200
+simulate() stores them: field.paths defined? true  mean S_T 101.7200
+same seed, same paths: mean S_T 101.7200
+simulate_paths(candidate): mean S_T 101.9193  min S_T 21.2254 versus Heston 31.0881
+field.model still Heston
+after clear_paths(): defined? false
+engine Cos: subsp::math::finance::module::Field::simulate_paths: controls.engine must be MonteCarlo
+two kappas: subsp::math::finance::module::simulate_paths: model.heston.kappa must have exactly one element
+zero paths: subsp::math::finance::module::Field: controls.mc.paths must be > 0
+no maturity: subsp::math::finance::module::Field: instrument.maturity must be defined
+```
+
+The first three lines: `simulate_paths()` returns paths without touching `field.paths`, `simulate()` stores them, and simulating again with the seed gives the same mean terminal value (101.7200 each time). The Bates candidate produces a similar mean, 101.9193, as it should, since the jump compensator keeps {math}`\mathbb{E}[S_T]` at the forward; but its worst path ends at 21.2 against 31.1 for Heston, because jumps put more weight in the left tail. The `Field` still holds Heston after `simulate_paths(candidate)`.
+
+The failures are specific. Asking for paths with a transform engine says the engine "must be MonteCarlo". A parameter with two elements ("kappa must have exactly one element") is not a model that can be simulated: a vector of parameters is for the pricing engines, which broadcast, but not for a simulation that follows one parameter set. `paths = 0` and a missing maturity are caught too.
+
+## Checklist
+
+1. Set the engine to `MonteCarlo`, and `paths`, `steps` and `seed` in `controls.mc`; the time grid ends at the longest maturity.
+2. Use one-element parameters; the market's first element is the one simulated.
+3. Test a new simulation: the mean terminal asset against {math}`S_0e^{(r-q)T}`, the mean variance against its formula, the shocks' mean, standard deviation and correlation.
+4. Read a maturity from the grid at column {math}`T/\Delta t`, and choose `steps` so that it is an integer.
+5. Reduce along `axis = 1` for path functionals (`mean`, `amax`, `amin`) and across paths with `mean()` for the estimate; divide the standard deviation by {math}`\sqrt N` for its error.
+6. A barrier or a maximum monitored on the grid is biased towards fewer crossings: increase `steps` and look at the trend.
+7. Use `simulate_paths(candidate)` inside loops and `simulate()` when you want the paths kept; `clear_paths()` when you are done.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="calibration.html">
+    <span class="label">Previous</span>
+    <span class="title">Calibration</span>
+  </a>
+  <a class="next-link" href="early_exercise.html">
+    <span class="label">Next</span>
+    <span class="title">Early exercise: American and Bermudan options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

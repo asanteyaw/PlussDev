@@ -52,3 +52,16 @@ path 1: W_T^2/2 = 0.36715, QV/2 = 1.02970
   theta = 1.0   integral = 1.39685   = W_T^2/2 +1.00000 QV/2
 ```
 The coefficient is `−1`, `0` and `+1` for `θ = 0`, `½` and `1` on both paths, to the printed precision. That is the whole classification: Ito subtracts half the quadratic variation, Stratonovich subtracts none, and the backward integral (used in the Hänggi–Klimontovich convention) adds it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ito_and_stratonovich_on_the_same_path.html">
+    <span class="label">Previous</span>
+    <span class="title">Ito and Stratonovich on the same path</span>
+  </a>
+  <a class="next-link" href="the_forms_of_the_call.html">
+    <span class="label">Next</span>
+    <span class="title">The forms of the call</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

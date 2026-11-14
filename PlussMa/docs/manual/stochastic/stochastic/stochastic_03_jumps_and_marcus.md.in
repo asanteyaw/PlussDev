@@ -30,4 +30,14 @@ The Marcus (canonical) convention answers a different question: how does a jump 
 - There is no Marcus SDE solver yet: the integral, the differential and the flow are provided, simulating a full jump equation under the Marcus rule is not.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic_03_jumps_and_marcus/a_levy_measure_as_atoms
+stochastic_03_jumps_and_marcus/a_path_with_jumps
+stochastic_03_jumps_and_marcus/the_marcus_integral
+stochastic_03_jumps_and_marcus/what_a_jump_does_to_the_state
+stochastic_03_jumps_and_marcus/the_marcus_differential
+```
 <!-- apiref:toctree:end -->

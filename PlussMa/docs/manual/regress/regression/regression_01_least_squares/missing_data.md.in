@@ -37,13 +37,13 @@ int main() {
 
   const auto fit = reg::ols_fit(pluss::make_series(ys, {8}, as_f64()), pluss::make_series(xs, {8}, as_f64()));
   out.writeln("nobs", fit.nobs, " dropped", fit.dropped_observations, " fitted values", fit.fitted_values.numel(), " residuals", fit.residuals.numel());
-  out.writeln("coefficients", fit.coefficients.pull<double>(), " df_resid", fit.df_resid);
+  out.writeln("coefficients", fit.coefficients.items<double>(), " df_resid", fit.df_resid);
 
   // The same fit made from the six complete rows directly.
   const std::vector<double> kept_x{1, 2, 4, 5, 7, 8};
   const std::vector<double> kept_y{2.1, 3.9, 7.8, 10.1, 13.8, 16.1};
   const auto direct = reg::ols_fit(pluss::make_series(kept_y, {6}, as_f64()), pluss::make_series(kept_x, {6}, as_f64()));
-  out.writeln("complete rows only", direct.coefficients.pull<double>(), " largest difference", fit.coefficients.sub(direct.coefficients).abs().max().item<double>());
+  out.writeln("complete rows only", direct.coefficients.items<double>(), " largest difference", fit.coefficients.sub(direct.coefficients).abs().max().item<double>());
   out.writeln("residuals match    ", fit.residuals.sub(direct.residuals).abs().max().item<double>());
 }
 ```
@@ -92,8 +92,21 @@ int main() {
 
   const auto fit = reg::ols_fit(pluss::make_series(ys, {8}, as_f64()), x);
   out.print_defaults(PrintOptions{}.fixed(4));
-  out.writeln("prediction with a NaN row:", reg::ols_predict(fit, pluss::make_series(std::vector<double>{9, nan, 10}, {3}, as_f64())).pull<double>());
+  out.writeln("prediction with a NaN row:", reg::ols_predict(fit, pluss::make_series(std::vector<double>{9, nan, 10}, {3}, as_f64())).items<double>());
 }
 ```
 
 With `drop_missing = false` the incomplete data are an error, which is the safer setting when a missing value would mean a mistake upstream. A data set with no complete row is an error either way. Prediction drops nothing: the row holding `NaN` gives `NaN`, and the other predictions are unaffected.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="case_weights.html">
+    <span class="label">Previous</span>
+    <span class="title">Case weights</span>
+  </a>
+  <a class="next-link" href="collinear_predictors.html">
+    <span class="label">Next</span>
+    <span class="title">Collinear predictors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

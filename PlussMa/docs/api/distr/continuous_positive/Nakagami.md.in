@@ -206,3 +206,16 @@ The two largest differences are 0 for the density and 5.55e-17 for the distribut
 - [`Rice`](../continuous_positive/Rice.md)
 - [`Chi`](../continuous_positive/Chi.md)
 - [`Gamma`](../continuous_positive/Gamma.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Maxwell.html">
+    <span class="label">Previous</span>
+    <span class="title">Maxwell</span>
+  </a>
+  <a class="next-link" href="Pareto.html">
+    <span class="label">Next</span>
+    <span class="title">Pareto</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

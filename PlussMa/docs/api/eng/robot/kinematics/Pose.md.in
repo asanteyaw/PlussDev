@@ -1,0 +1,57 @@
+# `robot::Pose`
+
+The frames of every link in the world.
+
+## Signature
+
+```cpp
+robot::Pose
+```
+
+## What It Does
+
+The result of `frames`: the orientation and the position of every link's frame in the world frame, for every configuration of a batch.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `rotation` | The rotation matrix of each link frame in the world, `[..., links, 3, 3]`. |  |
+| `position` | The origin of each link frame in the world, `[..., links, 3]`, in metres. |  |
+
+## Returns
+
+Returned by `frames`.
+
+## Errors
+
+Reading a field does not compute again.
+
+## Interpretation and Use
+
+The base frame is the world frame. The position of a link is the origin of its joint frame, so a prismatic joint's link moves with its joint value. Select one link with `select(-3, link)` on `rotation` and `select(-2, link)` on `position`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The shapes of both fields.
+
+@@example Eng/api/robot_pose_fields.cpp@@
+
+### Example 2
+
+A planar arm.
+
+@@example Eng/api/robot_fk_arm.cpp@@
+
+### Example 3
+
+A tree.
+
+@@example Eng/api/robot_fk_tree.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

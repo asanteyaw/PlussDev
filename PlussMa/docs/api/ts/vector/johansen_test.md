@@ -186,3 +186,16 @@ spec 2  5% critical values for rank <= 0, 1, 2: 34.97 18.40 3.87  selected rank 
 - [`JohansenOptions`](JohansenOptions.md)
 - [`JohansenResult`](JohansenResult.md)
 - [`Vecm`](Vecm.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="IrfOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">IrfOptions</span>
+  </a>
+  <a class="next-link" href="JohansenOptions.html">
+    <span class="label">Next</span>
+    <span class="title">JohansenOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

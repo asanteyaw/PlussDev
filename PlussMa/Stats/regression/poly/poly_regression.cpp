@@ -222,6 +222,7 @@ std::string poly_summary(const PolyFitResult& fit) {
 }
 
 std::ostream& print_poly_summary(std::ostream& os, const PolyFitResult& fit) {
+  PLUSS_CHECK(fit.ols.coefficients.defined(), "subsp::stats::regression::print_poly_summary: fit.ols.coefficients is undefined");
   os << "Polynomial Regression (degree=" << fit.degree
      << ", cross=" << (fit.include_cross ? "true" : "false") << ")\n";
   return print_ols_summary(os, fit.ols);

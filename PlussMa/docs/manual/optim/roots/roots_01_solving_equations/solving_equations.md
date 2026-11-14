@@ -277,3 +277,8 @@ Newton reaches a root from 33 of the 41 starting points and fails from 8, which 
 - **The derivative of a root is free with the right solver.** Marking the parameter and calling `reverse()` gives `d(root)/dp` by the implicit function theorem, whatever the starting point.
 
 Where next: [Quadratic programming](../../qp.md) is next.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

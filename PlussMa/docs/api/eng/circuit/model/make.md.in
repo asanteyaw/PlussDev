@@ -1,0 +1,61 @@
+# `circuit::make`
+
+Validates a circuit description and compiles it.
+
+## Signature
+
+```cpp
+circuit::Circuit circuit::make(const circuit::Net& net);
+```
+
+## What It Does
+
+Checks the topology and values of a `Net` and compiles the incidence matrices that `op` and `ac` solve. All non-empty value groups must share a dtype and platform and compatible leading batch axes.
+
+## Parameters
+
+`net`
+: The description of the circuit.
+
+## Returns
+
+An immutable `circuit::Circuit`.
+
+## Errors
+
+Throws `pluss::Error` for fewer than two nodes, a net with no elements, a node outside the circuit, an element from a node to itself, non-positive resistance or inductance, negative capacitance, mismatched list lengths, a diode or transistor with a terminal outside the circuit, two terminals on the same node, a polarity other than `1` or `-1`, a non-positive device value, or values that differ in dtype, platform or batch axes.
+
+## Interpretation and Use
+
+Validation is done here once; the analyses do not repeat it. Singular circuits (a floating node, contradicting ideal sources) are accepted here and reported by the analyses.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A divider compiled and solved.
+
+@@example Eng/api/circuit_divider.cpp@@
+
+### Example 2
+
+Every element kind.
+
+@@example Eng/api/circuit_all_elements.cpp@@
+
+### Example 3
+
+Every validation error.
+
+@@example Eng/api/circuit_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="CircuitModel.html">
+    <span class="label">Previous</span>
+    <span class="title">Circuit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

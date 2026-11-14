@@ -1,0 +1,61 @@
+# `comms::to_tones`
+
+Subcarrier symbols to an OFDM waveform.
+
+## Signature
+
+```cpp
+pluss::Series comms::to_tones(const pluss::Series& symbols, std::int64_t fft_size, std::int64_t cyclic_prefix);
+```
+
+## What It Does
+
+Groups the symbols into blocks of `fft_size` subcarrier symbols, turns each block into time samples by the unitary inverse FFT, and puts the last `cyclic_prefix` samples of the block in front of it. The unitary transform keeps the energy per sample equal to the energy per subcarrier symbol.
+
+## Parameters
+
+`symbols`
+: Complex subcarrier symbols, `[..., F * fft_size]`; leading axes are independent frames.
+
+`fft_size`
+: The number of subcarriers per block, at least `2`.
+
+`cyclic_prefix`
+: The prefix length in samples, in `[0, fft_size)`.
+
+## Returns
+
+A complex `[..., F * (fft_size + cyclic_prefix)]` waveform.
+
+## Errors
+
+Throws `pluss::Error` for symbols that are not a complex `[..., F * fft_size]` array, an `fft_size` below `2`, or a `cyclic_prefix` outside `[0, fft_size)`.
+
+## Interpretation and Use
+
+The prefix turns the linear convolution of a multipath channel into a circular one, so a channel whose impulse response is no longer than the prefix plus one sample multiplies every subcarrier by one complex gain. Choose the prefix at least as long as the channel memory.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A round trip and the prefix.
+
+@@example Eng/api/comms_ofdm_roundtrip.cpp@@
+
+### Example 2
+
+A multipath channel and one-tap equalisation.
+
+@@example Eng/api/comms_ofdm_multipath.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_ofdm_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

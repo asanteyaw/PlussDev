@@ -151,6 +151,15 @@ One-sided, the p-value halves to 0.0082 and is compared with the critical z 1.64
 
 ## See Also
 
-- [`ttest2`](ttest2.md)
+- [`ttest2`](../means_and_variances/ttest2.md)
 - [`signrank`](signrank.md)
-- [`kstest2`](kstest2.md)
+- [`kstest2`](../distributions/kstest2.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="signrank.html">
+    <span class="label">Next</span>
+    <span class="title">signrank</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

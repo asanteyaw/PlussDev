@@ -1014,7 +1014,7 @@ Front doors (intended starting points):
 Front doors (intended starting points):
 
 - `pluss::subsp::natsci::physics::fluids::les`: `eddy_viscosity`, `sgs_dissipation`, `advance`
-- `pluss::subsp::natsci::physics::fluids::rans`: `solve_channel`
+- `pluss::subsp::natsci::physics::fluids::rans`: `solve_channel`, `initial_transport`, `eddy_viscosity`, `advance`
 
 | Public enum | Values |
 | --- | --- |
@@ -1094,6 +1094,9 @@ Front doors (intended starting points):
 | `pluss::subsp::natsci::physics::fluids::les::Closure` | `model`, `constant`, `width`, `clip`, `local_average`, `test_ratio` | - |
 | `pluss::subsp::natsci::physics::fluids::rans::ChannelOptions` | `model`, `friction_reynolds`, `cells`, `stretching`, `max_iterations`, `tolerance`, `first_step`, `growth_limit`, `max_step` | - |
 | `pluss::subsp::natsci::physics::fluids::rans::ChannelResult` | `y`, `velocity`, `eddy_viscosity`, `total_stress`, `k`, `omega`, `nu_tilde`, `converged`, `iterations`, `residual` | - |
+| `pluss::subsp::natsci::physics::fluids::rans::Closure` | `model`, `freestream` | - |
+| `pluss::subsp::natsci::physics::fluids::rans::CoupledStep` | `flow`, `transport` | - |
+| `pluss::subsp::natsci::physics::fluids::rans::Transport` | `nu_tilde`, `k`, `omega` | - |
 | `pluss::subsp::natsci::physics::mechanics::Bodies` | - | `axes()`, `count()`, `mass()`, `position()`, `velocity()` |
 | `pluss::subsp::natsci::physics::mechanics::HamiltonianEvaluation` | `value`, `flow` | - |
 | `pluss::subsp::natsci::physics::mechanics::LagrangeEvaluation` | `value`, `momentum`, `mass`, `flow` | - |
@@ -1244,6 +1247,10 @@ Front doors (intended starting points):
 | `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
 | `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
 | `ProjectionResult pluss::subsp::natsci::physics::fluids::project(const IncompressibleState & state, const spatial::PeriodicGrid & grid, const common::SeriesQuantity<Density> & density, const common::ScalarQuantity<common::Time> & step, const ProjectionOptions & options = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
+| `CoupledStep pluss::subsp::natsci::physics::fluids::rans::advance(const fluids::IncompressibleState & state, const Transport & transport, const spatial::BoxGrid & grid, const fluids::FlowBounds & bounds, const common::ScalarQuantity<fluids::Density> & density, const common::ScalarQuantity<fluids::KinematicViscosity> & viscosity, const Closure & closure, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const fluids::StepOptions & options = {}, const fluids::BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/rans.h` |
+| `CoupledStep pluss::subsp::natsci::physics::fluids::rans::advance(const fluids::IncompressibleState & state, const Transport & transport, const spatial::PeriodicGrid & grid, const common::ScalarQuantity<fluids::Density> & density, const common::ScalarQuantity<fluids::KinematicViscosity> & viscosity, const Closure & closure, common::ScalarQuantity<common::Time> time, common::ScalarQuantity<common::Time> step, const fluids::StepOptions & options = {}, const fluids::BodyFn & body = = {}, const Series & wall_distance = pluss::series::undefined())` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/rans.h` |
+| `common::SeriesQuantity<fluids::KinematicViscosity> pluss::subsp::natsci::physics::fluids::rans::eddy_viscosity(const fluids::IncompressibleState & state, const Transport & transport, const spatial::BoxGrid & grid, const fluids::FlowBounds & bounds, const common::ScalarQuantity<fluids::KinematicViscosity> & viscosity, const Closure & closure = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/rans.h` |
+| `Transport pluss::subsp::natsci::physics::fluids::rans::initial_transport(const Closure & closure, const common::ScalarQuantity<fluids::KinematicViscosity> & viscosity, const fluids::IncompressibleState & state, double omega = 10.0)` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/rans.h` |
 | `ChannelResult pluss::subsp::natsci::physics::fluids::rans::solve_channel(const ChannelOptions & o = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids/rans.h` |
 | `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::ScalarQuantity<Density> & density, const common::ScalarQuantity<KinematicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
 | `SteadyResult pluss::subsp::natsci::physics::fluids::settle(const IncompressibleState & initial, const spatial::BoxGrid & grid, const FlowBounds & bounds, const common::SeriesQuantity<Density> & density, const common::SeriesQuantity<DynamicViscosity> & viscosity, common::ScalarQuantity<common::Time> start, common::ScalarQuantity<common::Time> step, const SteadyOptions & options = {}, const BodyFn & body = = {})` | `PlussMa/include/pluss/subsp/natsci/physics/fluids.h` |
@@ -1381,7 +1388,7 @@ Front doors (intended starting points):
 
 Front doors (intended starting points):
 
-- `pluss::subsp::eng::fluid`: `network`, `run`, `steady`, `transport`
+- `pluss::subsp::eng::fluid`: `heat`, `network`, `run`, `steady`, `transport`
 
 | Public enum | Values |
 | --- | --- |
@@ -1397,6 +1404,8 @@ Front doors (intended starting points):
 | Public type | Public fields | Public methods |
 | --- | --- | --- |
 | `pluss::subsp::eng::fluid::Action` | `device`, `index`, `act`, `value` | - |
+| `pluss::subsp::eng::fluid::Heat` | `initial`, `source`, `ambient`, `ua`, `tank_ambient`, `tank_ua`, `cp` | - |
+| `pluss::subsp::eng::fluid::HeatResult` | `hydraulic`, `node`, `link`, `tank`, `energy`, `energy_error` | - |
 | `pluss::subsp::eng::fluid::Liquid` | `density`, `kinematic_viscosity`, `gravity` | - |
 | `pluss::subsp::eng::fluid::Net` | `nodes`, `tanks`, `pipes`, `pumps`, `valves` | - |
 | `pluss::subsp::eng::fluid::Network` | - | `batch_shape()`, `dtype()`, `junctions()`, `links()`, `liquid()`, `nodes()`, `pipes()`, `platform()`, `pumps()`, `reservoirs()`, `tanks()`, `valves()` |
@@ -1405,7 +1414,7 @@ Front doors (intended starting points):
 | `pluss::subsp::eng::fluid::Pipes` | `from`, `to`, `length`, `diameter`, `roughness`, `minor` | - |
 | `pluss::subsp::eng::fluid::Pumps` | `from`, `to`, `shutoff_head`, `resistance`, `exponent`, `speed` | - |
 | `pluss::subsp::eng::fluid::Quality` | `mode`, `initial`, `source`, `pipe_rate`, `tank_rate` | - |
-| `pluss::subsp::eng::fluid::QualityOptions` | `step`, `courant`, `flow_tolerance`, `cells` | - |
+| `pluss::subsp::eng::fluid::RouteOptions` | `step`, `courant`, `flow_tolerance`, `cells` | - |
 | `pluss::subsp::eng::fluid::RunResult` | `time`, `head`, `pressure`, `flow`, `velocity`, `head_loss`, `friction_factor`, `balance`, `energy_residual`, `demand`, `emitter`, `tank_level`, `spill`, `open`, `converged`, `iterations` | - |
 | `pluss::subsp::eng::fluid::Schedule` | `duration`, `step`, `pattern_step`, `demand`, `pump`, `valve`, `time`, `state` | - |
 | `pluss::subsp::eng::fluid::StateControl` | `node`, `sense`, `threshold`, `action` | - |
@@ -1417,10 +1426,11 @@ Front doors (intended starting points):
 
 | Public free-call overload | Header |
 | --- | --- |
+| `HeatResult pluss::subsp::eng::fluid::heat(const Network & network, const Schedule & schedule, const Heat & thermal, const RouteOptions & route_options = {}, const Options & hydraulic_options = {})` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
 | `Network pluss::subsp::eng::fluid::network(const Net &, const Liquid &)` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
 | `RunResult pluss::subsp::eng::fluid::run(const Network &, const Schedule &, const Options &)` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
 | `SteadyResult pluss::subsp::eng::fluid::steady(const Network &, const Options &)` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
-| `TransportResult pluss::subsp::eng::fluid::transport(const Network & network, const Schedule & schedule, const Quality & quality, const QualityOptions & quality_options = {}, const Options & hydraulic_options = {})` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
+| `TransportResult pluss::subsp::eng::fluid::transport(const Network & network, const Schedule & schedule, const Quality & quality, const RouteOptions & route_options = {}, const Options & hydraulic_options = {})` | `PlussMa/include/pluss/subsp/eng/fluid.h` |
 
 ### `pluss::subsp::eng::lti`
 
@@ -1648,6 +1658,25 @@ Front doors (intended starting points):
 | --- | --- |
 | `Series pluss::subsp::math::multigrid::chebyshev(Apply && apply, const Series & inv_diag, const Series & b, Series x, std::int64_t degree, double lo, double hi)` | `PlussMa/include/pluss/subsp/math/multigrid.h` |
 | `krylov::CgResult pluss::subsp::math::multigrid::solve(const Hierarchy & h, const Series & rhs, std::size_t spatial_dims, const krylov::CgOptions & options = {})` | `PlussMa/include/pluss/subsp/math/multigrid.h` |
+
+### `pluss::subsp::math::operators::expansion`
+
+| Public enum | Values |
+| --- | --- |
+| `pluss::subsp::math::operators::expansion::Engine` | `Auto`, `Structural`, `Jet` |
+
+| Public type | Public fields | Public methods |
+| --- | --- | --- |
+| `pluss::subsp::math::operators::expansion::Power` | - | `derivative()`, `integral()`, `product()` |
+| `pluss::subsp::math::operators::expansion::Taylor` | - | `coefficients()`, `remainder()` |
+
+| Public free-call overload | Header |
+| --- | --- |
+| `Operator pluss::subsp::math::operators::expansion::power(std::string_view variable, double center)` | `PlussMa/include/pluss/subsp/math/operators.h` |
+| `Power pluss::subsp::math::operators::expansion::power()` | `PlussMa/include/pluss/subsp/math/operators.h` |
+| `Operator pluss::subsp::math::operators::expansion::taylor(pluss::StackArray<std::string_view> variables, pluss::RangeView<double> center, std::int64_t order, DiffOptions options = {})` | `PlussMa/include/pluss/subsp/math/operators.h` |
+| `Operator pluss::subsp::math::operators::expansion::taylor(std::string_view variable, double center, std::int64_t order, DiffOptions options = {}, Engine engine = Engine::Auto)` | `PlussMa/include/pluss/subsp/math/operators.h` |
+| `Taylor pluss::subsp::math::operators::expansion::taylor()` | `PlussMa/include/pluss/subsp/math/operators.h` |
 
 ## Internal by intent (visible in headers, never document)
 

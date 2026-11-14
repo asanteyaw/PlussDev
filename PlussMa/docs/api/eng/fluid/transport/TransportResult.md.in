@@ -1,0 +1,71 @@
+# `fluid::TransportResult`
+
+The quality at every hydraulic event, with the mass balance.
+
+## Signature
+
+```cpp
+fluid::TransportResult
+```
+
+## What It Does
+
+The result of `transport`: the hydraulic `RunResult` that drove it and the quality sampled at the same event times.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `hydraulic` | The `RunResult` used. |  |
+| `node` | Mixed quality, `[sample, ..., node]`. |  |
+| `link` | Volume mean quality of a pipe, upstream quality of a pump or valve, `[sample, ..., link]`. |  |
+| `tank` | Quality of each fully mixed tank, `[sample, ..., tank]`. |  |
+| `mass` | Stored quality-volume in the pipes and tanks, `[sample, ...]`. |  |
+| `mass_error` | The inventory change minus the cumulative reactions and boundary fluxes, `[sample, ...]`. |  |
+
+## Returns
+
+Returned by `transport`.
+
+## Errors
+
+Reading a field does not run again.
+
+## Interpretation and Use
+
+`mass_error` should stay at rounding level in any run: a value that grows means the quality step is too coarse or a boundary is not accounted for. A transient is sampled at the hydraulic events only, so use a short `Schedule::step` to see a front arrive.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Two sources mixing, with the mass balance.
+
+@@example Eng/api/fluid_transport_mix.cpp@@
+
+### Example 2
+
+Decay and the mass error.
+
+@@example Eng/api/fluid_transport_decay.cpp@@
+
+### Example 3
+
+Age at the nodes.
+
+@@example Eng/api/fluid_transport_age.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="RouteOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">RouteOptions</span>
+  </a>
+  <a class="next-link" href="transport.html">
+    <span class="label">Next</span>
+    <span class="title">transport</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

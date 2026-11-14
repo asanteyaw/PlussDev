@@ -128,4 +128,13 @@ At a stricter level the critical value rises to 12.50. The statistic 25.27 still
 ## See Also
 
 - [`kstest`](kstest.md)
-- [`vartest`](vartest.md)
+- [`vartest`](../means_and_variances/vartest.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="kstest2.html">
+    <span class="label">Previous</span>
+    <span class="title">kstest2</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -31,14 +31,14 @@ int main() {
   const auto y = pluss::make_series(ys, {60}, as_f64());
 
   const auto ols = reg::ols_fit(y, x);
-  out.writeln("least squares (the mean): intercept and slope", ols.coefficients.pull<double>());
+  out.writeln("least squares (the mean): intercept and slope", ols.coefficients.items<double>());
   out.writeln("   tau   intercept and slope    below   objective   pseudo R2   converged");
   for (double tau : {0.05, 0.25, 0.5, 0.75, 0.95}) {
     reg::QuantileOptions options;
     options.tau = tau;
     const auto fit = reg::quantile_fit(y, x, options);
     const auto below = static_cast<std::int64_t>(fit.residuals.lt(-1e-9).to(pluss::ScalarType::Float64).sum().item<double>());
-    out.writeln(tau, fit.coefficients.pull<double>(), below, "of", fit.nobs, fit.objective, fit.pseudo_rsquared, fit.converged);
+    out.writeln(tau, fit.coefficients.items<double>(), below, "of", fit.nobs, fit.objective, fit.pseudo_rsquared, fit.converged);
   }
 }
 ```
@@ -87,9 +87,9 @@ int main() {
   for (double tau : taus) {
     reg::QuantileOptions options;
     options.tau = tau;
-    lines.push_back(reg::quantile_predict(reg::quantile_fit(y, x, options), at).pull<double>());
+    lines.push_back(reg::quantile_predict(reg::quantile_fit(y, x, options), at).items<double>());
   }
-  out.writeln("x                 ", at.reshape({3}).pull<double>());
+  out.writeln("x                 ", at.reshape({3}).items<double>());
   for (std::size_t i = 0; i < taus.size(); ++i) {
     out.writeln("quantile line", taus[i], lines[i]);
   }
@@ -120,3 +120,16 @@ width of the 5%-95% band [3.6382, 14.5633, 27.3092]  lines in order at every poi
 The five lines are in order at all three points, and the width of the band between the 5% and 95% lines is 3.64, 14.56 and 27.31, proportional to x (it is 1.82 x in each case), as the construction of the data predicts.
 
 Nothing in the method forces separately fitted quantile lines to stay in order, and with little data or far from the centre they can cross. A crossing means the data do not support that pair of lines at that point; do not read a quantile function off lines that cross.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="median_regression_and_outliers.html">
+    <span class="label">Previous</span>
+    <span class="title">Median regression and outliers</span>
+  </a>
+  <a class="next-link" href="covariance_choices.html">
+    <span class="label">Next</span>
+    <span class="title">Covariance choices</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

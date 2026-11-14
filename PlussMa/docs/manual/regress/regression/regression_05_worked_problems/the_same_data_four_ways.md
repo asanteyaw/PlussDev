@@ -46,22 +46,22 @@ int main() {
   const auto at = pluss::make_series(std::vector<double>{25.0, 30.0}, {2}, as_f64());
   auto rmse_to_truth = [&](const pluss::Series &predicted) {
     double sum = 0.0;
-    const auto p = predicted.pull<double>();
+    const auto p = predicted.items<double>();
     for (int i = 0; i < 20; ++i) {
       sum += (p[i] - truth(i)) * (p[i] - truth(i));
     }
     return std::sqrt(sum / 20.0);
   };
   auto extrapolation_error = [&](const pluss::Series &predicted) {
-    const auto p = predicted.pull<double>();
+    const auto p = predicted.items<double>();
     return std::vector<double>{p[0] - truth(25.0), p[1] - truth(30.0)};
   };
 
   out.writeln("truth at x = 25 and 30:", truth(25.0), truth(30.0));
-  out.writeln("straight line      coefficients", line.coefficients.pull<double>(), " rmse to truth", rmse_to_truth(reg::ols_predict(line, grid)), " error at 25, 30", extrapolation_error(reg::ols_predict(line, at)), " AIC", line.aic);
-  out.writeln("quadratic          coefficients", quadratic.ols.coefficients.pull<double>(), " rmse to truth", rmse_to_truth(reg::poly_predict(quadratic, grid)), " error at 25, 30", extrapolation_error(reg::poly_predict(quadratic, at)), " AIC", quadratic.ols.aic);
-  out.writeln("normal family, log coefficients", exponential.coefficients.pull<double>(), " rmse to truth", rmse_to_truth(reg::glm_predict(exponential, grid)), " error at 25, 30", extrapolation_error(reg::glm_predict(exponential, at)), " AIC", exponential.aic);
-  out.writeln("median line        coefficients", median.coefficients.pull<double>(), " rmse to truth", rmse_to_truth(reg::quantile_predict(median, grid)), " error at 25, 30", extrapolation_error(reg::quantile_predict(median, at)));
+  out.writeln("straight line      coefficients", line.coefficients.items<double>(), " rmse to truth", rmse_to_truth(reg::ols_predict(line, grid)), " error at 25, 30", extrapolation_error(reg::ols_predict(line, at)), " AIC", line.aic);
+  out.writeln("quadratic          coefficients", quadratic.ols.coefficients.items<double>(), " rmse to truth", rmse_to_truth(reg::poly_predict(quadratic, grid)), " error at 25, 30", extrapolation_error(reg::poly_predict(quadratic, at)), " AIC", quadratic.ols.aic);
+  out.writeln("normal family, log coefficients", exponential.coefficients.items<double>(), " rmse to truth", rmse_to_truth(reg::glm_predict(exponential, grid)), " error at 25, 30", extrapolation_error(reg::glm_predict(exponential, at)), " AIC", exponential.aic);
+  out.writeln("median line        coefficients", median.coefficients.items<double>(), " rmse to truth", rmse_to_truth(reg::quantile_predict(median, grid)), " error at 25, 30", extrapolation_error(reg::quantile_predict(median, at)));
 }
 ```
 
@@ -105,7 +105,7 @@ int main() {
   const auto without = std::make_pair(pluss::make_series(xs_clean, {19}, as_f64()), pluss::make_series(ys_clean, {19}, as_f64()));
 
   auto shift = [&](const char *label, const pluss::Series &a, const pluss::Series &b) {
-    out.writeln(label, "with", a.pull<double>(), " without", b.pull<double>(), " largest change", a.sub(b).abs().max().item<double>());
+    out.writeln(label, "with", a.items<double>(), " without", b.items<double>(), " largest change", a.sub(b).abs().max().item<double>());
   };
   shift("straight line  ", reg::ols_fit(with.second, with.first).coefficients, reg::ols_fit(without.second, without.first).coefficients);
   shift("quadratic      ", reg::poly_fit(with.second, with.first).ols.coefficients, reg::poly_fit(without.second, without.first).ols.coefficients);
@@ -118,12 +118,12 @@ int main() {
 
   // The median line moved by more than the others. Is that the outlier's doing? Score both lines on the full data with the loss the median fit minimises.
   auto loss = [&](const pluss::Series &coefficients) {
-    const auto b = coefficients.pull<double>();
+    const auto b = coefficients.items<double>();
     const auto r = with.second.sub(with.first.mul(b[1]).add(b[0]));
     return r.ge(0.0).where(r.mul(0.5), r.mul(-0.5)).sum().item<double>();
   };
   out.writeln("check-function loss on all 20 points: line fitted with the outlier", loss(median_with.coefficients), " line fitted without it", loss(median_without.coefficients));
-  out.writeln("the outlier's own residual is", with.second.pull<double>()[15] - (median_with.coefficients.pull<double>()[0] + median_with.coefficients.pull<double>()[1] * 15.0), "against the line fitted with it,", with.second.pull<double>()[15] - (median_without.coefficients.pull<double>()[0] + median_without.coefficients.pull<double>()[1] * 15.0), "against the other");
+  out.writeln("the outlier's own residual is", with.second.items<double>()[15] - (median_with.coefficients.items<double>()[0] + median_with.coefficients.items<double>()[1] * 15.0), "against the line fitted with it,", with.second.items<double>()[15] - (median_without.coefficients.items<double>()[0] + median_without.coefficients.items<double>()[1] * 15.0), "against the other");
 }
 ```
 
@@ -139,3 +139,12 @@ the outlier's own residual is 4.788 against the line fitted with it, 9.851 again
 ```
 
 Removing the outlier changes the coefficients of the line, the quadratic and the exponential model by 0.14, 0.21 and 0.10, which is modest. The median line changes by 2.9 (the intercept goes from −6.47 to −3.57 and the slope from 2.263 to 1.732), more than any of the others, but that is not the outlier's doing: scored on all 20 points, the two median lines have the same check-function loss, 48.968. The loss is flat between them, so the minimiser is not unique for these data, and the optimiser lands on a different member when a point is removed. A median line is robust to how far an outlier lies from the line, not to the non-uniqueness of its minimiser, so for curved data with few points, treat its coefficients as one of several equally good answers.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="reference_curves_with_quantiles.html">
+    <span class="label">Previous</span>
+    <span class="title">Reference curves with quantiles</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -42,8 +42,8 @@ int main() {
       flat.push_back(second[i]);
     }
     const auto fit = reg::ols_fit(pluss::make_series(y, {10}, as_f64()), pluss::make_series(flat, {10, 2}, as_f64()));
-    out.writeln(label, "rank", fit.rank, "of", fit.k_params, " cond", fit.condition_number, " smallest eig", fit.smallest_eig, " se(b1)", fit.std_errors.pull<double>()[1], " warnings", fit.warnings.size());
-    out.writeln("      coefficients", fit.coefficients.pull<double>());
+    out.writeln(label, "rank", fit.rank, "of", fit.k_params, " cond", fit.condition_number, " smallest eig", fit.smallest_eig, " se(b1)", fit.std_errors.items<double>()[1], " warnings", fit.warnings.size());
+    out.writeln("      coefficients", fit.coefficients.items<double>());
     return fit;
   };
   run("unrelated second predictor :", unrelated);
@@ -83,8 +83,8 @@ int main() {
   const auto both = reg::ols_fit(response, pluss::make_series(flat, {10, 2}, as_f64()));
   const auto alone = reg::ols_fit(response, pluss::make_series(x1, {10}, as_f64()));
 
-  const auto b = both.coefficients.pull<double>();
-  const auto a = alone.coefficients.pull<double>();
+  const auto b = both.coefficients.items<double>();
+  const auto a = alone.coefficients.items<double>();
   out.writeln("b1 + 2 b2 with both columns  ", b[1] + 2.0 * b[2], " slope with x1 alone", a[1]);
   out.writeln("ratio b2 / b1 (minimum norm: 2)", b[2] / b[1]);
   out.writeln("fitted values agree          ", both.fitted_values.sub(alone.fitted_values).abs().max().item<double>());
@@ -126,7 +126,7 @@ int main() {
     const auto fit = reg::ols_fit(response, pluss::make_series(flat, {12, 2}, as_f64()));
     const double r2 = reg::ols_fit(first, pluss::make_series(x2, {12}, as_f64())).rsquared;
     const double sxx = first.sub(first.mean()).pow(2.0).sum().item<double>();
-    out.writeln(scale, r2, 1.0 / (1.0 - r2), fit.std_errors.pull<double>()[1], std::sqrt(fit.mse / (sxx * (1.0 - r2))), fit.condition_number);
+    out.writeln(scale, r2, 1.0 / (1.0 - r2), fit.std_errors.items<double>()[1], std::sqrt(fit.mse / (sxx * (1.0 - r2))), fit.condition_number);
   }
 }
 ```
@@ -164,9 +164,22 @@ int main() {
     reg::OLSOptions options;
     options.rcond = rcond;
     const auto fit = reg::ols_fit(response, design, options);
-    out.writeln("rcond", label, " rank", fit.rank, " coefficients", fit.coefficients.pull<double>(), " warnings", fit.warnings.size());
+    out.writeln("rcond", label, " rank", fit.rank, " coefficients", fit.coefficients.items<double>(), " warnings", fit.warnings.size());
   }
 }
 ```
 
 At 10⁻¹² and 10⁻⁹ the perturbation counts as a direction (rank 3) and the offsetting pair is returned. At 10⁻⁶ and 10⁻⁴ it is declared lost: the rank is 2, the coefficients are the minimum-norm pair (0.3967, 0.7935) and a second warning appears. At 10⁻² a second direction is also lost, rank is 1, and the fit degrades (the intercept drops from 0.18 to 0.0572), so a loose cutoff is not harmless. The rank and the coefficients always describe the same cutoff.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="missing_data.html">
+    <span class="label">Previous</span>
+    <span class="title">Missing data</span>
+  </a>
+  <a class="next-link" href="errors.html">
+    <span class="label">Next</span>
+    <span class="title">Errors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

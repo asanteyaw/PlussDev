@@ -144,3 +144,12 @@ The clustered series swings between a rolling standard deviation of 0.55 and 2.0
 - **Outliers can mimic clustering.** One enormous observation inflates the squares for the whole sample; look at the series before concluding.
 
 Where next: [Time Series 2: ARIMA Models](../ts_02_arima_models.md) fits a model to the mean of a series once these checks are done.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="white_noise_unit_roots_stationarity.html">
+    <span class="label">Previous</span>
+    <span class="title">White noise, unit roots, stationarity</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

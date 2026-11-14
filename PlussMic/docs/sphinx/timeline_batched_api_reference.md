@@ -5,13 +5,13 @@ delegation path added for multi-feature DataFrame operations.
 
 ## API Signature
 
-`Slate::tl() -> SlateTimelineAccessor`  
-`DataFrame::tl(feature: string_view) -> DataFrameTimelineAccessor`  
-`DataFrame::tl(features: initializer_list<string_view>) -> DataFrameTimelineAccessor`  
-`DataFrame::tl(features: RangeView<string_view> = {}) -> DataFrameTimelineAccessor`  
-`Atlas::tl(feature: string_view) -> AtlasTimelineAccessor`  
-`Atlas::tl(features: initializer_list<string_view>) -> AtlasTimelineAccessor`  
-`Atlas::tl(features: RangeView<string_view> = {}) -> AtlasTimelineAccessor`
+`SlateTimelineAccessor Slate::tl()`  
+`DataFrameTimelineAccessor DataFrame::tl(feature: string_view)`  
+`DataFrameTimelineAccessor DataFrame::tl(features: initializer_list<string_view>)`  
+`DataFrameTimelineAccessor DataFrame::tl(features: RangeView<string_view> = {})`  
+`AtlasTimelineAccessor Atlas::tl(feature: string_view)`  
+`AtlasTimelineAccessor Atlas::tl(features: initializer_list<string_view>)`  
+`AtlasTimelineAccessor Atlas::tl(features: RangeView<string_view> = {})`
 
 ## Notes
 

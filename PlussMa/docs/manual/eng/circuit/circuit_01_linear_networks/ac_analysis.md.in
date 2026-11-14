@@ -1,0 +1,276 @@
+# AC analysis
+
+[Back to Circuits 1: Linear Networks](../circuit_01_linear_networks.md)
+
+A circuit with capacitors and inductors responds differently to a slow signal and to a fast one: a filter passes one and blocks the other, a resonant circuit rings at a frequency of its own. `circuit::ac` computes the **small-signal sinusoidal response**: for a sinusoidal source of angular frequency `w`, the amplitude and phase of every node voltage and branch current, for every frequency in a list, in one call. This page works through a low-pass filter, a resonant circuit and an op-amp integrator against their formulas, and sweeps component values.
+
+## The mental model
+
+For a sinusoid `V cos(w t + phi)` every voltage and current in a linear circuit is a sinusoid of the same frequency, so each can be written as a **phasor**, a complex number whose magnitude is the amplitude and whose angle is the phase. In phasor form a capacitor behaves like a conductance `j w C` and an inductor like a resistance `j w L`, and the circuit equations are the same linear equations as at DC, with complex entries. `ac(circuit, omega)` solves them at each angular frequency in `omega` (radians per second, a real non-negative vector) and returns the same `Result` as `op`, with complex arrays and one more axis.
+
+The **source values are phasors**: the value of a voltage source is the phasor of the source (its amplitude, phase zero), so a source of `1` is a unit-amplitude sinusoid. Because the analysis is linear, the voltage at a node divided by the source is the **transfer function**.
+
+The axes of each result are `[..., frequencies, elements]`: the frequency axis is inserted just before the last axis, after any batch axes. For a single circuit, `voltage` has shape `[frequencies, nodes]`. The element type is complex (`Complex128` for `Float64` circuits, `Complex64` for `Float32`).
+
+## An RC low-pass filter
+
+A source drives a `1 kohm` resistor in series with a `1 microfarad` capacitor to ground, and the output is the capacitor voltage. The transfer function is `1 / (1 + j w R C)` with `R C = 1 ms`: the gain is `1 / sqrt(1 + (w R C)^2)` and the phase `-arctan(w R C)`. At the corner frequency `w = 1 / (R C) = 1000 rad/s` the gain is `0.7071` and the phase `-45` degrees. The program evaluates four frequencies; `w = 0` is the DC limit.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({1.0})};
+  net.resistors = {{1}, {2}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  const pluss::Series omega = vec({0.0, 1.0, 1000.0, 100000.0});
+
+  const auto result = ckt::ac(ckt::make(net), omega);
+  const pluss::Series output = result.voltage.select(1, 2);   // the capacitor voltage, node 2
+  out.writeln("voltage shape", result.voltage.sizes(), " element type", result.voltage.dtype().name);
+  out.writeln("gain         ", flat(output.abs()));
+  out.writeln("phase (deg)  ", flat(output.angle() * (180.0 / M_PI)));
+  out.writeln("analytic gain", 1.0, 1.0 / std::sqrt(1.0 + 1e-6), 1.0 / std::sqrt(2.0), 1.0 / std::sqrt(1.0 + 1e4));
+  out.writeln("source current magnitude", flat(result.source_current.abs()));
+}
+```
+
+The gain is `1` at DC and still prints as `1.000000` at `w = 1` (it is `0.9999995`), is `0.707107` at the corner, and falls to `0.01` two decades above it, as the formulas say. The phase goes from `0` through `-45` to nearly `-90` degrees. The source current is `0` at DC (the capacitor blocks it) and grows with frequency towards `V / R = 1 mA`.
+
+## A series resonant circuit
+
+A resistor `10 ohm`, an inductor `1 mH` and a capacitor `1 microfarad` in series. At the resonant frequency `w0 = 1 / sqrt(L C) = 31622.8 rad/s` the inductor and capacitor impedances cancel and the current is limited only by the resistor: `1 V / 10 ohm = 0.1 A`. Away from resonance the current is much smaller. The voltage across the capacitor at resonance is `Q` times the source, with the quality factor `Q = sqrt(L/C) / R = 3.162`. The program evaluates the circuit at a tenth of resonance, at resonance, and at ten times resonance.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net net;
+  net.nodes = 4;
+  net.voltage_sources = {{1}, {0}, vec({1.0})};
+  net.resistors = {{1}, {2}, vec({10.0})};
+  net.inductors = {{2}, {3}, vec({1e-3})};
+  net.capacitors = {{3}, {0}, vec({1e-6})};
+  const double w0 = 1.0 / std::sqrt(1e-3 * 1e-6);
+  const double quality = std::sqrt(1e-3 / 1e-6) / 10.0;
+
+  const auto result = ckt::ac(ckt::make(net), vec({0.1 * w0, w0, 10.0 * w0}));
+  out.writeln("resonant frequency", w0, " quality factor", quality);
+  out.writeln("source current magnitude  ", flat(result.source_current.abs()), " (0.1 A at resonance)");
+  out.writeln("capacitor voltage magnitude", flat(result.voltage.select(1, 3).abs()), " (Q at resonance)");
+  out.writeln("inductor current magnitude ", flat(result.inductor_current.abs()));
+}
+```
+
+At `w0` the source current is `0.1` and the capacitor voltage `3.162`: the circuit amplifies the source voltage across the capacitor by `Q`, even though the source is only 1 V. At a tenth or ten times the resonant frequency the current falls to about `3 mA`.
+
+## An op-amp integrator
+
+An inverting op amp with a capacitor in the feedback path integrates its input: the gain is `-1 / (j w R C)`. With `R = 1 kohm` and `C = 1 microfarad` the magnitude is `1 / (w * 0.001)`, which is `10`, `1` and `0.1` at `w = 100`, `1000` and `10000`, and the phase is `+90` degrees (the inverting minus sign and the `1/j` together).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  ckt::Net net;
+  net.nodes = 4;
+  net.voltage_sources = {{1}, {0}, vec({1.0})};
+  net.resistors = {{1}, {2}, vec({1000.0})};
+  net.capacitors = {{2}, {3}, vec({1e-6})};
+  net.amps = {{3}, {0}, {0}, {2}};
+  const auto result = ckt::ac(ckt::make(net), vec({100.0, 1000.0, 10000.0}));
+  const pluss::Series output = result.voltage.select(1, 3);
+  out.writeln("gain       ", flat(output.abs()), " expected 10, 1, 0.1");
+  out.writeln("phase (deg)", flat(output.angle() * (180.0 / M_PI)));
+}
+```
+
+## A sweep of component values
+
+Batched component values give a response for every member. The program sweeps the capacitor of the RC filter over `0.1`, `1` and `10` microfarads and evaluates three frequencies: the result has shape `[3, 3, 3]`, in the order capacitor values, frequencies, nodes. The gain at the output node, read at node 2, shows the corner moving: at `w = 1000` it is `0.995` for the smallest capacitor, `0.707` for the middle one (its corner) and `0.0995` for the largest.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({1.0})};
+  net.resistors = {{1}, {2}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({0.1e-6, 1e-6, 10e-6}).reshape({3, 1})};
+  const auto result = ckt::ac(ckt::make(net), vec({100.0, 1000.0, 10000.0}));
+
+  out.writeln("voltage shape", result.voltage.sizes(), " (capacitor value, frequency, node)");
+  const pluss::Series gain = result.voltage.select(2, 2).abs();   // node 2, shape [3, 3]
+  out.writeln("gain: rows are 0.1, 1 and 10 microfarad; columns 100, 1000 and 10000 rad/s");
+  for (long row = 0; row < 3; ++row) out.writeln(flat(gain.select(0, row)));
+}
+```
+
+Only the capacitor group carries a batch axis; the resistor and the source are shared, which is why the other values in the net did not need to be repeated.
+
+## Errors
+
+The frequencies must be a non-empty, finite, non-negative real vector on the circuit's platform.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({1.0})};
+  net.resistors = {{1}, {2}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  const ckt::Circuit circuit = ckt::make(net);
+  report([&] { (void)ckt::ac(circuit, vec({-1.0})); });
+  report([&] { (void)ckt::ac(circuit, pluss::series::zeros({0}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64))); });
+  report([&] { (void)ckt::ac(circuit, pluss::series::zeros({2, 2}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64))); });
+}
+```
+
+## Decisions
+
+- **A transfer function, or a filter's cutoff:** `ac` over a log-spaced range of frequencies, then read the gain (`abs`) and phase (`angle`) of the output node.
+- **Finding a resonance:** a coarse sweep to locate the peak, then a fine sweep around it; the result does not need an optimiser.
+- **Component tolerances:** a batch of values on the sensitive components, one call.
+- **A time-domain response:** convert the circuit to a state-space model and simulate it (see [Linear systems](../../lti.md)); `ac` gives the steady state only.
+
+## Pitfalls
+
+The program makes three mistakes on the RC low-pass, whose corner is at `1000 rad/s`: giving a frequency in hertz where radians per second are meant, expecting the gain to depend on the source amplitude, and sweeping down to zero frequency a circuit whose capacitor is the only connection to a node.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <functional>
+
+using namespace pluss::tils;
+namespace ckt = pluss::subsp::eng::circuit;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+static void report(const char *what, const std::function<void()> &call) {
+  try {
+    call();
+    std::cout << what << ": solved\n";
+  } catch (const pluss::Error &e) {
+    std::cout << what << ": " << e.message() << "\n";
+  }
+}
+
+static ckt::Net low_pass(double amplitude) {
+  ckt::Net net;
+  net.nodes = 3;
+  net.voltage_sources = {{1}, {0}, vec({amplitude})};
+  net.resistors = {{1}, {2}, vec({1000.0})};
+  net.capacitors = {{2}, {0}, vec({1e-6})};
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const double corner_hz = 1000.0 / (2.0 * M_PI);   // 159.155 Hz
+
+  // 1. a frequency in hertz given to a function that takes radians per second
+  const auto circuit = ckt::make(low_pass(1.0));
+  const auto wrong = ckt::ac(circuit, vec({corner_hz}));
+  const auto right = ckt::ac(circuit, vec({2.0 * M_PI * corner_hz}));
+  out.writeln("gain at 159.155 given as omega: ", flat(wrong.voltage.select(1, 2).abs())[0], "   at omega = 2 pi f: ", flat(right.voltage.select(1, 2).abs())[0]);
+
+  // 2. the source value is the amplitude of the phasor, so the output scales with it; the gain is the ratio
+  const auto big = ckt::ac(ckt::make(low_pass(5.0)), vec({1000.0}));
+  out.writeln("source 5: output magnitude ", flat(big.voltage.select(1, 2).abs())[0], ", gain ", flat(big.voltage.select(1, 2).abs())[0] / 5.0);
+
+  // 3. a capacitor is open at zero frequency: a node reached only through one has no DC voltage
+  ckt::Net floating;
+  floating.nodes = 3;
+  floating.voltage_sources = {{1}, {0}, vec({1.0})};
+  floating.capacitors = {{1}, {2}, vec({1e-6})};   // node 2 touches only this capacitor
+  const auto isolated = ckt::make(floating);
+  report("floating node at omega = 1000", [&] { (void)ckt::ac(isolated, vec({1000.0})); });
+  report("floating node at omega = 0   ", [&] { (void)ckt::ac(isolated, vec({0.0})); });
+}
+```
+
+The corner frequency is `159.155 Hz`, `1000 rad/s`: handed to `ac` as `159.155` it is a frequency six times too low and the gain is `0.98757` instead of `0.70711`, with no error. A source of `5` gives an output of magnitude `3.53553`, five times the unit response, and the gain, the ratio of the two, is unchanged. A node reached only through a capacitor has a well-defined voltage at any positive frequency, but at `omega = 0` the capacitor is an open circuit, the node is connected to nothing, and the equations are singular, which the error reports and which is the same failure as a floating node in the DC solution.
+
+Reference: [`Net`](../../../../api/eng/circuit/model/Net.md), [`ac`](../../../../api/eng/circuit/analysis/ac.md), [`make`](../../../../api/eng/circuit/model/make.md), [`Circuit`](../../../../api/eng/circuit/model/CircuitModel.md).
+
+Where next: the [circuit reference](../../../../api/plussma_eng.md) lists every call used in this chapter.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="dc_operating_point.html">
+    <span class="label">Previous</span>
+    <span class="title">DC operating point</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

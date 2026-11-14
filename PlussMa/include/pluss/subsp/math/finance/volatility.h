@@ -5,6 +5,7 @@
 #include "pluss/export.h"
 
 #include <cstdint>
+#include <vector>
 #include <limits>
 
 namespace pluss::subsp::math::finance::volatility {
@@ -34,6 +35,13 @@ struct SimOptions {
   bool paths_first = false;
   std::uint64_t seed = 0;
   std::uint64_t offset = 0;
+  // When set, the initial variance (forward-variance level for rough Bergomi) of the path generators is read from this tracked scalar, so the paths are
+  // differentiable in it (pathwise sensitivity); the numeric value in the parameters is ignored.
+  const pluss::codem::Series* tracked_level = nullptr;
+  // SABR only: a tracked initial forward of shape [paths] (one copy per path, so the sensitivity of the terminal forwards is the pathwise Jacobian).
+  const pluss::codem::Series* tracked_spot = nullptr;
+  // SABR only: the drift of the forward (rate - dividend yield) as a tracked scalar, replacing params.mu, for the pathwise rho of an early-exercise option.
+  const pluss::codem::Series* tracked_drift = nullptr;
 };
 
 struct GbmParams {
@@ -141,6 +149,58 @@ struct StochVolPaths {
   pluss::codem::Series innovation_spot = pluss::series::undefined();
   pluss::codem::Series innovation_var = pluss::series::undefined();
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Path generators behind module::Field::simulate_paths and the Monte Carlo engine. Not a public interface.
+namespace detail {
+
+// Several assets (Heston, Bates, Black-Scholes, SABR) simulated in one pass. Every parameter is a Series with one entry per asset; the assets are the leading state axis, so
+// one asset is the same code with an axis of length one. Heston is Bates with a zero jump intensity. The price shocks of different assets are
+// correlated by `price_correlation`, the variance shocks by `variance_correlation` (each an [A, A] correlation matrix; undefined means independent), and
+// within an asset the price and variance shocks have correlation `rho`. Outputs are [paths, steps + 1, A] (shocks [paths, steps, A]).
+enum class MultiKind : std::uint8_t { Sv = 0, BlackScholes = 1, Sabr = 2, RoughHeston = 3, RoughBergomi = 4 };   // Sv is Heston or Bates
+struct MultiSvParams {
+  // Optional: the kind of each asset (empty means every asset is Heston or Bates). A Black-Scholes asset (volatility `bs_vol`) has a price shock and no variance
+  // shock of its own; a SABR asset (alpha0, beta, nu) has a forward in place of the spot and a volatility factor alpha in place of the variance; a rough Heston (kappa, theta, sigma, rough_alpha, v0) or rough Bergomi (xi, eta, rough_alpha) asset has a variance that depends on the whole past of its shock. The columns
+  // below are per asset for every kind: the entries kappa, theta, sigma, v0 and the jump columns are read only for the assets that use them (put any valid
+  // filler elsewhere), and `rho` is the correlation of each asset's price shock with its own second factor (0 for Black-Scholes).
+  std::vector<MultiKind> kind;
+  pluss::codem::Series bs_vol, alpha0, beta, nu;                                              // Black-Scholes and SABR columns
+  pluss::codem::Series rough_alpha, xi, eta;                                                  // rough models: alpha = H - 1/2 (rough Heston reuses kappa, theta, sigma, v0)
+  double alpha_floor = 1e-12;
+  pluss::codem::Series spot0, growth, kappa, theta, sigma, rho, v0;                          // growth = expected growth rate of the spot, r - q
+  pluss::codem::Series jump_intensity, jump_mean, jump_vol;                                    // optional: undefined means no jumps
+  pluss::codem::Series price_correlation, variance_correlation;                               // optional [A, A]
+  pluss::codem::Series price_variance_correlation;                                            // optional [A, A]: corr(price shock a, variance shock b); the diagonal is rho
+  double variance_floor = 1e-12;
+};
+struct MultiSvPaths {
+  pluss::codem::Series spot, variance, innovation_spot, innovation_var;
+};
+CODEM_API MultiSvPaths multi_sv_paths(std::int64_t steps,
+                                      std::int64_t paths,
+                                      double dt,
+                                      const MultiSvParams& params,
+                                      const SimOptions& options = {},
+                                      pluss::codem::Config cfg = {},
+                                      std::uint64_t seed = 0);
 
 CODEM_API StochVolPaths gbm_paths(std::int64_t steps,
                                   std::int64_t paths,
@@ -294,5 +354,7 @@ CODEM_API StochVolPaths rough_bergomi_paths(std::int64_t steps,
                                             const RoughBergomiParams& params,
                                             pluss::codem::Config cfg = {},
                                             std::uint64_t seed = 0);
+
+} // namespace detail
 
 } // namespace pluss::subsp::math::finance::volatility

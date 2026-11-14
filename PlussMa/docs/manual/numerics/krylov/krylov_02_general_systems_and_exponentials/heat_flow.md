@@ -44,7 +44,7 @@ int main() {
     const auto y = r.value.host<double>();
     double worst = 0.0;
     for (std::int64_t j = 0; j < n; ++j) worst = std::max(worst, std::abs(y[j] - exact[j]));
-    std::cout << std::left << std::setw(12) << size << std::setw(12) << r.converged.item<bool>() << std::scientific << std::setprecision(1) << std::setw(18) << r.residual_estimate.item<double>() << worst << "\n";
+    std::cout << std::left << std::setw(12) << size << std::setw(12) << r.converged.squeeze().item<bool>() << std::scientific << std::setprecision(1) << std::setw(18) << r.residual_estimate.squeeze().item<double>() << worst << "\n";
   }
 }
 ```
@@ -60,3 +60,12 @@ basis size  converged   residual est.     error vs exact
 64          1           1.0e-20           5.2e-16
 ```
 The exact answer is known from the eigen-expansion, so the table shows the accuracy honestly. The error falls steeply with the size of the Krylov space, from 5e-2 at 4 vectors to 5e-16 at 64, and `converged` flips only when the estimate meets the tolerance (at 64). The estimate tracks the true error, which makes it usable when no exact answer exists: grow `max_iterations` until it passes. Evolution to a longer time or a rougher start needs a larger space; for a long evolution, advance it in several shorter steps.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_restart_length.html">
+    <span class="label">Previous</span>
+    <span class="title">The restart length</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

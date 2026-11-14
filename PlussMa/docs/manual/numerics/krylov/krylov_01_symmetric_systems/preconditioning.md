@@ -44,8 +44,8 @@ int main() {
   const auto jacobi = krylov::pcg(apply, [&](const Series& r) { return r * inverse_diagonal; }, b, {-1}, o);
   std::cout << std::left << std::setw(26) << "method" << std::setw(12) << "iterations" << std::setw(12) << "converged" << "relative residual\n";
   auto row = [&](const char* label, const krylov::CgResult& r) {
-    std::cout << std::left << std::setw(26) << label << std::setw(12) << r.iterations << std::setw(12) << r.converged.item<bool>() << std::scientific << std::setprecision(1)
-              << r.relative_residual.item<double>() << "\n";
+    std::cout << std::left << std::setw(26) << label << std::setw(12) << r.iterations << std::setw(12) << r.converged.squeeze().item<bool>() << std::scientific << std::setprecision(1)
+              << r.relative_residual.squeeze().item<double>() << "\n";
   };
   row("cg", plain);
   row("pcg, Jacobi", jacobi);
@@ -60,3 +60,16 @@ cg                        664         1           7.0e-11
 pcg, Jacobi               16          1           9.4e-12
 ```
 The matrix has diagonal entries spanning four decades, so its eigenvalues are spread over four decades and plain conjugate gradients needs 664 iterations. Dividing by the diagonal (Jacobi) rescales the system so its eigenvalues cluster near 1, and 16 iterations suffice, a fortyfold saving for a preconditioner that costs one elementwise multiply. A good preconditioner is the biggest lever on iteration count; the best one is cheap to apply and resembles `A⁻¹`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="conjugate_gradients_with_an_operator.html">
+    <span class="label">Previous</span>
+    <span class="title">Conjugate gradients with an operator</span>
+  </a>
+  <a class="next-link" href="batches.html">
+    <span class="label">Next</span>
+    <span class="title">Batches</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

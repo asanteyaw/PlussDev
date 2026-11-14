@@ -8,7 +8,7 @@ Every program is complete and its output is the output of that program. Iteratio
 
 ## The mental model
 
-An *operator* is any callable `apply(Series x) -> Series` that returns `A x` for a vector `x` (or a batch of vectors, with the unknowns on the trailing axes). `solve_dims` lists the axes that hold the unknowns (usually `{-1}`); axes in front of them are independent lanes solved together.
+An *operator* is any callable `Series apply(Series x)` that returns `A x` for a vector `x` (or a batch of vectors, with the unknowns on the trailing axes). `solve_dims` lists the axes that hold the unknowns (usually `{-1}`); axes in front of them are independent lanes solved together.
 
 ```cpp
 krylov::CgResult krylov::cg (apply, rhs, solve_dims, CgOptions options = {}, initial = undefined);

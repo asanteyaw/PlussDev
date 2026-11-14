@@ -20,7 +20,6 @@
 #include <vector>
 #include <thread>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "bundle/WorkspaceStore.h"
@@ -29,6 +28,7 @@
 #include "relational/Pull.h"
 #include "loader/CsvLoader.h"
 #include "table/io/SnapshotCsv.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::bundle {
 

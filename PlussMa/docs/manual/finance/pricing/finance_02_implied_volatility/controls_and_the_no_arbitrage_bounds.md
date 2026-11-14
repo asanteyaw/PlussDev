@@ -343,7 +343,7 @@ upper_vol below lower  -> upper_vol must be finite and > lower_vol
 tolerance = 0          -> tolerance must be finite and > 0
 max_iterations = 0     -> max_iterations must be > 0
 vega_floor = 0         -> vega_floor must be finite and > 0
-OptionType::Auto      -> is_call must be defined
+is_call must be defined OptionType::Auto
 ```
 
 A call 120% out of the money five weeks from expiry is worth 9 × 10⁻¹⁷, and its vega is 2 × 10⁻¹⁴, nearly nothing. Newton still recovers the volatility to 6 × 10⁻⁹ for every `vega_floor`, because where its step is unusable it falls back to a bisection step. Every invalid setting is rejected with the message shown, and so is `OptionType::Auto` with no `is_call` flag to say which options are calls.

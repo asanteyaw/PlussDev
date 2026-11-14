@@ -51,7 +51,7 @@ The table names to keep, in iteration order.
 
 An empty range is allowed and produces a defined but empty workspace.
 
-```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
 `RangeView::Of<std::string_view>` has implicit constructors from a brace
 list, a `std::vector<std::string_view>`, and other contiguous containers, so
 passing any of those at a call site works without ever naming `RangeView`
@@ -59,7 +59,7 @@ yourself. Example 1 below uses a brace literal (the dedicated
 `initializer_list` overload exists specifically to keep that call
 unambiguous); Examples 2 and 3 pass a named container instead, to exercise
 the `RangeView` and templated overloads respectively without naming either.
-```
+:::
 
 ## Returns
 

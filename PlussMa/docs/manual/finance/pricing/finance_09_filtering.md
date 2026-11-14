@@ -1,0 +1,48 @@
+<!-- generated from finance_09_filtering.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Finance 9: Filtering
+
+A model has states that nobody observes: the short rate behind bond prices, the volatility behind returns. A filter estimates them from the data as it arrives, and the likelihood it computes is what lets a model be fitted. After this chapter you can write a model in state-space form, run the Kalman, extended, unscented and particle filters, estimate the short rate from bond prices and the volatility from returns, handle missing and outlying observations, and read the standard error of what you filtered.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **A state-space model has two equations**: how the hidden state moves, and how the observation depends on it.
+- **The Kalman filter is exact for linear Gaussian models**; its covariance says how uncertain each estimate is, and its innovations give the likelihood.
+- **The extended and unscented filters** extend it to nonlinear observations by a Gaussian approximation; they reduce to the Kalman filter on a linear model.
+- **A particle filter represents the posterior by a weighted cloud**, so it handles any noise and any nonlinearity, at the price of simulation error.
+
+| Entry point | Purpose |
+|---|---|
+| `filtering::kalman_filter` | exact filter for a linear Gaussian state-space model, with missing data and known inputs |
+| `filtering::ekf_filter`, `ukf_filter` | Gaussian filters for nonlinear models, with and without Jacobians |
+| `filtering::particle_filter` | the bootstrap particle filter with four resampling methods |
+| `filtering::sv_particle_filter` | the particle filter for a stochastic-volatility model of returns |
+
+## Programs
+
+- [The Kalman filter](finance_09_filtering/the_kalman_filter.md)
+- [Filtering the short rate from bond prices](finance_09_filtering/yield_curve_filtering.md)
+- [Particle filters](finance_09_filtering/particle_filters.md)
+- [Filtering volatility from returns](finance_09_filtering/volatility_filtering.md)
+
+## Checklist
+
+1. State the model as a transition and an observation, with the noise of each and the law of the state before the first observation.
+2. Test any new model against the Kalman filter on a linear version.
+3. Use `NaN` for a missing observation, and `data_used` to see what entered.
+4. Check the noise assumptions: they set how much the filter trusts the data.
+5. Watch the effective sample size of a particle filter, and use the same seed in a parameter search.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_09_filtering/the_kalman_filter
+finance_09_filtering/yield_curve_filtering
+finance_09_filtering/particle_filters
+finance_09_filtering/volatility_filtering
+```
+<!-- apiref:toctree:end -->

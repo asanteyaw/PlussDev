@@ -1,0 +1,52 @@
+# Slates: one typed column
+
+[Back to PlussMic by example](../guide.md)
+
+A `Slate` is the single column underneath every table: one typed array of numbers, text or times, with a validity mask for missing values and an optional label for each case. This page uses slates by themselves, for the jobs that need only one column: a gradebook, a column of survey answers, two measurements reconciled by name, and a time column turned into features.
+
+## The mental model
+
+A slate has a **kind** (numbers, text, timestamps or durations), a **validity mask** that records which entries are present, and optionally **case labels** that name the rows. Operations respect the mask: a reduction skips missing entries and an arithmetic result is missing wherever either input is. The numbers underneath, reached with `as_series()`, have no mask, and show a placeholder zero where a value is missing (the pitfall page in [Files, missing data and time](files_and_time.md) shows the consequence).
+
+## A gradebook
+
+Ten exam scores, two students absent. The program marks the absences as missing, summarises, finds quartile cut points and ranks, assigns grade bands and fills the absences with the class median.
+
+@@example slate_gradebook.cpp@@
+
+`present 8 of 10` counts the entries that are present. `describe` summarises only those eight: mean `75.44`, median `75.25`, range `55` to `91`. `percentiles` gives the quartile cut points `68.125`, `75.25` and `86.125`, and `rank` ranks the present scores while leaving the absent students `NULL`. `bucketize` with the edges `0, 60, 70, 80, 90, 100` returns the band index of each score: `0` is an F and `4` is an A, so the 91 is band `4` and the 55 band `0`. The fill uses `median()`, and it is `75.25`, the same value `describe` reports, because the median of an even number of values is the average of the two middle ones on every path.
+
+## A column of answers
+
+Eight free-text answers to a yes-or-no question, two blank. The `nt()` accessor holds the text operations; the program trims and lower-cases, classifies with a pattern, and counts.
+
+@@example slate_text_column.cpp@@
+
+`strip` and `lower` leave the blanks `NULL`. `matches("yes")` and `matches("no")` test whether a cell *starts* with the pattern, so `yes, mostly` counts as a yes and `not really` counts as a no, while `n/a` is neither: three yes, two no, two missing, and one answer unclassified. That last line is why you print the counts that must add up to the total.
+
+## Two measurements, matched by name
+
+Today's readings are in the order the stations reported; yesterday's are in another order and include a station that has since closed. The program gives each slate its case labels, aligns yesterday to today by name, and subtracts.
+
+@@example slate_by_label.cpp@@
+
+Aligning by position would have compared north with south. `AlignBy::Caselbl` matches by name, and `hill`, which did not exist yesterday, becomes `NULL`, so the change is `NULL` for it rather than a wrong number. `find` locates the closed station in yesterday's list, and sorting by label orders the report alphabetically with the values attached.
+
+## Timestamps and a price stream
+
+A column of timestamps and a column of prices, seven trading days. The `tl()` accessor derives calendar features from the timestamps and `ts()` derives lags, returns and rolling statistics from the numbers.
+
+@@example slate_time_features.cpp@@
+
+The weekday names show the Saturday and the Monday after it, `weekend` flags the Saturday, and the first lag and the first return are `NULL` because there is no previous day. The return on the second day is `0.02` (`102 / 100 - 1`). The rolling mean of three observations uses what is available at the start (`100`, then `101`) and the full window from the third day on.
+
+## Decisions
+
+- **Missing is a state:** build slates with a validity mask, and use the slate's own reductions so that the mask is respected.
+- **Labels for alignment:** give a slate case labels when its order is not guaranteed and combine slates by name, not by position.
+- **Text operations:** use `nt()` for text slates; a prefix pattern is `matches`, a whole-cell pattern is `fullmatch`.
+- **Calendar and time-series features:** `tl()` and `ts()` return slates, so they feed a table directly.
+
+## Where next
+
+Reference pages: [`describe`](../api/slate/describe.md), [`percentiles`](../api/slate/percentiles.md), [`rank`](../api/slate/rank.md), [`bucketize`](../api/slate/bucketize.md), [`fillnull`](../api/slate/fillnull.md), [`median`](../api/slate/median.md), [`matches`](../api/slate/matches.md), [`label`](../api/slate/label.md), [`to_string`](../api/slate/to_string.md). Next: [Reports and joins](reports_and_joins.md).

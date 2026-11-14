@@ -32,7 +32,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(2));
   const math::Function absolute = math::function({"x"}, [](math::Function x) { return x.abs(); });
   const auto points = pluss::make_series({-2.0, 0.0, 3.0});
-  out.writeln("x                 ", points.pull<double>());
+  out.writeln("x                 ", points.items<double>());
 
   const std::pair<const char *, math::NonSmooth> policies[] = {{"Strict     ", math::NonSmooth::Strict},
                                                                 {"Piecewise  ", math::NonSmooth::Piecewise},
@@ -42,7 +42,7 @@ int main() {
     for (const std::int64_t order : {1, 2}) {
       const math::Function derivative = operators::differential("x", order, {.nonsmooth = policy})(absolute);
       try {
-        out.writeln(name, "derivative of order", order, derivative({points}).pull<double>());
+        out.writeln(name, "derivative of order", order, derivative({points}).items<double>());
       } catch (const pluss::Error &e) {
         const std::string text(e.what());
         out.writeln(name, "derivative of order", order, "->", text.substr(text.find(' ') + 1, text.find('\n') - text.find(' ') - 1));
@@ -56,8 +56,8 @@ Output
 
 ```text
 x                  [-2.00, 0.00, 3.00]
-Strict      derivative of order 1 -> complex derivative is undefined at zero
-Strict      derivative of order 2 -> complex derivative is undefined at zero
+Strict      derivative of order 1 -> the derivative is undefined at a zero denominator (abs and angle at zero, or a quotient with a zero divisor); a NonSmooth mode other than Strict defines it there
+Strict      derivative of order 2 -> the derivative is undefined at a zero denominator (abs and angle at zero, or a quotient with a zero divisor); a NonSmooth mode other than Strict defines it there
 Piecewise   derivative of order 1 [-1.00, nan, 1.00]
 Piecewise   derivative of order 2 [0.00, nan, 0.00]
 Subgradient derivative of order 1 [-1.00, 0.00, 1.00]
@@ -87,11 +87,11 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(2));
   const math::Function relu = math::function({"x"}, [](math::Function x) { return (x + x.abs()) * 0.5; });
   const auto points = pluss::make_series({-2.0, 0.0, 3.0});
-  out.writeln("x           ", points.pull<double>());
-  out.writeln("relu        ", relu({points}).pull<double>());
+  out.writeln("x           ", points.items<double>());
+  out.writeln("relu        ", relu({points}).items<double>());
   for (const auto &[name, policy] : {std::pair<const char *, math::NonSmooth>{"Piecewise  ", math::NonSmooth::Piecewise},
                                      {"Subgradient", math::NonSmooth::Subgradient}}) {
-    out.writeln(name, operators::differential("x", 1, {.nonsmooth = policy})(relu)({points}).pull<double>());
+    out.writeln(name, operators::differential("x", 1, {.nonsmooth = policy})(relu)({points}).items<double>());
   }
   try {
     (void)operators::differential("x")(relu)({points});
@@ -109,7 +109,7 @@ x            [-2.00, 0.00, 3.00]
 relu         [0.00, 0.00, 3.00]
 Piecewise   [0.00, nan, 1.00]
 Subgradient [0.00, 0.50, 1.00]
-Strict       complex derivative is undefined at zero
+Strict       the derivative is undefined at a zero denominator (abs and angle at zero, or a quotient with a zero divisor); a NonSmooth mode other than Strict defines it there
 ```
 
 `relu` is 0 at 0, and its derivative there depends on the policy: `Piecewise` marks it with `NaN`, `Subgradient` gives the midpoint ½ of the subdifferential [0, 1], and `Strict` refuses. The `Subgradient` value ½ is the average of the two one-sided slopes; the rectifier convention of 0 at the origin corresponds to the `Autodiff` policy applied to a formula written with `max` rather than `abs`, which the vocabulary does not have. Choose the policy that matches what the number is used for, and record it in the code with the option, where it can be read.
@@ -130,7 +130,7 @@ using namespace pluss::tils;
 
 static void evaluate(OutputEngine &out, const char *label, const math::Function &f, std::vector<double> at) {
   try {
-    const auto values = f({pluss::make_series(at, {static_cast<std::int64_t>(at.size())}, as_f64())}).pull<double>();
+    const auto values = f({pluss::make_series(at, {static_cast<std::int64_t>(at.size())}, as_f64())}).items<double>();
     out.writeln(label, values);
   } catch (const pluss::Error &e) {
     const std::string text(e.what());
@@ -166,7 +166,7 @@ Output
 d sqrt(x) at 0, 4         -> division domain excludes zero denominators
 d log(x) at 0             -> division domain excludes zero denominators
 d x^0.5 at 0, 4           [inf, 0.2500]
-d x^2.5 at -1, 0, 4       [nan, 0.0000, 20.0000]
+d x^2.5 at -1, 0, 4       -> pow domain requires a nonnegative base unless the exponent is an integer
 d/dy x^y at x = 2 , y = 3    5.5452
 d/dy x^y at x = 0 , y = 3   -> log domain excludes zero and requires positive real values
 d/dy x^y at x = -1 , y = 3   -> log domain excludes zero and requires positive real values
@@ -176,3 +176,16 @@ d/dy x^y at x = -1 , y = 3   -> log domain excludes zero and requires positive r
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="complex_derivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">Complex and Wirtinger derivatives</span>
+  </a>
+  <a class="next-link" href="opaque_functions_and_the_autodiff_fallback.html">
+    <span class="label">Next</span>
+    <span class="title">Opaque functions and the autodiff fallback</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

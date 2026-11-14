@@ -109,7 +109,7 @@ Output
 ```text
 policy                status                    objective  violation   evals   outer rounds
 ExtremeBarrier        Converged                 3.3437     0.0e+00     121     0
-MeritPenalty          Converged                 3.3433     0.0e+00     239     0
+MeritPenalty          Converged                 3.3438     0.0e+00     342     0
 AugmentedLagrangian   Converged                 3.3431     7.6e-07     1398    8
 ```
 - **ExtremeBarrier** rejects any violating point. Cheapest, and always feasible, but it can only approach a boundary from inside, so it stops a little short.
@@ -178,3 +178,12 @@ Budgets end the run with their own status. The cache answers repeated points fro
 - **Start at a vertex only knowingly.** The method moves along an edge of the feasible cone from a vertex; if it does not move, check that the cone has directions.
 
 Where next: [Chapter 8](../dfo_08_differential_evolution.md) turns to the population methods.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="poll_search_and_mesh.html">
+    <span class="label">Previous</span>
+    <span class="title">The poll, the search step and the mesh</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

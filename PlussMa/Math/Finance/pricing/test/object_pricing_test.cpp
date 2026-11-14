@@ -44,7 +44,7 @@ void test_bs_analytic_series_lane() {
   };
 
   const auto out = obj::price(inst, mdl, mkt, obj::pricer::Analytic{.with_greeks = true}, cfg);
-  const auto ref = prc::black_scholes_price(prc::OptionType::Call, mkt.spot, 100.0, 0.03, 0.01, 1.0, 0.20, cfg);
+  const auto ref = prc::detail::black_scholes_price(prc::OptionType::Call, mkt.spot, 100.0, 0.03, 0.01, 1.0, 0.20, cfg);
   const double err = out.price.sub(ref).abs().max().item<double>();
 
   expect(out.price.numel() == 5, "object bs analytic: output size mismatch");
@@ -72,8 +72,8 @@ void test_bs_analytic_auto_mixed_lane() {
   };
 
   const auto out = obj::price(inst, mdl, mkt, obj::pricer::Analytic{.with_greeks = false}, cfg);
-  const Series call_px = prc::black_scholes_price(prc::OptionType::Call, mkt.spot, 100.0, 0.03, 0.01, 1.0, 0.20, cfg);
-  const Series put_px = prc::black_scholes_price(prc::OptionType::Put, mkt.spot, 100.0, 0.03, 0.01, 1.0, 0.20, cfg);
+  const Series call_px = prc::detail::black_scholes_price(prc::OptionType::Call, mkt.spot, 100.0, 0.03, 0.01, 1.0, 0.20, cfg);
+  const Series put_px = prc::detail::black_scholes_price(prc::OptionType::Put, mkt.spot, 100.0, 0.03, 0.01, 1.0, 0.20, cfg);
   const Series expected = call_px.mul(is_call).add(put_px.mul(is_call.mul(-1.0).add(1.0)));
   const double err = out.price.sub(expected).abs().max().item<double>();
 

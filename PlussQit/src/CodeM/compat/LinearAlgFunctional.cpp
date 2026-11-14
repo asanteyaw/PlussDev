@@ -3950,6 +3950,11 @@ Series cholesky_inverse(const Series& factor, bool upper) {
 Series lu_solve(const Series& lu, const Series& b) {
   require_same_platform_(lu, b, "lu_solve");
   const auto finish = [&](Series out) {
+    // The CPU solver works in double precision; a single-precision system gets a single-precision answer.
+    if (out.scalar_type() == ScalarType::Float64 && lu.scalar_type() == ScalarType::Float32 &&
+        b.scalar_type() == ScalarType::Float32) {
+      out = out.to(ScalarType::Float32);
+    }
     bind_lu_solve_backward_(out, lu, b);
     return out;
   };

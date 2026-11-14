@@ -18,14 +18,15 @@ using pluss::subsp::math::finance::pricing::HestonIntegrationOptions;
 using pluss::subsp::math::finance::pricing::HestonNandiIntegrationOptions;
 using pluss::subsp::math::finance::pricing::MonteCarloOptions;
 using pluss::subsp::math::finance::pricing::OptionType;
-using pluss::subsp::math::finance::pricing::black_scholes_price;
-using pluss::subsp::math::finance::pricing::heston_nandi_price;
-using pluss::subsp::math::finance::pricing::heston_nandi_price_mc;
-using pluss::subsp::math::finance::pricing::heston_price;
-using pluss::subsp::math::finance::pricing::heston_price_fft;
-using pluss::subsp::math::finance::pricing::heston_price_fft_grid;
-using pluss::subsp::math::finance::pricing::heston_price_mc;
-using pluss::subsp::math::finance::pricing::sv_price_mc;
+using pluss::subsp::math::finance::pricing::detail::black_scholes_price;
+using pluss::subsp::math::finance::pricing::detail::heston_nandi_price;
+using pluss::subsp::math::finance::pricing::detail::heston_nandi_price_mc;
+using pluss::subsp::math::finance::pricing::detail::heston_price;
+using pluss::subsp::math::finance::pricing::detail::heston_price_cos;
+using pluss::subsp::math::finance::pricing::detail::heston_price_fft;
+using pluss::subsp::math::finance::pricing::detail::heston_price_fft_grid;
+using pluss::subsp::math::finance::pricing::detail::heston_price_mc;
+using pluss::subsp::math::finance::pricing::detail::sv_price_mc;
 using pluss::subsp::math::finance::volatility::HestonParams;
 using pluss::subsp::math::finance::volatility::HestonNandiParams;
 using pluss::subsp::math::finance::volatility::RandMethod;
@@ -261,6 +262,58 @@ void test_heston_nandi_mc_price() {
   expect(std::isfinite(call) && call > 0.0, "heston_nandi_price_mc call should be finite and positive");
   expect(std::isfinite(put) && put > 0.0, "heston_nandi_price_mc put should be finite and positive");
   expect(std::abs(call - call_cf) < 1.5, "heston_nandi_price_mc and closed-form call should be reasonably aligned");
+
+  // The period count belongs to the model: a quarter of a year has a quarter of the periods in both pricers.
+  HestonNandiParams q;
+  q.omega = 5.02e-6;
+  q.alpha = 1.32e-6;
+  q.beta = 0.589;
+  q.gamma = 421.39;
+  q.lambda = -0.5;
+  q.r = 0.05;
+  MonteCarloOptions quarter;
+  quarter.paths = 200000;
+  quarter.antithetic = true;
+  quarter.seed = 7;
+  for (double strike : {90.0, 100.0, 110.0}) {
+    const double closed = heston_nandi_price(OptionType::Call, 100.0, strike, 0.05, 0.0, 0.25, q);
+    const double simulated = heston_nandi_price_mc(OptionType::Call, 100.0, strike, 0.05, 0.0, 0.25, q, quarter, cfg);
+    expect(std::abs(closed - simulated) < 0.08, "heston_nandi_price_mc must use the same number of periods as the closed form");
+  }
+}
+
+// A heavy-tailed model at a long maturity widens the cosine interval until the direct call coefficients (size e^(b - ln K)) cancel
+// catastrophically: the price came back as 3185 for a call on a spot of 100. The put-parity route must agree with the Fourier
+// inversion, in the scalar and the vectorized paths, and an unconverged series must be refused rather than returned.
+void test_heston_cos_wide_interval() {
+  HestonParams p;
+  p.kappa = 0.5;
+  p.theta = 0.04;
+  p.sigma = 1.0;
+  p.rho = -0.9;
+  p.v0 = 0.04;
+  const double fft = heston_price_fft(OptionType::Call, 100.0, 100.0, 0.02, 0.0, 10.0, p);
+  const double cos = heston_price_cos(OptionType::Call, 100.0, 100.0, 0.02, 0.0, 10.0, p);
+  expect(std::abs(cos - fft) < 1e-3 && cos < 100.0, "heston_price_cos must agree with the FFT price at a long maturity and a large volatility of variance");
+  const double put = heston_price_cos(OptionType::Put, 100.0, 100.0, 0.02, 0.0, 10.0, p);
+  const double parity = cos - put - (100.0 - 100.0 * std::exp(-0.2));
+  expect(std::abs(parity) < 1e-6, "the wide-interval COS call and put must satisfy put-call parity");
+  const pluss::Series strikes = pluss::make_series(std::vector<double>{80.0, 100.0, 120.0});
+  const pluss::Series chain = heston_price_cos(OptionType::Call, pluss::make_series(std::vector<double>{100.0}), strikes, 0.02, 0.0, pluss::make_series(std::vector<double>{10.0}), p);
+  const double mid = chain.items<double>()[1];
+  expect(std::abs(mid - fft) < 5e-3, "the vectorized COS price must agree with the FFT price at a long maturity");
+  HestonFftOptions original;
+  original.mode = HestonCfMode::Original;
+  bool refused = false;
+  try {
+    (void)heston_price_fft(OptionType::Call, 100.0, 100.0, 0.02, 0.0, 10.0, p, original);
+  } catch (const std::exception&) {
+    refused = true;
+  }
+  expect(refused, "the original-form FFT price must be refused, not returned as NaN, where the characteristic function overflows");
+  // The same model at one year keeps its direct path and must not move.
+  const double one = heston_price_cos(OptionType::Call, 100.0, 100.0, 0.02, 0.0, 1.0, p);
+  expect(std::abs(one - heston_price_fft(OptionType::Call, 100.0, 100.0, 0.02, 0.0, 1.0, p)) < 1e-4, "the one-year COS price must still match the FFT price");
 }
 
 } // namespace
@@ -272,6 +325,7 @@ int main() {
     test_heston_fft_matches_ni_and_frft();
     test_heston_and_sv_mc_prices();
     test_heston_nandi_mc_price();
+    test_heston_cos_wide_interval();
     std::cout << "heston_sv_pricing_test passed\n";
     return 0;
   } catch (const std::exception& e) {

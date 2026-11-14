@@ -37,11 +37,11 @@ enum class JoinKeyMode { Integer, Float, Text, Time };
 
 JoinKeyMode join_key_mode(const Stream& a, const Stream& b, std::string_view where, std::string_view key) {
   const auto ka = a.kind(), kb = b.kind();
-  PLUSS_CHECK(ka == kb, fmt::format("{}: key '{}' has different kinds on the two sides", where, key));
+  PLUSS_CHECK(ka == kb, pluss::tils::OutputEngine::format("{}: key '{}' has different kinds on the two sides", where, key));
   switch (ka) {
     case StreamKind::Series: {
       const auto da = a.as_series().dtype(), db = b.as_series().dtype();
-      PLUSS_CHECK(!da.is_complex() && !db.is_complex(), fmt::format("{}: key '{}' cannot be complex", where, key));
+      PLUSS_CHECK(!da.is_complex() && !db.is_complex(), pluss::tils::OutputEngine::format("{}: key '{}' cannot be complex", where, key));
       return (!da.is_floating() && !db.is_floating()) ? JoinKeyMode::Integer : JoinKeyMode::Float;
     }
     case StreamKind::Note:
@@ -49,7 +49,7 @@ JoinKeyMode join_key_mode(const Stream& a, const Stream& b, std::string_view whe
     case StreamKind::Timeline:
       return JoinKeyMode::Time;
     default:
-      PLUSS_FAIL(fmt::format("{}: key '{}' has a kind that cannot be joined on", where, key));
+      PLUSS_FAIL(pluss::tils::OutputEngine::format("{}: key '{}' has a kind that cannot be joined on", where, key));
   }
 }
 
@@ -119,9 +119,9 @@ struct EncodedJoinSide {
 void encode_join_keys(const Catalog& left, const Catalog& right, const std::vector<std::string>& lk,
                       const std::vector<std::string>& rk, const RaggedLayout& ll, const RaggedLayout& rl,
                       std::string_view where, EncodedJoinSide& L, EncodedJoinSide& R) {
-  PLUSS_CHECK(lk.size() == rk.size(), fmt::format("{}: left and right key counts differ", where));
-  for (const auto& k : lk) PLUSS_CHECK(left.has(k), fmt::format("{}: left catalog has no key '{}'", where, k));
-  for (const auto& k : rk) PLUSS_CHECK(right.has(k), fmt::format("{}: right catalog has no key '{}'", where, k));
+  PLUSS_CHECK(lk.size() == rk.size(), pluss::tils::OutputEngine::format("{}: left and right key counts differ", where));
+  for (const auto& k : lk) PLUSS_CHECK(left.has(k), pluss::tils::OutputEngine::format("{}: left catalog has no key '{}'", where, k));
+  for (const auto& k : rk) PLUSS_CHECK(right.has(k), pluss::tils::OutputEngine::format("{}: right catalog has no key '{}'", where, k));
   L.columns.resize(lk.size());
   R.columns.resize(rk.size());
   for (std::size_t c = 0; c < lk.size(); ++c) {
@@ -232,9 +232,9 @@ CatalogMatch compute_match(const Catalog& left, const Catalog& right, const std:
   }
 
   if (cacheable) {
-    std::string key = fmt::format("{}|{}|", out.right.domain(), static_cast<int>(ragged.alignment));
+    std::string key = pluss::tils::OutputEngine::format("{}|{}|", out.right.domain(), static_cast<int>(ragged.alignment));
     for (std::size_t c = 0; c < rk.size(); ++c) {
-      key += fmt::format("{}:{}:{}:{};", right.keys(rk[c]).fingerprint(), static_cast<int>(modes[c]),
+      key += pluss::tils::OutputEngine::format("{}:{}:{}:{};", right.keys(rk[c]).fingerprint(), static_cast<int>(modes[c]),
                          shift_of(out.right, rk[c]), rk[c]);
     }
     auto built = built_side_cache().find(key);
@@ -267,13 +267,13 @@ CatalogMatch compute_match(const Catalog& left, const Catalog& right, const std:
 }  // namespace
 
 std::string CatalogJoinReport::summary() const {
-  return fmt::format(
+  return pluss::tils::OutputEngine::format(
       "{} output record(s); {} matched pair(s). left: {} of {} record(s) without a partner ({} without a key), "
       "{} omitted{}. right: {} of {} without a partner ({} without a key), {} omitted{}.",
       output_records, match.matched_pairs, match.left_unmatched, match.left_records, match.left_unkeyed,
-      match.left_dropped, trimmed_left > 0 ? fmt::format(", {} trimmed", trimmed_left) : std::string(),
+      match.left_dropped, trimmed_left > 0 ? pluss::tils::OutputEngine::format(", {} trimmed", trimmed_left) : std::string(),
       match.right_unmatched, match.right_records, match.right_unkeyed, match.right_dropped,
-      trimmed_right > 0 ? fmt::format(", {} trimmed", trimmed_right) : std::string());
+      trimmed_right > 0 ? pluss::tils::OutputEngine::format(", {} trimmed", trimmed_right) : std::string());
 }
 
 CatalogJoinResult Catalog::join_detailed(const Catalog& other, const CatalogJoinSpec& spec,
@@ -296,7 +296,7 @@ CatalogJoinResult Catalog::join_detailed(const Catalog& other, const CatalogJoin
   result.report.trimmed_right = rl.trimmed();
   PLUSS_CHECK(options.ragged.loss != RaggedLoss::Error ||
                   (matched.report.left_dropped == 0 && matched.report.right_dropped == 0),
-              fmt::format("{}: loss is set to Error but the join omits records ({})", where,
+              pluss::tils::OutputEngine::format("{}: loss is set to Error but the join omits records ({})", where,
                           result.report.summary()));
 
   // Output columns: left streams, then right streams (a same-named right key is
@@ -332,7 +332,7 @@ CatalogJoinResult Catalog::join_detailed(const Catalog& other, const CatalogJoin
     const std::string final_name = left_names.count(name) != 0 ? name + spec.right_suffix : name;
     const auto clash = claimed_by.find(final_name);
     PLUSS_CHECK(clash == claimed_by.end(),
-                fmt::format("{}: right column '{}' would be named '{}' in the output, which {} already uses; "
+                pluss::tils::OutputEngine::format("{}: right column '{}' would be named '{}' in the output, which {} already uses; "
                             "choose another right_suffix or rename a column",
                             where, name, final_name, clash == claimed_by.end() ? std::string() : clash->second));
     claimed_by.emplace(final_name, "right '" + name + "'");

@@ -23,3 +23,16 @@ The p-values and critical values come from simulated limiting distributions for 
 ## See Also
 
 - [`johansen_test`](johansen_test.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="johansen_test.html">
+    <span class="label">Previous</span>
+    <span class="title">johansen_test</span>
+  </a>
+  <a class="next-link" href="JohansenResult.html">
+    <span class="label">Next</span>
+    <span class="title">JohansenResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -133,7 +133,7 @@ namespace detail {
               "flash::Dataset::frame: temporal feature is ragged; use FramePolicy::PadNull to rectangularize");
   PLUSS_CHECK(current_size < target_size,
               "flash::Dataset::frame: temporal feature is longer than the selected rectangular size");
-  auto ticks = values.epoch_nanos().to(Platform::CPU).pull<std::int64_t>();
+  auto ticks = values.epoch_nanos().to(Platform::CPU).items<std::int64_t>();
   ticks.resize(static_cast<std::size_t>(target_size), pluss::Timeline::kNaT);
   const std::array<std::int64_t, 1> shape{target_size};
   auto out = pluss::codeh::ops_internal::timeline_from_epoch_nanos(ticks, shape);

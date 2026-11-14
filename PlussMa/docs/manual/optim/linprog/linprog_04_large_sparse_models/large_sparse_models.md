@@ -228,3 +228,8 @@ presolve off  objective 9.0000   x = 5.0000 0.0000 0.0000 1.0000 0.0000
 - **Leave presolve on.** It changes the size of the problem and not the answer; turn it off only to debug.
 
 Where next: [Integer programming](../../milp.md) adds whole-number decisions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

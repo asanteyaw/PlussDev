@@ -64,5 +64,6 @@ The next chapter reads results in depth: every exit flag, what each field of the
 
 optima_01_first_problems/stating_a_constrained_problem
 optima_01_first_problems/blocks_values_and_reading_the_result
+optima_01_first_problems/complex_parameters
 ```
 <!-- apiref:toctree:end -->

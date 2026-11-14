@@ -1,0 +1,69 @@
+# `fluid::Tanks`
+
+The cross-section, level limits and overflow behaviour of the tanks.
+
+## Signature
+
+```cpp
+fluid::Tanks
+```
+
+## What It Does
+
+Describes the tanks of a `Net`, one entry per node of kind `Tank`, in the order of the nodes. A tank is a cylinder: its area is constant, and a level-volume curve is not represented.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `area` | Cross-section, m², `[..., tank]`. | required if there are tanks |
+| `min_level` | Lowest level above the bottom, m, `[..., tank]`. | required if there are tanks |
+| `max_level` | Highest level above the bottom, m, `[..., tank]`. | required if there are tanks |
+| `overflow` | Per tank, true to spill the excess at the maximum level, false to close the inlet. | required if there are tanks |
+
+## Returns
+
+A value; validated by `network` and `run`.
+
+## Errors
+
+Areas that are not positive, limits that are out of order, an initial level outside the limits, and a count that does not match the number of tank nodes are rejected.
+
+## Interpretation and Use
+
+The initial level of a tank is `Nodes::head - Nodes::elevation`. At its maximum level a tank with `overflow` false closes its inlet; with `overflow` true it holds the level and reports the excess as `RunResult::spill`. At its minimum level it closes its outlet.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A tank, with and without overflow.
+
+@@example Eng/api/fluid_tanks_build.cpp@@
+
+### Example 2
+
+A day of demand patterns.
+
+@@example Eng/api/fluid_run_tank.cpp@@
+
+### Example 3
+
+A tank that starts above its maximum level.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Nodes.html">
+    <span class="label">Previous</span>
+    <span class="title">Nodes</span>
+  </a>
+  <a class="next-link" href="Pipes.html">
+    <span class="label">Next</span>
+    <span class="title">Pipes</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

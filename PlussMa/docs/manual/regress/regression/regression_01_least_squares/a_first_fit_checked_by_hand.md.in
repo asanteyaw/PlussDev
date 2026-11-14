@@ -41,22 +41,22 @@ int main() {
   const double se_slope = std::sqrt(s2 / sxx);
   const double se_intercept = std::sqrt(s2 * (1.0 / 8.0 + std::pow(x.mean().item<double>(), 2) / sxx));
 
-  out.writeln("coefficients   ", fit.coefficients.pull<double>(), " names", fit.coefficient_names);
+  out.writeln("coefficients   ", fit.coefficients.items<double>(), " names", fit.coefficient_names);
   out.writeln("by hand        ", std::vector<double>{intercept, slope});
-  out.writeln("std errors     ", fit.std_errors.pull<double>());
+  out.writeln("std errors     ", fit.std_errors.items<double>());
   out.writeln("by hand        ", std::vector<double>{se_intercept, se_slope});
-  out.writeln("t values       ", fit.t_values.pull<double>());
+  out.writeln("t values       ", fit.t_values.items<double>());
   out.writeln("by hand        ", std::vector<double>{intercept / se_intercept, slope / se_slope});
 
   const distr::StudentT t6{6.0, 0.0, 1.0};
-  out.writeln("p values       ", fit.p_values.pull<double>());
-  out.writeln("by hand        ", t6.cdf(fit.t_values.abs()).neg().add(1.0).mul(2.0).pull<double>());
+  out.writeln("p values       ", fit.p_values.items<double>());
+  out.writeln("by hand        ", t6.cdf(fit.t_values.abs()).neg().add(1.0).mul(2.0).items<double>());
 
   const auto ci = fit.conf_int.host<double>().array().data;
   const double half = (ci[3] - ci[2]) / 2.0;
   out.writeln("interval of the slope", ci[2], ci[3], " half-width / std err", half / se_slope);
   const auto multiplier = pluss::make_series(std::vector<double>{half / se_slope}, {1}, as_f64());
-  out.writeln("two-sided t tail beyond that multiplier (alpha = 0.05):", t6.cdf(multiplier).neg().add(1.0).mul(2.0).pull<double>());
+  out.writeln("two-sided t tail beyond that multiplier (alpha = 0.05):", t6.cdf(multiplier).neg().add(1.0).mul(2.0).items<double>());
   out.writeln("nobs", fit.nobs, " rank", fit.rank, " k_params", fit.k_params, " df_resid", fit.df_resid, " df_model", fit.df_model);
 }
 ```
@@ -76,3 +76,12 @@ The pairs agree to the digits shown. The slope is 1.9976, so each unit of x adds
 | `nobs`, `rank`, `k_params`, `df_resid`, `df_model` | integers | observations used, rank of the design, number of parameters, and the two degrees of freedom |
 
 Everything is returned in `Float64` on the platform of the predictors, whatever the input dtype was. The next pages read the remaining fields (goodness of fit, information criteria, diagnostics) and the options that change how the fit is made.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="shapes_and_inputs.html">
+    <span class="label">Next</span>
+    <span class="title">Shapes and inputs</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

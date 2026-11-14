@@ -39,23 +39,23 @@ int main() {
   options.response_name = "responded";
   options.predictor_names = {"dose"};
   const auto fit = reg::glm_fit(y, x, options);
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
   const auto cov = fit.covariance.host<double>().array().data;
 
-  out.writeln("coefficients", b, " std errors", fit.std_errors.pull<double>(), " converged", fit.converged);
+  out.writeln("coefficients", b, " std errors", fit.std_errors.items<double>(), " converged", fit.converged);
   out.writeln("responses by dose level:");
   for (int level = 1; level <= 8; ++level) {
     double count = 0.0;
     for (int subject = 0; subject < 10; ++subject) {
       count += responded[(level - 1) * 10 + subject];
     }
-    out.writeln("   dose", level, "responded", count, "of 10   fitted probability", reg::glm_predict(fit, pluss::make_series(std::vector<double>{static_cast<double>(level)}, {1}, as_f64())).pull<double>()[0]);
+    out.writeln("   dose", level, "responded", count, "of 10   fitted probability", reg::glm_predict(fit, pluss::make_series(std::vector<double>{static_cast<double>(level)}, {1}, as_f64())).items<double>()[0]);
   }
 
   const double ed50 = -b[0] / b[1];
   const double variance = (cov[0] + 2.0 * ed50 * cov[1] + ed50 * ed50 * cov[3]) / (b[1] * b[1]);
   out.writeln("ED50 =", ed50, " std error", std::sqrt(variance), " interval [", ed50 - 1.96 * std::sqrt(variance), ",", ed50 + 1.96 * std::sqrt(variance), "]   (true value 3)");
-  out.writeln("the model's probability at the ED50 is", reg::glm_predict(fit, pluss::make_series(std::vector<double>{ed50}, {1}, as_f64())).pull<double>()[0]);
+  out.writeln("the model's probability at the ED50 is", reg::glm_predict(fit, pluss::make_series(std::vector<double>{ed50}, {1}, as_f64())).items<double>()[0]);
 }
 ```
 
@@ -96,7 +96,7 @@ int main() {
 
   for (int per_dose : {10, 2}) {
     const auto fit = study(per_dose);
-    const auto b = fit.coefficients.pull<double>();
+    const auto b = fit.coefficients.items<double>();
     const auto cov = fit.covariance.host<double>().array().data;
     const double ed50 = -b[0] / b[1];
     const double variance = (cov[0] + 2.0 * ed50 * cov[1] + ed50 * ed50 * cov[3]) / (b[1] * b[1]);
@@ -111,10 +111,23 @@ int main() {
         highest = std::max(highest, m);
       }
     }
-    out.writeln(per_dose, "subjects per dose: ED50", ed50, " slope z", fit.z_values.pull<double>()[1]);
+    out.writeln(per_dose, "subjects per dose: ED50", ed50, " slope z", fit.z_values.items<double>()[1]);
     out.writeln("   delta method  [", ed50 - 1.96 * std::sqrt(variance), ",", ed50 + 1.96 * std::sqrt(variance), "]   Fieller  [", lowest, ",", highest, "]");
   }
 }
 ```
 
 With ten subjects per dose the Fieller interval, [2.142, 3.589], is close to the delta-method one, [2.280, 3.576], but wider on the low side: it extends 0.79 below the estimate and 0.66 above it, an asymmetry that the symmetric interval cannot show. With two subjects per dose the slope is no longer clearly different from zero (z = 1.64), and the two methods part company. The delta method still reports a finite interval, [−0.11, 3.57], which even includes negative doses. The Fieller scan finds every dose in the range searched (−20 to 30) plausible, because if the slope might be zero then the curve may be flat at one half and no dose is excluded. The honest conclusion is that this smaller study does not locate the ED50.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_calibration_line_and_its_uncertainty.html">
+    <span class="label">Previous</span>
+    <span class="title">A calibration line and its uncertainty</span>
+  </a>
+  <a class="next-link" href="comparing_two_event_rates.html">
+    <span class="label">Next</span>
+    <span class="title">Comparing two event rates</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

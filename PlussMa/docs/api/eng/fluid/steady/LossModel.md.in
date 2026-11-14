@@ -1,0 +1,63 @@
+# `fluid::LossModel`
+
+The head-loss law of the pipes.
+
+## Signature
+
+```cpp
+fluid::LossModel
+```
+
+## What It Does
+
+Chooses the law that gives the head a pipe loses at a flow. It is one setting for the whole network, and it changes the meaning of `Pipes::roughness`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `DarcyWeisbach` | `h = (f L/D + K) v ∣v∣ / (2 g)`. The friction factor `f` is `64/Re` below `Re = 2000`, a cubic interpolation to `4000`, and the Swamee-Jain relation above. `roughness` is an absolute roughness in m. |  |
+| `HazenWilliams` | `h = 10.67 L ∣q∣^0.852 q / (C^1.852 D^4.8704) + K v ∣v∣ / (2 g)`. `roughness` is the coefficient `C`. The friction factor is reported as 0. |  |
+
+## Returns
+
+An enumeration; `Options::loss`.
+
+## Errors
+
+`steady` rejects Hazen-Williams coefficients that are not positive.
+
+## Interpretation and Use
+
+Use `DarcyWeisbach` by default; it holds at every Reynolds number and for any liquid. Use `HazenWilliams` when the data are `C` coefficients and the flow is turbulent water. A roughness of `1e-4` is a fine Darcy roughness and an absurd `C`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Both laws against their formulas.
+
+@@example Eng/api/fluid_loss_models.cpp@@
+
+### Example 2
+
+Coefficients that are refused.
+
+@@example Eng/api/fluid_steady_errors.cpp@@
+
+### Example 3
+
+A solve with each law.
+
+@@example Eng/api/fluid_steady_options.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="DemandMode.html">
+    <span class="label">Next</span>
+    <span class="title">DemandMode</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

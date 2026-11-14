@@ -1,0 +1,64 @@
+# `comms::gallager`
+
+A regular Gallager LDPC code.
+
+## Signature
+
+```cpp
+comms::LdpcCode comms::gallager(std::int64_t length, std::int64_t column_weight, std::int64_t row_weight, std::uint64_t seed);
+```
+
+## What It Does
+
+Builds a regular low-density parity-check code by Gallager's construction: `column_weight` stacked bands, the first with `row_weight` consecutive ones in each row and the others random column permutations of it, so that every column has `column_weight` ones and every row `row_weight`. Gauss-Jordan elimination over GF(2) then gives the systematic generator.
+
+## Parameters
+
+`length`
+: The codeword length `n`: a multiple of `row_weight`, at least twice it, and at most `20000`.
+
+`column_weight`
+: The ones per column, at least `2`.
+
+`row_weight`
+: The ones per row, greater than `column_weight`.
+
+`seed`
+: The seed of the permutations: the same seed gives the same code.
+
+## Returns
+
+An `LdpcCode`.
+
+## Errors
+
+Throws `pluss::Error` when the weights or the length do not satisfy the conditions above.
+
+## Interpretation and Use
+
+A (3, 6) code is rate one half and decodes within about two decibels of the Shannon limit at long lengths; the construction is cheap but dense in memory (`m x n` entries), so very long codes need a sparse representation. A larger `column_weight` helps less than a longer length.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The code and its checks.
+
+@@example Eng/api/comms_ldpc_code.cpp@@
+
+### Example 2
+
+Coding gain over uncoded BPSK.
+
+@@example Eng/api/comms_ldpc_gain.cpp@@
+
+### Example 3
+
+Rejected parameters.
+
+@@example Eng/api/comms_ldpc_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

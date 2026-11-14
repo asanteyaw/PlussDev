@@ -1,0 +1,254 @@
+# Losses and objectives
+
+[Back to The Pricing Field](../finance_06_the_pricing_field.md)
+
+Fitting a model to market prices means choosing parameters {math}`\theta` that make the model prices {math}`P_i(\theta)` close to the quotes {math}`Q_i`, for the {math}`n` options in the `Field`. "Close" needs a definition, and a `Field` carries it in `controls.loss`. This page covers the residuals, the four losses, the objective functions that bind a `Field` to a set of quotes, and the traps. Page 5 uses them to calibrate.
+
+## Residuals and losses
+
+The **residual** of option {math}`i` is the model price minus the quote,
+
+```{math}
+r_i(\theta)=P_i(\theta)-Q_i,
+```
+
+positive where the model is too expensive. `field.residuals(quotes)` returns the vector {math}`r`. A **loss** reduces it to one number. All four are means over the {math}`n` options, with no weights:
+
+```{math}
+\begin{aligned}
+\textbf{MSE:}\quad & \frac1n\sum_i r_i^2, &
+\textbf{RelativeMSE:}\quad & \frac1n\sum_i\Big(\frac{r_i}{Q_i}\Big)^2,\\[4pt]
+\textbf{MAE:}\quad & \frac1n\sum_i |r_i|, &
+\textbf{Huber:}\quad & \frac1n\sum_i\rho_\delta(r_i),\qquad
+\rho_\delta(r)=\begin{cases}\tfrac12r^2,&|r|\le\delta,\\ \delta\big(|r|-\tfrac12\delta\big),&|r|>\delta.\end{cases}
+\end{aligned}
+```
+
+The derivative of the per-option penalty with respect to the residual, its *influence*, tells what each loss does with a large error: for MSE it is {math}`2r`, unbounded, so one wild quote pulls the fit hard; for MAE it is {math}`\operatorname{sign}(r)`, bounded but not smooth at 0; for Huber it is {math}`r` for small residuals and {math}`\pm\delta` for large ones, quadratic where the quotes are good and linear where they are not. RelativeMSE divides by the quote, so a deep out-of-the-money option priced at 0.05 counts as much as an in-the-money one priced at 20; the denominator is the quote, so a quote of zero is a division by zero.
+
+```cpp
+Series module::Field::residuals(const Series &quotes, Config cfg = {}) const;
+Series module::Field::loss(const Series &quotes, Config cfg = {}) const;
+double module::Field::loss_value(const Series &quotes, Config cfg = {}) const;
+double module::Field::objective(const Series &quotes, Config cfg = {}) const;
+std::function<double(const Model &)> module::Field::bind_objective(const Series &quotes, Config cfg = {}) const;
+template <SupportedModel M> std::function<double(const M &)> module::Field::bind_objective_typed(const Series &quotes, Config cfg = {}) const;
+```
+
+| Call | Returns |
+|---|---|
+| `residuals` | the model price minus the quote, with the shape of the price |
+| `loss` | the loss selected by `controls.loss`, as a rank-zero `Series` |
+| `loss_value`, `objective` | the same number as a `double`; two names for one computation |
+| `bind_objective` | a function from a `Model` to the loss, with the `Field` and the quotes frozen inside it |
+| `bind_objective_typed` | the same, taking the model struct `M` directly |
+
+`loss_value` and `objective` are the same computation under two names: use `objective` where a minimiser is meant to be the reader. `controls.loss` selects the loss, and `controls.huber_delta` is {math}`\delta` (default 0.05, used only by `Huber`).
+
+## Program 1: the four losses, by hand and by the library
+
+The program prices five strikes, sets five made-up quotes a little away from the model, and prints the residuals. It then computes the four losses with a loop that implements the formulas above, with {math}`\delta=0.5`, and prints them beside `loss_value` for each setting of `controls.loss`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, as_f64()), .maturity = pluss::make_series({1.0})},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos}};
+  field.controls.risk = mod::Risk::PriceOnly;
+  const auto model_price = field.price().price.items<double>();
+  const std::vector<double> quote{23.30, 15.00, 8.90, 4.20, 1.40};
+  const auto target = pluss::make_series(quote);
+  out.writeln("model  ", model_price);
+  out.writeln("quote  ", quote);
+  out.writeln("residual", field.residuals(target).items<double>());
+
+  const double delta = 0.5;
+  double mse = 0, rel = 0, mae = 0, huber = 0;
+  for (std::size_t i = 0; i < quote.size(); ++i) {
+    const double r = model_price[i] - quote[i];
+    mse += r * r;
+    rel += (r / quote[i]) * (r / quote[i]);
+    mae += std::abs(r);
+    huber += std::abs(r) <= delta ? 0.5 * r * r : delta * (std::abs(r) - 0.5 * delta);
+  }
+  const double n = static_cast<double>(quote.size());
+  field.controls.huber_delta = delta;
+  out.writeln("loss           by hand     loss_value");
+  const std::vector<std::tuple<const char *, mod::Loss, double>> losses{
+      {"MSE        ", mod::Loss::MSE, mse / n}, {"RelativeMSE", mod::Loss::RelativeMSE, rel / n}, {"MAE        ", mod::Loss::MAE, mae / n}, {"Huber      ", mod::Loss::Huber, huber / n}};
+  for (const auto &[name, loss, by_hand] : losses) {
+    field.controls.loss = loss;
+    out.writeln(name, by_hand, field.loss_value(target));
+  }
+}
+```
+
+The residuals are negative where the model is cheaper than the quote and positive where it is dearer. The by-hand and library columns agree to the six decimals shown for all four losses, so the definitions above are exactly what the library computes. Note how the losses differ in magnitude: the MSE (0.0345) is dominated by the largest residuals; the MAE (0.171) is the typical size of an error; the relative MSE, 0.0013, is the squared typical *percentage* error ({math}`\sqrt{0.0013}=3.6\%`); and the Huber loss with {math}`\delta=0.5` is exactly half the MSE here, 0.0172, because every residual is smaller than {math}`\delta` and so each is penalised by {math}`\tfrac12r^2`.
+
+## Program 2: shapes, dtypes, and what is not checked
+
+`loss` returns a rank-zero `Series`; `residuals` has the shape of the price. The quotes are subtracted from the model prices with ordinary broadcasting, which has consequences worth seeing before they surprise you in a calibration. The program prints the shape and value of the loss at the exact quotes, compares `loss_value` and `objective`, scales the quotes by 1.5, and then tries four different quotes.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 5, as_f64()), .maturity = pluss::make_series({1.0})},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly}};
+  const auto exact = field.price().price;
+  const auto loss = field.loss(exact);
+  out.writeln("loss of the exact quotes: shape", loss.sizes(), " value", loss.item<double>());
+  out.writeln("loss_value", field.loss_value(exact), " objective", field.objective(exact), " loss_value of 1.5 x quotes", field.loss_value(exact.mul(1.5)));
+
+  const auto attempt = [&](const char *what, const pluss::Series &target) {
+    try {
+      out.writeln(std::string(what) + ": loss", field.loss_value(target));
+    } catch (const std::exception &e) {
+      std::string message = e.what();
+      out.writeln(std::string(what) + ": " + message.substr(0, message.find('\n')));
+    }
+  };
+  attempt("one quote for all five", pluss::make_series({8.0}));
+  attempt("three quotes for five  ", pluss::make_series({23.0, 8.6, 1.5}));
+  attempt("Float32 quotes         ", exact.to(pluss::ScalarType::Float32));
+  attempt("a NaN quote            ", pluss::make_series({23.0, 15.0, std::nan(""), 4.0, 1.5}));
+}
+```
+
+At the model's own prices the loss is exactly zero and has shape `[]`; `loss_value` and `objective` agree. Scaling the quotes by 1.5 gives an MSE of 42.67: the residuals are minus a third of the quotes, so the squared residuals run from 0.6 (strike 120) to 133 (strike 80). The four attempts show the rules:
+
+- **One quote for five options** is *broadcast*: the single 8.0 is compared with every price, and the loss is 67.14. A shape-`[1]` quote vector is almost certainly a mistake; the library does not guess.
+- **Three quotes for five options** cannot be paired and the broadcast fails.
+- **A `Float32` quote vector** is converted without complaint and gives loss 0 here, because the exact prices rounded to single precision differ from the `Float64` ones by less than the six digits shown; the loss is about 10⁻¹² when printed with more digits.
+- **A `NaN` quote** is not an error: the loss is `NaN`. A calibration that starts with a `NaN` in its data fails by never improving. Check the quotes with `isfinite()` before the loop.
+
+The loss is also *evaluated at the `Field`'s `risk`*: `loss` calls `price()`, so a `Field` left at `Risk::All` computes eight extra pricings each time to throw them away. Set `controls.risk = PriceOnly` before using any objective.
+
+## Program 3: how each loss treats a large error
+
+The quotes of nine strikes are the model's own prices, except that the at-the-money quote carries an error that doubles from 0.05 to 3.2. The program prints the four losses against the error, with {math}`\delta=0.1`. Everything is deterministic, and the columns can be read as functions of the size of one bad quote.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 9, as_f64()), .maturity = pluss::make_series({1.0})},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04}),
+                   .controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly, .huber_delta = 0.1}};
+  const auto exact = field.price().price.items<double>();
+  out.writeln("error in one quote    MSE        RelativeMSE   MAE        Huber (delta 0.1)");
+  for (const double error : {0.05, 0.1, 0.2, 0.4, 0.8, 1.6, 3.2}) {
+    auto quote = exact;
+    quote[4] += error;
+    const auto target = pluss::make_series(quote);
+    std::string row = std::to_string(error).substr(0, 4) + std::string(18, ' ');
+    for (const auto loss : {mod::Loss::MSE, mod::Loss::RelativeMSE, mod::Loss::MAE, mod::Loss::Huber}) {
+      field.controls.loss = loss;
+      row += std::to_string(field.loss_value(target)).substr(0, 8) + "   ";
+    }
+    out.writeln(row);
+  }
+}
+```
+
+Reading down each column:
+
+- **MSE** is {math}`e^2/9`: each doubling of the error quadruples it (0.0003, 0.0011, 0.0044, 0.0178, 0.0711, 0.2844, 1.1378). Its derivative is proportional to {math}`e`, so the bad quote pulls proportionally harder the worse it is.
+- **MAE** is {math}`e/9`, linear: it doubles when the error doubles.
+- **Huber with {math}`\delta=0.1`** equals {math}`e^2/18` while {math}`e\le0.1` (0.000139, 0.000556) and then continues linearly with slope {math}`\delta/9=0.0111`: from 1.6 to 3.2 it rises by 0.0178 = 1.6 × 0.0111. It behaves like the MSE for good quotes and like the MAE, scaled by {math}`\delta`, for bad ones. Choose {math}`\delta` as the size of residual beyond which a quote should be treated as an outlier, typically a few times the noise of the good quotes.
+- **RelativeMSE** grows more slowly than the MSE (0.000004 to 0.0081 as the error goes from 0.05 to 3.2, a factor of 2000 where the MSE grows 4000-fold), because the denominator is the quote, and a quote with a large error has a large denominator, which discounts it. It saturates: the relative error cannot exceed 1 however large the quote.
+
+The choice of loss is a statement about the data. MSE is the maximum-likelihood loss for independent Gaussian errors of equal size. RelativeMSE is that for errors proportional to the price. MAE and Huber guard against occasional wrong quotes, a stale price or a typo, at the cost of a less smooth surface for the minimiser (MAE) or an extra constant to choose (Huber). Page 5 fits with each of them on quotes that contain a bad one.
+
+## Program 4: binding an objective to a Field
+
+An optimizer wants a function from parameters to a number. `bind_objective(quotes)` returns a `std::function<double(const Model &)>` that prices *the `Field` as it is now* with the candidate model and returns the loss. `bind_objective_typed<M>(quotes)` returns a `std::function<double(const M &)>` that takes the model struct itself, so the call site needs no `Model` wrapper. In both the `Field` and the quotes are *copied* into the function: the instrument, market, controls and loss are frozen at the moment of binding, and each call replaces only the model. The returned function owns its copy and writes the candidate into it on every call, so one bound function must not be called from two threads at once; bind one per thread.
+
+The program fits no parameter. It evaluates both bound functions on a ladder of initial variances {math}`v_0` around the true value 0.04 (the profile of the objective along one parameter), and then changes the `Field` to show that the bound objective does not follow.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(3));
+  const auto heston = [](double v0) { return fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, v0}); };
+  mod::Field field{.instrument = {.type = fin::pricing::Call, .strike = pluss::series::linspace(80.0, 120.0, 9, as_f64()), .maturity = pluss::make_series({1.0})},
+                   .market = fin::market::make(100.0, 0.02, 0.0),
+                   .model = heston(0.04),
+                   .controls = {.risk = mod::Risk::PriceOnly, .loss = mod::Loss::RelativeMSE}};
+  field.controls.engine = mod::Engine::Cos;
+  const auto target = field.price().price;
+
+  const auto objective = field.bind_objective(target);
+  const auto typed = field.bind_objective_typed<fin::model::Heston>(target);
+  out.writeln("v0      bound over Model   typed over Heston");
+  for (const double v0 : {0.02, 0.03, 0.04, 0.05, 0.06}) {
+    out.writeln(v0, objective(heston(v0)), typed(heston(v0).as<fin::model::Heston>()));
+  }
+
+  field.controls.loss = mod::Loss::MAE;
+  field.model = heston(0.06);
+  out.writeln("after changing the Field: bound objective at v0 = 0.05", objective(heston(0.05)), " Field loss at its own v0 = 0.06", field.loss_value(target));
+}
+```
+
+Both bound functions return the same value at every {math}`v_0`, and the objective is zero at the truth and rises on both sides: 0.0125 at {math}`v_0=0.03` and 0.0125 at 0.05, and about four times as much (0.0494) at twice the distance, which is a quadratic bowl near the minimum, as a smooth loss should have. The last line is the gotcha: after binding, the `Field` was switched to `MAE` and to {math}`v_0=0.06`. The bound objective still returns the relative-MSE value 0.01247 at 0.05, the same as before, while the `Field` itself now reports 0.784. If you change the instrument, the market or the controls, bind again.
+
+## Checklist
+
+1. Set `controls.risk = PriceOnly` before any loss or objective; `All` costs nothing extra for the closed forms and COS, a few extra transforms or simulations for FFT, Monte Carlo, lattice and PDE, and nine pricings for the engines that obtain Greeks by repricing.
+2. Give the quotes the shape of the price. A single quote is broadcast, not rejected, and a `NaN` quote makes the loss `NaN`, so filter with `isfinite()` first.
+3. Pick the loss to match the errors: `MSE` for equal-size Gaussian noise, `RelativeMSE` when the error is proportional to the price (and no quote is zero), `Huber` or `MAE` when a quote may be wrong.
+4. Set `huber_delta` to a few times the noise of the good quotes; it must be finite and positive.
+5. `objective` and `loss_value` are the same; `bind_objective` and `bind_objective_typed` freeze the `Field`, so rebind after changing it.
+6. One bound objective per thread.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="models_and_parameters.html">
+    <span class="label">Previous</span>
+    <span class="title">Models and parameters</span>
+  </a>
+  <a class="next-link" href="calibration.html">
+    <span class="label">Next</span>
+    <span class="title">Calibration</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

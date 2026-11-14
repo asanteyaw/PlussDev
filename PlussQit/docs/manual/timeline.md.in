@@ -1,0 +1,16 @@
+# Timeline and Duration by example
+
+Each page here solves a real task about time end to end with `Timeline` and `Duration`, together because one is rarely useful without the other: complete programs that print their results, with the output copied from the run.
+
+1. **Calendars, durations and time zones.** Payment schedules from terms, weekend adjustment, lateness, the same moment in several cities, and the night the clocks change.
+2. **Event streams on a clock.** Hourly totals, rolling averages whose window is a length of time, and as-of lookup for irregular events.
+3. **Reports from timestamps.** A support desk against its promise, subscription renewals with prorated refunds, and availability from heartbeats.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+timeline/calendars_and_durations
+timeline/event_streams
+timeline/reports_from_timestamps
+```

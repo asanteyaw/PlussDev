@@ -200,3 +200,16 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`Beta`](../continuous_bounded/Beta.md)
 - [`UShape`](../continuous_bounded/UShape.md)
 - [`Uniform`](../continuous_bounded/Uniform.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Anglit.html">
+    <span class="label">Previous</span>
+    <span class="title">Anglit</span>
+  </a>
+  <a class="next-link" href="Beta.html">
+    <span class="label">Next</span>
+    <span class="title">Beta</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -32,7 +32,7 @@ Construct a continuous oscillator and print dimensions, timebase, controllabilit
 
 #include <iostream>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -70,7 +70,7 @@ Compute reachability and observability Gramians for stable continuous and discre
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -111,7 +111,7 @@ Show immediate rejection of an incompatible feedthrough matrix and an invalid ne
 #include <exception>
 #include <string>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {

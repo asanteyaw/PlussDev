@@ -1,0 +1,63 @@
+# `thermal::vol`
+
+The specific volume of moist air.
+
+## Signature
+
+```cpp
+Series thermal::vol(const Series& temperature,
+                     const Series& w,
+                     const Series& pressure);
+```
+
+## What It Does
+
+Returns `287.042 (t + 273.15) (1 + 1.607858 w) / p` in cubic metres per kilogram of dry air.
+
+## Parameters
+
+`temperature`
+: The dry-bulb temperature in degrees Celsius.
+
+`w`
+: The humidity ratio in kg/kg, not negative.
+
+`pressure`
+: The total pressure in Pa, positive.
+
+## Returns
+
+The specific volume in m^3 per kg of dry air with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for a temperature outside -60 to 150, a negative humidity ratio, or a non-positive pressure.
+
+## Interpretation and Use
+
+The mixture density is `(1 + w) / vol`; humid air is lighter than dry air at the same temperature and pressure because water vapour is lighter than air. Volume flow of an air stream is dry-air mass flow times `vol`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Specific volume and density at 25 degrees.
+
+@@example Eng/api/thermal_vol_basic.cpp@@
+
+### Example 2
+
+Humid air is lighter.
+
+@@example Eng/api/thermal_vol_density.cpp@@
+
+### Example 3
+
+Rejected inputs.
+
+@@example Eng/api/thermal_vol_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

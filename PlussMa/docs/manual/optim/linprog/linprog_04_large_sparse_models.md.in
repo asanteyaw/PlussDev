@@ -57,4 +57,10 @@ A dense `Problem` can be solved by the sparse solver with `lp::solve_sparse(prob
 - Dense for batches and sweeps, sparse for one large model.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog_04_large_sparse_models/large_sparse_models
+```
 <!-- apiref:toctree:end -->

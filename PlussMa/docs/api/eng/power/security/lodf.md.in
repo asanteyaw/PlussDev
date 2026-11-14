@@ -1,0 +1,68 @@
+# `power::lodf`
+
+Line outage distribution factors of a grid.
+
+## Signature
+
+```cpp
+power::LodfResult power::lodf(const power::Grid& grid, double tolerance = 1e-10);
+```
+
+## What It Does
+
+For every line taken as an outage, returns how its pre-outage flow redistributes over the other lines. The factors follow from the transfer factors of the line against itself, and are exact for the DC model.
+
+## Parameters
+
+`grid`
+: The compiled network.
+
+`tolerance`
+: The smallest denominator `|1 - PTDF-of-the-line-against-itself|` that is accepted; an outage with a smaller one is invalid.
+
+## Returns
+
+A `LodfResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for a non-positive or non-finite tolerance.
+
+## Interpretation and Use
+
+An outage that splits the network, or of a line already out of service, is invalid and returns `NaN`. Leave the tolerance at its default unless you want to exclude lines that are nearly bridges.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The factors of a ring.
+
+@@example Eng/api/power_lodf_ring.cpp@@
+
+### Example 2
+
+A spur outage and the effect of the tolerance.
+
+@@example Eng/api/power_lodf_spur.cpp@@
+
+### Example 3
+
+Factors against an AC solution.
+
+@@example Eng/api/power_lodf_vs_ac.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ptdf.html">
+    <span class="label">Previous</span>
+    <span class="title">ptdf</span>
+  </a>
+  <a class="next-link" href="outages.html">
+    <span class="label">Next</span>
+    <span class="title">outages</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

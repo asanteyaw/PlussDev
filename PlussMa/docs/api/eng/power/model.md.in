@@ -28,25 +28,6 @@ Generators and voltage-controlled buses.
 
 @@example Eng/api/power_generators.cpp@@
 
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-model/BusKind
-model/Base
-model/Buses
-model/Gens
-model/Lines
-model/Net
-model/Grid
-model/make
-model/zbase
-model/ybase
-model/ibase
-model/pu
-model/si
-```
-
 <!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 2

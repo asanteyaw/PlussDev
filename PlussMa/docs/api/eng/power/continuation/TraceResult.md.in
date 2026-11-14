@@ -1,0 +1,77 @@
+# `power::TraceResult`
+
+The points of a continuation curve.
+
+## Signature
+
+```cpp
+power::TraceResult
+```
+
+## What It Does
+
+The result of `trace`: one entry for every point on the curve, with the voltages, powers and loading factor at each.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `voltage` | Complex bus voltages at each point, `[..., point, bus]`. |  |
+| `magnitude` | Voltage magnitudes, `[..., point, bus]`. |  |
+| `angle` | Voltage angles, `[..., point, bus]`. |  |
+| `injection` | Complex net bus injections, `[..., point, bus]`. |  |
+| `from_power` | Complex power entering each line at its sending end, `[..., point, line]`. |  |
+| `to_power` | The power at the receiving end, `[..., point, line]`. |  |
+| `factor` | The loading factor of each point, `[..., point]`. |  |
+| `tangent` | The unit tangent of the curve at each point, `[..., point, state + 1]`. |  |
+| `residual` | The power mismatch at each point, `[..., point]`. |  |
+| `valid` | False for the points after a scenario has stopped, `[..., point]`. |  |
+| `reached` | True when the requested target or the nose was reached, `[...]`. |  |
+| `points` | The number of points on the curve. |  |
+
+## Returns
+
+Returned by `trace`.
+
+## Errors
+
+Reading a field does not trace again.
+
+## Interpretation and Use
+
+Read `reached` before using the last point as the target or the nose. In a batch every scenario stops at its own end and the later points are marked invalid.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The curve of a line to its nose.
+
+@@example Eng/api/power_trace_nose.cpp@@
+
+### Example 2
+
+Shapes and the end points of a trace to a target.
+
+@@example Eng/api/power_trace_target.cpp@@
+
+### Example 3
+
+A trace that did not reach its target.
+
+@@example Eng/api/power_trace_beyond.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="TraceOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">TraceOptions</span>
+  </a>
+  <a class="next-link" href="trace.html">
+    <span class="label">Next</span>
+    <span class="title">trace</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

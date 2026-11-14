@@ -65,4 +65,21 @@ std::ostream     &reg::print_ols_summary(std::ostream &os, const reg::OLSFitResu
 7. Incomplete rows are dropped by default; read `dropped_observations`.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+regression_01_least_squares/a_first_fit_checked_by_hand
+regression_01_least_squares/shapes_and_inputs
+regression_01_least_squares/several_predictors
+regression_01_least_squares/every_number_in_the_result
+regression_01_least_squares/residual_diagnostics
+regression_01_least_squares/the_summary_report
+regression_01_least_squares/prediction_and_intervals
+regression_01_least_squares/options
+regression_01_least_squares/case_weights
+regression_01_least_squares/missing_data
+regression_01_least_squares/collinear_predictors
+regression_01_least_squares/errors
+```
 <!-- apiref:toctree:end -->

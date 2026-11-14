@@ -45,3 +45,8 @@ The archive is a record of the search, not a computed front: it holds non-domina
 - **Read both objectives at the minimiser, not only the scalar.** The scalar depends on your weights; the vector is the trade-off.
 
 Where next: [Chapter 12](../dfo_12_mads_variants.md) covers the specialised variants.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

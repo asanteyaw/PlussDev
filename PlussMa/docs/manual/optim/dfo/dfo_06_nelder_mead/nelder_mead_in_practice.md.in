@@ -46,3 +46,8 @@ The shape you give is the shape you get back, and the objective always receives 
 - **Nelder–Mead can stall on non-smooth functions.** The simplex collapses against a kink while reporting `Converged`; check with an independent method.
 
 Where next: [Chapter 7](../dfo_07_pattern_search.md) describes pattern search, the constrained method.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

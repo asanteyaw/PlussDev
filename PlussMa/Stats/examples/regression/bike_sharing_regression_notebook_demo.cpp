@@ -249,7 +249,7 @@ int main() {
       {"fold", pluss::table::Slate(pluss::make_series(fold_axis_values, {k_folds}, f64_cfg))},
       {"r2", pluss::table::Slate(pluss::make_series(cv_r2_scores, {k_folds}, f64_cfg))},
       {"neg_mse", pluss::table::Slate(pluss::make_series(cv_mse_scores, {k_folds}, f64_cfg))},
-  }).label().set("fold", false);
+  }).labels().set("fold", false);
   cv_score_df.plot().line("r2").headline("Cross-validation R-squared by fold").save_pdf("03_cv_r2_by_fold.pdf");
 
   //======= Cell Eight=======

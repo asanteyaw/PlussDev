@@ -6,3 +6,12 @@
 @@example Numerical/linear_algebra/guide/901_conjugate_gradient.cpp@@
 
 The operator here is the second-difference stencil, written with shifted copies of the vector; no matrix exists anywhere. In exact arithmetic, conjugate gradients finishes in at most as many iterations as the right-hand side has distinct eigen-components: here only the odd eigenvectors are excited, which is why it stops after 56 for 100 unknowns, and why the answer is exact to the last digit. In general expect far fewer iterations than unknowns when the eigenvalues cluster, and many more when they do not.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="preconditioning.html">
+    <span class="label">Next</span>
+    <span class="title">Preconditioning</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

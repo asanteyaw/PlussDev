@@ -2,13 +2,13 @@
 
 [Back to Heston and Bates](../finance_03_heston_and_bates.md)
 
-The FFT and COS pricers need nothing from a model but the characteristic function of ln S_T under the pricing measure, φ(u) = E[e^(i u ln S_T)]. The model-specific pricers wrap one built-in characteristic function; the generic pricers take any function you supply.
+The FFT and COS pricers need nothing from a model but the characteristic function of ln S_T under the pricing measure, φ(u) = E[e^(i u ln S_T)]. The engines of a `Field` wrap the characteristic function of the model it holds; the generic pricers below take any function you supply, which is how a model that the field does not know is priced by Fourier methods.
 
 ```cpp
-using prc::CharacteristicFn = std::function<std::complex<double>(std::complex<double>)>;
-double prc::option_price_cos(type, spot, strike, rate, dividend_yield, maturity, const prc::CharacteristicFn &, const prc::CosOptions & = {}, Config = {});
-double prc::option_price_fft(type, spot, strike, rate, dividend_yield, maturity, const prc::CharacteristicFn &, const prc::HestonFftOptions & = {}, Config = {});
-prc::HestonFftResult prc::option_price_fft_grid(type, spot, rate, dividend_yield, maturity, const prc::CharacteristicFn &, const prc::HestonFftOptions & = {}, Config = {});
+using pricing::CharacteristicFn = std::function<std::complex<double>(std::complex<double>)>;
+double pricing::option_price_cos(pricing::OptionType type, double spot, double strike, double rate, double dividend_yield, double maturity, const pricing::CharacteristicFn &char_fn, const pricing::CosOptions &options = {}, Config cfg = {});
+double pricing::option_price_fft(pricing::OptionType type, double spot, double strike, double rate, double dividend_yield, double maturity, const pricing::CharacteristicFn &char_fn, const pricing::HestonFftOptions &options = {}, Config cfg = {});
+pricing::HestonFftResult pricing::option_price_fft_grid(pricing::OptionType type, double spot, double rate, double dividend_yield, double maturity, const pricing::CharacteristicFn &char_fn, const pricing::HestonFftOptions &options = {}, Config cfg = {});
 ```
 
 The function is evaluated at complex arguments (the FFT pricer evaluates it at u − (α + 1) i), so it must be defined there: that is, the model must have finite moments of order α + 1. It must be the *plain* characteristic function, not discounted: both pricers apply the discount factor. `spot`, `rate` and `dividend_yield` are used for the discounting and the parity of puts; the drift of the model must already be risk neutral, E[S_T] = S e^((r − q) T), which the function you supply must encode.
@@ -17,7 +17,7 @@ The COS pricer estimates the mean and variance of ln S_T from the function by fi
 
 ## Black-Scholes as a check
 
-A characteristic function that is Gaussian, φ(u) = exp(i u μ − σ² T u² / 2) with μ = ln S + (r − q − σ²/2) T, is Black-Scholes. Both generic pricers must then reproduce the Black-Scholes price.
+A characteristic function that is Gaussian, φ(u) = exp(i u μ − σ² T u² / 2) with μ = ln S + (r − q − σ²/2) T, is Black-Scholes. Both generic pricers must then reproduce the Black-Scholes price, which the programs take from a Black-Scholes field.
 
 @@run@@
 ```cpp
@@ -26,6 +26,20 @@ A characteristic function that is Gaussian, φ(u) = exp(i u μ − σ² T u² / 
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
 
 int main() {
   OutputEngine out;
@@ -38,15 +52,15 @@ int main() {
   };
   out.writeln("strike   Black-Scholes   COS          FFT");
   for (double strike : {80.0, 100.0, 125.0}) {
-    out.writeln(strike, prc::black_scholes_price(prc::Call, spot, strike, rate, dividend, maturity, sigma), prc::option_price_cos(prc::Call, spot, strike, rate, dividend, maturity, gaussian),
+    out.writeln(strike, bs_price(prc::Call, spot, strike, rate, dividend, maturity, sigma), prc::option_price_cos(prc::Call, spot, strike, rate, dividend, maturity, gaussian),
                 prc::option_price_fft(prc::Call, spot, strike, rate, dividend, maturity, gaussian));
   }
-  out.writeln("a put:", prc::black_scholes_price(prc::Put, spot, 110.0, rate, dividend, maturity, sigma), prc::option_price_cos(prc::Put, spot, 110.0, rate, dividend, maturity, gaussian),
+  out.writeln("a put:", bs_price(prc::Put, spot, 110.0, rate, dividend, maturity, sigma), prc::option_price_cos(prc::Put, spot, 110.0, rate, dividend, maturity, gaussian),
               prc::option_price_fft(prc::Put, spot, 110.0, rate, dividend, maturity, gaussian));
 }
 ```
 
-The COS price from the Gaussian characteristic function equals the Black-Scholes price to eight decimals, calls and put. The FFT agrees to within 4 × 10⁻⁶ (22.318545 against 22.318548 at strike 80, and exact at the money).
+The COS price from the Gaussian characteristic function equals the Black-Scholes price to eight decimals, calls and put. The FFT agrees to within 3 × 10⁻⁸ (22.31854801 against 22.31854802 at strike 80).
 
 ## A new model: Merton's jump diffusion
 
@@ -63,6 +77,33 @@ and, unlike most models, its price is also known as a series: a Poisson-weighted
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+
+
+// Implied volatility of one quote: a Black-Scholes field whose own volatility is irrelevant, because the quote is passed in.
+double bs_iv(prc::OptionType type, double price, double S, double K, double r, double q, double T, const prc::ImpliedVolOptions &options = {}) {
+  return bs_field(type, S, K, r, q, T, 0.2).implied_vol(pluss::make_series({price}), options).items<double>()[0];
+}
+// Implied volatilities of a strip of call quotes with their own spots and maturities.
+pluss::Series iv_strip(const pluss::Series &quotes, const pluss::Series &spots, const pluss::Series &maturities, double K, double r, double q) {
+  mod::Field strip{.instrument = {.type = prc::Call, .strike = pluss::make_series({K}), .maturity = maturities},
+                   .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                   .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})}};
+  return strip.implied_vol(quotes);
+}
 
 int main() {
   OutputEngine out;
@@ -82,7 +123,7 @@ int main() {
     for (int n = 0; n < 80; ++n) {
       const double sigma_n = std::sqrt(sigma * sigma + n * delta * delta / maturity);
       const double rate_n = rate - lambda * k + n * std::log(1.0 + k) / maturity;
-      total += weight * prc::black_scholes_price(type, spot, strike, rate_n, dividend, maturity, sigma_n);
+      total += weight * bs_price(type, spot, strike, rate_n, dividend, maturity, sigma_n);
       weight *= lambda_prime * maturity / (n + 1);
     }
     return total;
@@ -97,13 +138,13 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(4));
   std::vector<double> smile;
   for (double strike : {80.0, 90.0, 100.0, 110.0, 120.0}) {
-    smile.push_back(prc::implied_vol(prc::Call, prc::option_price_cos(prc::Call, spot, strike, rate, dividend, maturity, merton), spot, strike, rate, dividend, maturity));
+    smile.push_back(bs_iv(prc::Call, prc::option_price_cos(prc::Call, spot, strike, rate, dividend, maturity, merton), spot, strike, rate, dividend, maturity));
   }
   out.writeln("implied volatilities at strikes 80 to 120:", smile);
 }
 ```
 
-The Poisson series, the COS price and the FFT price agree: the COS price equals the series to eight decimals, and the FFT price is within 5 × 10⁻⁶. The model's implied volatilities, 0.2886, 0.2696, 0.2556, 0.2482 and 0.2468, form a downward-sloping smile that comes from negative jumps alone, with no stochastic volatility.
+The Poisson series, the COS price and the FFT price agree: the COS price equals the series to eight decimals, and the FFT price is within 3 × 10⁻⁸. The model's implied volatilities, 0.2886, 0.2696, 0.2556, 0.2482 and 0.2468, form a downward-sloping smile that comes from negative jumps alone, with no stochastic volatility.
 
 ## The cumulant step
 
@@ -150,3 +191,12 @@ int main() {
 ```
 
 The price does not change with `cumulant_step` over the whole accepted range, from 10⁻¹ to 10⁻⁶ (the differences are below 10⁻¹¹). A step of 10⁻⁸ is rejected.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="jumps_the_bates_model.html">
+    <span class="label">Next</span>
+    <span class="title">Jumps: the Bates model</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

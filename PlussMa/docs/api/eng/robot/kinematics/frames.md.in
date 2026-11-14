@@ -1,0 +1,64 @@
+# `robot::frames`
+
+The world frames of every link for given joint values.
+
+## Signature
+
+```cpp
+robot::Pose robot::frames(const robot::Robot& robot, const pluss::Series& q);
+```
+
+## What It Does
+
+Composes the fixed transform and the joint motion of every link down the tree: the world rotation of link `i` is that of its parent times the link's own rotation, and its world position is the parent's position plus the parent's rotation applied to the link's offset. A revolute joint turns the link about its axis; a prismatic joint slides it along it.
+
+## Parameters
+
+`robot`
+: The compiled robot.
+
+`q`
+: The joint values: a real floating `[..., links]` array on the robot's platform, in radians for revolute joints and metres for prismatic ones. Leading axes are a batch of configurations.
+
+## Returns
+
+A `Pose` with `rotation` `[..., links, 3, 3]` and `position` `[..., links, 3]`.
+
+## Errors
+
+Throws `pluss::Error` when `q` is not a real floating `[..., links]` array on the robot's platform.
+
+## Interpretation and Use
+
+The call is vectorized over the batch of configurations: a trajectory of a thousand configurations is one call. The result carries reverse sensitivity to `q` and to the values the robot was built from.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The elbow and forearm of a planar arm against closed forms.
+
+@@example Eng/api/robot_fk_arm.cpp@@
+
+### Example 2
+
+Three configurations in one call.
+
+@@example Eng/api/robot_fk_batch.cpp@@
+
+### Example 3
+
+A branching tree: which links move when a joint moves.
+
+@@example Eng/api/robot_fk_tree.cpp@@
+
+### Example 4
+
+Rejected configurations.
+
+@@example Eng/api/robot_fk_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

@@ -242,11 +242,11 @@ Output
 iters / evals     n = 8         n = 16        n = 32        
 MeritMethod       38 / 67       60 / 119      84 / 196      
 SequentialQP      7 / 8         8 / 9         8 / 13        
-WorkingSet        7 / 8         12 / 28       11 / 20       
+WorkingSet        7 / 8         12 / 29       11 / 20       
 InternalProtocol  12 / 16       15 / 19       14 / 18       
 * did not converge
 ```
-Sequential QP, the working-set method and the interior method each need 7 to 15 iterations at every size, and between 8 and 28 evaluations. The merit method needs more iterations as the problem grows (38, 60, 84) and more evaluations (67, 119, 196). When each evaluation is expensive, evaluations are the number to watch: sequential QP is the cheapest at every size (8, 9 and 13), the interior method comes next (16, 19 and 18), and the working-set method is the most expensive at 16 variables (28).
+Sequential QP, the working-set method and the interior method each need 7 to 15 iterations at every size, and between 8 and 29 evaluations. The merit method needs more iterations as the problem grows (38, 60, 84) and more evaluations (67, 119, 196). When each evaluation is expensive, evaluations are the number to watch: sequential QP is the cheapest at every size (8, 9 and 13), the interior method comes next (16, 19 and 18), and the working-set method is the most expensive at 16 variables (29).
 
 ## Decisions and pitfalls
 
@@ -257,3 +257,16 @@ Sequential QP, the working-set method and the interior method each need 7 to 15 
 - **Test at the size you will use.** A method that is cheap at ten variables can grow badly; the merit method's iteration count rises with the problem where the quadratic-model methods stay flat.
 
 Where next: [Options and presets](options_and_presets.md) shows which settings move the result and how to avoid setting the wrong ones.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="four_algorithms_on_one_problem.html">
+    <span class="label">Previous</span>
+    <span class="title">Four algorithms on one problem</span>
+  </a>
+  <a class="next-link" href="options_and_presets.html">
+    <span class="label">Next</span>
+    <span class="title">Options and presets</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

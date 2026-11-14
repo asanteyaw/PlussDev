@@ -5,4 +5,10 @@ Chapters, in reading order:
 - [Interpolation 1: Linear Interpolation](interpolation/interp_01_linear.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+interpolation/interp_01_linear
+```
 <!-- apiref:toctree:end -->

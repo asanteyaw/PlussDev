@@ -1,0 +1,63 @@
+# `thermal::biot`
+
+The Biot number of a body.
+
+## Signature
+
+```cpp
+Series thermal::biot(const Series& coefficient,
+                      const Series& conductivity,
+                      const Series& length);
+```
+
+## What It Does
+
+Returns `h L / k`: the ratio of the resistance inside a body (`L / k`) to the resistance of its surface film (`1 / h`). A small Biot number means the body is nearly uniform in temperature.
+
+## Parameters
+
+`coefficient`
+: The film coefficient in W/(m^2 K), positive.
+
+`conductivity`
+: The conductivity of the body in W/(m K), positive.
+
+`length`
+: The characteristic length in m, positive: volume over surface area, or the half-thickness of a plate cooled on both faces.
+
+## Returns
+
+The dimensionless Biot number with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array, not finite or not positive.
+
+## Interpretation and Use
+
+Below about `0.1` a body may be treated as one lumped capacity (a single store); above it the temperature varies through the body and it should be meshed, for example with `mesh`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Biot numbers of three materials.
+
+@@example Eng/api/thermal_biot_basic.cpp@@
+
+### Example 2
+
+A lumped body against a mesh, at small and large Biot number.
+
+@@example Eng/api/thermal_biot_lumped.cpp@@
+
+### Example 3
+
+Rejected inputs.
+
+@@example Eng/api/thermal_biot_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

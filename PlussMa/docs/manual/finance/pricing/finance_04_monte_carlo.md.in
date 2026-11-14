@@ -6,11 +6,27 @@ Every program is complete, and its output is the output of that program.
 
 ## The calls
 
-| | Function |
-|---|---|
-| paths | `gbm_paths`, `heston_paths`, `bates_paths`, `sv_paths`, `heston_nandi_paths`, `sabr_paths`, `slv_paths`, `rough_heston_paths`, `rough_bergomi_paths` (namespace `volatility`, alias `vol`) |
-| prices | `heston_price_mc`, `bates_price_mc`, `sv_price_mc`, `heston_nandi_price_mc`, `sabr_price_mc`, `slv_price_mc`, `rough_heston_price_mc`, `rough_bergomi_price_mc` (namespace `pricing`, alias `prc`) |
-| controls | `vol::SimOptions` for paths, `prc::MonteCarloOptions` for prices |
+```cpp
+module::Engine module::Controls::engine = module::Engine::Analytic;
+pricer::MonteCarlo module::Controls::mc;
+std::int64_t pricer::MonteCarlo::paths = 40000;
+std::int64_t pricer::MonteCarlo::steps = 252;
+std::uint64_t pricer::MonteCarlo::seed = 0;
+module::Field::Result module::Field::price(Config cfg = {}) const;
+module::Paths module::Field::simulate_paths(Config cfg = {}) const;
+```
+
+The engine is `MonteCarlo` for any model, the number of paths, the steps and the seed are set on `field.controls.mc`, and the field prices or simulates. In use:
+
+```cpp
+mod::Field field{.instrument = ..., .market = ..., .model = ...,            // Black-Scholes, SABR, Heston, Bates, rough Heston or rough Bergomi
+                 .controls = {.engine = mod::Engine::MonteCarlo}};
+field.controls.mc.paths = 40000;  field.controls.mc.steps = 252;  field.controls.mc.seed = 1;
+field.price();             // the price of every option of the strip
+field.simulate_paths();    // the paths themselves, as a mod::Paths
+```
+
+`field.controls.mc` holds every control of the engine: the number of paths and steps, the variance scheme, the source of random numbers and the three variance-reduction devices. Because the engine is only a switch of the field, any model of the previous chapters can be repriced by simulation by changing one line, which is how the programs of this chapter are checked against the COS engine.
 
 ## Programs
 
@@ -29,4 +45,14 @@ Every program is complete, and its output is the output of that program.
 5. Quasi-random sequences gain most with few steps; randomise them to get an error bar.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_04_monte_carlo/options_and_errors
+finance_04_monte_carlo/pricing_by_simulation
+finance_04_monte_carlo/quasi_random_sequences
+finance_04_monte_carlo/simulated_paths
+finance_04_monte_carlo/variance_reduction
+```
 <!-- apiref:toctree:end -->

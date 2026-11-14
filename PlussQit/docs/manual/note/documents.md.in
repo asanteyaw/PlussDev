@@ -1,0 +1,36 @@
+# Documents: generating and checking
+
+[Back to Note by example](../note.md)
+
+Text is also something you produce and verify. This page personalises a message for every row of a table and then checks a LaTeX manuscript for the mistakes that cost a rejected submission: references to labels that do not exist, and citations with no bibliography entry.
+
+## The mental model
+
+Generating text is replacement with data: a template with placeholders, one value per row. Checking text is extraction plus set arithmetic: pull out what is used, pull out what is defined, and compare the two sets. The extraction side has accessors for structured formats; for LaTeX, `note.tex()` knows sections, labels, references and citations.
+
+## A mail merge
+
+Four customers, one missing a name. The program fills a template for each, falls back to a default for the empty name, checks that no placeholder survives, and joins the letters into one document.
+
+@@example note/mail_merge.cpp@@
+
+Each letter is the template with `{name}`, `{product}` and `{due}` replaced for its row, and the empty name becomes `customer` instead of leaving `Dear ,`. The quality-control check is the habit to copy: after generating, test for the placeholder syntax, here `{`, and expect zero. `join` produces one document of 235 characters from the four letters.
+
+## A manuscript check
+
+A short LaTeX source with three sections, four labels, a citation of two keys at once and a reference to a section that does not exist yet. The program lists the outline and then compares used against defined for both references and citations.
+
+@@example note/latex_manuscript.cpp@@
+
+The outline is `Introduction`, `Method`, `Results`. The labels defined are `sec:intro`, `sec:method` and `eq:main`; the references used are `sec:intro`, `sec:results` and `eq:main`, so one reference, `sec:results`, points at a label that was never defined, because the Results section carries no `\label`. For citations, `citations()` returns one token per command: `lamport94,missing99` is a single token because it came from a single `\cite`. To compare keys you want them one by one, which is `bibliography_keys()`: with it the check finds that `missing99` is cited but not in the bibliography, and that `unused2000` is in the bibliography but never cited.
+
+## Decisions
+
+- **Defaults for missing data:** decide the fallback text before generating, so an empty cell does not produce a broken sentence.
+- **Verify what you generate:** test for leftover placeholders and for doubled spaces.
+- **Extract, then compare sets:** used minus defined is the list of broken references; defined minus used is clutter.
+- **Right extractor:** `citations()` for commands, `bibliography_keys()` for keys.
+
+## Where next
+
+Reference pages: [`replace`](../../sphinx/api/note/replace.md), [`join`](../../sphinx/api/note/join.md), [`contains`](../../sphinx/api/note/contains.md), [`lengths_chars`](../../sphinx/api/note/lengths_chars.md), [`host`](../../sphinx/api/note/host.md), [`sections`](../../sphinx/api/note-tex/sections.md), [`labels`](../../sphinx/api/note-tex/labels.md), [`refs`](../../sphinx/api/note-tex/refs.md), [`citations`](../../sphinx/api/note-tex/citations.md), [`bibliography_keys`](../../sphinx/api/note-tex/bibliography_keys.md). Back to [Note by example](../note.md).

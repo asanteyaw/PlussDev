@@ -171,3 +171,12 @@ The fourth start, `(10, 20)`, is the instructive one. The solver reports flag `1
 - **`Converged` is a statement about tolerances, not about truth.** It tells you the stopping rule was met; whether the point is the one you want is for you to verify.
 
 Where next: That completes the Optima chapters; [Septima](../../septima.md) is the library's first-order and quasi-Newton solver family.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="design_problems.html">
+    <span class="label">Previous</span>
+    <span class="title">Design problems</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

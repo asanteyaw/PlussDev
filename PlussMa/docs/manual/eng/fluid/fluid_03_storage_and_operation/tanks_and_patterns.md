@@ -1,0 +1,339 @@
+<!-- generated from tanks_and_patterns.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Tanks and patterns
+
+[Back to Fluid 3: Storage and Operation](../fluid_03_storage_and_operation.md)
+
+A town's demand is not constant: it peaks in the morning and the evening and sinks at night. A tank absorbs the difference, filling when the supply exceeds the draw and emptying when it does not, and a tank is what keeps the pressure up when the pumps cannot follow the peak. `fluid::run` simulates a day of this. It steps through time, applies the demand pattern, solves the network at every event with the same `steady` solver as before, and moves each tank's level by the flow the solver found. This page explains the clock and the tank's balance, runs a tank through a four-period demand pattern and checks the water it gained and lost against its level, runs a tank to its limits with and without overflow, and shows the descriptions the run refuses.
+
+## The mental model
+
+A run is a sequence of **events**. At each event the network is a steady one: the demands for the current pattern period, the tank heads for the current levels, and the pump speeds and valve settings for the current controls. `steady` solves it, and the flow into each tank holds until the next event. The tank level at the next event follows from conservation of volume:
+
+```{math}
+\text{level}(t + \Delta t) = \text{level}(t) + \frac{\Delta t \,( q_{\text{tank}} - q_{\text{spill}} )}{A} ,
+```
+
+with the tank's cross-section `A`. The clock does not step blindly. `Schedule::step` is the longest hydraulic step, and every event that could change the solution shortens a step to land on it exactly: the end of a pattern period, a timed control, a control threshold, and the moment a tank reaches its minimum or maximum level. This is what makes the water balance exact rather than approximate.
+
+A tank is a node of kind `Tank`. Its `elevation` is its **bottom**, its initial water surface is `Nodes::head`, so the initial level is `head - elevation`, and `Net::tanks` supplies, per tank, the `area`, the `min_level` and `max_level` above the bottom, and an `overflow` flag. A tank has a constant cross-section, a cylinder; a level-volume curve is not represented, and the cylinder is not approximated by an average area.
+
+A **pattern** is a table of multipliers that repeats. `Schedule::demand` has the shape `[period, node]`, each entry a multiplier on the base demand of that node, and it changes at every `pattern_step` seconds, cycling back to the first row after the last. `Schedule::pump` is `[period, pump]`, a multiplier on the relative speed, and `Schedule::valve` is `[period, valve]`, an absolute valve setting. A run returns a `RunResult`, with every field of the steady result stacked along a leading `sample` axis, plus `time` in seconds, `tank_level`, `spill`, the `open` state of every link, `converged` and `iterations`.
+
+## Four periods of demand
+
+A reservoir at `60` m feeds a junction through a `0.15` m pipe, and a tank, `400` m² in section and `3` m deep at the start, floats on the junction through a `0.20` m pipe. The junction's base demand is `0.04` m³/s. The pattern has four periods of three hours with the multipliers `0.5`, `1`, `2` and `3`, so the demand is `0.02`, `0.04`, `0.08` and `0.12` m³/s. The program runs twelve hours and prints the state at each period boundary. Then it checks the water: the volume that entered the tank, each flow held for the length of its step, against the tank's cross-section times the change in level.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// reservoir (60 m) -> pipe -> junction 1 (demand) -> pipe -> tank; the tank bottom is at 20 m, its surface starts at 23 m
+static fluid::Net with_tank(double area, bool overflow) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Tank};
+  net.nodes.elevation = vec({0.0, 10.0, 20.0});
+  net.nodes.demand = vec({0.0, 0.04, 0.0});
+  net.nodes.head = vec({60.0, 50.0, 23.0});
+  net.tanks.area = vec({area});
+  net.tanks.min_level = vec({0.5});
+  net.tanks.max_level = vec({6.0});
+  net.tanks.overflow = {overflow};
+  net.pipes.from = {0, 1};
+  net.pipes.to = {1, 2};
+  net.pipes.length = vec({800.0, 400.0});
+  net.pipes.diameter = vec({0.15, 0.20});
+  net.pipes.roughness = vec({1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  fluid::Schedule schedule;
+  schedule.duration = 12.0 * 3600.0;
+  schedule.step = 1800.0;
+  schedule.pattern_step = 3.0 * 3600.0;
+  // one row per period, one column per node: only the junction's multiplier matters
+  schedule.demand = pluss::series::make(std::vector<double>{0, 0.5, 0, 0, 1.0, 0, 0, 2.0, 0, 0, 3.0, 0}, {4, 3});
+
+  const auto r = fluid::run(fluid::network(with_tank(400.0, false)), schedule);
+  const auto time = flat(r.time), level = flat(r.tank_level);
+  const auto into_tank = r.flow.select(-1, 1).reshape({r.flow.sizes()[0]}).items<double>();
+  const auto delivered = r.demand.select(-1, 1).reshape({r.demand.sizes()[0]}).items<double>();
+  out.writeln("samples ", time.size(), ", every state converged: ", r.converged.all().item<bool>());
+  for (std::size_t i = 0; i < time.size(); i += 6)
+    out.writeln("t ", time[i] / 3600.0, " h: demand ", delivered[i], " m3/s, flow into the tank ", into_tank[i], " m3/s, level ", level[i], " m");
+  out.writeln("t ", time.back() / 3600.0, " h: level ", level.back(), " m");
+
+  double volume = 0.0;
+  for (std::size_t i = 0; i + 1 < time.size(); ++i) volume += into_tank[i] * (time[i + 1] - time[i]);
+  out.writeln("volume that entered the tank ", volume, " m3, area * change of level ", 400.0 * (level.back() - level.front()), " m3");
+}
+```
+
+Output
+
+```text
+samples 25, every state converged: true
+t 0.0000 h: demand 0.0200 m3/s, flow into the tank 0.0265 m3/s, level 3.0000 m
+t 3.0000 h: demand 0.0400 m3/s, flow into the tank 0.0068 m3/s, level 3.7093 m
+t 6.0000 h: demand 0.0800 m3/s, flow into the tank -0.0319 m3/s, level 3.8925 m
+t 9.0000 h: demand 0.1200 m3/s, flow into the tank -0.0674 m3/s, level 3.0368 m
+t 12.0000 h: demand 0.0200 m3/s, flow into the tank 0.0276 m3/s, level 1.2274 m
+t 12.0000 h: level 1.2274 m
+volume that entered the tank -709.0545 m3, area * change of level -709.0545 m3
+```
+
+The tank follows the day. In the first six hours the demand is below what the supply pipe can bring and the tank fills, `0.0265` m³/s into it at the start and `0.0068` m³/s by the third hour. In the third period the demand outgrows the supply, the flow into the tank turns negative, `-0.0319` m³/s, which is the tank feeding the town, and the level falls from `3.89` m to `1.23` m by the end of the fourth. The flow into the tank is never an input: it is what the equations leave over once the demand, the supply and the head of the tank agree. The two volumes are the same to the printed digit, `-709.0545` m³: the day ends with the tank having given up exactly the water that its level lost.
+
+## A tank at its limits
+
+A tank that fills must stop somewhere. The same network with a small tank, `40` m² in section, runs for eight hours at the constant base demand. The level climbs to the maximum, `6` m, at about `5.2` hours, and from then on what happens depends on `overflow`. A tank that does not overflow closes its inlet: the pipe is shut, and the demand is supplied entirely by the reservoir. A tank that overflows stays at its maximum level and spills the excess, so its inlet stays open. The program prints the two runs side by side: the event that lands on the maximum, the state afterwards, and the water balance of the overflowing tank.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net with_tank(double area, bool overflow) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Tank};
+  net.nodes.elevation = vec({0.0, 10.0, 20.0});
+  net.nodes.demand = vec({0.0, 0.04, 0.0});
+  net.nodes.head = vec({60.0, 50.0, 23.0});
+  net.tanks.area = vec({area});
+  net.tanks.min_level = vec({0.5});
+  net.tanks.max_level = vec({6.0});
+  net.tanks.overflow = {overflow};
+  net.pipes.from = {0, 1};
+  net.pipes.to = {1, 2};
+  net.pipes.length = vec({800.0, 400.0});
+  net.pipes.diameter = vec({0.15, 0.20});
+  net.pipes.roughness = vec({1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  fluid::Schedule schedule;
+  schedule.duration = 8.0 * 3600.0;
+  schedule.step = 3600.0;
+  schedule.pattern_step = 8.0 * 3600.0;
+
+  for (bool overflow : {false, true}) {
+    const auto r = fluid::run(fluid::network(with_tank(40.0, overflow)), schedule);
+    const auto time = flat(r.time), level = flat(r.tank_level), spill = flat(r.spill), open = flat(r.open);
+    const auto supply = r.flow.select(-1, 0).reshape({r.flow.sizes()[0]}).items<double>();
+    const auto into_tank = r.flow.select(-1, 1).reshape({r.flow.sizes()[0]}).items<double>();
+    out.writeln(overflow ? "overflow allowed:" : "no overflow:");
+    for (std::size_t i = 0; i < time.size(); ++i) {
+      if (i != 0 && i != 5 && i != 6 && i + 1 != time.size()) continue;
+      out.writeln("  t ", time[i], " s: level ", level[i], " m, supply pipe ", supply[i], " m3/s, tank pipe ", into_tank[i], " m3/s (open ", open[2 * i + 1], "), spill ", spill[i], " m3/s");
+    }
+    if (overflow) {
+      const std::size_t last = time.size() - 1;
+      out.writeln("  balance at the end: supply ", supply[last], " = demand 0.04 + tank pipe ", into_tank[last], " = ", 0.04 + into_tank[last], "; the tank pipe ", into_tank[last], " leaves as spill ", spill[last]);
+    }
+  }
+}
+```
+
+Output
+
+```text
+no overflow:
+  t 0.0000 s: level 3.0000 m, supply pipe 0.0473 m3/s, tank pipe 0.0073 m3/s (open 1.0000), spill 0.0000 m3/s
+  t 18000.0000 s: level 5.9190 m, supply pipe 0.0454 m3/s, tank pipe 0.0054 m3/s (open 1.0000), spill 0.0000 m3/s
+  t 18602.8532 s: level 6.0000 m, supply pipe 0.0400 m3/s, tank pipe 0.0000 m3/s (open 0.0000), spill 0.0000 m3/s
+  t 28800.0000 s: level 6.0000 m, supply pipe 0.0400 m3/s, tank pipe 0.0000 m3/s (open 0.0000), spill 0.0000 m3/s
+overflow allowed:
+  t 0.0000 s: level 3.0000 m, supply pipe 0.0473 m3/s, tank pipe 0.0073 m3/s (open 1.0000), spill 0.0000 m3/s
+  t 18000.0000 s: level 5.9190 m, supply pipe 0.0454 m3/s, tank pipe 0.0054 m3/s (open 1.0000), spill 0.0000 m3/s
+  t 18602.8532 s: level 6.0000 m, supply pipe 0.0453 m3/s, tank pipe 0.0053 m3/s (open 1.0000), spill 0.0053 m3/s
+  t 28800.0000 s: level 6.0000 m, supply pipe 0.0453 m3/s, tank pipe 0.0053 m3/s (open 1.0000), spill 0.0053 m3/s
+  balance at the end: supply 0.0453 = demand 0.04 + tank pipe 0.0053 = 0.0453; the tank pipe 0.0053 leaves as spill 0.0053
+```
+
+The level reaches `6.0000` m at `18602.85` s, exactly where the clock was shortened to land on it. Without overflow the tank's pipe is closed from then on: its flow is `0.0000`, its entry in `open` is `0`, and the supply pipe falls to the `0.0400` m³/s the junction draws. With overflow the pipe stays open, the level holds at `6.0000` m, and the whole inflow leaves as spill: `0.0053` m³/s into the tank and `0.0053` m³/s of spill, with the supply pipe at `0.0453`. Choose by what the tank does in reality: a floating tank on a pipe that cannot spill needs the inlet to close, an open-topped storage reservoir overflows.
+
+## Sensitivity of a level to the demand
+
+A run is as differentiable as a steady solve. Marking the base demands as tracked and differentiating the final level of the tank gives the derivative of that level with respect to every junction's base demand. The program does it for the twelve-hour pattern and compares the derivative with a finite difference.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net with_tank(double demand) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Tank};
+  net.nodes.elevation = vec({0.0, 10.0, 20.0});
+  net.nodes.demand = vec({0.0, demand, 0.0});
+  net.nodes.head = vec({60.0, 50.0, 23.0});
+  net.tanks.area = vec({400.0});
+  net.tanks.min_level = vec({0.5});
+  net.tanks.max_level = vec({6.0});
+  net.tanks.overflow = {false};
+  net.pipes.from = {0, 1};
+  net.pipes.to = {1, 2};
+  net.pipes.length = vec({800.0, 400.0});
+  net.pipes.diameter = vec({0.15, 0.20});
+  net.pipes.roughness = vec({1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0});
+  return net;
+}
+
+static fluid::Schedule day() {
+  fluid::Schedule schedule;
+  schedule.duration = 12.0 * 3600.0;
+  schedule.step = 1800.0;
+  schedule.pattern_step = 3.0 * 3600.0;
+  schedule.demand = pluss::series::make(std::vector<double>{0, 0.5, 0, 0, 1.0, 0, 0, 2.0, 0, 0, 3.0, 0}, {4, 3});
+  return schedule;
+}
+
+static double final_level(double demand) {
+  const auto r = fluid::run(fluid::network(with_tank(demand)), day());
+  return flat(r.tank_level).back();
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  auto net = with_tank(0.04);
+  net.nodes.demand.tracks_slope_(true);
+  const auto r = fluid::run(fluid::network(net), day());
+  const std::int64_t last = r.tank_level.sizes()[0] - 1;
+  r.tank_level.select(0, last).reverse();
+  out.writeln("final level ", flat(r.tank_level).back(), " m");
+  out.writeln("d final level / d demand ", flat(net.nodes.demand.sensitivity()), "  (m per m3/s)");
+  const double step = 1e-6;
+  out.writeln("finite difference at the junction ", (final_level(0.04 + step) - final_level(0.04 - step)) / (2.0 * step));
+}
+```
+
+Output
+
+```text
+final level 1.227364 m
+d final level / d demand [0.000000, -157.153921, 0.000000]  (m per m3/s)
+finite difference at the junction -157.153921
+```
+
+More base demand lowers the final level, by `157.15` m for each cubic metre per second of base demand held for the whole day, or `0.157` m for each litre per second. The derivative agrees with the finite difference to every printed digit. It is non-zero for the junction alone, since the reservoir and the tank have no demand.
+
+## Decisions
+
+- **Step and pattern step.** `step` is a ceiling and the clock lands on every event, so a long `step` costs accuracy only in the tank balance, never in the schedule. Choose it from how fast the supply and the demand move between events.
+- **Overflow or closing inlet.** Set `overflow` for a tank that spills and leave it false for one that must stop filling. Either way the level never leaves `[min_level, max_level]`.
+- **What a pattern multiplies.** A demand pattern multiplies base demands, a pump pattern the relative speeds, and a valve pattern replaces the setting, since a flow target or a pressure target has no natural base value to scale. Rows are periods and columns are nodes, pumps or valves, in the order of `Net`.
+- **Reading the run.** Index the first axis of every result by the `time` series. A level at sample `i` and the flows at sample `i` belong to the same instant, and those flows hold until the next sample.
+
+## Pitfalls
+
+Three descriptions the run refuses. The tank starts above its maximum level, the demand pattern has the wrong number of columns, and a multiplier is negative.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <functional>
+#include <iostream>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+static fluid::Net with_tank(double initial_head) {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction, fluid::NodeKind::Tank};
+  net.nodes.elevation = vec({0.0, 10.0, 20.0});
+  net.nodes.demand = vec({0.0, 0.04, 0.0});
+  net.nodes.head = vec({60.0, 50.0, initial_head});
+  net.tanks.area = vec({400.0});
+  net.tanks.min_level = vec({0.5});
+  net.tanks.max_level = vec({6.0});
+  net.tanks.overflow = {false};
+  net.pipes.from = {0, 1};
+  net.pipes.to = {1, 2};
+  net.pipes.length = vec({800.0, 400.0});
+  net.pipes.diameter = vec({0.15, 0.20});
+  net.pipes.roughness = vec({1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0});
+  return net;
+}
+
+static void attempt(const char *label, const std::function<void()> &call) {
+  try {
+    call();
+    std::cout << label << ": ran\n";
+  } catch (const std::exception &e) {
+    std::cout << label << ": " << e.what() << "\n";
+  }
+}
+
+int main() {
+  fluid::Schedule schedule;
+  schedule.duration = 3600.0;
+  attempt("tank surface at 29 m, 9 m deep, maximum 6 m", [&] { (void)fluid::run(fluid::network(with_tank(29.0)), schedule); });
+  attempt("demand pattern with two columns for three nodes", [&] {
+    auto bad = schedule;
+    bad.demand = pluss::series::make(std::vector<double>{0.0, 1.0}, {1, 2});
+    (void)fluid::run(fluid::network(with_tank(23.0)), bad);
+  });
+  attempt("a negative demand multiplier", [&] {
+    auto bad = schedule;
+    bad.demand = pluss::series::make(std::vector<double>{0.0, -1.0, 0.0}, {1, 3});
+    (void)fluid::run(fluid::network(with_tank(23.0)), bad);
+  });
+}
+```
+
+Output
+
+```text
+tank surface at 29 m, 9 m deep, maximum 6 m: eng::fluid::network: initial tank level must be within bounds
+demand pattern with two columns for three nodes: eng::fluid::run: demand pattern must be real floating [period, element]
+a negative demand multiplier: eng::fluid::run: demand pattern must be nonnegative
+```
+
+Each is refused before any time is simulated, and each message names the thing to fix: the initial level against the tank's bounds, the shape the demand pattern must have, `[period, node]`, and the sign of a multiplier. A negative multiplier would turn a demand into a source without any hint in the pattern, so a source has to be written as a negative base demand.
+
+Reference: [`run`](../../../../api/eng/fluid/operation/run.md), [`Schedule`](../../../../api/eng/fluid/operation/Schedule.md), [`RunResult`](../../../../api/eng/fluid/operation/RunResult.md), [`Tanks`](../../../../api/eng/fluid/model/Tanks.md), [`Net`](../../../../api/eng/fluid/model/Net.md).
+
+Where next: [Controls and rules](controls_and_rules.md) switches pumps and valves on a clock or on a tank level.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="demand_policy.html">
+    <span class="label">Previous</span>
+    <span class="title">Demand policy</span>
+  </a>
+  <a class="next-link" href="controls_and_rules.html">
+    <span class="label">Next</span>
+    <span class="title">Controls and rules</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

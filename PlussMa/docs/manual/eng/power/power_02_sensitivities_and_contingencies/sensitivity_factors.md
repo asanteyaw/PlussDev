@@ -1,0 +1,290 @@
+<!-- generated from sensitivity_factors.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Sensitivity factors
+
+[Back to Power 2: Sensitivities and Contingencies](../power_02_sensitivities_and_contingencies.md)
+
+A planner or an operator keeps asking the same question in different forms: if this much more power is injected at that bus, which lines carry more, and by how much? Answering by re-solving the power flow for every question is slow, and the DC power flow is linear, so the answer is a matrix. `power::ptdf` returns that matrix, the power transfer distribution factors. This page explains what a factor means, checks the factors of a ring against hand values, uses them to predict the effect of a change of load without a new solve, handles lines out of service and batches, and shows the mistake of reading a transfer between two ordinary buses from one column.
+
+## The mental model
+
+The DC flow on a line is a linear function of the bus injections, so the change of flow on line `l` caused by injecting one extra per-unit of power at bus `b`, withdrawn at the slack bus, is a fixed number: the **PTDF** of line `l` for bus `b`. `ptdf(grid)` returns the whole matrix:
+
+| Shape | Entry `[..., line, bus]` |
+|---|---|
+| `[..., line, bus]` | the change in the active flow on the line, from its first bus to its second, per unit of power injected at the bus and withdrawn at the slack |
+
+Four facts follow from the definition, and each is checked below. The column of the slack bus is zero, since injecting and withdrawing at the same bus changes nothing. The factors are properties of the network alone, not of the loads, so one matrix serves every operating point; the flow after any change `delta_p` of the injections is `flow + ptdf * delta_p`. A transfer of power from bus `a` to bus `b` changes the flows by the difference of the two columns, `ptdf[:, b] - ptdf[:, a]` per unit. And a line that is out of service carries no flow, so its row is zero.
+
+## Factors of a ring
+
+The ring of three buses has the slack at bus `0`, and its two paths to bus `2`, directly (reactance `0.3`) and through bus `1` (`0.1 + 0.2 = 0.3`), are equal. Power injected at bus `2` and withdrawn at the slack therefore splits equally: half goes along each path, in the direction from bus `2` toward the slack, which on the lines as they are numbered is a flow of `-0.5` on line `2` (against its direction, from `2` to `0`) and `-0.5` on lines `1` and `0` along the path through bus `1`. Power injected at bus `1` takes the short way, through line `0` (reactance `0.1`), carrying `-0.8333` of it, and the long way round through line `1` and line `2` carrying `0.1667`, in proportion to the reactances `0.5` and `0.1`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a ring of three buses: the slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 between them.
+// Lines: 0 joins buses 0-1 (x = 0.1), line 1 joins 1-2 (x = 0.2), line 2 joins 0-2 (x = 0.3).
+static power::Net ring() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.03});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const power::Grid grid = power::make(ring());
+  const auto factors = power::ptdf(grid);
+  const auto f = flat(factors);
+  out.writeln("shape of the PTDF matrix: ", factors.sizes(), " (line, bus)");
+  for (int line = 0; line < 3; ++line) out.writeln("line ", line, ": ", f[3 * line], " ", f[3 * line + 1], " ", f[3 * line + 2]);
+  out.writeln("by hand: bus 1 column -5/6, +1/6, -1/6 (the reactance ratio 0.5 : 0.1 of the two paths from bus 1 to the slack); bus 2 column -1/2, -1/2, -1/2");
+}
+```
+
+Output
+
+```text
+shape of the PTDF matrix: [3, 3] (line, bus)
+line 0: 0.00000 -0.83333 -0.50000
+line 1: 0.00000 0.16667 -0.50000
+line 2: 0.00000 -0.16667 -0.50000
+by hand: bus 1 column -5/6, +1/6, -1/6 (the reactance ratio 0.5 : 0.1 of the two paths from bus 1 to the slack); bus 2 column -1/2, -1/2, -1/2
+```
+
+The slack column is zero, the bus-`2` column is `-0.5` on every line, half the injection on each of the two equal paths, and the bus-`1` column puts `-0.83333` on line `0` and, round the long way, `0.16667` on line `1` and `-0.16667` on line `2`, the ratio of the reactances of the two paths. The flows out of the slack add to the unit injected: `0.83333 + 0.16667 = 1`.
+
+## Predicting a change without solving again
+
+The factors turn a question about any change of injection into a matrix product. The program raises the load at bus `2` from `0.5` to `0.8` per unit, a change of `-0.3` in its injection, and computes the new flows two ways: by adding `ptdf * delta_p` to the base flows, and by solving the DC power flow again for the changed load. The two must agree to rounding.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a ring of three buses: the slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 between them.
+// Lines: 0 joins buses 0-1 (x = 0.1), line 1 joins 1-2 (x = 0.2), line 2 joins 0-2 (x = 0.3).
+static power::Net ring() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.03});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const power::Grid grid = power::make(ring());
+  const auto base = flat(power::dc(grid).from_power);
+  const auto f = flat(power::ptdf(grid));
+
+  const double change = -0.3;   // the injection at bus 2 falls by 0.3: a larger load
+  std::vector<double> predicted(3);
+  for (int line = 0; line < 3; ++line) predicted[line] = base[line] + f[3 * line + 2] * change;
+
+  power::Net heavier = ring();
+  heavier.buses.p = vec({0.0, 0.0, -0.8});
+  const auto resolved = flat(power::dc(power::make(heavier)).from_power);
+  out.writeln("base flows:               ", base);
+  out.writeln("predicted with the PTDF:  ", predicted);
+  out.writeln("re-solved flows:          ", resolved);
+  double worst = 0.0;
+  for (int line = 0; line < 3; ++line) worst = std::max(worst, std::abs(predicted[line] - resolved[line]));
+  out.writeln("largest difference: ", worst);
+}
+```
+
+Output
+
+```text
+base flows:               [0.250000, 0.250000, 0.250000]
+predicted with the PTDF:  [0.400000, 0.400000, 0.400000]
+re-solved flows:          [0.400000, 0.400000, 0.400000]
+largest difference: 0.000000
+```
+
+The prediction equals the re-solved flows to rounding, `0.4` on each path for the load of `0.8`: the factors are exact for the DC model, and one matrix product replaced a solve. For many questions, such as every outage of every generator, that matters.
+
+## Lines out of service, and batches
+
+A line with `active` false carries no flow, so its factors are zero, and the other lines' factors change to reflect the network without it. Every value in the network may have leading axes, and the matrix then carries them: `[..., line, bus]`. The program takes line `2` out of the ring, prints the factors of the remaining network, which are those of a chain: any injection at bus `1` or `2` must flow back through the slack along the single remaining path, so the factors are `-1` on the lines it uses, and solves a batch of two load levels, which gives a leading axis of two on the matrix.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a ring of three buses: the slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 between them.
+// Lines: 0 joins buses 0-1 (x = 0.1), line 1 joins 1-2 (x = 0.2), line 2 joins 0-2 (x = 0.3).
+static power::Net ring() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.03});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  power::Net outage = ring();
+  outage.lines.active = {true, true, false};   // the direct line 0-2 is out
+  const auto f = flat(power::ptdf(power::make(outage)));
+  for (int line = 0; line < 3; ++line) out.writeln("line ", line, " (in service: ", line < 2 ? "yes" : "no ", "): ", f[3 * line], " ", f[3 * line + 1], " ", f[3 * line + 2]);
+
+  // a batch of two load levels on the same network
+  power::Net batch = ring();
+  batch.buses.p = pluss::series::make(std::vector<double>{0, 0, -0.2, 0, 0, -0.5}).reshape({2, 3});
+  batch.buses.q = pluss::series::make(std::vector<double>{0, 0, -0.04, 0, 0, -0.1}).reshape({2, 3});
+  const auto factors = power::ptdf(power::make(batch));
+  out.writeln("PTDF of a batch of two scenarios has shape ", factors.sizes());
+  const auto both = flat(factors);
+  double difference = 0.0;
+  for (int i = 0; i < 9; ++i) difference = std::max(difference, std::abs(both[i] - both[9 + i]));
+  out.writeln("largest difference between the matrices of the two scenarios: ", difference);
+}
+```
+
+Output
+
+```text
+line 0 (in service: yes): 0.00000 -1.00000 -1.00000
+line 1 (in service: yes): 0.00000 0.00000 -1.00000
+line 2 (in service: no ): 0.00000 0.00000 0.00000
+PTDF of a batch of two scenarios has shape [2, 3, 3]
+largest difference between the matrices of the two scenarios: 0.00000
+```
+
+Without the direct line, an injection at bus `2` travels along line `1` and line `0` back to the slack, so those two lines carry `-1` for it and line `2` carries nothing. The batch of two load levels gives shape `[2, 3, 3]`, and the two matrices are identical, as the printed difference of zero shows: the factors depend on the network, not on the loads.
+
+## Decisions
+
+- **Flow changes for many injection changes:** one `ptdf` and a matrix product, not a solve per change.
+- **Transfers between two buses, or between a generator and a load:** the difference of two columns.
+- **Voltage or loss questions:** the PTDF is a DC quantity; use the [AC power flow](../power_01_networks_and_power_flow/ac_power_flow.md).
+
+## Pitfalls
+
+The program reads a transfer wrongly, on purpose. It asks what a shift of `0.1` per unit of generation from bus `1` to bus `2` does to line `0`, which carries part of the way. Taking the factor of one bus alone answers the question for a transfer to or from the slack, not between the two. The difference of the two columns is the right answer, and the program checks it against a re-solved power flow.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a ring of three buses: the slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 between them.
+// Lines: 0 joins buses 0-1 (x = 0.1), line 1 joins 1-2 (x = 0.2), line 2 joins 0-2 (x = 0.3).
+static power::Net ring() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.03});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const power::Grid grid = power::make(ring());
+  const auto f = flat(power::ptdf(grid));
+  const int line = 0;
+  const double shift = 0.1;   // generation moves from bus 1 to bus 2: the injection falls by 0.1 at bus 1 and rises by 0.1 at bus 2
+
+  const double one_column = f[3 * line + 2] * shift;                           // reading the column of bus 2 alone
+  const double difference = (f[3 * line + 2] - f[3 * line + 1]) * shift;        // the transfer from bus 1 to bus 2
+
+  power::Net moved = ring();
+  moved.buses.p = vec({0.0, -0.1, -0.4});
+  const double before = flat(power::dc(grid).from_power)[line];
+  const double after = flat(power::dc(power::make(moved)).from_power)[line];
+  out.writeln("change of the flow on line 0 from re-solving:       ", after - before);
+  out.writeln("column of bus 2 alone (wrong):                      ", one_column);
+  out.writeln("difference of the columns of bus 2 and bus 1:       ", difference);
+}
+```
+
+Output
+
+```text
+change of the flow on line 0 from re-solving:       0.033333
+column of bus 2 alone (wrong):                      -0.050000
+difference of the columns of bus 2 and bus 1:       0.033333
+```
+
+The single column answers a different question, a shift of `0.1` between bus `2` and the slack, and is off by the contribution of bus `1`; the difference of the columns equals the re-solved change to rounding. The slack is the reference of the factors, so a transfer between two ordinary buses needs both of their columns.
+
+Reference: [`ptdf`](../../../../api/eng/power/security/ptdf.md), [`make`](../../../../api/eng/power/model/make.md), [`dc`](../../../../api/eng/power/flow/dc.md), [`Grid`](../../../../api/eng/power/model/Grid.md), [`Lines`](../../../../api/eng/power/model/Lines.md).
+
+Where next: [Line outages](line_outages.md) extends the factors to the loss of a line, and screens every outage of a network at once.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="line_outages.html">
+    <span class="label">Next</span>
+    <span class="title">Line outages</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

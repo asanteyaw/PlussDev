@@ -108,3 +108,12 @@ int main() {
 ```
 
 Just above the cut the logarithm of −4 has imaginary part +π and just below it −π, with real part ln 4 = 1.386294 on both sides. The square root is +2i above and −2i below, and the fractional power `pow(0.5)` agrees with `std::sqrt` on the principal branch. The residual 2.5 × 10⁻¹³ in the real part is the distance 10⁻¹² of the test points from the axis. A function built from these primitives is analytic everywhere except on the cut, which matters for the derivatives of the next page.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="wirtinger_derivatives.html">
+    <span class="label">Next</span>
+    <span class="title">Wirtinger derivatives</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

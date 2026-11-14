@@ -1,0 +1,28 @@
+# Fluid properties
+
+One place for the properties of water and air: each with an explicit state, a validity range that is enforced, and a provenance you can quote.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Liquid water from 0 to 100 degrees.
+
+@@example Eng/api/thermal_props_water.cpp@@
+
+### Example 2
+
+Dry air from 250 K to 600 K.
+
+@@example Eng/api/thermal_props_air.cpp@@
+
+### Example 3
+
+The provenance of the properties.
+
+@@example Eng/api/thermal_source_water.cpp@@
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

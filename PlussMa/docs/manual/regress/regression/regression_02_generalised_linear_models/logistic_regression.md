@@ -33,8 +33,8 @@ int main() {
   const auto none = pluss::series::zeros({8, 0}, as_f64());
   const auto y = pluss::make_series(std::vector<double>{0, 1, 1, 0, 1, 1, 0, 1}, {8}, as_f64());
   const auto fit = reg::glm_fit(y, none, options);
-  out.writeln("coefficient", fit.coefficients.pull<double>(), " logit of the mean 0.625:", std::log(0.625 / 0.375));
-  out.writeln("iterations", fit.iterations, " converged", fit.converged, " fitted probability", fit.fitted_values.pull<double>()[0]);
+  out.writeln("coefficient", fit.coefficients.items<double>(), " logit of the mean 0.625:", std::log(0.625 / 0.375));
+  out.writeln("iterations", fit.iterations, " converged", fit.converged, " fitted probability", fit.fitted_values.items<double>()[0]);
 }
 ```
 
@@ -71,7 +71,7 @@ int main() {
   options.response_name = "passed";
   options.predictor_names = {"hours"};
   const auto fit = reg::glm_fit(passed, hours, options);
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
   out.writeln("coefficients", b, " names", fit.coefficient_names);
   out.writeln("iterations", fit.iterations, " converged", fit.converged, " link is the logit:", fit.link == reg::GLMLink::Logit ? "yes" : "no");
 
@@ -82,8 +82,8 @@ int main() {
 
   // Wald statistics and p-values from the standard normal distribution.
   const distr::Normal standard(0.0, 1.0);
-  out.writeln("z values", fit.z_values.pull<double>(), " by hand", fit.coefficients.div(fit.std_errors).pull<double>());
-  out.writeln("p values", fit.p_values.pull<double>(), " by hand", standard.cdf(fit.z_values.abs()).neg().add(1.0).mul(2.0).pull<double>());
+  out.writeln("z values", fit.z_values.items<double>(), " by hand", fit.coefficients.div(fit.std_errors).items<double>());
+  out.writeln("p values", fit.p_values.items<double>(), " by hand", standard.cdf(fit.z_values.abs()).neg().add(1.0).mul(2.0).items<double>());
 
   // The covariance is the inverse of the Fisher information X'WX.
   const auto design = pluss::series::ones({10, 1}, as_f64()).unite({hours.reshape({10, 1})}, 1);
@@ -137,13 +137,13 @@ int main() {
   options.family = reg::GLMFamily::Binomial;
   const auto fit = reg::glm_fit(passed, hours, options);
 
-  const auto b = fit.coefficients.pull<double>();
-  const auto se = fit.std_errors.pull<double>();
+  const auto b = fit.coefficients.items<double>();
+  const auto se = fit.std_errors.items<double>();
   const auto ci = fit.conf_int.host<double>().array().data;
   out.writeln("interval of the slope", ci[2], ci[3], " half-width / std err", (ci[3] - ci[2]) / 2.0 / se[1], "(the 97.5% normal quantile is 1.9600)");
   out.writeln("odds ratio per hour    ", std::exp(b[1]), " interval [", std::exp(ci[2]), ",", std::exp(ci[3]), "]");
   out.writeln("odds ratio per 2 hours ", std::exp(2.0 * b[1]), " interval [", std::exp(2.0 * ci[2]), ",", std::exp(2.0 * ci[3]), "]");
-  out.writeln("the interval for the odds ratio excludes 1:", (std::exp(ci[2]) > 1.0 || std::exp(ci[3]) < 1.0) ? "yes" : "no", " (p value of the slope", fit.p_values.pull<double>()[1], ")");
+  out.writeln("the interval for the odds ratio excludes 1:", (std::exp(ci[2]) > 1.0 || std::exp(ci[3]) < 1.0) ? "yes" : "no", " (p value of the slope", fit.p_values.items<double>()[1], ")");
 }
 ```
 
@@ -181,14 +181,14 @@ int main() {
   const auto study = pluss::make_series(std::vector<double>{1.0, 2.5, 4.0, 8.0, 0.0}, {5}, as_f64());
   const auto probability = reg::glm_predict(fit, study);
   const auto log_odds = reg::glm_predict(fit, study, reg::GLMPredictionType::Linear);
-  out.writeln("hours       ", study.pull<double>());
-  out.writeln("probability ", probability.pull<double>());
-  out.writeln("log-odds    ", log_odds.pull<double>());
-  out.writeln("1/(1+exp(-log-odds))", log_odds.neg().exp().add(1.0).reciprocal().pull<double>());
+  out.writeln("hours       ", study.items<double>());
+  out.writeln("probability ", probability.items<double>());
+  out.writeln("log-odds    ", log_odds.items<double>());
+  out.writeln("1/(1+exp(-log-odds))", log_odds.neg().exp().add(1.0).reciprocal().items<double>());
 
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
   const double even = -b[0] / b[1];
-  out.writeln("hours at which the probability is one half", even, " predicted there", reg::glm_predict(fit, pluss::make_series(std::vector<double>{even}, {1}, as_f64())).pull<double>());
+  out.writeln("hours at which the probability is one half", even, " predicted there", reg::glm_predict(fit, pluss::make_series(std::vector<double>{even}, {1}, as_f64())).items<double>());
   out.writeln("the fitted values are the in-sample means:", reg::glm_predict(fit, hours).sub(fit.fitted_values).abs().max().item<double>());
 }
 ```
@@ -205,3 +205,12 @@ the fitted values are the in-sample means: 0.00000
 ```
 
 The probability of passing is 0.0856 at 1 hour, 0.4162 at 2.5 hours and 0.8445 at 4 hours. At 0 hours it is 0.0236, the logistic function of the intercept alone, and at 8 hours, beyond the data, 0.9992. The mean is the logistic function of the log-odds, as the third line confirms. The probability is one half where the log-odds is zero, at 2.75 hours, and predicting there returns 0.5. Predicting at the original rows returns the fitted values.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="poisson_regression.html">
+    <span class="label">Next</span>
+    <span class="title">Poisson regression</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

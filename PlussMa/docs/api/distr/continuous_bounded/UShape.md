@@ -246,3 +246,16 @@ The formula and `distr::cdf` agree to 5.55e-17 over the grid, so the library imp
 - [`Arcsin`](../continuous_bounded/Arcsin.md)
 - [`Beta`](../continuous_bounded/Beta.md)
 - [`Cosine`](../continuous_bounded/Cosine.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Triangular.html">
+    <span class="label">Previous</span>
+    <span class="title">Triangular</span>
+  </a>
+  <a class="next-link" href="Uniform.html">
+    <span class="label">Next</span>
+    <span class="title">Uniform</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

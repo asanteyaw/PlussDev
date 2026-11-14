@@ -1,0 +1,78 @@
+# `power::EstimateResult`
+
+The estimated state, residuals, covariance and diagnostics.
+
+## Signature
+
+```cpp
+power::EstimateResult
+```
+
+## What It Does
+
+The result of `estimate`. Arrays keep the leading scenario axes.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `voltage` | Complex estimated bus voltages, `[..., bus]`. |  |
+| `magnitude` | Estimated voltage magnitudes. |  |
+| `angle` | Estimated voltage angles in radians. |  |
+| `injection` | The complex bus injections implied by the estimate, `[..., bus]`. |  |
+| `from_power` | Complex power entering each line at its sending end, `[..., line]`. |  |
+| `to_power` | Complex power entering each line at its receiving end. |  |
+| `predicted` | `h(x)` at the estimate, `[..., measurement]`, in the order given. |  |
+| `residual` | `value - predicted`. |  |
+| `normalized_residual` | The residual divided by its own standard deviation: large values flag suspect measurements. |  |
+| `objective` | The minimum weighted sum of squares `J`. |  |
+| `covariance` | The covariance of the estimated state, `[..., state, state]`, the angles of the non-reference buses first and then the magnitudes. |  |
+| `converged` | True when the iteration converged, `[...]`. |  |
+| `iterations` | Gauss-Newton iterations used. |  |
+
+## Returns
+
+Returned by `estimate`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+Compare `objective` with a chi-square threshold of the redundancy and read the normalised residuals. The estimator reports this evidence; it does not remove measurements.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field against an independent least-squares solution.
+
+@@example Eng/api/power_est_state.cpp@@
+
+### Example 2
+
+Residuals, covariance and a gross error.
+
+@@example Eng/api/power_est_residuals.cpp@@
+
+### Example 3
+
+A wrong measurement accepted.
+
+@@example Eng/api/power_est_pitfalls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="EstimateOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">EstimateOptions</span>
+  </a>
+  <a class="next-link" href="estimate.html">
+    <span class="label">Next</span>
+    <span class="title">estimate</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

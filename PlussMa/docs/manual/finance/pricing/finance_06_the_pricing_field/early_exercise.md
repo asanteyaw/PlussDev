@@ -1,0 +1,664 @@
+<!-- generated from early_exercise.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Early exercise: American and Bermudan options
+
+[Back to The Pricing Field](../finance_06_the_pricing_field.md)
+
+Every option so far was **European**: it can be exercised on one day, the maturity {math}`T`. A **Bermudan** option can be exercised on a fixed list of days {math}`t_1<\dots<t_m\le T`, and an **American** option on any day up to {math}`T`. They are one family. A European option is a Bermudan with the single date {math}`T`, and an American is the limit of Bermudans on ever finer lists, so the `Field` describes all three with one setting on the instrument, `instrument.exercise`, and prices them with the same objects as before.
+
+## The problem being solved
+
+The holder chooses the exercise day, so the value is the best expected discounted payoff over every rule that decides, from what has happened so far, whether to stop:
+
+```{math}
+V_0=\sup_{\tau\in\mathcal{T}}\ \mathbb{E}^{\mathbb{Q}}\!\left[e^{-r\tau}\,g(S_\tau)\right],\qquad g(S)=(K-S)^+\ \text{for a put},\ (S-K)^+\ \text{for a call},
+```
+
+where {math}`\mathcal{T}` is the set of allowed exercise days: {math}`\{T\}` (European), {math}`\{t_1,\dots,t_m,T\}` (Bermudan) or {math}`[0,T]` (American). Working backwards from {math}`T`, the value at an allowed day is the larger of exercising and of waiting,
+
+```{math}
+V_{t}=\max\!\Big(g(S_t),\ \,e^{-r\Delta t}\,\mathbb{E}^{\mathbb{Q}}\big[V_{t+\Delta t}\mid S_t\big]\Big),
+```
+
+and at a day when exercise is not allowed only the second term remains. Everything below is a way to evaluate that conditional expectation, the **continuation value**. Two consequences are worth knowing before any number is computed. The value is never below the intrinsic value {math}`g(S_0)`, and it is never below the European value, since waiting until {math}`T` is one of the rules. And an American call on an asset that pays no dividend is *never* exercised early, so it is worth exactly the European call: giving up the option to wait forgoes the interest on the strike and the insurance against a fall, for nothing in return. A put, or a call on an asset with a dividend yield, has a genuine early-exercise premium.
+
+## How the instrument says it
+
+| Member of `instrument` | Meaning |
+|---|---|
+| `exercise` | `ExerciseStyle::European` (default), `Bermudan` or `American` |
+| `exercise_times` | Bermudan only: the interim exercise dates, in years from today |
+
+| Call | Returns |
+|---|---|
+| `instrument::Vanilla instrument::american(pricing::OptionType type, double strike, double maturity, Config cfg);` | an American option |
+| `instrument::Vanilla instrument::bermudan(pricing::OptionType type, double strike, double maturity, std::span<const double> dates, Config cfg);` | a Bermudan option exercisable on `dates` and at the maturity |
+
+Dates at or beyond an option's maturity add nothing: the maturity is always an exercise day, and a date after it is outside that option's life. This matters when one schedule is shared by options of different maturities, each uses the dates that fall within its own life. A Bermudan needs at least one date.
+
+## The five engines
+
+| Engine | Models | How the continuation value is found |
+|---|---|---|
+| `Spectral` | `BlackScholes` | the integral equation for the exercise boundary, solved by Chebyshev collocation; American (and European) exercise |
+| `Lattice` | `BlackScholes` | a Cox-Ross-Rubinstein binomial tree; the maximum is taken node by node; Bermudan too |
+| `Cos` | `BlackScholes`, `Heston`, `Bates` | Fourier-cosine expansion of the value between exercise dates (with quadrature in the variance for Heston and Bates); Bermudan directly, American by extrapolation over Bermudans |
+| `Pde` | `Heston` | a two-dimensional finite-difference solution of the Heston equation with the exercise constraint; European, Bermudan and American |
+| `MonteCarlo` | all six | Longstaff-Schwartz regression on simulated paths |
+
+The closed-form and transform engines (`Analytic`, `Fft`, `Cos`) price European exercise only and say so if asked for anything else. `Lattice` and `Spectral` also price a European option, which makes them a check on the others. `Spectral` does not price a Bermudan option.
+
+**The lattice.** In a tree with {math}`N` steps of length {math}`\Delta t=T/N` the asset moves to {math}`uS` or {math}`S/u` with {math}`u=e^{\sigma\sqrt{\Delta t}}`, the up-move having risk-neutral probability {math}`p=(e^{(r-q)\Delta t}-u^{-1})/(u-u^{-1})`. The value at a node is {math}`e^{-r\Delta t}\,(pV_{\uparrow}+(1-p)V_{\downarrow})`, replaced by {math}`g(S)` wherever exercise is allowed and larger. It is deterministic and converges at rate {math}`1/N`; `controls.lattice.steps` sets {math}`N` (default 1000). A Bermudan date is snapped to the nearest step.
+
+**The integral equation.** Let {math}`B(\tau)` be the exercise boundary of a put: the asset price below which, with time {math}`\tau` to maturity, exercising is better than waiting. The American put equals the European put plus the value of the right to exercise early, which accrues only along the boundary:
+
+```{math}
+V(S,\tau)=v(S,\tau)+\int_0^{\tau}\Big[rK\,e^{-rs}\,\Phi\big(-d_-(s,S/B(\tau-s))\big)-qS\,e^{-qs}\,\Phi\big(-d_+(s,S/B(\tau-s))\big)\Big]\,ds,
+```
+
+where {math}`v` is the European price, {math}`\Phi` the normal distribution function and {math}`d_\pm(s,z)=\big(\ln z+(r-q\pm\tfrac12\sigma^2)s\big)/(\sigma\sqrt s)`. The boundary is not known, but it must satisfy the value-matching condition {math}`V(B(\tau),\tau)=K-B(\tau)` and the smooth-pasting condition {math}`\partial_S V=-1` there. Together they give a fixed-point equation for the boundary alone,
+
+```{math}
+B(\tau)=K\,e^{-(r-q)\tau}\,\frac{N(\tau,B)}{D(\tau,B)},
+```
+
+with {math}`N` and {math}`D` themselves integrals over the earlier values {math}`B(u)`, {math}`0<u<\tau`. The `Spectral` engine solves it as follows. The quantity {math}`\ln(X/B(\tau))^2`, with {math}`X=B(0)=K\min(1,r/q)`, is smooth in {math}`\sqrt\tau`, so it is represented by a Chebyshev interpolant in {math}`\sqrt\tau` through `nodes + 1` points; the integrals are taken by Gauss-Legendre quadrature in an angle that removes the square-root singularities at both ends; and the equation is iterated to a fixed point. The price then follows from the first formula, with the boundary read off the interpolant, and a call is priced as a put through the symmetry {math}`C(S,K,r,q)=P(K,S,q,r)`. The work does not depend on the spot or on how deep in the money the option is, and the error falls geometrically with `nodes`: 24 nodes give an error of about {math}`10^{-9}` for the options below.
+
+**The cosine expansion.** Between two exercise dates the option is a European one, and the COS method (Fang and Oosterlee) evaluates it from the characteristic function of the log-return: if the value just after a date is known through its cosine coefficients {math}`V_k` on an interval {math}`[a,b]`, the continuation value at the previous date is {math}`c(x)=e^{-r\Delta t}\sum_k' \operatorname{Re}\big(\varphi(k\pi/(b-a))\,e^{ik\pi(x-a)/(b-a)}\big)V_k`, with {math}`x=\ln(S/K)`. At each date the exercise point {math}`x^*`, where the continuation value equals the payoff, is found by a root search; the coefficients of the value are then the payoff's below {math}`x^*` and the continuation value's above it, both known in closed form, and the recursion repeats. A Bermudan option is priced by this directly, and the error falls exponentially with `cos.exercise_terms`. An American option is the limit of Bermudans with ever more dates, and is obtained by the four-point Richardson extrapolation
+
+```{math}
+V_{\mathrm{AM}}=\tfrac1{21}\big(64\,v(2^{d+3})-56\,v(2^{d+2})+14\,v(2^{d+1})-v(2^{d})\big)
+```
+
+of the Bermudan prices {math}`v(M)` with {math}`M` equally spaced dates; `cos.extrapolation` is {math}`d`. The extrapolation, not the series, limits the accuracy of an American price, which is typically between {math}`10^{-5}` and {math}`10^{-3}` away from the spectral engine's: use `Spectral` when the American price itself is the aim and `Cos` for a Bermudan one.
+
+**Heston and Bates.** With stochastic variance the state has two coordinates, and the transition density of the log-price given the variance path has no closed form. The Heston version of the method (Fang and Oosterlee, 2011) keeps the cosine expansion in the log-asset dimension and discretises the log-variance {math}`\sigma=\ln v` by quadrature on nodes {math}`\varsigma_j`: the value after a date is a set of cosine coefficients {math}`V_{n,j}` for each node, and one step multiplies them by a kernel {math}`\tilde\varphi(\omega,\varsigma_j,\varsigma_p)`, the product of the transition density of the log-variance and the characteristic function of the log-asset given both variances. The Bessel functions of the two cancel except for one, of complex argument, which is why the engine contains a complex Bessel function. The change to the log-variance is what makes the Feller-violating parameter sets tractable: in {math}`v` itself the density of the variance blows up at zero. The log-variance range is chosen from the noncentral chi-square distribution of the variance at the exercise dates (`cos.variance_tolerance` is the probability left outside), the quadrature is a composite Gauss-Legendre rule with most of its `cos.variance_nodes` in the bulk of the distribution, and the cost of one date is proportional to {math}`N J^2` for {math}`N` cosine terms and {math}`J` nodes. Bates adds the independent jump factor of the log-asset to the kernel. The default extrapolation depth is 2 for these two models (3 for Black-Scholes): each extra level halves the step, and the variance grid must then resolve a narrower transition density.
+
+**What the engine refuses.** The quadrature fails silently if it cannot resolve the transition density of the variance at a short step: the recursion then returns a wrong price with nothing to show for it. The engine therefore checks, before it uses a step length, that the quadrature of the density of the log-variance integrates to 1 at the nodes in the bulk, and raises an error that names the step and the remedy (more `cos.variance_nodes`, fewer dates, or a smaller extrapolation depth) when it does not. The same width of the log-asset range matters for a different reason: the call payoff grows exponentially across the range, so `cos.exercise_truncation` (9 standard deviations) is narrower than the 12 of the European method.
+
+**The Heston PDE.** For Heston there is no boundary curve to find, since the exercise region lies in the plane of asset price and variance. The value {math}`V(S,v,\tau)` solves
+
+```{math}
+\partial_\tau V=\tfrac12 vS^2V_{SS}+\rho\sigma vS\,V_{Sv}+\tfrac12\sigma^2vV_{vv}+(r-q)S\,V_S+\kappa(\theta-v)V_v-rV,\qquad V\ge(K-S)^+,
+```
+
+with equality where exercising is optimal. The `Pde` engine discretises both variables with second-order finite differences on grids that are stretched, so that the nodes cluster around the strike (with the strike itself a node, where the payoff has its kink) and near {math}`v=0`. In time it uses an alternating-direction (ADI) scheme, in which each step needs only tridiagonal solves along one axis at a time; the mixed derivative {math}`V_{Sv}` is treated explicitly with a correction step, and the first steps are fully implicit to damp the payoff kink. For American exercise the constraint is imposed by splitting: each step is solved without it, the multiplier of the previous step is removed, and the result is projected onto the payoff. A Bermudan option is projected only on its dates, and a European one never. The error falls about fourfold when `spot_nodes` is doubled; the variance grid and the number of steps matter much less at the defaults.
+
+**The regression.** Simulation cannot compute {math}`\mathbb{E}[V_{t+\Delta t}\mid S_t]` directly, since each path has seen only one future. Longstaff and Schwartz estimate it from the paths themselves. Starting from the cash flows at {math}`T`, at each allowed day going backwards they take the in-the-money paths, regress the discounted cash flow that follows on a polynomial {math}`1,x,\dots,x^d` of {math}`x=S_t/K`, and exercise on the paths where the intrinsic value exceeds the fitted continuation value. The price is the discounted average of the cash flows that result. Because a fitted rule is never better than the optimal one, the estimate is **biased low**, and the bias shrinks with a better basis. Paths are drawn from the model's own simulator, which is why every model works: `controls.mc.paths` and `controls.mc.steps` set the sample and the grid of allowed days (an American option is exercisable on all `steps` of them), `controls.mc.basis_degree` sets {math}`d` (default 3), and the seed, scheme and antithetic switches are the ones of Chapter 4. Control variates and importance sampling are rejected, since they are written for a terminal payoff.
+
+## Program 1: three styles on one put
+
+A one-year at-the-money put with 5% interest and 20% volatility, priced on the same 1000-step lattice as a European, as Bermudans with quarterly and monthly dates, and as an American. The prices increase with the number of exercise days, and the European value agrees with the closed formula.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  const auto put = fin::pricing::Put;
+  mod::Field field{.market = fin::market::make(100.0, 0.05, 0.0), .model = fin::model::BlackScholes{.volatility = pluss::series::full({1}, 0.2, as_f64())}};
+  field.controls.engine = mod::Engine::Lattice;
+  field.controls.risk = mod::Risk::PriceOnly;
+  const std::vector<double> quarterly{0.25, 0.5, 0.75};
+  std::vector<double> monthly;
+  for (int m = 1; m < 12; ++m) monthly.push_back(m / 12.0);
+  const auto show = [&](const char *name, const fin::instrument::Vanilla &inst) {
+    field.instrument = inst;
+    char line[96];
+    std::snprintf(line, sizeof line, "%-22s %.4f", name, field.price().price.items<double>()[0]);
+    out.writeln(line);
+  };
+  show("European", fin::instrument::make(put, 100.0, 1.0));
+  show("Bermudan, quarterly", fin::instrument::bermudan(put, 100.0, 1.0, quarterly));
+  show("Bermudan, monthly", fin::instrument::bermudan(put, 100.0, 1.0, monthly));
+  show("American", fin::instrument::american(put, 100.0, 1.0));
+  field.controls.engine = mod::Engine::Analytic;
+  field.instrument = fin::instrument::make(put, 100.0, 1.0);
+  char line[96];
+  std::snprintf(line, sizeof line, "%-22s %.4f", "European, closed form", field.price().price.items<double>()[0]);
+  out.writeln(line);
+}
+```
+
+Output
+
+```text
+European               5.5715
+Bermudan, quarterly    5.9555
+Bermudan, monthly      6.0419
+American               6.0896
+European, closed form  5.5735
+```
+
+Each step up adds rights, so each price is at least the one before; the American minus the European, about 0.52, is the **early-exercise premium** of this put. The monthly Bermudan already captures most of it, which is the sense in which an American is the limit of Bermudans.
+
+## Program 2: where early exercise pays
+
+The premium depends on the moneyness, and on whether holding the option earns more than the cash from exercising. The program prices the American put at five spots and the American call with and without a dividend yield, each against the European value on the same lattice. Deep in the money the put is worth its intrinsic value (it is exercised at once); the call without a dividend has no premium at all.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  mod::Field field{.model = fin::model::BlackScholes{.volatility = pluss::series::full({1}, 0.2, as_f64())}};
+  field.controls.engine = mod::Engine::Lattice;
+  field.controls.risk = mod::Risk::PriceOnly;
+  const auto price = [&](fin::pricing::OptionType type, bool american, double spot, double q) {
+    field.market = fin::market::make(spot, 0.05, q);
+    field.instrument = american ? fin::instrument::american(type, 100.0, 1.0) : fin::instrument::make(type, 100.0, 1.0);
+    return field.price().price.items<double>()[0];
+  };
+  out.writeln("put, no dividend      spot  American  European   premium");
+  for (const double spot : {60.0, 80.0, 100.0, 120.0, 140.0}) {
+    const double a = price(fin::pricing::Put, true, spot, 0.0), e = price(fin::pricing::Put, false, spot, 0.0);
+    char line[96];
+    std::snprintf(line, sizeof line, "                    %5.0f  %8.4f  %8.4f  %8.4f", spot, a, e, a - e);
+    out.writeln(line);
+  }
+  out.writeln("call, at the money    yield  American  European   premium");
+  for (const double q : {0.0, 0.03, 0.08}) {
+    const double a = price(fin::pricing::Call, true, 100.0, q), e = price(fin::pricing::Call, false, 100.0, q);
+    char line[96];
+    std::snprintf(line, sizeof line, "                    %5.2f  %8.4f  %8.4f  %8.4f", q, a, e, a - e);
+    out.writeln(line);
+  }
+}
+```
+
+Output
+
+```text
+put, no dividend      spot  American  European   premium
+                       60   40.0000   35.1772    4.8228
+                       80   20.0000   16.9826    3.0174
+                      100    6.0896    5.5715    0.5181
+                      120    1.3678    1.2928    0.0751
+                      140    0.2433    0.2336    0.0097
+call, at the money    yield  American  European   premium
+                     0.00   10.4486   10.4486    0.0000
+                     0.03    8.6508    8.6506    0.0002
+                     0.08    6.5412    6.1411    0.4001
+```
+
+For the put the premium is largest in the money and vanishes as the spot rises, where exercise becomes a remote possibility. For the call the premium is exactly zero at no dividend, and grows with the yield, since a dividend is what the holder of the option, but not of the share, forgoes.
+
+## Program 3: convergence of the lattice against the spectral price, and the Greeks
+
+The lattice error shrinks like {math}`1/N`. The spectral engine gives the price the tree is converging to, so the program prints the tree's error at 50 to 4000 steps. It then reads the Greeks of the American put from the spectral engine, with `risk = All`. The Greeks of an early-exercise price are bumped prices, like the other engines'; on a fixed tree the value is piecewise linear in the spot, so the lattice and the regression bump the spot and the volatility by 2%, about the spacing of a few nodes, while the smooth spectral price needs only the small bump.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  mod::Field field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(100.0, 0.05, 0.0),
+                   .model = fin::model::make(fin::model::Kind::BlackScholes, {0.2}),
+                   .controls = {.engine = mod::Engine::Spectral, .risk = mod::Risk::PriceOnly}};
+  const double exact = field.price().price.items<double>()[0];
+  char line[160];
+  std::snprintf(line, sizeof line, "spectral price %.8f", exact);
+  out.writeln(line);
+  field.controls.engine = mod::Engine::Lattice;
+  for (const std::int64_t steps : {50, 100, 500, 1000, 4000}) {
+    field.controls.lattice.steps = steps;
+    std::snprintf(line, sizeof line, "lattice steps %5lld  price %.5f  error %.2e", static_cast<long long>(steps), field.price().price.items<double>()[0],
+                  field.price().price.items<double>()[0] - exact);
+    out.writeln(line);
+  }
+  field.controls.engine = mod::Engine::Spectral;
+  field.controls.risk = mod::Risk::All;
+  const auto g = field.price().greeks;
+  std::snprintf(line, sizeof line, "delta %.4f  gamma %.4f  vega %.3f  theta %.3f  rho %.3f", g.delta.items<double>()[0], g.gamma.items<double>()[0],
+                g.vega.items<double>()[0], g.theta.items<double>()[0], g.rho.items<double>()[0]);
+  out.writeln(line);
+}
+```
+
+Output
+
+```text
+spectral price 6.09037059
+lattice steps    50  price 6.07373  error -1.66e-02
+lattice steps   100  price 6.08235  error -8.02e-03
+lattice steps   500  price 6.08881  error -1.56e-03
+lattice steps  1000  price 6.08960  error -7.75e-04
+lattice steps  4000  price 6.09018  error -1.90e-04
+delta -0.4111  gamma 0.0230  vega 37.488  theta -2.238  rho -30.217
+```
+
+All five Greeks are those of the American price. The delta, about -0.41, is larger in size than the European put's -0.36: the right to exercise makes the option behave more like a short position in the asset.
+
+## Program 4: the regression, for a model with no lattice
+
+The spectral engine and the tree are Black-Scholes. The same `Field` with the `MonteCarlo` engine prices the American put by regression, here first under Black-Scholes to be compared with the spectral price, then under Heston with a vanishing volatility of variance (so it must give the same price), then under Heston with a real one. The error of the regression estimate shrinks with the number of paths, and its bias with the degree of the basis.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  const auto s = [](double v) { return pluss::series::full({1}, v, as_f64()); };
+  mod::Field field{.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0), .market = fin::market::make(100.0, 0.05, 0.0),
+                   .model = fin::model::BlackScholes{.volatility = s(0.2)}};
+  field.controls.risk = mod::Risk::PriceOnly;
+  field.controls.engine = mod::Engine::Spectral;
+  const auto show = [&](const char *name) {
+    char line[96];
+    std::snprintf(line, sizeof line, "%-34s %.4f", name, field.price().price.items<double>()[0]);
+    out.writeln(line);
+  };
+  show("Black-Scholes, spectral");
+  field.controls.engine = mod::Engine::MonteCarlo;
+  field.controls.mc.paths = 100000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.antithetic = true;
+  show("Black-Scholes, regression");
+  field.controls.mc.basis_degree = 1;
+  show("Black-Scholes, regression, degree 1");
+  field.controls.mc.basis_degree = 3;
+  field.model = fin::model::Heston{.kappa = s(2.0), .theta = s(0.04), .sigma = s(0.01), .rho = s(0.0), .v0 = s(0.04)};
+  show("Heston, vol-of-vol 0.01");
+  field.model = fin::model::Heston{.kappa = s(1.5), .theta = s(0.04), .sigma = s(0.5), .rho = s(-0.7), .v0 = s(0.04)};
+  show("Heston, vol-of-vol 0.5, rho -0.7");
+  field.instrument = fin::instrument::make(fin::pricing::Put, 100.0, 1.0);
+  field.controls.engine = mod::Engine::Cos;
+  show("same Heston, European, COS");
+}
+```
+
+Output
+
+```text
+Black-Scholes, spectral            6.0904
+Black-Scholes, regression          6.0455
+Black-Scholes, regression, degree 1 5.9518
+Heston, vol-of-vol 0.01            6.0830
+Heston, vol-of-vol 0.5, rho -0.7   5.6230
+same Heston, European, COS         5.1784
+```
+
+The regression price sits a few cents below the spectral price, as a low-biased estimate should (part of the gap is the 50-day grid of allowed exercise days, which makes it a Bermudan); a degree-1 basis (a straight line for the continuation value) is visibly worse than degree 3. With stochastic volatility the early-exercise premium persists: the American price is above the European price from the transform engine. Only the simulation engine can value the American under Heston, and it does so for all six models in the same way.
+
+## Program 5: what is refused, and implied volatility from American quotes
+
+An engine that prices European exercise only refuses an American instrument and names the engines that do work. The same `Field` then backs out a volatility from American quotes with the objective of Chapter 6, here recovering the 27% used to produce the quotes.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  auto inst = fin::instrument::american(fin::pricing::Put, 100.0, 1.0);
+  inst.strike = pluss::make_series({90.0, 100.0, 110.0}, {3}, as_f64());
+  mod::Field field{.instrument = inst, .market = fin::market::make(100.0, 0.05, 0.0), .model = fin::model::BlackScholes{.volatility = pluss::series::full({1}, 0.27, as_f64())}};
+  field.controls.risk = mod::Risk::PriceOnly;
+  field.controls.engine = mod::Engine::Analytic;
+  try {
+    field.price();
+  } catch (const std::exception &e) {
+    const std::string message = e.what();
+    out.writeln(message.substr(0, message.find('\n')));
+  }
+  field.controls.engine = mod::Engine::Lattice;
+  field.controls.lattice.steps = 300;
+  const auto quotes = field.price().price;
+  char quoted[96];
+  std::snprintf(quoted, sizeof quoted, "quotes %.4f %.4f %.4f", quotes.items<double>()[0], quotes.items<double>()[1], quotes.items<double>()[2]);
+  out.writeln(quoted);
+  const auto objective = field.bind_objective_typed<fin::model::BlackScholes>(quotes, as_f64());
+  const auto at = [&](double sigma) { return objective(fin::model::BlackScholes{.volatility = pluss::series::full({1}, sigma, as_f64())}); };
+  double lo = 0.05, hi = 0.6;
+  for (int i = 0; i < 60; ++i) {
+    const double a = lo + (hi - lo) / 3.0, b = hi - (hi - lo) / 3.0;
+    (at(a) < at(b)) ? hi = b : lo = a;
+  }
+  char line[96];
+  std::snprintf(line, sizeof line, "implied volatility %.6f", 0.5 * (lo + hi));
+  out.writeln(line);
+}
+```
+
+Output
+
+```text
+subsp::math::finance::module::Field: controls.engine Analytic prices European exercise only; American and Bermudan options need the MonteCarlo engine (any model) or the Lattice or Spectral engine (BlackScholes) or the Pde engine (Heston)
+quotes 4.5920 8.7279 14.4833
+implied volatility 0.270000
+```
+
+## Program 6: the COS engine, against a published Bermudan value
+
+The first line reproduces the Bermudan put of Fang and Oosterlee (*Numer. Math.* 114, 2009, Section 4.1, Test 1): ten equally spaced exercise dates, spot 100, strike 110, one year, 10% interest and 20% volatility. They report 10.479520123, computed by a different method. The remaining lines price the one-year at-the-money put of Program 1 as a European, as a quarterly Bermudan and as an American, and put the extrapolated American price beside the spectral one.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  mod::Field field;
+  field.model = fin::model::make(fin::model::Kind::BlackScholes, {0.2});
+  field.controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly};
+  char line[160];
+  std::vector<double> tenths;
+  for (int k = 1; k < 10; ++k) tenths.push_back(k / 10.0);
+  field.market = fin::market::make(100.0, 0.1, 0.0);
+  field.instrument = fin::instrument::bermudan(fin::pricing::Put, 110.0, 1.0, tenths);
+  std::snprintf(line, sizeof line, "published Bermudan test    %.9f   (reference 10.479520123)", field.price().price.items<double>()[0]);
+  out.writeln(line);
+
+  field.market = fin::market::make(100.0, 0.05, 0.0);
+  field.instrument = fin::instrument::make(fin::pricing::Put, 100.0, 1.0);
+  std::snprintf(line, sizeof line, "European                   %.6f", field.price().price.items<double>()[0]);
+  out.writeln(line);
+  field.instrument = fin::instrument::bermudan(fin::pricing::Put, 100.0, 1.0, std::vector<double>{0.25, 0.5, 0.75});
+  std::snprintf(line, sizeof line, "Bermudan, quarterly        %.6f", field.price().price.items<double>()[0]);
+  out.writeln(line);
+  field.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0);
+  for (const std::int64_t depth : {1, 2, 3}) {
+    field.controls.cos.extrapolation = depth;
+    std::snprintf(line, sizeof line, "American, extrapolation d=%lld %.6f", static_cast<long long>(depth), field.price().price.items<double>()[0]);
+    out.writeln(line);
+  }
+  field.controls.engine = mod::Engine::Spectral;
+  std::snprintf(line, sizeof line, "American, spectral         %.6f", field.price().price.items<double>()[0]);
+  out.writeln(line);
+}
+```
+
+Output
+
+```text
+published Bermudan test    10.479520123   (reference 10.479520123)
+European                   5.573526
+Bermudan, quarterly        5.956635
+American, extrapolation d=1 6.091081
+American, extrapolation d=2 6.090194
+American, extrapolation d=3 6.090345
+American, spectral         6.090371
+```
+
+## Program 7: Heston by the COS method, and when it refuses
+
+The first block prices the Bermudan put of the Feller-violating parameter set of Program 8 with 20 dates by the COS engine and by the PDE engine, which share no code. The paper prints 3.2047 for the same problem; the two independent computations agree with each other more closely than with it. The second block asks for the same option with 40 dates and only 32 variance nodes, which cannot resolve the narrow transition density, and prints the first line of the error.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  mod::Field field;
+  field.market = fin::market::make(100.0, 0.04, 0.0);
+  field.model = fin::model::make(fin::model::Kind::Heston, {1.15, 0.0348, 0.39, -0.64, 0.0348});
+  field.controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly};
+  char line[200];
+  const auto dates = [](int count) {
+    std::vector<double> d;
+    for (int k = 1; k < count; ++k) d.push_back(0.25 * k / count);
+    return d;
+  };
+  field.instrument = fin::instrument::bermudan(fin::pricing::Put, 100.0, 0.25, dates(20));
+  std::snprintf(line, sizeof line, "COS,  20 dates    %.5f", field.price().price.items<double>()[0]);
+  out.writeln(line);
+  field.controls.engine = mod::Engine::Pde;
+  field.controls.pde = {.spot_nodes = 480, .variance_nodes = 120, .time_steps = 400};
+  std::snprintf(line, sizeof line, "PDE,  20 dates    %.5f", field.price().price.items<double>()[0]);
+  out.writeln(line);
+
+  field.controls.engine = mod::Engine::Cos;
+  field.controls.cos.variance_nodes = 32;
+  field.instrument = fin::instrument::bermudan(fin::pricing::Put, 100.0, 0.25, dates(40));
+  try {
+    field.price();
+  } catch (const std::exception &e) {
+    const std::string message = e.what();
+    out.writeln(message.substr(0, message.find('\n')));
+  }
+}
+```
+
+Output
+
+```text
+COS,  20 dates    3.20383
+PDE,  20 dates    3.20359
+subsp::math::finance::pricing::heston_price_cos_exercise: the variance quadrature does not resolve the transition density for a step of 0.006250 years (it integrates to 1.001217 at log-variance -22.402050); raise variance_nodes or use fewer exercise dates / a smaller extrapolation depth
+```
+
+## Program 8: Heston, against published prices
+
+The `Pde` engine is checked against prices published for a standard test case: {math}`\kappa=5`, {math}`\theta=0.16`, {math}`\sigma=0.9`, {math}`\rho=0.1`, {math}`r=0.1`, a put with strike 10 and maturity 0.25, at five spots and two initial variances. The reference rows are the Ikonen-Toivanen values quoted by in 't Hout and Haentjens (*ADI schemes for pricing American options under the Heston model*, Tables 2 and 3), to four decimals. The second part prices Bermudan puts with 20 and 60 equally spaced dates for a parameter set that violates the Feller condition ({math}`\kappa=1.15`, {math}`\theta=0.0348`, {math}`\sigma=0.39`, {math}`\rho=-0.64`, {math}`r=0.04`, strike 100, maturity 0.25, spot 100), against the COS-method values published by Fang and Oosterlee (quoted in Table 4 of the same paper): 3.2047 and 3.2079.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  mod::Field field;
+  field.instrument = fin::instrument::american(fin::pricing::Put, 10.0, 0.25);
+  field.market = fin::market::make(10.0, 0.1, 0.0);
+  field.controls = {.engine = mod::Engine::Pde, .risk = mod::Risk::PriceOnly};
+  const double published[2][5] = {{2.0000, 1.1076, 0.5199, 0.2135, 0.0820}, {2.0785, 1.3336, 0.7959, 0.4482, 0.2427}};
+  const double variances[2] = {0.0625, 0.25};
+  char line[160];
+  out.writeln("v0        S0   Pde engine   published");
+  for (int row = 0; row < 2; ++row) {
+    field.model = fin::model::make(fin::model::Kind::Heston, {5.0, 0.16, 0.9, 0.1, variances[row]});
+    for (int col = 0; col < 5; ++col) {
+      field.market = fin::market::make(8.0 + col, 0.1, 0.0);
+      std::snprintf(line, sizeof line, "%-8.4f %3.0f   %9.4f   %9.4f", variances[row], 8.0 + col, field.price().price.items<double>()[0], published[row][col]);
+      out.writeln(line);
+    }
+  }
+  field.market = fin::market::make(100.0, 0.04, 0.0);
+  field.model = fin::model::make(fin::model::Kind::Heston, {1.15, 0.0348, 0.39, -0.64, 0.0348});
+  out.writeln("Bermudan put, Feller violated      Pde engine   published (COS)");
+  const double cos_values[2] = {3.2047, 3.2079};
+  const int counts[2] = {20, 60};
+  for (int i = 0; i < 2; ++i) {
+    std::vector<double> dates;
+    for (int k = 1; k < counts[i]; ++k) dates.push_back(0.25 * k / counts[i]);
+    field.instrument = fin::instrument::bermudan(fin::pricing::Put, 100.0, 0.25, dates);
+    field.controls.pde.time_steps = 200;
+    std::snprintf(line, sizeof line, "%2d dates                        %9.4f   %9.4f", counts[i], field.price().price.items<double>()[0], cos_values[i]);
+    out.writeln(line);
+  }
+}
+```
+
+Output
+
+```text
+v0        S0   Pde engine   published
+0.0625     8      2.0000      2.0000
+0.0625     9      1.1076      1.1076
+0.0625    10      0.5200      0.5199
+0.0625    11      0.2136      0.2135
+0.0625    12      0.0820      0.0820
+0.2500     8      2.0784      2.0785
+0.2500     9      1.3336      1.3336
+0.2500    10      0.7959      0.7959
+0.2500    11      0.4482      0.4482
+0.2500    12      0.2427      0.2427
+Bermudan put, Feller violated      Pde engine   published (COS)
+20 dates                           3.2029      3.2047
+60 dates                           3.2063      3.2079
+```
+
+The American values agree with the published ones to within one unit of the fourth decimal, which is the size of the disagreement among the published schemes themselves. The Bermudan prices agree with the COS method to about {math}`2\times10^{-3}` at the default grid, in a regime where the variance can reach zero; a finer grid brings them closer.
+
+## Program 9: the Heston American put
+
+With the engine validated, the same `Field` prices what the Heston model makes of an American put. The program prices a one-year at-the-money put with a European payoff (from the transform engine), a Bermudan with quarterly dates and the American, and reads the Greeks of the American. The right to exercise early adds about half a unit, as in the Black-Scholes example of Program 1. The Greeks are those of the American price; the vega is the derivative with respect to the initial variance {math}`v_0`, not to a volatility.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  mod::Field field;
+  field.market = fin::market::make(100.0, 0.05, 0.0);
+  field.model = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.3, -0.7, 0.04});
+  field.controls = {.engine = mod::Engine::Cos, .risk = mod::Risk::PriceOnly};
+  char line[160];
+  field.instrument = fin::instrument::make(fin::pricing::Put, 100.0, 1.0);
+  std::snprintf(line, sizeof line, "European (COS)            %.4f", field.price().price.items<double>()[0]);
+  out.writeln(line);
+  field.controls.engine = mod::Engine::Pde;
+  field.instrument = fin::instrument::make(fin::pricing::Put, 100.0, 1.0);
+  std::snprintf(line, sizeof line, "European (Pde)            %.4f", field.price().price.items<double>()[0]);
+  out.writeln(line);
+  field.instrument = fin::instrument::bermudan(fin::pricing::Put, 100.0, 1.0, std::vector<double>{0.25, 0.5, 0.75});
+  std::snprintf(line, sizeof line, "Bermudan, quarterly (Pde) %.4f", field.price().price.items<double>()[0]);
+  out.writeln(line);
+  field.instrument = fin::instrument::american(fin::pricing::Put, 100.0, 1.0);
+  field.controls.risk = mod::Risk::All;
+  const auto r = field.price();
+  std::snprintf(line, sizeof line, "American (Pde)           %.4f", r.price.items<double>()[0]);
+  out.writeln(line);
+  std::snprintf(line, sizeof line, "delta %.4f  gamma %.4f  vega (per unit v0) %.3f", r.greeks.delta.items<double>()[0], r.greeks.gamma.items<double>()[0], r.greeks.vega.items<double>()[0]);
+  out.writeln(line);
+}
+```
+
+Output
+
+```text
+European (COS)            5.4848
+European (Pde)            5.4843
+Bermudan, quarterly (Pde) 5.8678
+American (Pde)           5.9853
+delta -0.3478  gamma 0.0224  vega (per unit v0) 50.471
+```
+
+## Program 10: the exercise boundary
+
+The `Spectral` engine finds the boundary as a by-product, and `Field::exercise_boundary` returns it: the asset price at which exercise becomes optimal, at each time to maturity you give. For a put the holder exercises below it; for a call, above it. Only Black-Scholes has a boundary curve (under Heston the exercise region is a surface in asset and variance). The program prints the boundary of a one-year put without a dividend, of the same put with a 6% dividend yield, and of a call with a 7% yield, at five times to maturity. At expiry the put boundary is {math}`K\min(1,r/q)`: the strike when {math}`q\le r`, and lower when the dividend yield exceeds the interest rate.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cstdio>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  const auto times = pluss::make_series({0.0, 0.1, 0.25, 0.5, 1.0});
+  const auto row = [&](const char *name, fin::pricing::OptionType type, double rate, double yield) {
+    mod::Field field{.instrument = fin::instrument::american(type, 100.0, 1.0), .market = fin::market::make(100.0, rate, yield),
+                     .model = fin::model::make(fin::model::Kind::BlackScholes, {0.25}), .controls = {.engine = mod::Engine::Spectral}};
+    const auto b = field.exercise_boundary(times).items<double>();
+    char line[160];
+    std::snprintf(line, sizeof line, "%-28s %8.3f %8.3f %8.3f %8.3f %8.3f", name, b[0], b[1], b[2], b[3], b[4]);
+    out.writeln(line);
+  };
+  out.writeln("time to maturity                  0.00     0.10     0.25     0.50     1.00");
+  row("put, r 5%, q 0%", fin::pricing::Put, 0.05, 0.0);
+  row("put, r 2%, q 6%", fin::pricing::Put, 0.02, 0.06);
+  row("call, r 3%, q 7%", fin::pricing::Call, 0.03, 0.07);
+}
+```
+
+Output
+
+```text
+time to maturity                  0.00     0.10     0.25     0.50     1.00
+put, r 5%, q 0%               100.000   87.176   82.766   78.946   74.890
+put, r 2%, q 6%                33.333   31.729   30.868   29.957   28.770
+call, r 3%, q 7%              100.000  115.316  121.698  127.764  134.796
+```
+
+The put boundary starts at the strike (100) at expiry and moves away from it as the time to maturity grows, to 74.9 at one year, since a longer-lived option is worth more alive. With the 6% yield above the 2% rate it starts at {math}`100\cdot0.02/0.06=33.3` and falls to 28.8. The call boundary does the same on the other side, rising from 100 to 134.8.
+
+## Gotchas
+
+- **Exercise is on the grid.** `Lattice` allows exercise at its `steps` nodes and `MonteCarlo` at its `steps` time points, so an American price from either is really a Bermudan on that grid. More steps move it toward the continuous limit from below.
+- **The PDE grid sets its accuracy.** At the default 240 x 60 grid the European price differs from the transform engines by well under 0.001; raise `spot_nodes` (the error falls fourfold per doubling) before anything else. Prices are interpolated at the spot and the initial variance, so they change smoothly with both. The `Pde` engine prices Heston only: Bates has jumps, which make the equation an integro-differential one (use `Cos`), and the rough models have no equation to solve.
+- **A regression price is low-biased and noisy.** Quote it with the seed fixed, compare it with the lattice where one exists, and widen `paths` before widening `basis_degree`; a high degree with few paths overfits.
+- **One simulation per option.** The regression simulates fresh paths over each option's own life, so a strip of options costs one simulation each.
+- **Greeks are bumped prices.** They are noisy for the regression engine, but the random numbers are the same in every bumped price, which keeps the differences stable.
+- **The lattice needs room.** If the volatility is so small for the step count that the risk-neutral probability leaves (0, 1), the call is rejected with a message to use more steps or a larger volatility.
+
+## Checklist
+
+1. Choose the style on the instrument; keep everything else of the `Field` as it was.
+2. Use `Spectral` for a Black-Scholes American option (exact to many digits), `Cos` when it is Bermudan, `Pde` or `Cos` for Heston (each checks the other), `Cos` for Bates, and `MonteCarlo` for every other model.
+3. Confirm convergence by doubling `lattice.steps` or `spectral.nodes`, or by comparing the regression with the spectral price on a Black-Scholes case.
+4. Check the price against the bounds: at least the intrinsic value, at least the European value, at most the American with more dates.
+5. Remember that an American call without dividends is a European call.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="simulated_paths.html">
+    <span class="label">Previous</span>
+    <span class="title">Simulated paths</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -31,4 +31,12 @@ The `Auto` thresholds: `signrank` is exact for at most 15 nonzero differences; `
 5. Check expected counts in a chi-squared test.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+inference_02_ranks_distributions_and_tables/rank_and_sign_tests
+inference_02_ranks_distributions_and_tables/tests_of_a_distribution
+inference_02_ranks_distributions_and_tables/several_groups_and_tables
+```
 <!-- apiref:toctree:end -->

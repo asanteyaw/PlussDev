@@ -48,4 +48,12 @@ Only the first row is a success. `ObjectiveTargetReached` is a success you asked
 The next chapter compares the four algorithms: which problems each one handles well, where each one fails, and how to choose between them.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima_02_reading_results/exit_flags_and_stall_categories
+optima_02_reading_results/the_report_summaries_and_multipliers
+optima_02_reading_results/watching_a_run
+```
 <!-- apiref:toctree:end -->

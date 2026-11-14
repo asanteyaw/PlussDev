@@ -466,7 +466,7 @@ Raw batches keep strings/notes close to file contents. Neutral batches carry
 ### API Signature
 
 ```text
-CsvCaseReader::next(output: DataFrame&) -> bool
+bool CsvCaseReader::next(output: DataFrame&)
 ```
 
 ### Notes

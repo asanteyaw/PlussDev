@@ -8,3 +8,16 @@ When `g` depends on time as well, use `ito_at(time, g, mu, sigma)`: `g` receives
 @@example Probability/random_processes/guide/sde/14_time_dependent.cpp@@
 
 The first state is risk-neutral and has discounted drift 0.00000; the second has 3.12411, equal to `e^(−rt)(μ − r x)`. The discounted diffusion equals `e^(−rt) σ`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="products_and_quotients.html">
+    <span class="label">Previous</span>
+    <span class="title">Products and quotients</span>
+  </a>
+  <a class="next-link" href="the_stratonovich_convention.html">
+    <span class="label">Next</span>
+    <span class="title">The Stratonovich convention</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

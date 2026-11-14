@@ -59,9 +59,9 @@ TEST_CASE("COS pricing tracks Heston NI and FFT across strikes", "[finance][pric
   const std::vector<double> strikes{70.0, 80.0, 90.0, 100.0, 110.0, 120.0, 130.0};
 
   for (double k : strikes) {
-    const double px_ni = prc::heston_price(prc::OptionType::Call, s, k, r, q, t, p, ni_opt);
-    const double px_fft = prc::heston_price_fft(prc::OptionType::Call, s, k, r, q, t, p, fft_opt, cfg);
-    const double px_cos = prc::heston_price_cos(prc::OptionType::Call, s, k, r, q, t, p, cos_opt, cfg);
+    const double px_ni = prc::detail::heston_price(prc::OptionType::Call, s, k, r, q, t, p, ni_opt);
+    const double px_fft = prc::detail::heston_price_fft(prc::OptionType::Call, s, k, r, q, t, p, fft_opt, cfg);
+    const double px_cos = prc::detail::heston_price_cos(prc::OptionType::Call, s, k, r, q, t, p, cos_opt, cfg);
     REQUIRE(std::isfinite(px_cos));
     REQUIRE(px_cos > 0.0);
     REQUIRE(std::abs(px_cos - px_ni) < 0.45);
@@ -69,19 +69,19 @@ TEST_CASE("COS pricing tracks Heston NI and FFT across strikes", "[finance][pric
   }
 
   const double k = 105.0;
-  const double c = prc::heston_price_cos(prc::OptionType::Call, s, k, r, q, t, p, cos_opt, cfg);
-  const double pput = prc::heston_price_cos(prc::OptionType::Put, s, k, r, q, t, p, cos_opt, cfg);
+  const double c = prc::detail::heston_price_cos(prc::OptionType::Call, s, k, r, q, t, p, cos_opt, cfg);
+  const double pput = prc::detail::heston_price_cos(prc::OptionType::Put, s, k, r, q, t, p, cos_opt, cfg);
   const double parity = s * std::exp(-q * t) - k * std::exp(-r * t);
   REQUIRE(std::abs((c - pput) - parity) < 0.2);
 
   const auto spot_s = pluss::series::full({static_cast<std::int64_t>(strikes.size())}, s, cfg);
   const auto strike_s = pluss::make_series(strikes, {static_cast<std::int64_t>(strikes.size())}, cfg);
   const auto maturity_s = pluss::series::full({static_cast<std::int64_t>(strikes.size())}, t, cfg);
-  const auto series_px = prc::heston_price_cos(prc::OptionType::Call, spot_s, strike_s, r, q, maturity_s, p, cos_opt, cfg);
+  const auto series_px = prc::detail::heston_price_cos(prc::OptionType::Call, spot_s, strike_s, r, q, maturity_s, p, cos_opt, cfg);
   REQUIRE(series_px.numel() == static_cast<std::int64_t>(strikes.size()));
   REQUIRE(all_finite(series_px));
   for (std::int64_t i = 0; i < series_px.numel(); ++i) {
-    const double scalar_px = prc::heston_price_cos(
+    const double scalar_px = prc::detail::heston_price_cos(
         prc::OptionType::Call, s, strikes[static_cast<std::size_t>(i)], r, q, t, p, cos_opt, cfg);
     REQUIRE(std::abs(series_px.select(0, i).item<double>() - scalar_px) < 1.0e-10);
   }
@@ -114,8 +114,8 @@ TEST_CASE("COS pricing tracks Bates FFT", "[finance][pricing][cos][bates]") {
   const double q = 0.0;
   const double t = 1.0;
   for (double k : {80.0, 90.0, 100.0, 110.0, 120.0}) {
-    const double px_fft = prc::bates_price_fft(prc::OptionType::Call, s, k, r, q, t, p, fft_opt, cfg);
-    const double px_cos = prc::bates_price_cos(prc::OptionType::Call, s, k, r, q, t, p, cos_opt, cfg);
+    const double px_fft = prc::detail::bates_price_fft(prc::OptionType::Call, s, k, r, q, t, p, fft_opt, cfg);
+    const double px_cos = prc::detail::bates_price_cos(prc::OptionType::Call, s, k, r, q, t, p, cos_opt, cfg);
     REQUIRE(std::isfinite(px_cos));
     REQUIRE(px_cos > 0.0);
     REQUIRE(std::abs(px_cos - px_fft) < 0.6);

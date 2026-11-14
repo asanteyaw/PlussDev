@@ -1,0 +1,60 @@
+# `thermal::Exchange`
+
+The result of rating a heat exchanger.
+
+## Signature
+
+```cpp
+thermal::Exchange
+```
+
+## What It Does
+
+Holds the outputs of `rate`, each with the broadcast shape of the inputs.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `duty` | The heat in W transferred from the hot stream to the cold stream. |  |
+| `hot_out` | The outlet temperature of the hot stream. |  |
+| `cold_out` | The outlet temperature of the cold stream. |  |
+| `effectiveness` | The effectiveness of the exchanger. |  |
+| `ntu` | The number of transfer units `UA / Cmin`. |  |
+
+## Returns
+
+A value returned by `rate`.
+
+## Errors
+
+None: a result is only constructed by a successful call.
+
+## Interpretation and Use
+
+The energy balance holds exactly: `hot_c (hot_in - hot_out) = cold_c (cold_out - cold_in) = duty`. The duty is negative when the stream called hot is the colder one.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A rated counter-flow exchanger.
+
+@@example Eng/api/thermal_rate_basic.cpp@@
+
+### Example 2
+
+A sweep of UA.
+
+@@example Eng/api/thermal_rate_ua_sweep.cpp@@
+
+### Example 3
+
+A boiler.
+
+@@example Eng/api/thermal_rate_boil.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

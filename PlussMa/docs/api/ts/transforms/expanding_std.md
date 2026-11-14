@@ -117,3 +117,16 @@ ddof 0              nan      nan   0.8165   1.8708   1.8547   2.6874   2.7994
 
 - [`expanding_mean`](expanding_mean.md)
 - [`rolling_std`](rolling_std.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="expanding_mean.html">
+    <span class="label">Previous</span>
+    <span class="title">expanding_mean</span>
+  </a>
+  <a class="next-link" href="fill_gaps.html">
+    <span class="label">Next</span>
+    <span class="title">fill_gaps</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

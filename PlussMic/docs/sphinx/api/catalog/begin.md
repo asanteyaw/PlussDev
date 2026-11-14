@@ -22,7 +22,7 @@ order — not the streams themselves and not row values.
 ```{important} Iterates key names, not streams or row values
 `for (const auto& x : catalog)` binds `x` to each `std::string` key name, not to a
 `Stream`. If you want the actual stream for a key, look it up with
-[`at(key)`](at.md)/[`get(key)`](get.md) inside the loop.
+[`keys(key)`](keys.md)/[`get(key)`](get.md) inside the loop.
 ```
 
 ## Parameters
@@ -93,7 +93,7 @@ true
 - [`Catalog::end`](end.md): the matching past-the-end iterator.
 - [`Catalog::keys`](keys.md): the underlying `std::vector<std::string>` this iterates over,
   accessible directly without iterators.
-- [`Catalog::at`](at.md) / [`Catalog::get`](get.md): fetch the actual `Stream` for a key
+- [`Catalog::keys`](keys.md) (`keys(key)`) / [`Catalog::get`](get.md): fetch the actual `Stream` for a key
   name found during iteration.
 
 <div class="pluss-inline-prev-next">

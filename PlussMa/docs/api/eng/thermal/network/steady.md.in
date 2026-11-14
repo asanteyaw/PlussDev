@@ -1,0 +1,65 @@
+# `thermal::steady`
+
+Solves the steady state of a thermal network.
+
+## Signature
+
+```cpp
+thermal::Result thermal::steady(const thermal::Net& net,
+                       const circuit::SolveOptions& options = {});
+```
+
+## What It Does
+
+Finds the temperatures at which every node is in heat balance: heat injected plus heat flowing in through links equals zero, with the fixed nodes at their prescribed temperatures. Capacities play no part. The solve is the circuit engine's operating point, so a batch of networks is solved together.
+
+## Parameters
+
+`net`
+: The network.
+
+`options`
+: The controls of the underlying solve; a thermal network is linear, so they are not needed in practice.
+
+## Returns
+
+A `Result` with the temperatures, link flows, boundary flows and the balance defect.
+
+## Errors
+
+Throws `pluss::Error` for an invalid description, a network with no fixed temperature, or a node that has no conduction path to a fixed node; the message names the node.
+
+## Interpretation and Use
+
+Use `steady` for the long-run state, for the sizing of an insulation layer, or to find a consistent start for a transient. It does not read stores.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A chain between two temperatures.
+
+@@example Eng/api/thermal_steady_series.cpp@@
+
+### Example 2
+
+Heat injected into the middle.
+
+@@example Eng/api/thermal_steady_heat.cpp@@
+
+### Example 3
+
+A sweep over conductances.
+
+@@example Eng/api/thermal_steady_batch.cpp@@
+
+### Example 4
+
+Rejected networks.
+
+@@example Eng/api/thermal_steady_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

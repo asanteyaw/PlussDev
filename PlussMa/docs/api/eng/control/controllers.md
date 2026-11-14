@@ -22,7 +22,7 @@ Assign two continuous closed-loop poles and inspect placement diagnostics.
 
 #include <complex>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -61,7 +61,7 @@ Construct a filtered parallel PID controller and evaluate its frequency response
 #include <complex>
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {
@@ -96,7 +96,7 @@ Reject an uncontrollable plant and a negative derivative-filter constant.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
+namespace control = pluss::subsp::eng::control;
 using namespace pluss::tils;
 
 int main() {

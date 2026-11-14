@@ -2,60 +2,81 @@
 
 [Back to Monte Carlo](../finance_04_monte_carlo.md)
 
-The Monte Carlo price of a European option is the average of the discounted payoff over simulated paths. Each model has a function with the same signature as its semi-analytic pricers:
+The Monte Carlo price of a European option is the average of the discounted payoff over simulated paths. The `MonteCarlo` engine of a `Field` does exactly that for whatever model the field holds, with the controls of `field.controls.mc`:
 
 ```cpp
-double prc::heston_price_mc(type, spot, strike, rate, dividend_yield, maturity, const vol::HestonParams &, const prc::MonteCarloOptions & = {}, Config = {});
-// the same for bates_price_mc, sv_price_mc, heston_nandi_price_mc, sabr_price_mc (forward in place of spot), slv_price_mc, rough_heston_price_mc, rough_bergomi_price_mc
-struct prc::MonteCarloOptions {
-  std::int64_t paths = 40000, steps = 252;
-  vol::SimScheme scheme = Euler;  vol::RandMethod rand_method = Pseudo;  bool randomized_quasi = false;  int sobol_scrambling = 0;
-  bool antithetic = false, control_variate = false, importance_sampling = false;  double importance_shift = 0.0, control_vol = 0.0;
-  std::uint64_t offset = 0, seed = 0;
-};
+module::Engine module::Controls::engine = module::Engine::Analytic;
+pricer::MonteCarlo module::Controls::mc;
+module::Field::Result module::Field::price(Config cfg = {}) const;
 ```
 
-The simulation is risk neutral: the drift is set to `rate − dividend_yield` whatever `mu` the parameter struct holds. A maturity of zero returns the intrinsic value. The result is a single number, with no error bar; its uncertainty is found by repeating the price with different seeds.
+Choose the engine, set the controls on `field.controls.mc`, and price:
+
+```cpp
+field.controls.engine = mod::Engine::MonteCarlo;
+field.controls.mc.paths = 40000;  field.controls.mc.steps = 252;  field.controls.mc.seed = 1;
+const double price = field.price().price.items<double>()[0];
+```
+
+The simulation is risk neutral: the drift is `rate − dividend_yield` whatever the model. A maturity of zero returns the intrinsic value. The result is a single number per option, with no error bar; its uncertainty is found by repeating the price with different seeds. The programs of this chapter share three helpers: `monte_carlo` builds the field, `cos_reference` prices the same Heston option by the COS engine as the reference to be judged against, and `mean_sd` summarises repeated prices.
 
 ## The error falls as 1/√N
 
-The statistical error of a Monte Carlo price is σ/√N, with σ the standard deviation of one discounted payoff. The program prices a Heston call 12 times with different seeds at each number of paths, and prints the mean, the standard deviation of the 12 prices (the standard error of one run) and that standard deviation times √N, which should be roughly constant. The COS price is the reference.
+The statistical error of a Monte Carlo price is σ/√N, with σ the standard deviation of one discounted payoff. The program prices a Heston call 12 times with different seeds at each number of paths, and prints the mean, the standard deviation of the 12 prices (the standard error of one run) and that standard deviation times √N, which should be roughly constant.
 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const double spot = 100.0, strike = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
-  const vol::HestonParams params;
-  const double reference = prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, maturity, params);
-  out.writeln("COS reference", reference);
+  out.writeln("COS reference", cos_reference(100.0));
   out.writeln("   paths     mean of 12     std dev of one run    std dev x sqrt(paths)");
   for (std::int64_t paths : {1000, 4000, 16000, 64000}) {
     std::vector<double> prices;
     for (int seed = 1; seed <= 12; ++seed) {
-      prc::MonteCarloOptions options;
-      options.paths = paths;
-      options.steps = 32;
-      options.seed = 100 + seed;
-      prices.push_back(prc::heston_price_mc(prc::Call, spot, strike, rate, dividend, maturity, params, options));
+      mod::Field field = monte_carlo(fin::model::Kind::Heston, kHeston);
+      field.controls.mc.paths = paths;
+      field.controls.mc.steps = 32;
+      field.controls.mc.seed = 100 + seed;
+      prices.push_back(price1(field));
     }
-    double mean = 0.0;
-    for (double p : prices) {
-      mean += p / 12.0;
-    }
-    double variance = 0.0;
-    for (double p : prices) {
-      variance += (p - mean) * (p - mean) / 11.0;
-    }
-    out.writeln(paths, mean, std::sqrt(variance), std::sqrt(variance) * std::sqrt(static_cast<double>(paths)));
+    const auto [mean, sd] = mean_sd(prices);
+    out.writeln(paths, mean, sd, sd * std::sqrt(static_cast<double>(paths)));
   }
 }
 ```
@@ -71,36 +92,55 @@ Besides the statistical error there is a bias from replacing the continuous proc
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const double spot = 100.0, strike = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
-  const vol::HestonParams params;
-  const double reference = prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, maturity, params);
+  const double reference = cos_reference(100.0);
   out.writeln("COS reference", reference);
   out.writeln("   steps     mean of 8 runs     bias      standard error of the mean");
   for (std::int64_t steps : {4, 8, 16, 32, 64, 128}) {
     std::vector<double> prices;
     for (int seed = 1; seed <= 8; ++seed) {
-      prc::MonteCarloOptions options;
-      options.paths = 30000;
-      options.steps = steps;
-      options.seed = 500 + seed;
-      prices.push_back(prc::heston_price_mc(prc::Call, spot, strike, rate, dividend, maturity, params, options));
+      mod::Field field = monte_carlo(fin::model::Kind::Heston, kHeston);
+      field.controls.mc.paths = 30000;
+      field.controls.mc.steps = steps;
+      field.controls.mc.seed = 500 + seed;
+      prices.push_back(price1(field));
     }
-    double mean = 0.0;
-    for (double p : prices) {
-      mean += p / 8.0;
-    }
-    double variance = 0.0;
-    for (double p : prices) {
-      variance += (p - mean) * (p - mean) / 7.0;
-    }
-    out.writeln(steps, mean, mean - reference, std::sqrt(variance / 8.0));
+    const auto [mean, sd] = mean_sd(prices);
+    out.writeln(steps, mean, mean - reference, sd / std::sqrt(8.0));
   }
 }
 ```
@@ -109,47 +149,82 @@ The bias falls with the number of steps, from +0.194 at 4 steps through +0.128, 
 
 ## Schemes
 
-`SimScheme` selects how the variance is stepped. `Euler` is the simplest; `Milstein` and `Milstein2` add a correction term; `QuadExp` is Andersen's quadratic-exponential scheme, which matches the first two moments of the variance exactly and handles a variance near zero; `Transition` samples the exact non-central chi-squared transition of the square-root process (this needs the degree 4κθ/σ² of that distribution to exceed 1, so that the sampler can be driven by the shock that is correlated with the spot; below it, `Transition` uses the quadratic-exponential step instead). With 32 steps and parameters that satisfy the Feller condition they price alike; they differ when the variance is often near zero, which the next program arranges with a small mean reversion and a large volatility of variance.
+`scheme` selects how the variance is stepped. `Euler` is the simplest; `Milstein` and `Milstein2` add a correction term; `QuadExp` is Andersen's quadratic-exponential scheme, which matches the first two moments of the variance exactly and handles a variance near zero; `Transition` samples the exact non-central chi-squared transition of the square-root process (this needs the degree 4κθ/σ² of that distribution to exceed 1, so that the sampler can be driven by the shock that is correlated with the asset; below it, `Transition` uses the quadratic-exponential step instead). With 32 steps and parameters that satisfy the Feller condition they price alike; they differ when the variance is often near zero, which the next program arranges with a small mean reversion and a large volatility of variance.
 
 @@run@@
 ```cpp
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const double spot = 100.0, strike = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
-  vol::HestonParams params;
-  params.kappa = 0.5;
-  params.theta = 0.04;
-  params.sigma = 1.0;  // 2 kappa theta = 0.04 is far below sigma^2 = 1: the variance is often near zero
-  params.rho = -0.7;
-  const double reference = prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, maturity, params);
+  // 2 kappa theta = 0.04 is far below sigma^2 = 1: the variance is often near zero
+  const std::vector<double> params{0.5, 0.04, 1.0, -0.7, 0.04};
+  const double reference = cos_reference(100.0, params);
   out.writeln("COS reference", reference);
-  const std::vector<std::pair<const char *, vol::SimScheme>> schemes{{"Euler    ", vol::SimScheme::Euler}, {"Milstein ", vol::SimScheme::Milstein}, {"Milstein2", vol::SimScheme::Milstein2},
-                                                                    {"QuadExp  ", vol::SimScheme::QuadExp}, {"Transition", vol::SimScheme::Transition}};
+  const std::vector<std::pair<const char *, fin::volatility::SimScheme>> schemes{{"Euler    ", fin::volatility::SimScheme::Euler}, {"Milstein ", fin::volatility::SimScheme::Milstein},
+                                                                                {"Milstein2", fin::volatility::SimScheme::Milstein2}, {"QuadExp  ", fin::volatility::SimScheme::QuadExp},
+                                                                                {"Transition", fin::volatility::SimScheme::Transition}};
   for (const auto &[name, scheme] : schemes) {
     std::vector<double> prices;
     for (int seed = 1; seed <= 8; ++seed) {
-      prc::MonteCarloOptions options;
-      options.paths = 30000;
-      options.steps = 32;
-      options.scheme = scheme;
-      options.seed = 900 + seed;
-      prices.push_back(prc::heston_price_mc(prc::Call, spot, strike, rate, dividend, maturity, params, options));
+      mod::Field field = monte_carlo(fin::model::Kind::Heston, params);
+      field.controls.mc.paths = 30000;
+      field.controls.mc.steps = 32;
+      field.controls.mc.scheme = scheme;
+      field.controls.mc.seed = 900 + seed;
+      prices.push_back(price1(field));
     }
-    double mean = 0.0;
-    for (double p : prices) {
-      mean += p / 8.0;
-    }
+    const auto [mean, sd] = mean_sd(prices);
     out.writeln(name, " mean of 8 runs", mean, " bias", mean - reference);
   }
 }
 ```
 
-With a variance process that violates the Feller condition badly, the schemes differ widely against the COS price of 6.1563. Euler and the two Milstein schemes are biased by more than 2 (35%) because they cannot represent a variance that sits near zero. The quadratic-exponential scheme is accurate (bias 0.061, within the statistical error). `Transition` gives the same result, because for these parameters its exact sampler cannot be driven by the correlated shock, so it uses the quadratic-exponential step.
+With a variance process that violates the Feller condition badly, the schemes differ widely against the COS price of 6.1563. Euler and the two Milstein schemes are biased by more than 2 (35% or more) because they cannot represent a variance that sits near zero. The quadratic-exponential scheme is far closer (bias 0.077, about 1% of the price, from the finite step and the sampling error of eight runs). `Transition` gives the same result, because for these parameters its exact sampler cannot be driven by the correlated shock, so it uses the quadratic-exponential step.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="options_and_errors.html">
+    <span class="label">Previous</span>
+    <span class="title">Options and errors</span>
+  </a>
+  <a class="next-link" href="quasi_random_sequences.html">
+    <span class="label">Next</span>
+    <span class="title">Quasi-random sequences</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

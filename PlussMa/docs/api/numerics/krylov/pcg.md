@@ -21,10 +21,10 @@ The same method as [`cg`](cg.md) with a preconditioner `M ≈ A⁻¹`: `precondi
 ## Parameters
 
 `Apply &&apply`
-: `Series -> Series`: `A x`.
+: `Series (Series)`: `A x`.
 
 `Precondition &&precondition`
-: `Series -> Series`: the preconditioner applied to a residual.
+: `Series (Series)`: the preconditioner applied to a residual.
 
 `const pluss::Series &rhs`
 : The right-hand side.

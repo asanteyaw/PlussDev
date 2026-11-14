@@ -1,0 +1,306 @@
+# Describing a robot
+
+[Back to Robotics 1: Kinematics](../robot_01_kinematics.md)
+
+Before a robot can be asked anything it has to be described: how many links it has, how they are connected, which way each joint moves, and (for dynamics) what each link weighs. `robot::Links` holds that description with one row per link, and `robot::make` validates it and compiles an immutable `Robot`. This page builds a planar two-link arm, a branching tree with a sliding joint, and a kinematic-only model, and shows the rotation helpers used to describe frames.
+
+## The mental model
+
+A robot is a **tree of links**, one joint per link. Link `i` hangs from link `parent[i]` (`-1` for the base, which is the world frame), and parents always come before their children. Each row of `Links` says three things about its link.
+
+- **Where the joint sits.** `translation[i]` and `rpy[i]` give the joint frame in the parent's frame when the joint is at zero. `rpy` is roll, pitch and yaw about the fixed x, y and z axes, in that order. An undefined `rpy` is the identity.
+- **How the joint moves.** `axis[i]` is the joint axis in the joint frame. A **revolute** joint (`prismatic[i] = 0`) turns the link about it and its value is an angle in radians; a **prismatic** joint (`prismatic[i] = 1`) slides the link along it and its value is a distance in metres.
+- **What the link is.** `mass`, `center` (centre of mass in the link frame) and `inertia` (about the centre of mass, in the link frame) are needed only for dynamics.
+
+Positions are in metres and angles in radians throughout. A configuration is a real array `[..., links]` of joint values; leading axes are a batch of configurations, and every function is vectorized over it.
+
+## A planar two-link arm
+
+Two revolute joints about the z axis, a `0.5 m` upper arm and a `0.4 m` forearm, with masses of `1` and `2 kg`. The second joint sits `0.5 m` along the first link's x axis. The program builds it, reports the number of links and whether it has mass, and lists the parents.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// planar two-link arm in the x-y plane: both joints about z, link lengths 0.5 and 0.4 m, masses 1 and 2 kg
+static rb::Links arm_links() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {0, 0};
+  links.axis = mat({0, 0, 1, 0, 0, 1}, {2, 3});
+  links.translation = mat({0, 0, 0, 0.5, 0, 0}, {2, 3});
+  links.mass = vec({1.0, 2.0});
+  links.center = mat({0.25, 0, 0, 0.2, 0, 0}, {2, 3});
+  links.inertia = mat({0, 0, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0.03}, {2, 3, 3});
+  return links;
+}
+static rb::DynamicsOptions in_plane() {
+  rb::DynamicsOptions options;
+  options.gravity = vec({0.0, -9.81, 0.0});   // gravity along -y: the arm moves in the x-y plane
+  return options;
+}
+
+int main() {
+  OutputEngine out;
+  const rb::Robot robot = rb::make(arm_links());
+  out.writeln("links", robot.links(), " has mass", robot.has_mass());
+  out.writeln("parent of each link", robot.parent());
+}
+```
+
+The arm has `2` links and carries mass properties, and the parent array `[-1, 0]` says link 0 hangs from the base and link 1 from link 0.
+
+## Rotation matrices for frames
+
+Frames are described with rotation matrices, and `robot::rotation` and `robot::rpy` build them. `rotation(axis, angle)` is the turn by an angle about an axis (the axis need not be a unit vector); `rpy(angles)` is the roll-pitch-yaw matrix `Rz Ry Rx`. A quarter turn about z maps the x axis onto the y axis, and the same turn written as yaw gives the same matrix. The program checks both.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  // roll about x, then pitch about y, then yaw about z, all about the fixed axes: R = Rz Ry Rx
+  const pluss::Series angles = vec({0.4, -0.7, 1.3});
+  const pluss::Series product = rb::rotation(vec({0, 0, 1}), angles.select(0, 2))
+                                    .matmul(rb::rotation(vec({0, 1, 0}), angles.select(0, 1)))
+                                    .matmul(rb::rotation(vec({1, 0, 0}), angles.select(0, 0)));
+  const pluss::Series direct = rb::rpy(angles);
+  out.writeln("rpy first row   ", flat(direct.select(0, 0)));
+  out.writeln("Rz Ry Rx row    ", flat(product.select(0, 0)));
+  out.writeln("largest difference below 1e-12", direct.sub(product).abs().amax().item<double>() < 1e-12);
+  // pure yaw is a rotation about z
+  out.writeln("yaw 90 degrees, R x", flat(rb::rpy(vec({0, 0, M_PI / 2})).matmul(vec({1, 0, 0}).unsqueeze(-1))));
+}
+```
+
+The matrix `rpy` builds is the product `Rz Ry Rx` to rounding, and a yaw of ninety degrees takes `(1, 0, 0)` to `(0, 1, 0)`.
+
+## A tree with a branch and a sliding joint
+
+Several links may share a parent, which is how a trunk with two arms is described, and a link may be prismatic. The tree below has a trunk (link 0, about z), a shoulder (link 1, about y) and a rail (link 2, sliding along x) both on the trunk, and a wrist (link 3, about x) on the rail.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a trunk (link 0, about z) with a shoulder (link 1, about y), a rail (link 2, a slide along x) and a wrist (link 3, about x) on the rail
+static rb::Links tree_links() {
+  rb::Links links;
+  links.parent = {-1, 0, 0, 2};
+  links.prismatic = {0, 0, 1, 0};
+  links.axis = mat({0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0}, {4, 3});
+  links.translation = mat({0, 0, 0.3, 0.2, 0, 0.1, -0.2, 0, 0.1, 0, 0, 0.3}, {4, 3});
+  links.rpy = mat({0, 0, 0, 0.2, 0, 0.1, 0, -0.1, 0, 0.3, 0.2, 0}, {4, 3});
+  return links;
+}
+
+int main() {
+  OutputEngine out;
+  const rb::Robot robot = rb::make(tree_links());
+  out.writeln("links", robot.links(), " has mass", robot.has_mass());
+  out.writeln("parent of each link", robot.parent(), " (links 1 and 2 both hang from link 0; link 3 from link 2)");
+}
+```
+
+Links 1 and 2 both have parent 0, and link 3 has parent 2. This tree has no masses, so it is a kinematic model: `has mass` is false.
+
+## A kinematic-only model
+
+Mass properties matter only for dynamics. A robot made without them supports every kinematics function, and the dynamics functions refuse it with a message that says what is missing.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  // a robot without mass properties is a kinematic model: kinematics work and dynamics are refused
+  rb::Links links;
+  links.parent = {-1};
+  links.prismatic = {0};
+  links.axis = mat({0, 0, 1}, {1, 3});
+  links.translation = mat({0, 0, 0}, {1, 3});
+  const rb::Robot robot = rb::make(links);
+  out.writeln("has mass", robot.has_mass());
+  out.writeln("pose of the only link", robot.links());
+  try {
+    (void)rb::inertia(robot, vec({0.1}));
+  } catch (const pluss::Error &e) {
+    out.writeln(e.message());
+  }
+}
+```
+
+## Errors
+
+`make` checks every field and names the one that is wrong. The program gives the arm a parent that is not earlier than its link, a zero axis, a joint kind of `2`, a negative mass, a translation with the wrong number of rows, an asymmetric inertia, and a `center` without `mass`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// planar two-link arm in the x-y plane: both joints about z, link lengths 0.5 and 0.4 m, masses 1 and 2 kg
+static rb::Links arm_links() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {0, 0};
+  links.axis = mat({0, 0, 1, 0, 0, 1}, {2, 3});
+  links.translation = mat({0, 0, 0, 0.5, 0, 0}, {2, 3});
+  links.mass = vec({1.0, 2.0});
+  links.center = mat({0.25, 0, 0, 0.2, 0, 0}, {2, 3});
+  links.inertia = mat({0, 0, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0.03}, {2, 3, 3});
+  return links;
+}
+static rb::DynamicsOptions in_plane() {
+  rb::DynamicsOptions options;
+  options.gravity = vec({0.0, -9.81, 0.0});   // gravity along -y: the arm moves in the x-y plane
+  return options;
+}
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  auto self = arm_links();
+  self.parent = {-1, 1};
+  report([&] { (void)rb::make(self); });
+  auto no_axis = arm_links();
+  no_axis.axis = mat({0, 0, 1, 0, 0, 0}, {2, 3});
+  report([&] { (void)rb::make(no_axis); });
+  auto kind = arm_links();
+  kind.prismatic = {0, 2};
+  report([&] { (void)rb::make(kind); });
+  auto negative = arm_links();
+  negative.mass = vec({1.0, -2.0});
+  report([&] { (void)rb::make(negative); });
+  auto shape = arm_links();
+  shape.translation = mat({0, 0, 0}, {1, 3});
+  report([&] { (void)rb::make(shape); });
+  auto asymmetric = arm_links();
+  asymmetric.inertia = mat({0, 1, 0, 0, 0, 0, 0, 0, 0.02, 0, 0, 0, 0, 0, 0, 0, 0, 0.03}, {2, 3, 3});
+  report([&] { (void)rb::make(asymmetric); });
+  rb::Links lonely;
+  lonely.parent = {-1};
+  lonely.prismatic = {0};
+  lonely.axis = mat({0, 0, 1}, {1, 3});
+  lonely.translation = mat({0, 0, 0}, {1, 3});
+  lonely.center = mat({0, 0, 0}, {1, 3});
+  report([&] { (void)rb::make(lonely); });
+}
+```
+
+Each message names the field and the rule it broke.
+
+## Decisions
+
+- **A robot for kinematics only:** `parent`, `prismatic`, `axis`, `translation` and optionally `rpy`.
+- **A robot for dynamics too:** add `mass`, and `center` and `inertia` unless a point mass at the joint is a good model.
+- **A joint frame that is rotated relative to its parent:** an `rpy` row, or build the angles from a matrix you already have with `robot::rotation` and `rpy`.
+- **Two arms on one trunk:** two links with the same `parent`.
+
+## Pitfalls
+
+The program makes two mistakes with the planar arm: giving the second link's translation in world coordinates instead of the parent frame, and giving angles in degrees.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static rb::Links two_links(std::vector<double> second_translation, std::vector<double> second_axis) {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {0, 0};
+  links.axis = mat({0, 0, 1, second_axis[0], second_axis[1], second_axis[2]}, {2, 3});
+  links.translation = mat({0, 0, 0, second_translation[0], second_translation[1], second_translation[2]}, {2, 3});
+  return links;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto elbow = [&](const rb::Links &links, pluss::Series q) { return flat(rb::frames(rb::make(links), q).position.select(0, 1)); };
+
+  // 1. the elbow is 0.5 m along the upper arm: in the parent frame that is (0.5, 0, 0), whatever the shoulder angle
+  out.writeln("elbow with the offset in the parent frame, shoulder at 90 degrees", elbow(two_links({0.5, 0, 0}, {0, 0, 1}), vec({M_PI / 2, 0.0})));
+  // writing the world position the elbow happens to have at 90 degrees, (0, 0.5, 0), is wrong: the offset turns with the shoulder
+  out.writeln("elbow with (0, 0.5, 0) as the offset, same pose        ", elbow(two_links({0.0, 0.5, 0}, {0, 0, 1}), vec({M_PI / 2, 0.0})));
+
+  // 2. degrees where radians are expected
+  out.writeln("elbow for a 30 degree shoulder entered as 30", elbow(two_links({0.5, 0, 0}, {0, 0, 1}), vec({30.0, 0.0})));
+  out.writeln("elbow for a 30 degree shoulder entered in radians", elbow(two_links({0.5, 0, 0}, {0, 0, 1}), vec({30.0 * M_PI / 180.0, 0.0})));
+
+}
+```
+
+With the shoulder at ninety degrees the elbow is at `(0, 0.5, 0)` when the offset is written in the parent frame as `(0.5, 0, 0)`. Writing the elbow's world position at that pose, `(0, 0.5, 0)`, as the offset is wrong: the offset turns with the shoulder, so the elbow lands at `(-0.5, 0, 0)`. A shoulder of thirty degrees entered as `30` is thirty radians and puts the elbow at `(0.077, -0.494, 0)` instead of `(0.433, 0.250, 0)`.
+
+## Where next
+
+[Forward kinematics and Jacobians](forward_kinematics_and_jacobians.md) places the links and maps joint rates to velocities. Reference pages: [`Links`](../../../../api/eng/robot/model/Links.md), [`make`](../../../../api/eng/robot/model/make.md), [`Robot`](../../../../api/eng/robot/model/RobotModel.md), [`rotation`](../../../../api/eng/robot/model/rotation.md), [`rpy`](../../../../api/eng/robot/model/rpy.md).

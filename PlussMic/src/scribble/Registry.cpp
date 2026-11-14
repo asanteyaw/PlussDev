@@ -19,7 +19,7 @@
 #include "kindle/catalog.h"
 #include "loader/Loader.h"
 #include "table/io/CsvSchemaConvert.h"
-#include <fmt/format.h>
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::scribble {
 
@@ -152,7 +152,7 @@ std::string unique_key_name(std::string base, const std::unordered_set<std::stri
   auto candidate = base + "_case";
   std::int64_t suffix = 1;
   while (taken.find(candidate) != taken.end()) {
-    candidate = fmt::format("{}_{}", base, suffix++);
+    candidate = pluss::tils::OutputEngine::format("{}_{}", base, suffix++);
   }
   return candidate;
 }

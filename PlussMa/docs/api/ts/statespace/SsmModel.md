@@ -24,3 +24,16 @@ Because the initial moments describe the state one step before the first observa
 ## See Also
 
 - [`Ssm`](Ssm.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="SsmForecastResult.html">
+    <span class="label">Previous</span>
+    <span class="title">SsmForecastResult</span>
+  </a>
+  <a class="next-link" href="SsmOptions.html">
+    <span class="label">Next</span>
+    <span class="title">SsmOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

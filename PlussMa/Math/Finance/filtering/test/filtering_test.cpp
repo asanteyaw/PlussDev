@@ -245,6 +245,67 @@ void test_sv_particle_filter() {
   expect(std::isfinite(out.loglik), "sv_particle loglik must be finite");
 }
 
+
+// The leverage effect: data simulated with a strongly negative correlation between the return and the next log-variance shock is better
+// explained by the filter that knows the correlation than by one that sets it to zero. Before the filter used rho, both gave the same
+// likelihood, whatever rho was.
+void test_sv_particle_filter_uses_leverage() {
+  const Config cfg = f64_cpu();
+  SvParams truth;
+  truth.mu = 0.0;
+  truth.logvar_mean = -3.0;
+  truth.phi = 0.9;
+  truth.vol_of_logvar = 6.0;  // per sqrt(year): about 0.38 per day-step of 1/252
+  truth.rho = -0.9;
+  truth.logvar0 = -3.0;
+  const double dt = 1.0 / 252.0;
+  const auto sim = pluss::subsp::math::finance::volatility::detail::sv_paths(1500, 1, 100.0, dt, truth, cfg, 11ULL);
+  const Series path = sim.spot.reshape({1501});
+  const Series returns = path.slice(0, 1, 1501, 1).div(path.slice(0, 0, 1500, 1)).log();
+
+  SvParams blind = truth;
+  blind.rho = 0.0;
+  double wins = 0.0;
+  for (std::uint64_t seed : {1ULL, 2ULL, 3ULL}) {
+    const double with = sv_particle_filter(returns, truth, 600, dt, 0.5, cfg, seed).loglik;
+    const double without = sv_particle_filter(returns, blind, 600, dt, 0.5, cfg, seed).loglik;
+    if (with > without) wins += 1.0;
+  }
+  expect(wins >= 2.0, "the SV particle filter must use the leverage correlation rho");
+}
+
+// On a linear Gaussian model the unscented filter is exact, so it must reproduce the Kalman filter: means, covariances and the log-likelihood,
+// for any sigma-point spread, including a state of small variance such as an interest rate (the jitter must not swamp alpha^2 P).
+void test_ukf_matches_kalman_on_linear_models() {
+  const Config cfg = f64_cpu();
+  const std::int64_t t_obs = 60;
+  for (const double scale : {1.0, 1e-4}) {  // 1e-4: the variance of a short rate is of order 1e-4
+    KalmanModel kalman;
+    kalman.transition = pluss::series::full({1, 1}, 0.95, cfg);
+    kalman.observation = pluss::series::full({1, 1}, 1.0, cfg);
+    kalman.process_cov = pluss::series::full({1, 1}, 0.01 * scale, cfg);
+    kalman.observation_cov = pluss::series::full({1, 1}, 0.04 * scale, cfg);
+    kalman.initial_mean = pluss::series::full({1}, 0.0, cfg);
+    kalman.initial_cov = pluss::series::full({1, 1}, 0.5 * scale, cfg);
+    const Series y = pluss::series::randn({t_obs}, cfg, 77ULL).mul(std::sqrt(0.2 * scale));
+    const auto exact = kalman_filter(y, kalman, cfg);
+    for (const double alpha : {1e-3, 0.5}) {
+      UkfModel ukf;
+      ukf.transition = [](const Series& x, std::int64_t) { return x.mul(0.95); };
+      ukf.observation = [](const Series& x, std::int64_t) { return x; };
+      ukf.process_cov = kalman.process_cov;
+      ukf.observation_cov = kalman.observation_cov;
+      ukf.initial_mean = kalman.initial_mean;
+      ukf.initial_cov = kalman.initial_cov;
+      ukf.options.alpha = alpha;
+      const auto got = ukf_filter(y, ukf, cfg);
+      expect(std::abs(got.loglik - exact.loglik) < 1e-2, "ukf log-likelihood must equal the Kalman one on a linear model");  // the jitter of 1e-10 is what remains
+      expect(got.filtered_mean.sub(exact.filtered_mean).abs().max().item<double>() < 1e-6, "ukf filtered mean must equal the Kalman one");
+      expect(got.filtered_cov.sub(exact.filtered_cov).abs().max().item<double>() < 1e-9, "ukf filtered covariance must equal the Kalman one");
+    }
+  }
+}
+
 } // namespace
 
 int main() {
@@ -253,9 +314,11 @@ int main() {
     test_linear_kalman_missing_and_tol();
     test_ekf();
     test_ukf();
+    test_ukf_matches_kalman_on_linear_models();
     test_particle_filter();
     test_particle_filter_resampling_modes();
     test_sv_particle_filter();
+    test_sv_particle_filter_uses_leverage();
     std::cout << "filtering_test passed\n";
     return 0;
   } catch (const std::exception& e) {

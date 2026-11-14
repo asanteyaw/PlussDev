@@ -36,8 +36,8 @@ int main() {
   reg::OLSOptions options;
   options.predictor_names = {"x1", "x2"};
   const auto fit = reg::ols_fit(y, x, options);
-  out.writeln("names", fit.coefficient_names, " coefficients", fit.coefficients.pull<double>());
-  out.writeln("std errors", fit.std_errors.pull<double>());
+  out.writeln("names", fit.coefficient_names, " coefficients", fit.coefficients.items<double>());
+  out.writeln("std errors", fit.std_errors.items<double>());
 
   const auto design = pluss::series::ones({12, 1}, as_f64()).unite({x}, 1);
   const auto xt = design.transpose(0, 1);
@@ -48,7 +48,7 @@ int main() {
   out.writeln("largest |X' residuals|         ", xt.matmul(fit.residuals.reshape({12, 1})).abs().max().item<double>());
   out.writeln("sum of residuals               ", fit.residuals.sum().item<double>());
   out.writeln("largest |covariance - s2 (X'X)^-1|", fit.covariance.sub(linalg::inverse(gram).mul(fit.mse)).abs().max().item<double>());
-  out.writeln("std errors from the covariance diagonal", fit.covariance.diagonal().sqrt().pull<double>());
+  out.writeln("std errors from the covariance diagonal", fit.covariance.diagonal().sqrt().items<double>());
 }
 ```
 
@@ -98,17 +98,17 @@ int main() {
   const auto y_without_x2 = reg::ols_fit(y, column2).residuals;
   const auto x1_without_x2 = reg::ols_fit(column1, column2).residuals;
   const auto partial = reg::ols_fit(y_without_x2, x1_without_x2);
-  out.writeln("coefficient of x1 in the full model      ", full.coefficients.pull<double>()[1]);
-  out.writeln("slope of the two residual series         ", partial.coefficients.pull<double>()[1]);
+  out.writeln("coefficient of x1 in the full model      ", full.coefficients.items<double>()[1]);
+  out.writeln("slope of the two residual series         ", partial.coefficients.items<double>()[1]);
 
   const auto alone = reg::ols_fit(y, column1);
-  out.writeln("slope of x1 when x2 is left out          ", alone.coefficients.pull<double>()[1]);
+  out.writeln("slope of x1 when x2 is left out          ", alone.coefficients.items<double>()[1]);
 
   // Leaving x2 out moves the slope by b2 times the slope of x2 on x1.
-  const double b2 = full.coefficients.pull<double>()[2];
-  const double delta = reg::ols_fit(column2, column1).coefficients.pull<double>()[1];
+  const double b2 = full.coefficients.items<double>()[2];
+  const double delta = reg::ols_fit(column2, column1).coefficients.items<double>()[1];
   out.writeln("slope of x2 on x1 (delta)                ", delta, " and b2", b2);
-  out.writeln("b1 + b2 * delta                          ", full.coefficients.pull<double>()[1] + b2 * delta);
+  out.writeln("b1 + b2 * delta                          ", full.coefficients.items<double>()[1] + b2 * delta);
 }
 ```
 
@@ -154,13 +154,13 @@ int main() {
 
   const auto cov = fit.covariance.host<double>().array().data;  // row-major 3 x 3
   const double variance_of_sum = cov[4] + cov[8] + 2.0 * cov[5];
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
   out.writeln("b1 + b2                      ", b[1] + b[2]);
   out.writeln("std error from the covariance", std::sqrt(variance_of_sum));
 
   const auto refit = reg::ols_fit(y, pluss::make_series(reparametrised, {12, 2}, as_f64()));
-  out.writeln("slope of x1 after reparametrising", refit.coefficients.pull<double>()[1]);
-  out.writeln("its standard error               ", refit.std_errors.pull<double>()[1]);
+  out.writeln("slope of x1 after reparametrising", refit.coefficients.items<double>()[1]);
+  out.writeln("its standard error               ", refit.std_errors.items<double>()[1]);
   out.writeln("covariance of b1 and b2 (cov[1][2])", cov[5], " ignoring it would give", std::sqrt(cov[4] + cov[8]));
 }
 ```
@@ -176,3 +176,16 @@ covariance of b1 and b2 (cov[1][2]) -0.000387  ignoring it would give 0.040649
 ```
 
 The standard error of b₁ + b₂ taken from the covariance matrix, 0.029648, equals the standard error of the combined slope in the reparametrised model (y = a + (b₁ + b₂) x₁ + b₂ (x₂ − x₁)), whose x₁ coefficient is the sum 0.736685. The covariance of b₁ and b₂ is small in absolute terms (−0.000387) but not negligible: the two variances alone give 0.040649, 37% too large. Whenever a result combines coefficients, use `covariance`, not just `std_errors`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="shapes_and_inputs.html">
+    <span class="label">Previous</span>
+    <span class="title">Shapes and inputs</span>
+  </a>
+  <a class="next-link" href="every_number_in_the_result.html">
+    <span class="label">Next</span>
+    <span class="title">Every number in the result</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

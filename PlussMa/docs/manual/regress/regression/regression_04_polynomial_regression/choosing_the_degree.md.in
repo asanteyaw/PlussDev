@@ -93,3 +93,16 @@ int main() {
 With x between 100 and 119 the raw design is ill conditioned from the start. The condition number is 2,090 for a straight line, already above the warning threshold of 1000, and it grows by a factor of about two and a half thousand with each degree. From degree 4 the rank is 4 whatever the number of parameters (4 of 5, 4 of 6, 4 of 7), so the design has lost directions and the coefficients are the minimum-norm ones. After centring and scaling the condition numbers are 3.3, 12, 47, 183, 728 and 2,950: the design has full rank at every degree, and the R² values are the same to the digits shown (0.977 to 0.979).
 
 The same fitted curve is obtained from any such linear change of the predictor, so it is safe to fit on the scaled variable and to predict with the same transformation.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_expanded_design.html">
+    <span class="label">Previous</span>
+    <span class="title">The expanded design</span>
+  </a>
+  <a class="next-link" href="prediction_summary_and_options.html">
+    <span class="label">Next</span>
+    <span class="title">Prediction, the summary and options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

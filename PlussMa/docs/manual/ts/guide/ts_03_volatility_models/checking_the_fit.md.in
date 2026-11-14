@@ -164,3 +164,16 @@ Look at the columns in turn. On the average count both bands look fine: about 95
 - **Fat tails can remain.** Standardised residuals that are still heavy-tailed mean Gaussian intervals understate extreme moves, even when the clustering is gone.
 
 Where next: [Several series with a constant correlation](several_series_with_a_constant_correlation.md) fits volatility models to several series at once.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="asymmetric_responses.html">
+    <span class="label">Previous</span>
+    <span class="title">Asymmetric responses</span>
+  </a>
+  <a class="next-link" href="several_series_with_a_constant_correlation.html">
+    <span class="label">Next</span>
+    <span class="title">Several series with a constant correlation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

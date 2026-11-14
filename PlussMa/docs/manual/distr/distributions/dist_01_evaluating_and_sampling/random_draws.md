@@ -135,7 +135,7 @@ int main() {
   // P(Z1 + Z2 > 3): the sum is N(0, 2), so the exact value is one minus its distribution function at 3.
   const auto s = distr::Normal{0.0, 1.0}.sample({n}, f64, 1ULL) + distr::Normal{0.0, 1.0}.sample({n}, f64, 2ULL);
   const double p_hat = (s > 3.0).to(pluss::ScalarType::Float64).mean().item<double>();
-  const double p_exact = 1.0 - distr::Normal{0.0, std::sqrt(2.0)}.cdf(pluss::make_series({3.0}, f64)).item<double>();
+  const double p_exact = 1.0 - distr::Normal{0.0, std::sqrt(2.0)}.cdf(pluss::make_series({3.0}, f64)).squeeze().item<double>();
 
   // E[max of two unit exponentials] = 1.5: max(a, b) = (a + b + |a - b|) / 2.
   const auto e1 = distr::Exponential{1.0}.sample({n}, f64, 3ULL), e2 = distr::Exponential{1.0}.sample({n}, f64, 4ULL);
@@ -166,3 +166,16 @@ Both estimates land within about one standard error of the exact value (0.01698 
 - **Use `sample_like` to match an existing array** instead of rebuilding its shape, dtype and platform by hand.
 
 Where next: [Families by kind](families_by_kind.md) reaches the less common families through one set of functions.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="densities_distribution_functions_and_tails.html">
+    <span class="label">Previous</span>
+    <span class="title">Densities, distribution functions and tails</span>
+  </a>
+  <a class="next-link" href="families_by_kind.html">
+    <span class="label">Next</span>
+    <span class="title">Families by kind</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include <pluss/pluss.h>
+#include <pluss/tils/kit/output.h>
 
 namespace {
 
@@ -21,7 +21,7 @@ DataFrame make_time_series_df() {
   for (std::int64_t i = 0; i < ncases; ++i) {
     const auto day = 1 + static_cast<int>(i / 24);
     const auto hour = static_cast<int>(i % 24);
-    ts_labels.push_back(fmt::format("2026-01-{:02d} {:02d}:00:00", day, hour));
+    ts_labels.push_back(pluss::tils::OutputEngine::format("2026-01-{:02d} {:02d}:00:00", day, hour));
   }
 
   std::vector<double> load_mw;

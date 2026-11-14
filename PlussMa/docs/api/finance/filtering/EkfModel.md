@@ -12,7 +12,7 @@ A nonlinear state-space model for the extended Kalman filter: the dynamics, the 
 
 `filtering::StateFn`, default `empty`.
 
-`(const Series &x, std::int64_t t) -> Series`: `f`, state `[n]` to `[n]`. Required.
+`Series (const Series &x, std::int64_t t)`: `f`, state `[n]` to `[n]`. Required.
 
 ### `observation`
 

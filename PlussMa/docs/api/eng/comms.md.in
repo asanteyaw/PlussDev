@@ -1,0 +1,50 @@
+# Communications
+
+Digital modulation and detection on complete blocks of data: PSK and square QAM with Gray labelling, hard and soft demodulation, root-raised-cosine pulse shaping with matched filtering, white Gaussian noise at a chosen Eb/N0, and the error metrics and theory to judge a link. Every call is vectorized over leading frame axes.
+
+## Choosing A Surface
+
+| Task | Branch |
+|---|---|
+| Constellations, mapping and detection | [Modulation and detection](comms/modulation.md) |
+| Pulse shaping and matched filtering | [Pulse shaping](comms/pulse.md) |
+| Noise at a given Eb/N0 | [Channel](comms/channel.md) |
+| Bit error rate, EVM and theory | [Error metrics and theory](comms/metrics.md) |
+| Convolutional coding and Viterbi decoding | [Channel coding](comms/coding.md) |
+| Timing and carrier recovery | [Synchronisation](comms/synchronisation.md) |
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A QPSK mapping.
+
+@@example Eng/api/comms_modulate_bits.cpp@@
+
+### Example 2
+
+A link against theory.
+
+@@example Eng/api/comms_theory_table.cpp@@
+
+### Example 3
+
+Shaping and matching.
+
+@@example Eng/api/comms_match_chain.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+comms/modulation
+comms/pulse
+comms/channel
+comms/metrics
+comms/coding
+comms/synchronisation
+```
+<!-- apiref:toctree:end -->

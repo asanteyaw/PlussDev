@@ -1,0 +1,91 @@
+# `robot::impact`
+
+Joint velocities after an impact.
+
+## Signature
+
+```cpp
+robot::ImpactResult robot::impact(const robot::Robot& robot, const robot::Contacts& contacts, const robot::Pins& pins, const pluss::Series& q, const pluss::Series& qd, double restitution, const robot::ConstraintOptions& options = {});
+```
+
+## What It Does
+
+Applies Newton's impact law to every contact that is in range (gap at most the threshold) and approaching its plane (normal velocity below zero): it receives a non-negative normal impulse chosen so that the normal velocity after the impact is `restitution` times the approach speed, with complementarity (no impulse if the contact is already separating after). Pins stop their points, and friction (when set) limits the tangential impulse of a contact to the friction coefficient times its normal impulse. The impulses solve the linear complementarity problem of the Delassus matrix `J M^-1 J^T`, as a quadratic program by `math::qp`, for the whole batch.
+
+## Parameters
+
+`robot`
+: The compiled robot, with mass properties.
+
+`contacts`
+: The contacts; may be empty.
+
+`pins`
+: The pins; may be empty.
+
+`q`
+: The joint values at the impact, `[..., links]`.
+
+`qd`
+: The joint velocities just before it.
+
+`restitution`
+: The coefficient of restitution in `[0, 1]`: `0` a plastic impact, `1` an elastic one.
+
+`options`
+: The contact threshold and friction iterations; see `ConstraintOptions`.
+
+## Returns
+
+An `ImpactResult` with the velocities after, the contact impulses, the pin impulses and the friction impulses.
+
+## Errors
+
+Throws `pluss::Error` when the robot has no mass properties, for a `restitution` outside `[0, 1]`, for a malformed argument, or for options out of range.
+
+## Interpretation and Use
+
+The velocity after is `qd + M^-1 J^T impulse`: every joint coupled to a contact point shares the change through the inertia. Use `impact` to reset the velocity when a simulation step brings a point to a plane, then `constrain` for the contact that follows.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Plastic, partly elastic and elastic impacts.
+
+@@example Eng/api/robot_impact_restitution.cpp@@
+
+### Example 2
+
+Friction in an impact.
+
+@@example Eng/api/robot_impact_friction.cpp@@
+
+### Example 3
+
+Separating and out-of-range contacts.
+
+@@example Eng/api/robot_impact_separating.cpp@@
+
+### Example 4
+
+A pin stops its point.
+
+@@example Eng/api/robot_impact_pin.cpp@@
+
+### Example 5
+
+Three blocks at once.
+
+@@example Eng/api/robot_impact_batch.cpp@@
+
+### Example 6
+
+Rejected arguments.
+
+@@example Eng/api/robot_impact_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

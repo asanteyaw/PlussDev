@@ -156,3 +156,12 @@ The one-sided tests look at one gap each: the right gap `D+` gives p 0.8609 and 
 
 - [`kstest2`](kstest2.md)
 - [`jbtest`](jbtest.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="kstest2.html">
+    <span class="label">Next</span>
+    <span class="title">kstest2</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,39 @@
+# Finance 8: Delta Hedging
+
+An option seller owes a random payoff and removes most of the randomness by holding the right number of shares of the asset. The option is a `Field`, so its value and delta come from whatever model and engine the field uses. This chapter simulates that hedge and measures what is left. After it you can run a discrete delta hedge on any path, rebuild the portfolio by hand, estimate the spread of the profit from the gamma of the option, predict the profit of a hedge made at the wrong volatility, count the cost of trading, and handle dividends.
+
+Every program is complete and its output is the output of that program.
+
+## The mental model
+
+- **A delta hedge is a self-financing portfolio.** Shares worth {math}`\Delta_tS_t` and a cash account that pays for every change of the position; the hedge error is the portfolio minus the option.
+- **The error is the gamma of the option.** Each rebalance leaves a profit of {math}`\tfrac12\Gamma S^2(\sigma^2\Delta t-(\Delta S/S)^2)`, mean zero at the true volatility, and the standard deviation of the total falls like {math}`1/\sqrt n`.
+- **A wrong volatility has a price.** Hedging at {math}`\sigma_h` earns {math}`e^{rT}(V(\sigma_h)-V(\sigma_{\text{real}}))` on average.
+- **Fine hedging costs money.** Trading costs grow like {math}`\sqrt n` as the risk shrinks like {math}`1/\sqrt n`.
+
+| Entry point | Purpose |
+|---|---|
+| `hedging::delta_hedge(field, path)` | hedge one path of an asset with the delta of the option's `Field` (closed form for Black-Scholes and for Heston and Bates on the COS engine, and the engine's own delta from its grid, paths or solved surface for the other models), returning the option value, delta, cash, portfolio, hedge error and terminal profit |
+
+## Programs
+
+- [The hedging portfolio](finance_08_delta_hedging/the_hedging_portfolio.md)
+- [The hedging error](finance_08_delta_hedging/hedging_error.md)
+
+## Checklist
+
+1. Give the path on equally spaced dates from 0 to the maturity, and hedge one path per call.
+2. Read the hedge error as `portfolio - option_value`; the last value is the profit.
+3. Expect a mean of zero and a spread of order {math}`1/\sqrt n` when the hedge volatility is the true one.
+4. Pass the dividend yield of the asset.
+5. Use the returned `delta` to add costs or other effects.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+finance_08_delta_hedging/the_hedging_portfolio
+finance_08_delta_hedging/hedging_error
+```
+<!-- apiref:toctree:end -->

@@ -54,3 +54,12 @@ Malliavin-weight estimate  0.01328
 closed form n(d2)/(x0 sigma sqrt(T))  0.01325
 ```
 The weighted estimate is 0.01328 against the closed form 0.01325, from 400000 paths, while the pathwise estimate is exactly zero. The weight is the whole trick: the payoff is untouched and so can be as discontinuous as you like.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_skorokhod_integral.html">
+    <span class="label">Previous</span>
+    <span class="title">The Skorokhod integral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

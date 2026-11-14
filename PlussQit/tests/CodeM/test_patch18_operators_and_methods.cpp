@@ -31,6 +31,29 @@ TEST_CASE("operators", "[ops]") {
   REQUIRE(m.scalar_type() == ScalarType::Bool);
 }
 
+TEST_CASE("bitwise symbols compose boolean masks and integer bits", "[ops][bitwise]") {
+  const Series lhs_mask = pluss::make_series({true, true, false, false});
+  const Series rhs_mask = pluss::make_series({true, false, true, false});
+
+  REQUIRE((lhs_mask & rhs_mask).items<bool>() ==
+          std::vector<bool>{true, false, false, false});
+  REQUIRE((lhs_mask | rhs_mask).items<bool>() ==
+          std::vector<bool>{true, true, true, false});
+  REQUIRE((~lhs_mask).items<bool>() ==
+          std::vector<bool>{false, false, true, true});
+  REQUIRE((~lhs_mask).items<bool>() == lhs_mask.logical_not().items<bool>());
+
+  const Series lhs_bits = pluss::make_series({6, 5}, ScalarType::Int64);
+  const Series rhs_bits = pluss::make_series({3, 10}, ScalarType::Int64);
+
+  REQUIRE((lhs_bits & rhs_bits).items<std::int64_t>() ==
+          std::vector<std::int64_t>{2, 0});
+  REQUIRE((lhs_bits | rhs_bits).items<std::int64_t>() ==
+          std::vector<std::int64_t>{7, 15});
+  REQUIRE((~lhs_bits).items<std::int64_t>() ==
+          std::vector<std::int64_t>{~std::int64_t{6}, ~std::int64_t{5}});
+}
+
 TEST_CASE("ostream", "[print]") {
   Series a = pluss::series::arange(0, 5, 1, ScalarType::Int64);
   std::ostringstream oss;

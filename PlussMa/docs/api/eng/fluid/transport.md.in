@@ -1,0 +1,45 @@
+# Transport of quality and heat
+
+This branch follows what the water carries through the flows of a run: `transport` follows a concentration or the age of the water, and `heat` the temperature with its exchange with the surroundings. Both share the cells, step and Courant limit of `RouteOptions`.
+
+## Choosing A Surface
+
+Use `transport` for a disinfectant, a tracer or the age of the water, and `heat` for a thermal main. Choose the cell count and step for the sharpness of the front, and read the conservation error.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Two sources mixing at a junction.
+
+@@example Eng/api/fluid_transport_mix.cpp@@
+
+### Example 2
+
+A decay checked against its exact value.
+
+@@example Eng/api/fluid_transport_decay.cpp@@
+
+### Example 3
+
+A pipe cooling.
+
+@@example Eng/api/fluid_heat_pipe.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+transport/QualityMode
+transport/Quality
+transport/RouteOptions
+transport/TransportResult
+transport/transport
+transport/Heat
+transport/HeatResult
+transport/heat_fn
+```
+<!-- apiref:toctree:end -->

@@ -91,7 +91,7 @@ std::string group_key_name_(std::size_t index, const Slate& key) {
   if (key.named() && !key.name().empty()) {
     return key.name();
   }
-  return index == 0 ? std::string("key") : fmt::format("key_{}", index + 1);
+  return index == 0 ? std::string("key") : pluss::tils::OutputEngine::format("key_{}", index + 1);
 }
 
 std::size_t group_hash_mix_(std::size_t seed, std::size_t value) {
@@ -496,7 +496,7 @@ std::string group_value_output_name_(std::string_view value_name, GroupOp op) {
   if (value_name.empty()) {
     return op_name;
   }
-  return fmt::format("{}_{}", value_name, op_name);
+  return pluss::tils::OutputEngine::format("{}_{}", value_name, op_name);
 }
 
 GroupFactorization_ factor_group_keys_(std::span<const Slate> keys,
@@ -723,7 +723,7 @@ Slate group_broadcast_slate_(const Slate& grouped, const GroupState_& state) {
     auto validity = group_bool_mask_(valid, group_slate_platform_(out));
     PLUSS_CHECK(
         validity.numel() == out.size(),
-        fmt::format(
+        pluss::tils::OutputEngine::format(
             "group: broadcast validity size mismatch (mask={}, out={})",
             validity.numel(),
             out.size()));
@@ -1119,7 +1119,7 @@ Slate group_numeric_slate_(const Slate& value,
 
   PLUSS_CHECK(
       validity.numel() == out.numel(),
-      fmt::format(
+      pluss::tils::OutputEngine::format(
           "group: numeric validity size mismatch (op={}, validity={}, out={})",
           group_op_token_(op),
           validity.numel(),

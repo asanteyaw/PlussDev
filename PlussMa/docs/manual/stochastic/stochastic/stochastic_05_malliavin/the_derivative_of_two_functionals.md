@@ -49,3 +49,12 @@ W at the grid: 0.00000 0.35760 0.07076 -0.12382 -0.11375 -0.52610 -0.77600 -0.91
 D_i max(W):  1.00000 0.00000 0.00000 0.00000 0.00000 0.00000 0.00000 0.00000
 ```
 For `F = W_T²` the derivative is −1.73370 on every increment, equal to `2 W_T` with `W_T = −0.86685`. For `F = max(W)` the maximum of the sampled path is the second sample, 0.35760, so only the first increment moves it: the derivative is 1 there and 0 on the rest.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_skorokhod_integral.html">
+    <span class="label">Next</span>
+    <span class="title">The Skorokhod integral</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

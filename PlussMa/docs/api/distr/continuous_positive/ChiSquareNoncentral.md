@@ -144,10 +144,10 @@ Output
 ```text
 integral of the density: 0.87758
 cdf(12) - cdf(1): 0.87758
-fraction of 200000 draws in range: 0.87914
+fraction of 200000 draws in range: 0.87775
 ```
 
-The integral of the density (0.87758) and the difference of the distribution function (0.87758) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.87914) differs from it by 0.00156, which is the size of the sampling error of a fraction of 200000 draws (a standard error of about 7.33e-04), so the density, the distribution function and the sampler describe the same distribution.
+The integral of the density (0.87758) and the difference of the distribution function (0.87758) agree to all printed digits: they are two computations of one probability. The fraction of random draws (0.87775) differs from it by 0.00017, which is within the sampling error of a fraction of 200000 draws (a standard error of about 7.33e-04), so the density, the distribution function and the sampler describe the same distribution.
 
 ### Example 3
 
@@ -200,3 +200,16 @@ Read down the rows: `lambda 0.5` peaks on this grid at x = 3 (value 0.1563); `la
 - [`FNoncentral`](../continuous_positive/FNoncentral.md)
 - [`Rice`](../continuous_positive/Rice.md)
 - [`Gamma`](../continuous_positive/Gamma.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ChiSquare.html">
+    <span class="label">Previous</span>
+    <span class="title">ChiSquare</span>
+  </a>
+  <a class="next-link" href="Erlang.html">
+    <span class="label">Next</span>
+    <span class="title">Erlang</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

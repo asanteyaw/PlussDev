@@ -58,3 +58,12 @@ The best value falls from 48 at the seed (iteration 1, three evaluations) to 6.1
 - **Read `selection_reason`.** It tells you which rule `Auto` applied, which is the first thing to check when a result surprises you.
 
 Where next: [Budgets, statuses and repeatability](budgets_statuses_and_repeatability.md) explains how a solve ends.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="budgets_statuses_and_repeatability.html">
+    <span class="label">Next</span>
+    <span class="title">Budgets, the five statuses and repeatability</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

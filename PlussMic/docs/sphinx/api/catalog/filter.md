@@ -65,14 +65,14 @@ city                     | Note         | Note             | 3       | [Accra, K
 ```
 
 Example 2. Build the mask from one of the catalog's own streams, via
-[`at()`](at.md).`as_series()` and a `Slate`-level comparison.
+[`keys("id")`](keys.md).`as_series()` and a `Slate`-level comparison.
 
 ```cpp
 auto ct = pluss::kindle::Catalog({
     "id"_k = pluss::kindle::Stream(pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0})),
 });
 
-auto mask = (ct.at("id").as_series() > 2.0);
+auto mask = (ct.keys("id").as_series() > 2.0);
 auto out = ct.filter(mask);
 std::cout << out;
 ```

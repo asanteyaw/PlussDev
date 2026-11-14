@@ -159,7 +159,7 @@ int main() {
   std::cout << std::left << std::setw(28) << "model" << std::right << std::setw(10) << "Q(24)" << std::setw(6) << "df" << std::setw(12) << "p-value" << "\n";
   for (const auto& en : entries) {
     const auto fit = ts::Sarima::fit_mle(y, en.o, f64);
-    auto r = fit.infer(y, f64).host<double>();
+    auto r = fit.infer(y, f64).items<double>();
     r.erase(r.begin(), r.begin() + en.skip);
     ts::LjungBoxOptions lb;
     lb.lags = {24};
@@ -190,3 +190,16 @@ The non-seasonal model fails decisively (Q = 65 on 22 degrees of freedom, p < 0.
 - **Check the residuals at the seasonal lags**, not only at the first few.
 
 Where next: [Differencing](differencing.md) turns to the other transformation that makes a series fit a stationary model, the ordinary difference.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="checking_the_residuals.html">
+    <span class="label">Previous</span>
+    <span class="title">Checking the residuals</span>
+  </a>
+  <a class="next-link" href="differencing.html">
+    <span class="label">Next</span>
+    <span class="title">Differencing</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

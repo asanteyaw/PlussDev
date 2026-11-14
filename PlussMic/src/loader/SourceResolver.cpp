@@ -8,7 +8,6 @@
 #include <fstream>
 #include <utility>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 
@@ -18,6 +17,7 @@
 
 #if PLUSSMIC_HAS_CURL
 #include <curl/curl.h>
+#include <pluss/tils/kit/output.h>
 #endif
 
 namespace pluss::loader::detail {
@@ -53,7 +53,7 @@ std::filesystem::path make_download_temp_path() {
   const auto seed = static_cast<std::uint64_t>(
       std::chrono::high_resolution_clock::now().time_since_epoch().count());
   for (std::size_t i = 0; i < 512; ++i) {
-    const auto candidate = base / fmt::format("pluss_loader_http_{}_{}.tmp", seed, i);
+    const auto candidate = base / pluss::tils::OutputEngine::format("pluss_loader_http_{}_{}.tmp", seed, i);
     std::error_code exists_ec;
     const bool exists = std::filesystem::exists(candidate, exists_ec);
     if (!exists && !exists_ec) return candidate;

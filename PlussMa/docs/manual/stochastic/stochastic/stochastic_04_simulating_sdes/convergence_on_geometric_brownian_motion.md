@@ -55,3 +55,12 @@ steps   Euler-Maruyama   Milstein   Heun (Stratonovich form)
   128          0.01521    0.00087   0.00062
 ```
 Euler-Maruyama's error falls from 0.05904 at 8 steps to 0.01521 at 128, a factor of 3.9 for 16 times more steps, close to the predicted `√16 = 4`. Milstein falls from 0.01280 to 0.00087, a factor of 14.7, close to 16; Heun falls from 0.00862 to 0.00062, a factor of 13.9. At 128 steps Milstein and Heun are 17 and 24 times more accurate than Euler-Maruyama. When the volatility depends on the state, Milstein is worth its extra derivative.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="pathwise_delta.html">
+    <span class="label">Next</span>
+    <span class="title">Pathwise delta</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

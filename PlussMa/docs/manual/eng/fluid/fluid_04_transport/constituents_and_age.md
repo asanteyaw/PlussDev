@@ -1,0 +1,430 @@
+<!-- generated from constituents_and_age.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Constituents and water age
+
+[Back to Fluid 4: Transport](../fluid_04_transport.md)
+
+Pressure and flow say how much water arrives; they do not say what is in it. A utility needs to know how much chlorine is left at the end of a main, where two sources mix, and how long the water has sat in a pipe, because old water is where a disinfectant is gone and bacteria are not. `fluid::transport` follows one quantity through the network over a run: a **constituent**, such as a concentration of a disinfectant or a tracer, or the **age** of the water. It uses the flows that `fluid::run` finds and does not solve the hydraulics again. This page explains how the quantity moves, follows two sources mixing at a junction and checks the mixture against the flows, adds a decay reaction and checks it against its exact value, shows how the number of cells changes the sharpness of a front, and follows the age of the water along a pipe.
+
+## The mental model
+
+`transport` calls `run` for the hydraulics, and then advances the quality through every hydraulic interval with the flows of that interval held fixed. Inside an interval the quality clock takes steps no longer than `RouteOptions::step`, shortened so that no pipe cell, and no draining tank, passes more than the fraction `courant` of its content in one step.
+
+Each pipe is cut into `cells` cells of equal volume, and the quality moves from each cell to the next in the direction of the flow. A step of the upwind scheme gives each cell the fraction `λ = |q| Δt / (V / cells)` of its upstream neighbour's value and keeps `1 - λ` of its own. When `λ = 1` the whole content of a cell moves on in a step and the front is carried exactly; when `λ < 1` the scheme blurs a sharp front by mixing the cells, which is called numerical diffusion. At a junction the incoming flows mix completely: the quality that leaves is the flow-weighted average of what arrives. A reservoir holds a fixed quality and a negative demand injects water at its `source` quality. Pumps and valves hold no water and pass on their upstream quality.
+
+A `Quality` describes what is transported:
+
+| Member | Shape | Meaning |
+|---|---|---|
+| `mode` | | `Constituent`, the default, or `Age` |
+| `initial` | `[..., node]` | the starting quality at every node, required for a constituent |
+| `source` | `[..., node]` | the held quality at a reservoir and of an injection, defaults to `initial` |
+| `pipe_rate` | `[..., pipe]` | a first-order rate in 1/s: `c` changes as `c e^{k Δt}`, so a decay is a negative rate |
+| `tank_rate` | `[..., tank]` | the same, for a tank |
+
+The result has one sample for every hydraulic event. `node` and `link` hold the mixed quality at every node and the mean in every link, `tank` the quality of each tank, and `mass` the total stored quality-volume. `mass_error` is the running balance of that inventory against the reactions and the boundary fluxes, and it should stay at rounding level. A `TransportResult` also carries the hydraulic `RunResult` that drove it, so the flows behind every quality are at hand.
+
+## Two sources mixing
+
+Reservoirs at `50` m and `48` m feed one junction through `600` m and `300` m of `0.15` m pipe, and the junction draws `0.02` m³/s. The first reservoir carries a tracer at concentration `1` and the second holds clean water. The junction's steady concentration has to be the flow-weighted average, the fraction of the draw that comes from the first reservoir. The program solves the flows, prints the junction concentration as the tracer arrives, and checks the final value and the mass balance.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// two reservoirs feed junction 2 through pipes of different length
+static fluid::Net two_sources() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.0, 0.02});
+  net.nodes.head = vec({50.0, 48.0, 40.0});
+  net.pipes.from = {0, 1};
+  net.pipes.to = {2, 2};
+  net.pipes.length = vec({600.0, 300.0});
+  net.pipes.diameter = vec({0.15, 0.15});
+  net.pipes.roughness = vec({1e-4, 1e-4});
+  net.pipes.minor = vec({0.0, 0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const auto network = fluid::network(two_sources());
+  const auto flow = flat(fluid::steady(network).flow);
+  out.writeln("pipe flows ", flow, " m3/s; the first reservoir supplies the fraction ", flow[0] / (flow[0] + flow[1]));
+
+  fluid::Schedule schedule;
+  schedule.duration = 1800.0;
+  schedule.step = 120.0;
+  schedule.pattern_step = 24.0 * 3600.0;
+  fluid::Quality quality;
+  quality.initial = vec({1.0, 0.0, 0.0}); // the tracer is held at 1 at the first reservoir, 0 elsewhere
+  fluid::RouteOptions route;
+  route.step = 10.0;
+  route.courant = 0.9;
+  route.cells = 20;
+
+  const auto r = fluid::transport(network, schedule, quality, route);
+  const auto time = flat(r.hydraulic.time), node = flat(r.node), mass_error = flat(r.mass_error);
+  for (std::size_t i = 0; i < time.size(); i += 2)
+    out.writeln("t ", time[i], " s: junction concentration ", node[3 * i + 2], ", mass error ", mass_error[i]);
+  out.writeln("final ", node.back(), ", flow-weighted average ", flow[0] / (flow[0] + flow[1]));
+}
+```
+
+Output
+
+```text
+pipe flows [0.01313, 0.00687] m3/s; the first reservoir supplies the fraction 0.65653
+t 0.00000 s: junction concentration 0.00000, mass error 0.00000
+t 240.00000 s: junction concentration 0.00000, mass error -0.00000
+t 480.00000 s: junction concentration 0.00492, mass error -0.00000
+t 720.00000 s: junction concentration 0.20884, mass error -0.00000
+t 960.00000 s: junction concentration 0.55431, mass error -0.00000
+t 1200.00000 s: junction concentration 0.64835, mass error -0.00000
+t 1440.00000 s: junction concentration 0.65622, mass error -0.00000
+t 1680.00000 s: junction concentration 0.65652, mass error -0.00000
+final 0.65652, flow-weighted average 0.65653
+```
+
+The flows are `0.01313` and `0.00687` m³/s, so the first reservoir supplies `65.65%` of the draw, and the junction settles at exactly that: `0.65652`, to the printed digits, against `0.65653` from the flows. The tracer takes a while to arrive. The junction concentration, `0.00492` at `480` s, passes `0.2` at `720` s and reaches `0.55` at `960` s, spread over several minutes instead of arriving as a step because the scheme mixes the cells it passes through. The mass error stays at `0.00000` throughout.
+
+## A decay reaction
+
+A disinfectant decays as it travels, and the rate decides how far it reaches. In a pipe with a rate `-k` the concentration after the water has spent a time `T` in the pipe is `exp(-k T)` of its entry value. One reservoir at concentration `1` feeds a junction through a kilometre of `0.15` m pipe, `17.67` m³ in volume, with a `0.01` m³/s draw, so the water takes `T = 1767` s to cross it. The program runs it for three rates and compares the junction with `exp(-k T)`. It sets the quality step to one cell's transit time, `T / cells`: then `λ = 1` and the front is carried without blurring.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// reservoir -> 1 km pipe -> junction drawing 0.01 m3/s
+static fluid::Net line() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.01});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.15});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  const auto network = fluid::network(line());
+  const double kPi = 3.14159265358979323846, volume = kPi * 0.15 * 0.15 / 4.0 * 1000.0, q = 0.01;
+  const double transit = volume / q;
+  const std::int64_t cells = 20;
+  out.writeln("pipe volume ", volume, " m3, transit time ", transit, " s, one cell in ", transit / cells, " s");
+
+  fluid::Schedule schedule;
+  schedule.duration = 4.0 * 3600.0;
+  schedule.step = transit / cells; // the hydraulic step also cuts the quality step, so keep it the same
+  schedule.pattern_step = 24.0 * 3600.0;
+  fluid::RouteOptions route;
+  route.step = transit / cells; // Courant number one
+  route.courant = 1.0;
+  route.cells = cells;
+
+  for (double k : {0.0, 1e-4, 3e-4}) {
+    fluid::Quality quality;
+    quality.initial = vec({1.0, 0.0});
+    quality.pipe_rate = vec({-k}); // a negative rate is a decay
+    const auto r = fluid::transport(network, schedule, quality, route);
+    out.writeln("k = ", k, ": junction ", flat(r.node).back(), ", exp(-k T) = ", std::exp(-k * transit), ", mass error ", flat(r.mass_error).back());
+  }
+}
+```
+
+Output
+
+```text
+pipe volume 17.671459 m3, transit time 1767.145868 s, one cell in 88.357293 s
+k = 0.000000: junction 1.000000, exp(-k T) = 1.000000, mass error -0.000000
+k = 0.000100: junction 0.838020, exp(-k T) = 0.838019, mass error -0.000000
+k = 0.000300: junction 0.588525, exp(-k T) = 0.588520, mass error -0.000000
+```
+
+With one cell crossed per step the junction concentration equals `exp(-k T)` to within `5e-6`: `1.000000` for no reaction, `0.838020` for `k = 1e-4` (exact `0.838019`) and `0.588525` for `k = 3e-4` (exact `0.588520`), and the mass error, which includes the reacted amount, is zero. The reaction is applied exactly (`c e^{kΔt}` per step, not an approximation of the derivative), so a smaller step changes the answer only through the transport.
+
+## How sharp a front is
+
+A front is as sharp as its cells are small. The same kilometre of pipe carries a front, the arrival of the tracer, at a Courant number `0.9`, with `2`, `8` and `32` cells per pipe. The program reads the time at which the junction first reaches `10%`, `50%` and `90%` of the tracer concentration, from samples one minute apart.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net line() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.01});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.15});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(1).with_sep(""));
+  const auto network = fluid::network(line());
+  fluid::Schedule schedule;
+  schedule.duration = 4.0 * 3600.0;
+  schedule.step = 60.0;
+  schedule.pattern_step = 24.0 * 3600.0;
+  for (std::int64_t cells : {2, 8, 32}) {
+    fluid::Quality quality;
+    quality.initial = vec({1.0, 0.0});
+    fluid::RouteOptions route;
+    route.step = 20.0;
+    route.courant = 0.9;
+    route.cells = cells;
+    const auto r = fluid::transport(network, schedule, quality, route);
+    const auto time = flat(r.hydraulic.time), node = flat(r.node);
+    double t10 = -1.0, t50 = -1.0, t90 = -1.0;
+    for (std::size_t i = 0; i < time.size(); ++i) {
+      const double c = node[2 * i + 1];
+      if (t10 < 0.0 && c >= 0.1) t10 = time[i];
+      if (t50 < 0.0 && c >= 0.5) t50 = time[i];
+      if (t90 < 0.0 && c >= 0.9) t90 = time[i];
+    }
+    out.writeln(cells, " cells: 10% at ", t10, " s, 50% at ", t50, " s, 90% at ", t90, " s; width of the front ", t90 - t10, " s");
+  }
+  out.writeln("a plug would arrive at 1767.1 s");
+}
+```
+
+Output
+
+```text
+2 cells: 10% at 480.0 s, 50% at 1500.0 s, 90% at 3420.0 s; width of the front 2940.0 s
+8 cells: 10% at 1080.0 s, 50% at 1740.0 s, 90% at 2580.0 s; width of the front 1500.0 s
+32 cells: 10% at 1500.0 s, 50% at 1800.0 s, 90% at 2100.0 s; width of the front 600.0 s
+a plug would arrive at 1767.1 s
+```
+
+With `2` cells the front is smeared over `2940` s, from `10%` at `480` s to `90%` at `3420` s. `8` cells cut that to `1500` s and `32` cells to `600` s, and the `50%` mark moves towards the plug's arrival at `1767` s: `1500`, `1740` and `1800` s (the samples are a minute apart). Resolution is paid for in cost: more cells and a shorter step. Choose the cell count by the width of front you can accept relative to what you want to know.
+
+## The age of the water
+
+`QualityMode::Age` follows the age of the water instead of a concentration. It is the same transport with a fixed boundary and a source built in: a reservoir holds age zero, and everywhere else the age grows by one second for each second. No source or reaction fields are accepted, because they would make the quantity something other than an age. The program follows the age along the same pipe.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net line() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.01});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.15});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2).with_sep(""));
+  const auto network = fluid::network(line());
+  fluid::Schedule schedule;
+  schedule.duration = 3.0 * 3600.0;
+  schedule.step = 60.0;
+  schedule.pattern_step = 24.0 * 3600.0;
+  fluid::Quality age;
+  age.mode = fluid::QualityMode::Age;
+  fluid::RouteOptions route;
+  route.step = 20.0;
+  route.courant = 1.0;
+  route.cells = 20;
+  const auto r = fluid::transport(network, schedule, age, route);
+  const auto time = flat(r.hydraulic.time), node = flat(r.node);
+  for (std::size_t i = 0; i < time.size(); i += 24)
+    out.writeln("t ", time[i], " s: age at the reservoir ", node[2 * i], " s, at the junction ", node[2 * i + 1], " s");
+  out.writeln("age at the end ", node.back(), " s; pipe volume / flow = 1767.15 s");
+}
+```
+
+Output
+
+```text
+t 0.00 s: age at the reservoir 0.00 s, at the junction 0.00 s
+t 1440.00 s: age at the reservoir 0.00 s, at the junction 1414.48 s
+t 2880.00 s: age at the reservoir 0.00 s, at the junction 1766.64 s
+t 4320.00 s: age at the reservoir 0.00 s, at the junction 1767.15 s
+t 5760.00 s: age at the reservoir 0.00 s, at the junction 1767.15 s
+t 7200.00 s: age at the reservoir 0.00 s, at the junction 1767.15 s
+t 8640.00 s: age at the reservoir 0.00 s, at the junction 1767.15 s
+t 10080.00 s: age at the reservoir 0.00 s, at the junction 1767.15 s
+age at the end 1767.15 s; pipe volume / flow = 1767.15 s
+```
+
+The reservoir stays at age zero, and the junction first holds the water that was in the pipe when the run began, which ages one second a second, `480` s at `480` s. When the fresh water arrives the age settles, and it settles at the pipe volume divided by the flow, `1767.15` s, which is the residence time. That is what age is: the average time since the water left a source. In a looped network it varies from node to node and is the quantity that identifies the stagnant corners.
+
+## Decisions
+
+- **Constituent or age.** Use a constituent for a substance you know the source and reaction of. Use `Age` when you want to find the places the water has sat, with no knowledge of what is in it.
+- **Cells and step.** The cell count sets how sharp a front is, and `RouteOptions::step` how finely time is cut. For an exact front choose a step that gives `λ = 1` in the pipe you care about, as in the decay example. Use the default `0.9` Courant limit when the pipes differ.
+- **Sources.** A reservoir holds its quality for the whole run. Leave `source` out to hold the reservoir at its `initial` value, and give it only to override that, or to give an injection (a negative demand) a different quality.
+- **Reading the result.** The quality samples are at the hydraulic events, so a transient is only as finely sampled as `Schedule::step` allows, whatever the quality step. Use a short `Schedule::step` to see a front arrive.
+
+## Pitfalls
+
+Mistakes in the quality description, each refused or misread. The first four leave out or break a required field. The fifth gives a decay rate a positive sign, which is a growth rate, and is accepted.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <functional>
+#include <iostream>
+
+using namespace pluss::tils;
+namespace fluid = pluss::subsp::eng::fluid;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static fluid::Net line() {
+  fluid::Net net;
+  net.nodes.kind = {fluid::NodeKind::Reservoir, fluid::NodeKind::Junction};
+  net.nodes.elevation = vec({0.0, 5.0});
+  net.nodes.demand = vec({0.0, 0.01});
+  net.nodes.head = vec({50.0, 49.0});
+  net.pipes.from = {0};
+  net.pipes.to = {1};
+  net.pipes.length = vec({1000.0});
+  net.pipes.diameter = vec({0.15});
+  net.pipes.roughness = vec({1e-4});
+  net.pipes.minor = vec({0.0});
+  return net;
+}
+
+static void attempt(const char *label, const std::function<void()> &call) {
+  try {
+    call();
+    std::cout << label << ": ran\n";
+  } catch (const std::exception &e) {
+    std::cout << label << ": " << e.what() << "\n";
+  }
+}
+
+int main() {
+  const auto network = fluid::network(line());
+  fluid::Schedule schedule;
+  schedule.duration = 3600.0;
+  schedule.step = 600.0;
+  schedule.pattern_step = 24.0 * 3600.0;
+
+  attempt("a constituent with no initial quality", [&] {
+    fluid::Quality quality;
+    (void)fluid::transport(network, schedule, quality);
+  });
+  attempt("age with a decay rate", [&] {
+    fluid::Quality quality;
+    quality.mode = fluid::QualityMode::Age;
+    quality.pipe_rate = vec({-1e-4});
+    (void)fluid::transport(network, schedule, quality);
+  });
+  attempt("a negative concentration", [&] {
+    fluid::Quality quality;
+    quality.initial = vec({-1.0, 0.0});
+    (void)fluid::transport(network, schedule, quality);
+  });
+  attempt("a Courant limit of 1.5", [&] {
+    fluid::Quality quality;
+    quality.initial = vec({1.0, 0.0});
+    fluid::RouteOptions route;
+    route.courant = 1.5;
+    (void)fluid::transport(network, schedule, quality, route);
+  });
+
+  // the sign of a rate: 1e-4 is growth
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  fluid::Schedule longer = schedule;
+  longer.duration = 4.0 * 3600.0;
+  longer.step = 88.3573;
+  fluid::RouteOptions route;
+  route.step = 88.3573;
+  route.courant = 1.0;
+  route.cells = 20;
+  for (double rate : {-1e-4, 1e-4}) {
+    fluid::Quality quality;
+    quality.initial = vec({1.0, 0.0});
+    quality.pipe_rate = vec({rate});
+    const auto r = fluid::transport(network, longer, quality, route);
+    out.writeln("rate ", rate, ": the junction settles at ", flat(r.node).back());
+  }
+}
+```
+
+Output
+
+```text
+a constituent with no initial quality: eng::fluid::transport: initial quality is required
+age with a decay rate: eng::fluid::transport: Age supplies its zero boundary and unit growth law; source and reaction fields are not accepted
+a negative concentration: eng::fluid::transport: initial quality must be nonnegative
+a Courant limit of 1.5: eng::fluid::transport: route step, Courant number, flow tolerance, and cell count are invalid
+rate -0.00010: the junction settles at 0.83802
+rate 0.00010: the junction settles at 1.19329
+```
+
+The first four are refused, each with a message that names the field: a constituent needs `initial`, `Age` accepts neither a source nor a reaction, concentrations are nonnegative, and the Courant limit lies in `(0, 1]`. The last is the quiet one. A decay written as `+1e-4` is read as a growth rate and carries the concentration to `1.19`, higher than the source's `1`, with no complaint: the rate is the exponent of `e^{kΔt}`, so decay is negative.
+
+Reference: [`transport`](../../../../api/eng/fluid/transport/transport.md), [`Quality`](../../../../api/eng/fluid/transport/Quality.md), [`RouteOptions`](../../../../api/eng/fluid/transport/RouteOptions.md), [`TransportResult`](../../../../api/eng/fluid/transport/TransportResult.md), [`QualityMode`](../../../../api/eng/fluid/transport/QualityMode.md).
+
+Where next: [Thermal routing](thermal_routing.md) follows the same flows with heat instead of a concentration.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="thermal_routing.html">
+    <span class="label">Next</span>
+    <span class="title">Thermal routing</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

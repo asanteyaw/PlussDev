@@ -1,0 +1,55 @@
+# `thermal::psat`
+
+The saturation pressure of water vapour.
+
+## Signature
+
+```cpp
+Series thermal::psat(const Series& temperature);
+```
+
+## What It Does
+
+Returns the pressure in pascals at which water vapour is in equilibrium with liquid water (at 0 degrees and above) or with ice (below 0 degrees), from the Hyland-Wexler correlations of the ASHRAE handbook. Valid from -60 to 150 degrees Celsius.
+
+## Parameters
+
+`temperature`
+: The temperature in degrees Celsius, between -60 and 150.
+
+## Returns
+
+The saturation pressure in Pa with the shape of `temperature`.
+
+## Errors
+
+Throws `pluss::Error` for a temperature that is not a real floating array, not finite, or outside -60 to 150.
+
+## Interpretation and Use
+
+The liquid and ice correlations meet at 0 degrees to within a fraction of a pascal. The pressure is the ideal-gas value: the enhancement factor of real moist air (a fraction of a percent at one atmosphere) is not applied.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Saturation pressure from 0 to 100 degrees.
+
+@@example Eng/api/thermal_psat_table.cpp@@
+
+### Example 2
+
+Across the freezing point.
+
+@@example Eng/api/thermal_psat_ice.cpp@@
+
+### Example 3
+
+Rejected temperatures.
+
+@@example Eng/api/thermal_psat_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

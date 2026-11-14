@@ -199,3 +199,16 @@ Read down the rows: `b 0.5` peaks on this grid at x = 4 (value 0.1302); `b 1` pe
 - [`Gamma`](../continuous_positive/Gamma.md)
 - [`Weibull`](../continuous_positive/Weibull.md)
 - [`Exponential`](../continuous_positive/Exponential.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Pareto.html">
+    <span class="label">Previous</span>
+    <span class="title">Pareto</span>
+  </a>
+  <a class="next-link" href="Rayleigh.html">
+    <span class="label">Next</span>
+    <span class="title">Rayleigh</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

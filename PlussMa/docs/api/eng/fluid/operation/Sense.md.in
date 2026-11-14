@@ -1,0 +1,67 @@
+# `fluid::Sense`
+
+Whether a state control fires below or above its threshold.
+
+## Signature
+
+```cpp
+fluid::Sense
+```
+
+## What It Does
+
+Gives the direction of a `StateControl`. `Below` fires when the watched value is below the threshold and `Above` when it is above it.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Below` | Fires when the level or pressure head falls below the threshold. |  |
+| `Above` | Fires when it rises above the threshold. |  |
+
+## Returns
+
+An enumeration; `StateControl::sense`.
+
+## Errors
+
+None.
+
+## Interpretation and Use
+
+Pair an `Above` rule with a `Below` rule at different thresholds to make a hysteresis band: the thresholds the wrong way round make rules that cannot settle.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A hysteresis band on a tank level.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 2
+
+Rules that cannot settle.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+### Example 3
+
+Actions fired by level and by time.
+
+@@example Eng/api/fluid_controls_actions.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Device.html">
+    <span class="label">Previous</span>
+    <span class="title">Device</span>
+  </a>
+  <a class="next-link" href="Act.html">
+    <span class="label">Next</span>
+    <span class="title">Act</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

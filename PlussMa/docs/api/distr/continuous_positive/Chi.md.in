@@ -207,3 +207,16 @@ The two largest differences are 1.11e-16 for the density and 5.55e-16 for the di
 - [`Rayleigh`](../continuous_positive/Rayleigh.md)
 - [`Maxwell`](../continuous_positive/Maxwell.md)
 - [`Nakagami`](../continuous_positive/Nakagami.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Burr.html">
+    <span class="label">Previous</span>
+    <span class="title">Burr</span>
+  </a>
+  <a class="next-link" href="ChiSquare.html">
+    <span class="label">Next</span>
+    <span class="title">ChiSquare</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

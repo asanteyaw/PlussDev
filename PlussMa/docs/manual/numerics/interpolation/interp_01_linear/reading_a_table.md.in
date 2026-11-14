@@ -6,3 +6,12 @@
 @@example Numerical/interpolation/guide/801_first_interpolation.cpp@@
 
 A query exactly on a table point returns the table value, and the spacing is free to vary: the intervals here are 2, 3, 5 and 10 minutes wide.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="queries_outside_the_table.html">
+    <span class="label">Next</span>
+    <span class="title">Queries outside the table</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

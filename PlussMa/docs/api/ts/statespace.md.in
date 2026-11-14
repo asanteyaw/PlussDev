@@ -82,4 +82,16 @@ int main() {
 ```
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+statespace/Ssm
+statespace/SsmFilterResult
+statespace/SsmForecastResult
+statespace/SsmModel
+statespace/SsmOptions
+statespace/SsmSimResult
+statespace/SsmSmoothResult
+```
 <!-- apiref:toctree:end -->

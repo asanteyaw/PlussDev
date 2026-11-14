@@ -113,3 +113,12 @@ With the cache on, repeated points are answered from memory (`cache_hits`) and t
 - **Leave the cache on for deterministic functions.** `cache_hits` counts the saved calls; turn it off only if the same input can give different outputs.
 
 Where next: [Several objectives and constraint policies](several_objectives_and_constraint_policies.md) covers the other two black-box features.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="several_objectives_and_constraint_policies.html">
+    <span class="label">Next</span>
+    <span class="title">Several objectives and constraint policies</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

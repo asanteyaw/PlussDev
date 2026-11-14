@@ -168,6 +168,7 @@ Plan build(const lti::StateSpace &system, const Weights &weights,
   const Series in_hi =
       flatten_trajectory(trajectory(bounds.input_upper.to(a.platform(), dtype),
                                     horizon, inputs, "bounds.input_upper"));
+  PLUSS_CHECK(in_lo.le(in_hi).all().item<bool>(), std::string(op) + ": bounds.input_lower must not exceed bounds.input_upper");
   const std::int64_t controls = horizon * inputs;
   Series constraint = pluss::series::eye(controls, dtype).to(a.platform());
 
@@ -186,6 +187,7 @@ Plan build(const lti::StateSpace &system, const Weights &weights,
     const Series state_hi = flatten_trajectory(
         trajectory(bounds.state_upper.to(a.platform(), dtype), horizon, states,
                    "bounds.state_upper"));
+    PLUSS_CHECK(state_lo.le(state_hi).all().item<bool>(), std::string(op) + ": bounds.state_lower must not exceed bounds.state_upper");
     std::vector<std::int64_t> eye_shape(su.sizes().begin(), su.sizes().end());
     eye_shape[eye_shape.size() - 2] = controls;
     eye_shape[eye_shape.size() - 1] = controls;

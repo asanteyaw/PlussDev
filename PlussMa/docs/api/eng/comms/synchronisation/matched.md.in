@@ -1,0 +1,58 @@
+# `comms::matched`
+
+The matched filter without sampling.
+
+## Signature
+
+```cpp
+pluss::Series comms::matched(const pluss::Series& waveform, const pluss::Series& taps);
+```
+
+## What It Does
+
+Filters the waveform with the time-reversed taps (a full convolution): the receive side of a pulse-shaped link before any sampling. `match` is this followed by sampling at the symbol instants; `gardner` takes its output.
+
+## Parameters
+
+`waveform`
+: A real or complex `[..., samples]` array.
+
+`taps`
+: The pulse the transmitter used, a real vector.
+
+## Returns
+
+The filtered waveform, `[..., samples + taps - 1]`.
+
+## Errors
+
+Throws `pluss::Error` for an undefined waveform or taps that are not a real vector.
+
+## Interpretation and Use
+
+The peak of the filtered pulse of the first symbol is at `taps - 1` samples (plus any channel delay). Use it when the sampling instants are not known in advance.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Filtering and sampling.
+
+@@example Eng/api/comms_matched_filter_basic.cpp@@
+
+### Example 2
+
+Feeding the timing loop.
+
+@@example Eng/api/comms_gardner_lock.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_gardner_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

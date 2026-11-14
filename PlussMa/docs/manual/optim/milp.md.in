@@ -6,4 +6,11 @@ Chapters, in reading order:
 - [Integer Programming 2: Larger Models and Worked Problems](milp/milp_02_larger_integer_models.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+milp/milp_01_integer_programs
+milp/milp_02_larger_integer_models
+```
 <!-- apiref:toctree:end -->

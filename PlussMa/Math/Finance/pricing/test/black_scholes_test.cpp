@@ -37,9 +37,9 @@ void test_scalar_black_scholes_reference() {
   constexpr double t = 1.0;
   constexpr double v = 0.2;
 
-  const double call = pricing::black_scholes_price(OptionType::Call, s, k, r, q, t, v);
-  const double put = pricing::black_scholes_price(OptionType::Put, s, k, r, q, t, v);
-  const auto g_call = pricing::black_scholes_greeks(OptionType::Call, s, k, r, q, t, v);
+  const double call = pricing::detail::black_scholes_price(OptionType::Call, s, k, r, q, t, v);
+  const double put = pricing::detail::black_scholes_price(OptionType::Put, s, k, r, q, t, v);
+  const auto g_call = pricing::detail::black_scholes_greeks(OptionType::Call, s, k, r, q, t, v);
 
   expect(approx(call, 10.4505835722, 1e-6), "call price reference mismatch");
   expect(approx(put, 5.5735260223, 1e-6), "put price reference mismatch");
@@ -59,9 +59,9 @@ void test_series_black_scholes_ttm() {
   const Series s = pluss::make_series(std::vector<double>{90.0, 100.0, 110.0}, {3}, cfg);
   const Series tau = pluss::make_series(std::vector<double>{1.0, 0.5, 0.0}, {3}, cfg);
 
-  const Series call = pricing::black_scholes_price(OptionType::Call, s, tau, 100.0, 0.03, 0.01, 0.25, cfg);
+  const Series call = pricing::detail::black_scholes_price(OptionType::Call, s, tau, 100.0, 0.03, 0.01, 0.25, cfg);
   const BlackScholesSeriesGreeks g =
-      pricing::black_scholes_greeks(OptionType::Call, s, tau, 100.0, 0.03, 0.01, 0.25, cfg);
+      pricing::detail::black_scholes_greeks(OptionType::Call, s, tau, 100.0, 0.03, 0.01, 0.25, cfg);
 
   expect(call.sizes().size() == 1 && call.sizes()[0] == 3, "series call output shape mismatch");
   expect(g.delta.sizes().size() == 1 && g.delta.sizes()[0] == 3, "series delta output shape mismatch");
@@ -85,8 +85,8 @@ void test_implied_vol_scalar_methods() {
   constexpr double t = 0.75;
   constexpr double sigma_true = 0.28;
 
-  const double call_px = pricing::black_scholes_price(OptionType::Call, s, k, r, q, t, sigma_true);
-  const double put_px = pricing::black_scholes_price(OptionType::Put, s, k, r, q, t, sigma_true);
+  const double call_px = pricing::detail::black_scholes_price(OptionType::Call, s, k, r, q, t, sigma_true);
+  const double put_px = pricing::detail::black_scholes_price(OptionType::Put, s, k, r, q, t, sigma_true);
 
   const std::vector<ImpliedVolMethod> methods = {
       ImpliedVolMethod::Auto,
@@ -100,8 +100,8 @@ void test_implied_vol_scalar_methods() {
     opt.method = m;
     opt.tolerance = 1e-10;
     opt.max_iterations = 256;
-    const double c_iv = pricing::implied_vol(OptionType::Call, call_px, s, k, r, q, t, opt);
-    const double p_iv = pricing::implied_vol(OptionType::Put, put_px, s, k, r, q, t, opt);
+    const double c_iv = pricing::detail::implied_vol(OptionType::Call, call_px, s, k, r, q, t, opt);
+    const double p_iv = pricing::detail::implied_vol(OptionType::Put, put_px, s, k, r, q, t, opt);
     expect(std::isfinite(c_iv), "scalar implied vol call should be finite");
     expect(std::isfinite(p_iv), "scalar implied vol put should be finite");
     expect(std::abs(c_iv - sigma_true) <= 1e-7, "scalar implied vol call mismatch");
@@ -118,12 +118,12 @@ void test_implied_vol_series() {
   constexpr double q = 0.01;
   constexpr double sigma_true = 0.22;
 
-  const Series px = pricing::black_scholes_price(OptionType::Call, s, tau, k, r, q, sigma_true, cfg);
+  const Series px = pricing::detail::black_scholes_price(OptionType::Call, s, tau, k, r, q, sigma_true, cfg);
   ImpliedVolOptions opt;
   opt.method = ImpliedVolMethod::Brent;
   opt.tolerance = 1e-10;
   opt.max_iterations = 256;
-  const Series iv = pricing::implied_vol(OptionType::Call, px, s, tau, k, r, q, opt, cfg);
+  const Series iv = pricing::detail::implied_vol(OptionType::Call, px, s, tau, k, r, q, opt, cfg);
 
   expect(iv.sizes().size() == 1 && iv.sizes()[0] == 5, "series implied vol shape mismatch");
   expect(iv.isfinite().all().item<double>() == 1.0, "series implied vol should be finite");
@@ -134,9 +134,9 @@ void test_implied_vol_series() {
 void test_implied_vol_no_solution_nan() {
   ImpliedVolOptions opt;
   opt.method = ImpliedVolMethod::Brent;
-  const double iv_bad_low = pricing::implied_vol(OptionType::Call, -1.0, 100.0, 100.0, 0.03, 0.0, 1.0, opt);
-  const double iv_bad_high = pricing::implied_vol(OptionType::Call, 200.0, 100.0, 100.0, 0.03, 0.0, 1.0, opt);
-  const double iv_bad_t = pricing::implied_vol(OptionType::Call, 10.0, 100.0, 100.0, 0.03, 0.0, 0.0, opt);
+  const double iv_bad_low = pricing::detail::implied_vol(OptionType::Call, -1.0, 100.0, 100.0, 0.03, 0.0, 1.0, opt);
+  const double iv_bad_high = pricing::detail::implied_vol(OptionType::Call, 200.0, 100.0, 100.0, 0.03, 0.0, 1.0, opt);
+  const double iv_bad_t = pricing::detail::implied_vol(OptionType::Call, 10.0, 100.0, 100.0, 0.03, 0.0, 0.0, opt);
   expect(std::isnan(iv_bad_low), "invalid low price should return NaN");
   expect(std::isnan(iv_bad_high), "invalid high price should return NaN");
   expect(std::isnan(iv_bad_t), "non-positive maturity should return NaN");

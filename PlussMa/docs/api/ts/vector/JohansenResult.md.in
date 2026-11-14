@@ -25,3 +25,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`johansen_test`](johansen_test.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="JohansenOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">JohansenOptions</span>
+  </a>
+  <a class="next-link" href="Var.html">
+    <span class="label">Next</span>
+    <span class="title">Var</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

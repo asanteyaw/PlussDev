@@ -31,11 +31,11 @@ or any other range whose elements convert to `std::string_view`)
     existence itself is checked only when [`.collect()`](collect.md) actually runs and
     tries to select them from the materialized frame.
 
-```{note} `pluss::msharp::RangeView` is never spelled out in these examples
+:::{note} `pluss::msharp::RangeView` is never spelled out in these examples
 See [`Nexus::select`](../nexus/select.md)'s own note on this — the same
 three-overload pattern (brace literal / named `RangeView`-convertible
 container / any other qualifying range) applies here identically.
-```
+:::
 
 ## Returns
 

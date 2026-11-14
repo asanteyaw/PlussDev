@@ -1,0 +1,89 @@
+# `comms::encode`
+
+Encoding with a convolutional, LDPC or turbo code.
+
+## Signature
+
+```cpp
+pluss::Series comms::encode(const comms::ConvolutionalCode& code, const pluss::Series& bits);
+
+pluss::Series comms::encode(const comms::LdpcCode& code, const pluss::Series& bits);
+
+pluss::Series comms::encode(const comms::TurboCode& code, const pluss::Series& interleaver, const pluss::Series& bits);
+```
+
+## What It Does
+
+**Convolutional:** encodes the bits with every generator by convolution modulo two and interleaves the outputs per input bit, after appending `constraint_length - 1` zero tail bits so that the encoder ends in the zero state. **LDPC:** multiplies the information bits by the systematic generator modulo two: the codeword holds the information bits at `info_positions` and the parity bits elsewhere. **Turbo:** encodes the bits with the first recursive systematic encoder (terminated to the zero state with `K - 1` tail steps) and, in the interleaved order, with the second (left unterminated); the output is the systematic bits, the first parity stream, the second parity stream, and the tail of the first encoder (its systematic then parity bits).
+
+## Parameters
+
+`code`
+: The code: a `ConvolutionalCode`, an `LdpcCode` or a `TurboCode`. The overload is chosen by its type.
+
+`interleaver`
+: Turbo only: a permutation of `0 .. N - 1`, as `shuffle` returns.
+
+`bits`
+: Zeros and ones, a real array whose leading axes are independent frames: `[..., N]` with `N >= 1` for the convolutional code, `[..., k]` with `k = code.dimension` for LDPC and `[..., N]` with `N >= 2` for turbo.
+
+## Returns
+
+An `Int64` array of zeros and ones: `[..., (N + constraint_length - 1) * generators]` (convolutional), `[..., n]` (LDPC) or `[..., 3 N + 2 (K - 1)]` (turbo).
+
+## Errors
+
+Throws `pluss::Error` for an invalid code, bits that are not a real array of zeros and ones, a last length that does not match the code, or (turbo) an interleaver that is not an integer permutation of the right length. The messages name the overload (`encode`) and the rule.
+
+## Interpretation and Use
+
+The convolutional tail costs `K - 1` extra coded symbols per frame, a small fraction of a long frame; the decoder uses it to start and end in a known state. Every LDPC codeword satisfies every parity check. Leaving the second turbo encoder unterminated costs a little performance at short blocks and keeps the layout simple. Modulate the result with `modulate`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A convolutional codeword checked by hand.
+
+@@example Eng/api/comms_conv_codeword.cpp@@
+
+### Example 2
+
+Lengths for two convolutional codes.
+
+@@example Eng/api/comms_conv_rate.cpp@@
+
+### Example 3
+
+Encoding a batch of LDPC frames.
+
+@@example Eng/api/comms_ldpc_encode_decode.cpp@@
+
+### Example 4
+
+The turbo codeword layout.
+
+@@example Eng/api/comms_turbo_codeword.cpp@@
+
+### Example 5
+
+Rejected convolutional input.
+
+@@example Eng/api/comms_conv_errors.cpp@@
+
+### Example 6
+
+Rejected LDPC input.
+
+@@example Eng/api/comms_ldpc_errors.cpp@@
+
+### Example 7
+
+Rejected turbo input.
+
+@@example Eng/api/comms_turbo_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

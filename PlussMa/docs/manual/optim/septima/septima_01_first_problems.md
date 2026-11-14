@@ -32,7 +32,7 @@ The defaults are a starting point, not a tuned recipe. The first program shows h
 
 - `septima(objective, start, options, constraints)` runs the solver; the gradient comes from automatic differentiation of your objective.
 - The defaults are not tuned. Adam's default learning rate (0.001) and budget (200 iterations) will not solve most problems; set the learning rate to the scale of your parameters, or use L-BFGS.
-- `Converged` needs all three of gradient, step and violation within tolerance. A run that ends with `MaxIterations` or `NoProgress` may still have a good answer: read `objective_value`, `stationarity` and `step_inf_norm`.
+- `Converged` needs all three of gradient, step and violation within tolerance. A run that ends with `MaxIterations` may still have a good answer: read `objective_value`, `stationarity` and `step_inf_norm`.
 - `stationarity` is the measure of optimality; `gradient_inf_norm` is the objective's gradient alone and is not zero at a constrained optimum.
 - Pass parameters as one block, a list of blocks, or named blocks; write the objective on `Series`. The result is the same.
 - A progress hook sees every iteration and can stop the run.

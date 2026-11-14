@@ -23,7 +23,7 @@ A sudden load, damping and free vibration.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -119,7 +119,7 @@ A rod swinging through a large angle.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -209,7 +209,7 @@ default spectral radius 0.90000: every step converged true, at most 3.00000 Newt
 tip rotation at 0, 0.3 and 0.6 s (rad): 1.00000 0.48006 -0.56304
 shapes: displacement [121, 9, 3], kinetic [121]
 spectral_radius 0.5: tip rotation at 0.6 s (rad) -0.56293
-stiffness_damping 1e-4: tip rotation at 0.6 s (rad) -0.56242
+stiffness_damping 1e-4: tip rotation at 0.6 s (rad) 0.99901
 ```
 ### Example 3
 
@@ -222,7 +222,7 @@ A frequency sweep.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -279,11 +279,18 @@ int main() {
   // velocity and acceleration
   out.writeln("|velocity| / (omega |u|) at the tip: ", flat(r.velocity.select(-2, members).select(-1, 1).abs().div(r.displacement.select(-2, members).select(-1, 1).abs()).div(vec(frequencies))));
 
-  // undamped at the natural frequency: no steady response
+  // undamped: the amplitude grows without bound as the frequency approaches the natural frequency
+  const std::vector<std::pair<const char *, double>> offsets = {{"1e-2", 1e-2}, {"1e-3", 1e-3}};
+  for (const auto &offset : offsets) {
+    const auto u = structure::harmonic(frame, load.slice(0, 1, 2), vec({omega1 * (1.0 + offset.second)}), wall);
+    out.writeln("no damping, ", offset.first, " above omega_1: tip amplitude (mm) ", 1000.0 * flat(u.displacement.select(-2, members).select(-1, 1).abs())[0]);
+  }
+
+  // exactly at the natural frequency the dynamic stiffness is singular: the solve reports that it did not converge
   structure::HarmonicOptions undamped;
   undamped.fail_on_nonconvergence = false;
-  const auto u = structure::harmonic(frame, load.slice(0, 1, 2), vec({omega1}), wall, undamped);
-  out.writeln("undamped at omega_1, failure off: converged ", u.converged.all().item<bool>());
+  const auto exact = structure::harmonic(frame, load.slice(0, 1, 2), vec({omega1}), wall, undamped);
+  out.writeln("undamped at omega_1, failure off: converged ", exact.converged.all().item<bool>());
   try {
     undamped.fail_on_nonconvergence = true;
     (void)structure::harmonic(frame, load.slice(0, 1, 2), vec({omega1}), wall, undamped);
@@ -301,22 +308,10 @@ shapes: displacement [4, 9, 3], reaction [4, 9, 3], relative residual [0.0000, 0
 iterations 24, operator evaluations 26, restarts 1
 mass damping:      tip amplitude (mm) [1.7010, 388.2302, 0.2505, 55.7885]
 |velocity| / (omega |u|) at the tip: [1.0000, 1.0000, 1.0000, 1.0000]
+no damping, 1e-2 above omega_1: tip amplitude (mm) 77.2242
+no damping, 1e-3 above omega_1: tip amplitude (mm) 776.1488
 undamped at omega_1, failure off: converged false
 undamped at omega_1, failure on: eng::structure::harmonic: dynamic stiffness solve did not converge; a sampled frequency may be singular or poorly conditioned
-```
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-dynamics/MotionState
-dynamics/MotionOptions
-dynamics/NonlinearMotionOptions
-dynamics/HarmonicOptions
-dynamics/MotionResult
-dynamics/NonlinearMotionResult
-dynamics/HarmonicResult
-dynamics/motion
-dynamics/harmonic
 ```
 
 <!-- apiref:toctree:start -->

@@ -25,7 +25,7 @@ The corotational static solve applies the load in steps and solves each with New
 | `line_search_shrink` | Factor by which a rejected Newton step is shortened, in `(0, 1)`. | `0.5` |
 | `armijo` | Fraction of the predicted decrease that a Newton step must achieve, in `(0, 1)`. | `1e-4` |
 | `min_load_step` | Smallest load increment, as a fraction of the load; a continuation that needs a smaller one stops. | `1e-6` |
-| `solve` | Conjugate-gradient controls of the inner linear solves (`max_iterations`, tolerances, `check_interval`). A tangent that is not positive definite is solved by restarted GMRES instead. | budget 8192 |
+| `solve` | Conjugate-gradient controls of the inner linear solves (`max_iterations`, tolerances, `check_interval`). Loss of positive curvature is reported as nonconvergence rather than hidden behind a regularisation. | budget 8192 |
 | `fail_on_nonconvergence` | When true a continuation that does not reach the full load throws; when false it returns the last equilibrium with `load_factor` below one. | `true` |
 
 ## Returns
@@ -52,11 +52,17 @@ Steps, tolerance, an iteration cap and the failure switch on a cantilever bent t
 
 ### Example 2
 
+Line-search, step-size and cutback controls.
+
+@@example Eng/api/structure_solver_controls.cpp@@
+
+### Example 3
+
 The linear solve for comparison.
 
 @@example Eng/api/structure_frame_solve.cpp@@
 
-### Example 3
+### Example 4
 
 Validation raised by the frame.
 

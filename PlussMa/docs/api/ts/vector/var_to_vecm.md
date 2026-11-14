@@ -90,7 +90,7 @@ Output
 
 ```text
 impact row 0: -0.5153 0.1763
-largest difference after the round trip: 0.0e+00
+largest difference after the round trip: 1.1e-16
 ```
 
 
@@ -98,3 +98,16 @@ largest difference after the round trip: 0.0e+00
 
 - [`vecm_to_var`](vecm_to_var.md)
 - [`VarFit`](VarFit.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Var.html">
+    <span class="label">Previous</span>
+    <span class="title">Var</span>
+  </a>
+  <a class="next-link" href="VarFit.html">
+    <span class="label">Next</span>
+    <span class="title">VarFit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

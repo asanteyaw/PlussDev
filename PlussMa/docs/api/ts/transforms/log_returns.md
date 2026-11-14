@@ -150,3 +150,16 @@ log_returns(x)      nan      nan      nan
 
 - [`returns`](returns.md)
 - [`diff`](diff.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="lead.html">
+    <span class="label">Previous</span>
+    <span class="title">lead</span>
+  </a>
+  <a class="next-link" href="resample.html">
+    <span class="label">Next</span>
+    <span class="title">resample</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

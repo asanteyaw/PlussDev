@@ -47,11 +47,17 @@ Tolerance, budget and the failure switch in both states.
 
 ### Example 2
 
+The remaining conjugate-gradient controls.
+
+@@example Eng/api/structure_solver_controls.cpp@@
+
+### Example 3
+
 The default options on the three-bar truss.
 
 @@example Eng/api/structure_truss_solve.cpp@@
 
-### Example 3
+### Example 4
 
 A mechanism reported through the solve.
 

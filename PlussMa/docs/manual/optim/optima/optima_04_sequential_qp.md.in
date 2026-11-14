@@ -49,4 +49,11 @@ Each iteration does four things.
 Chapter 5 opens the working-set method and the interior method, the two other quadratic-model algorithms, and shows when each beats sequential QP.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima_04_sequential_qp/the_sqp_loop
+optima_04_sequential_qp/subproblems_restoration_and_stopping
+```
 <!-- apiref:toctree:end -->

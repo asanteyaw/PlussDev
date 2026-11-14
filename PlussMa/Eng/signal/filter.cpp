@@ -73,6 +73,62 @@ void check_batch_axes(const Series &left, const Series &right, std::int64_t dim,
   }
 }
 
+template <class T>
+std::vector<T> host_values(const Series &value, ScalarType dtype) {
+  const Series flat = value.to(Platform::CPU, dtype).contiguous();
+  return flat.reshape({flat.numel()}).template items<T>();
+}
+
+template <class T>
+void direct_lanes(const std::vector<T> &x, const std::vector<T> &h, std::vector<T> &y, std::int64_t lanes,
+                  std::int64_t n, std::int64_t m) {
+  const std::int64_t out = n + m - 1;
+  for (std::int64_t lane = 0; lane < lanes; ++lane) {
+    const T *in = x.data() + lane * n;
+    const T *taps = h.data() + lane * m;
+    T *dst = y.data() + lane * out;
+    for (std::int64_t k = 0; k < m; ++k) {
+      const T tap = taps[k];
+      for (std::int64_t i = 0; i < n; ++i)
+        dst[i + k] += tap * in[i];
+    }
+  }
+}
+
+template <class T>
+Series direct_conv_as(const Series &x, const Series &h, std::int64_t dim, ScalarType dtype) {
+  const std::int64_t n = x.size(-1);
+  const std::int64_t m = h.size(-1);
+  const std::int64_t lanes = x.numel() / n;
+  const std::vector<T> xv = host_values<T>(x, dtype);
+  const std::vector<T> hv = host_values<T>(h, dtype);
+  std::vector<T> y(static_cast<std::size_t>(lanes * (n + m - 1)), T{});
+  direct_lanes<T>(xv, hv, y, lanes, n, m);
+  std::vector<std::int64_t> shape(x.sizes().begin(), x.sizes().end());
+  shape.back() = n + m - 1;
+  const Config cfg = Config{}.with_dtype(dtype).with_platform(x.platform());
+  return pluss::make_series(y, shape, cfg).moveaxis(-1, dim);
+}
+
+Series direct_conv(const Series &input, const Series &kernel, std::int64_t dim, ScalarType dtype) {
+  Series x = input.to(dtype).moveaxis(dim, -1);
+  Series h = kernel.to(dtype).moveaxis(dim, -1);
+  std::vector<std::int64_t> batch;
+  for (std::int64_t axis = 0; axis + 1 < x.dim(); ++axis)
+    batch.push_back(std::max(x.size(axis), h.size(axis)));
+  auto with_last = [&](std::int64_t last) {
+    std::vector<std::int64_t> shape = batch;
+    shape.push_back(last);
+    return shape;
+  };
+  x = x.expand(with_last(x.size(-1)), true).contiguous();
+  h = h.expand(with_last(h.size(-1)), true).contiguous();
+  if (dtype == ScalarType::Float64) return direct_conv_as<double>(x, h, dim, dtype);
+  if (dtype == ScalarType::Float32) return direct_conv_as<float>(x, h, dim, dtype);
+  if (dtype == ScalarType::Complex128) return direct_conv_as<std::complex<double>>(x, h, dim, dtype);
+  return direct_conv_as<std::complex<float>>(x, h, dim, dtype);
+}
+
 Series crop_conv(Series full, std::int64_t input_size, std::int64_t kernel_size,
                  std::int64_t dim, ConvMode mode) {
   if (mode == ConvMode::Full)
@@ -214,6 +270,57 @@ Coefficients coefficients(const Series &input, const Series &numerator,
   return {std::move(b), std::move(a), width - 1, dtype};
 }
 
+// The recurrence is sequential in the sample index, so it cannot be vectorised along the signal; it is
+// vectorised across the independent lanes by running one tight loop per lane on the host. Each lane uses the
+// transposed direct form II, so the state carried between calls is the same `order` values per lane the
+// Series path keeps, and a block-by-block run continues exactly where the previous block stopped.
+template <class T>
+void run_lanes(const std::vector<T> &x, std::vector<T> &y, std::vector<T> &z,
+               std::int64_t lanes, std::int64_t count, std::int64_t order,
+               const std::vector<T> &b, const std::vector<T> &a) {
+  for (std::int64_t lane = 0; lane < lanes; ++lane) {
+    const T *in = x.data() + lane * count;
+    T *out = y.data() + lane * count;
+    T *state = z.data() + lane * order;
+    for (std::int64_t n = 0; n < count; ++n) {
+      const T xn = in[n];
+      const T yn = b[0] * xn + (order > 0 ? state[0] : T{});
+      out[n] = yn;
+      for (std::int64_t k = 0; k < order; ++k) {
+        const T carry = k + 1 < order ? state[k + 1] : T{};
+        state[k] = b[static_cast<std::size_t>(k + 1)] * xn - a[static_cast<std::size_t>(k + 1)] * yn + carry;
+      }
+    }
+  }
+}
+
+template <class T>
+FilterRun native_run(const Series &samples, const Coefficients &coeff, const Series &state, std::int64_t dim, ScalarType dtype) {
+  const std::int64_t count = samples.size(-1);
+  const std::int64_t order = coeff.order;
+  const std::int64_t lanes = samples.numel() / count;
+  const std::vector<T> x = host_values<T>(samples, dtype);
+  std::vector<T> z = order > 0 ? host_values<T>(state, dtype) : std::vector<T>{};
+  const std::vector<T> b = host_values<T>(coeff.b, dtype);
+  const std::vector<T> a = host_values<T>(coeff.a, dtype);
+  std::vector<T> y(x.size());
+  run_lanes<T>(x, y, z, lanes, count, order, b, a);
+  const Config cfg = Config{}.with_dtype(dtype).with_platform(samples.platform());
+  std::vector<std::int64_t> sample_shape(samples.sizes().begin(), samples.sizes().end());
+  Series values = pluss::make_series(y, sample_shape, cfg).moveaxis(-1, dim);
+  Series final_state = order > 0 ? pluss::make_series(z, std::vector<std::int64_t>(state.sizes().begin(), state.sizes().end()), cfg) : state;
+  return {std::move(values), std::move(final_state)};
+}
+
+FilterRun native_recurrence(const Series &samples, const Coefficients &coeff, const Series &state, std::int64_t dim) {
+  const ScalarType dtype = coeff.dtype;
+  const Series contiguous = samples.contiguous();
+  if (dtype == ScalarType::Float64) return native_run<double>(contiguous, coeff, state, dim, dtype);
+  if (dtype == ScalarType::Float32) return native_run<float>(contiguous, coeff, state, dim, dtype);
+  if (dtype == ScalarType::Complex128) return native_run<std::complex<double>>(contiguous, coeff, state, dim, dtype);
+  return native_run<std::complex<float>>(contiguous, coeff, state, dim, dtype);
+}
+
 FilterRun filter_impl(const Series &input, const Series &numerator,
                       const Series &denominator, const Series *initial,
                       std::int64_t dim, std::string_view operation) {
@@ -229,6 +336,11 @@ FilterRun filter_impl(const Series &input, const Series &numerator,
   const std::int64_t count = samples.size(-1);
   if (count == 0)
     return {samples.moveaxis(-1, dim), std::move(state)};
+  // Differentiable inputs keep the Series path, whose operations record the tape; everything else runs natively.
+  const bool tracked = input.tracks_slope() || numerator.tracks_slope() || denominator.tracks_slope() ||
+                       (initial != nullptr && initial->tracks_slope());
+  if (input.platform() == Platform::CPU && !tracked)
+    return native_recurrence(samples, coeff, state, dim);
 
   std::vector<Series> b_terms;
   std::vector<Series> a_terms;
@@ -434,6 +546,13 @@ Series conv(const Series &input, const Series &kernel, std::int64_t dim,
   const bool real = !dtype_of(dtype).is_complex();
   const std::int64_t full_size = input_size + kernel_size - 1;
   Series full;
+  // Short kernels (or short signals) are summed directly on the host: exact for small integer data, with none of the
+  // rounding noise of a transform, and much cheaper than two forward transforms and an inverse. The transform path
+  // remains for long-by-long convolution and whenever an input records the tape.
+  const bool tracked = input.tracks_slope() || aligned.tracks_slope();
+  if (input.platform() == Platform::CPU && !tracked && std::min(input_size, kernel_size) <= 64) {
+    return crop_conv(direct_conv(input, aligned, dim, dtype), input_size, kernel_size, dim, mode);
+  }
   if (real) {
     full = input.to(dtype)
                .rfft(full_size, dim, "backward")

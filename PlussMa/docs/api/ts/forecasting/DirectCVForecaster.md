@@ -256,3 +256,16 @@ rows with an out-of-sample prediction: 320.0000 of 400
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="build_lagged_predictors.html">
+    <span class="label">Previous</span>
+    <span class="title">build_lagged_predictors</span>
+  </a>
+  <a class="next-link" href="DirectForecaster.html">
+    <span class="label">Next</span>
+    <span class="title">DirectForecaster</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

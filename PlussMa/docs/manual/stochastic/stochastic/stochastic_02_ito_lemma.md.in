@@ -31,4 +31,15 @@ Stratonovich differentials, `x.calc.diff.strat(g, mu, sigma)`, use the ordinary 
 - A differential is a prediction: check it against a simulation when the stakes warrant.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic_02_ito_lemma/ito_s_lemma_for_three_functions
+stochastic_02_ito_lemma/several_sources_of_noise
+stochastic_02_ito_lemma/products_and_quotients
+stochastic_02_ito_lemma/explicit_time_dependence
+stochastic_02_ito_lemma/the_stratonovich_convention
+stochastic_02_ito_lemma/checking_a_prediction_by_simulation
+```
 <!-- apiref:toctree:end -->

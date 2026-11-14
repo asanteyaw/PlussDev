@@ -147,3 +147,16 @@ The sum of the masses (1) and the difference of the distribution function (1) ag
 - [`Bernoulli`](../discrete/Bernoulli.md)
 - [`Binomial`](../discrete/Binomial.md)
 - [`Normal`](../continuous_real_line/Normal.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Poisson.html">
+    <span class="label">Previous</span>
+    <span class="title">Poisson</span>
+  </a>
+  <a class="next-link" href="Skellam.html">
+    <span class="label">Next</span>
+    <span class="title">Skellam</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

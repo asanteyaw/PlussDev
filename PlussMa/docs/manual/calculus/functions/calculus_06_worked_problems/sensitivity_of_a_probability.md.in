@@ -31,15 +31,15 @@ int main() {
   const math::Function sensitivity = operators::differential("sigma")(probability);
 
   const auto sigma = pluss::make_series({0.25, 0.5, 1.0, 2.0, 4.0});
-  const auto p = probability({sigma}).pull<double>();
-  const auto dp = sensitivity({sigma}).pull<double>();
+  const auto p = probability({sigma}).items<double>();
+  const auto dp = sensitivity({sigma}).items<double>();
 
   std::vector<double> exact_p, exact_dp;
-  for (const double s : sigma.pull<double>()) {
+  for (const double s : sigma.items<double>()) {
     exact_p.push_back(std::erf(1.0 / (s * std::sqrt(2.0))));
     exact_dp.push_back(-2.0 * std::exp(-1.0 / (2.0 * s * s)) / (s * s * std::sqrt(two_pi)));
   }
-  out.writeln("sigma      ", sigma.pull<double>());
+  out.writeln("sigma      ", sigma.items<double>());
   out.writeln("P(sigma)   ", p);
   out.writeln("erf form   ", exact_p);
   out.writeln("dP/dsigma  ", dp);
@@ -53,3 +53,16 @@ The probability agrees with the error function form at all five standard deviati
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="taylor_polynomials_from_derivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">A Taylor polynomial and its error</span>
+  </a>
+  <a class="next-link" href="precision_and_concurrency.html">
+    <span class="label">Next</span>
+    <span class="title">Precision and concurrency</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

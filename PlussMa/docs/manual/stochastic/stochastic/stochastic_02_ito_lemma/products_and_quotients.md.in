@@ -8,3 +8,16 @@ For two processes driven by the same noise, `d(XY) = X dY + Y dX + d[X, Y]`, whe
 @@example Probability/random_processes/guide/sde/13_product_and_quotient.cpp@@
 
 Every drift equals its closed form: 0.30700 for the product, 0.02504 for the quotient, 0.07600 for `(X − Y)²`. The last one shows the general form: the second-order term is the variance of `X − Y`, which depends on how correlated the noises are.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="several_sources_of_noise.html">
+    <span class="label">Previous</span>
+    <span class="title">Several sources of noise</span>
+  </a>
+  <a class="next-link" href="explicit_time_dependence.html">
+    <span class="label">Next</span>
+    <span class="title">Explicit time dependence</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

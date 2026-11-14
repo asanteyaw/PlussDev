@@ -30,4 +30,11 @@ Every program is complete and its output is the output of that program. The prog
 4. Use the `*_payload` functions when you want the numbers for your own plotting or tables.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ts_07_plots/autocorrelation_and_partial_autocorrelation
+ts_07_plots/plots_of_the_residuals
+```
 <!-- apiref:toctree:end -->

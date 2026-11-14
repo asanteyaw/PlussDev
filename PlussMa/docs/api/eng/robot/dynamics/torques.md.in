@@ -1,0 +1,73 @@
+# `robot::torques`
+
+The joint forces and torques of a motion.
+
+## Signature
+
+```cpp
+pluss::Series robot::torques(const robot::Robot& robot, const pluss::Series& q, const pluss::Series& qd, const pluss::Series& qdd, const robot::DynamicsOptions& options = {});
+```
+
+## What It Does
+
+Computes the joint torques (forces for prismatic joints) that produce the accelerations `qdd` at the state `(q, qd)` against gravity, by the recursive Newton-Euler method: velocities and accelerations are propagated from the base outwards, the force and moment on each link are computed from its mass properties, and they are accumulated from the tips back to the base.
+
+## Parameters
+
+`robot`
+: The compiled robot, with mass properties.
+
+`q`
+: The joint values, a real floating `[..., links]` array.
+
+`qd`
+: The joint rates, `[..., links]`.
+
+`qdd`
+: The joint accelerations, `[..., links]`.
+
+`options`
+: The gravity; see `DynamicsOptions`.
+
+## Returns
+
+A real `[..., links]` array of joint torques, in newton-metres for revolute joints and newtons for prismatic ones.
+
+## Errors
+
+Throws `pluss::Error` when the robot has no mass properties, when `q`, `qd` or `qdd` is not a real floating `[..., links]` array on the robot's platform, or when the gravity is malformed.
+
+## Interpretation and Use
+
+The result equals `M(q) qdd + bias(q, qd)`. With `qd` and `qdd` zero it is the torque that holds the pose against gravity. The cost is linear in the number of links and the call is vectorized over a batch, so a whole trajectory of torques is one call. The result carries reverse sensitivity to the configuration and the mass properties.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Torques of a planar arm against M qdd plus bias.
+
+@@example Eng/api/robot_dyn_inverse.cpp@@
+
+### Example 2
+
+A sampled motion in one call.
+
+@@example Eng/api/robot_dyn_inverse_batch.cpp@@
+
+### Example 3
+
+A cart with a pendulum against closed forms.
+
+@@example Eng/api/robot_dyn_inverse_prismatic.cpp@@
+
+### Example 4
+
+Rejected arguments.
+
+@@example Eng/api/robot_dyn_inverse_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

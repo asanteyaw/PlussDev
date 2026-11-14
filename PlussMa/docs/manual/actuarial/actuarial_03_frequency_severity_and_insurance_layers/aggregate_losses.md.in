@@ -1,0 +1,166 @@
+# Aggregate Losses
+
+[Back to Frequency, Severity and Insurance Layers](../actuarial_03_frequency_severity_and_insurance_layers.md)
+
+The loss a portfolio pays in a period is the sum of a random number of random amounts,
+
+```{math}
+S=X_1+X_2+\cdots+X_N,
+```
+
+with the claim count {math}`N` independent of the severities {math}`X_i`, which are independent and identically distributed. The **aggregate loss** {math}`S` is what premiums must fund, and its distribution is what a reserve or a reinsurance treaty is measured against.
+
+Its mean and variance follow from those of the frequency and severity, with no simulation:
+
+```{math}
+E[S]=E[N]\,E[X],\qquad
+\mathrm{Var}[S]=E[N]\,\mathrm{Var}[X]+\mathrm{Var}[N]\,\bigl(E[X]\bigr)^2 .
+```
+
+The first term is the variability of the claim amounts; the second is the variability of the claim count, amplified by the size of a claim. For a Poisson frequency, {math}`\mathrm{Var}[N]=E[N]=\lambda`, and the variance is {math}`\lambda\,E[X^2]`, the rate times the second moment of the claim.
+
+## The functions
+
+```cpp
+losses::AggregateMoments losses::aggregate_moments(const pluss::Series &frequency_mean, const pluss::Series &frequency_variance, const pluss::Series &severity_mean, const pluss::Series &severity_variance);
+losses::AggregateMoments losses::compound_poisson(double lambda, double severity_mean, double severity_variance, pluss::Platform platform = pluss::Platform::CPU);
+losses::AggregateMoments losses::compound_negbin(double r, double p, double severity_mean, double severity_variance, pluss::Platform platform = pluss::Platform::CPU);
+```
+
+| Function | Meaning |
+|---|---|
+| `aggregate_moments(frequency_mean, frequency_variance, severity_mean, severity_variance)` | the formulas above for any frequency, element by element: the four arguments are `Series` of one length (or rank-zero scalars), so a portfolio of segments is computed in one call |
+| `compound_poisson(lambda, severity_mean, severity_variance)` | the formulas for a Poisson frequency of rate `lambda` |
+| `compound_negbin(r, p, severity_mean, severity_variance)` | the formulas for a negative binomial frequency, with the parameterisation of [Claim Frequency and Severity](claim_frequency_and_severity.md) |
+
+Each returns an `AggregateMoments`: the `mean` and `variance` of the aggregate loss as `Series`.
+
+## A Poisson frequency with a gamma severity
+
+A portfolio expects 2.5 claims a year, and a claim has a gamma severity with mean 6,000 and variance 18 million. The program takes the severity moments from `gamma_moments`, calls `compound_poisson`, and checks it against the general function and the formulas.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const losses::AggregateMoments severity = losses::gamma_moments(2.0, 3000.0);
+  const double mean = severity.mean.item<double>(), variance = severity.variance.item<double>();
+  const losses::AggregateMoments direct = losses::compound_poisson(2.5, mean, variance);
+  const losses::AggregateMoments frequency = losses::poisson_moments(2.5);
+  const losses::AggregateMoments general = losses::aggregate_moments(frequency.mean, frequency.variance, severity.mean, severity.variance);
+  out.writeln("compound_poisson   mean", direct.mean.item<double>(), " variance", direct.variance.item<double>());
+  out.writeln("aggregate_moments  mean", general.mean.item<double>(), " variance", general.variance.item<double>());
+  out.writeln("by the formulas    mean", 2.5 * mean, " variance", 2.5 * (variance + mean * mean));
+}
+```
+
+## The effect of overdispersion
+
+A negative binomial frequency with the same mean as a Poisson leaves the expected aggregate loss unchanged and raises its variance, through the second term of the formula. The program compares a Poisson with mean 3 and a negative binomial with mean 3 and variance 6, on the same severity.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const losses::AggregateMoments severity = losses::gamma_moments(2.0, 3000.0);
+  const double mean = severity.mean.item<double>(), variance = severity.variance.item<double>();
+  const auto poisson = losses::compound_poisson(3.0, mean, variance);
+  const auto negbin = losses::compound_negbin(3.0, 0.5, mean, variance);
+  out.writeln("Poisson            mean", poisson.mean.item<double>(), " variance", poisson.variance.item<double>());
+  out.writeln("negative binomial  mean", negbin.mean.item<double>(), " variance", negbin.variance.item<double>());
+  out.writeln("extra variance", negbin.variance.item<double>() - poisson.variance.item<double>(), " = (Var N - E N) * E[X]^2 =", (6.0 - 3.0) * mean * mean);
+}
+```
+
+## The portfolio effect
+
+The coefficient of variation of the aggregate loss, its standard deviation over its mean, falls as the portfolio grows: with a Poisson frequency it is {math}`\sqrt{E[X^2]/\lambda}\,/\,E[X]`, which shrinks like {math}`1/\sqrt\lambda`. Ten times the exposure makes the loss about three times steadier relative to its mean; this is the law of large numbers that makes insurance possible.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const losses::AggregateMoments severity = losses::gamma_moments(2.0, 3000.0);
+  const double mean = severity.mean.item<double>(), variance = severity.variance.item<double>();
+  for (const double lambda : {1.0, 10.0, 100.0, 1000.0}) {
+    const auto s = losses::compound_poisson(lambda, mean, variance);
+    out.writeln("claims per year", lambda, " mean", s.mean.item<double>(), " standard deviation", std::sqrt(s.variance.item<double>()), " coefficient of variation", std::sqrt(s.variance.item<double>()) / s.mean.item<double>());
+  }
+}
+```
+
+## A portfolio of segments in one call
+
+`aggregate_moments` works on vectors, so a book split into segments is computed at once: here three segments with expected claim counts 1, 2 and 3 (and variance equal to the mean, a Poisson), and one severity with mean 100 and variance 50. The program compares with the formulas segment by segment.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series frequency_mean = pluss::make_series({1.0, 2.0, 3.0});
+  const pluss::Series frequency_variance = pluss::make_series({1.0, 2.0, 3.0});
+  const pluss::Series severity_mean = pluss::make_series({100.0, 100.0, 100.0});
+  const pluss::Series severity_variance = pluss::make_series({50.0, 50.0, 50.0});
+  const losses::AggregateMoments s = losses::aggregate_moments(frequency_mean, frequency_variance, severity_mean, severity_variance);
+  out.writeln("mean     =", s.mean.items<double>());
+  out.writeln("variance =", s.variance.items<double>());
+  out.writeln("by the formulas: variance", 1.0 * 50.0 + 1.0 * 100.0 * 100.0, 2.0 * 50.0 + 2.0 * 100.0 * 100.0, 3.0 * 50.0 + 3.0 * 100.0 * 100.0);
+}
+```
+
+## Where to go next
+
+The aggregate loss depends on what each claim costs the insurer, and a contract changes that: a deductible removes small losses, a limit caps large ones ([Deductibles, Limits and Coinsurance](deductibles_limits_and_coinsurance.md), [Layers and Stop-Loss](layers_and_stop_loss.md)).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="claim_frequency_and_severity.html">
+    <span class="label">Previous</span>
+    <span class="title">Claim Frequency and Severity</span>
+  </a>
+  <a class="next-link" href="deductibles_limits_and_coinsurance.html">
+    <span class="label">Next</span>
+    <span class="title">Deductibles, Limits and Coinsurance</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

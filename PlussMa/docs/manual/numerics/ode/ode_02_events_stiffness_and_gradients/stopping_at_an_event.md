@@ -59,3 +59,12 @@ velocity  : -14.007141   (exact -14.007141)
 rising event: triggered = 0, stopped at t = 5.000000
 ```
 The impact time and speed agree with the closed form to the printed digits, and the event value (the height) is zero to the refinement tolerance. Asking for a rising crossing, which never happens, returns `triggered = 0` and the state at `t1`: always check `triggered`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="a_stiff_linear_system.html">
+    <span class="label">Next</span>
+    <span class="title">A stiff linear system</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

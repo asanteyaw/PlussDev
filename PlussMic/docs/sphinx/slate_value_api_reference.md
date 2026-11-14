@@ -404,7 +404,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::operator pluss::Duration() const
+operator SlateValue::pluss::Duration()
 ```
 
 #### What It Does
@@ -452,7 +452,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::operator pluss::Note() const
+operator SlateValue::pluss::Note()
 ```
 
 #### What It Does
@@ -500,7 +500,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::operator pluss::Series() const
+operator SlateValue::pluss::Series()
 ```
 
 #### What It Does
@@ -548,7 +548,7 @@ The call completes and returns the contract described under Output.
 #### Signature
 
 ```cpp
-SlateValue::operator pluss::Timeline() const
+operator SlateValue::pluss::Timeline()
 ```
 
 #### What It Does

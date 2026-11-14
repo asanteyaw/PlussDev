@@ -23,7 +23,6 @@
 #include <vector>
 #include <variant>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "CodeM/core/Half.h"
@@ -36,6 +35,7 @@
 #include "table/Atlas.h"
 #include "table/display/Display.h"
 #include "table/io/CsvSchemaConvert.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::table {
 
@@ -415,46 +415,46 @@ std::string series_scalar_string_at(const pluss::Series& s, std::int64_t row) {
     case pluss::codem::ScalarType::Bool:
       return reinterpret_cast<const bool*>(base)[row] ? "true" : "false";
     case pluss::codem::ScalarType::Int8:
-      return fmt::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<int>(reinterpret_cast<const std::int8_t*>(base)[row]));
     case pluss::codem::ScalarType::Int16:
-      return fmt::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int16_t*>(base)[row]);
     case pluss::codem::ScalarType::Int32:
-      return fmt::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int32_t*>(base)[row]);
     case pluss::codem::ScalarType::Int64:
-      return fmt::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::int64_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt8:
-      return fmt::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
+      return pluss::tils::OutputEngine::format("{}", static_cast<unsigned>(reinterpret_cast<const std::uint8_t*>(base)[row]));
     case pluss::codem::ScalarType::UInt16:
-      return fmt::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint16_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt32:
-      return fmt::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint32_t*>(base)[row]);
     case pluss::codem::ScalarType::UInt64:
-      return fmt::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
+      return pluss::tils::OutputEngine::format("{}", reinterpret_cast<const std::uint64_t*>(base)[row]);
     case pluss::codem::ScalarType::Float16:
       return std::isnan(pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]))
           ? std::string("NULL")
-          : fmt::format("{:.6g}",
+          : pluss::tils::OutputEngine::format("{:.6g}",
                         pluss::codem::float16_to_float(reinterpret_cast<const pluss::codem::Float16*>(base)[row]));
     case pluss::codem::ScalarType::BFloat16:
       return std::isnan(pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]))
           ? std::string("NULL")
-          : fmt::format("{:.6g}",
+          : pluss::tils::OutputEngine::format("{:.6g}",
                         pluss::codem::bfloat16_to_float(reinterpret_cast<const pluss::codem::BFloat16*>(base)[row]));
     case pluss::codem::ScalarType::Float32:
       return std::isnan(reinterpret_cast<const float*>(base)[row])
           ? std::string("NULL")
-          : fmt::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
+          : pluss::tils::OutputEngine::format("{:.8g}", reinterpret_cast<const float*>(base)[row]);
     case pluss::codem::ScalarType::Float64:
       return std::isnan(reinterpret_cast<const double*>(base)[row])
           ? std::string("NULL")
-          : fmt::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
+          : pluss::tils::OutputEngine::format("{:.12g}", reinterpret_cast<const double*>(base)[row]);
     case pluss::codem::ScalarType::Complex64: {
       const auto v = reinterpret_cast<const pluss::codem::Complex64*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     case pluss::codem::ScalarType::Complex128: {
       const auto v = reinterpret_cast<const pluss::codem::Complex128*>(base)[row];
-      return fmt::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
+      return pluss::tils::OutputEngine::format("({:.6g}{:+.6g}j)", v.real(), v.imag());
     }
     default:
       return "";
@@ -475,7 +475,7 @@ std::string slate_scalar_string_at(const Slate& t, std::int64_t row) {
     case SlateKind::Note:
       return std::string(t.as_note().at(row));
     case SlateKind::Timeline:
-      return fmt::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
+      return pluss::tils::OutputEngine::format("{}", t.as_timeline().ticks()[static_cast<std::size_t>(row)]);
     default:
       return "";
   }
@@ -1020,7 +1020,7 @@ std::vector<QueryToken> tokenize_query(std::string_view expression) {
       continue;
     }
 
-    PLUSS_FAIL(fmt::format("DataFrame::query: unsupported character '{}'", ch));
+    PLUSS_FAIL(pluss::tils::OutputEngine::format("DataFrame::query: unsupported character '{}'", ch));
   }
 
   out.push_back({QueryTokenKind::End, ""});
@@ -1535,7 +1535,7 @@ DataFrame positional_rhs_like_lhs_(const DataFrame& lhs,
                                    std::string_view where) {
   if (lhs.ncases() != rhs.ncases() || lhs.nfeatures() != rhs.nfeatures()) {
     throw ::pluss::Error(
-        fmt::format("{}: positional frame alignment requires identical shape (lhs=({}, {}), rhs=({}, {}))",
+        pluss::tils::OutputEngine::format("{}: positional frame alignment requires identical shape (lhs=({}, {}), rhs=({}, {}))",
                     where,
                     lhs.ncases(),
                     lhs.nfeatures(),
@@ -1561,7 +1561,7 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
       return FrameMatch{lhs, positional_rhs_like_lhs_(lhs, rhs, where)};
     case AlignBy::Caselbl: {
       if (lhs.nfeatures() != rhs.nfeatures()) {
-        throw ::pluss::Error(fmt::format(
+        throw ::pluss::Error(pluss::tils::OutputEngine::format(
             "{}: AlignBy::Caselbl requires identical feature count for positional feature pairing "
             "(lhs={}, rhs={})",
             where,
@@ -1583,7 +1583,7 @@ FrameMatch prepare_frame_pair_for_alignment_(const DataFrame& lhs,
     }
     case AlignBy::Feature: {
       if (lhs.ncases() != rhs.ncases()) {
-        throw ::pluss::Error(fmt::format(
+        throw ::pluss::Error(pluss::tils::OutputEngine::format(
             "{}: AlignBy::Feature requires identical case count for positional case pairing "
             "(lhs={}, rhs={})",
             where,
@@ -1788,7 +1788,7 @@ DataFrame dataframe_math_slate(const DataFrame& frame,
     switch (options.align) {
       case AlignBy::Pos:
         if (other.size() != frame.ncases()) {
-          throw ::pluss::Error(fmt::format(
+          throw ::pluss::Error(pluss::tils::OutputEngine::format(
               "DataFrame::math(Slate, Axis::Case): positional alignment requires rhs length to match "
               "DataFrame cases (rhs={}, cases={})",
               other.size(),
@@ -1816,7 +1816,7 @@ DataFrame dataframe_math_slate(const DataFrame& frame,
   switch (options.align) {
     case AlignBy::Pos:
       if (other.size() != frame.nfeatures()) {
-        throw ::pluss::Error(fmt::format(
+        throw ::pluss::Error(pluss::tils::OutputEngine::format(
             "DataFrame::math(Slate, Axis::Feature): positional alignment requires rhs length to match "
             "DataFrame features (rhs={}, features={})",
             other.size(),
@@ -1984,7 +1984,7 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
     switch (options.align) {
       case AlignBy::Pos:
         if (other.size() != frame.ncases()) {
-          throw ::pluss::Error(fmt::format(
+          throw ::pluss::Error(pluss::tils::OutputEngine::format(
               "DataFrame::compare(Slate, Axis::Case): positional alignment requires rhs length to match "
               "DataFrame cases (rhs={}, cases={})",
               other.size(),
@@ -2011,7 +2011,7 @@ DataFrame dataframe_cmp_slate(const DataFrame& frame,
   switch (options.align) {
     case AlignBy::Pos:
       if (other.size() != frame.nfeatures()) {
-        throw ::pluss::Error(fmt::format(
+        throw ::pluss::Error(pluss::tils::OutputEngine::format(
             "DataFrame::compare(Slate, Axis::Feature): positional alignment requires rhs length to match "
             "DataFrame features (rhs={}, features={})",
             other.size(),
@@ -2514,7 +2514,7 @@ void detail::DataFrameImpl::validate_and_reindex_() {
   }
   PLUSS_CHECK(cases_.defined(), "DataFrame: cases are undefined");
   PLUSS_CHECK(cases_.size() == nrows_,
-              fmt::format("DataFrame: case length mismatch (cases={}, nrows={}, cols={})",
+              pluss::tils::OutputEngine::format("DataFrame: case length mismatch (cases={}, nrows={}, cols={})",
                           cases_.size(),
                           nrows_,
                           columns_.size()));
@@ -2673,7 +2673,7 @@ Slate prepare_slate_for_use_(
     case AlignBy::Pos:
       if (value.size() != src.nrows_) {
         throw ::pluss::Error(
-            fmt::format("{}: positional {} requires rhs length to match DataFrame cases "
+            pluss::tils::OutputEngine::format("{}: positional {} requires rhs length to match DataFrame cases "
                         "(rhs={}, cases={})",
                         where,
                         align_use_name_(use),

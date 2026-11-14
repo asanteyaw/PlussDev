@@ -1,0 +1,67 @@
+# `robot::accel`
+
+The joint accelerations under given torques.
+
+## Signature
+
+```cpp
+pluss::Series robot::accel(const robot::Robot& robot, const pluss::Series& q, const pluss::Series& qd, const pluss::Series& tau, const robot::DynamicsOptions& options = {});
+```
+
+## What It Does
+
+Solves `M(q) qdd = tau - bias(q, qd)` for the accelerations. It is the right-hand side of the equations of motion: integrate it to simulate the robot.
+
+## Parameters
+
+`robot`
+: The compiled robot, with mass properties.
+
+`q`
+: The joint values, `[..., links]`.
+
+`qd`
+: The joint rates, `[..., links]`.
+
+`tau`
+: The applied joint torques and forces, `[..., links]`.
+
+`options`
+: The gravity; see `DynamicsOptions`.
+
+## Returns
+
+A real `[..., links]` array of joint accelerations.
+
+## Errors
+
+Throws `pluss::Error` when the robot has no mass properties or an argument is malformed.
+
+## Interpretation and Use
+
+The call undoes `torques`: the accelerations that torques produce are the ones that gave those torques. Use it as the derivative function of an integrator; with `tau` zero a conservative system keeps its total energy, which is a good check on the step size.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Free fall, holding torques and a round trip.
+
+@@example Eng/api/robot_dyn_forward.cpp@@
+
+### Example 2
+
+A one-second simulation with energy conserved.
+
+@@example Eng/api/robot_dyn_simulate.cpp@@
+
+### Example 3
+
+Against inverse dynamics.
+
+@@example Eng/api/robot_dyn_inverse.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

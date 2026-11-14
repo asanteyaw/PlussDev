@@ -1,0 +1,355 @@
+<!-- generated from second_order_sections.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Second-order sections
+
+[Back to Signals 2: Recursive Filters](../signal_02_recursive_filters.md)
+
+You have designed a filter of high order, a sharp low-pass for example, and you want to run it. This page shows why a single pair of coefficient vectors stops being usable at moderate orders, and how a cascade of second-order sections, run by `sos`, stays accurate at any order. It also shows the section matrix format, so that you can build a cascade yourself.
+
+## The mental model
+
+A filter of order `p` has `p` poles. Written as one `numerator` and one `denominator`, its coefficients are the coefficients of a polynomial whose roots are those poles. The roots of a polynomial of high degree are extremely sensitive to the coefficients: a relative change in the 16th digit of one coefficient can move a root a long way. For a narrow low-pass filter the poles are clustered near `z = 1`, which is the worst case. Rounding the coefficients to double precision is enough to push a pole outside the unit circle.
+
+A **second-order section** avoids this by never forming the high-degree polynomial. The filter is factored into a product of degree-2 pieces, one per pair of poles (or a single real pole), each with its own three feed-forward and three feedback coefficients. The signal passes through the sections one after the other. Each quadratic has roots that move smoothly with its three coefficients, so rounding does no harm.
+
+The `sos` functions take the sections as a matrix of shape `[sections, 6]`. Each row is `[b0, b1, b2, a0, a1, a2]`: the numerator coefficients followed by the denominator coefficients. A design from `butter`, `cheby1` or `cheby2` is turned into this matrix by `lti::to_sos`.
+
+## One section is a filter
+
+The first program designs a second-order low-pass Butterworth filter at a cutoff of `0.2` of the Nyquist frequency, converts it to sections, and filters an impulse. A filter of order 2 has exactly one section, and the result is identical to `filter` with the same six numbers split into `b` and `a`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series sections = lti::to_sos(sig::butter(2, 0.2));
+  out.writeln("sections shape", sections.sizes());
+  out.writeln("[b0 b1 b2 a0 a1 a2]", sections.reshape({6}).items<double>());
+
+  const pluss::Series impulse = pluss::series::make(std::vector<double>{1, 0, 0, 0, 0, 0});
+  const pluss::Series b = sections.slice(1, 0, 3).reshape({3});
+  const pluss::Series a = sections.slice(1, 3, 6).reshape({3});
+  out.writeln("sos    ", sig::sos(impulse, sections).values.items<double>());
+  out.writeln("filter ", sig::filter(impulse, b, a).values.items<double>());
+}
+```
+
+Output
+
+```text
+sections shape [1, 6]
+[b0 b1 b2 a0 a1 a2] [0.067455, 0.134911, 0.067455, 1.000000, -1.142981, 0.412802]
+sos     [0.067455, 0.212011, 0.281934, 0.234726, 0.151905, 0.076729]
+filter  [0.067455, 0.212011, 0.281934, 0.234726, 0.151905, 0.076729]
+```
+
+The matrix has one row. Its numerator is `0.067455 * [1, 2, 1]`, the characteristic double zero at `z = -1` of a Butterworth low-pass, and its denominator is `[1, -1.142981, 0.412802]`. The two responses are the same six numbers. Every row has `a0 = 1` here because `to_sos` normalises, but a row with another leading denominator coefficient is accepted and normalised by `sos` itself; a zero is refused.
+
+## Order and sections
+
+An order-`p` design has `ceil(p / 2)` sections. The program shows the section counts for orders 4 and 8 and checks the cascade against its definition: running `sos` is the same as feeding the signal through each row in turn with `filter`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series four = lti::to_sos(sig::butter(4, 0.2));
+  out.writeln("order 4 sections", four.sizes(), "  order 8 sections", lti::to_sos(sig::butter(8, 0.2)).sizes());
+
+  const pluss::Series x = pluss::series::make(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8});
+  pluss::Series by_hand = x;
+  for (long row = 0; row < four.size(0); ++row) {
+    const pluss::Series r = four.select(0, row);
+    by_hand = sig::filter(by_hand, r.slice(0, 0, 3), r.slice(0, 3, 6)).values;
+  }
+  out.writeln("largest difference, sos against section by section:", (sig::sos(x, four).values - by_hand).abs().max().item<double>());
+}
+```
+
+Output
+
+```text
+order 4 sections [2, 6]   order 8 sections [4, 6]
+largest difference, sos against section by section: 0.000000
+```
+
+Order 4 gives two sections and order 8 gives four. The two ways of cascading agree to the last digit (the printed difference is `0.000000`; each is the same sequence of operations).
+
+## Why high orders need sections
+
+The next program makes the point with numbers. For a Butterworth low-pass of order `p` at a cutoff of `0.02` of Nyquist, it forms the one-polynomial form by multiplying out the poles and zeros, and runs a step through both forms. The final value of a low-pass step response must be exactly `1`. A well-conditioned filter reaches it to rounding error; the polynomial form, built from the same poles in double precision, does not.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+#include <vector>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using Complex = std::complex<double>;
+
+// The coefficients of the monic polynomial with the given roots, highest power first.
+static std::vector<double> polynomial(const std::vector<Complex> &roots) {
+  std::vector<Complex> c{1.0};
+  for (const Complex &r : roots) {
+    std::vector<Complex> next(c.size() + 1, 0.0);
+    for (std::size_t i = 0; i < c.size(); ++i) {
+      next[i] += c[i];
+      next[i + 1] -= r * c[i];
+    }
+    c = next;
+  }
+  std::vector<double> real;
+  for (const Complex &v : c) real.push_back(v.real());
+  return real;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series step = pluss::series::ones({4000}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+  out.writeln("order   sections: final value   one polynomial: final value");
+  for (const int order : {4, 6, 8, 10, 12}) {
+    const auto design = sig::butter(order, 0.02);
+    std::vector<double> numerator = polynomial(design.zeros().to(pluss::ScalarType::Complex128).items<Complex>());
+    const std::vector<double> denominator = polynomial(design.poles().to(pluss::ScalarType::Complex128).items<Complex>());
+    for (double &v : numerator) v *= design.gain().item<double>();
+
+    const double with_sections = sig::sos(step, lti::to_sos(design)).values.select(0, 3999).item<double>();
+    const double with_polynomial = sig::filter(step, pluss::series::make(numerator), pluss::series::make(denominator)).values.select(0, 3999).item<double>();
+    out.writeln(order, with_sections, with_polynomial);
+  }
+}
+```
+
+Output
+
+```text
+order   sections: final value   one polynomial: final value
+4 1.000000 1.000000
+6 1.000000 1.000000
+8 1.000000 0.999969
+10 1.000000 0.959609
+12 1.000000 342139059536190061744351354496116326400.000000
+```
+
+The section form reaches `1.000000` at every order. The single-polynomial form is accurate at order 4 and 6, loses digits at 8, is off in the second digit at order 10, and at order 12 the filter has become unstable: the printed value is astronomically large. Nothing in the filter or the data changed between rows except the order; what failed is the representation. This is the reason `lti::to_sos` exists and the reason designs return poles and zeros, not coefficients.
+
+## Streaming through sections
+
+A cascade carries two state numbers per section, so the state of an `sos` run has shape `[lanes..., sections, 2]`. It is passed back exactly like the state of `filter`: the second argument after the sections. The program runs a ramp of twenty samples whole and in two blocks through an order-4 cascade.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series sections = lti::to_sos(sig::butter(4, 0.2));
+  const pluss::Series x = pluss::series::arange(0, 20, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+
+  const auto whole = sig::sos(x, sections);
+  const auto first = sig::sos(x.slice(0, 0, 7), sections);
+  const auto second = sig::sos(x.slice(0, 7, 20), sections, first.state);
+  out.writeln("state shape for one signal   ", whole.state.sizes());
+  out.writeln("largest difference, blocks against whole:", (first.values.unite({second.values}, 0) - whole.values).abs().max().item<double>());
+
+  const pluss::Series lanes = pluss::series::arange(0, 6, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).reshape({2, 3});
+  out.writeln("state shape for two lanes    ", sig::sos(lanes, sections).state.sizes());
+}
+```
+
+Output
+
+```text
+state shape for one signal    [2, 2]
+largest difference, blocks against whole: 0.000000
+state shape for two lanes     [2, 2, 2]
+```
+
+Splitting the twenty samples at seven changes nothing: the largest difference is `0.000000`. One signal has a state of shape `[2, 2]` (two sections, two numbers each) and two lanes have `[2, 2, 2]`.
+
+## A cascade you build yourself
+
+Any matrix with six columns is a valid cascade. The program builds two identical first-order smoothers as a two-section cascade by hand, as rows with the unused second-order terms set to zero, and compares the result with filtering twice. A row `[0.5, 0, 0, 1, -0.5, 0]` is the smoother `y[n] = 0.5 y[n-1] + 0.5 x[n]`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series rows = pluss::series::make(std::vector<double>{0.5, 0, 0, 1, -0.5, 0, 0.5, 0, 0, 1, -0.5, 0}).reshape({2, 6});
+  const pluss::Series impulse = pluss::series::make(std::vector<double>{1, 0, 0, 0, 0, 0});
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.5});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.5});
+
+  out.writeln("two-section cascade ", sig::sos(impulse, rows).values.items<double>());
+  out.writeln("filter applied twice", sig::filter(sig::filter(impulse, b, a).values, b, a).values.items<double>());
+}
+```
+
+Output
+
+```text
+two-section cascade  [0.250000, 0.250000, 0.187500, 0.125000, 0.078125, 0.046875]
+filter applied twice [0.250000, 0.250000, 0.187500, 0.125000, 0.078125, 0.046875]
+```
+
+Two smoothers in series have the response `(n + 1) 0.5^(n + 2)`: `0.25, 0.25, 0.1875, 0.125, ...` The cascade and the two successive calls agree, as they must.
+
+## Errors
+
+`sos` refuses a section matrix that does not have six columns, one with a zero leading denominator coefficient, a state that cannot be matched to the lanes and sections, and an integer input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series x = pluss::series::zeros({2, 4});
+  report([&] { (void)sig::sos(x, pluss::series::zeros({2, 5})); });
+  report([&] { (void)sig::sos(x, pluss::series::make(std::vector<double>{0.5, 0, 0, 0, -0.5, 0}).reshape({1, 6})); });
+  report([&] { (void)sig::sos(x, pluss::series::make(std::vector<double>{0.5, 0, 0, 1, -0.5, 0}).reshape({1, 6}), pluss::series::zeros({3, 1, 2})); });
+  report([&] { (void)sig::sos(pluss::make_series(std::vector<int>{1, 2, 3}, {3}), pluss::series::make(std::vector<double>{0.5, 0, 0, 1, -0.5, 0}).reshape({1, 6})); });
+}
+```
+
+Output
+
+```text
+eng::signal::sos: sections must have shape [section, 6]
+eng::signal::sos: every section denominator[0] must be nonzero
+eng::signal::sos: state is not broadcastable to the signal lanes
+eng::signal::sos: input must have a floating or complex dtype
+```
+
+## Decisions
+
+- **Any designed filter of order above about 4:** use `sos`, and keep the design as poles and zeros until `to_sos`.
+- **Filter coefficients that you already hold as one `numerator`/`denominator` pair:** `filter` is fine for low orders (up to about 4 or 6, depending on the cutoff). For a narrow band, factor first.
+- **A custom cascade:** build the `[sections, 6]` matrix yourself and call `sos`; sections need not be a design's.
+
+## Pitfalls
+
+Two mistakes, each with its output. The first is the belief that only the order decides when the single-polynomial form fails: a narrow cutoff, with the poles crowded against `z = 1`, makes it fail at a lower order. The program forms the polynomial for a Butterworth filter of order 8 at three cutoffs and reports the final value of its step response, which must be exactly `1`. The second mistake is to swap the two halves of a section row: the program takes the section of the first program, swaps its numerator and denominator, and filters an impulse. A section with the roles of zeros and poles exchanged has its poles where the zeros were.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+#include <vector>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+using Complex = std::complex<double>;
+
+static std::vector<double> polynomial(const std::vector<Complex> &roots) {
+  std::vector<Complex> c{1.0};
+  for (const Complex &r : roots) {
+    std::vector<Complex> next(c.size() + 1, 0.0);
+    for (std::size_t i = 0; i < c.size(); ++i) {
+      next[i] += c[i];
+      next[i + 1] -= r * c[i];
+    }
+    c = next;
+  }
+  std::vector<double> real;
+  for (const Complex &v : c) real.push_back(v.real());
+  return real;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series step = pluss::series::ones({4000}, f64);
+  for (const double cutoff : {0.2, 0.05, 0.02}) {
+    const auto design = sig::butter(8, cutoff);
+    std::vector<double> numerator = polynomial(design.zeros().to(pluss::ScalarType::Complex128).items<Complex>());
+    const std::vector<double> denominator = polynomial(design.poles().to(pluss::ScalarType::Complex128).items<Complex>());
+    for (double &v : numerator) v *= design.gain().item<double>();
+    out.writeln("order 8, cutoff", cutoff, " polynomial form, final step value",
+                sig::filter(step, pluss::series::make(numerator), pluss::series::make(denominator)).values.select(0, 3999).item<double>());
+  }
+
+  const pluss::Series section = lti::to_sos(sig::butter(2, 0.2));
+  const pluss::Series swapped = section.slice(1, 3, 6).unite({section.slice(1, 0, 3)}, 1);
+  const pluss::Series impulse = pluss::series::make(std::vector<double>{1, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+  out.writeln("section as designed      ", sig::sos(impulse, section).values.items<double>());
+  out.writeln("halves swapped (never settles)", sig::sos(impulse, swapped).values.items<double>());
+}
+```
+
+Output
+
+```text
+order 8, cutoff 0.200000  polynomial form, final step value 1.000000
+order 8, cutoff 0.050000  polynomial form, final step value 1.000000
+order 8, cutoff 0.020000  polynomial form, final step value 0.999969
+section as designed       [0.067455, 0.212011, 0.281934, 0.234726, 0.151905, 0.076729, 0.024993, -0.003107, -0.013869, -0.014569]
+halves swapped (never settles) [14.824638, -46.593547, 84.482091, -122.370635, 160.259179, -198.147723, 236.036267, -273.924810, 311.813354, -349.701898]
+```
+
+At a cutoff of `0.2` the polynomial form still reaches `1.000000` at order 8, at `0.05` too, and at `0.02` it is already off in the fifth digit (`0.999969`); the section form is exact at all three. The swapped section has a double pole at `z = -1`, on the unit circle, where the low-pass had its double zero. Its impulse response alternates in sign and grows by about `37.9` at every step, never settling, while the designed section decays to zero.
+
+The third mistake, with no output to show, is to feed a state from a cascade with a different number of sections: it is rejected with the message in the errors program, not reshaped.
+
+Reference: [`to_sos`](../../../../api/eng/lti/response/to_sos.md), [`butter`](../../../../api/eng/signal/design/butter.md), [`sos`](../../../../api/eng/signal/filtering/sos.md), [`filter`](../../../../api/eng/signal/filtering/filter.md).
+
+Where next: [Zero-phase filtering](zero_phase_filtering.md) uses a cascade forwards and backwards to remove its delay.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="filters_and_streaming.html">
+    <span class="label">Previous</span>
+    <span class="title">Filters and streaming</span>
+  </a>
+  <a class="next-link" href="zero_phase_filtering.html">
+    <span class="label">Next</span>
+    <span class="title">Zero-phase filtering</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

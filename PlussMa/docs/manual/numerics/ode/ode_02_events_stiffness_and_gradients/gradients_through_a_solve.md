@@ -28,8 +28,8 @@ int main() {
     ode::OdeOptions o;
     o.steps = steps;
     const auto g = ode::fluxa_adjoint(decay, vec({y0}), 0.0, T, vec({th}), vec({1.0}), o);
-    std::cout << std::left << std::fixed << std::setprecision(8) << std::setw(8) << steps << std::setw(18) << g.grad_y0.item<double>() << std::setw(18)
-              << g.grad_theta.item<double>() << std::scientific << std::setprecision(1) << std::abs(g.grad_theta.item<double>() - dth) << "\n";
+    std::cout << std::left << std::fixed << std::setprecision(8) << std::setw(8) << steps << std::setw(18) << g.grad_y0.squeeze().item<double>() << std::setw(18)
+              << g.grad_theta.squeeze().item<double>() << std::scientific << std::setprecision(1) << std::abs(g.grad_theta.squeeze().item<double>() - dth) << "\n";
   }
   std::cout << "exact   " << std::fixed << std::setprecision(8) << std::setw(18) << dy0 << std::setw(18) << dth << "\n";
 }
@@ -46,3 +46,12 @@ steps   dL/dy0            dL/dtheta         error in dL/dtheta
 exact   0.24659696        -0.73979089       
 ```
 The adjoint is the exact gradient of the *discrete* RK4 map. It differs from the gradient of the true solution only by the method's own error, which falls by about 16 per halving of the step, as in Chapter 1. The method is defined for fixed-step RK4; asking for it with the adaptive method is an error, because differentiating through accepted and rejected step decisions is a separate problem. Choose `steps` so the discretisation error is below the accuracy you need in the gradient.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_stiff_linear_system.html">
+    <span class="label">Previous</span>
+    <span class="title">A stiff linear system</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

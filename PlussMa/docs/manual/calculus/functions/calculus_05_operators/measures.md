@@ -98,3 +98,16 @@ mu(x^2 > 0.36) =  0.40000000    exact 0.4
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="integral_transforms.html">
+    <span class="label">Previous</span>
+    <span class="title">Fourier and Laplace transforms</span>
+  </a>
+  <a class="next-link" href="vector_variational_and_adjoint.html">
+    <span class="label">Next</span>
+    <span class="title">Vector, variational and adjoint operators</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

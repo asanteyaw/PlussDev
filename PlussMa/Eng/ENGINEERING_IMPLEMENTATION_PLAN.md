@@ -752,7 +752,7 @@ complex AC dtype, and retains reverse sensitivity through device values and sour
 
 This is intentionally the linear circuit foundation, not a complete SPICE claim. E4b
 extends the same block assembler with controlled sources and ideal op-amp constraints;
-the next E4 work is nonlinear operating points and transient DAE integration. Netlist syntax, compact
+the nonlinear operating points of E4d and the transient of E4c followed. Netlist syntax, compact
 semiconductor models, sparse scaling, continuation, noise, and harmonic balance remain
 later layers and must not fork the canonical topology owner.
 
@@ -819,6 +819,195 @@ Permanent verification reconstructs a signed VCCS operating point and output cur
 loaded VCVS voltage and branch current; a two-lane gain sweep; a 10x ideal non-inverting
 amplifier; controlled-source AC reuse; reverse sensitivity of output voltage to VCVS
 gain; and failures for mismatched four-terminal metadata and degenerate op-amp inputs.
+
+### E4c linear transient analysis
+
+`circuit::tran` integrates the linear MNA system `E x' + F x = u(t)` on a uniform grid. `F`
+and the source vector come from the same stamps as `op` (the shared `Stamps` owner);
+`E` holds the capacitor Laplacian on the node block and `-L` on the inductor branch
+diagonal, so `ac` is exactly `tran` with `d/dt -> j w`. The step recurrences are discrete
+state-space systems and run through the native `lti::sim` host loop (and its Series
+recursion when parameters track a tape), so reverse sensitivities to component values
+work without a circuit-private integrator. Two rules are public through `TranOptions`:
+the trapezoid rule (one-step; conserves LC energy to rounding) and Gear2/BDF2 (two-step,
+state `[x_k; x_{k-1}]`, started by one backward-Euler step; damps what a long step cannot
+resolve). A consistent first sample comes from one batched pinned solve in which each
+capacitor is a voltage constraint and each inductor a current constraint, so `Start`
+carries only state (capacitor voltage, inductor current) and the algebraic unknowns are
+solved around it. `Drive` replaces independent source values per sample (straight line
+between samples); an undefined member holds the stored value. Parameter batches and
+single-precision circuits keep their dtype.
+
+Defects found and fixed on the way: `subsp::linearalg::lu_solve` returned Float64 for
+Float32 inputs, so every Float32 circuit failed in `op` and `ac` with a dtype mismatch;
+the result is now restored to the input dtype. The circuit module's throws are now
+`pluss::Error` (previously `std::invalid_argument`), with the circuit-level explanation of
+singular systems kept as the message.
+
+Permanent verification (`eng_circuit_test`): RC/RL/LC closed forms, second-order
+convergence of both rules, trapezoid LC amplitude conservation and Gear2 damping,
+sinusoidal steady state against the AC response, op-amp integrator ramp, VCCS charging,
+charged-capacitor discharge and inductor start current, parameter batches, Float32,
+reverse sensitivity against a central difference, source across an inductor, and the
+argument and unreachable-start failures.
+
+References: no external source was inspected for this tranche. The two rules are the
+textbook trapezoidal rule and the second-order backward differentiation formula; the
+accuracy, conservation and ringing claims in the guide are measured by the programs on
+the page, not quoted. Deferred rather than approximated: nonuniform and adaptive steps,
+event-driven sources, and DAE index
+reduction beyond the consistent first sample.
+
+### E4d nonlinear devices: diodes and bipolar transistors
+
+`Net` gains `diodes` (Shockley, optional ideality) and `transistors` (Ebers-Moll transport
+model, NPN/PNP by `polarity`, optional reverse gain; no Early effect, charge storage or
+terminal resistance). Both are compiled once into junction incidence matrices (`Devices`,
+with the transistor polarity folded into the incidences so a PNP is the NPN equations on
+negated junction voltages), and every analysis shares one Newton core: the device currents
+`N(x)` are added to the same linear system the analysis already solves (`op`: `F x + N = u`;
+`tran`: the trapezoid, backward-Euler or Gear2 step equation; the pinned starting-state
+solve), each iteration solves the companion (conductance stamp plus equivalent source) about
+the previous limited junction voltages, and SPICE-style junction limiting (`pnjlim`, with
+the critical voltage per junction) stops the exponentials overflowing. `SolveOptions`
+(thermal voltage, tolerance, iteration limit, `gmin` across every junction) is shared by
+`op`, the `ac` overload, and `TranOptions::solver`. `ac` of a device circuit needs the
+operating point (`ac(circuit, omega, op_result)`): devices contribute their small-signal
+conductances, and the stored sources are the excitation, so a bias circuit and an
+excitation circuit of the same topology are built separately, as in the guide.
+
+Sensitivities: the iteration runs outside the tape and one final differentiable Newton step
+at the converged point returns the implicit-function sensitivity (`dx = -J^-1 dr/dtheta`);
+in `tran` the history terms stay on the tape, so reverse sensitivities pass through the
+time loop. A DC sweep needs no separate analysis: a leading axis on a source is a batch of
+independent solves, iterated together until every member converges.
+
+Convergence and robustness (added after review): a failed Newton solve is retried by gmin stepping
+(large junction conductance stepped down by decades) and, for operating points and starting
+states, by source stepping; the default `gmin` is 1e-18 so a reverse-biased diode carries its
+saturation current; a device current above `max_current` is an error rather than a silent
+absurd solution; `tran` compares every step with the same interval as two half steps and
+subdivides with trapezoid sub-steps (`step_tolerance`, `max_refinement`, reported in
+`Result::refinements`), so long sample intervals no longer overshoot a switching circuit;
+`Transistors::early_voltage` adds the Early effect.
+
+Permanent verification (`eng_circuit_test`, `device_checks`): diode bias against the exact
+scalar equation by bisection (forward, reverse including the `gmin` leakage, a batch of
+sweep values with ideality), transistor forward-active gain and terminal-current balance,
+the PNP mirror reproducing the NPN node voltages with the opposite sign, reverse-mode
+sensitivity of a diode voltage to a resistor against a central difference, the small-signal
+divider `rd / (R + rd)` with `rd = n Vt / Id`, an off-state diode leaving an RC step
+response linear, a half-wave rectifier (peak, floor and agreement of both rules), and the
+non-convergence, control and device-description failures.
+
+References: no external source was inspected for this tranche. The diode and Ebers-Moll
+equations and the junction-voltage limiter are textbook formulas; the numbers in the guide
+come from the programs on the pages. MOSFETs (level-1 square law, body tied to the source, NMOS/PMOS through the same polarity fold,
+reverse conduction by swapping drain and source, optional channel-length modulation) share the
+Newton core and its fallbacks; their moderate-step limiter replaces the junction limiter. Charge
+storage is constant device capacitances (diode junction, BJT base-emitter/base-collector, MOSFET
+gate-source/gate-drain) compiled as ordinary capacitors appended to the net's (one place implements
+charge storage; `Start` follows that order). Parallel capacitors are now legal: the pinned starting
+solve regularises the redundant constraint rows and verifies that the start voltages agree.
+Voltage-dependent charge: diodes with a `junction_potential` store the SPICE depletion charge (linear
+continuation above half the potential) plus the diffusion charge `transit_time x i`; the charge enters
+the transient as `weight x Q(v)` folded into the device current (weight 2/h for the trapezoid, 1/h for the
+backward-Euler start, 1.5/h for Gear2) with the previous charges as history, the refinement sub-steps use the
+same weights, and `ac` adds `j w C(v)` at the operating point. MOSFETs take an optional `bulk` node with
+`body_effect` and `surface_potential` (threshold shift `gamma (sqrt(phi + vsb) - sqrt(phi))`, reverse conduction
+uses the drain as the source reference).
+Ideas for later (not built): voltage-dependent charge for BJT junctions and MOS gate capacitances, short-channel
+and subthreshold MOS models, noise analysis, harmonic balance.
+
+### E8a rigid-body robots: kinematics, Jacobians, inverse kinematics, dynamics
+
+`pluss::subsp::eng::robot` (Eng/robot). The repository-wide audit before writing found no
+existing SO(3), quaternion or spatial-algebra owner in PlussMa or Series, so the rotation
+helpers (`rotation`, Rodrigues; `rpy`, Rz Ry Rx) are new and live here. A robot is `Links`
+(parent array with parent < child, revolute/prismatic joints about a joint-frame axis, joint
+frame at a translation and roll-pitch-yaw in the parent frame, optional mass, centre and
+inertia) compiled once by `make` into an immutable `Robot`; configurations are `Series`
+`[..., n]`, every call is vectorized over the leading axes, and every result carries reverse
+sensitivity to configurations and to the compiled values. Kinematics composes the transforms
+down the tree; the geometric Jacobian is `[z x (p - o); z]` per ancestor revolute joint and
+`[z; 0]` per prismatic joint, zero for non-ancestors. Inverse dynamics is recursive Newton-
+Euler in link frames with the base accelerating against gravity; the mass matrix is the
+columns of RNEA at unit accelerations with zero gravity and velocity (correct by construction
+and cheap for the small trees targeted; CRBA and ABA are deliberately not claimed);
+forward dynamics solves `M qdd = tau - bias` with the batched LU. Inverse kinematics is
+Levenberg-Marquardt damped least squares (per-target accept/reject: the error never grows and an
+unreachable target ends at the nearest point found) on position and, optionally, the sine-axis orientation error, with optional joint limits, run off
+the tape. The cross product is written with components because `Series::cross` requires
+equal ranks and the recursion mixes batched and constant vectors.
+
+Permanent verification (`eng_robot_test`): rotation orthonormality and the rpy product,
+closed-form two-link planar arm kinematics, inertia matrix and bias forces, the cart-pole
+equations with a prismatic joint, Jacobian columns against central differences for a tree
+with prismatic and revolute joints (linear and angular), symmetric positive-definite mass
+matrix on a branching tree, total-energy conservation of forward dynamics under RK4 on the
+planar arm and the tree, gravity torque equal to the gradient of the potential energy,
+forward/inverse dynamics round trip, mass sensitivity of the potential energy, pose and
+batched position inverse kinematics, unreachable targets reporting non-convergence, Float32
+dtype preservation and the validation failures.
+
+References: Featherstone, *Rigid Body Dynamics Algorithms* (2008) and the textbook Newton-
+Euler recursion, used for the equations only; no source code of any robotics library was
+inspected and no numeric constants were taken from one. Constraints and contacts (added after review): `constrain` holds points at rest (`Pins`,
+free three-component forces) and keeps points on one side of planes (`Contacts`, frictionless,
+force along the normal, non-negative and complementary to the normal acceleration). The kinematic
+recursion is one function (`propagate`) shared by RNEA and the constraint code; the contact problem
+is the linear complementarity problem of the Delassus matrix `J M^-1 J^T`, solved for the whole batch
+as the box-constrained QP it is by the existing `math::qp` (accurate to its tolerance), with the point
+Jacobian and bias acceleration built from the existing link Jacobian and motion pass. Friction and impacts (added after
+review): contacts take an optional Coulomb coefficient; the tangent rows join the same quadratic program with bounds
+`mu x` the previous round's normal force (a short fixed-point iteration, a pyramid approximation of the cone), and
+`impact` applies Newton's impact law (restitution) and a friction impulse through the same Delassus matrix and
+solver, with one shared constraint-row builder for both.
+Deferred rather than approximated:
+spatial-vector formulations (CRBA/ABA), rolling and torsional friction, an exact friction cone, simultaneous multi-body
+impact ordering, task priorities in the IK, trajectory generation, floating bases and
+control adapters.
+
+### E9a digital communications: modulation, pulse shaping, noise, detection
+
+`pluss::subsp::eng::comms` (Eng/comms) works on complete blocks: `psk(order)` and `qam(order)`
+(square, order a power of four) build a `Constellation` with unit average energy, Gray labels
+by default, optional phase and Complex64/Complex128 points; `modulate`, `symbols`, `to_bits`,
+`to_labels`, `detect` (nearest point), `demod`, and `llr` (max-log log-likelihood ratios,
+positive favours zero) map and decide; `rrc`, `shape` and `match` implement unit-energy
+root-raised-cosine shaping and matched filtering through the existing `signal::conv` (complex
+signals filter their real and imaginary parts); `noise` and `noise_variance` give reproducible
+noise at a chosen Eb/N0; `to_tones`/`from_tones` (unitary FFT blocks with a cyclic prefix); `ber`, `ser`, `evm` and `theory` judge a
+link. Leading axes are independent frames throughout. Nothing here reimplements an owner:
+convolution is `signal::conv`, random numbers are `Series::randn` with an explicit seed, and
+the Q function is `erfc`.
+
+Permanent verification (`eng_comms_test`): unit energy and the Gray nearest-neighbour property
+for PSK and QAM, noiseless round trips for every order, label packing, LLR sign against the hard
+decision, RRC unit energy, symmetry and the Nyquist property of the pair, a noise-free
+shape/match chain recovering symbols, noise variance and its equal split, seed reproducibility,
+EVM equal to the noise-to-signal amplitude, and simulated bit error rates for BPSK, QPSK,
+16-QAM, 64-QAM and 8-PSK within 15-20 percent of `theory` at 60000 symbols.
+
+References: textbook modulation and detection theory; the BER expressions are the standard
+exact (BPSK, QPSK) and nearest-neighbour (higher order PSK, square QAM) formulas, and the
+guide's numbers are measured by its programs. Channel coding and synchronisation (added after review): `ConvolutionalCode`/`encode` (terminated
+feed-forward codes built from `signal::conv` modulo two) and `decode` (soft, ACS vectorized
+over states and frames, trellis tables on the host, traceback from the zero state), checked against the
+textbook (7, 5) codeword, the free-distance correction guarantee and the coding gain over uncoded BPSK.
+`timing` is the Oerder-Meyr square-law estimator, `delay` a linear phase through the existing FFT,
+`cfo` the M-th power spectrum peak with parabolic interpolation, `derot`, and
+`pll` a second-order Costas loop (damping 1/sqrt 2) run over symbols and vectorized over frames.
+Iterative codes (added after review): `gallager` (Gallager construction, systematic generator by Gauss-Jordan
+over GF(2)), `encode`, `decode` (normalised min-sum on dense messages, vectorized over frames, stopping on
+a satisfied syndrome); `TurboCode`, `shuffle`, `encode` (first encoder terminated, second not) and
+`decode` (two max-log-MAP BCJR decoders exchanging scaled extrinsic information). The trellis tables are shared
+with the Viterbi decoder (`link_trellis`). `matched` is the unsampled half of `match`, and `gardner` is a
+Gardner loop with cubic interpolation on its output, damping 1/sqrt 2.
+Deferred rather than approximated: non-square
+QAM, irregular and quasi-cyclic LDPC with sparse storage, tail-biting and punctured convolutional codes, turbo
+trellis-termination of both encoders, a log-MAP (exact) turbo decoder, equalisation, fading channels, Mueller-Muller and early-late timing detectors,
+packet framing and streaming blocks.
 
 ### E5a power-flow foundation
 
@@ -1620,6 +1809,50 @@ transient conduction, heat exchangers, moist-air state calculations, and HVAC/pl
 components. Thermophysical property calls use a centralized property provider with
 explicit reference states and provenance.
 
+#### E5b audit: thermal building blocks (2026-11-13)
+
+Reuse decided before any thermal code: a lumped thermal network is the circuit system
+`E x' + F x = u` (temperature = voltage, heat flow = current, conductance = 1/R, thermal
+capacity = capacitor to the reference node, fixed temperature = voltage source, heat source
+= current source). `thermal` therefore compiles its records into a `circuit::Net` and
+calls `circuit::op` / `circuit::tran`; batching, trapezoid/Gear2 stepping and implicit
+sensitivities are inherited, not rebuilt. Layered walls discretise into the same network
+through one finite-volume helper. Not found anywhere in PlussMa: saturation pressure,
+liquid water/air property correlations, moist-air state, exchanger effectiveness. Those are
+new and live in one property provider (`thermal::props`) with explicit reference states and
+a provenance string per correlation; roots for wet-bulb/dew point reuse `math::roots`.
+
+#### E5c completion: thermal networks, conduction, exchangers, moist air and properties
+
+`Eng/thermal` is implemented. `thermal::steady` and `thermal::tran` compile `Net`
+(links, stores, fixed temperatures, heats) into a `circuit::Net` and call the circuit
+operating point and transient, so batching, trapezoid/Gear2 stepping and dtype retention are
+inherited; the module adds validation in thermal terms (named nodes, conduction paths to a
+fixed temperature, drive/start shapes), link and boundary heat flows, and a layered wall
+finite-volume mesh (`mesh` returning a `Slab`). Closed forms: plane/cylinder/sphere
+conduction and film resistances, Biot number, straight fins with adiabatic, convective and
+infinite tips. Exchangers: effectiveness-NTU for parallel, counter, cross (standard
+approximation), shell-and-tube and boiling arrangements, its inverse (closed form; cross by
+`math::roots::illinois`), `rate`, and `lmtd`. Moist air: ASHRAE Hyland-Wexler saturation
+pressure over water and ice, humidity ratio, relative humidity, enthalpy (reference state:
+dry air and liquid water at 0 deg C), volume, dew point and wet bulb by bracketed roots,
+adiabatic mixing. Property provider: `props` / `source` for liquid water and dry air with
+enforced validity ranges (no extrapolation) and provenance strings.
+
+Tests (`Eng/thermal/test`) check series/parallel network identities, boundary energy
+balance, the lumped cooling curve, exchanger limits and round trips, saturation pressure
+and psychrometric table values, and property values. The guide chapters
+`manual/eng/thermal/thermal_01_conduction` and `thermal_02_exchangers_and_air` and the
+`api/eng/thermal` reference (five families, 41 pages) carry their programs under
+`Math/examples/Eng/api/thermal_*.cpp`.
+
+Deferred, recorded here only: radiation links and temperature-dependent conductivity
+(nonlinear networks on the circuit Newton core), phase-change storage, convection
+correlations (Nusselt relations for pipes, plates and banks), exact cross-flow series and
+multi-pass shell correction factors, fouling, coils and plant-loop components built on the
+exchanger and moist-air states, latent heat recovery, humid-air enhancement factors, an
+IAPWS-grade water/steam provider and further fluids, two-dimensional conduction.
+
 ### Phase E6: structures and finite elements
 
 Establish mesh, node, degree-of-freedom, material, section, element, constraint, load-case,
@@ -1690,6 +1923,25 @@ EPANET's dynamic Lagrangian segment lists. Its first-order numerical diffusion, 
 batch CFL clock, one-constituent contract, fully mixed tanks, and deferred multi-species,
 wall-reaction, source-class, and high-resolution advection scope are recorded with the
 equations, tests, and inspected EPANET references in `Eng/fluid/IMPLEMENTATION.md`.
+
+#### E7e completion: thermal-fluid routing
+
+`fluid::heat()` now specializes the E7d route owner for constant-property sensible heat.
+It reuses the accepted E7c hydraulic event trajectory, bidirectional finite-volume
+advection, complete junction mixing, zero-volume device transfer, current tank volume,
+scenario batching, dtype/platform retention, reverse graph, and conservation ledger.
+Pipe and tank `UA` terms use exact affine relaxation toward prescribed ambient
+temperatures; stored and reconciled inventories are reported in joules through `HeatResult`.
+
+The public route clock is now `RouteOptions` for both quality and heat, preventing two
+resolution contracts from drifting over the same numerical owner. Analytical pipe and tank
+cooldown, moving-plug residence time, mixing, batching, Float32, reverse sensitivities, and
+failure boundaries are permanent regressions. E7e remains one-way coupled and
+constant-property; wall capacitance, variable properties, pump heat, phase change,
+heat-exchanger devices, and hydraulic feedback remain explicit future contracts rather
+than hidden approximations. Equations, diagnostics, limits, and inspected EnergyPlus,
+CoolProp/IAPWS, and inherited EPANET references are recorded in
+`Eng/fluid/IMPLEMENTATION.md`.
 
 ### Phase E8: robotics and mechatronics
 

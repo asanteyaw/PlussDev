@@ -1,0 +1,80 @@
+# Transient response
+
+[Back to Thermal 1: Conduction](../thermal_01_conduction.md)
+
+A cup of coffee cools, a room warms after the heating is switched on, a component heats up under load. This page adds thermal capacity to the network and follows the temperatures through time: a body cooling, a start from a given state, boundaries and heaters that change, and the choice of step.
+
+## The mental model
+
+A body that holds heat has a thermal capacity `C` in joules per kelvin. Heat flowing in raises its temperature at `Q / C`, so for one body losing heat through a conductance `G` to surroundings at `T_inf`,
+
+```{math}
+C \frac{dT}{dt} = -G\,(T - T_\infty) + q ,
+```
+
+and the temperature relaxes towards `T_inf + q / G` with the **time constant** `C / G`. A network is many such bodies coupled; its response is a sum of exponentials, and the fastest of them sets how short a step must be. `tran` takes the same `Net` as `steady`, plus `Stores`, a vector of times, a `Drive` for boundaries and heats that change, and a `Start` for where the stores begin. Every array of the result gains a time axis in front of its element axis.
+
+## A body cooling
+
+A body of 100 J/K at 100 degrees cools through 0.5 W/K to surroundings at 20 degrees. The time constant is `100 / 0.5 = 200 s`.
+
+@@example Eng/api/thermal_tran_cooling.cpp@@
+
+The numerical values agree with `20 + 80 exp(-t / 200)` to better than a thousandth of a kelvin on a 2 s step: the default scheme is second order, so halving the step divides the error by four. The shape `[101, 2]` is time then node; every result follows that rule.
+
+## Where the stores start
+
+Without a `Start` every store begins at zero, which on a Celsius scale is rarely where you want it. A store started at the ambient stays there; a store left at the default warms towards the boundary.
+
+@@example Eng/api/thermal_tran_start.cpp@@
+
+The default start is a disturbance of 20 degrees below the surroundings, and the body creeps up with the time constant of 200 s. Start where the physics starts: at the ambient, or at the steady state of an earlier operating point.
+
+## Things that change in time
+
+A boundary that moves (the weather, a thermostat) is a `Drive::temperature`; a heater that switches is a `Drive::power`. Each has one row per time sample. Here the surroundings step from 20 to 40 degrees at 100 s and a 50 W heater runs between 200 s and 300 s.
+
+@@example Eng/api/thermal_tran_drive.cpp@@
+
+The body stays at 20 degrees until the surroundings step, rises slowly towards 40, takes the heater's 50 W as an extra `50 / 0.5 = 100 K` that it only partly reaches in 100 s, and then relaxes back. The last line is the heat the boundary exchanges at the final sample; it is negative because the body, at about 47 degrees, is warmer than the 40-degree surroundings, so the boundary absorbs heat.
+
+A member of the `Drive` that you leave undefined holds the stored value, and a defined one replaces it. The next program shows both on the same body.
+
+@@example Eng/api/thermal_drive_defaults.cpp@@
+
+## The step and the scheme
+
+`Trapezoid`, the default, averages the equations at the two ends of the step. It is exact for a straight-line response and conserves energy, but when a step is much longer than the fastest time constant it rings. `Gear2` extends backwards over two earlier steps and damps. A step five time constants long shows the difference:
+
+@@example Eng/api/thermal_tran_scheme.cpp@@
+
+The exact answer is within 0.7 % of 10 after the first step. The trapezoid values swing 14.3, 8.2, 10.8, 9.7, 10.1 around it before settling; `Gear2` overshoots by 2.6 % once and is within 0.03 % of 10 by the fifth step. When a long step cannot be avoided, use `Gear2`; when the step is short against every time constant the two agree and the trapezoid is the more accurate.
+
+## A room over six days
+
+All the pieces together: a two-layer wall meshed into cells, films on both faces, ventilation, a heater, and an outdoor temperature that swings by 5 degrees every day. The program lays the network out, drives it for six days in 10-minute steps and compares the settled room temperature with the steady state at the mean outdoor temperature.
+
+@@example Eng/api/thermal_guide_room.cpp@@
+
+The room approaches its long-run behaviour over several days, because the wall's capacity is large against its conductance, and the daily outdoor swing of 10 K shows up in the room as a swing of only about 1.2 K: the wall's capacity smooths it. The range of the last day, 18.95 to 20.15 degrees, brackets the steady state at the mean outdoor temperature, 19.81: a linear network driven by a periodic input oscillates around its steady state at the mean input.
+
+## Decisions
+
+- **Step size:** a few steps per smallest time constant, and at least a few per period of the fastest drive. Check by halving it.
+- **Which scheme:** the trapezoid rule for smooth responses and oscillations, `Gear2` when the network is stiff (very different time constants) or the step is long.
+- **Lumped or meshed:** one store per body is right when the Biot number is below about 0.1 (see [Walls, fins and meshes](walls_and_fins.md)); otherwise mesh the body.
+- **Starting state:** the ambient for a disturbance, a steady state for continuing a run.
+
+## Pitfalls
+
+A drive or start that does not fit the network is refused with the element named: a power drive with no heats, a drive with the wrong number of rows, a start with no stores, a capacity that is not positive.
+
+@@example Eng/api/thermal_tran_errors.cpp@@
+
+And, as in steady state, a start in kelvin against boundaries in Celsius is not an error but a wrong answer; keep one scale.
+
+@@example Eng/api/thermal_pitfall_scales.cpp@@
+
+## Where next
+
+Reference pages: [`tran`](../../../../api/eng/thermal/network/tran.md), [`Stores`](../../../../api/eng/thermal/network/Stores.md), [`Drive`](../../../../api/eng/thermal/network/Drive.md), [`Start`](../../../../api/eng/thermal/network/Start.md), [`Result`](../../../../api/eng/thermal/network/Result.md). Next: [Walls, fins and meshes](walls_and_fins.md).

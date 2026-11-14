@@ -81,4 +81,23 @@ int main() {
 ```
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+forecasting/build_lag_plan
+forecasting/build_lagged_predictors
+forecasting/DirectCVForecaster
+forecasting/DirectForecaster
+forecasting/DirectForecasterOptions
+forecasting/DirectStepModel
+forecasting/dm_test
+forecasting/DmOptions
+forecasting/DmResult
+forecasting/LagPlan
+forecasting/LagPlanOptions
+forecasting/PartitionOptions
+forecasting/PartitionWindow
+forecasting/TsPartition
+```
 <!-- apiref:toctree:end -->

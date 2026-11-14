@@ -9,6 +9,7 @@
 ```cpp
 Series Series::bitwise_or(const Series& rhs) const
 Series& Series::bitwise_or_(const Series& rhs) const
+Series Series::operator|(const Series& rhs) const
 ```
 
 ## What It Does
@@ -18,6 +19,10 @@ in either operand.
 
 If `bitwise_and()` asks "which bits survive in both?", `bitwise_or()` asks
 "which bits appear anywhere across the pair?"
+
+The symbolic form `lhs | rhs` is the out-of-place equivalent. For Boolean
+Series it combines alternative conditions; for integral Series it preserves
+the existing bitwise union semantics.
 
 ## Parameters
 
@@ -106,6 +111,7 @@ Use `bitwise_or()` when you need the bitwise union of two inputs.
 
 ## See Also
 
+- [`Series operators`](operators.md): `&`, `|`, and `~` taught together.
 - [`Series::bitwise_and`](bitwise_and.md): keeps only overlapping bits.
 - [`Series::bitwise_xor`](bitwise_xor.md): keeps differing bits only.
 - [`Series::logical_or`](logical_or.md): truth-value union rather than raw

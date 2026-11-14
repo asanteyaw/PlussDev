@@ -10,9 +10,9 @@ generated inventory in `PlussMa/public_calls.md` determines which declarations a
 
 E7a exposes two functional entry points:
 
-- `fluid::network(const Net&, const Liquid&) -> Network` validates and compiles immutable
+- `Network fluid::network(const Net&, const Liquid&)` validates and compiles immutable
   node/link topology while retaining differentiable physical Series; and
-- `fluid::steady(const Network&, const Options&) -> SteadyResult` solves junction heads and
+- `SteadyResult fluid::steady(const Network&, const Options&)` solves junction heads and
   pipe flows as one coupled nonlinear system.
 
 Nodes are either variable-head junctions or fixed-head reservoirs. Junction demand is
@@ -182,6 +182,11 @@ controls fail through nonconvergence or reverse-flow validation. E7b exposes the
 hydraulic equation, not EPANET's history-dependent OPEN/CLOSED/ACTIVE state machine;
 hysteretic switching belongs with operational controls and extended-period state.
 
+An active flow or pressure valve cannot raise the head across it: a solution in which its head loss is
+below `-100 * head_tolerance` is refused with "an active control valve cannot add head", in the same way
+as a reversed flow. Without this check, a sustaining setting below the natural upstream pressure, or a flow
+setting above the flow the head difference can pass, returned a solution in which the valve acted as a pump.
+
 Permanent verification adds a pump-only network, affinity-law speed sweep, exact pump-speed
 reverse derivative, independent minor-loss valve result, active reducing- and
 sustaining-valve pressures, and a fixed-flow valve embedded in a looped network. It also
@@ -236,6 +241,13 @@ where `p = head - elevation` is pressure head in metres. A non-positive base dem
 injection and remains fixed; pressure throttling is not applied to a source. The analytical
 interior derivative `dd/dp` is assembled into the lower-left Newton block instead of
 freezing demand during an iteration.
+
+The Newton step is relaxed lane by lane: a lane whose full step does not reduce its weighted residual
+norm (energy residual in metres plus continuity residual scaled by `head_tolerance / flow_tolerance`) takes a
+halved step, up to eight times. The factor is a detached decision, so an accepted full step keeps its reverse
+graph unchanged. Without it, a pressure-driven demand far above what the pipes can deliver made the full
+step cycle between two distant heads and the solve never converged, where the gradient-method reference
+converges with its step-size control.
 
 A junction emitter contributes
 
@@ -350,7 +362,8 @@ quality at reservoir boundaries and a unit source of one second of age per elaps
 Age therefore does not accept user source or reaction fields: combining those meanings
 would produce a quantity that is no longer water age.
 
-`QualityOptions` separates transport resolution from hydraulic resolution:
+`RouteOptions` separates transport resolution from hydraulic resolution and is
+shared by constituent, age, and thermal routing:
 
 | Field | Meaning | Contract |
 | --- | --- | --- |
@@ -486,3 +499,134 @@ require explicit public contracts and validation; none is silently approximated 
   timestep, and tolerance options. All were inspected 2026-10-25. The equations and
   invariants were adapted to a fixed-shape batched Series finite-volume owner; no reference
   source was copied verbatim.
+
+## E7e: Thermal-Fluid Routing
+
+### One route engine, two physical laws
+
+`fluid::heat()` is a thermal specialization of the E7d route engine, not a second network
+simulator. It consumes the accepted `fluid::run()` trajectory and therefore inherits the
+same event boundaries, solved flow direction, finite-volume cells, algebraic pump and valve
+transfer, complete junction mixing, constant-area tank volume, batching, dtype, platform,
+and reverse graph. `RouteOptions` is intentionally shared by `transport()` and `heat()` so
+Courant limits and cell resolution cannot acquire divergent meanings.
+
+The `Heat` record supplies absolute temperatures and constant-property sensible-heat data:
+
+| Field | Shape or type | Meaning | Default |
+| --- | --- | --- | --- |
+| `initial` | `[..., node]` | initial node and implied pipe/tank temperature, K | required |
+| `source` | `[..., node]` | fixed reservoir and negative-demand injection temperature, K | `initial` |
+| `ambient` | `[..., pipe]` | surrounding temperature for each physical pipe, K | required where `ua > 0` |
+| `ua` | `[..., pipe]` | total pipe-to-ambient conductance, W/K | zero |
+| `tank_ambient` | `[..., tank]` | surrounding temperature for each mixed tank, K | required where `tank_ua > 0` |
+| `tank_ua` | `[..., tank]` | total tank-to-ambient conductance, W/K | zero |
+| `cp` | scalar | constant fluid specific heat, J/(kg K) | `4180` |
+
+Density comes from the compiled `Network::liquid()`. `cp` is a call-level constant while
+temperatures and conductances may carry every network batch axis. This contract is narrow
+on purpose: temperature-dependent properties belong in a future property-law interface,
+not in an undocumented host callback that would break batching and differentiation.
+
+### Exact local heat exchange
+
+For pipe volume `V`, total conductance `UA`, ambient temperature `Ta`, density `rho`, and
+specific heat `cp`, the thermal reaction stage solves
+
+```text
+dT/dt = -UA (T - Ta) / (rho cp V)
+```
+
+with the exact constant-coefficient update
+
+```text
+T(t + dt) = Ta + (T(t) - Ta) exp[-UA dt / (rho cp V)].
+```
+
+Although a pipe is split into equal finite volumes for advection, dividing both its volume
+and conductance among those cells leaves the same rate coefficient. The implementation can
+therefore apply one batched pipe rate without constructing per-cell host records. A tank
+uses the identical equation with its current hydraulic volume. Its coefficient is rebuilt
+from that volume at every route substep before the exact exponential is applied.
+
+Advection and heat exchange are operator-split at the route step. At Courant one, a plug's
+computed outlet temperature matches the analytical residence-time expression. At smaller
+Courant numbers the existing first-order upwind diffusion remains; reducing `step` improves
+splitting error, while increasing `cells` improves spatial resolution. Thermal routing does
+not alter hydraulic density or viscosity during a call, so it is one-way coupled in E7e.
+
+### Mixing, boundaries, and devices
+
+Junction temperature is the mass-flow-weighted sensible-energy mixture. E7e assumes one
+fluid with common `rho` and `cp`, so those factors cancel and the canonical volume-flow
+mixing system from E7d is exact. Reservoirs hold `source`; if omitted, they hold `initial`.
+Negative node demand injects fluid at `source`, while positive demand, emitters, reservoir
+backflow, and tank spill export the current mixed temperature.
+
+Pumps and valves remain zero-volume algebraic devices. Their outlet temperature equals the
+upstream mixed temperature: E7e does not silently add pump inefficiency heat, motor heat, or
+valve flashing. Those effects require explicit device-energy records in a later tranche.
+Solved negative flow reverses both the thermal boundary and finite-volume stencil.
+
+### Results and energy ledger
+
+`HeatResult` returns temperatures at hydraulic event times and converts the common route
+inventory to joules:
+
+| Field | Shape | Meaning |
+| --- | --- | --- |
+| `hydraulic` | `RunResult` | hydraulic states that drove the thermal route |
+| `node` | `[sample, ..., node]` | mixed node temperature, K |
+| `link` | `[sample, ..., link]` | pipe volume mean or zero-volume upstream temperature, K |
+| `tank` | `[sample, ..., tank]` | mixed tank temperature, K |
+| `energy` | `[sample, ...]` | stored `rho cp sum(V T)`, J, relative to the zero-K datum |
+| `energy_error` | `[sample, ...]` | storage change minus ambient exchange and boundary flux, J |
+
+The absolute datum does not affect heat-transfer rates, but it makes boundary and storage
+accounting unambiguous. Ambient exchange is measured from the exact exponential inventory
+change, not approximated as `UA (T-Ta) dt`. A closed nonreacting domain therefore has nearly
+zero `energy_error`; a cooled domain also closes after its ambient term is reconciled.
+
+### Validation and permanent verification
+
+The boundary rejects absent initial temperature, negative or non-finite absolute
+temperatures, nonpositive/non-finite `cp`, negative/non-finite conductance, a positive
+conductance without its ambient temperature, shape-width errors, and dtype/platform or
+batch mismatch. The common route clock retains its positive-step, `(0, 1]` Courant,
+nonnegative flow-tolerance, and positive-cell contracts.
+
+The permanent E7e suite covers an analytical stagnant-pipe cooldown, a Courant-one moving
+plug with analytical residence-time heat loss, equal-flow thermal mixing, analytical tank
+cooldown, scenario batching, Float32 retention, reverse sensitivities to source temperature
+and `UA`, energy closure, and stable invalid-property failures. It runs in the same target
+as every E7a--E7d hydraulic and constituent regression.
+
+### Deliberate limits
+
+E7e is a differentiable, constant-property, one-way-coupled network thermal model. It does
+not yet include fluid/wall dual capacitance, radial multilayer insulation records,
+temperature-dependent EOS/transport properties, hydraulic feedback, pump heat, phase
+change, compressibility, radiation, ground-temperature fields, or heat-exchanger
+effectiveness models. In particular, `ua` represents the complete steady resistance from
+bulk fluid to the prescribed ambient; it must not be interpreted as only the internal film
+coefficient when wall capacitance matters.
+
+### E7e references inspected
+
+- EnergyPlus 26.2 Engineering Reference, “Pipes,” including the Hanby fluid/wall energy
+  balances, capacitance, insulation resistance, and finite-volume time delay;
+- EnergyPlus Engineering Reference, “Plant Temperature Source Component,” for prescribed
+  thermal boundaries;
+- EnergyPlus Engineering Reference, “Plant Loop Heat Pump,” for the sensible-energy
+  relation between heat rate, mass flow, `cp`, and outlet temperature;
+- CoolProp Water documentation and the IAPWS-95 references it identifies, used to bound the
+  future variable-property contract rather than to introduce an unverified property fit;
+  and
+- EPA/OWA EPANET 2.2 `qualroute.c`, retained as the routing, mixing, reversal, tank, and
+  boundary-accounting reference inherited from E7d.
+
+These references were inspected 2026-10-29. Their equations and invariants were adapted to
+the existing batched Series route owner; no implementation source was copied verbatim. A
+search of the locally installed MATLAB R2025b toolbox did not reveal a visible source
+implementation with a stronger reusable thermal-pipe contract, and no protected code was
+decompiled or inferred.

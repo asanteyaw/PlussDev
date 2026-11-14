@@ -1,0 +1,90 @@
+# `circuit::Circuit`
+
+An immutable compiled circuit.
+
+## Signature
+
+```cpp
+std::int64_t circuit::Circuit::nodes() const noexcept;
+std::int64_t circuit::Circuit::unknowns() const noexcept;
+std::int64_t circuit::Circuit::diodes() const noexcept;
+std::int64_t circuit::Circuit::transistors() const noexcept;
+std::int64_t circuit::Circuit::mosfets() const noexcept;
+const std::vector<std::int64_t>& circuit::Circuit::batch_shape() const noexcept;
+```
+
+## What It Does
+
+What `circuit::make` returns: the validated topology compiled into incidence matrices, ready to be solved by `op`, `ac` and `tran` any number of times.
+
+## Methods
+
+`nodes()`
+: The number of nodes including the ground.
+
+`unknowns()`
+: The number of unknowns of the nodal equations: the non-ground node voltages plus a current for every voltage source, inductor, VCVS and op amp.
+
+`diodes(), transistors(), mosfets()`
+: The number of diodes, of transistors and of MOSFETs; a circuit with either is solved by Newton iteration.
+
+`batch_shape()`
+: The leading batch axes of the element values.
+
+`dtype(), platform()`
+: The element type and the device of the stored data.
+
+## Returns
+
+Accessors return counts and the batch shape.
+
+## Errors
+
+Accessors do not fail. Invalid descriptions are rejected by `make`.
+
+## Changelog
+
+- **0.1** — Initial public contract.
+
+## Interpretation and Use
+
+A `Circuit` cannot be default-constructed; build it with `make`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The counts of a divider.
+
+@@example Eng/api/circuit_divider.cpp@@
+
+### Example 2
+
+The batch shape of a sweep.
+
+@@example Eng/api/circuit_batch_net.cpp@@
+
+### Example 3
+
+Every element kind.
+
+@@example Eng/api/circuit_all_elements.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Net.html">
+    <span class="label">Previous</span>
+    <span class="title">Net</span>
+  </a>
+  <a class="next-link" href="make.html">
+    <span class="label">Next</span>
+    <span class="title">make</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

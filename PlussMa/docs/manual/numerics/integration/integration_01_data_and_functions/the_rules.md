@@ -60,3 +60,16 @@ sin(20 x)     GaussLegendre   yes        480          5.2e-17
 - On the **smooth** integrands, Gauss–Legendre needs 480 evaluations for full accuracy, Simpson hundreds to thousands, the trapezoid rule hundreds of thousands: the higher the order of the rule, the fewer nodes a given accuracy needs.
 - On the **oscillatory** integrand the gap widens, since the trapezoid rule needs half a million evaluations.
 - On the **kink** no rule is fast: all lose their order of accuracy at a point where the function is not smooth, and they converge only by brute-force refinement. If you know where the kink is, split the interval there and integrate each smooth piece.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="integrating_a_function.html">
+    <span class="label">Previous</span>
+    <span class="title">Integrating a function</span>
+  </a>
+  <a class="next-link" href="tolerance_and_honest_failure.html">
+    <span class="label">Next</span>
+    <span class="title">Tolerance and honest failure</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

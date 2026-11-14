@@ -13,10 +13,10 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include <pluss/pluss.h>
 #include <pluss/tils.h>
+#include <pluss/tils/kit/output.h>
 
 namespace {
 
@@ -260,7 +260,7 @@ std::string pressure_bin(double p) {
 std::string geo_bin(double lat, double lng) {
   const auto blat = std::floor(lat * 2.0) / 2.0;
   const auto blng = std::floor(lng * 2.0) / 2.0;
-  return fmt::format("{:.1f},{:.1f}", blat, blng);
+  return pluss::tils::OutputEngine::format("{:.1f},{:.1f}", blat, blng);
 }
 
 bool is_highway_like(std::string_view street) {
@@ -436,7 +436,7 @@ DataFrame metric_table(std::string key_name,
 }
 
 void show_q_table(int q, std::string_view title, const DataFrame& frame, std::int64_t n = 10) {
-  std::cout << fmt::format("\nQ{}. {}\n", q, title);
+  std::cout << pluss::tils::OutputEngine::format("\nQ{}. {}\n", q, title);
   frame.head(n);
 }
 
@@ -597,7 +597,7 @@ int main(int argc, char** argv) {
 
   auto df = DataFrame::load_csv(options.filepath, options);
 
-  std::cout << fmt::format("Loaded US accidents dataset: [ {} cs x {} feat ]\n", df.ncases(), df.nfeatures());
+  std::cout << pluss::tils::OutputEngine::format("Loaded US accidents dataset: [ {} cs x {} feat ]\n", df.ncases(), df.nfeatures());
   std::cout << "Use argv[1]=0 or omit for full file; pass a positive integer for a quick sample.\n";
 
   run_verb_walkthrough(df);
@@ -853,7 +853,7 @@ int main(int argc, char** argv) {
     }
 
     if (weather.has_value()) {
-      const auto combo = fmt::format("{} | {}", weather_bucket(*weather), tod);
+      const auto combo = pluss::tils::OutputEngine::format("{} | {}", weather_bucket(*weather), tod);
       weather_tod_mean[combo].add(*sev);
     }
 
@@ -862,7 +862,7 @@ int main(int argc, char** argv) {
     if (start_ns.has_value() && end_ns.has_value() && *end_ns >= *start_ns) {
       const auto dur_h = (*end_ns - *start_ns) / 3.6e12;
       duration_mean.add(dur_h);
-      severity_duration_mean[fmt::format("Severity={}", sev_level)].add(dur_h);
+      severity_duration_mean[pluss::tils::OutputEngine::format("Severity={}", sev_level)].add(dur_h);
       severity_duration_corr.add(dur_h, *sev);
     }
   }
@@ -887,7 +887,7 @@ int main(int argc, char** argv) {
   {
     std::unordered_map<std::string, std::int64_t> y;
     for (const auto& [k, v] : year_count) {
-      y[fmt::format("{}", k)] = v;
+      y[pluss::tils::OutputEngine::format("{}", k)] = v;
     }
     show_q_table(11, "Year with most accidents", count_table("year", "accidents", sorted_counts(y, 10)), 10);
   }
@@ -911,7 +911,7 @@ int main(int argc, char** argv) {
   {
     std::unordered_map<std::string, std::int64_t> h;
     for (const auto& [k, v] : hour_count) {
-      h[fmt::format("{:02d}:00", static_cast<int>(k))] = v;
+      h[pluss::tils::OutputEngine::format("{:02d}:00", static_cast<int>(k))] = v;
     }
     show_q_table(14, "Time of day with most accidents", count_table("hour", "accidents", sorted_counts(h, 24)), 12);
   }
@@ -931,7 +931,7 @@ int main(int argc, char** argv) {
     years.reserve(yv.size());
     counts.reserve(yv.size());
     for (const auto& [year, c] : yv) {
-      years.push_back(fmt::format("{}", year));
+      years.push_back(pluss::tils::OutputEngine::format("{}", year));
       counts.push_back(c);
     }
     auto ydf = DataFrame({{"year", make_note_slate(years)}, {"accidents", make_i64_slate(counts)}});
@@ -940,16 +940,16 @@ int main(int argc, char** argv) {
     show_q_table(17, "Accident frequency trend over time", trend, trend.ncases());
   }
 
-  std::cout << fmt::format("\nQ18. Average accident duration (End_Time - Start_Time): {:.3f} hours\n", duration_mean.mean());
-  std::cout << fmt::format("Q19. Correlation(duration, severity): {:.4f}\n", severity_duration_corr.corr());
+  std::cout << pluss::tils::OutputEngine::format("\nQ18. Average accident duration (End_Time - Start_Time): {:.3f} hours\n", duration_mean.mean());
+  std::cout << pluss::tils::OutputEngine::format("Q19. Correlation(duration, severity): {:.4f}\n", severity_duration_corr.corr());
   show_q_table(19, "Average duration by severity level", metric_table("severity", "avg_duration_hours", sorted_means(severity_duration_mean, 8)), 8);
 
-  std::cout << fmt::format("\nQ20. Mean severity at night: {:.4f} | day: {:.4f}\n", night_sev.mean(), day_sev.mean());
+  std::cout << pluss::tils::OutputEngine::format("\nQ20. Mean severity at night: {:.4f} | day: {:.4f}\n", night_sev.mean(), day_sev.mean());
 
   {
     std::unordered_map<std::string, std::int64_t> s;
     for (const auto& [k, v] : severity_dist) {
-      s[fmt::format("{}", k)] = v;
+      s[pluss::tils::OutputEngine::format("{}", k)] = v;
     }
     show_q_table(21, "Distribution of accident severity levels", count_table("severity", "accidents", sorted_counts(s, 8)), 8);
   }
@@ -976,7 +976,7 @@ int main(int argc, char** argv) {
     show_q_table(22, "States with highest proportion of severity 3-4 accidents", metric_table("state", "prop_severity_3_4", rows), 10);
   }
 
-  std::cout << fmt::format("\nQ23. Correlation(Severity, Distance(mi)): {:.4f}\n", severity_distance_corr.corr());
+  std::cout << pluss::tils::OutputEngine::format("\nQ23. Correlation(Severity, Distance(mi)): {:.4f}\n", severity_distance_corr.corr());
   show_q_table(24, "Severity on highway-like vs city/local streets", metric_table("road_type", "avg_severity", sorted_means(hwy_vs_city_mean, 4)), 4);
   show_q_table(25, "Severity near intersections (Junction)", metric_table("junction", "avg_severity", sorted_means(junction_mean, 2)), 2);
   show_q_table(26, "Severity near railway crossings", metric_table("railway", "avg_severity", sorted_means(railway_mean, 2)), 2);
@@ -988,17 +988,17 @@ int main(int argc, char** argv) {
   show_q_table(31, "Weather conditions most associated with accidents", count_table("weather", "accidents", sorted_counts(weather_count, 10)), 10);
   show_q_table(32, "Rain vs snow vs clear accident frequency", count_table("weather_bucket", "accidents", sorted_counts(weather_bucket_count, 6)), 6);
   show_q_table(33, "Temperature bins vs accident frequency", count_table("temp_bin", "accidents", sorted_counts(temp_bin_count, 8)), 8);
-  std::cout << fmt::format("\nQ34. Correlation(Wind Speed, Severity): {:.4f}\n", severity_wind_corr.corr());
+  std::cout << pluss::tils::OutputEngine::format("\nQ34. Correlation(Wind Speed, Severity): {:.4f}\n", severity_wind_corr.corr());
 
   {
     std::vector<std::pair<std::string, std::int64_t>> rows{{"Visibility<5", vis_lt5_count}, {"Visibility>=5", vis_ge5_count}};
     show_q_table(35, "Accidents with visibility below 5 miles", count_table("visibility_bucket", "accidents", rows), 2);
   }
 
-  std::cout << fmt::format("\nQ36. Correlation(Humidity, Severity): {:.4f}\n", severity_humidity_corr.corr());
+  std::cout << pluss::tils::OutputEngine::format("\nQ36. Correlation(Humidity, Severity): {:.4f}\n", severity_humidity_corr.corr());
   show_q_table(37, "Pressure bins and accident counts", count_table("pressure_bin", "accidents", sorted_counts(pressure_bin_count, 5)), 5);
-  std::cout << fmt::format("Q37b. Correlation(Pressure, Severity): {:.4f}\n", severity_pressure_corr.corr());
-  std::cout << fmt::format("\nQ38. Storm-related accidents count: {}\n", storm_count);
+  std::cout << pluss::tils::OutputEngine::format("Q37b. Correlation(Pressure, Severity): {:.4f}\n", severity_pressure_corr.corr());
+  std::cout << pluss::tils::OutputEngine::format("\nQ38. Storm-related accidents count: {}\n", storm_count);
 
   show_q_table(39, "Accidents at night vs day", count_table("sunrise_sunset", "accidents", sorted_counts(day_night_count, 4)), 4);
   show_q_table(40, "Twilight period counts (civil)", count_table("civil_twilight", "accidents", sorted_counts(civil_count, 8)), 8);

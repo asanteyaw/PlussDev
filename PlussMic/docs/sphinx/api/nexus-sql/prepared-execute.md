@@ -46,7 +46,7 @@ and two matching parameter maps:
 The no-argument overload re-executes the template with no substitution at
 all — useful when the template has no placeholders, or when every
 placeholder was already baked in at `prepare()` time via
-[`NexusQuery::query(options)`](../nexus_api_reference.md)'s own options.
+[`NexusQuery::query(options)`](../../nexus_api_reference.md)'s own options.
 
 ## Parameters
 

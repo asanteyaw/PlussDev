@@ -69,46 +69,33 @@ target_link_libraries(plussmic_bi_serve_tests PRIVATE PlussMic)
 target_link_libraries(plussmic_table_gap_benchmark PRIVATE PlussMic)
 target_link_libraries(plussmic_scribble_gap_benchmark PRIVATE PlussMic)
 target_compile_definitions(plussmic_table_csv_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_kindle_catalog_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
-target_compile_definitions(plussmic_bundle_locus_tests PRIVATE
-  FMT_HEADER_ONLY=1
-)
 target_compile_definitions(plussmic_scribble_model_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_table_ts_accessor_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_table_axis_match_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_table_statistics_window_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_table_flash_dataset_bridge_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_temporal_core_migration_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR="${PLUSSMIC_ROOT_DIR}"
 )
 target_compile_definitions(plussmic_bi_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 target_compile_definitions(plussmic_bi_serve_tests PRIVATE
-  FMT_HEADER_ONLY=1
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
 )
 

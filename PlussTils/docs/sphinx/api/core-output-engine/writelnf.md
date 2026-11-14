@@ -22,7 +22,7 @@ The engine, so the call chains.
 
 ## Errors
 
-A pattern whose placeholder count disagrees with the arguments is refused in strict mode, and otherwise prints the marker or ignores the extra argument.
+A string-literal pattern is checked against its arguments while compiling, so a placeholder with no argument, an unmatched brace, a malformed spec, or `{}` mixed with `{0}` is a compile error. A pattern built at run time must be wrapped in [`runtime_format`](../core-runtime-format.md); its mismatches are found when the call runs, where a malformed spec throws `pluss::Error`, strict mode refuses an unused argument with a `pluss::Error`, and otherwise a missing argument prints the marker and an extra argument is ignored.
 
 ## Practical Examples
 
@@ -90,7 +90,7 @@ The index picks the argument, so the order in the pattern can differ from the or
 
 ### Example 3
 
-Example 3 leaves a placeholder without an argument.
+Example 3 leaves a placeholder without an argument. A literal pattern with too few arguments does not compile, so the pattern is held in a variable and wrapped in `runtime_format`.
 
 ```cpp
 #include <pluss/tils/kit/output.h>
@@ -104,7 +104,8 @@ using namespace pluss::tils;
 
 int main() {
   OutputEngine out;
-  out.writelnf("{} and {}", "only one", PrintOptions{.missing_arg = "<?>"});
+  const std::string pattern = "{} and {}";
+  out.writelnf(runtime_format(pattern), "only one", PrintOptions{.missing_arg = "<?>"});
   return 0;
 }
 ```

@@ -91,13 +91,13 @@ iteration            3
 function_evaluations 4  (the trust-region step may be tried more than once)
 
 optimizer   exit          iters   evals   objective   gradient
-L-SR1       Converged     119     286     9.2e-20     1.1e-08
-L-BFGS      NoProgress    124     124     3.3e-10     2.5e-04
+L-SR1       Converged     115     262     2.0e-20     6.8e-09
+L-BFGS      Converged     108     108     5.3e-20     6.1e-09
 Adam        Converged     4388    4388    2.1e-17     3.6e-09
 ```
 On the quadratic the method converges in 3 iterations and 4 function evaluations. The evaluations exceed the iterations because a trust-region step may be tried more than once: a step the function does not reward is rejected, the radius shrinks, and the step is tried again. `gradient_norm` is the **2-norm** of the gradient, where Septima's `gradient_inf_norm` is the largest component; the default tolerance is 1e-6 on it.
 
-On the chain, the three optimizers differ in what they achieve, not only in how long they take. L-SR1 converges in 119 iterations and 286 evaluations to an objective of 9.2e-20 with a gradient of 1.1e-08. L-BFGS spends 124 iterations and 124 evaluations and stops with `NoProgress` at 3.3e-10 and a gradient of 2.5e-04: it uses one evaluation per iteration where L-SR1 uses about two and a half, but it cannot get any closer. Adam, at a learning rate of 0.05, converges after 4388 iterations. When you need a very accurate answer to a smooth unconstrained problem, L-SR1 is the optimizer to try.
+On the chain, all three optimizers converge. L-SR1 takes 115 iterations and 262 evaluations to reach an objective of 2.0e-20 with a gradient of 6.8e-09. L-BFGS takes 108 iterations and 108 evaluations to reach 5.3e-20 and 6.1e-09: it uses one evaluation per iteration where L-SR1 uses a little over two, and on this problem it is as accurate. Adam, at a learning rate of 0.05, converges after 4388 iterations. L-SR1's advantage on a problem like this is not accuracy but robustness to the shape of the function, as the saddle below shows.
 
 ## Program 2: Saddles
 
@@ -145,12 +145,12 @@ Output
 ```text
 x0          eps       L-SR1 (exit, objective)   L-BFGS (exit, objective)
 0.5         0.1       Converged, -1.0e+00       Converged, -1.0e+00
-0.001       0.001     Converged, -1.0e+00       NoProgress, -8.0e-06
-0.5         1e-06     Converged, -1.0e+00       NoProgress, -1.6e-11
-0.001       1e-06     Converged, -1.0e+00       NoProgress, -1.6e-11
-0.5         1e-09     Converged, -4.0e-18       Converged, -1.6e-17
+0.001       0.001     Converged, -1.0e+00       NoProgress, -8.1e-06
+0.5         1e-06     Converged, -1.0e+00       Converged, -1.0e+00
+0.001       1e-06     Converged, -1.0e+00       Converged, -1.0e+00
+0.5         1e-09     Converged, -4.0e-18       Converged, -1.0e+00
 ```
-From a start with `y = 0.1` both methods find the minimum. As the start moves closer to the saddle, L-BFGS stops improving beside it: with `(x, y) = (0.001, 0.001)` it ends with `NoProgress` at an objective of -8.0e-06, and with `y = 1e-6` at -1.6e-11, both essentially at the saddle's value of 0. Its model is a bowl, so it sees nothing to gain by leaving. L-SR1 finds the minimum, -1, from every one of these starts, because its model has a direction of falling curvature and the trust-region step follows it.
+From a start with `y = 0.1` both methods find the minimum. As the start moves closer to the saddle, L-BFGS can stop improving beside it: with `(x, y) = (0.001, 0.001)` it ends with `NoProgress` at an objective of -8.1e-06, essentially the saddle's value of 0, because its model is a bowl and sees nothing to gain by leaving; from the other starts, including `y = 1e-6`, it escapes and finds -1. L-SR1 finds the minimum, -1, from every one of these starts, because its model has a direction of falling curvature and the trust-region step follows it.
 
 The last row is the caution. At `y = 1e-9` the gradient is already below the tolerance, so both methods report `Converged` at a point whose objective is -4e-18, the saddle. The tests the solvers use are first-order tests: a gradient of zero identifies a stationary point, and a saddle is as stationary as a minimum. If a saddle could be a stationary point of your problem, perturb the start, run from several starts, and compare the objective values.
 
@@ -209,7 +209,7 @@ int main() {
   options.progress_hook = [](const optim::Lsr1ProgressSnapshot& s) {
     std::cout << std::right << std::setw(4) << s.iteration << std::scientific << std::setprecision(3) << "  objective " << s.objective << "  gradient " << s.gradient_norm
               << std::fixed << std::setprecision(3) << "  radius " << s.trust_radius << "  step " << s.step_norm << "\n";
-    return true;
+    return false;
   };
   optim::l_sr1_trust_region(chain, vec(start), options);
   return 0;
@@ -221,12 +221,12 @@ Output
 ```text
 setting               exit           iters   evals   objective
 memory 1              MaxIterations  1000    1256    1.9e+00
-memory 3              MaxIterations  1000    1529    1.4e-01
-memory 10             Converged      119     286     9.2e-20
-memory 30             Converged      119     286     9.2e-20
-initial radius 0.01   NoProgress     385     877     6.3e-12
-initial radius 1      Converged      119     286     9.2e-20
-initial radius 100    Converged      175     551     5.6e-18
+memory 3              MaxIterations  1000    1538    1.6e-01
+memory 10             Converged      115     262     2.0e-20
+memory 30             Converged      115     262     2.0e-20
+initial radius 0.01   Converged      148     313     4.5e-18
+initial radius 1      Converged      115     262     2.0e-20
+initial radius 100    Converged      145     427     5.7e-17
 
 the first twelve iterations
    1  objective 7.074e+02  gradient 8.151e+02  radius 1.000  step 1.000
@@ -242,7 +242,7 @@ the first twelve iterations
   11  objective 9.103e+00  gradient 1.452e+01  radius 0.500  step 0.125
   12  objective 8.484e+00  gradient 5.051e+00  radius 0.500  step 0.080
 ```
-The memory matters more than for L-BFGS. With a memory of 1 or 3 the model is too poor to follow the valley: neither converges in 1000 iterations, ending at 1.9 and 0.14. With 10 it converges in 119 iterations. A memory larger than the number of variables is capped at the number of variables (more than n step vectors in n dimensions are linearly dependent and add nothing), so 30 gives exactly the same run as 10 on this ten-variable problem; the default of 10 is a sensible value, and more never helps once it reaches n. The initial radius is adapted by the method and matters little: 1 (the default) converges in 119 iterations, 100 in 175, and 0.01, which starts the method taking tiny steps, ends with `NoProgress` after 385 iterations at 6.3e-12.
+The memory matters more than for L-BFGS. With a memory of 1 or 3 the model is too poor to follow the valley: neither converges in 1000 iterations, ending at 1.9 and 0.16. With 10 it converges in 115 iterations. A memory larger than the number of variables is capped at the number of variables (more than n step vectors in n dimensions are linearly dependent and add nothing), so 30 gives exactly the same run as 10 on this ten-variable problem; the default of 10 is a sensible value, and more never helps once it reaches n. The initial radius is adapted by the method and matters little: 1 (the default) converges in 115 iterations, 100 in 145, and 0.01, which starts the method taking tiny steps, converges in 148 iterations: a far-too-small radius costs iterations while it grows, but does not end the run. A starting radius above `max_radius` simply starts at the cap.
 
 The trace shows the trust region at work. The radius sits at 1 while the model predicts well; at iteration 6 the decrease in the objective is much smaller than predicted, the radius drops to 0.25 and then recovers to 0.5, and the steps follow it: lengths of 0.5, 0.25, 0.5. The objective falls from 707 to 8.5 in twelve iterations. A radius that keeps shrinking would mean the model is poor, which usually means the memory is too small.
 
@@ -303,10 +303,15 @@ The first problem fits a vector `w` and a scalar `b`; the answer, `w = (-0.4, 0.
 ## Decisions and pitfalls
 
 - **Evaluations exceed iterations in a trust-region method.** A step the function does not reward is rejected, the radius shrinks and the step is tried again; read evaluations, not iterations, when each is expensive.
-- **L-SR1 is more accurate, at more evaluations.** On the chain it reached a gradient of 1e-8 where L-BFGS stopped near 1e-4; choose by whether you need that precision.
+- **L-SR1 costs more evaluations per iteration.** On the chain it needed 262 evaluations where L-BFGS needed 108, for an equally accurate answer; choose it for robustness near saddles, not for precision alone.
 - **All three tests are first-order.** A zero gradient identifies a stationary point and a saddle is as stationary as a minimum; if a saddle could be an answer, check the second-order behaviour yourself.
 - **L-BFGS stops beside a saddle; L-SR1 can leave it.** The bowl model of L-BFGS sees nothing to gain, while the SR1 model sees the negative curvature; but at a start already below the tolerance, neither moves.
 - **Keep the memory at 10 or more.** A memory of 1 or 3 is too poor to follow the valley and neither converges in 1000 iterations; a memory above the number of variables is capped at it.
 - **Watch the radius.** A radius that keeps collapsing means the model predicts the objective badly (nearly flat or non-smooth region); a radius that always sits at its maximum means you can afford larger steps.
 
 Where next: [Chapter 5](../septima_05_choosing_and_worked_problems.md) chooses between the solvers on worked problems.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

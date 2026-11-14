@@ -1,0 +1,46 @@
+# Constraints and contacts
+
+This branch holds a robot to constraints. `Pins` hold points at rest in the world and `Contacts` keep points on one side of planes without friction; `constrain` gives the accelerations and the constraint forces (with Coulomb friction when set), `impact` the velocities after a collision, and `locate` and `gap` locate the points.
+
+## Choosing A Surface
+
+Use `Pins` for points that must not move and `Contacts` for supports that can only push; use `constrain` for either, and `accel` when there is nothing to hold.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Support, release and free fall of a slider.
+
+@@example Eng/api/robot_contact_rest.cpp@@
+
+### Example 2
+
+A pinned tip.
+
+@@example Eng/api/robot_pin_arm.cpp@@
+
+### Example 3
+
+Points of a planar arm.
+
+@@example Eng/api/robot_point_position.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+constraints/Contacts
+constraints/Pins
+constraints/ConstraintOptions
+constraints/ConstrainedResult
+constraints/locate
+constraints/gap
+constraints/constrain
+constraints/ImpactResult
+constraints/impact
+```
+<!-- apiref:toctree:end -->

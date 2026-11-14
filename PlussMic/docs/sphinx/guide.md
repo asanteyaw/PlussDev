@@ -1,0 +1,27 @@
+<!-- generated from guide.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# PlussMic by example
+
+Each page here builds a real workflow end to end with PlussMic: complete programs that print their results, with the output copied from the run. The manual and the API reference say what each call does; these pages show how to chain the calls to get a report out of data. The order follows the model, from one column up to multi-table workspaces.
+
+1. **Slates.** One typed column with missing values: a gradebook, text answers, measurements matched by name, and time features.
+2. **DataFrames.** Reports and joins; files, missing data and time; and three complete workflows (an audit, cohort retention and a forecast backtest).
+3. **Atlas.** Stacks of equal tables: cross-validation, monthly exports and what-if scenarios.
+4. **Kindle.** The stream-first model: catalogs for the common table jobs, then streams and archives.
+5. **Scribble.** Heterogeneous records: mixed JSON, records that hold lists, an event log and layered configuration.
+6. **Bundle.** Multi-table workspaces: a customer table pulled from related tables, health checks, join paths, SQL, persistence and the Locus version.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+guide/slates
+guide/reports_and_joins
+guide/files_and_time
+guide/end_to_end_workflows
+guide/atlas
+guide/kindle_catalogs
+guide/kindle_streams_archives
+guide/scribble
+guide/bundle
+```

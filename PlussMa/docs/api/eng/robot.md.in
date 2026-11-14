@@ -1,0 +1,46 @@
+# Robotics
+
+Rigid-body robots described as a tree of links with revolute and prismatic joints: frames, Jacobians and inverse kinematics, and the dynamics of a motion by recursive Newton-Euler. A robot is described once as `Links`, compiled by `make` into a `Robot`, and every call is vectorized over a batch of configurations.
+
+## Choosing A Surface
+
+| Task | Branch |
+|---|---|
+| Describe and compile a robot, rotation matrices | [Robot model](robot/model.md) |
+| Frames, Jacobians and inverse kinematics | [Robot kinematics](robot/kinematics.md) |
+| Torques, inertia, accelerations and energies | [Robot dynamics](robot/dynamics.md) |
+| Pins, contacts and constraint forces | [Constraints and contacts](robot/constraints.md) |
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+The frames of a planar arm.
+
+@@example Eng/api/robot_fk_arm.cpp@@
+
+### Example 2
+
+The torques of a planar arm.
+
+@@example Eng/api/robot_dyn_inverse.cpp@@
+
+### Example 3
+
+A target reached by inverse kinematics.
+
+@@example Eng/api/robot_ik_position.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 3
+:hidden:
+
+robot/model
+robot/kinematics
+robot/dynamics
+robot/constraints
+```
+<!-- apiref:toctree:end -->

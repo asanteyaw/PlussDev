@@ -145,19 +145,19 @@ int main() {
   const auto t = pluss::make_series({0.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : d.pdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.pdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : d.logpdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.logpdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : d.cdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.cdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logcdf:";
-  for (double v : d.logcdf(x).pull<double>()) std::cout << ' ' << v;
+  for (double v : d.logcdf(x).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cgf at t = 0: " << as_f64(d.cgf(t)) << '\n';
 
@@ -257,7 +257,7 @@ int main() {
   const auto x = pluss::make_series({-6.0, -2.0, 0.0}, f64);
   const auto density = many.pdf(x);
   std::cout << "one object, three parameter sets:";
-  for (double v : density.pull<double>()) std::cout << ' ' << v;
+  for (double v : density.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 
   // The same numbers, one scalar object at a time.
@@ -306,3 +306,16 @@ One object with three values of each parameter returned the three densities 6.90
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Skellam.html">
+    <span class="label">Previous</span>
+    <span class="title">Skellam</span>
+  </a>
+  <a class="next-link" href="Uniform.html">
+    <span class="label">Next</span>
+    <span class="title">Uniform</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

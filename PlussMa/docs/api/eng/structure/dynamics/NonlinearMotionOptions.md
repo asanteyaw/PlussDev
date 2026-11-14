@@ -20,14 +20,14 @@ Controls for the nonlinear `motion`, which solves the corotational equations of 
 |---|---|---|
 | `spectral_radius` | As for `MotionOptions`. The default damps the poorly resolved high modes that large rotations of stiff members excite. | `0.9` |
 | `mass_damping` | The coefficient `a` of `a M`. | `0` |
-| `stiffness_damping` | The coefficient `b`; the damping force is `b` times the current tangent stiffness applied to the velocity, so a rigid spin is not damped. | `0` |
+| `stiffness_damping` | The coefficient `b`; the damping force is `b` times the initial (reference) stiffness applied to the velocity. The initial stiffness reads a rigid rotation as strain, so stiffness damping also resists a structure swinging through large angles; use mass damping, or a small `b`, for such motion. | `0` |
 | `max_iterations` | Newton iterations per step. | `20` |
 | `max_line_search` | Step reductions per iteration. | `8` |
 | `relative_tolerance` | Out-of-balance force as a fraction of the load. | `1e-8` |
 | `absolute_tolerance` | Out-of-balance force below which a step is accepted; raised to the rounding floor of the internal forces when smaller. | `1e-10` |
 | `line_search_shrink` | Factor by which a rejected step is shortened. | `0.5` |
 | `armijo` | Fraction of the predicted decrease a step must achieve. | `1e-4` |
-| `solve` | Conjugate-gradient controls of the inner linear solves; a tangent that is not positive definite is solved by restarted GMRES. | budget 8192 |
+| `solve` | Conjugate-gradient controls of the inner linear solves; loss of positive curvature is reported as nonconvergence. | budget 8192 |
 | `fail_on_nonconvergence` | When true a step that does not converge throws; when false it is recorded in `converged`. | `true` |
 
 ## Returns
@@ -48,7 +48,7 @@ The following programs isolate this symbol's normal contract, a materially diffe
 
 ### Example 1
 
-Default, strong numerical damping and stiffness damping on a swinging rod.
+Default and strong numerical damping on a swinging rod, and stiffness damping, which uses the initial stiffness and so brakes the swing.
 
 ```cpp
 #include <pluss/ma.h>
@@ -57,7 +57,7 @@ Default, strong numerical damping and stiffness damping on a swinging rod.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -147,7 +147,7 @@ default spectral radius 0.90000: every step converged true, at most 3.00000 Newt
 tip rotation at 0, 0.3 and 0.6 s (rad): 1.00000 0.48006 -0.56304
 shapes: displacement [121, 9, 3], kinetic [121]
 spectral_radius 0.5: tip rotation at 0.6 s (rad) -0.56293
-stiffness_damping 1e-4: tip rotation at 0.6 s (rad) -0.56242
+stiffness_damping 1e-4: tip rotation at 0.6 s (rad) 0.99901
 ```
 ### Example 2
 
@@ -160,7 +160,7 @@ The linear integrator for comparison.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -256,7 +256,7 @@ Rejected controls.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }

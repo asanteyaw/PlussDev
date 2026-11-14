@@ -99,11 +99,11 @@ Stream ragged_binary(const Stream& lhs, const Stream& rhs, std::string_view op, 
 
   if (n != m) {
     PLUSS_CHECK(policy.domain != RaggedDomain::Exact,
-                fmt::format("ragged_binary: streams have different lengths ({} vs {}) and the policy requires equal lengths", n, m));
+                pluss::tils::OutputEngine::format("ragged_binary: streams have different lengths ({} vs {}) and the policy requires equal lengths", n, m));
     PLUSS_CHECK(policy.absent != RaggedAbsent::Error,
-                fmt::format("ragged_binary: streams have different lengths ({} vs {}) and absence is an error", n, m));
+                pluss::tils::OutputEngine::format("ragged_binary: streams have different lengths ({} vs {}) and absence is an error", n, m));
     PLUSS_CHECK(!(policy.domain == RaggedDomain::Shortest && policy.loss == RaggedLoss::Error),
-                fmt::format("ragged_binary: domain=Shortest would drop {} record(s) and loss=Error refuses that",
+                pluss::tils::OutputEngine::format("ragged_binary: domain=Shortest would drop {} record(s) and loss=Error refuses that",
                             longest - shortest));
   }
 

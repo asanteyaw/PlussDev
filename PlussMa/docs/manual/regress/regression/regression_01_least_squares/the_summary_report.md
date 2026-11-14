@@ -175,7 +175,7 @@ Kurtosis:                          1.518   Cond. No.                            
 ==============================================================================
 Warnings:
 [1] The design matrix is singular or rank deficient; coefficients were estimated using a pseudoinverse.
-[2] The smallest eigenvalue is 4.933e-31. This might indicate strong multicollinearity or a singular design matrix.
+[2] The smallest eigenvalue is 3.788e-30. This might indicate strong multicollinearity or a singular design matrix.
 
 no intercept: warnings [Model has no explicit intercept; R-squared and F-statistic interpretations differ from intercept models.]
 ```
@@ -183,3 +183,16 @@ no intercept: warnings [Model has no explicit intercept; R-squared and F-statist
 The duplicated predictor (x₂ = 2x₁) has rank 2 of 3 and raises both rank warnings. The condition number prints as `inf` because the smallest singular value is numerically zero. The two slopes, 0.3995 and 0.7990, are the minimum-norm split of the single estimable slope (0.3995 + 2 × 0.7990 = 1.9976) and have the same *t* statistic, 71.86. The last line shows the single warning of a model without an intercept.
 
 The same three reports exist for the other families: `glm_summary`, `quantile_summary` and `poly_summary`, with the matching `print_*` functions. Each is shown in its own chapter.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="residual_diagnostics.html">
+    <span class="label">Previous</span>
+    <span class="title">Residual diagnostics</span>
+  </a>
+  <a class="next-link" href="prediction_and_intervals.html">
+    <span class="label">Next</span>
+    <span class="title">Prediction and intervals</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -2,18 +2,14 @@
 
 [Back to Implied Volatility](../finance_02_implied_volatility.md)
 
-Option markets quote prices, but traders compare options by their *implied volatility*: the value of σ that makes the Black-Scholes price equal the observed price. Because the Black-Scholes price rises strictly with σ, that value is unique when it exists, and `implied_vol` finds it.
+Option markets quote prices, but traders compare options by their *implied volatility*: the value of σ that makes the Black-Scholes price equal the observed price. Because the Black-Scholes price rises strictly with σ, that value is unique when it exists, and `implied_vol` finds it. The programs below quote the prices of Black-Scholes fields and invert them with a helper, `bs_iv`, that builds a one-option field and passes the price as the quote; the volatility of that field plays no part.
 
 ```cpp
-double prc::implied_vol(prc::OptionType type, double option_price, double spot, double strike, double rate,
-                        double dividend_yield, double maturity, const prc::ImpliedVolOptions &options = {});
-Series prc::implied_vol(type, const Series &option_price, const Series &spot, double strike, double rate,
-                        double dividend_yield, double maturity, const prc::ImpliedVolOptions &options = {}, Config cfg = {});
-Series prc::implied_vol(type, const Series &option_price, const Series &spot, const Series &time_to_maturity, double strike,
-                        double rate, double dividend_yield, const prc::ImpliedVolOptions &options = {}, Config cfg = {});
+Series module::Field::implied_vol(const pricing::ImpliedVolOptions &options = {}, Config cfg = {}) const;                          // the smile the field's own model implies
+Series module::Field::implied_vol(const Series &quotes, const pricing::ImpliedVolOptions &options = {}, Config cfg = {}) const;    // the volatilities market quotes imply
 ```
 
-The arguments are those of `black_scholes_price`, with the observed `option_price` in place of the volatility. The result is a volatility, or `NaN` when no volatility in the search range reproduces the price ([Controls and the no-arbitrage bounds](controls_and_the_no_arbitrage_bounds.md)).
+`implied_vol` is a method of the [`Field`](../finance_01_black_scholes.md), not a separate engine: the field supplies the instrument (type, strikes, maturities) and the market (spot, rate, dividend yield), and the method inverts one Black-Scholes price per option. With no argument it inverts the prices the field's *own* model produces, which turns any model, Heston or SABR as well as Black-Scholes, into a smile of implied volatilities; with `quotes` it inverts observed prices. The result is a `Series` with one volatility per option, or `NaN` where no volatility in the search range reproduces the price ([Controls and the no-arbitrage bounds](controls_and_the_no_arbitrage_bounds.md)).
 
 ## A round trip
 
@@ -27,6 +23,33 @@ The program prices calls and puts at volatilities from 5% to 200%, at three stri
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+
+
+// Implied volatility of one quote: a Black-Scholes field whose own volatility is irrelevant, because the quote is passed in.
+double bs_iv(prc::OptionType type, double price, double S, double K, double r, double q, double T, const prc::ImpliedVolOptions &options = {}) {
+  return bs_field(type, S, K, r, q, T, 0.2).implied_vol(pluss::make_series({price}), options).items<double>()[0];
+}
+// Implied volatilities of a strip of call quotes with their own spots and maturities.
+pluss::Series iv_strip(const pluss::Series &quotes, const pluss::Series &spots, const pluss::Series &maturities, double K, double r, double q) {
+  mod::Field strip{.instrument = {.type = prc::Call, .strike = pluss::make_series({K}), .maturity = maturities},
+                   .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                   .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})}};
+  return strip.implied_vol(quotes);
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.sci(2));
@@ -36,8 +59,8 @@ int main() {
   for (auto type : {prc::Call, prc::Put}) {
     for (double strike : {80.0, 100.0, 125.0}) {
       for (double vol : {0.05, 0.1, 0.2, 0.4, 0.8, 1.5, 2.0}) {
-        const double price = prc::black_scholes_price(type, spot, strike, rate, dividend, maturity, vol);
-        const double iv = prc::implied_vol(type, price, spot, strike, rate, dividend, maturity);
+        const double price = bs_price(type, spot, strike, rate, dividend, maturity, vol);
+        const double iv = bs_iv(type, price, spot, strike, rate, dividend, maturity);
         ++total;
         if (std::isfinite(iv)) {
           ++recovered;
@@ -53,8 +76,8 @@ int main() {
   }
   out.writeln("recovered", recovered, "of", total, " largest error", worst, " (volatility", worst_vol, "strike", worst_strike, "price", worst_price, ")");
   out.print_defaults(PrintOptions{}.fixed(8));
-  const double price = prc::black_scholes_price(prc::Call, spot, 100.0, rate, dividend, maturity, 0.2345);
-  out.writeln("one price", price, " implies", prc::implied_vol(prc::Call, price, spot, 100.0, rate, dividend, maturity));
+  const double price = bs_price(prc::Call, spot, 100.0, rate, dividend, maturity, 0.2345);
+  out.writeln("one price", price, " implies", bs_iv(prc::Call, price, spot, 100.0, rate, dividend, maturity));
 }
 ```
 
@@ -72,6 +95,33 @@ All 42 prices, calls and puts at three strikes and seven volatilities, return a 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
 
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+
+
+// Implied volatility of one quote: a Black-Scholes field whose own volatility is irrelevant, because the quote is passed in.
+double bs_iv(prc::OptionType type, double price, double S, double K, double r, double q, double T, const prc::ImpliedVolOptions &options = {}) {
+  return bs_field(type, S, K, r, q, T, 0.2).implied_vol(pluss::make_series({price}), options).items<double>()[0];
+}
+// Implied volatilities of a strip of call quotes with their own spots and maturities.
+pluss::Series iv_strip(const pluss::Series &quotes, const pluss::Series &spots, const pluss::Series &maturities, double K, double r, double q) {
+  mod::Field strip{.instrument = {.type = prc::Call, .strike = pluss::make_series({K}), .maturity = maturities},
+                   .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                   .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})}};
+  return strip.implied_vol(quotes);
+}
+
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.sci(2));
@@ -88,12 +138,12 @@ int main() {
       {"Auto", prc::Auto}, {"Newton", prc::Newton}, {"Bisection", prc::Bisection}, {"Secant", prc::Secant}, {"Brent", prc::Brent}};
   out.writeln("error of the recovered volatility, by method:");
   for (const auto &c : cases) {
-    const double price = prc::black_scholes_price(c.type, 100.0, c.strike, 0.02, 0.0, c.maturity, c.vol);
+    const double price = bs_price(c.type, 100.0, c.strike, 0.02, 0.0, c.maturity, c.vol);
     std::vector<double> errors;
     for (const auto &[name, method] : methods) {
       prc::ImpliedVolOptions options;
       options.method = method;
-      errors.push_back(std::abs(prc::implied_vol(c.type, price, 100.0, c.strike, 0.02, 0.0, c.maturity, options) - c.vol));
+      errors.push_back(std::abs(bs_iv(c.type, price, 100.0, c.strike, 0.02, 0.0, c.maturity, options) - c.vol));
     }
     out.writeln(c.label, " price", price, errors);
   }
@@ -104,7 +154,7 @@ All five methods recover the volatility to 10⁻⁸ or better in every case, inc
 
 ## Many prices at once
 
-With `Series` arguments each element is solved independently, and an element with no solution is `NaN` without affecting the others. The program recovers the volatilities of a path of one-month option prices, as the spot and the remaining maturity change, and then inserts an impossible price.
+With a strip, each element is solved independently, and an element with no solution is `NaN` without affecting the others. The program recovers the volatilities of a path of one-month option prices, as the spot and the remaining maturity change, and then inserts an impossible price.
 
 @@run@@
 ```cpp
@@ -113,6 +163,33 @@ With `Series` arguments each element is solved independently, and an element wit
 
 namespace prc = pluss::subsp::math::finance::pricing;
 using namespace pluss::tils;
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+
+// One Black-Scholes option as a field: instrument, market and model, priced by the analytic engine.
+mod::Field bs_field(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return mod::Field{.instrument = fin::instrument::make(type, K, T),
+                    .market = fin::market::make(S, r, q),
+                    .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})},
+                    .controls = {.engine = mod::Engine::Analytic}};
+}
+double bs_price(prc::OptionType type, double S, double K, double r, double q, double T, double vol) {
+  return bs_field(type, S, K, r, q, T, vol).price().price.items<double>()[0];
+}
+
+
+// Implied volatility of one quote: a Black-Scholes field whose own volatility is irrelevant, because the quote is passed in.
+double bs_iv(prc::OptionType type, double price, double S, double K, double r, double q, double T, const prc::ImpliedVolOptions &options = {}) {
+  return bs_field(type, S, K, r, q, T, 0.2).implied_vol(pluss::make_series({price}), options).items<double>()[0];
+}
+// Implied volatilities of a strip of call quotes with their own spots and maturities.
+pluss::Series iv_strip(const pluss::Series &quotes, const pluss::Series &spots, const pluss::Series &maturities, double K, double r, double q) {
+  mod::Field strip{.instrument = {.type = prc::Call, .strike = pluss::make_series({K}), .maturity = maturities},
+                   .market = {.spot = spots, .rate = pluss::make_series({r}), .dividend_yield = pluss::make_series({q})},
+                   .model = fin::model::BlackScholes{.volatility = pluss::make_series({0.2})}};
+  return strip.implied_vol(quotes);
+}
 
 int main() {
   OutputEngine out;
@@ -129,19 +206,28 @@ int main() {
   // Each element is priced at its own volatility, then inverted.
   std::vector<double> prices;
   for (int i = 0; i < 6; ++i) {
-    prices.push_back(prc::black_scholes_price(prc::Call, path[i], strike, rate, dividend, remaining[i], true_vol[i]));
+    prices.push_back(bs_price(prc::Call, path[i], strike, rate, dividend, remaining[i], true_vol[i]));
   }
   const auto price_series = pluss::make_series(prices, {6}, as_f64());
-  out.writeln("recovered", prc::implied_vol(prc::Call, price_series, spot, ttm, strike, rate, dividend).pull<double>());
+  out.writeln("recovered", iv_strip(price_series, spot, ttm, strike, rate, dividend).items<double>());
   out.writeln("true     ", true_vol);
 
   // With one maturity for every element, the maturity is a scalar.
-  out.writeln("fixed maturity of 30 days:", prc::implied_vol(prc::Call, price_series, spot, strike, rate, dividend, 30.0 / 365.0).pull<double>());
+  out.writeln("fixed maturity of 30 days:", iv_strip(price_series, spot, pluss::make_series({30.0 / 365.0}), strike, rate, dividend).items<double>());
 
   // One impossible price (below the intrinsic value) yields NaN for that element only.
   prices[3] = 0.0;
-  out.writeln("with a zero price in the fourth element:", prc::implied_vol(prc::Call, pluss::make_series(prices, {6}, as_f64()), spot, ttm, strike, rate, dividend).pull<double>());
+  out.writeln("with a zero price in the fourth element:", iv_strip(pluss::make_series(prices, {6}, as_f64()), spot, ttm, strike, rate, dividend).items<double>());
 }
 ```
 
 Each element is solved independently and returns its own volatility, 0.22, 0.24, 0.23, 0.21, 0.20 and 0.25, using its own remaining maturity. The scalar-maturity form applies the same 30 days to every element, so it returns different volatilities (0.2356 for the second): the remaining maturity matters. A zero price in the fourth element gives `NaN` there and leaves the others unchanged.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="controls_and_the_no_arbitrage_bounds.html">
+    <span class="label">Next</span>
+    <span class="title">Controls and the no-arbitrage bounds</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

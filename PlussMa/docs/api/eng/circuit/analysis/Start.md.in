@@ -1,0 +1,63 @@
+# `circuit::Start`
+
+The energy stored in the circuit at the first instant of a transient run.
+
+## Signature
+
+```cpp
+circuit::Start
+```
+
+## What It Does
+
+Names the capacitor voltages and inductor currents with which `tran` begins. The first sample of the run is made consistent with them: each capacitor is held at its voltage and each inductor at its current while the rest of the circuit, resistive nodes and source currents included, is solved around them.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `capacitor_voltage` | The voltage across each capacitor, positive node minus negative node, `[..., capacitors]`, in the order the capacitors were given to the net. | Undefined: every capacitor starts at zero volts. |
+| `inductor_current` | The current through each inductor from its positive node to its negative node, `[..., inductors]`. | Undefined: every inductor starts at zero amperes. |
+
+## Returns
+
+A value; validated by `tran`.
+
+## Errors
+
+A member must be a real floating, finite array on the circuit's platform with one value per element, or none for a circuit without such elements. Leading axes must either be absent, so that every lane starts alike, or equal the circuit's parameter batch. A start that contradicts what the ideal sources impose, such as a capacitor directly across a voltage source at another voltage, has no solution and is reported as an unreachable starting state.
+
+## Interpretation and Use
+
+A circuit that was already running starts from its operating point: pass the voltage across each capacitor and the current through each inductor from `op`. The default describes switching on from rest. A capacitor voltage or inductor current is a state, not a source: it cannot jump, so a node that a capacitor holds keeps its start voltage at the first sample while a resistive node that a source drives reads its full value at once.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A capacitor and an inductor with stored energy.
+
+@@example Eng/api/circuit_tran_start.cpp@@
+
+### Example 2
+
+Starting from the operating point, and from rest.
+
+@@example Eng/api/circuit_start_operating_point.cpp@@
+
+### Example 3
+
+One start per lane, and one start shared by every lane.
+
+@@example Eng/api/circuit_start_batch.cpp@@
+
+### Example 4
+
+Rejected starts.
+
+@@example Eng/api/circuit_start_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

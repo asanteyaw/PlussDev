@@ -6,3 +6,16 @@
 @@example Numerical/interpolation/guide/802_edge_modes.cpp@@
 
 Choose by what an out-of-range query means. `Clamp` is right when the quantity really levels off at the ends and quietly hides a mistake otherwise. `Linear` extrapolates the trend and is only as good as the data's linearity. `Error` finds queries that should not happen; use it while developing and in code where the table must cover every query.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="reading_a_table.html">
+    <span class="label">Previous</span>
+    <span class="title">Reading a table</span>
+  </a>
+  <a class="next-link" href="batches_complex_values_and_gradients.html">
+    <span class="label">Next</span>
+    <span class="title">Batches, complex values and gradients</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

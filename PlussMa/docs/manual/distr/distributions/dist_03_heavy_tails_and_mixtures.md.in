@@ -33,4 +33,11 @@ with `K₁` the modified Bessel function of the second kind. `alpha` governs the
 4. Read the weights' standard errors with their constraint in mind: they sum to one.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dist_03_heavy_tails_and_mixtures/heavy_tails
+dist_03_heavy_tails_and_mixtures/mixtures
+```
 <!-- apiref:toctree:end -->

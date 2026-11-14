@@ -105,3 +105,16 @@ estimated correlation 0.612, log-likelihood -3340.712
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="GjrOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">GjrOptions</span>
+  </a>
+  <a class="next-link" href="MvEgarchFit.html">
+    <span class="label">Next</span>
+    <span class="title">MvEgarchFit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

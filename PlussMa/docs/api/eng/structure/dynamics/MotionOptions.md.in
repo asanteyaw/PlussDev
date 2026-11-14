@@ -46,11 +46,17 @@ Rayleigh and numerical damping on a cantilever.
 
 ### Example 2
 
+The inner solve limited, with the failure switch in both states.
+
+@@example Eng/api/structure_dynamic_controls.cpp@@
+
+### Example 3
+
 Rejected values.
 
 @@example Eng/api/structure_dynamics_errors.cpp@@
 
-### Example 3
+### Example 4
 
 Damping in the frequency domain.
 

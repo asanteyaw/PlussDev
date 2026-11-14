@@ -201,3 +201,16 @@ Read down the rows: `mode 0.5` peaks on this grid at x = 0.5 (value 0.5); `mode 
 - [`Beta`](../continuous_bounded/Beta.md)
 - [`Semicircle`](../continuous_bounded/Semicircle.md)
 - [`Quadratic`](../continuous_bounded/Quadratic.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Semicircle.html">
+    <span class="label">Previous</span>
+    <span class="title">Semicircle</span>
+  </a>
+  <a class="next-link" href="UShape.html">
+    <span class="label">Next</span>
+    <span class="title">UShape</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

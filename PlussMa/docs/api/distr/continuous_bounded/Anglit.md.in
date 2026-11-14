@@ -214,3 +214,12 @@ The formula and `distr::cdf` agree to 1.11e-16 over the grid, so the library imp
 - [`HalfCosine`](../continuous_bounded/HalfCosine.md)
 - [`Quadratic`](../continuous_bounded/Quadratic.md)
 - [`Semicircle`](../continuous_bounded/Semicircle.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Arcsin.html">
+    <span class="label">Next</span>
+    <span class="title">Arcsin</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

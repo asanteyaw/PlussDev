@@ -109,8 +109,22 @@ Series gram(const StateSpace &system, Gram side,
             : system.c().transpose(-2, -1).conj().matmul(system.c());
   const Series dynamics =
       reach ? system.a() : system.a().transpose(-2, -1).conj();
-  return system.is_cont() ? dynamics.linearalg.lyap(driver, options)
-                          : dynamics.linearalg.dlyap(driver, options);
+  // The Gramian is finite only for a stable system. The Lyapunov solvers report an unstable or marginal A as a
+  // singular matrix or a non-finite iteration, which says nothing about the cause, so the failure is re-raised
+  // with the condition that was violated.
+  try {
+    return system.is_cont() ? dynamics.linearalg.lyap(driver, options)
+                            : dynamics.linearalg.dlyap(driver, options);
+  } catch (const pluss::Error &error) {
+    std::string cause(error.what());
+    cause = cause.substr(0, cause.find("Triggered"));
+    while (!cause.empty() && (cause.back() == '\n' || cause.back() == ' '))
+      cause.pop_back();
+    PLUSS_CHECK(false, std::string("eng::lti::gram: the Gramian could not be computed; it exists only for a stable "
+                                   "system (every eigenvalue of A ") +
+                           (system.is_cont() ? "in the left half-plane" : "inside the unit circle") + "). Solver message: " + cause);
+  }
+  return Series();
 }
 
 } // namespace pluss::subsp::eng::lti

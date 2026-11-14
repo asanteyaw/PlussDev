@@ -42,8 +42,8 @@ int main() {
   for (std::int64_t point = 0; point < 3; ++point) {
     const auto m = h.select(0, point);
     const auto q = r.select(0, point);
-    out.writeln("x =", x.select(0, point).item<double>(), " Hessian", m.select(0, 0).pull<double>(), m.select(0, 1).pull<double>(),
-                "  in (y, x) order", q.select(0, 0).pull<double>(), q.select(0, 1).pull<double>());
+    out.writeln("x =", x.select(0, point).item<double>(), " Hessian", m.select(0, 0).items<double>(), m.select(0, 1).items<double>(),
+                "  in (y, x) order", q.select(0, 0).items<double>(), q.select(0, 1).items<double>());
   }
 }
 ```
@@ -85,16 +85,16 @@ int main() {
 
   const auto point_x = pluss::make_series(2.0, as_f64());
   const auto point_y = pluss::make_series(3.0, as_f64());
-  out.writeln("v rank", v.rank(), " shape", v.shape(), " v(2, 3) =", v({point_x, point_y}).pull<double>());
+  out.writeln("v rank", v.rank(), " shape", v.shape(), " v(2, 3) =", v({point_x, point_y}).items<double>());
 
   const math::Function jacobian = operators::jacobian()(v);
   out.writeln("Jacobian rank", jacobian.rank(), " shape", jacobian.shape());
   const auto j = jacobian({point_x, point_y});
-  for (std::int64_t row = 0; row < 3; ++row) out.writeln("  row", row, j.select(0, row).pull<double>());
+  for (std::int64_t row = 0; row < 3; ++row) out.writeln("  row", row, j.select(0, row).items<double>());
 
   const auto jyx = operators::jacobian({"y", "x"})(v)({point_x, point_y});
   out.writeln("columns in (y, x) order:");
-  for (std::int64_t row = 0; row < 3; ++row) out.writeln("  row", row, jyx.select(0, row).pull<double>());
+  for (std::int64_t row = 0; row < 3; ++row) out.writeln("  row", row, jyx.select(0, row).items<double>());
 
   const auto jy = operators::jacobian({"y"})(v)({point_x, point_y});
   out.writeln("only y: shape", jy.sizes());
@@ -159,3 +159,16 @@ The Jacobian of the gradient equals the Hessian to the tolerance of `allclose` (
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="gradients.html">
+    <span class="label">Previous</span>
+    <span class="title">Gradients</span>
+  </a>
+  <a class="next-link" href="batches_and_broadcasting.html">
+    <span class="label">Next</span>
+    <span class="title">Batches and broadcasting</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

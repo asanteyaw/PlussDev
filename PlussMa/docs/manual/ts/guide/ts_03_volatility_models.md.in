@@ -48,4 +48,13 @@ For GARCH and GJR the forecast of the variance mean-reverts to the unconditional
 5. Forecast with `forecast(h, y)`; forecasts of a stationary model revert to the unconditional variance.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ts_03_volatility_models/fitting_a_garch_1_1
+ts_03_volatility_models/asymmetric_responses
+ts_03_volatility_models/checking_the_fit
+ts_03_volatility_models/several_series_with_a_constant_correlation
+```
 <!-- apiref:toctree:end -->

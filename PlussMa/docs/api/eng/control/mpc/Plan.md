@@ -59,8 +59,8 @@ Inspect plan dimensions and reuse it with a warm start.
 
 #include <iostream>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -107,8 +107,8 @@ See which options become fixed at compilation.
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -159,8 +159,8 @@ Reject unsupported timebases and horizons during build.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -202,11 +202,6 @@ Output
 continuous plant rejected = eng::control::mpc::solve: system must be discrete
 zero horizon rejected = eng::control::mpc::solve: horizon must be positive
 ```
-
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="Result.html">
@@ -219,3 +214,7 @@ zero horizon rejected = eng::control::mpc::solve: horizon must be positive
   </a>
 </div>
 <!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

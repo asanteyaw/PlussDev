@@ -84,16 +84,16 @@ int main() {
   const std::vector<double> params = {1.0, 1.5, -0.4, 0.1, 0.8};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::Gh, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gh, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Gh, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Gh, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::Gh, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Gh, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -133,7 +133,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::Gh, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({-3.0, 3.0}, f64);
-  const auto c = distr::cdf(dst::Gh, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Gh, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Gh, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= -3.0).to(pluss::ScalarType::Float64) * (draws <= 3.0).to(pluss::ScalarType::Float64)).mean());
@@ -174,19 +174,19 @@ int main() {
   const auto x = pluss::make_series({-5.0, -2.0, 0.0, 1.0, 3.0, 6.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "lambda -1  :";
-  for (double v : distr::pdf(dst::Gh, x, {-1.0, 1.5, -0.4, 0.1, 0.8}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gh, x, {-1.0, 1.5, -0.4, 0.1, 0.8}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "lambda -0.5:";
-  for (double v : distr::pdf(dst::Gh, x, {-0.5, 1.5, -0.4, 0.1, 0.8}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gh, x, {-0.5, 1.5, -0.4, 0.1, 0.8}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "lambda 1   :";
-  for (double v : distr::pdf(dst::Gh, x, {1.0, 1.5, -0.4, 0.1, 0.8}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gh, x, {1.0, 1.5, -0.4, 0.1, 0.8}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "lambda 3   :";
-  for (double v : distr::pdf(dst::Gh, x, {3.0, 1.5, -0.4, 0.1, 0.8}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Gh, x, {3.0, 1.5, -0.4, 0.1, 0.8}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -210,3 +210,16 @@ Read down the rows: `lambda -1` peaks on this grid at x = 0 (value 0.7783); `lam
 - [`StudentT`](../continuous_real_line/StudentT.md)
 - [`Gig`](../continuous_positive/Gig.md)
 - [`distr::Gh`](../object_based/Gh.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ExtremeValue.html">
+    <span class="label">Previous</span>
+    <span class="title">ExtremeValue</span>
+  </a>
+  <a class="next-link" href="HyperbolicSecant.html">
+    <span class="label">Next</span>
+    <span class="title">HyperbolicSecant</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -8,3 +8,16 @@ The `θ` family reads `f` at `(1 − θ)·left + θ·right` of each step. The pr
 @@example Probability/random_processes/guide/sde/03_theta_family.cpp@@
 
 The coefficient is `−1`, `0` and `+1` for `θ = 0`, `½` and `1` on both paths, to the printed precision. That is the whole classification: Ito subtracts half the quadratic variation, Stratonovich subtracts none, and the backward integral (used in the Hänggi–Klimontovich convention) adds it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ito_and_stratonovich_on_the_same_path.html">
+    <span class="label">Previous</span>
+    <span class="title">Ito and Stratonovich on the same path</span>
+  </a>
+  <a class="next-link" href="the_forms_of_the_call.html">
+    <span class="label">Next</span>
+    <span class="title">The forms of the call</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

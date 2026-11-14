@@ -1,0 +1,20 @@
+# Fluid 1: Pipe Networks
+
+Water reaches a city through a network of pipes, and the first question about any network is steady: with these demands and these pipes, what are the pressures and flows? This chapter describes a network and checks it, solves a looped network and reads the solver's stopping rule, looks at the head-loss law each pipe obeys, and solves many scenarios at once while differentiating the answer.
+
+- [Building a network](fluid_01_pipe_networks/building_a_network.md)
+- [Looped networks](fluid_01_pipe_networks/looped_networks.md)
+- [Pipe loss models](fluid_01_pipe_networks/pipe_loss_models.md)
+- [Scenarios and sensitivities](fluid_01_pipe_networks/scenarios_and_sensitivities.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+fluid_01_pipe_networks/building_a_network
+fluid_01_pipe_networks/looped_networks
+fluid_01_pipe_networks/pipe_loss_models
+fluid_01_pipe_networks/scenarios_and_sensitivities
+```
+<!-- apiref:toctree:end -->

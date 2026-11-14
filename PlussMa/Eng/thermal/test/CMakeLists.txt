@@ -1,0 +1,3 @@
+add_executable(eng_thermal_test thermal_test.cpp)
+target_link_libraries(eng_thermal_test PRIVATE pluss plussqit_codem)
+add_test(NAME eng_thermal_test COMMAND eng_thermal_test)

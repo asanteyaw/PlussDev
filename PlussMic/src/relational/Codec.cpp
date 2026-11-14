@@ -51,6 +51,8 @@ StoreKind parse_store_kind(std::string_view text) {
   if (kind == "parquet" || kind == "pq") {
     return StoreKind::Parquet;
   }
+  static const bool pluss_vocab_1 = pluss::exception::names::define("store kind", {"csv", "json", "pq", "parquet"});
+  (void)pluss_vocab_1;
   PLUSS_FAIL("Nexus::load: unsupported store kind '" + std::string(text) + "'");
 }
 std::string join_compact(const std::vector<std::string>& values, char sep) {
@@ -145,6 +147,8 @@ CaseLabelPolicy parse_case_label_policy(std::string_view text) {
   if (value == "structured") {
     return CaseLabelPolicy::Structured;
   }
+  static const bool pluss_vocab_2 = pluss::exception::names::define("case-label policy", {"unknown", "implicit_range", "external_axis", "feature_derived", "structured"});
+  (void)pluss_vocab_2;
   PLUSS_FAIL("Nexus::load: unsupported case-label policy '" + std::string(text) + "'");
 }
 std::string relationship_cardinality_string(RelationshipCardinality cardinality) {
@@ -174,6 +178,8 @@ RelationshipCardinality parse_relationship_cardinality(std::string_view text) {
   if (value.empty() || value == "many_to_many") {
     return RelationshipCardinality::ManyToMany;
   }
+  static const bool pluss_vocab_3 = pluss::exception::names::define("relationship cardinality", {"one_to_one", "one_to_many", "many_to_one", "many_to_many"});
+  (void)pluss_vocab_3;
   PLUSS_FAIL("Nexus::load: unsupported relationship cardinality '" + std::string(text) + "'");
 }
 RelationshipValidationStatus parse_relationship_status(std::string_view text) {
@@ -190,6 +196,8 @@ RelationshipValidationStatus parse_relationship_status(std::string_view text) {
   if (value == "invalid") {
     return RelationshipValidationStatus::Invalid;
   }
+  static const bool pluss_vocab_4 = pluss::exception::names::define("relationship status", {"declared", "validated", "warning", "invalid"});
+  (void)pluss_vocab_4;
   PLUSS_FAIL("Nexus::load: unsupported relationship status '" + std::string(text) + "'");
 }
 JoinHow parse_join_how(std::string_view text) {
@@ -215,6 +223,8 @@ JoinHow parse_join_how(std::string_view text) {
   if (value == "right_only") {
     return JoinHow::RightOnly;
   }
+  static const bool pluss_vocab_5 = pluss::exception::names::define("join kind", {"inner", "left", "right", "outer", "cross", "left_only", "right_only"});
+  (void)pluss_vocab_5;
   PLUSS_FAIL("Nexus::load: unsupported join kind '" + std::string(text) + "'");
 }
 std::string optional_text(const std::optional<std::string>& value) {

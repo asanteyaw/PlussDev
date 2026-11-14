@@ -23,7 +23,7 @@ The result holds the value, an a-posteriori error estimate per lane (the standar
 ## Parameters
 
 `Apply &&apply`
-: `Series -> Series`: the product `A x`.
+: `Series (Series)`: the product `A x`.
 
 `const pluss::Series &input`
 : The vector `v`; leading axes are lanes.

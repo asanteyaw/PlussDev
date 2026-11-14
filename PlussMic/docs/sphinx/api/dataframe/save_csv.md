@@ -80,8 +80,10 @@ to use a default name.
 
 **float_format** (`std::optional<std::string>`, default unset)
 
-A `fmt`-style format string applied to every floating-point value written. Leave unset
-to use the library's default numeric formatting (enough significant digits to round-trip
+A replacement-field format string applied to every floating-point value written, for
+example `"{:.3f}"` (three decimals) or `"{:.6g}"` (six significant digits). The field takes
+the usual `[fill][align][sign][#][0][width][.precision][type]` spec; a malformed string
+throws when the value is written. Leave unset to use the library's default numeric formatting (enough significant digits to round-trip
 typical values without excess trailing digits).
 
 **quotechar** (`char`, default `'"'`)

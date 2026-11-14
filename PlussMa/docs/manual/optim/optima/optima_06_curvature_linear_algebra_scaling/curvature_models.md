@@ -93,10 +93,10 @@ Output
 n       SequentialQP Bfgs     Interior Bfgs         Interior Lbfgs        Interior Identity     
 6       56 / 61               57 / 65               51 / 64               300 / 302 *           
 12      85 / 97               88 / 102              80 / 91               300 / 302 *           
-24      145 / 162             145 / 155             137 / 161             300 / 302 *           
+24      143 / 161             142 / 155             133 / 156             300 / 302 *           
 * did not converge
 ```
-The real models grow gently: sequential QP with BFGS needs 56, 85 and 145 iterations; the interior method with BFGS 57, 88 and 145; with the limited-memory model 51, 80 and 137. The limited-memory model is the cheapest in iterations here, not just in storage. The identity model, which throws curvature away, does not converge in 300 iterations at any size. Curvature information is the difference between a method that finishes and one that crawls; the choice between BFGS and its limited-memory version is a smaller matter that depends on size and storage.
+The real models grow gently: sequential QP with BFGS needs 56, 85 and 143 iterations; the interior method with BFGS 57, 88 and 142; with the limited-memory model 51, 80 and 133. The limited-memory model is the cheapest in iterations here, not just in storage. The identity model, which throws curvature away, does not converge in 300 iterations at any size. Curvature information is the difference between a method that finishes and one that crawls; the choice between BFGS and its limited-memory version is a smaller matter that depends on size and storage.
 
 ## Program 2: The memory of the limited-memory model
 
@@ -168,13 +168,13 @@ Output
 
 ```text
 memory    flag  iters  evals  objective
-1         1     142    178    1.59e-05
-3         1     86     101    5.16e-08
-5         1     83     98     2.35e-07
-10        1     80     91     1.69e-07
-30        1     74     90     7.43e-09
+1         1     143    174    1.36e-05
+3         1     86     101    6.96e-08
+5         1     82     96     1.33e-08
+10        1     80     91     1.68e-07
+30        1     74     90     7.41e-09
 ```
-Memory 1 needs 142 iterations and ends at an objective of 1.59e-05; memory 30 needs 74 and reaches 7.43e-09. The default of 10 (80 iterations, 1.69e-07) is already close to the best. A very short memory is a poor model, and a long one costs storage and arithmetic for little gain.
+Memory 1 needs 143 iterations and ends at an objective of 1.36e-05; memory 30 needs 74 and reaches 7.41e-09. The default of 10 (80 iterations, 1.68e-07) is already close to the best. A very short memory is a poor model, and a long one costs storage and arithmetic for little gain.
 
 ## Program 3: Every algorithm, every model
 
@@ -378,3 +378,12 @@ From 1e-12 to 1e-4 the result is identical: the default is far below anything th
 - **On a small problem the cheap models win.** Exact curvature costs more per iteration; it pays when the problem is difficult, not merely when it is available.
 
 Where next: [The step's linear algebra, and units](linear_algebra_and_units.md) covers the system solved at every step and the effect of units.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="linear_algebra_and_units.html">
+    <span class="label">Next</span>
+    <span class="title">The step's linear algebra, and units</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

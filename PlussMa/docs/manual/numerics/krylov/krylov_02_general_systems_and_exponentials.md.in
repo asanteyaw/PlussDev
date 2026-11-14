@@ -48,4 +48,11 @@ This computes `exp(time · A) v` by an Arnoldi projection. It is the solution at
 4. Use the residual estimate and the `converged` flags; they are the stopping evidence.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+krylov_02_general_systems_and_exponentials/the_restart_length
+krylov_02_general_systems_and_exponentials/heat_flow
+```
 <!-- apiref:toctree:end -->

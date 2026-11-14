@@ -1,0 +1,185 @@
+# Portal frames
+
+[Back to Structures 2: Frames](../structure_02_frames.md)
+
+A portal frame is two columns joined by a beam. A lateral load, from wind or an earthquake, makes it sway, and what resists the sway is the bending of the columns and the beam together. This page solves a portal frame under a lateral load, checks its sway against a closed formula and its reactions against equilibrium, and sweeps the beam's stiffness and the base fixity in one call to show how strongly each controls the sway.
+
+## The mental model
+
+Take columns of height `h` and second moment `I_c`, a beam of span `L` and second moment `I_b`, the same modulus `E` throughout, and a lateral load `H` at the top-left corner. Assume the members are so stiff axially that their lengths do not change. The sway `delta` of the beam is then governed by the **stiffness ratio** of the beam to the columns,
+
+```{math}
+k = \frac{I_b / L}{I_c / h}.
+```
+
+With fixed bases, the slope-deflection equations give
+
+```{math}
+\delta_{\text{fixed}} = \frac{H h^3 (2 + 3k)}{12 E I_c (1 + 6k)},
+```
+
+and with pinned bases
+
+```{math}
+\delta_{\text{pinned}} = \frac{H h^3 (2k + 1)}{12 k E I_c}.
+```
+
+A beam that is very stiff compared with the columns (`k` large) holds the column tops from rotating, and the limits are `H h^3 / (24 E I_c)` for fixed bases and `H h^3 / (6 E I_c)` for pinned bases. A beam that is soft (`k` small) lets the column tops rotate freely and the frame sways much more. The two formulas assume rigid axial behaviour, so the programs here use a large area, `100 m^2`, to make the axial deformations negligible and the comparison exact.
+
+## A portal frame under a lateral load
+
+The frame has nodes `0` (left base), `1` (left top), `2` (right top) and `3` (right base), with three members: the left column from node `0` to node `1`, the beam from node `1` to node `2`, and the right column from node `3` to node `2`. The columns are `3 m` high, the beam spans `4 m`, `E I_c = 200e9 * 8e-5 = 16 MN m^2`, and the beam has twice the column inertia, so `k = 2 * 3 / 4 = 1.5`. A `10 kN` load pushes the top-left corner to the right; both bases are fixed in all three degrees of freedom.
+
+The program solves it and checks the sway against the formula, the two top corners against each other (the beam is axially rigid, so they move together), the reactions against equilibrium of the whole frame (the horizontal reactions balance `H`, and the moments about the left base balance), and the joint at the left top corner, where the column's moment and the beam's moment must cancel.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const double E = 200e9, A = 100.0, Ic = 8e-5, Ib = 2 * Ic, h = 3.0, L = 4.0, H = 10000.0;
+  const double k = (Ib / L) / (Ic / h);
+
+  // nodes: 0 left base, 1 left top, 2 right top, 3 right base; members: left column, beam, right column
+  const st::Mesh mesh{grid({0, 0, 0, h, L, h, L, 0}, 2), {0, 1, 3}, {1, 2, 2}};
+  const auto frame = st::frame(mesh, {vec({A, A, A}), vec({Ic, Ib, Ic}), vec({E, E, E})});
+  const st::Fix bases{{0, 0, 0, 3, 3, 3}, {0, 1, 2, 0, 1, 2}, {}};
+  const auto r = st::solve(frame, grid({0, 0, 0, H, 0, 0, 0, 0, 0, 0, 0, 0}, 3), bases);
+
+  const auto u = flat(r.displacement);
+  const double formula = H * h * h * h * (2 + 3 * k) / (12 * E * Ic * (1 + 6 * k));
+  out.writeln("stiffness ratio k = ", k);
+  out.writeln("sway of the left top corner (mm): ", 1000.0 * u[3], "   formula ", 1000.0 * formula);
+  out.writeln("sway of the right top corner (mm): ", 1000.0 * u[6], "   (the beam is axially rigid, so it equals the left one)");
+  out.writeln("rotation of the two top corners (mrad): ", 1000.0 * u[5], " ", 1000.0 * u[8], "   (equal for sway)");
+
+  const auto reaction = flat(r.reaction);
+  out.writeln("base reactions, left (Fx Fy M): ", reaction[0], " ", reaction[1], " ", reaction[2], "   right: ", reaction[9], " ", reaction[10], " ", reaction[11]);
+  out.writeln("horizontal balance, reactions plus load (N): ", reaction[0] + reaction[9] + H);
+  out.writeln("vertical balance (N): ", reaction[1] + reaction[10]);
+  // moments about the left base: the reaction couples plus the vertical reaction at the right base times its lever arm, plus the load times its height
+  out.writeln("moment balance about the left base (N m): ", reaction[2] + reaction[11] + reaction[10] * L + reaction[9] * 0.0 - H * h);
+
+  const auto action = flat(r.end_force);   // members: 0 left column, 1 beam, 2 right column; six values each
+  out.writeln("joint at the left top corner: column Mj ", action[5], " + beam Mi ", action[6 + 2], " = ", action[5] + action[6 + 2]);
+}
+```
+
+The sway agrees with the formula, `0.9141 mm` against `0.9141 mm`; the corners move together and turn together; the balances are zero to rounding; and the left top joint carries equal and opposite moments from its two members (`6750 N m`). The reactions show how the load is carried: each base takes half the shear (`-5000 N`, resisting the push), the left base pulls down and the right base pushes up by `3375 N` to resist overturning, and each base also supplies a fixity moment of about `8250 N m`. The overturning moment of the load about the base, `10000 * 3 = 30000 N m`, is carried by the vertical couple (`3375 * 4 = 13500 N m`) and the two fixity moments (`2 * 8250 = 16500 N m`).
+
+## The effect of the beam and of the base
+
+Two design choices control sway: how stiff the beam is compared with the columns, and whether the bases are fixed or pinned. The program solves one frame for four beam inertias in a single call (a leading axis on the section inertia), once with fixed bases and once with pinned bases (fixed in x and y only), and compares every sway with the formulas above.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const double E = 200e9, A = 100.0, Ic = 8e-5, h = 3.0, L = 4.0, H = 10000.0;
+  const std::vector<double> ratio = {0.25, 1.0, 4.0, 100.0};   // beam inertia over column inertia
+
+  // one structure per beam inertia: a leading axis of four on the inertia
+  std::vector<double> inertia, area, modulus;
+  for (double q : ratio) {
+    inertia.insert(inertia.end(), {Ic, q * Ic, Ic});
+    area.insert(area.end(), {A, A, A});
+    modulus.insert(modulus.end(), {E, E, E});
+  }
+  const auto section = [&](const std::vector<double> &values) { return pluss::series::make(values).reshape({4, 3}); };
+  const st::Mesh mesh{grid({0, 0, 0, h, L, h, L, 0}, 2), {0, 1, 3}, {1, 2, 2}};
+  const auto frame = st::frame(mesh, {section(area), section(inertia), section(modulus)});
+  const auto load = grid({0, 0, 0, H, 0, 0, 0, 0, 0, 0, 0, 0}, 3);
+
+  const st::Fix fixed{{0, 0, 0, 3, 3, 3}, {0, 1, 2, 0, 1, 2}, {}};
+  const st::Fix pinned{{0, 0, 3, 3}, {0, 1, 0, 1}, {}};
+  const auto f = flat(st::solve(frame, load, fixed).displacement);
+  const auto p = flat(st::solve(frame, load, pinned).displacement);
+
+  out.writeln("beam/column inertia   k      fixed bases (mm): solver  formula    pinned bases (mm): solver  formula");
+  for (std::size_t i = 0; i < ratio.size(); ++i) {
+    const double k = (ratio[i] * Ic / L) / (Ic / h);
+    const double fixed_formula = H * h * h * h * (2 + 3 * k) / (12 * E * Ic * (1 + 6 * k));
+    const double pinned_formula = H * h * h * h * (2 * k + 1) / (12 * k * E * Ic);
+    out.writeln(ratio[i], "      ", k, "      ", 1000.0 * f[i * 12 + 3], "  ", 1000.0 * fixed_formula, "      ", 1000.0 * p[i * 12 + 3], "  ", 1000.0 * pinned_formula);
+  }
+}
+```
+
+Both columns of results agree with their formulas to within `0.0001 mm`, for every beam, from one call of `solve` per base condition. Two lessons are in the table. A stiffer beam helps, but with diminishing return: raising the beam inertia a hundredfold from `k = 0.19` to `k = 75` cuts the fixed-base sway by only about `58 percent`, towards the limit `H h^3 / (24 E I_c) = 0.7031 mm`. And base fixity matters far more than the beam: a pinned base sways four to six times as far as a fixed one for the same beam, because the columns lose their base moment. In practice, a frame that is too flexible is better cured by fixing its bases or bracing it than by thickening its beam.
+
+## Decisions
+
+- **Sway too large:** fix the bases, stiffen the columns (`I_c` enters directly, the beam only through `k`), or brace the frame with a diagonal bar.
+- **A frame with a floor above a beam or several storeys:** the same description works; add nodes and members, and load the nodes.
+- **Hand check:** the closed forms above, with fixed or pinned bases and a rigid axial model, cover a one-bay, one-storey frame; use them to verify any more elaborate model of one.
+
+## Pitfalls
+
+The program shows two mistakes in portal analysis: comparing against the hand formula with a realistic axial area, which the formula does not assume, and reading the sway of a pinned-base frame as if it were fixed. It solves the frame of the first example with an area of `100 m^2` and with a realistic `5e-3 m^2`, and with fixed and with pinned bases.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const double E = 200e9, Ic = 8e-5, Ib = 2 * Ic, h = 3.0, L = 4.0, H = 10000.0, k = (Ib / L) / (Ic / h);
+  const st::Mesh mesh{grid({0, 0, 0, h, L, h, L, 0}, 2), {0, 1, 3}, {1, 2, 2}};
+  const auto load = grid({0, 0, 0, H, 0, 0, 0, 0, 0, 0, 0, 0}, 3);
+  const st::Fix fixed{{0, 0, 0, 3, 3, 3}, {0, 1, 2, 0, 1, 2}, {}};
+  const st::Fix pinned{{0, 0, 3, 3}, {0, 1, 0, 1}, {}};
+  const auto sway = [&](double area, const st::Fix &bases) {
+    const auto frame = st::frame(mesh, {vec({area, area, area}), vec({Ic, Ib, Ic}), vec({E, E, E})});
+    return 1000.0 * flat(st::solve(frame, load, bases).displacement)[3];
+  };
+  out.writeln("formula, fixed bases, rigid axially (mm):   ", 1000.0 * H * h * h * h * (2 + 3 * k) / (12 * E * Ic * (1 + 6 * k)));
+  out.writeln("solver, fixed bases, area 100 m^2 (mm):     ", sway(100.0, fixed));
+  out.writeln("solver, fixed bases, area 5e-3 m^2 (mm):    ", sway(5e-3, fixed));
+  out.writeln("solver, pinned bases, area 100 m^2 (mm):    ", sway(100.0, pinned), "   formula ", 1000.0 * H * h * h * h * (2 * k + 1) / (12 * k * E * Ic));
+}
+```
+
+With a realistic area the sway is about two percent larger than the formula, because the columns and beam also shorten and lengthen and the formula does not allow that; set the area very large when you want the comparison to be exact. A pinned base removes only the rotational restraint: the node stays in place and the column can rotate there, and the sway, `3.75 mm`, is about four times that of the fixed frame.
+
+Reference: [`frame`](../../../../api/eng/structure/model/frame.md), [`Sections`](../../../../api/eng/structure/model/Sections.md), [`solve`](../../../../api/eng/structure/statics/solve.md), [`FrameResult`](../../../../api/eng/structure/statics/FrameResult.md), [`Fix`](../../../../api/eng/structure/model/Fix.md).
+
+Where next: the [next chapter](../structure_03_dynamics.md) uses the same frames for vibration: natural frequencies, mode shapes, buckling loads and the response to loads that vary in time.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="beams_and_end_actions.html">
+    <span class="label">Previous</span>
+    <span class="title">Beams and end actions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -39,3 +39,12 @@ Budgets end the run with their own status. The cache answers repeated points fro
 - **Start at a vertex only knowingly.** The method moves along an edge of the feasible cone from a vertex; if it does not move, check that the cone has directions.
 
 Where next: [Chapter 8](../dfo_08_differential_evolution.md) turns to the population methods.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="poll_search_and_mesh.html">
+    <span class="label">Previous</span>
+    <span class="title">The poll, the search step and the mesh</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

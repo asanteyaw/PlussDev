@@ -101,3 +101,16 @@ index and residual count: 300 and 300
 ## See Also
 
 - [`residuals`](plot_residuals.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="plot_residuals.html">
+    <span class="label">Previous</span>
+    <span class="title">plot_residuals</span>
+  </a>
+  <a class="next-link" href="ResidualPlotOptions.html">
+    <span class="label">Next</span>
+    <span class="title">ResidualPlotOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

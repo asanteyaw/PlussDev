@@ -33,20 +33,20 @@ int main() {
   const auto x = pluss::make_series({0.2, 0.5, 1.25, 2.0});
   const math::Function id = math::function({"x"}, [](math::Function v) { return v; });
 
-  out.writeln("x      ", x.pull<double>());
-  out.writeln("exp    ", id.exp()({x}).pull<double>());
-  out.writeln("log    ", id.log()({x}).pull<double>());
-  out.writeln("log1p  ", id.log1p()({x}).pull<double>());
-  out.writeln("expm1  ", id.expm1()({x}).pull<double>());
-  out.writeln("sqrt   ", id.sqrt()({x}).pull<double>());
-  out.writeln("sin    ", id.sin()({x}).pull<double>());
-  out.writeln("cos    ", id.cos()({x}).pull<double>());
-  out.writeln("tan    ", id.tan()({x}).pull<double>());
-  out.writeln("sinh   ", id.sinh()({x}).pull<double>());
-  out.writeln("cosh   ", id.cosh()({x}).pull<double>());
-  out.writeln("tanh   ", id.tanh()({x}).pull<double>());
-  out.writeln("abs(-x)", (-id).abs()({x}).pull<double>());
-  out.writeln("-x     ", (-id)({x}).pull<double>());
+  out.writeln("x      ", x.items<double>());
+  out.writeln("exp    ", id.exp()({x}).items<double>());
+  out.writeln("log    ", id.log()({x}).items<double>());
+  out.writeln("log1p  ", id.log1p()({x}).items<double>());
+  out.writeln("expm1  ", id.expm1()({x}).items<double>());
+  out.writeln("sqrt   ", id.sqrt()({x}).items<double>());
+  out.writeln("sin    ", id.sin()({x}).items<double>());
+  out.writeln("cos    ", id.cos()({x}).items<double>());
+  out.writeln("tan    ", id.tan()({x}).items<double>());
+  out.writeln("sinh   ", id.sinh()({x}).items<double>());
+  out.writeln("cosh   ", id.cosh()({x}).items<double>());
+  out.writeln("tanh   ", id.tanh()({x}).items<double>());
+  out.writeln("abs(-x)", (-id).abs()({x}).items<double>());
+  out.writeln("-x     ", (-id)({x}).items<double>());
 }
 ```
 
@@ -77,10 +77,10 @@ int main() {
   const math::Function variable_power = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x.pow(y); });
   const math::Function constant_base = math::function({"x"}, [](math::Function x) { return math::function(2.0).pow(x); });
 
-  out.writeln("((2 + x) - y)(x + 1)/3 raised to y:", mixed({x, y}).pull<double>());
-  out.writeln("6/x - 1:", reciprocal({x}).pull<double>());
-  out.writeln("x^y:", variable_power({x, y}).pull<double>());
-  out.writeln("2^x:", constant_base({x}).pull<double>());
+  out.writeln("((2 + x) - y)(x + 1)/3 raised to y:", mixed({x, y}).items<double>());
+  out.writeln("6/x - 1:", reciprocal({x}).items<double>());
+  out.writeln("x^y:", variable_power({x, y}).items<double>());
+  out.writeln("2^x:", constant_base({x}).items<double>());
 }
 ```
 
@@ -137,7 +137,7 @@ int main() {
   source.add_(10.0, 1.0);
   auto result = owned();
   result.mul_(5.0);
-  out.writeln("after changing the source and a result:", owned().pull<double>());
+  out.writeln("after changing the source and a result:", owned().items<double>());
 
   // A function of no variables can also be traced: the callable takes no parameters.
   const math::Function traced_constant = math::function({}, [] { return 4; });
@@ -170,8 +170,8 @@ int main() {
 
   out.writeln("shape of the result:", grid.sizes());
   out.writeln("dtype is Float32:", grid.scalar_type() == pluss::ScalarType::Float32 ? "yes" : "no");
-  out.writeln("row 0:", grid.select(0, 0).pull<double>());
-  out.writeln("row 1:", grid.select(0, 1).pull<double>());
+  out.writeln("row 0:", grid.select(0, 0).items<double>());
+  out.writeln("row 1:", grid.select(0, 1).items<double>());
   out.writeln("on the CPU:", grid.platform() == pluss::pCPU ? "yes" : "no");
 }
 ```
@@ -197,8 +197,8 @@ int main() {
   const math::Function x = square.arg("x");
   const auto values = pluss::make_series({1.0, 2.0, 3.0});
 
-  out.writeln("arg(\"x\") evaluated:", x({values}).pull<double>());
-  out.writeln("x * square:", (x * square)({values}).pull<double>());
+  out.writeln("arg(\"x\") evaluated:", x({values}).items<double>());
+  out.writeln("x * square:", (x * square)({values}).items<double>());
   try {
     (void)square.arg("y");
   } catch (const pluss::Error &e) {
@@ -212,3 +212,16 @@ int main() {
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="building_and_evaluating.html">
+    <span class="label">Previous</span>
+    <span class="title">Building and evaluating a function</span>
+  </a>
+  <a class="next-link" href="simplification_and_assumptions.html">
+    <span class="label">Next</span>
+    <span class="title">Simplification and assumptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

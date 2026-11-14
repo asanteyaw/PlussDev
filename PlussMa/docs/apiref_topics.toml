@@ -1,0 +1,103 @@
+# apiref_topics.toml -- the one list of PlussMa topics.
+#
+# Every topic has two sections: the User Guide (task-oriented chapters, programs with real
+# output) and the API Reference (one page per function, type and option). This file is the only
+# place that says which topics exist, in which order, and where each section starts; `apiref.py
+# wire` reads it to generate the home-page cards, the User Guide and API Reference landing
+# pages, and the Guide/Reference switch at the top of every sidebar. A section with no page yet
+# is left out (`guide` / `reference` empty) and is shown as "coming".
+#
+#   slug       short name; also the manual/<slug>/ directory of the guide
+#   title      what readers see
+#   summary    one line, shared by the cards and both landing pages
+#   guide      first page of the guide, relative to the docs root (md)
+#   reference  first page of the API reference, relative to the docs root (md)
+#   code       the namespace or framework name used in code, for the cards
+
+[[topic]]
+slug = "ts"
+title = "Time series"
+code = "ts"
+summary = "Transforms, diagnostics, ARIMA, volatility, vector, state-space and direct forecasting models."
+guide = "manual/ts/guide.md"
+reference = "api/plussma_ts.md"
+
+[[topic]]
+slug = "distr"
+title = "Distributions"
+code = "distr"
+summary = "Sixty probability families, sampling and maximum-likelihood fitting."
+guide = "manual/distr.md"
+reference = "api/plussma_distr.md"
+
+[[topic]]
+slug = "infer"
+title = "Hypothesis testing"
+code = "infer"
+summary = "Tests of means, variances, ranks, distributions and tables, with exact small-sample p-values."
+guide = "manual/infer.md"
+reference = "api/plussma_infer.md"
+
+[[topic]]
+slug = "regress"
+title = "Regression"
+code = "regress"
+summary = "Least squares, generalised linear, quantile and polynomial regression."
+guide = "manual/regress.md"
+reference = "api/plussma_regression.md"
+
+[[topic]]
+slug = "optim"
+title = "Optimization"
+code = "optim"
+summary = "Constrained and derivative-free optimization, linear and mixed-integer programming, root finding."
+guide = "manual/optim.md"
+reference = "api/plussma_optim.md"
+
+[[topic]]
+slug = "calculus"
+title = "Calculus"
+code = "calculus"
+summary = "Functions as values: exact derivatives, integrals and vector calculus, and operators that transform them."
+guide = "manual/calculus.md"
+reference = "api/plussma_calculus.md"
+
+[[topic]]
+slug = "numerics"
+title = "Numerical methods"
+code = "numerics"
+summary = "Integration, differential equations, interpolation and large linear systems."
+guide = "manual/numerics.md"
+reference = "api/plussma_numerics.md"
+
+[[topic]]
+slug = "stochastic"
+title = "Stochastic processes"
+code = "stochastic"
+summary = "Stochastic integrals, Itô calculus, jumps, SDE simulation and Malliavin calculus."
+guide = "manual/stochastic.md"
+reference = "api/plussma_stochastic.md"
+
+[[topic]]
+slug = "finance"
+title = "Finance"
+code = "finance"
+summary = "Option pricing: Black-Scholes, implied volatility and stochastic-volatility models."
+guide = "manual/finance.md"
+reference = "api/plussma_finance.md"
+
+[[topic]]
+slug = "actuarial"
+title = "Actuarial mathematics"
+code = "actuarial"
+summary = "Mortality and life tables, contingent present values, aggregate losses, ratemaking and reserving."
+guide = "manual/actuarial.md"
+reference = "api/plussma_actuarial.md"
+
+[[topic]]
+slug = "eng"
+title = "Engineering"
+code = "eng"
+summary = "Signal processing, dynamic systems, controls, circuits, power, fluids and structures."
+guide = "manual/eng.md"
+reference = "api/plussma_eng.md"

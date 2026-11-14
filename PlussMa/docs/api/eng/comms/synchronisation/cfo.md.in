@@ -1,0 +1,58 @@
+# `comms::cfo`
+
+The carrier frequency offset of PSK symbols.
+
+## Signature
+
+```cpp
+pluss::Series comms::cfo(const pluss::Series& symbols, std::int64_t order);
+```
+
+## What It Does
+
+Raises the symbols to the power `order`, which removes the modulation of an M-PSK signal and leaves a tone at `order` times the offset, finds the peak of its zero-padded spectrum and refines it by parabolic interpolation.
+
+## Parameters
+
+`symbols`
+: Received symbols, a complex `[..., N]` array with `N >= 16`.
+
+`order`
+: The PSK order: `2`, `4` or `8`.
+
+## Returns
+
+A real array of shape `[...]`: the offset in cycles per symbol, in `(-0.5 / order, 0.5 / order)`.
+
+## Errors
+
+Throws `pluss::Error` for an order other than `2`, `4` or `8`, or symbols that are not a complex array of at least sixteen.
+
+## Interpretation and Use
+
+The range is limited to a fraction `1 / (2 order)` of the symbol rate. The accuracy improves with the number of symbols and the signal-to-noise ratio; use the estimate with `derot`, and a `pll` loop for the residual and for drift.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Estimates against noise and order.
+
+@@example Eng/api/comms_freq_estimate.cpp@@
+
+### Example 2
+
+One estimate per frame, and the correction.
+
+@@example Eng/api/comms_derotate_batch.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_freq_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

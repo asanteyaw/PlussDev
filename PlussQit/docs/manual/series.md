@@ -1,0 +1,24 @@
+<!-- generated from series.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Series by example
+
+Each page here solves a real task end to end with `Series`: complete programs that print their results, with the output copied from the run. The reference pages say what each method does; these pages show how to combine the methods and the factory functions to get work done.
+
+1. **Cleaning and scaling data.** Find and replace unusable readings with masks, put columns on one scale, flag outliers, and avoid the `where` trap.
+2. **Summaries, rankings and tables.** Rank candidates, total by group, and read a year-by-month table with reductions along axes.
+3. **Estimation and uncertainty.** Fit a line with the linear-algebra accessor, bootstrap an average, and the numeric pitfalls that spoil an estimate.
+4. **Simulation.** Price a path-dependent option with fifty thousand paths generated at once, and integrate by random sampling, including in five dimensions.
+5. **Signals.** Smooth with moving statistics, catch anomalies, and find tones with the Fourier transform.
+6. **Learning by gradient.** Differentiate a loss with the library, train by gradient descent, optimise a constrained portfolio and fit a nonlinear curve with Adam.
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+
+series/cleaning_data
+series/summaries_and_tables
+series/estimation
+series/simulation
+series/signals
+series/learning_by_gradient
+```

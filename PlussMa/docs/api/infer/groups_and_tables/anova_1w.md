@@ -111,8 +111,8 @@ int main() {
   const auto y = pluss::make_series(std::vector<double>{4.6, 5.9, 4.2, 5.6, 6.4, 5.3, 6.6, 6.0, 7.2, 5.5}, {10}, as_f64());
   const auto g = pluss::make_series(std::vector<double>{10, 10, 10, 10, 20, 20, 20, 30, 30, 30}, {10}, as_f64());
   const auto r = hyp::anova_1w(y, g);
-  const auto means = r.group_means.pull<double>();
-  const auto counts = r.group_counts.pull<double>();
+  const auto means = r.group_means.items<double>();
+  const auto counts = r.group_counts.items<double>();
   for (int i = 0; i < r.groups; ++i) std::cout << "group " << i << ": n " << counts[i] << ", mean " << means[i] << "\n";
   std::cout << "F " << r.stat << ", p " << r.pvalue << "\n";
 }
@@ -132,5 +132,14 @@ The group counts and means are reported with the test: the three groups have 4, 
 ## See Also
 
 - [`chisq_gof`](chisq_gof.md)
-- [`ttest2`](ttest2.md)
-- [`ranksum`](ranksum.md)
+- [`ttest2`](../means_and_variances/ttest2.md)
+- [`ranksum`](../ranks_and_signs/ranksum.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="chisq_gof.html">
+    <span class="label">Next</span>
+    <span class="title">chisq_gof</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

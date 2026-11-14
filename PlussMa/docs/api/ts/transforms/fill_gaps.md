@@ -121,3 +121,16 @@ backward         2.0000   2.0000   4.0000   4.0000      nan
 ## See Also
 
 - [`resample`](resample.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="expanding_std.html">
+    <span class="label">Previous</span>
+    <span class="title">expanding_std</span>
+  </a>
+  <a class="next-link" href="lag.html">
+    <span class="label">Next</span>
+    <span class="title">lag</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -53,7 +53,7 @@ int main() {
   options.progress_hook = [](const optim::Lsr1ProgressSnapshot& s) {
     std::cout << std::right << std::setw(4) << s.iteration << std::scientific << std::setprecision(3) << "  objective " << s.objective << "  gradient " << s.gradient_norm
               << std::fixed << std::setprecision(3) << "  radius " << s.trust_radius << "  step " << s.step_norm << "\n";
-    return true;
+    return false;
   };
   optim::l_sr1_trust_region(chain, vec(start), options);
   return 0;

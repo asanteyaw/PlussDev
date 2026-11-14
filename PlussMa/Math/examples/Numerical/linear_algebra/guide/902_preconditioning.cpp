@@ -38,8 +38,8 @@ int main() {
   const auto jacobi = krylov::pcg(apply, [&](const Series& r) { return r * inverse_diagonal; }, b, {-1}, o);
   std::cout << std::left << std::setw(26) << "method" << std::setw(12) << "iterations" << std::setw(12) << "converged" << "relative residual\n";
   auto row = [&](const char* label, const krylov::CgResult& r) {
-    std::cout << std::left << std::setw(26) << label << std::setw(12) << r.iterations << std::setw(12) << r.converged.item<bool>() << std::scientific << std::setprecision(1)
-              << r.relative_residual.item<double>() << "\n";
+    std::cout << std::left << std::setw(26) << label << std::setw(12) << r.iterations << std::setw(12) << r.converged.squeeze().item<bool>() << std::scientific << std::setprecision(1)
+              << r.relative_residual.squeeze().item<double>() << "\n";
   };
   row("cg", plain);
   row("pcg, Jacobi", jacobi);

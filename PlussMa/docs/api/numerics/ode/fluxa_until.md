@@ -26,7 +26,7 @@ Only fixed-step `RK4` is supported here, and `options.steps` is the number of st
 : The derivative.
 
 `const ode::OdeEventFn &event`
-: `(t, y, theta) -> scalar Series`: the quantity whose sign change ends the solve.
+: `scalar Series (t, y, theta)`: the quantity whose sign change ends the solve.
 
 `const pluss::Series &y0`
 : The initial state.

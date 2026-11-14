@@ -65,7 +65,53 @@ template <class Fn> void expect_error(Fn &&fn, const std::string &message) {
 
 } // namespace
 
+// The host recursion and the Series recursion (used when an input records the tape) must agree for continuous and
+// discrete systems, both holds, batches of systems, an initial state, and uniform and non-uniform time grids.
+void host_matches_tape() {
+  using pluss::Series;
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const Series a = pluss::series::make({0.0, 1.0, -2.0, -3.0}).reshape({2, 2});
+  const Series b = pluss::series::make({0.0, 1.0}).reshape({2, 1});
+  const Series c = pluss::series::make({1.0, 0.5}).reshape({1, 2});
+  const Series d = pluss::series::make({0.1}).reshape({1, 1});
+  const Series x0 = pluss::series::make({0.3, -0.2});
+  for (const bool uniform : {true, false}) {
+    std::vector<double> grid;
+    for (int i = 0; i < 40; ++i) grid.push_back(uniform ? 0.05 * i : 0.05 * i + (i % 3) * 0.004);
+    const Series time = pluss::make_series(grid, {40}, f64);
+    const Series input = (time * 3.0).sin().unsqueeze(-1);
+    for (const auto hold : {lti::Hold::Zero, lti::Hold::Linear}) {
+      const auto system = lti::state(a, b, c, d);
+      const lti::SimOptions options{.hold = hold};
+      Series tracked = input.clone();
+      tracked.tracks_slope_(true);
+      const auto fast = lti::sim(system, input, time, x0, options);
+      const auto slow = lti::sim(system, tracked, time, x0, options);
+      expect(fast.values.sizes() == slow.values.sizes(), "host simulation has the wrong shape");
+      expect(fast.values.sub(slow.values).abs().max().item<double>() < 1e-12, "host simulation values differ from the tape path");
+      expect(fast.states.sub(slow.states).abs().max().item<double>() < 1e-12, "host simulation states differ from the tape path");
+    }
+  }
+  // a batch of two systems and a discrete system
+  const Series batch_a = a.unsqueeze(0).unite({(a * 0.5).unsqueeze(0)}, 0);
+  const auto batched = lti::state(batch_a, b, c, d);
+  const Series time = pluss::series::arange(0, 25, f64) * 0.1;
+  const Series input = pluss::series::ones({25, 1}, f64);
+  Series tracked = input.clone();
+  tracked.tracks_slope_(true);
+  expect(lti::sim(batched, input, time).values.sub(lti::sim(batched, tracked, time).values).abs().max().item<double>() < 1e-12,
+         "batched host simulation differs from the tape path");
+  const auto discrete = lti::state(a * 0.1, b, c, d, 0.5);
+  const Series steps = pluss::series::arange(0, 12, f64) * 0.5;
+  const Series ones = pluss::series::ones({12, 1}, f64);
+  Series tracked_ones = ones.clone();
+  tracked_ones.tracks_slope_(true);
+  expect(lti::sim(discrete, ones, steps).values.sub(lti::sim(discrete, tracked_ones, steps).values).abs().max().item<double>() < 1e-12,
+         "discrete host simulation differs from the tape path");
+}
+
 int main() {
+  host_matches_tape();
   const auto irregular_time = pluss::series::make({0.0, 0.2, 0.7, 1.5});
   const auto constant = pluss::series::ones({4, 1});
   const auto zoh = lti::sim(first_order(), constant, irregular_time,
@@ -75,7 +121,7 @@ int main() {
          "continuous simulation shapes are wrong");
   expect_close(zoh.values, {0.0, 1.0 - std::exp(-0.2), 1.0 - std::exp(-0.7),
                             1.0 - std::exp(-1.5)});
-  expect_close(zoh.states, zoh.values.flatten().pull<double>());
+  expect_close(zoh.states, zoh.values.flatten().items<double>());
 
   const auto ramp = irregular_time.reshape({4, 1});
   const auto linear = lti::sim(first_order(), ramp, irregular_time,
@@ -162,7 +208,7 @@ int main() {
       pluss::series::make({{1.0, 1.0, 1.0, 1.0}}).transpose(0, 1);
   expect(!strided_input.is_contiguous(), "strided input became contiguous");
   expect_close(lti::sim(first_order(), strided_input, irregular_time).values,
-               zoh.values.flatten().pull<double>());
+               zoh.values.flatten().items<double>());
 
   using Complex = std::complex<double>;
   const auto complex_system =

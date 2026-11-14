@@ -1,0 +1,40 @@
+# Pulse shaping
+
+This branch turns symbols into a band-limited waveform and back. `rrc` designs the pulse, `shape` makes the waveform and `match` filters and samples it at the receiver.
+
+## Choosing A Surface
+
+Use `rrc` at both ends: the transmitter shapes with it and the receiver matches with it, and the pair has no intersymbol interference.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+The taps of a pulse.
+
+@@example Eng/api/comms_rrc_taps.cpp@@
+
+### Example 2
+
+A shaped waveform.
+
+@@example Eng/api/comms_shape_waveform.cpp@@
+
+### Example 3
+
+Shaping and matching.
+
+@@example Eng/api/comms_match_chain.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+pulse/rrc
+pulse/shape
+pulse/match
+```
+<!-- apiref:toctree:end -->

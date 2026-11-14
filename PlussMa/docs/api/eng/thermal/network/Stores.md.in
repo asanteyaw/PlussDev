@@ -1,0 +1,57 @@
+# `thermal::Stores`
+
+Thermal capacities of nodes.
+
+## Signature
+
+```cpp
+thermal::Stores
+```
+
+## What It Does
+
+Gives nodes the ability to hold heat. Store `k` is a thermal capacity `capacity[k]` in joules per kelvin attached to `node[k]`: heat flowing into the node raises its temperature at the rate `Q / C`. Only `tran` uses capacities; `steady` ignores them because a steady network stores nothing. A node without a store responds instantly, which is how a massless surface node is modelled.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `node` | The node of each store, an integer in `0 .. nodes - 1`. | empty |
+| `capacity` | The capacity of each store in J/K, positive. The last axis has one value per store; leading axes are batches. | undefined (no stores) |
+
+## Returns
+
+A value; read by `tran`.
+
+## Errors
+
+`steady` and `tran` throw `pluss::Error` for a node index outside the network, a capacity array whose last axis does not have one value per store, a capacity that is not positive or not finite, or capacities without nodes.
+
+## Interpretation and Use
+
+Two stores on one node add. The capacity of a body is its mass times its specific heat; the time constant of a body of capacity `C` that loses heat through a conductance `G` is `C / G`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A body cooling through one conductance.
+
+@@example Eng/api/thermal_tran_cooling.cpp@@
+
+### Example 2
+
+The default start of a store.
+
+@@example Eng/api/thermal_tran_start.cpp@@
+
+### Example 3
+
+Rejected capacities.
+
+@@example Eng/api/thermal_errors_stores.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

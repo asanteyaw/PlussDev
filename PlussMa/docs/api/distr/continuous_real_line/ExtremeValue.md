@@ -247,3 +247,16 @@ The formula and `distr::cdf` agree to 5.55e-17 over the grid, so the library imp
 - [`Gompertz`](../continuous_positive/Gompertz.md)
 - [`Normal`](../continuous_real_line/Normal.md)
 - [`Logistic`](../continuous_real_line/Logistic.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Cauchy.html">
+    <span class="label">Previous</span>
+    <span class="title">Cauchy</span>
+  </a>
+  <a class="next-link" href="Gh.html">
+    <span class="label">Next</span>
+    <span class="title">Gh</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

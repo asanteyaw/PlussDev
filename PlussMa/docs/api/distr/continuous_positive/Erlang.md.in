@@ -206,3 +206,16 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`Exponential`](../continuous_positive/Exponential.md)
 - [`ChiSquare`](../continuous_positive/ChiSquare.md)
 - [`Poisson`](../discrete/Poisson.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ChiSquareNoncentral.html">
+    <span class="label">Previous</span>
+    <span class="title">ChiSquareNoncentral</span>
+  </a>
+  <a class="next-link" href="Exponential.html">
+    <span class="label">Next</span>
+    <span class="title">Exponential</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,70 @@
+# `circuit::Controls`
+
+Four-terminal voltage-controlled elements.
+
+## Signature
+
+```cpp
+circuit::Controls
+```
+
+## What It Does
+
+A group of voltage-controlled current sources (`Net::vccs`) or voltage sources (`Net::vcvs`). The controlled element runs from `positive` to `negative` and is controlled by the voltage `control_positive - control_negative`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `positive` | The positive output node of each element. | empty |
+| `negative` | The negative output node. | empty |
+| `control_positive` | The positive control node. | empty |
+| `control_negative` | The negative control node. | empty |
+| `gain` | Transconductance in siemens for a VCCS, voltage gain for a VCVS; last axis the elements. | undefined |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+Mismatched list lengths, nodes outside the circuit or a non-finite gain are rejected by `make`.
+
+## Interpretation and Use
+
+A VCCS draws its current from its positive node. A VCVS adds a branch-current unknown, reported as `vcvs_current`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A VCCS and a VCVS in one circuit.
+
+@@example Eng/api/circuit_all_elements.cpp@@
+
+### Example 2
+
+A VCVS of gain 5 driving a load.
+
+@@example Eng/api/circuit_vcvs.cpp@@
+
+### Example 3
+
+Singular circuits that controlled sources can create.
+
+@@example Eng/api/circuit_singular.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Branches.html">
+    <span class="label">Previous</span>
+    <span class="title">Branches</span>
+  </a>
+  <a class="next-link" href="Amps.html">
+    <span class="label">Next</span>
+    <span class="title">Amps</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

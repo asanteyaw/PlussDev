@@ -175,7 +175,7 @@ namespace {
 std::vector<double> one_pass(pluss::loader::DataLoader& loader) {
   std::vector<double> order;
   for (auto batch : loader) {
-    const auto values = batch.x().reshape({batch.x().numel()}).pull<double>();
+    const auto values = batch.x().reshape({batch.x().numel()}).items<double>();
     order.insert(order.end(), values.begin(), values.end());
   }
   return order;
@@ -255,7 +255,7 @@ void print_values(const std::vector<double>& values) {
 std::vector<double> visited(pluss::loader::DataLoader& loader) {
   std::vector<double> out;
   for (auto batch : loader) {
-    const auto values = batch.x().reshape({batch.x().numel()}).pull<double>();
+    const auto values = batch.x().reshape({batch.x().numel()}).items<double>();
     out.insert(out.end(), values.begin(), values.end());
   }
   return out;
@@ -447,8 +447,8 @@ int main() {
   std::cout << "partition covers all rows once: " << (all == values) << '\n';
 
   // Fields stay aligned: y was built as ten times x, so every train row keeps that relation.
-  const auto train_x = split.train_fields[0].reshape({split.train_fields[0].numel()}).pull<double>();
-  const auto train_y = split.train_fields[1].reshape({split.train_fields[1].numel()}).pull<double>();
+  const auto train_x = split.train_fields[0].reshape({split.train_fields[0].numel()}).items<double>();
+  const auto train_y = split.train_fields[1].reshape({split.train_fields[1].numel()}).items<double>();
   bool aligned = train_x.size() == train_y.size();
   for (std::size_t i = 0; aligned && i < train_x.size(); ++i) aligned = train_y[i] == 10.0 * train_x[i];
   std::cout << "fields stay aligned: " << aligned << '\n';
@@ -456,7 +456,7 @@ int main() {
   // The same seed gives the same split.
   const loader::DataSplit again = loader::split_fields({x, y}, options);
   std::cout << "same seed, same split: "
-            << (again.train_fields[0].reshape({again.train_fields[0].numel()}).pull<double>() == train_x) << '\n';
+            << (again.train_fields[0].reshape({again.train_fields[0].numel()}).items<double>() == train_x) << '\n';
 }
 ```
 
@@ -525,7 +525,7 @@ int main() {
   // Iterating the prefetching loader yields the same order too.
   std::vector<double> streamed;
   for (auto batch : prefetched) {
-    const auto v = batch.x().reshape({batch.x().numel()}).pull<double>();
+    const auto v = batch.x().reshape({batch.x().numel()}).items<double>();
     streamed.insert(streamed.end(), v.begin(), v.end());
   }
   std::cout << "streamed order matches: " << (streamed == values) << '\n';

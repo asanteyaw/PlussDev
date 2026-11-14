@@ -161,3 +161,16 @@ At horizon 1 the orthogonalised shares of series `a` are 1 and 0 by construction
 - **Index carefully.** The layout is `[step][shock][response]`; transposing it swaps cause and effect.
 
 Where next: [Granger tests](granger_tests.md) asks the question in a testable form: does one series help predict another?
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fitting_a_var_and_choosing_the_lag_order.html">
+    <span class="label">Previous</span>
+    <span class="title">Fitting a VAR and choosing the lag order</span>
+  </a>
+  <a class="next-link" href="granger_tests.html">
+    <span class="label">Next</span>
+    <span class="title">Granger tests</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

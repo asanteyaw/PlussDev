@@ -6,9 +6,9 @@ values.
 
 ## API Signature
 
-- `DataFrame::ts() -> DataFrameTsAccessor`
-- `Slate::ts() -> TimeSeriesAccessor`
-- `Atlas::ts() -> AtlasTsAccessor`
+- `DataFrameTsAccessor DataFrame::ts()`
+- `TimeSeriesAccessor Slate::ts()`
+- `AtlasTsAccessor Atlas::ts()`
 
 Compatibility overloads still accept feature names, but preferred public code is
 selection-first: select the value feature(s), then call `.ts()` with no feature
@@ -68,33 +68,33 @@ Output:
 
 ### API Signature
 
-- `returns(periods: int64 = 1) -> DataFrame`
-- `log_returns(periods: int64 = 1) -> DataFrame`
-- `diff(periods: int64 = 1) -> DataFrame`
-- `lag(periods: int64 = 1) -> DataFrame`
-- `lead(periods: int64 = 1) -> DataFrame`
-- `rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {}) -> DataFrame`
-- `rolling(duration: string_view, statistic: WindowStatistic = Mean, options: StatisticOptions = {}, closure: WindowClosure = Right) -> DataFrame`
-- `expanding(statistic: WindowStatistic = Mean, options: StatisticOptions = {}) -> DataFrame`
-- `ewm(alpha: double, statistic: WindowStatistic = Mean, adjusted: bool = true, bias_corrected: bool = true, min_count: int64 = 1, ignore_nulls: bool = false) -> DataFrame`
-- `zscore_rolling(window: int64, min_periods: int64 = 1, epsilon: double = 1e-12) -> DataFrame`
-- `fill_gaps(mode: GapFillMode = Forward, constant: optional<double> = nullopt) -> DataFrame`
-- `sort(ascending: bool = true, nulls_last: bool = true) -> DataFrame`
-- `resample(freq: string_view, step: int64 = 1) -> DataFrameTsResampler`
-- `resample(freq: string_view, op: ResampleOp, step: int64 = 1) -> DataFrame`
-- `resample(time_feature: string_view, freq: string_view, step: int64 = 1) -> DataFrameTsResampler`
-- `resample(time_feature: string_view, freq: string_view, op: ResampleOp, step: int64 = 1) -> DataFrame`
-- `asfreq(freq: string_view, step: int64 = 1, fill_mode: GapFillMode = Forward, constant: optional<double> = nullopt, op: ResampleOp = Last) -> DataFrame`
-- `asfreq(time_feature: string_view, freq: string_view, step: int64 = 1, fill_mode: GapFillMode = Forward, constant: optional<double> = nullopt, op: ResampleOp = Last) -> DataFrame`
-- `insert_gaps(freq: string_view, step: int64 = 1) -> DataFrame`
-- `insert_gaps(time_feature: string_view, freq: string_view, step: int64 = 1) -> DataFrame`
-- `align_to(target_axis: Slate, mode: TsAlignMode = Exact) -> DataFrame`
-- `align_to(time_feature: string_view, target_axis: Slate, mode: TsAlignMode = Exact) -> DataFrame`
-- `reindex_time(target_axis: Slate, mode: TsAlignMode = Exact, fill: TsReindexFill = None, constant: optional<double> = nullopt) -> DataFrame`
-- `reindex_time(time_feature: string_view, target_axis: Slate, mode: TsAlignMode = Exact, fill: TsReindexFill = None, constant: optional<double> = nullopt) -> DataFrame`
-- `calendar(time_feature: string_view) -> DataFrame`
-- `lag_block(lags: {int64...}) -> DataFrame`
-- `rolling_block(windows: {int64...}, options: TsRollingBlockOptions = {}) -> DataFrame`
+- `DataFrame returns(periods: int64 = 1)`
+- `DataFrame log_returns(periods: int64 = 1)`
+- `DataFrame diff(periods: int64 = 1)`
+- `DataFrame lag(periods: int64 = 1)`
+- `DataFrame lead(periods: int64 = 1)`
+- `DataFrame rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {})`
+- `DataFrame rolling(duration: string_view, statistic: WindowStatistic = Mean, options: StatisticOptions = {}, closure: WindowClosure = Right)`
+- `DataFrame expanding(statistic: WindowStatistic = Mean, options: StatisticOptions = {})`
+- `DataFrame ewm(alpha: double, statistic: WindowStatistic = Mean, adjusted: bool = true, bias_corrected: bool = true, min_count: int64 = 1, ignore_nulls: bool = false)`
+- `DataFrame zscore_rolling(window: int64, min_periods: int64 = 1, epsilon: double = 1e-12)`
+- `DataFrame fill_gaps(mode: GapFillMode = Forward, constant: optional<double> = nullopt)`
+- `DataFrame sort(ascending: bool = true, nulls_last: bool = true)`
+- `DataFrameTsResampler resample(freq: string_view, step: int64 = 1)`
+- `DataFrame resample(freq: string_view, op: ResampleOp, step: int64 = 1)`
+- `DataFrameTsResampler resample(time_feature: string_view, freq: string_view, step: int64 = 1)`
+- `DataFrame resample(time_feature: string_view, freq: string_view, op: ResampleOp, step: int64 = 1)`
+- `DataFrame asfreq(freq: string_view, step: int64 = 1, fill_mode: GapFillMode = Forward, constant: optional<double> = nullopt, op: ResampleOp = Last)`
+- `DataFrame asfreq(time_feature: string_view, freq: string_view, step: int64 = 1, fill_mode: GapFillMode = Forward, constant: optional<double> = nullopt, op: ResampleOp = Last)`
+- `DataFrame insert_gaps(freq: string_view, step: int64 = 1)`
+- `DataFrame insert_gaps(time_feature: string_view, freq: string_view, step: int64 = 1)`
+- `DataFrame align_to(target_axis: Slate, mode: TsAlignMode = Exact)`
+- `DataFrame align_to(time_feature: string_view, target_axis: Slate, mode: TsAlignMode = Exact)`
+- `DataFrame reindex_time(target_axis: Slate, mode: TsAlignMode = Exact, fill: TsReindexFill = None, constant: optional<double> = nullopt)`
+- `DataFrame reindex_time(time_feature: string_view, target_axis: Slate, mode: TsAlignMode = Exact, fill: TsReindexFill = None, constant: optional<double> = nullopt)`
+- `DataFrame calendar(time_feature: string_view)`
+- `DataFrame lag_block(lags: {int64...})`
+- `DataFrame rolling_block(windows: {int64...}, options: TsRollingBlockOptions = {})`
 
 ### Example
 
@@ -135,18 +135,18 @@ auto six_hour_ffill = values.ts().resample("6H").ffill();
 
 ### API Signature
 
-- `returns(periods: int64 = 1) -> Slate`
-- `log_returns(periods: int64 = 1) -> Slate`
-- `diff(periods: int64 = 1) -> Slate`
-- `lag(periods: int64 = 1) -> Slate`
-- `lead(periods: int64 = 1) -> Slate`
-- `rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {}) -> Slate`
-- `rolling(axis: Slate, duration: string_view, statistic: WindowStatistic = Mean, options: StatisticOptions = {}, closure: WindowClosure = Right) -> Slate`
-- `expanding(statistic: WindowStatistic = Mean, options: StatisticOptions = {}) -> Slate`
-- `ewm(alpha: double, statistic: WindowStatistic = Mean, adjusted: bool = true, bias_corrected: bool = true, min_count: int64 = 1, ignore_nulls: bool = false) -> Slate`
-- `zscore_rolling(window: int64, min_periods: int64 = 1, epsilon: double = 1e-12) -> Slate`
-- `fill_gaps(mode: GapFillMode = Forward, constant: optional<double> = nullopt) -> Slate`
-- `resample(axis: Slate, freq: string_view, op: ResampleOp = Mean, step: int64 = 1) -> TimeSeriesResample`
+- `Slate returns(periods: int64 = 1)`
+- `Slate log_returns(periods: int64 = 1)`
+- `Slate diff(periods: int64 = 1)`
+- `Slate lag(periods: int64 = 1)`
+- `Slate lead(periods: int64 = 1)`
+- `Slate rolling(window: int64, statistic: WindowStatistic = Mean, options: WindowOptions = {})`
+- `Slate rolling(axis: Slate, duration: string_view, statistic: WindowStatistic = Mean, options: StatisticOptions = {}, closure: WindowClosure = Right)`
+- `Slate expanding(statistic: WindowStatistic = Mean, options: StatisticOptions = {})`
+- `Slate ewm(alpha: double, statistic: WindowStatistic = Mean, adjusted: bool = true, bias_corrected: bool = true, min_count: int64 = 1, ignore_nulls: bool = false)`
+- `Slate zscore_rolling(window: int64, min_periods: int64 = 1, epsilon: double = 1e-12)`
+- `Slate fill_gaps(mode: GapFillMode = Forward, constant: optional<double> = nullopt)`
+- `TimeSeriesResample resample(axis: Slate, freq: string_view, op: ResampleOp = Mean, step: int64 = 1)`
 
 ### Example
 

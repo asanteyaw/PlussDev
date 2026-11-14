@@ -28,7 +28,7 @@ int main() {
   // x^2 sin(x y) exp(cos x) is odd in x: even * odd * even.
   const math::Function odd = math::function({"x", "y"}, [](math::Function x, math::Function y) { return x.pow(2) * (x * y).sin() * x.cos().exp(); });
   const math::Function symmetric = operators::integral("x", -2.0, 2.0)(odd);
-  out.writeln("odd integrand, [-2, 2]  (", kind(symmetric), ")", symmetric({y}).pull<double>());
+  out.writeln("odd integrand, [-2, 2]  (", kind(symmetric), ")", symmetric({y}).items<double>());
 
   // x^2 exp(cos x) is even: no shortcut, so it is integrated numerically.
   const math::Function even = math::function({"x"}, [](math::Function x) { return x.pow(2) * x.cos().exp(); });
@@ -76,10 +76,10 @@ int main() {
   const auto x = pluss::make_series({0.1, 0.25, 0.75, 1.0});
   out.writeln("provenance of the integral:", anchored.provenance() == math::Provenance::Quadrature ? "quadrature" : "exact",
               ", of its derivative:", recovered.provenance() == math::Provenance::Structural ? "exact" : "quadrature");
-  out.writeln("d/dx of the integral ", recovered({x}).pull<double>());
-  out.writeln("the integrand        ", kernel({x}).pull<double>());
-  out.writeln("second derivative    ", slope({x}).pull<double>());
-  out.writeln("integrand's slope    ", kernel_slope({x}).pull<double>());
+  out.writeln("d/dx of the integral ", recovered({x}).items<double>());
+  out.writeln("the integrand        ", kernel({x}).items<double>());
+  out.writeln("second derivative    ", slope({x}).items<double>());
+  out.writeln("integrand's slope    ", kernel_slope({x}).items<double>());
 }
 ```
 
@@ -117,9 +117,9 @@ int main() {
   const math::Function sensitivity = operators::differential("a")(area);
 
   const auto a = pluss::make_series({1.0, 2.0});
-  out.writeln("d(integral)/da   ", sensitivity({a}).pull<double>());
+  out.writeln("d(integral)/da   ", sensitivity({a}).items<double>());
   std::vector<double> closed;
-  for (const double value : a.pull<double>()) closed.push_back(-(std::sqrt(M_PI) * std::erf(value) / (2.0 * value * value) - std::exp(-value * value) / value));
+  for (const double value : a.items<double>()) closed.push_back(-(std::sqrt(M_PI) * std::erf(value) / (2.0 * value * value) - std::exp(-value * value) / value));
   out.writeln("closed form      ", closed);
   out.writeln("provenance:", sensitivity.provenance() == math::Provenance::Quadrature ? "quadrature" : "exact");
 }
@@ -137,3 +137,12 @@ The sensitivity of the integral to the parameter agrees with the closed form to 
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="numerical_integrals_and_batches.html">
+    <span class="label">Previous</span>
+    <span class="title">Numerical integrals and batches</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

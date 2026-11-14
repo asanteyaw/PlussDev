@@ -45,3 +45,16 @@ adapted integrand: Skorokhod -0.60934, Ito sum -0.60934
 anticipating u = W_T: mean |delta(u) - (W_T^2 - 1)| = 0.00000
 ```
 The first line shows the two sums agree on an adapted integrand, −0.60934 on both sides. The second shows the anticipating identity: the mean absolute difference between `δ(u)` and `W_T² − 1` is 0.00000 to the printed digits. The cost is one reverse pass per increment, so use it on the grid sizes of a test or a sensitivity, not on millions of steps.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_derivative_of_two_functionals.html">
+    <span class="label">Previous</span>
+    <span class="title">The derivative of two functionals</span>
+  </a>
+  <a class="next-link" href="a_digital_option_s_delta.html">
+    <span class="label">Next</span>
+    <span class="title">A digital option's delta</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

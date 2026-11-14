@@ -1,0 +1,116 @@
+# Moist air
+
+[Back to Thermal 2: Exchangers and Air](../thermal_02_exchangers_and_air.md)
+
+Air in a building carries water vapour, and the water matters for comfort, for condensation and for the energy it takes to cool: a good part of a cooling coil's load is latent. This page computes the state of moist air from dry-bulb temperature, humidity and pressure, finds its dew point and wet bulb, splits a load into sensible and latent parts, and mixes streams.
+
+## The mental model
+
+Moist air is a mixture of dry air and water vapour, and its state is fixed by three numbers: the dry-bulb temperature `t` (degrees Celsius), the humidity ratio `w` (kilograms of water per kilogram of dry air) and the total pressure `p` (pascals). Everything else follows: relative humidity compares the vapour pressure with the saturation pressure at `t`; enthalpy is per kilogram of **dry** air; the dew point is the temperature at which the saturation pressure equals the vapour pressure. The reference state of the enthalpy is dry air at 0 degrees and liquid water at 0 degrees, both zero. These functions use degrees Celsius and pascals; the property provider on the next page uses kelvin.
+
+## Saturation pressure
+
+The pressure at which water vapour is in equilibrium with liquid water, and below 0 degrees with ice:
+
+@@example Eng/api/thermal_psat_table.cpp@@
+
+The last value is the boiling point at one atmosphere. Across the freezing point the liquid and ice correlations meet:
+
+@@example Eng/api/thermal_psat_ice.cpp@@
+
+## Humidity ratio and relative humidity
+
+The humidity ratio of air at 25 degrees and 50 % relative humidity:
+
+@@example Eng/api/thermal_ratio_basic.cpp@@
+
+At altitude the same temperature and relative humidity carry more water per kilogram of dry air, because the total pressure is lower:
+
+@@example Eng/api/thermal_ratio_pressure.cpp@@
+
+`rh` runs the other way. Warming air at constant `w` lowers its relative humidity; cooling raises it, and above 1 the air could not hold the water as vapour:
+
+@@example Eng/api/thermal_rh_basic.cpp@@
+
+@@example Eng/api/thermal_rh_roundtrip.cpp@@
+
+## Enthalpy, sensible and latent
+
+The enthalpy per kilogram of dry air is `1006 t + w (2501000 + 1860 t)`: a sensible part for the air and the vapour, and the latent heat carried by the vapour.
+
+@@example Eng/api/thermal_enth_basic.cpp@@
+
+A cooling coil that takes 1 kg/s of dry air from 30 degrees and `w = 0.014` to 15 degrees and `w = 0.0106` removes the difference of the two enthalpies; the formula splits that load exactly into a sensible part for the temperature drop and a latent part for the water removed:
+
+@@example Eng/api/thermal_enth_split.cpp@@
+
+More than a third of this load is latent, which a sensible-only calculation would miss entirely.
+
+## Volume and density
+
+The specific volume per kilogram of dry air gives the volume flow of an air stream, and the density of the mixture is `(1 + w) / vol`:
+
+@@example Eng/api/thermal_vol_basic.cpp@@
+
+Humid air is lighter than dry air at the same temperature and pressure, because water vapour is lighter than air:
+
+@@example Eng/api/thermal_vol_density.cpp@@
+
+## Dew point and wet bulb
+
+The dew point is the temperature to which air must be cooled, at constant `w`, before water starts to condense; at that temperature `rh` is exactly one.
+
+@@example Eng/api/thermal_dew_basic.cpp@@
+
+@@example Eng/api/thermal_dew_roundtrip.cpp@@
+
+The wet bulb is the temperature a wetted thermometer settles at in a fast stream. For unsaturated air the order is always dew point below wet bulb below dry bulb:
+
+@@example Eng/api/thermal_wet_basic.cpp@@
+
+They coincide at saturation and separate as the air dries:
+
+@@example Eng/api/thermal_wet_saturated.cpp@@
+
+Below freezing the wet bulb becomes an ice bulb, and the function switches to the ice energy balance automatically:
+
+@@example Eng/api/thermal_wet_ice.cpp@@
+
+## Mixing streams
+
+Mixing conserves dry air, water and enthalpy. Equal flows of warm, humid air and cool, dry air:
+
+@@example Eng/api/thermal_mix_basic.cpp@@
+
+The humidity ratio averages exactly and the temperature, recovered from the averaged enthalpy, is 20.05 rather than the arithmetic 20 because the specific heat of the mixture depends on `w`. An economiser mixes outdoor air into the return air in a controllable fraction:
+
+@@example Eng/api/thermal_mix_ratio.cpp@@
+
+## Decisions
+
+- **Which state variables:** `t`, `w` and `p`; convert from relative humidity with `ratio` and back with `rh`.
+- **Load:** enthalpy difference times dry-air mass flow, split into sensible (temperature) and latent (humidity ratio) parts.
+- **Is a surface wet:** compare its temperature with the dew point of the air next to it.
+- **Mixing:** use `mix`, not an average of temperatures.
+
+## Pitfalls
+
+Mixing two saturated streams can make air that is supersaturated: the straight-line mix lies above the saturation curve and fog forms.
+
+@@example Eng/api/thermal_mix_condensing.cpp@@
+
+`mix` returns the state before condensation, and `rh` reports 1.27, so the result is visibly unphysical rather than silently wrong.
+
+Units are the other trap: these functions take degrees Celsius, so a temperature in kelvin is refused (and the property provider, which takes kelvin, refuses Celsius):
+
+@@example Eng/api/thermal_pitfall_units.cpp@@
+
+Humidity above 1, a vapour pressure that reaches the total pressure, a dew point that does not exist (dry air) and supersaturated air in `wet` are all refused with the reason named:
+
+@@example Eng/api/thermal_ratio_errors.cpp@@
+
+@@example Eng/api/thermal_wet_errors.cpp@@
+
+## Where next
+
+Reference pages: [`psat`](../../../../api/eng/thermal/air/psat.md), [`ratio`](../../../../api/eng/thermal/air/ratio.md), [`rh`](../../../../api/eng/thermal/air/rh.md), [`enth`](../../../../api/eng/thermal/air/enth.md), [`vol`](../../../../api/eng/thermal/air/vol.md), [`dew`](../../../../api/eng/thermal/air/dew.md), [`wet`](../../../../api/eng/thermal/air/wet.md), [`mix`](../../../../api/eng/thermal/air/mix.md), [`MixState`](../../../../api/eng/thermal/air/MixState.md). Next: [Properties and a recovery ventilator](properties_and_systems.md).

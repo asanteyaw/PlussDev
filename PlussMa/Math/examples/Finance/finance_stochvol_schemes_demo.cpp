@@ -33,7 +33,7 @@ int main() {
            pluss::subsp::math::finance::volatility::SimScheme::Transition}) {
     opt.scheme = scheme;
     opt.method = pluss::subsp::math::finance::volatility::RandMethod::Pseudo;
-    const auto p = pluss::subsp::math::finance::volatility::heston_paths(64, 4, 100.0, 1.0 / 252.0, hp, opt, cfg, opt.seed);
+    const auto p = pluss::subsp::math::finance::volatility::detail::heston_paths(64, 4, 100.0, 1.0 / 252.0, hp, opt, cfg, opt.seed);
     std::cout << "heston scheme=" << static_cast<int>(scheme) << "\n";
     std::cout << "spot=" << p.spot << "\n";
     std::cout << "variance=" << p.variance << "\n";
@@ -44,22 +44,22 @@ int main() {
   opt.randomized_quasi = true;
   opt.sobol_scrambling = 3;
   opt.offset = 128;
-  const auto p_sob = pluss::subsp::math::finance::volatility::heston_paths(64, 4, 100.0, 1.0 / 252.0, hp, opt, cfg, opt.seed);
+  const auto p_sob = pluss::subsp::math::finance::volatility::detail::heston_paths(64, 4, 100.0, 1.0 / 252.0, hp, opt, cfg, opt.seed);
   std::cout << "heston sobol randomized\n";
   std::cout << "spot=" << p_sob.spot << "\n";
 
   opt.method = pluss::subsp::math::finance::volatility::RandMethod::Halton;
-  const auto p_hal = pluss::subsp::math::finance::volatility::heston_paths(64, 4, 100.0, 1.0 / 252.0, hp, opt, cfg, opt.seed);
+  const auto p_hal = pluss::subsp::math::finance::volatility::detail::heston_paths(64, 4, 100.0, 1.0 / 252.0, hp, opt, cfg, opt.seed);
   std::cout << "heston halton randomized\n";
   std::cout << "spot=" << p_hal.spot << "\n";
 
   opt.method = pluss::subsp::math::finance::volatility::RandMethod::Torus;
-  const auto p_tor = pluss::subsp::math::finance::volatility::heston_paths(64, 4, 100.0, 1.0 / 252.0, hp, opt, cfg, opt.seed);
+  const auto p_tor = pluss::subsp::math::finance::volatility::detail::heston_paths(64, 4, 100.0, 1.0 / 252.0, hp, opt, cfg, opt.seed);
   std::cout << "heston torus randomized\n";
   std::cout << "spot=" << p_tor.spot << "\n";
 
   opt.method = pluss::subsp::math::finance::volatility::RandMethod::Sobol;
-  const auto p_sv = pluss::subsp::math::finance::volatility::sv_paths(64, 4, 100.0, 1.0 / 252.0, sp, opt, cfg, opt.seed);
+  const auto p_sv = pluss::subsp::math::finance::volatility::detail::sv_paths(64, 4, 100.0, 1.0 / 252.0, sp, opt, cfg, opt.seed);
   std::cout << "sv sobol randomized\n";
   std::cout << "spot=" << p_sv.spot << "\n";
   std::cout << "variance=" << p_sv.variance << "\n";
@@ -71,7 +71,7 @@ int main() {
   qsp.rho = -0.2;
   qsp.mu = 0.0;
   opt.method = pluss::subsp::math::finance::volatility::RandMethod::Sobol;
-  const auto p_sabr = pluss::subsp::math::finance::volatility::sabr_paths(64, 4, 100.0, 1.0 / 252.0, qsp, opt, cfg, opt.seed);
+  const auto p_sabr = pluss::subsp::math::finance::volatility::detail::sabr_paths(64, 4, 100.0, 1.0 / 252.0, qsp, opt, cfg, opt.seed);
   std::cout << "sabr sobol randomized\n";
   std::cout << "forward=" << p_sabr.spot << "\n";
   std::cout << "alpha2=" << p_sabr.variance << "\n";
@@ -87,7 +87,7 @@ int main() {
   slvp.local_vol_level = 0.95;
   slvp.local_vol_curvature = 0.2;
   opt.method = pluss::subsp::math::finance::volatility::RandMethod::Halton;
-  const auto p_slv = pluss::subsp::math::finance::volatility::slv_paths(64, 4, 100.0, 1.0 / 252.0, slvp, opt, cfg, opt.seed);
+  const auto p_slv = pluss::subsp::math::finance::volatility::detail::slv_paths(64, 4, 100.0, 1.0 / 252.0, slvp, opt, cfg, opt.seed);
   std::cout << "slv halton randomized\n";
   std::cout << "spot=" << p_slv.spot << "\n";
   std::cout << "variance=" << p_slv.variance << "\n";
@@ -102,7 +102,7 @@ int main() {
   mc.offset = 256;
   mc.seed = 20260402ULL;
 
-  const double h_mc = pluss::subsp::math::finance::pricing::heston_price_mc(
+  const double h_mc = pluss::subsp::math::finance::pricing::detail::heston_price_mc(
       pluss::subsp::math::finance::pricing::OptionType::Call,
       100.0,
       100.0,
@@ -112,7 +112,7 @@ int main() {
       hp,
       mc,
       cfg);
-  const double sv_mc = pluss::subsp::math::finance::pricing::sv_price_mc(
+  const double sv_mc = pluss::subsp::math::finance::pricing::detail::sv_price_mc(
       pluss::subsp::math::finance::pricing::OptionType::Call,
       100.0,
       100.0,
@@ -124,7 +124,7 @@ int main() {
       cfg);
 
   mc.antithetic = true;
-  const double h_mc_anti = pluss::subsp::math::finance::pricing::heston_price_mc(
+  const double h_mc_anti = pluss::subsp::math::finance::pricing::detail::heston_price_mc(
       pluss::subsp::math::finance::pricing::OptionType::Call,
       100.0,
       100.0,
@@ -137,7 +137,7 @@ int main() {
 
   mc.control_variate = true;
   mc.control_vol = std::sqrt(hp.theta);
-  const double h_mc_cv = pluss::subsp::math::finance::pricing::heston_price_mc(
+  const double h_mc_cv = pluss::subsp::math::finance::pricing::detail::heston_price_mc(
       pluss::subsp::math::finance::pricing::OptionType::Call,
       100.0,
       100.0,
@@ -150,7 +150,7 @@ int main() {
 
   mc.importance_sampling = true;
   mc.importance_shift = 0.15;
-  const double h_mc_is = pluss::subsp::math::finance::pricing::heston_price_mc(
+  const double h_mc_is = pluss::subsp::math::finance::pricing::detail::heston_price_mc(
       pluss::subsp::math::finance::pricing::OptionType::Call,
       100.0,
       100.0,

@@ -1,0 +1,61 @@
+# `comms::derot`
+
+Removing a carrier offset.
+
+## Signature
+
+```cpp
+pluss::Series comms::derot(const pluss::Series& symbols, const pluss::Series& cycles_per_symbol, const pluss::Series& phase);
+```
+
+## What It Does
+
+Multiplies symbol `n` by `exp(-j (2 pi f n + phi))`, undoing a carrier frequency offset `f` (in cycles per symbol) and a phase `phi` (in radians).
+
+## Parameters
+
+`symbols`
+: Complex symbols, `[..., N]`.
+
+`cycles_per_symbol`
+: The frequency offset, a scalar or `[...]`.
+
+`phase`
+: The phase offset, a scalar or `[...]`.
+
+## Returns
+
+A complex array of the shape of `symbols`.
+
+## Errors
+
+Throws `pluss::Error` for symbols that are not a complex array.
+
+## Interpretation and Use
+
+Use a negative `f` to apply an offset, for example to build a test signal. The result of `cfo` can be passed directly.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The angles after derotating.
+
+@@example Eng/api/comms_derotate_basic.cpp@@
+
+### Example 2
+
+One offset per frame.
+
+@@example Eng/api/comms_derotate_batch.cpp@@
+
+### Example 3
+
+Rejected input.
+
+@@example Eng/api/comms_derotate_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

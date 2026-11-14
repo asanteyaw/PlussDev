@@ -113,3 +113,16 @@ rolling 3       10.0000  11.0000  11.0000  12.6667  13.3333  15.6667  16.3333
 
 - [`expanding_std`](expanding_std.md)
 - [`rolling_mean`](rolling_mean.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ewm_std.html">
+    <span class="label">Previous</span>
+    <span class="title">ewm_std</span>
+  </a>
+  <a class="next-link" href="expanding_std.html">
+    <span class="label">Next</span>
+    <span class="title">expanding_std</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

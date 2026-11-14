@@ -30,5 +30,12 @@ Each test adds its own fields (degrees of freedom, means, standard errors, an in
 
 For the tests of time series (unit roots, stationarity, ARCH effects, forecast comparison) see the time-series reference.
 
-<!-- apiref:toctree:start -->
-<!-- apiref:toctree:end -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+infer/means_and_variances
+infer/ranks_and_signs
+infer/distributions
+infer/groups_and_tables
+```

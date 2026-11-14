@@ -33,4 +33,13 @@ The module is `pluss::subsp::math::integ`. Its two ideas:
 5. Always read `converged` and `error_estimate`.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+integration_01_data_and_functions/integrating_data
+integration_01_data_and_functions/integrating_a_function
+integration_01_data_and_functions/the_rules
+integration_01_data_and_functions/tolerance_and_honest_failure
+```
 <!-- apiref:toctree:end -->

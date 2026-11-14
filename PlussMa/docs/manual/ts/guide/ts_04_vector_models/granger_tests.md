@@ -206,3 +206,16 @@ Each table lists the tested pairs: entry `i` tests whether series `cause[i]` hel
 - **Many tests, many false positives.** A system of `k` series has `k(k − 1)` pairwise tests; with `k = 6` that is 30, and one or two will reject by chance at 5%.
 
 Where next: [The rank of a cointegrated system](the_rank_of_a_cointegrated_system.md) turns to series that wander but stay together.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="impulse_responses_and_variance_decompositions.html">
+    <span class="label">Previous</span>
+    <span class="title">Impulse responses and variance decompositions</span>
+  </a>
+  <a class="next-link" href="the_rank_of_a_cointegrated_system.html">
+    <span class="label">Next</span>
+    <span class="title">The rank of a cointegrated system</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -14,6 +14,15 @@ endif()
 
 list(GET staged_dirs 0 staged_dir)
 get_filename_component(staged_name "${staged_dir}" NAME)
+find_program(_pluss_python NAMES python3 python REQUIRED)
+execute_process(
+  COMMAND "${_pluss_python}" "${DISTRIBUTION_SOURCE_DIR}/tools/check_distribution_relocation.py"
+          "${staged_dir}" "${DISTRIBUTION_SOURCE_DIR}" "${DISTRIBUTION_BUILD_DIR}"
+  RESULT_VARIABLE relocation_result
+)
+if(NOT relocation_result EQUAL 0)
+  message(FATAL_ERROR "Staged distribution contains build-machine paths")
+endif()
 set(DISTRIBUTION_ARCHIVE "${DISTRIBUTION_BUILD_DIR}/${staged_name}.zip")
 execute_process(
   COMMAND "${CMAKE_COMMAND}" -E tar cf "${DISTRIBUTION_ARCHIVE}" --format=zip "${staged_name}"

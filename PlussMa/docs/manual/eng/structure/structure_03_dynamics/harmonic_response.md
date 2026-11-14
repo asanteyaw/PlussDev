@@ -1,0 +1,542 @@
+<!-- generated from harmonic_response.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Harmonic response
+
+[Back to Structures 3: Dynamics](../structure_03_dynamics.md)
+
+A machine turning at a steady speed pushes on its supports with a force that varies sinusoidally, and after a while the structure settles into a steady oscillation at the same frequency. How large is that oscillation, and how does it depend on the frequency? `structure::harmonic` computes the steady response to a sinusoidal load directly, for many frequencies in one call, with no time stepping. This page sweeps the frequency of a load on a cantilever, checks the sweep against a sum over the natural modes, shows how damping controls the resonance peak, and reads the support reactions that a vibrating structure sends into its foundation.
+
+## The mental model
+
+For a load `f e^{i omega t}` the steady response is `u e^{i omega t}`, with a complex amplitude `u` (its size is the amplitude and its angle is the phase lag behind the load), found from
+
+```{math}
+\left( K + i \omega C - \omega^2 M \right) u = f, \qquad C = a M + b K.
+```
+
+`harmonic(frame, load, omega, fix, options)` solves this for every frequency in `omega`. The load has a leading frequency axis, `[..., frequency, node, 3]`, and may be complex; a real load is taken as having zero phase. It returns a `HarmonicResult`:
+
+| Member | Shape | Meaning |
+|---|---|---|
+| `omega` | `[frequency]` | the angular frequencies, in radians per second |
+| `displacement` | `[..., frequency, node, 3]` | complex amplitude of every node's motion |
+| `velocity` | same | `i omega u` |
+| `acceleration` | same | `-omega^2 u` |
+| `reaction` | same | the complex amplitude of the support force and moment; zero at free degrees of freedom |
+| `residual_norm`, `relative_residual`, `converged` | `[..., frequency]` | solve diagnostics for each frequency |
+| `iterations`, `operator_evaluations`, `restarts` | (numbers) | the work of the iterative solve |
+
+`HarmonicOptions` holds the damping `mass_damping` (`a`) and `stiffness_damping` (`b`) that `motion` also uses, the settings of the iterative complex solver in `solve`, and `fail_on_nonconvergence`. The physical motion at a frequency is the real part, `Re(u e^{i omega t})`; its amplitude is `|u|` and its phase lag behind the load is `-arg(u)`.
+
+Near a natural frequency the matrix is almost singular and the response large; the damping alone keeps it finite. An undamped structure driven exactly at a natural frequency has no steady response at all: the amplitude grows without bound as the frequency approaches it, as the pitfalls section shows.
+
+## A frequency sweep, checked against the modes
+
+The structure is the cantilever of the previous pages: eight members, `2 m` long, `E I = 16.67 kN m^2`, steel density, natural frequencies `40.5, 253.8, 710.7 rad/s` and so on. A `10 N` load at the tip with stiffness damping `b = 1e-4` (a damping ratio `zeta_n = b omega_n / 2`, which is `0.002` for the first mode) is applied at six frequencies: well below, below, at, just above, well above the first mode, and at the second.
+
+The same response is also the sum over the modes: with mass-normalised shapes `phi_n`, the tip amplitude at frequency `omega` is
+
+```{math}
+u = \sum_n \frac{\phi_n(\text{tip})^2 \, F}{\omega_n^2 - \omega^2 + 2 i \zeta_n \omega_n \omega}.
+```
+
+The program computes both, the direct solve for all six frequencies in one call, and the sum over six modes, and prints them with the amplitude and phase.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 8;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to},
+                               {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9)), vec(std::vector<double>(members, 7850.0))});
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  const std::size_t tip = 3 * members + 1;
+  const double force = 10.0, b = 1e-4;
+
+  // the direct solve: one load per frequency, all in one call
+  const std::vector<double> frequencies = {10, 30, 40.5, 41.5, 100, 253.8};
+  std::vector<double> loads;
+  for (std::size_t f = 0; f < frequencies.size(); ++f) {
+    std::vector<double> load(3 * (members + 1), 0.0);
+    load[tip] = force;
+    loads.insert(loads.end(), load.begin(), load.end());
+  }
+  st::HarmonicOptions options;
+  options.stiffness_damping = b;
+  const auto h = st::harmonic(frame, pluss::series::make(loads).reshape({(std::int64_t)frequencies.size(), members + 1, 3}), vec(frequencies), wall, options);
+  const auto tip_motion = h.displacement.select(-2, members).select(-1, 1);
+  const auto re = flat(tip_motion.real()), im = flat(tip_motion.imag());
+
+  // the mode sum
+  st::EigOptions eig;
+  eig.count = 6;
+  const auto modes = st::modes(frame, wall, eig);
+  const auto omega = flat(modes.omega), shape = flat(modes.shape);
+
+  out.writeln("converged at every frequency: ", h.converged.all().item<bool>());
+  out.writeln("omega      direct (amplitude mm, phase deg)         mode sum, 6 modes (amplitude mm, phase deg)");
+  for (std::size_t f = 0; f < frequencies.size(); ++f) {
+    std::complex<double> sum = 0.0;
+    for (int n = 0; n < 6; ++n) {
+      const double phi = shape[n * 3 * (members + 1) + tip];
+      const double zeta = b * omega[n] / 2.0;
+      sum += phi * phi * force / std::complex<double>(omega[n] * omega[n] - frequencies[f] * frequencies[f], 2.0 * zeta * omega[n] * frequencies[f]);
+    }
+    out.writeln(frequencies[f], "     ", 1000.0 * std::hypot(re[f], im[f]), "  ", std::atan2(im[f], re[f]) * 180.0 / M_PI, "          ", 1000.0 * std::abs(sum), "  ", std::arg(sum) * 180.0 / M_PI);
+  }
+}
+```
+
+Output
+
+```text
+converged at every frequency: true
+omega      direct (amplitude mm, phase deg)         mode sum, 6 modes (amplitude mm, phase deg)
+10.0000     1.7010  -0.0609          1.7007  -0.0609
+30.0000     3.4886  -0.3780          3.4883  -0.3780
+40.5000     383.4239  -88.8527          383.4239  -88.8528
+41.5000     30.9660  -175.2389          30.9662  -175.2389
+100.0000     0.2505  -179.7192          0.2508  -179.7201
+253.8000     1.5585  -90.4970          1.5585  -90.5069
+```
+
+The direct solve and the mode sum agree to about a part in a thousand at the worst frequency (the small gap is the stiffness of the modes beyond the six). The phase tells the story of a resonance. Below the first natural frequency the tip moves almost in phase with the load, `-0.06` degrees at `10 rad/s`. At resonance it lags by almost `90` degrees and the amplitude is at its peak, `383 mm` for a `10 N` load, against a static deflection of `1.6 mm`. Above the first frequency it lags by nearly `180` degrees, moving against the load, and the amplitude falls to `0.25 mm` at `100 rad/s`. At `253.8 rad/s`, the second frequency, the response peaks again with a lag of about `90` degrees.
+
+## Damping and the size of the peak
+
+At resonance the response is limited by damping alone. For a lightly damped mode the tip amplitude at its natural frequency is, from the mode sum, `phi_1(tip)^2 F / (2 zeta_1 omega_1^2)`: halve the damping and the peak doubles. The program drives the tip at the first natural frequency, with the stiffness damping chosen for `zeta_1 = 0.002, 0.01` and `0.05`, and compares the solver's amplitude with that formula.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 8;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to},
+                               {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9)), vec(std::vector<double>(members, 7850.0))});
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  const std::size_t tip = 3 * members + 1;
+
+  const auto modes = st::modes(frame, wall);
+  const double omega = flat(modes.omega)[0], phi = flat(modes.shape)[tip], force = 10.0;
+  std::vector<double> load(3 * (members + 1), 0.0);
+  load[tip] = force;
+  const auto loads = grid(load, 3).reshape({1, members + 1, 3});
+
+  for (double zeta : {0.002, 0.01, 0.05}) {
+    st::HarmonicOptions options;
+    options.stiffness_damping = 2.0 * zeta / omega;
+    const auto h = st::harmonic(frame, loads, vec({omega}), wall, options);
+    const double amplitude = flat(h.displacement.select(-2, members).select(-1, 1).abs())[0];
+    out.writeln("zeta ", zeta, ": peak tip amplitude (mm) ", 1000.0 * amplitude, "   formula phi^2 F / (2 zeta omega^2) = ", 1000.0 * phi * phi * force / (2.0 * zeta * omega * omega));
+  }
+}
+```
+
+Output
+
+```text
+zeta 0.0020: peak tip amplitude (mm) 388.2926   formula phi^2 F / (2 zeta omega^2) = 388.2924
+zeta 0.0100: peak tip amplitude (mm) 77.6595   formula phi^2 F / (2 zeta omega^2) = 77.6585
+zeta 0.0500: peak tip amplitude (mm) 15.5366   formula phi^2 F / (2 zeta omega^2) = 15.5317
+```
+
+The two agree to better than a tenth of a percent (the difference is the small contribution of the higher modes), and the peak shrinks in proportion to the damping: from `388 mm` to `77.7 mm` to `15.5 mm` as the damping ratio rises from `0.002` to `0.05`. Real structures have damping ratios of one to five percent, much larger than the `0.002` of the sweep above, and the resonant peaks that matter in practice are correspondingly lower. Dividing the peak by the static deflection of `1.6 mm` gives the amplification, close to `1 / (2 zeta)` in every case.
+
+## What the structure sends into its foundation
+
+The `reaction` of a harmonic solve is the force and moment the supports apply, as a complex amplitude at each frequency. For a base-excited or machine-loaded structure it is the quantity that decides foundation loads, and `velocity` and `acceleration` are the quantities that decide comfort and equipment limits. The program reads, at the six frequencies of the sweep, the amplitude of the vertical reaction at the wall relative to the applied `10 N` (a transmissibility: one means the foundation feels exactly the applied load), and checks that `velocity` and `acceleration` are `i omega u` and `-omega^2 u`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const int members = 8;
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  const auto frame = st::frame({grid(position, 2), from, to},
+                               {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9)), vec(std::vector<double>(members, 7850.0))});
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  const std::size_t tip = 3 * members + 1;
+
+  const std::vector<double> frequencies = {10, 30, 40.5, 41.5, 100, 253.8};
+  std::vector<double> loads;
+  for (std::size_t f = 0; f < frequencies.size(); ++f) {
+    std::vector<double> load(3 * (members + 1), 0.0);
+    load[tip] = 10.0;
+    loads.insert(loads.end(), load.begin(), load.end());
+  }
+  st::HarmonicOptions options;
+  options.stiffness_damping = 1e-4;
+  const auto h = st::harmonic(frame, pluss::series::make(loads).reshape({(std::int64_t)frequencies.size(), members + 1, 3}), vec(frequencies), wall, options);
+
+  const auto wall_shear = flat(h.reaction.select(-2, 0).select(-1, 1).abs());   // vertical reaction at node 0, every frequency
+  out.writeln("omega     vertical reaction at the wall / applied load");
+  for (std::size_t f = 0; f < frequencies.size(); ++f) out.writeln(frequencies[f], "     ", wall_shear[f] / 10.0);
+
+  // velocity = i omega u, acceleration = -omega^2 u
+  const auto u = h.displacement.select(-2, members).select(-1, 1);
+  const auto v = h.velocity.select(-2, members).select(-1, 1);
+  const auto a = h.acceleration.select(-2, members).select(-1, 1);
+  double worst_v = 0.0, worst_a = 0.0;
+  for (std::size_t f = 0; f < frequencies.size(); ++f) {
+    const double w = frequencies[f];
+    const double uf = flat(u.abs())[f];
+    worst_v = std::max(worst_v, std::abs(flat(v.abs())[f] - w * uf) / (w * uf));
+    worst_a = std::max(worst_a, std::abs(flat(a.abs())[f] - w * w * uf) / (w * w * uf));
+  }
+  out.writeln("largest relative error of |velocity| against omega |u|: ", worst_v, ",  of |acceleration| against omega^2 |u|: ", worst_a);
+}
+```
+
+Output
+
+```text
+omega     vertical reaction at the wall / applied load
+10.0000     1.1004
+30.0000     2.8920
+40.5000     386.5771
+41.5000     31.8562
+100.0000     1.0239
+253.8000     34.1953
+largest relative error of |velocity| against omega |u|: 0.0000,  of |acceleration| against omega^2 |u|: 0.0000
+```
+
+Away from resonance the foundation feels about the load that was applied: `1.10` times at `10 rad/s` and `1.02` times at `100 rad/s`, a little more than one because the vibrating beam's own inertia loads the wall as well. At the first natural frequency it feels `387` times the applied load, and at the second `34` times, because the structure is moving the way it wants to. Velocity and acceleration amplitudes are the displacement amplitude times `omega` and `omega^2`, exactly.
+
+## Mass damping and stiffness damping
+
+`HarmonicOptions` has two damping coefficients, and they shape the response differently. Stiffness damping `b` gives mode `n` a damping ratio `b omega_n / 2`, which grows with frequency, so it damps the high modes most. Mass damping `a` gives `a / (2 omega_n)`, which falls with frequency, so it damps the low modes most and barely touches the high ones. The two are set here to give the same ratio, `0.002`, at the first mode; at the second mode, `6.27` times higher in frequency, stiffness damping gives `0.0125` and mass damping only `0.0003`. The program drives the tip at the first and at the second natural frequency under each.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static st::Frame beam(int members) {
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  return st::frame({grid(position, 2), from, to},
+                   {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9)), vec(std::vector<double>(members, 7850.0))});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3).with_sep(""));
+  const int members = 8;
+  const auto frame = beam(members);
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  const std::size_t tip = 3 * members + 1;
+
+  st::EigOptions two;
+  two.count = 2;
+  const auto omega = flat(st::modes(frame, wall, two).omega);
+  const std::vector<double> frequencies = {omega[0], omega[1]};
+  std::vector<double> loads;
+  for (int f = 0; f < 2; ++f) {
+    std::vector<double> load(3 * (members + 1), 0.0);
+    load[tip] = 10.0;
+    loads.insert(loads.end(), load.begin(), load.end());
+  }
+  const auto load = pluss::series::make(loads).reshape({2, members + 1, 3});
+
+  st::HarmonicOptions stiffness;
+  stiffness.stiffness_damping = 2.0 * 0.002 / omega[0];
+  st::HarmonicOptions mass;
+  mass.mass_damping = 2.0 * 0.002 * omega[0];
+  const auto s = flat(st::harmonic(frame, load, vec(frequencies), wall, stiffness).displacement.select(-2, members).select(-1, 1).abs());
+  const auto m = flat(st::harmonic(frame, load, vec(frequencies), wall, mass).displacement.select(-2, members).select(-1, 1).abs());
+  out.writeln("damping ratio at mode 1 and mode 2, stiffness damping: ", stiffness.stiffness_damping * omega[0] / 2.0, " ", stiffness.stiffness_damping * omega[1] / 2.0);
+  out.writeln("damping ratio at mode 1 and mode 2, mass damping:      ", mass.mass_damping / (2.0 * omega[0]), " ", mass.mass_damping / (2.0 * omega[1]));
+  out.writeln("tip amplitude at omega_1 and omega_2 (mm), stiffness damping: ", 1000.0 * s[0], " ", 1000.0 * s[1]);
+  out.writeln("tip amplitude at omega_1 and omega_2 (mm), mass damping:      ", 1000.0 * m[0], " ", 1000.0 * m[1]);
+}
+```
+
+Output
+
+```text
+damping ratio at mode 1 and mode 2, stiffness damping: 0.002 0.013
+damping ratio at mode 1 and mode 2, mass damping:      0.002 0.000
+tip amplitude at omega_1 and omega_2 (mm), stiffness damping: 388.293 1.578
+tip amplitude at omega_1 and omega_2 (mm), mass damping:      388.292 61.974
+```
+
+At the first natural frequency the two give the same peak, as designed; at the second, stiffness damping gives a far smaller peak because it damps that mode six times harder, and mass damping leaves it nearly free to ring. Choose the coefficients for the modes that matter: stiffness damping to tame the high modes, mass damping to tame the low ones, or both to hold a chosen ratio across a band.
+
+## The solver controls
+
+`HarmonicOptions::solve` holds the controls of the iterative complex solver: `max_iterations`, the `restart` length of the Krylov space, and the tolerances. No global matrix is assembled: the dynamic stiffness is applied member by member inside the iteration, so the controls decide whether and how fast it finishes. The program solves three frequencies with the defaults, with a restart length of `4`, with a loose tolerance, and with an iteration budget of `3`, switching the failure off so that an unfinished solve can be inspected, and prints the work each run reports and the resonance amplitude it finds.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+static st::Frame beam(int members) {
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  return st::frame({grid(position, 2), from, to},
+                   {vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9)), vec(std::vector<double>(members, 7850.0))});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2).with_sep(""));
+  const int members = 8;
+  const auto frame = beam(members);
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  const std::size_t tip = 3 * members + 1;
+  std::vector<double> loads;
+  for (int f = 0; f < 3; ++f) {
+    std::vector<double> l(3 * (members + 1), 0.0);
+    l[tip] = 10.0;
+    loads.insert(loads.end(), l.begin(), l.end());
+  }
+  const auto load = pluss::series::make(loads).reshape({3, members + 1, 3});
+
+  st::HarmonicOptions defaults;
+  defaults.stiffness_damping = 1e-4;
+  st::HarmonicOptions small_restart = defaults;
+  small_restart.solve.restart = 4;
+  small_restart.fail_on_nonconvergence = false;
+  st::HarmonicOptions loose = defaults;
+  loose.solve.relative_tolerance = 1e-2;
+  st::HarmonicOptions capped = defaults;
+  capped.solve.max_iterations = 3;
+  capped.fail_on_nonconvergence = false;
+  const struct { const char *name; st::HarmonicOptions options; } runs[] = {
+      {"defaults        ", defaults}, {"restart 4       ", small_restart}, {"tolerance 1e-2  ", loose}, {"max_iterations 3", capped}};
+  for (const auto &run : runs) {
+    const auto r = st::harmonic(frame, load, vec({10.0, 40.5, 100.0}), wall, run.options);
+    out.writeln(run.name, ": iterations ", r.iterations, ", operator evaluations ", r.operator_evaluations, ", restarts ", r.restarts, ", converged ", r.converged.all().item<bool>(),
+                ", resonance amplitude (mm) ", 1000.0 * flat(r.displacement.select(-2, members).select(-1, 1).abs())[1]);
+  }
+}
+```
+
+Output
+
+```text
+defaults        : iterations 24, operator evaluations 26, restarts 1, converged true, resonance amplitude (mm) 3.83e+02
+restart 4       : iterations 128, operator evaluations 161, restarts 32, converged false, resonance amplitude (mm) 4.67e-02
+tolerance 1e-2  : iterations 24, operator evaluations 26, restarts 1, converged true, resonance amplitude (mm) 3.83e+02
+max_iterations 3: iterations 3, operator evaluations 5, restarts 1, converged false, resonance amplitude (mm) 1.12e-03
+```
+
+The defaults and the loose tolerance find the `383 mm` resonance amplitude in `24` iterations. A restart length of `4` is too short for this system: the iteration spends its whole budget of `128` iterations, reports `converged` false and returns an amplitude that is not an answer. A budget of `3` stops even sooner for the same reason. Read `converged` after changing these controls, and give a larger frame a longer restart and a larger budget.
+
+## Decisions
+
+- **A steady sinusoidal load:** `harmonic`, for all the frequencies at once; use `motion` when the load starts, stops or changes shape.
+- **Where to look:** the natural frequencies from `modes` tell you where to put the frequency samples: put several within each resonance, spaced finely compared with the width `2 zeta omega_n`.
+- **Damping:** use measured or code values (one to five percent for most structures) through `a` and `b`, and note that stiffness damping grows with frequency while mass damping falls.
+
+## Pitfalls
+
+The program makes three mistakes: a load without a frequency axis, approaching a natural frequency with no damping, and sampling a narrow resonance too coarsely. For the last it sweeps `30` to `60 rad/s` in steps of `5 rad/s` and in steps of `0.25 rad/s`, with the damping of the first sweep, `zeta_1 = 0.002`, and reports the largest amplitude found.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+
+using namespace pluss::tils;
+namespace st = pluss::subsp::eng::structure;
+
+static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a straight steel beam along x, 2 m long, with density
+static st::Frame beam(int members, bool with_density = true) {
+  std::vector<double> position;
+  std::vector<std::int64_t> from, to;
+  for (int i = 0; i <= members; ++i) {
+    position.push_back(2.0 * i / members);
+    position.push_back(0.0);
+  }
+  for (int i = 0; i < members; ++i) {
+    from.push_back(i);
+    to.push_back(i + 1);
+  }
+  st::Sections sections{vec(std::vector<double>(members, 1e-3)), vec(std::vector<double>(members, 8.333e-8)), vec(std::vector<double>(members, 200e9))};
+  if (with_density) sections.density = vec(std::vector<double>(members, 7850.0));
+  return st::frame({grid(position, 2), from, to}, sections);
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3).with_sep(""));
+  const int members = 8;
+  const auto frame = beam(members);
+  const st::Fix wall{{0, 0, 0}, {0, 1, 2}, {}};
+  const std::size_t tip = 3 * members + 1;
+  const double omega1 = flat(st::modes(frame, wall).omega)[0];
+  const auto loads_for = [&](int count) {
+    std::vector<double> loads;
+    for (int f = 0; f < count; ++f) {
+      std::vector<double> load(3 * (members + 1), 0.0);
+      load[tip] = 10.0;
+      loads.insert(loads.end(), load.begin(), load.end());
+    }
+    return pluss::series::make(loads).reshape({count, members + 1, 3});
+  };
+
+  // 1. a load without a frequency axis
+  std::vector<double> single(3 * (members + 1), 0.0);
+  single[tip] = 10.0;
+  try {
+    (void)st::harmonic(frame, grid(single, 3), vec({omega1}), wall);
+  } catch (const std::exception &e) {
+    std::cout << "load without a frequency axis: " << e.what() << "\n";
+  }
+
+  // 2. no damping: the amplitude grows as the frequency approaches omega_1, and at omega_1 the system is singular
+  const std::vector<std::pair<const char *, double>> offsets = {{"1e-2", 1e-2}, {"1e-3", 1e-3}};
+  for (const auto &offset : offsets) {
+    const auto u = st::harmonic(frame, loads_for(1).reshape({1, members + 1, 3}), vec({omega1 * (1.0 + offset.second)}), wall);
+    out.writeln("no damping, ", offset.first, " above omega_1: tip amplitude (mm) ", 1000.0 * flat(u.displacement.select(-2, members).select(-1, 1).abs())[0]);
+  }
+  st::HarmonicOptions undamped;
+  undamped.fail_on_nonconvergence = false;
+  const auto at = st::harmonic(frame, loads_for(1).reshape({1, members + 1, 3}), vec({omega1}), wall, undamped);
+  out.writeln("undamped at omega_1: converged ", at.converged.all().item<bool>());
+
+  // 3. a coarse frequency grid misses a narrow resonance
+  st::HarmonicOptions damped;
+  damped.stiffness_damping = 1e-4;
+  for (double step : {5.0, 0.25}) {
+    std::vector<double> frequencies;
+    for (double w = 30.0; w <= 60.0 + 1e-9; w += step) frequencies.push_back(w);
+    const auto r = st::harmonic(frame, loads_for(static_cast<int>(frequencies.size())), vec(frequencies), wall, damped);
+    const auto amplitude = flat(r.displacement.select(-2, members).select(-1, 1).abs());
+    out.writeln("frequency step ", step, " rad/s: largest tip amplitude found (mm) ", 1000.0 * *std::max_element(amplitude.begin(), amplitude.end()));
+  }
+}
+```
+
+Output
+
+```text
+load without a frequency axis: eng::structure::harmonic: load must be finite [..., frequency, node, 3] with the frame precision and platform
+no damping, 1e-2 above omega_1: tip amplitude (mm) 77.224
+no damping, 1e-3 above omega_1: tip amplitude (mm) 776.149
+undamped at omega_1: converged false
+frequency step 5.000 rad/s: largest tip amplitude found (mm) 62.323
+frequency step 0.250 rad/s: largest tip amplitude found (mm) 383.424
+```
+
+The load needs the frequency axis, and the error names it. With no damping the tip amplitude is `77 mm` one percent above the natural frequency and `776 mm` at one part in a thousand: it grows in inverse proportion to the distance, and exactly at the frequency the dynamic stiffness is singular, so the solve reports that it did not converge. Always give a structure damping before sweeping through a resonance. And the coarse sweep reports a peak a fraction of the true one, because the resonance is narrower than the `5 rad/s` spacing; the finer sweep finds the `383 mm` peak. Put several frequency samples inside each resonance, spaced finely compared with its width `2 zeta omega_n`.
+
+Reference: [`harmonic`](../../../../api/eng/structure/dynamics/harmonic.md), [`HarmonicResult`](../../../../api/eng/structure/dynamics/HarmonicResult.md), [`HarmonicOptions`](../../../../api/eng/structure/dynamics/HarmonicOptions.md), [`modes`](../../../../api/eng/structure/spectral/modes.md).
+
+Where next: the [next chapter](../structure_04_large_displacements.md) removes the assumption that displacements are small, so that a frame can swing through large rotations.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="transient_response.html">
+    <span class="label">Previous</span>
+    <span class="title">Transient response</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

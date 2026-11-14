@@ -65,7 +65,7 @@ volatility::StochVolPaths Heston::paths(std::int64_t steps,
                                         const volatility::SimOptions& options,
                                         pluss::codem::Config cfg,
                                         std::uint64_t seed) const {
-  return volatility::heston_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+  return volatility::detail::heston_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
 }
 
 double Heston::price(pricing::OptionType type,
@@ -75,7 +75,7 @@ double Heston::price(pricing::OptionType type,
                      double dividend_yield,
                      double maturity,
                      const pricing::HestonIntegrationOptions& options) const {
-  return pricing::heston_price(type, spot, strike, rate, dividend_yield, maturity, params_, options);
+  return pricing::detail::heston_price(type, spot, strike, rate, dividend_yield, maturity, params_, options);
 }
 
 Series Heston::price(pricing::OptionType type,
@@ -119,7 +119,7 @@ double Heston::price_mc(pricing::OptionType type,
                         double maturity,
                         const pricing::MonteCarloOptions& options,
                         pluss::codem::Config cfg) const {
-  return pricing::heston_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::heston_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 Series Heston::price_mc(pricing::OptionType type,
@@ -177,7 +177,7 @@ volatility::StochVolPaths Bates::paths(std::int64_t steps,
                                        const volatility::SimOptions& options,
                                        pluss::codem::Config cfg,
                                        std::uint64_t seed) const {
-  return volatility::bates_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+  return volatility::detail::bates_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
 }
 
 double Bates::price_mc(pricing::OptionType type,
@@ -188,7 +188,7 @@ double Bates::price_mc(pricing::OptionType type,
                        double maturity,
                        const pricing::MonteCarloOptions& options,
                        pluss::codem::Config cfg) const {
-  return pricing::bates_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::bates_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 double Bates::price_fft(pricing::OptionType type,
@@ -199,7 +199,7 @@ double Bates::price_fft(pricing::OptionType type,
                         double maturity,
                         const pricing::HestonFftOptions& options,
                         pluss::codem::Config cfg) const {
-  return pricing::bates_price_fft(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::bates_price_fft(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 Series Bates::price_mc(pricing::OptionType type,
@@ -290,7 +290,7 @@ volatility::StochVolPaths Sv::paths(std::int64_t steps,
                                     const volatility::SimOptions& options,
                                     pluss::codem::Config cfg,
                                     std::uint64_t seed) const {
-  return volatility::sv_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+  return volatility::detail::sv_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
 }
 
 double Sv::price(pricing::OptionType type,
@@ -301,7 +301,7 @@ double Sv::price(pricing::OptionType type,
                  double maturity,
                  const pricing::MonteCarloOptions& options,
                  pluss::codem::Config cfg) const {
-  return pricing::sv_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::sv_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 double Sv::price_mc(pricing::OptionType type,
@@ -312,7 +312,7 @@ double Sv::price_mc(pricing::OptionType type,
                     double maturity,
                     const pricing::MonteCarloOptions& options,
                     pluss::codem::Config cfg) const {
-  return pricing::sv_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::sv_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 HestonNandi::HestonNandi(volatility::HestonNandiParams params) : params_(params) {}
@@ -332,7 +332,7 @@ volatility::StochVolPaths HestonNandi::paths(std::int64_t steps,
                                              const volatility::SimOptions& options,
                                              pluss::codem::Config cfg,
                                              std::uint64_t seed) const {
-  return volatility::heston_nandi_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+  return volatility::detail::heston_nandi_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
 }
 
 double HestonNandi::price_mc(pricing::OptionType type,
@@ -343,7 +343,7 @@ double HestonNandi::price_mc(pricing::OptionType type,
                              double maturity,
                              const pricing::MonteCarloOptions& options,
                              pluss::codem::Config cfg) const {
-  return pricing::heston_nandi_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::heston_nandi_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 double HestonNandi::price(pricing::OptionType type,
@@ -353,7 +353,7 @@ double HestonNandi::price(pricing::OptionType type,
                           double dividend_yield,
                           double maturity,
                           const pricing::HestonNandiIntegrationOptions& options) const {
-  return pricing::heston_nandi_price(type, spot, strike, rate, dividend_yield, maturity, params_, options);
+  return pricing::detail::heston_nandi_price(type, spot, strike, rate, dividend_yield, maturity, params_, options);
 }
 
 Sabr::Sabr(volatility::SabrParams params) : params_(params) {}
@@ -373,7 +373,7 @@ volatility::StochVolPaths Sabr::paths(std::int64_t steps,
                                       const volatility::SimOptions& options,
                                       pluss::codem::Config cfg,
                                       std::uint64_t seed) const {
-  return volatility::sabr_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+  return volatility::detail::sabr_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
 }
 
 double Sabr::price_mc(pricing::OptionType type,
@@ -385,7 +385,7 @@ double Sabr::price_mc(pricing::OptionType type,
                       const pricing::MonteCarloOptions& options,
                       pluss::codem::Config cfg) const {
   (void)dividend_yield;
-  return pricing::sabr_price_mc(type, spot, strike, rate, maturity, params_, options, cfg);
+  return pricing::detail::sabr_price_mc(type, spot, strike, rate, maturity, params_, options, cfg);
 }
 
 Slv::Slv(volatility::SlvParams params) : params_(params) {}
@@ -405,7 +405,7 @@ volatility::StochVolPaths Slv::paths(std::int64_t steps,
                                      const volatility::SimOptions& options,
                                      pluss::codem::Config cfg,
                                      std::uint64_t seed) const {
-  return volatility::slv_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+  return volatility::detail::slv_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
 }
 
 double Slv::price_mc(pricing::OptionType type,
@@ -416,7 +416,7 @@ double Slv::price_mc(pricing::OptionType type,
                      double maturity,
                      const pricing::MonteCarloOptions& options,
                      pluss::codem::Config cfg) const {
-  return pricing::slv_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::slv_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 RoughHeston::RoughHeston(volatility::RoughHestonParams params) : params_(params) {}
@@ -436,7 +436,7 @@ volatility::StochVolPaths RoughHeston::paths(std::int64_t steps,
                                              const volatility::SimOptions& options,
                                              pluss::codem::Config cfg,
                                              std::uint64_t seed) const {
-  return volatility::rough_heston_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+  return volatility::detail::rough_heston_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
 }
 
 double RoughHeston::price_mc(pricing::OptionType type,
@@ -447,7 +447,7 @@ double RoughHeston::price_mc(pricing::OptionType type,
                              double maturity,
                              const pricing::MonteCarloOptions& options,
                              pluss::codem::Config cfg) const {
-  return pricing::rough_heston_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::rough_heston_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 RoughBergomi::RoughBergomi(volatility::RoughBergomiParams params) : params_(params) {}
@@ -467,7 +467,7 @@ volatility::StochVolPaths RoughBergomi::paths(std::int64_t steps,
                                               const volatility::SimOptions& options,
                                               pluss::codem::Config cfg,
                                               std::uint64_t seed) const {
-  return volatility::rough_bergomi_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
+  return volatility::detail::rough_bergomi_paths(steps, num_paths, spot0, dt, params_, options, cfg, seed);
 }
 
 double RoughBergomi::price_mc(pricing::OptionType type,
@@ -478,7 +478,7 @@ double RoughBergomi::price_mc(pricing::OptionType type,
                               double maturity,
                               const pricing::MonteCarloOptions& options,
                               pluss::codem::Config cfg) const {
-  return pricing::rough_bergomi_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
+  return pricing::detail::rough_bergomi_price_mc(type, spot, strike, rate, dividend_yield, maturity, params_, options, cfg);
 }
 
 VasicekRate::VasicekRate(rates::VasicekParams params) : params_(params) {}

@@ -151,3 +151,12 @@ diff(x, 7)          nan      nan      nan      nan      nan      nan      nan
 - [`returns`](returns.md): the relative change
 - [`log_returns`](log_returns.md): the logarithmic change
 - [`lag`](lag.md): the shifted series itself
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ema.html">
+    <span class="label">Next</span>
+    <span class="title">ema</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,761 @@
+<!-- generated from friction_and_impacts.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Friction and impacts
+
+[Back to Robotics 3: Constraints and Contacts](../robot_03_constraints.md)
+
+A floor that only pushes lets a block slide forever. Real contacts have friction, and real collisions lose speed. This page adds Coulomb friction to the contacts, so that a block sticks or slides on a slope, and Newton's impact law, so that a block that arrives with speed rebounds, stops or skids.
+
+## The mental model
+
+**Friction.** Give `Contacts` a `friction` coefficient `mu` per contact. The tangential force of the contact is then limited to `mu` times its normal force, along the two tangent directions of the plane. A contact whose point is not accelerating along the plane is **sticking** and carries whatever friction it needs, up to the limit; one that slides carries exactly the limit against the sliding. `constrain` solves this as a quadratic program for the whole batch: the friction bound of each round is `mu` times the normal force of the previous round, which settles in a few rounds (`ConstraintOptions::friction_iterations`). The limit is a pyramid, not a cone: exact when the motion is along a tangent direction, slightly generous in between.
+
+**Impact.** At a collision the velocity changes in an instant, so forces become impulses. `impact(robot, contacts, pins, q, qd, restitution)` gives every contact that is in range and approaching its plane the non-negative normal impulse that makes its normal velocity after the impact `restitution` times the approach speed (`0` plastic, `1` elastic), complementarily: contacts that are out of range or already separating take none. Pins stop their points, and friction limits the tangential impulse to `mu` times the normal one. The velocity after is `qd + M^-1 J^T impulse`.
+
+## A block on a slope
+
+A `2 kg` block moves in the x-y plane (two prismatic joints) on a `30 degree` slope through the origin. The slope is the contact: its normal is `(-sin 30, cos 30, 0)`. The block sticks while `tan 30 = 0.577` is below the friction coefficient and slides otherwise.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rb::Robot robot = block();
+  const pluss::Series q = vec({0.0, 0.0}), rest = vec({0.0, 0.0});
+  // a block on a 30 degree slope: it slides when tan(30) = 0.577 exceeds the friction coefficient
+  out.writeln("friction  acceleration (x, y)         normal force  friction force");
+  for (double mu : {0.0, 0.3, 0.5, 0.6, 0.8}) {
+    const rb::ConstrainedResult r = rb::constrain(robot, slope(30.0, mu), rb::Pins{}, q, rest, rest, earth_in_plane());
+    const std::vector<double> a = flat(r.acceleration), f = flat(r.friction_force);
+    out.writeln(mu, a[0], a[1], flat(r.contact_force)[0], std::sqrt(f[0] * f[0] + f[1] * f[1] + f[2] * f[2]));
+  }
+  out.writeln("weight components: normal m g cos 30 =", 2 * 9.81 * std::cos(M_PI / 6), " tangential m g sin 30 =", 2 * 9.81 * std::sin(M_PI / 6));
+}
+```
+
+Output
+
+```text
+friction  acceleration (x, y)         normal force  friction force
+0.00000 -4.24785 -2.45250 16.99142 0.00000
+0.30000 -2.04060 -1.17814 16.99142 5.09743
+0.50000 -0.56910 -0.32857 16.99142 8.49571
+0.60000 -0.00000 0.00000 16.99142 9.81000
+0.80000 0.00000 0.00000 16.99142 9.81000
+weight components: normal m g cos 30 = 16.99142  tangential m g sin 30 = 9.81000
+```
+
+With no friction the block accelerates down the slope (`4.9 m/s^2 = g sin 30` along the slope, here `(-4.25, -2.45)` in x and y). At `0.3` and `0.5` it slides more slowly. At `0.6` and `0.8`, above `tan 30`, it does not move at all, and the friction force is `9.81 N`: exactly the tangential weight `m g sin 30`, with the normal force `16.99 N`, the normal weight `m g cos 30`.
+
+## Sliding
+
+For a block that slides, the acceleration down the slope is `g (sin 30 - mu cos 30)`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rb::Robot robot = block();
+  const pluss::Series rest = vec({0.0, 0.0});
+  // sliding: the acceleration down the slope is g (sin t - mu cos t); batches of friction coefficients are separate calls here
+  const double t = M_PI / 6;
+  for (double mu : {0.1, 0.3, 0.5}) {
+    const rb::ConstrainedResult r = rb::constrain(robot, slope(30.0, mu), rb::Pins{}, rest, rest, rest, earth_in_plane());
+    const std::vector<double> a = flat(r.acceleration);
+    out.writeln("friction", mu, " acceleration along the slope", std::abs(a[0] * std::cos(t) + a[1] * std::sin(t)), " formula", 9.81 * (std::sin(t) - mu * std::cos(t)));
+  }
+  // the friction opposes the sliding: it points up the slope
+  const rb::ConstrainedResult r = rb::constrain(robot, slope(30.0, 0.3), rb::Pins{}, rest, rest, rest, earth_in_plane());
+  out.writeln("friction force (x, y, z)", flat(r.friction_force));
+}
+```
+
+Output
+
+```text
+friction 0.10000  acceleration along the slope 4.05543  formula 4.05543
+friction 0.30000  acceleration along the slope 2.35629  formula 2.35629
+friction 0.50000  acceleration along the slope 0.65715  formula 0.65715
+friction force (x, y, z) [4.41450, 2.54871, 0.00000]
+```
+
+The accelerations are `4.055`, `2.356` and `0.657 m/s^2` for `0.1`, `0.3` and `0.5`, equal to the formula, and the friction force points up the slope.
+
+## An impact
+
+A `2 kg` block falls at `3 m/s` onto a floor. The impulse the floor applies is `m (1 + e) v`: `6`, `9` and `12 N s` for plastic, half-elastic and elastic impacts, and the block ends at rest, rebounding at `1.5 m/s`, or rebounding at the full `3 m/s`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+static rb::Contacts floor_contact(double friction = 0.0) {
+  rb::Contacts floor;
+  floor.link = {1};
+  floor.point = mat({0, 0, 0}, {1, 3});
+  floor.normal = mat({0, 1, 0}, {1, 3});
+  floor.offset = vec({0.0});
+  if (friction > 0.0) floor.friction = vec({friction});
+  return floor;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rb::Robot robot = block();
+  const pluss::Series q = vec({0.0, 0.0});
+  // a 2 kg block falls onto the floor at 3 m/s: the rebound is restitution times the approach speed, the impulse m (1 + e) v
+  out.writeln("restitution  velocity after (x, y)   impulse   m (1 + e) v");
+  for (double e : {0.0, 0.5, 1.0}) {
+    const rb::ImpactResult hit = rb::impact(robot, floor_contact(), rb::Pins{}, q, vec({0.0, -3.0}), e);
+    out.writeln(e, flat(hit.velocity)[0], flat(hit.velocity)[1], flat(hit.contact_impulse)[0], 2.0 * 3.0 * (1.0 + e));
+  }
+}
+```
+
+Output
+
+```text
+restitution  velocity after (x, y)   impulse   m (1 + e) v
+0.00000 0.00000 0.00000 6.00000 6.00000
+0.50000 0.00000 1.50000 9.00000 9.00000
+1.00000 0.00000 3.00000 12.00000 12.00000
+```
+
+## Friction in an impact
+
+Landing at `2 m/s` sideways and `1 m/s` down with a plastic impact, the normal impulse is `2 N s` and friction can remove up to `mu` times that of the sideways momentum `m v_t = 4 N s`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+static rb::Contacts floor_contact(double friction = 0.0) {
+  rb::Contacts floor;
+  floor.link = {1};
+  floor.point = mat({0, 0, 0}, {1, 3});
+  floor.normal = mat({0, 1, 0}, {1, 3});
+  floor.offset = vec({0.0});
+  if (friction > 0.0) floor.friction = vec({friction});
+  return floor;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rb::Robot robot = block();
+  const pluss::Series q = vec({0.0, 0.0}), v = vec({2.0, -1.0});
+  // landing at 2 m/s sideways and 1 m/s down with a plastic impact: friction removes up to mu x the normal impulse of tangential speed
+  out.writeln("friction  velocity after (x, y)   normal impulse  friction impulse");
+  for (double mu : {0.0, 0.5, 1.0, 2.0}) {
+    const rb::ImpactResult hit = rb::impact(robot, floor_contact(mu), rb::Pins{}, q, v, 0.0);
+    out.writeln(mu, flat(hit.velocity)[0], flat(hit.velocity)[1], flat(hit.contact_impulse)[0], flat(hit.friction_impulse)[0]);
+  }
+  out.writeln("sticks when mu >= 2: the sideways speed 2 needs a tangential impulse m v_t = 4 = mu x the normal impulse 2 x 1");
+}
+```
+
+Output
+
+```text
+friction  velocity after (x, y)   normal impulse  friction impulse
+0.00000 2.00000 0.00000 2.00000 0.00000
+0.50000 1.50000 -0.00000 2.00000 -1.00000
+1.00000 1.00000 -0.00000 2.00000 -2.00000
+2.00000 0.00000 -0.00000 2.00000 -4.00000
+sticks when mu >= 2: the sideways speed 2 needs a tangential impulse m v_t = 4 = mu x the normal impulse 2 x 1
+```
+
+With `mu = 0.5` the block slides on at `1.5 m/s` (the impulse `1 N s` took `0.5 m/s` off the sideways speed); with `1` at `1 m/s`; and with `2` the sideways speed is gone: the block sticks.
+
+## Which contacts take part
+
+Only a contact in range and approaching takes an impulse. A pin stops its point whatever the restitution.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+static rb::Contacts floor_contact(double friction = 0.0) {
+  rb::Contacts floor;
+  floor.link = {1};
+  floor.point = mat({0, 0, 0}, {1, 3});
+  floor.normal = mat({0, 1, 0}, {1, 3});
+  floor.offset = vec({0.0});
+  if (friction > 0.0) floor.friction = vec({friction});
+  return floor;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rb::Robot robot = block();
+  // only a contact in range that approaches its plane takes an impulse
+  out.writeln("separating (moving up):     ", flat(rb::impact(robot, floor_contact(), rb::Pins{}, vec({0.0, 0.0}), vec({1.0, 2.0}), 0.5).velocity));
+  out.writeln("approaching, out of range:  ", flat(rb::impact(robot, floor_contact(), rb::Pins{}, vec({0.0, 0.5}), vec({0.0, -3.0}), 0.5).velocity));
+  out.writeln("approaching, in range:      ", flat(rb::impact(robot, floor_contact(), rb::Pins{}, vec({0.0, 0.0}), vec({0.0, -3.0}), 0.5).velocity));
+  out.writeln("no constraints at all:      ", flat(rb::impact(robot, rb::Contacts{}, rb::Pins{}, vec({0.0, 0.0}), vec({0.0, -3.0}), 0.5).velocity));
+}
+```
+
+Output
+
+```text
+separating (moving up):      [1.00000, 2.00000]
+approaching, out of range:   [0.00000, -3.00000]
+approaching, in range:       [0.00000, 1.50000]
+no constraints at all:       [0.00000, -3.00000]
+```
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rb::Robot robot = block();
+  // a pin stops its point completely, whatever the restitution
+  rb::Pins pin;
+  pin.link = {1};
+  pin.point = mat({0, 0, 0}, {1, 3});
+  const rb::ImpactResult hit = rb::impact(robot, rb::Contacts{}, pin, vec({0.0, 0.0}), vec({2.0, -1.0}), 0.5);
+  out.writeln("velocity after", flat(hit.velocity), " pin impulse", flat(hit.pin_impulse), " (= -m v = (-4, 2, 0))");
+}
+```
+
+Output
+
+```text
+velocity after [-0.00000, 0.00000]  pin impulse [-4.00000, 2.00000, 0.00000]  (= -m v = (-4, 2, 0))
+```
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+static rb::Contacts floor_contact(double friction = 0.0) {
+  rb::Contacts floor;
+  floor.link = {1};
+  floor.point = mat({0, 0, 0}, {1, 3});
+  floor.normal = mat({0, 1, 0}, {1, 3});
+  floor.offset = vec({0.0});
+  if (friction > 0.0) floor.friction = vec({friction});
+  return floor;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const rb::Robot robot = block();
+  // three blocks at once: falling, rising and sliding
+  const pluss::Series q = mat({0, 0, 0, 0, 0, 0}, {3, 2}), v = mat({0, -3, 0, 3, 2, -1}, {3, 2});
+  const rb::ImpactResult hit = rb::impact(robot, floor_contact(0.5), rb::Pins{}, q, v, 0.5);
+  out.writeln("velocity shape", hit.velocity.sizes(), " impulse shape", hit.contact_impulse.sizes(), " friction impulse shape", hit.friction_impulse.sizes());
+  out.writeln("velocities after", flat(hit.velocity));
+  out.writeln("normal impulses ", flat(hit.contact_impulse));
+}
+```
+
+Output
+
+```text
+velocity shape [3, 2]  impulse shape [3, 1]  friction impulse shape [3, 1, 3]
+velocities after [0.00000, 1.50000, 0.00000, 3.00000, 1.25000, 0.50000]
+normal impulses  [9.00000, -0.00000, 3.00000]
+```
+
+## Errors
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  const rb::Robot robot = block();
+  const pluss::Series rest = vec({0.0, 0.0});
+  rb::Contacts negative = slope(30.0, 0.3);
+  negative.friction = vec({-0.1});
+  report([&] { (void)rb::constrain(robot, negative, rb::Pins{}, rest, rest, rest, earth_in_plane()); });
+  rb::Contacts shape = slope(30.0, 0.3);
+  shape.friction = vec({0.1, 0.2});
+  report([&] { (void)rb::constrain(robot, shape, rb::Pins{}, rest, rest, rest, earth_in_plane()); });
+  rb::ConstraintOptions rounds = earth_in_plane();
+  rounds.friction_iterations = 0;
+  report([&] { (void)rb::constrain(robot, slope(30.0, 0.3), rb::Pins{}, rest, rest, rest, rounds); });
+}
+```
+
+Output
+
+```text
+eng::robot::constrain: friction must be a non-negative real floating vector with one value per contact
+eng::robot::constrain: friction must be a non-negative real floating vector with one value per contact
+eng::robot::constrain: contact_threshold must be non-negative and friction_iterations at least 1
+```
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a block of mass 2 kg free to move in the x-y plane: two prismatic joints (x, then y), the block on the second link
+static rb::Robot block() {
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  return rb::make(links);
+}
+static rb::ConstraintOptions earth_in_plane() {
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  return options;
+}
+static rb::Contacts slope(double degrees, double friction) {
+  // an incline through the origin rising to the right: the contact point is the block's origin
+  const double t = degrees * M_PI / 180.0;
+  rb::Contacts contact;
+  contact.link = {1};
+  contact.point = mat({0, 0, 0}, {1, 3});
+  contact.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  contact.offset = vec({0.0});
+  if (friction > 0.0) contact.friction = vec({friction});
+  return contact;
+}
+static rb::Contacts floor_contact(double friction = 0.0) {
+  rb::Contacts floor;
+  floor.link = {1};
+  floor.point = mat({0, 0, 0}, {1, 3});
+  floor.normal = mat({0, 1, 0}, {1, 3});
+  floor.offset = vec({0.0});
+  if (friction > 0.0) floor.friction = vec({friction});
+  return floor;
+}
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const pluss::Error &e) {
+      out.writeln(e.message());
+    }
+  };
+  const rb::Robot robot = block();
+  const pluss::Series q = vec({0.0, 0.0}), v = vec({0.0, -1.0});
+  report([&] { (void)rb::impact(robot, floor_contact(), rb::Pins{}, q, v, 1.5); });
+  report([&] { (void)rb::impact(robot, floor_contact(), rb::Pins{}, q, v, -0.1); });
+  report([&] { (void)rb::impact(robot, floor_contact(), rb::Pins{}, vec({0.0}), v, 0.5); });
+  rb::ConstraintOptions bad;
+  bad.contact_threshold = -1.0;
+  report([&] { (void)rb::impact(robot, floor_contact(), rb::Pins{}, q, v, 0.5, bad); });
+}
+```
+
+Output
+
+```text
+eng::robot::impact: restitution must lie in [0, 1]
+eng::robot::impact: restitution must lie in [0, 1]
+eng::robot::impact: q must be a real floating [..., 2] array
+eng::robot::impact: contact_threshold must be non-negative and friction_iterations at least 1
+```
+
+## Decisions
+
+- **A simulation with collisions:** step with `constrain`; when a point reaches its plane with speed, apply `impact` to reset the velocity, then continue.
+- **Sticking and sliding:** set `friction`; the solver decides which applies at every instant.
+- **A bouncing ball or an elastic collision:** `restitution` near one; a landing foot, near zero.
+- **Many contacts or lanes:** one call; the batch is solved together.
+
+## Pitfalls
+
+The program makes three mistakes: describing a slope without a friction coefficient, expecting an impact on a separating contact to do something, and using a restitution above one.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace rb = pluss::subsp::eng::robot;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static pluss::Series mat(std::vector<double> v, std::vector<std::int64_t> shape) { return pluss::series::make(v, shape); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  rb::Links links;
+  links.parent = {-1, 0};
+  links.prismatic = {1, 1};
+  links.axis = mat({1, 0, 0, 0, 1, 0}, {2, 3});
+  links.translation = mat({0, 0, 0, 0, 0, 0}, {2, 3});
+  links.mass = vec({0.0, 2.0});
+  const rb::Robot robot = rb::make(links);
+  rb::ConstraintOptions options;
+  options.dynamics.gravity = vec({0.0, -9.81, 0.0});
+  const double t = M_PI / 6;
+  rb::Contacts slope;
+  slope.link = {1};
+  slope.point = mat({0, 0, 0}, {1, 3});
+  slope.normal = mat({-std::sin(t), std::cos(t), 0}, {1, 3});
+  slope.offset = vec({0.0});
+  const pluss::Series rest = vec({0.0, 0.0});
+
+  // 1. a rough slope described without a friction coefficient is frictionless: the block slides
+  out.writeln("no friction coefficient: acceleration", flat(rb::constrain(robot, slope, rb::Pins{}, rest, rest, rest, options).acceleration));
+  slope.friction = vec({0.8});
+  out.writeln("friction 0.8:            acceleration", flat(rb::constrain(robot, slope, rb::Pins{}, rest, rest, rest, options).acceleration));
+
+  // 2. an impact on a contact that is already separating changes nothing
+  rb::Contacts floor;
+  floor.link = {1};
+  floor.point = mat({0, 0, 0}, {1, 3});
+  floor.normal = mat({0, 1, 0}, {1, 3});
+  floor.offset = vec({0.0});
+  out.writeln("impact while moving up", flat(rb::impact(robot, floor, rb::Pins{}, rest, vec({0.0, 2.0}), 0.5).velocity));
+
+  // 3. restitution above one would create energy: refused
+  try {
+    (void)rb::impact(robot, floor, rb::Pins{}, rest, vec({0.0, -2.0}), 1.2);
+  } catch (const pluss::Error &e) {
+    out.writeln(e.message());
+  }
+}
+```
+
+Output
+
+```text
+no friction coefficient: acceleration [-4.2479, -2.4525]
+friction 0.8:            acceleration [0.0000, 0.0000]
+impact while moving up [0.0000, 2.0000]
+eng::robot::impact: restitution must lie in [0, 1]
+```
+
+Without a friction coefficient the slope is frictionless: the block accelerates at `(-4.248, -2.453) m/s^2` however rough the surface really is, and with `friction = 0.8` it does not move. An impact on a contact that is moving away leaves the velocity at `(0, 2)`. A restitution above one would create energy and is refused.
+
+## Where next
+
+Reference pages: [`Contacts`](../../../../api/eng/robot/constraints/Contacts.md), [`impact`](../../../../api/eng/robot/constraints/impact.md), [`ImpactResult`](../../../../api/eng/robot/constraints/ImpactResult.md), [`ConstraintOptions`](../../../../api/eng/robot/constraints/ConstraintOptions.md).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="friction_and_impacts.html">
+    <span class="label">Previous</span>
+    <span class="title">Friction and impacts</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

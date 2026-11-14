@@ -236,7 +236,7 @@ double chisq_quantile_(double prob, std::int64_t dof, Config cfg) {
 
 double f_cdf_(double value, std::int64_t dof1, std::int64_t dof2, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{value}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::FDistribution{static_cast<double>(dof1), static_cast<double>(dof2)}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::FDistribution{static_cast<double>(dof1), static_cast<double>(dof2)}.cdf(q).items<double>().front());
 }
 
 double f_quantile_(double prob, std::int64_t dof1, std::int64_t dof2, Config cfg) {

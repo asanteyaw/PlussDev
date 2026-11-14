@@ -40,4 +40,13 @@ operators::Operator operators::integral(std::string_view variable, double lower,
 6. Differentiate integrals with `differential`: the limit and parameter derivatives are exact in form.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_04_integrals/antiderivatives
+calculus_04_integrals/anchored_and_definite_integrals
+calculus_04_integrals/numerical_integrals_and_batches
+calculus_04_integrals/parity_and_the_fundamental_theorem
+```
 <!-- apiref:toctree:end -->

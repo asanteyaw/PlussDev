@@ -26,4 +26,10 @@ The result holds these as `dual_eq` (one value per equality row, the change of t
 - An infeasible result carries Farkas multipliers; an unbounded result carries a ray. Both can be verified from the original data. Their scale is arbitrary.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog_02_prices_and_certificates/prices_and_certificates
+```
 <!-- apiref:toctree:end -->

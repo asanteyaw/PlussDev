@@ -81,3 +81,12 @@ g(x) = sin(x)
   largest difference from the closed form: 3.0e-18
 ```
 The difference from the closed form is at most `1.1e-16`, which is rounding. For `x²` the lemma has the familiar form: drift `2xμ + σ²`, diffusion `2xσ`. At `x = 1` the drift is 0.65000 and the diffusion 1.00000.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="several_sources_of_noise.html">
+    <span class="label">Next</span>
+    <span class="title">Several sources of noise</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

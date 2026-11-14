@@ -55,4 +55,10 @@ BlackboxSolverOutcome ltmads_minimizer(objective, initial, MadsBlackboxConfig co
 6. For failures, constraints or several objectives use the black-box interface (next chapter).
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_10_mesh_adaptive_search/mads_in_practice
+```
 <!-- apiref:toctree:end -->

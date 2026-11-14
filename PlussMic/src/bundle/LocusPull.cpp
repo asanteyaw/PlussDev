@@ -6,12 +6,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "relational/Links.h"
 #include "relational/Match.h"
 #include "relational/Pull.h"
+#include <pluss/tils/kit/output.h>
 
 // Native pull and traversal for Locus. Everything here is composed from three
 // Catalog-level pieces: match_keys (which records pair up), relational::expand
@@ -32,7 +32,7 @@ using pluss::kindle::StreamKind;
 std::string qualify(std::string_view table, std::string_view feature) {
   PLUSS_CHECK(!table.empty(), "pull table scope cannot be empty");
   PLUSS_CHECK(!feature.empty(), "pull feature cannot be empty");
-  return fmt::format("{}.{}", table, feature);
+  return pluss::tils::OutputEngine::format("{}.{}", table, feature);
 }
 
 void check_pull_policy(const locus::RaggedPolicy& p, std::string_view where) {
@@ -71,10 +71,10 @@ struct TimeColumn {
 
 TimeColumn load_time(const Catalog& catalog, const std::string& feature, std::string_view table,
                      std::string_view where) {
-  PLUSS_CHECK(catalog.has(feature), fmt::format("{}: time field '{}' is missing on table '{}'", where, feature, table));
+  PLUSS_CHECK(catalog.has(feature), pluss::tils::OutputEngine::format("{}: time field '{}' is missing on table '{}'", where, feature, table));
   const auto stream = catalog.keys(feature);
   PLUSS_CHECK(stream.kind() == StreamKind::Timeline,
-              fmt::format("{}: time field '{}' on table '{}' must be a Timeline stream", where, feature, table));
+              pluss::tils::OutputEngine::format("{}: time field '{}' on table '{}' must be a Timeline stream", where, feature, table));
   TimeColumn out;
   out.ns = stream.as_timeline().epoch_nanos().host<std::int64_t>();
   out.valid = pluss::kindle::detail::has_validity_mask(stream)
@@ -174,8 +174,8 @@ Catalog LocusPull::collect() const {
   constexpr std::string_view where = "Locus::pull";
   const Locus& loc = locus_;
   const auto& policy = options_.ragged;
-  PLUSS_CHECK(loc.has(root_), fmt::format("{}: unknown catalog '{}'", where, root_));
-  PLUSS_CHECK(!specs_.empty(), fmt::format("{}: at least one field is required", where));
+  PLUSS_CHECK(loc.has(root_), pluss::tils::OutputEngine::format("{}: unknown catalog '{}'", where, root_));
+  PLUSS_CHECK(!specs_.empty(), pluss::tils::OutputEngine::format("{}: at least one field is required", where));
   check_pull_policy(policy, where);
   const auto fields = relational::parse_pull_fields(root_, specs_, where);
 
@@ -188,7 +188,7 @@ Catalog LocusPull::collect() const {
   const auto table = [&](const std::string& name) -> Table& {
     auto it = tables.find(name);
     if (it == tables.end()) {
-      PLUSS_CHECK(loc.has(name), fmt::format("{}: unknown catalog '{}'", where, name));
+      PLUSS_CHECK(loc.has(name), pluss::tils::OutputEngine::format("{}: unknown catalog '{}'", where, name));
       auto catalog = loc.catalog(name);
       auto layout = RaggedLayout::of(catalog, policy, where);
       it = tables.emplace(name, Table{std::move(catalog), std::move(layout)}).first;
@@ -198,7 +198,7 @@ Catalog LocusPull::collect() const {
 
   for (const auto& f : fields) {
     PLUSS_CHECK(table(f.table).catalog.has(f.feature),
-                fmt::format("{}: unknown feature '{}' on table '{}'", where, f.feature, f.table));
+                pluss::tils::OutputEngine::format("{}: unknown feature '{}' on table '{}'", where, f.feature, f.table));
   }
   const std::int64_t n = table(root_).layout.domain();
   std::vector<std::int64_t> identity(static_cast<std::size_t>(n));
@@ -229,7 +229,7 @@ Catalog LocusPull::collect() const {
   };
   const auto path_to = [&](const std::string& target) {
     auto path = loc.path(root_, target);
-    PLUSS_CHECK(path.has_value(), fmt::format("{}: no relationship path from '{}' to '{}'", where, root_, target));
+    PLUSS_CHECK(path.has_value(), pluss::tils::OutputEngine::format("{}: no relationship path from '{}' to '{}'", where, root_, target));
     return *path;
   };
 
@@ -243,7 +243,7 @@ Catalog LocusPull::collect() const {
     for (const auto& step : path_to(f.table).steps) {
       const auto card = oriented_cardinality(step);
       PLUSS_CHECK(card == locus::RelationshipCardinality::ManyToOne || card == locus::RelationshipCardinality::OneToOne,
-                  fmt::format("{}: requested field '{}' requires expanding relationship '{}' from '{}' to '{}'. "
+                  pluss::tils::OutputEngine::format("{}: requested field '{}' requires expanding relationship '{}' from '{}' to '{}'. "
                               "pull preserves root grain and cannot traverse one-to-many or many-to-many paths",
                               where, f.token, step.relationship_name, step.from_table, step.to_table));
       const auto& m = hop(step);
@@ -279,13 +279,13 @@ Catalog LocusPull::collect() const {
   if (has_aggregate && options_.require_primary_key) {
     const auto meta = loc.table_meta(root_);
     PLUSS_CHECK(meta.has_value() && !meta->primary_key.empty(),
-                fmt::format("{}: aggregating fields group related records under a root record, so root table '{}' "
+                pluss::tils::OutputEngine::format("{}: aggregating fields group related records under a root record, so root table '{}' "
                             "needs a declared primary key (Locus::meta), or turn off PullOptions::require_primary_key",
                             where, root_));
     const auto& root_catalog = table(root_).catalog;
     const auto audit = root_catalog.audit_keys(root_catalog, meta->primary_key, meta->primary_key, policy);
     PLUSS_CHECK(audit.left_unique && audit.left_unkeyed == 0,
-                fmt::format("{}: root table '{}' must have a complete, unique declared primary key before "
+                pluss::tils::OutputEngine::format("{}: root table '{}' must have a complete, unique declared primary key before "
                             "aggregate pulls", where, root_));
   }
 
@@ -294,7 +294,7 @@ Catalog LocusPull::collect() const {
   std::unordered_set<std::string> aliases;
   for (const auto& f : fields) {
     const auto alias = relational::pull_output_alias(root_, f);
-    PLUSS_CHECK(aliases.insert(alias).second, fmt::format("{}: output alias collision for '{}'", where, alias));
+    PLUSS_CHECK(aliases.insert(alias).second, pluss::tils::OutputEngine::format("{}: output alias collision for '{}'", where, alias));
     auto& tb = table(f.table);
     const auto leaf = tb.catalog.keys(f.feature);
     const auto leaf_shift = tb.layout.shift_of(f.feature);
@@ -306,7 +306,7 @@ Catalog LocusPull::collect() const {
     }
 
     const auto aggregate = relational::parse_pull_aggregate(*f.aggregate);
-    PLUSS_CHECK(aggregate.has_value(), fmt::format("{}: unsupported aggregate token '{}'", where, *f.aggregate));
+    PLUSS_CHECK(aggregate.has_value(), pluss::tils::OutputEngine::format("{}: unsupported aggregate token '{}'", where, *f.aggregate));
     const auto& ex = expanded_for(f.table);
     std::vector<std::int64_t> roots = ex.root, leaves = ex.leaf;
     std::vector<std::uint8_t> root_ok(static_cast<std::size_t>(n), 1);
@@ -317,13 +317,13 @@ Catalog LocusPull::collect() const {
       // time for "_root" tokens.
       const auto child_meta = loc.table_meta(f.table);
       PLUSS_CHECK(child_meta.has_value() && child_meta->time_field.has_value(),
-                  fmt::format("{}: window aggregate '{}' requires a declared time_field on table '{}'", where,
+                  pluss::tils::OutputEngine::format("{}: window aggregate '{}' requires a declared time_field on table '{}'", where,
                               f.token, f.table));
       const auto child_time = load_time(tb.catalog, *child_meta->time_field, f.table, where);
       const auto child_shift = tb.layout.shift_of(*child_meta->time_field);
       const auto window_seconds = relational::pull_window_seconds(*aggregate, where);
       PLUSS_CHECK(window_seconds <= std::numeric_limits<std::int64_t>::max() / 1'000'000'000LL,
-                  fmt::format("{}: pull window length exceeds the supported nanosecond range", where));
+                  pluss::tils::OutputEngine::format("{}: pull window length exceeds the supported nanosecond range", where));
       const std::int64_t window_ns = window_seconds * 1'000'000'000LL;
 
       const auto time_of = [&](std::int64_t record, std::int64_t& out_ns) {
@@ -338,7 +338,7 @@ Catalog LocusPull::collect() const {
       if (aggregate->anchor == relational::PullAggregate::Anchor::Root) {
         const auto root_meta = loc.table_meta(root_);
         PLUSS_CHECK(root_meta.has_value() && root_meta->time_field.has_value(),
-                    fmt::format("{}: root-anchored window aggregate '{}' requires a declared time_field on root "
+                    pluss::tils::OutputEngine::format("{}: root-anchored window aggregate '{}' requires a declared time_field on root "
                                 "table '{}'", where, f.token, root_));
         const auto root_time = load_time(table(root_).catalog, *root_meta->time_field, root_, where);
         const auto root_shift = table(root_).layout.shift_of(*root_meta->time_field);
@@ -435,8 +435,8 @@ LocusTraverse LocusTraverse::join(std::string_view right) const { return join(ri
 
 LocusTraverse LocusTraverse::join(std::string_view right, const locus::JoinSpec& spec) const {
   constexpr std::string_view where = "LocusTraverse::join";
-  PLUSS_CHECK(locus_.has(anchor_), fmt::format("{}: unknown catalog '{}'", where, anchor_));
-  PLUSS_CHECK(locus_.has(right), fmt::format("{}: unknown catalog '{}'", where, right));
+  PLUSS_CHECK(locus_.has(anchor_), pluss::tils::OutputEngine::format("{}: unknown catalog '{}'", where, anchor_));
+  PLUSS_CHECK(locus_.has(right), pluss::tils::OutputEngine::format("{}: unknown catalog '{}'", where, right));
 
   // With no keys and no named link, the single direct link between the two
   // tables supplies them; several links is an error, never a guess.
@@ -465,8 +465,8 @@ namespace {
 std::vector<std::string> normalized_names(const std::vector<std::string>& names, std::string_view where) {
   std::unordered_set<std::string> seen;
   for (const auto& name : names) {
-    PLUSS_CHECK(!name.empty(), fmt::format("{}: feature names cannot be empty", where));
-    PLUSS_CHECK(seen.insert(name).second, fmt::format("{}: duplicate feature '{}'", where, name));
+    PLUSS_CHECK(!name.empty(), pluss::tils::OutputEngine::format("{}: feature names cannot be empty", where));
+    PLUSS_CHECK(seen.insert(name).second, pluss::tils::OutputEngine::format("{}: duplicate feature '{}'", where, name));
   }
   return names;
 }

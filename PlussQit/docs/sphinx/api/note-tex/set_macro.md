@@ -7,7 +7,7 @@
 
 ```cpp
 Note Note::TexAccessor::set_macro(std::string_view name,
-                               std::string_view body) const
+                                    std::string_view body) const
 ```
 
 ## Define One Cell-Local Control Word

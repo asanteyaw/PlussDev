@@ -1,6 +1,6 @@
 # Control systems
 
-The `pluss::ma::eng::control` family turns validated LTI models into feedback laws, estimators, stability evidence, and constrained control plans. Its functions preserve Series dtype, platform, batching, and reverse sensitivity while delegating matrix equations, state estimation, and quadratic programming to their lower numerical owners.
+The `pluss::subsp::eng::control` family turns validated LTI models into feedback laws, estimators, stability evidence, and constrained control plans. Its functions preserve Series dtype, platform, batching, and reverse sensitivity while delegating matrix equations, state estimation, and quadratic programming to their lower numerical owners.
 
 ## Branches
 

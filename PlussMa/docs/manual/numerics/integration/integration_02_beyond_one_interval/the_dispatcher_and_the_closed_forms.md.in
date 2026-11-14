@@ -8,3 +8,12 @@
 @@example Numerical/integration/guide/615_dispatcher_and_closed_forms.cpp@@
 
 The jump cannot reach 1e-10 by quadrature, and the dispatcher compares the two error estimates and keeps the better answer (quadrature's 2e-5 beats Monte Carlo's). The closed forms agree with quadrature to ten digits and serve as independent checks.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="monte_carlo.html">
+    <span class="label">Previous</span>
+    <span class="title">Monte Carlo</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

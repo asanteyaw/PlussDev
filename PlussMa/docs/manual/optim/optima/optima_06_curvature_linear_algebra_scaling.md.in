@@ -44,4 +44,11 @@ The curvature models are `Bfgs` (a dense matrix, updated from each step and the 
 Chapter 7 covers derivatives: where the gradients and Jacobians come from, how to supply your own, and the exact-derivative curvature models that the interior method accepts.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima_06_curvature_linear_algebra_scaling/curvature_models
+optima_06_curvature_linear_algebra_scaling/linear_algebra_and_units
+```
 <!-- apiref:toctree:end -->

@@ -1,0 +1,76 @@
+# `power::TraceOptions`
+
+Stopping rule and stepping controls of the continuation.
+
+## Signature
+
+```cpp
+power::TraceOptions
+```
+
+## What It Does
+
+Controls for `trace`: where to stop, how large the first step is and how it may change, and the corrector limits.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `stop` | Whether the trace ends at the target or at the nose. | TraceStop::Target |
+| `target` | The loading factor at which a `Target` trace ends. | 1 |
+| `step` | The first step in the loading factor. | 0.05 |
+| `step_min` | The smallest step the adaptation may use. | 1e-4 |
+| `step_max` | The largest step the adaptation may use. | 0.2 |
+| `adapt_tolerance` | The predictor error that the step adaptation aims at. | 1e-3 |
+| `adapt_damping` | The damping of the step adaptation. | 0.7 |
+| `tolerance` | The residual tolerance of each corrector. | 1e-9 |
+| `max_steps` | The largest number of points on the curve. | 400 |
+| `max_iterations` | The Newton iterations allowed per corrector. | 12 |
+| `adaptive` | Let the step grow and shrink with the curvature. | true |
+
+## Returns
+
+A value; validated by `trace`.
+
+## Errors
+
+Step bounds, tolerance or iteration limits that are not positive and ordered are rejected.
+
+## Interpretation and Use
+
+An adaptive trace takes larger steps where the curve is nearly straight and shortens them near the nose. A small `max_steps` ends the trace early with `reached` false.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Adaptive, fixed and capped steps.
+
+@@example Eng/api/power_trace_stepping.cpp@@
+
+### Example 2
+
+The default trace.
+
+@@example Eng/api/power_trace_target.cpp@@
+
+### Example 3
+
+A trace to the nose.
+
+@@example Eng/api/power_trace_nose.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LoadPath.html">
+    <span class="label">Previous</span>
+    <span class="title">LoadPath</span>
+  </a>
+  <a class="next-link" href="TraceResult.html">
+    <span class="label">Next</span>
+    <span class="title">TraceResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

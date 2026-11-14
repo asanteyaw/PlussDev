@@ -237,3 +237,20 @@ int main() {
 - [`TsPartition`](TsPartition.md)
 - [`DirectForecaster`](DirectForecaster.md)
 - [`dm_test`](dm_test.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="build_lagged_predictors.html">
+    <span class="label">Previous</span>
+    <span class="title">build_lagged_predictors</span>
+  </a>
+  <a class="next-link" href="DirectForecaster.html">
+    <span class="label">Next</span>
+    <span class="title">DirectForecaster</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

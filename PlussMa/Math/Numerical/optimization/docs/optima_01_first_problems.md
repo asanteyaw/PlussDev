@@ -84,44 +84,6 @@ iterations: 1
 ```
 The solver reaches the target `(1, 2)` to within its tolerance, reports `converged: true`, and exits with flag `1`, which is the code for `Converged`. The answer is accurate to the stopping tolerance, not guaranteed to the last digit, so always judge a result against the tolerance rather than against an exact printed value.
 
-The same call with the objective written on `Trace`, the type the derivative tools in `pluss::subsp::math::diff` work with, reaches the identical answer. Its operations are the `diff::` functions (`diff::square`, `diff::sum`, ...), and `diff::trace(value, false)` marks a value as a fixed constant. Plain `Series` is the natural way to write an objective; the `Trace` form is accepted wherever a `Series` objective is, so existing code keeps working.
-
-```cpp
-#include <pluss/ma.h>
-
-#include <iostream>
-#include <vector>
-
-int main() {
-  namespace optim = pluss::subsp::math::optim;
-  namespace diff = pluss::subsp::math::diff;
-  const auto f64 = pluss::ScalarType::Float64;
-
-  const auto target = pluss::make_series(std::vector<double>{1.0, 2.0}, {2}).to(f64);
-  const auto start = pluss::make_series(std::vector<double>{0.0, 0.0}, {2}).to(f64);
-
-  // f(x) = |x - target|^2, minimized where x == target.
-  const auto result = optim::optima(
-      [&](const optim::Trace& x) { return diff::sum(diff::square(x - diff::trace(target, false))); },
-      start);
-
-  const auto x = result.params.at("x").host<double>();
-  std::cout << "x = [" << x[0] << ", " << x[1] << "]\n";
-  std::cout << "converged: " << std::boolalpha << result.converged << "\n";
-  std::cout << "exit flag: " << static_cast<int>(result.exit_flag) << "\n";
-  std::cout << "iterations: " << result.iteration << "\n";
-  return 0;
-}
-```
-
-Output
-
-```text
-x = [1, 2]
-converged: true
-exit flag: 1
-iterations: 1
-```
 ### Program 2: bounds
 
 Bounds restrict each coordinate to an interval. This program puts the unconstrained minimum at `(3, -2)` and the box at `[0, 2] x [0, 2]`, so the solver has to settle on the corner of the box nearest the target. Bounds go into a `constraints()` value, passed as the fourth argument.

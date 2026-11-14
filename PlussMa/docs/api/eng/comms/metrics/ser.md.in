@@ -1,0 +1,58 @@
+# `comms::ser`
+
+The fraction of symbols that differ.
+
+## Signature
+
+```cpp
+pluss::Series comms::ser(const pluss::Series& sent, const pluss::Series& received);
+```
+
+## What It Does
+
+Returns the fraction of positions at which two label arrays differ, over the last axis.
+
+## Parameters
+
+`sent`
+: The transmitted labels, `[..., N]`.
+
+`received`
+: The decided labels from `detect`, of the same shape.
+
+## Returns
+
+A real array of shape `[...]`.
+
+## Errors
+
+Throws `pluss::Error` for arrays of different shapes or an empty last axis.
+
+## Interpretation and Use
+
+With Gray labels a symbol error is mostly a single bit error, so the bit error rate is close to the symbol error rate divided by the bits per symbol.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Symbol and bit error rates.
+
+@@example Eng/api/comms_ser_basic.cpp@@
+
+### Example 2
+
+A batch of detected frames.
+
+@@example Eng/api/comms_detect_batch.cpp@@
+
+### Example 3
+
+Rejected arrays.
+
+@@example Eng/api/comms_ber_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

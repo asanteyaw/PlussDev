@@ -1,0 +1,57 @@
+# `comms::TimingResult`
+
+The result of symbol-timing recovery.
+
+## Signature
+
+```cpp
+comms::TimingResult
+```
+
+## What It Does
+
+Holds the recovered symbols and the sampling instant of each.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `symbols` | The symbols sampled at the instants the loop steered, `[..., count]`. |  |
+| `offset` | The sampling instant of each symbol in samples of the input waveform, `[..., count]`. |  |
+
+## Returns
+
+Returned by `gardner`.
+
+## Errors
+
+Reading a field does not run the loop again.
+
+## Interpretation and Use
+
+The first symbols are sampled before the loop has settled. The symbol stream has an unknown integer alignment with the transmitted one (the loop locks to whichever symbol instants it finds); align it with a preamble.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A locked loop.
+
+@@example Eng/api/comms_gardner_lock.cpp@@
+
+### Example 2
+
+Loops of different bandwidth.
+
+@@example Eng/api/comms_gardner_bandwidth.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/comms_gardner_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

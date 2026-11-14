@@ -1,0 +1,296 @@
+# DC power flow
+
+[Back to Power 1: Networks and Power Flow](../power_01_networks_and_power_flow.md)
+
+Most contingency, congestion and market studies need many power flows, quickly, and do not need the voltage magnitudes. The DC power flow gives the active-power flows from a single linear solve. This page explains what the approximation assumes, solves a network whose flows can be found by hand, compares the answer with the full AC solution, shows that the solution scales with the load, and shows the networks for which the approximation fails.
+
+## The mental model
+
+The DC power flow keeps three assumptions about the AC equations. Every voltage magnitude is `1.0` per unit. Every line is lossless, so only its reactance `x` matters. And the angle differences across the lines are small, so `sin(difference)` is the difference. Active power on a line from bus `i` to bus `j` is then `(theta_i - theta_j) / x`, the same form as a current through a resistor, and the balance of power at each bus is a linear system for the angles,
+
+```{math}
+B \theta = P,
+```
+
+where `B` is the susceptance matrix, `P` the net active injections and the slack angle is fixed at zero. `dc(grid)` returns a `DcResult`:
+
+| Member | Shape | Meaning |
+|---|---|---|
+| `angle` | `[..., bus]` | the angles in radians, zero at the slack |
+| `injection` | `[..., bus]` | the net active injection at every bus, which at the slack is whatever balances the rest |
+| `from_power`, `to_power` | `[..., line]` | the active flow into each line at its two ends, equal and opposite since the line is lossless |
+| `residual` | `[...]` | the largest violation of power balance, a check on the solution |
+
+The injection is `p` of the bus plus the `p` of the active generators, so the slack absorbs any imbalance between total generation and total load.
+
+## A network whose flows are known
+
+The network is a ring of three buses with a `0.5` per unit load at bus `2` and the slack at bus `0`. The path from `0` to `2` through bus `1` has reactance `0.1 + 0.2 = 0.3`, equal to that of the direct line, so by symmetry each carries `0.25`. The angle at bus `2` is the drop along either path, `0.25 * 0.3 = 0.075` rad below the slack, and at bus `1` it is `0.25 * 0.1 = 0.025` below. The program solves the network and prints the angles and flows beside these values.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// three buses in a ring: a slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 in between.
+// The two paths from bus 0 to bus 2, directly (x = 0.3) and through bus 1 (x = 0.1 + 0.2), have equal reactance.
+static power::Net ring(double resistance_scale = 1.0) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01 * resistance_scale, 0.02 * resistance_scale, 0.03 * resistance_scale});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const auto r = power::dc(power::make(ring()));
+  out.writeln("angles (rad):          ", flat(r.angle), "   by hand 0, -0.025, -0.075");
+  out.writeln("flows from end (p.u.): ", flat(r.from_power), "   by hand 0.25 (0 to 1), 0.25 (1 to 2), 0.25 (0 to 2)");
+  out.writeln("flows to end (p.u.):   ", flat(r.to_power), "   equal and opposite: the line is lossless");
+  out.writeln("injections (p.u.):     ", flat(r.injection), "   the slack supplies the whole load");
+  out.writeln("residual: ", flat(r.residual));
+}
+```
+
+The angles are `0, -0.025, -0.075`, and each path carries exactly `0.25`: the flow divides between parallel paths in inverse proportion to their reactances, the way current divides between resistors. The slack's injection is the load, `0.5`, since the lossless model has nothing else to supply.
+
+## Redistributing generation
+
+Where the generation sits decides the flows. Moving generation from the slack to a generator at bus `1` shortens the path for part of the load. The program puts a generator of `0.3` per unit at bus `1`, so the slack now supplies `0.2`, and prints the new flows: a flow of `0.3` enters bus `1` from the generator, and the lines carry the combination of the two sources.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// three buses in a ring: a slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 in between.
+// The two paths from bus 0 to bus 2, directly (x = 0.3) and through bus 1 (x = 0.1 + 0.2), have equal reactance.
+static power::Net ring(double resistance_scale = 1.0) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01 * resistance_scale, 0.02 * resistance_scale, 0.03 * resistance_scale});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  power::Net net = ring();
+  net.buses.kind[1] = power::BusKind::PV;
+  net.gens.bus = {1};
+  net.gens.p = vec({0.3});
+  net.gens.q = vec({0.0});
+  const auto r = power::dc(power::make(net));
+  out.writeln("injections (p.u.): ", flat(r.injection), "   the slack supplies 0.5 - 0.3 = 0.2");
+  out.writeln("angles (rad):      ", flat(r.angle));
+  auto flows = flat(r.from_power);
+  for (double &flow : flows) flow += 0.0;   // turns a rounding-level -0 into 0
+  out.writeln("flows (p.u.):      ", flows, "   lines 0-1, 1-2, 0-2");
+}
+```
+
+Bus `1` now sits at the same angle as the slack, so line `0-1` carries nothing: the generator's `0.3` goes to the load through line `1-2`, and the slack's `0.2` through line `0-2`. By linearity the flows are the sum of the flows from each source alone, which is what makes the DC model the basis of sensitivity factors.
+
+## Linearity: sweeps of load
+
+Because the equations are linear, doubling the injections doubles the angles and the flows. The program puts three load levels, `0.25`, `0.5` and `1.0` per unit, on the load bus with a leading axis, solves them in one call, and prints the angle at the load bus for each; the ratios to the first are exactly `1`, `2`, `4`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// three buses in a ring: a slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 in between.
+// The two paths from bus 0 to bus 2, directly (x = 0.3) and through bus 1 (x = 0.1 + 0.2), have equal reactance.
+static power::Net ring(double resistance_scale = 1.0) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01 * resistance_scale, 0.02 * resistance_scale, 0.03 * resistance_scale});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6).with_sep(""));
+  power::Net net = ring();
+  net.buses.p = pluss::series::make(std::vector<double>{0, 0, -0.25, 0, 0, -0.5, 0, 0, -1.0}).reshape({3, 3});
+  net.buses.q = pluss::series::make(std::vector<double>{0, 0, -0.05, 0, 0, -0.1, 0, 0, -0.2}).reshape({3, 3});
+  const auto r = power::dc(power::make(net));
+  const auto angle = flat(r.angle.select(-1, 2));
+  out.writeln("load-bus angle for 0.25, 0.5 and 1.0 per unit (rad): ", angle);
+  out.writeln("ratios to the first: ", angle[0] / angle[0], " ", angle[1] / angle[0], " ", angle[2] / angle[0]);
+  out.writeln("shape of the angles: ", r.angle.sizes());
+}
+```
+
+The ratios are exactly `1, 2, 4`, and the result keeps the leading axis, `[3, 3]`. The reactive part of the load is ignored: the three `q` values have no effect on the DC solution.
+
+## Comparing with the AC solution
+
+The DC flows are an approximation, and how good depends on the network. The program solves the ring with the AC power flow for the same loads, once with the resistances of the lines as given (a resistance to reactance ratio of `0.1`, typical of high-voltage lines) and once with the resistances increased tenfold (a ratio of `1`, typical of distribution lines), and compares the flow on the direct line and the total supplied by the slack with the DC values, which do not change.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// three buses in a ring: a slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 in between.
+// The two paths from bus 0 to bus 2, directly (x = 0.3) and through bus 1 (x = 0.1 + 0.2), have equal reactance.
+static power::Net ring(double resistance_scale = 1.0) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01 * resistance_scale, 0.02 * resistance_scale, 0.03 * resistance_scale});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const auto dc = power::dc(power::make(ring()));
+  out.writeln("DC:                      direct-line flow ", flat(dc.from_power)[2], ", slack output ", flat(dc.injection)[0]);
+  for (double scale : {1.0, 10.0}) {
+    const auto ac = power::ac(power::make(ring(scale)));
+    out.writeln("AC, resistance x ", scale, ":    direct-line flow ", flat(ac.from_power.real())[2], ", slack output ", flat(ac.injection.real())[0], ", converged ", ac.converged.item<bool>());
+  }
+}
+```
+
+With the resistances as given the DC flow, `0.25`, is within one percent of the AC flow, `0.25206`, and the slack supplies `0.50411` rather than `0.5` to cover the losses, which DC cannot see. With the resistances increased tenfold the AC flow is `0.27421`, nearly ten percent above the DC value, and the slack supplies `0.54842`. Use the DC model where the resistance is small against the reactance and the voltages are near nominal.
+
+## Decisions
+
+- **Many solves or only flows:** DC; screening of contingencies, sensitivity factors and market dispatch are built on it.
+- **Voltages, reactive power or losses matter:** the [AC power flow](ac_power_flow.md).
+- **Checking a DC result:** read `residual`, and compare the sum of the injections with zero.
+
+## Pitfalls
+
+The program makes one intentional mistake: treating the DC losses as real. It sums the injections of the DC and the AC results for the same network and prints both, to show that the DC sum is exactly zero because the model has no losses, while the AC sum is the true loss of the network.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// three buses in a ring: a slack at bus 0, a load of 0.5 per unit at bus 2, and bus 1 in between.
+// The two paths from bus 0 to bus 2, directly (x = 0.3) and through bus 1 (x = 0.1 + 0.2), have equal reactance.
+static power::Net ring(double resistance_scale = 1.0) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ, power::BusKind::PQ};
+  net.buses.p = vec({0.0, 0.0, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.1});
+  net.buses.vm = vec({1.0, 1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01 * resistance_scale, 0.02 * resistance_scale, 0.03 * resistance_scale});
+  net.lines.x = vec({0.1, 0.2, 0.3});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const auto dc = power::dc(power::make(ring()));
+  const auto ac = power::ac(power::make(ring()));
+  double dc_sum = 0.0, ac_sum = 0.0;
+  for (double v : flat(dc.injection)) dc_sum += v;
+  for (double v : flat(ac.injection.real())) ac_sum += v;
+  out.writeln("sum of DC injections (p.u.): ", dc_sum, "   (no losses in the model)");
+  out.writeln("sum of AC injections (p.u.): ", ac_sum, "   (the real losses)");
+  out.writeln("losses as a share of the load: ", 100.0 * ac_sum / 0.5, " percent");
+}
+```
+
+A DC solution always balances exactly, so its zero loss says nothing about the network; the real losses here are `0.00411` per unit, `0.82` percent of the load. If losses matter to the question, such as the cost of power delivered or the size of the slack, they come from the AC power flow.
+
+Reference: [`dc`](../../../../api/eng/power/flow/dc.md), [`DcResult`](../../../../api/eng/power/flow/DcResult.md), [`ac`](../../../../api/eng/power/flow/ac.md), [`make`](../../../../api/eng/power/model/make.md).
+
+Where next: [AC power flow](ac_power_flow.md) solves the full nonlinear equations for the voltage magnitudes, reactive power and losses.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="describing_a_network.html">
+    <span class="label">Previous</span>
+    <span class="title">Describing a network</span>
+  </a>
+  <a class="next-link" href="ac_power_flow.html">
+    <span class="label">Next</span>
+    <span class="title">AC power flow</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

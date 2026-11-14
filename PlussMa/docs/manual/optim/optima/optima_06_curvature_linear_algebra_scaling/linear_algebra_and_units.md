@@ -89,10 +89,10 @@ Cholesky          SequentialQP      1     9      0.17534    0
 Cholesky          InternalProtocol  1     15     0.17535    0        
 PivotedDirect     SequentialQP      1     9      0.17534    0        
 PivotedDirect     InternalProtocol  1     15     0.17535    0        
-ConjugateGradient SequentialQP      1     9      0.17534    11453    
+ConjugateGradient SequentialQP      1     9      0.17534    11267    
 ConjugateGradient InternalProtocol  1     15     0.17535    202      
 ```
-All six runs reach the same objective, 0.17534 or 0.17535: sequential QP in 9 iterations and the interior method in 15. Conjugate gradients take 11453 Krylov iterations in sequential QP and 202 in the interior method; the factorizations take none because they form and factor the system once per step. A dense factorization of a 100-variable system is small work. Conjugate gradients exist for the problem sizes where the system no longer fits, `iterative_dimension_threshold` (3000 by default) is where `Auto` switches to them, and every algorithm falls back to a direct solve if conjugate gradients fail to reach their tolerance, so the choice can cost time but cannot cost the answer. The tolerance used inside the iteration is capped at 1e-8 whatever `krylov_tolerance` says, because a primal-dual step has to be accurate to the iteration's own precision.
+All six runs reach the same objective, 0.17534 or 0.17535: sequential QP in 9 iterations and the interior method in 15. Conjugate gradients take 11267 Krylov iterations in sequential QP and 202 in the interior method; the factorizations take none because they form and factor the system once per step. A dense factorization of a 100-variable system is small work. Conjugate gradients exist for the problem sizes where the system no longer fits, `iterative_dimension_threshold` (3000 by default) is where `Auto` switches to them, and every algorithm falls back to a direct solve if conjugate gradients fail to reach their tolerance, so the choice can cost time but cannot cost the answer. The tolerance used inside the iteration is capped at 1e-8 whatever `krylov_tolerance` says, because a primal-dual step has to be accurate to the iteration's own precision.
 
 ## Program 6: Units, measured
 
@@ -169,13 +169,13 @@ K       algorithm         None                      InitialPoint              Ob
 1000    WorkingSet        1 / 43                    1 / 10                    1 / 23                    
 1000    InternalProtocol  1 / 17                    1 / 17                    1 / 29                    
 1e+06   SequentialQP      1 / 9                     1 / 9                     1 / 17                    
-1e+06   WorkingSet        1 / 58                    1 / 60                    1 / 24                    
+1e+06   WorkingSet        1 / 61                    1 / 60                    1 / 24                    
 1e+06   InternalProtocol  -6 / 15                   -6 / 15                   1 / 49                    
 1e+09   SequentialQP      -6 / 33                   -6 / 33                   1 / 19                    
-1e+09   WorkingSet        1 / 11                    -6 / 11                   1 / 35                    
+1e+09   WorkingSet        1 / 11                    1 / 10                    1 / 35                    
 1e+09   InternalProtocol  -6 / 20                   -6 / 20                   1 / 48                    
 ```
-With `None`, the problem as written, sequential QP converges at `K = 1000` and `1e6` but fails at `1e9` (flag `-6`), and the interior method fails at both `1e6` and `1e9`; only the working-set method survives all three, in 43, 58 and 11 iterations. `InitialPoint` changes nothing for sequential QP and the interior method and makes the working-set method fail at `1e9`. `ObjectiveAndConstraints`, the default, is the only column in which every cell converges: sequential QP in 16, 17 and 19 iterations, the working-set method in 23, 24 and 35, and the interior method in 29, 49 and 48. The price is visible where the units were already fine: at `K = 1000` sequential QP takes 16 iterations instead of 10. The automatic rescaling is no substitute for a model whose numbers mean something, but it removes the failure that extreme units used to cause.
+With `None`, the problem as written, sequential QP converges at `K = 1000` and `1e6` but fails at `1e9` (flag `-6`), and the interior method fails at both `1e6` and `1e9`; only the working-set method survives all three, in 43, 61 and 11 iterations. `InitialPoint` changes nothing for sequential QP and the interior method and moves the working-set method by at most a few iterations. `ObjectiveAndConstraints`, the default, is the only column in which every cell converges: sequential QP in 16, 17 and 19 iterations, the working-set method in 23, 24 and 35, and the interior method in 29, 49 and 48. The price is visible where the units were already fine: at `K = 1000` sequential QP takes 16 iterations instead of 10. The automatic rescaling is no substitute for a model whose numbers mean something, but it removes the failure that extreme units used to cause.
 
 ## Decisions and pitfalls
 
@@ -185,3 +185,12 @@ With `None`, the problem as written, sequential QP converges at `K = 1000` and `
 - **Write your problem in natural units if you can.** Scaling repairs a bad choice of units; it is not a licence to pick them carelessly, and tolerances are only meaningful when quantities are of order one.
 
 Where next: [Chapter 7](../optima_07_derivatives.md) is about where the derivatives come from.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="curvature_models.html">
+    <span class="label">Previous</span>
+    <span class="title">Curvature models</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

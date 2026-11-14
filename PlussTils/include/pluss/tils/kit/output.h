@@ -8,6 +8,7 @@
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <initializer_list>
 #include <iostream>
 #include <map>
@@ -25,11 +26,10 @@
 #include <variant>
 #include <vector>
 
-#include "pluss/tils/print_options.h"
+#include <pluss/error.h>
 
-#if PLUSSQIT_HAS_FMT
-#include <fmt/format.h>
-#endif
+#include "pluss/tils/kit/format_spec.h"
+#include "pluss/tils/print_options.h"
 
 namespace pluss::tils {
 
@@ -276,8 +276,15 @@ void render_number(std::ostream& os, N value, const ResolvedPrint& r) {
                           r.precision >= 0 ? r.precision : 6);
     else if (r.notation == Notation::General && r.precision >= 0)
       res = std::to_chars(buf, buf + sizeof buf, value, std::chars_format::general, r.precision);
-    else
-      res = std::to_chars(buf, buf + sizeof buf, value);
+    else {
+      // no notation chosen: the shortest round-trip form, laid out like {fmt}'s `{}`
+      const bool neg = std::signbit(value);
+      std::string body = (neg ? "-" : "") + fmtspec::float_body_(neg ? -value : value, fmtspec::Spec{}, 0);
+      if (r.uppercase)
+        for (char& c : body) if (c == 'e') c = 'E';
+      num_finalize_(os, std::move(body), "", r);
+      return;
+    }
   } else {
     res = std::to_chars(buf, buf + sizeof buf, value);
   }
@@ -591,18 +598,6 @@ inline std::string simple_brace_format(std::string_view fmt, std::initializer_li
   return out;
 }
 
-#if PLUSSQIT_HAS_FMT
-template <class T>
-decltype(auto) fmt_arg(T&& value) {
-  using U = std::remove_cvref_t<T>;
-  if constexpr (fmt::is_formattable<U, char>::value) {
-    return std::forward<T>(value);
-  } else {
-    return render_to_string(value);
-  }
-}
-#endif
-
 // ── engine-support: trailing PrintOptions detection + arg-pack peel ───────
 // Decides whether the last argument of a call is a PrintOptions. The check lives in a function with
 // `if constexpr`, so the empty-pack case never names a last element, and a call with no arguments
@@ -684,8 +679,143 @@ inline void apply_spec_(ResolvedPrint& r, std::string_view s) {
   }
 }
 
-// Our own brace engine -- no fmt. `{}` / `{N}` render via the call ctx; `{:spec}`
-// applies a per-placeholder override; `{{` / `}}` are literal braces.
+// ── scalar placeholders with a spec use the strict grammar (format_spec.h) ─────────────────────────────────────
+template <class U>
+inline constexpr bool strict_scalar_v =
+    std::is_arithmetic_v<U> || std::is_pointer_v<U> || std::is_same_v<U, std::nullptr_t> ||
+    (std::is_convertible_v<const U&, std::string_view> && !std::is_pointer_v<U>);
+
+template <class T>
+std::string format_strict_(const T& value, const fmtspec::Spec& sp) {
+  using U = std::remove_cvref_t<T>;
+  if constexpr (std::is_same_v<U, bool>) {
+    return fmtspec::format_bool(value, sp);
+  } else if constexpr (is_char_v<U>) {
+    return fmtspec::format_character(value, sp);
+  } else if constexpr (std::is_integral_v<U>) {
+    return fmtspec::format_integer(value, sp);
+  } else if constexpr (std::is_floating_point_v<U>) {
+    return fmtspec::format_floating(value, sp);
+  } else if constexpr (std::is_same_v<U, std::nullptr_t>) {
+    return fmtspec::format_pointer(nullptr, sp);
+  } else if constexpr (std::is_pointer_v<U> && !std::is_convertible_v<U, std::string_view>) {
+    return fmtspec::format_pointer(static_cast<const void*>(value), sp);
+  } else {
+    return fmtspec::format_text(std::string_view{value}, sp);
+  }
+}
+
+// integer value of argument `n`, for a nested {} width / precision
+template <class Tup, std::size_t... I>
+long long arg_as_int_(std::size_t n, const Tup& t, std::index_sequence<I...>) {
+  long long out = -1;
+  bool done = false;
+  auto take = [&](const auto& v) {
+    using V = std::remove_cvref_t<decltype(v)>;
+    if constexpr (std::is_integral_v<V> && !std::is_same_v<V, bool> && !is_char_v<V>) {
+      out = static_cast<long long>(v);
+      done = true;
+    }
+  };
+  ((I == n ? (take(std::get<I>(t)), void()) : void()), ...);
+  PLUSS_CHECK(done, "format: width/precision argument must be an integer");
+  return out;
+}
+
+// Call-level PrintOptions (grouping, fixed decimals, hex, ...) keep applying to a placeholder whose spec does not say
+// otherwise: the spec decides what it names, the options fill in the rest. Options the strict grammar has no
+// spelling for (humanized sizes, metric prefixes, a custom decimal point, trimmed zeros, custom nan/inf text,
+// other bool styles) send the placeholder to the engine's own renderer.
+template <class V>
+constexpr bool strict_scalar_numeric_v = std::is_arithmetic_v<V> && !std::is_same_v<V, bool> && !is_char_v<V>;
+
+template <class V>
+bool call_options_need_engine_renderer_(const ResolvedPrint& r) {
+  if constexpr (strict_scalar_numeric_v<V>) {
+    return r.humanize != Humanize::None || r.notation == Notation::Metric || r.decimal_point != '.' ||
+           r.trim_trailing_zeros || r.group_size != 3 || r.nan_text != "nan" || r.pos_inf_text != "inf" ||
+           r.neg_inf_text != "-inf";
+  } else if constexpr (std::is_same_v<V, bool>) {
+    return r.bool_style != BoolStyle::TrueFalse;
+  } else {
+    return false;
+  }
+}
+
+template <class V>
+void inherit_call_options_(fmtspec::Spec& sp, const ResolvedPrint& r) {
+  if constexpr (strict_scalar_numeric_v<V>) {
+    if (sp.type == 0) {
+      if constexpr (std::is_integral_v<V>) {
+        if (r.notation == Notation::Hex) sp.type = r.uppercase ? 'X' : 'x';
+        else if (r.notation == Notation::Octal) sp.type = 'o';
+        else if (r.notation == Notation::Binary) sp.type = 'b';
+        else if (r.notation == Notation::Percent) sp.type = '%';
+      } else {
+        if (r.notation == Notation::Fixed) sp.type = 'f';
+        else if (r.notation == Notation::Scientific) sp.type = r.uppercase ? 'E' : 'e';
+        else if (r.notation == Notation::General) sp.type = r.uppercase ? 'G' : 'g';
+        else if (r.notation == Notation::Percent) sp.type = '%';
+      }
+    }
+    if (sp.precision < 0 && r.precision >= 0) sp.precision = r.precision;
+    if (sp.sign == 0) sp.sign = r.sign == Sign::Always ? '+' : r.sign == Sign::SpaceForPositive ? ' ' : 0;
+    if (sp.group == 0 && r.grouping != '\0') sp.group = r.grouping;
+    if (r.alt) sp.alt = true;
+  }
+}
+
+// Render argument `n` under `spec` into `out`. Scalars follow the strict grammar; containers and other
+// values keep the engine's element-wise override (`{:.2f}` on a list formats every element).
+template <class Tup, class Dyn, std::size_t... I>
+void render_nth_spec_(std::size_t n, const Tup& t, std::string_view spec, Dyn&& dyn, const RenderCtx& base,
+                      std::string& out, std::string_view missing, std::index_sequence<I...>) {
+  bool done = false;
+  auto legacy = [&](const auto& v) {
+    ResolvedPrint pr = base.r;
+    apply_spec_(pr, spec);
+    RenderCtx c2{pr, 0};
+    std::ostringstream tmp;
+    render_content(tmp, v, c2);
+    std::string piece = std::move(tmp).str();
+    if (pr.width > 0 || pr.truncate > 0 || pr.case_transform != CaseXf::None) {
+      std::ostringstream f;
+      emit_field_(f, std::move(piece), pr);
+      piece = std::move(f).str();
+    }
+    out += piece;
+  };
+  auto one = [&](const auto& v) {
+    using V = std::remove_cvref_t<decltype(v)>;
+    if constexpr (strict_scalar_v<V>) {
+      if (call_options_need_engine_renderer_<V>(base.r)) {
+        legacy(v);
+      } else {
+        // The spec owns the field layout. A call-level width / truncate / case still applies to the piece: the
+        // whole layout when the spec gave no width, and only truncate and case when it did.
+        fmtspec::Spec sp = fmtspec::parse(spec, dyn);
+        inherit_call_options_<V>(sp, base.r);
+        std::string piece = format_strict_(v, sp);
+        ResolvedPrint pr = base.r;
+        if (sp.width > 0) pr.width = 0;
+        if (pr.width > 0 || pr.truncate > 0 || pr.case_transform != CaseXf::None) {
+          std::ostringstream f;
+          emit_field_(f, std::move(piece), pr);
+          piece = std::move(f).str();
+        }
+        out += piece;
+      }
+    } else {
+      legacy(v);
+    }
+    done = true;
+  };
+  ((I == n ? (one(std::get<I>(t)), void()) : void()), ...);
+  if (!done) out.append(missing);
+}
+
+// The brace engine behind writef / writelnf / format. `{}` / `{N}` render through the call ctx; `{:spec}`
+// applies the spec; `{{` / `}}` are literal braces.
 template <class Tup>
 std::string format_expand_(std::string_view pat, const RenderCtx& base, const Tup& args) {
   constexpr std::size_t N = std::tuple_size_v<Tup>;
@@ -708,28 +838,42 @@ std::string format_expand_(std::string_view pat, const RenderCtx& base, const Tu
       std::string_view spec;
       if (j < pat.size() && pat[j] == ':') {
         std::size_t k = j + 1;
-        while (k < pat.size() && pat[k] != '}') ++k;
+        int depth = 0;  // nested {} (dynamic width / precision) belong to the spec
+        while (k < pat.size() && (pat[k] != '}' || depth > 0)) {
+          if (pat[k] == '{') ++depth;
+          else if (pat[k] == '}') --depth;
+          ++k;
+        }
         spec = pat.substr(j + 1, k - (j + 1));
         j = k;
       }
       if (j >= pat.size() || pat[j] != '}') { out.push_back('{'); ++i; continue; }
 
       const std::size_t use = has_idx ? idx : auto_idx++;
-      ResolvedPrint pr = base.r;
-      if (!spec.empty()) apply_spec_(pr, spec);
-      RenderCtx c2{pr, 0};
-
-      std::ostringstream tmp;
-      if (use < N) render_nth_(use, args, tmp, c2, missing, std::make_index_sequence<N>{});
-      else tmp << missing;
-      std::string piece = std::move(tmp).str();
-      if (pr.width > 0 || pr.truncate > 0 || pr.case_transform != CaseXf::None) {
-        std::ostringstream f;
-        emit_field_(f, std::move(piece), pr);
-        piece = std::move(f).str();
+      if (spec.empty()) {
+        std::ostringstream tmp;
+        if (use < N) render_nth_(use, args, tmp, base, missing, std::make_index_sequence<N>{});
+        else tmp << missing;
+        std::string piece = std::move(tmp).str();
+        const ResolvedPrint& pr = base.r;
+        if (pr.width > 0 || pr.truncate > 0 || pr.case_transform != CaseXf::None) {  // call-level field layout
+          std::ostringstream f;
+          emit_field_(f, std::move(piece), pr);
+          piece = std::move(f).str();
+        }
+        out.append(piece);
+      } else if (use < N) {
+        auto dyn = [&](bool has, std::size_t id) {
+          const std::size_t at = has ? id : auto_idx++;
+          PLUSS_CHECK(at < N, "format: width/precision argument index out of range");
+          used = (std::max)(used, at + 1);
+          return arg_as_int_(at, args, std::make_index_sequence<N>{});
+        };
+        render_nth_spec_(use, args, spec, dyn, base, out, missing, std::make_index_sequence<N>{});
+      } else {
+        out.append(missing);
       }
-      out.append(piece);
-      if (use < N) used = std::max(used, use + 1);
+      if (use < N) used = (std::max)(used, use + 1);
       i = j + 1;
       continue;
     }
@@ -737,11 +881,142 @@ std::string format_expand_(std::string_view pat, const RenderCtx& base, const Tu
     out.push_back(c);
     ++i;
   }
-  if (base.r.strict_args && used != N)
-    throw std::runtime_error("OutputEngine: format placeholder / argument count mismatch");
+  PLUSS_CHECK(!(base.r.strict_args && used != N), "OutputEngine: format placeholder / argument count mismatch");
   return out;
 }
 
+// ── compile-time checking of literal patterns ────────────────────────────────────────────────────────────────
+// Each failure throws a distinct tag type, so the diagnostic of a bad literal names the problem:
+//   format_string_error_unmatched_brace, _bad_spec, _missing_argument, _mixed_indexing
+struct format_string_error_unmatched_brace {};
+struct format_string_error_bad_spec {};
+struct format_string_error_missing_argument {};
+struct format_string_error_mixed_indexing {};
+
+inline constexpr std::size_t kUnknownArgCount = static_cast<std::size_t>(-1);
+
+constexpr bool is_digit_(char c) noexcept { return c >= '0' && c <= '9'; }
+
+// Walks one pattern exactly like format_expand_ / fmtspec::parse do, without any argument values.
+constexpr void check_pattern(std::string_view pat, std::size_t nargs) {
+  std::size_t auto_idx = 0;
+  int mode = 0;  // 0 none yet, 1 automatic indexing, 2 manual indexing
+  auto take = [&](bool manual, std::size_t id) {
+    const int want = manual ? 2 : 1;
+    if (mode != 0 && mode != want) throw format_string_error_mixed_indexing{};
+    mode = want;
+    const std::size_t at = manual ? id : auto_idx++;
+    if (nargs != kUnknownArgCount && at >= nargs) throw format_string_error_missing_argument{};
+  };
+  auto utf8_len = [](unsigned char lead) -> std::size_t {
+    return lead < 0x80 ? 1 : (lead >> 5) == 0x6 ? 2 : (lead >> 4) == 0xE ? 3 : (lead >> 3) == 0x1E ? 4 : 1;
+  };
+  auto is_align = [](char c) { return c == '<' || c == '>' || c == '^'; };
+
+  for (std::size_t i = 0; i < pat.size();) {
+    const char c = pat[i];
+    if (c == '}') {
+      if (i + 1 < pat.size() && pat[i + 1] == '}') { i += 2; continue; }
+      throw format_string_error_unmatched_brace{};
+    }
+    if (c != '{') { ++i; continue; }
+    if (i + 1 < pat.size() && pat[i + 1] == '{') { i += 2; continue; }
+    std::size_t j = i + 1, id = 0;
+    bool has_id = false;
+    while (j < pat.size() && is_digit_(pat[j])) { id = id * 10 + static_cast<std::size_t>(pat[j] - '0'); has_id = true; ++j; }
+    take(has_id, id);
+    if (j < pat.size() && pat[j] == ':') {
+      std::size_t k = j + 1, depth = 0;
+      while (k < pat.size() && (pat[k] != '}' || depth > 0)) {
+        if (pat[k] == '{') ++depth;
+        else if (pat[k] == '}') --depth;
+        ++k;
+      }
+      if (k >= pat.size()) throw format_string_error_unmatched_brace{};
+      const std::string_view s = pat.substr(j + 1, k - (j + 1));
+      std::size_t p = 0;
+      if (!s.empty()) {
+        const std::size_t cl = utf8_len(static_cast<unsigned char>(s[0]));
+        if (s.size() > cl && is_align(s[cl])) p = cl + 1;
+        else if (is_align(s[0])) p = 1;
+      }
+      if (p < s.size() && (s[p] == '+' || s[p] == '-' || s[p] == ' ')) ++p;
+      if (p < s.size() && s[p] == '#') ++p;
+      if (p < s.size() && s[p] == '0') ++p;
+      auto count = [&]() {  // width / precision: digits or a nested {[id]}
+        if (p < s.size() && s[p] == '{') {
+          std::size_t q = p + 1, nid = 0;
+          bool nhas = false;
+          while (q < s.size() && is_digit_(s[q])) { nid = nid * 10 + static_cast<std::size_t>(s[q] - '0'); nhas = true; ++q; }
+          if (q >= s.size() || s[q] != '}') throw format_string_error_bad_spec{};
+          take(nhas, nid);
+          p = q + 1;
+          return true;
+        }
+        if (p < s.size() && is_digit_(s[p])) { while (p < s.size() && is_digit_(s[p])) ++p; return true; }
+        return false;
+      };
+      count();
+      if (p < s.size() && s[p] == '.') {
+        ++p;
+        if (!count()) throw format_string_error_bad_spec{};
+      }
+      if (p < s.size() && (s[p] == ',' || s[p] == '_' || s[p] == '\'')) ++p;
+      if (p < s.size() && s[p] == 'L') ++p;
+      if (p < s.size()) {
+        const char t = s[p++];
+        bool ok = false;
+        for (const char allowed : std::string_view("bBcdeEfFgGaAopsxX?%")) ok = ok || allowed == t;
+        if (!ok) throw format_string_error_bad_spec{};
+      }
+      if (p != s.size()) throw format_string_error_bad_spec{};
+      j = k;
+    }
+    if (j >= pat.size() || pat[j] != '}') throw format_string_error_unmatched_brace{};
+    i = j + 1;
+  }
+}
+
+// How many values a call's pattern can refer to: all arguments except a trailing PrintOptions.
+template <class... Args>
+constexpr std::size_t pattern_arg_count() {
+  if constexpr (sizeof...(Args) == 1 && (is_arg_pack_v<std::remove_cvref_t<Args>> && ...)) {
+    return kUnknownArgCount;  // a packed ArgPack carries its values at run time
+  } else if constexpr (trailing_options_v<Args...>) {
+    return sizeof...(Args) - 1;
+  } else {
+    return sizeof...(Args);
+  }
+}
+
+}  // namespace detail
+
+// A pattern that was checked while compiling. Literals convert implicitly and are validated against the number of
+// arguments (`format("{} {}", 1)` does not compile); a pattern built at run time goes through runtime_format().
+struct runtime_format {
+  std::string_view text;
+  explicit runtime_format(std::string_view t) noexcept : text(t) {}
+};
+
+namespace detail {
+template <class... Args>
+struct format_string {
+  std::string_view text;
+  template <std::size_t N>
+  consteval format_string(const char (&literal)[N]) : text(literal, N - 1) {
+    check_pattern(text, pattern_arg_count<Args...>());
+  }
+  format_string(runtime_format r) noexcept : text(r.text) {}
+};
+template <class... Args>
+using format_string_t = std::type_identity_t<format_string<std::remove_cvref_t<Args>...>>;
+
+template <class... Rest>
+std::string format_string_(std::string_view pattern, const PrintOptions& po, const Rest&... rest) {
+  const ResolvedPrint r = resolve(po, EngineDefaults{});
+  const RenderCtx ctx{r, 0};
+  return format_expand_(pattern, ctx, std::tie(rest...));
+}
 } // namespace detail
 
 class OutputEngine {
@@ -843,15 +1118,45 @@ public:
   }
 
   template <class... Args>
-  OutputEngine& writef(std::string_view pattern, Args&&... args) {
-    return format_dispatch_(pattern, /*newline=*/false, /*lvl=*/nullptr,
+  OutputEngine& writef(detail::format_string_t<Args...> pattern, Args&&... args) {
+    return format_dispatch_(pattern.text, /*newline=*/false, /*lvl=*/nullptr,
                             std::forward<Args>(args)...);
   }
 
   template <class... Args>
-  OutputEngine& writelnf(std::string_view pattern, Args&&... args) {
-    return format_dispatch_(pattern, /*newline=*/true, /*lvl=*/nullptr,
+  OutputEngine& writelnf(detail::format_string_t<Args...> pattern, Args&&... args) {
+    return format_dispatch_(pattern.text, /*newline=*/true, /*lvl=*/nullptr,
                             std::forward<Args>(args)...);
+  }
+
+  // ── formatters (return a string instead of writing to a sink) ───────────────────────────────────────────
+  // OutputEngine::format("{:>8.3f} {}", x, name) renders with the same brace grammar and value rendering as
+  // writef/writelnf, but with pristine defaults, so it is safe for library messages whatever any engine
+  // instance has been configured to do. A trailing PrintOptions overrides the defaults for this call. A literal
+  // pattern is checked against its arguments while compiling; a pattern built at run time goes through
+  // runtime_format(). Static, so it is usable as OutputEngine::format(...) or engine.format(...).
+  template <class... Args>
+  [[nodiscard]] static std::string format(detail::format_string_t<Args...> pattern, const Args&... args) {
+    if constexpr (detail::trailing_options_v<Args...>) {
+      return detail::apply_peel_last_(
+          [&](const PrintOptions& o, const auto&... rest) { return detail::format_string_(pattern.text, o, rest...); },
+          std::forward_as_tuple(args...), std::make_index_sequence<sizeof...(Args) - 1>{});
+    } else {
+      return detail::format_string_(pattern.text, PrintOptions{}, args...);
+    }
+  }
+
+  // OutputEngine::join(range, ", ") -> the elements rendered one by one, separated by `sep`.
+  template <std::ranges::input_range R>
+  [[nodiscard]] static std::string join(const R& range, std::string_view sep) {
+    std::string out;
+    bool first = true;
+    for (const auto& item : range) {
+      if (!first) out.append(sep);
+      first = false;
+      out += detail::render_to_string(item);
+    }
+    return out;
   }
 
   OutputEngine& endln() {
@@ -881,8 +1186,8 @@ public:
   }
 
   template <class... Args>
-  OutputEngine& logf(OutputLevel level, std::string_view pattern, Args&&... args) {
-    return format_dispatch_(pattern, /*newline=*/true, &level, std::forward<Args>(args)...);
+  OutputEngine& logf(OutputLevel level, detail::format_string_t<Args...> pattern, Args&&... args) {
+    return format_dispatch_(pattern.text, /*newline=*/true, &level, std::forward<Args>(args)...);
   }
 
   template <class... Args>
@@ -911,27 +1216,27 @@ public:
   }
 
   template <class... Args>
-  OutputEngine& tracef(std::string_view pattern, Args&&... args) {
+  OutputEngine& tracef(detail::format_string_t<Args...> pattern, Args&&... args) {
     return logf(OutputLevel::Trace, pattern, std::forward<Args>(args)...);
   }
 
   template <class... Args>
-  OutputEngine& debugf(std::string_view pattern, Args&&... args) {
+  OutputEngine& debugf(detail::format_string_t<Args...> pattern, Args&&... args) {
     return logf(OutputLevel::Debug, pattern, std::forward<Args>(args)...);
   }
 
   template <class... Args>
-  OutputEngine& infof(std::string_view pattern, Args&&... args) {
+  OutputEngine& infof(detail::format_string_t<Args...> pattern, Args&&... args) {
     return logf(OutputLevel::Info, pattern, std::forward<Args>(args)...);
   }
 
   template <class... Args>
-  OutputEngine& warnf(std::string_view pattern, Args&&... args) {
+  OutputEngine& warnf(detail::format_string_t<Args...> pattern, Args&&... args) {
     return logf(OutputLevel::Warn, pattern, std::forward<Args>(args)...);
   }
 
   template <class... Args>
-  OutputEngine& errorf(std::string_view pattern, Args&&... args) {
+  OutputEngine& errorf(detail::format_string_t<Args...> pattern, Args&&... args) {
     return logf(OutputLevel::Error, pattern, std::forward<Args>(args)...);
   }
 
@@ -1097,5 +1402,40 @@ private:
   PrintOptions print_defaults_{};
   bool print_defaults_set_{false};
 };
+
+// ── free-function forms of the engine's formatters ─────────────────────────────────────────────────────────
+template <class... Args>
+[[nodiscard]] std::string format(detail::format_string_t<Args...> pattern, const Args&... args) {
+  return OutputEngine::format<Args...>(pattern, args...);
+}
+
+// join(range, ", ") -> the elements rendered one by one, separated by `sep`.
+template <std::ranges::input_range R>
+[[nodiscard]] std::string join(const R& range, std::string_view sep) {
+  return OutputEngine::join(range, sep);
+}
+
+// print / println: format and write to std::cout, a stream, or a C FILE*.
+template <class... Args>
+void print(std::ostream& os, detail::format_string_t<Args...> pattern, const Args&... args) {
+  os << format<Args...>(pattern, args...);
+}
+template <class... Args>
+void print(std::FILE* file, detail::format_string_t<Args...> pattern, const Args&... args) {
+  const std::string text = format<Args...>(pattern, args...);
+  std::fwrite(text.data(), 1, text.size(), file);
+}
+template <class... Args>
+void print(detail::format_string_t<Args...> pattern, const Args&... args) {
+  print<Args...>(std::cout, pattern, args...);
+}
+template <class... Args>
+void println(std::ostream& os, detail::format_string_t<Args...> pattern, const Args&... args) {
+  os << format<Args...>(pattern, args...) << '\n';
+}
+template <class... Args>
+void println(detail::format_string_t<Args...> pattern, const Args&... args) {
+  println<Args...>(std::cout, pattern, args...);
+}
 
 } // namespace pluss::tils

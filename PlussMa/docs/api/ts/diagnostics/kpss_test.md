@@ -252,3 +252,16 @@ trend: statistic 0.1056, critical 0.1460
 - [`KpssOptions`](KpssOptions.md)
 - [`KpssResult`](KpssResult.md)
 - [`adf_test`](adf_test.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ArchLmResult.html">
+    <span class="label">Previous</span>
+    <span class="title">ArchLmResult</span>
+  </a>
+  <a class="next-link" href="KpssOptions.html">
+    <span class="label">Next</span>
+    <span class="title">KpssOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,1452 @@
+# apiref_manifest_optimapi.toml -- the `Optimization` API reference of PlussMa.
+
+[framework.optim_api]
+title = "Optimization"
+nav_title = "Optimization API"
+nav_prefix = "api/optim/"
+root_page = "api/plussma_optim.html"
+summary = "Solvers for equations and optimization problems: root finding, quadratic, linear and mixed-integer programming, constrained and unconstrained nonlinear optimization, and derivative-free search."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "optim/roots"
+page = "api/optim/roots.md"
+title = "Root finding"
+maxdepth = 2
+children = ["roots/Derivatives", "roots/Options", "roots/Result", "roots/bisect", "roots/householder", "roots/illinois", "roots/newton", "roots/secant"]
+
+[[family]]
+path = "optim/qp"
+page = "api/optim/qp.md"
+title = "Quadratic programming"
+maxdepth = 2
+children = ["qp/Options", "qp/Result", "qp/Solver", "qp/WarmStart", "qp/prepare", "qp/solve"]
+
+[[family]]
+path = "optim/linprog"
+page = "api/optim/linprog.md"
+title = "Linear programming"
+maxdepth = 2
+children = ["linprog/Method", "linprog/Options", "linprog/Problem", "linprog/Result", "linprog/Status", "linprog/solve", "linprog/success", "linprog/to_string"]
+
+[[family]]
+path = "optim/milp"
+page = "api/optim/milp.md"
+title = "Mixed-integer linear programming"
+maxdepth = 2
+children = ["milp/Options", "milp/Problem", "milp/Result", "milp/Status", "milp/solve", "milp/to_string"]
+
+[[family]]
+path = "optim/optima"
+page = "api/optim/optima.md"
+title = "Constrained optimization (Optima)"
+maxdepth = 2
+children = ["optima/ConstrainedProblem", "optima/ConstraintMultipliers", "optima/DerivativeAuditReport", "optima/InternalProtocolOptions", "optima/OptimaAlgorithm", "optima/OptimaExitFlag", "optima/OptimaHessianApproximation", "optima/OptimaLinearSystemSolver", "optima/OptimaLinearSystemStructure", "optima/OptimaOptions", "optima/OptimaOutput", "optima/OptimaProblemScaling", "optima/OptimaProgressSnapshot", "optima/OptimaStallCategory", "optima/OptimaState", "optima/PenaltyMethodOptions", "optima/ProblemBuilder", "optima/ProblemEvaluation", "optima/SequentialQPOptions", "optima/WorkingSetOptions", "optima/audit_optima_derivatives", "optima/constraints", "optima/evaluate_problem", "optima/optima", "optima/optima_algorithm_name", "optima/optima_exit_flag_name", "optima/optima_problem_scaling_name", "optima/optima_progress_stage_name", "optima/optima_stall_category_name", "optima/pack_scalars", "optima/pack_series", "optima/pack_vector", "optima/presets_internal_protocol", "optima/presets_robust_internal_protocol", "optima/presets_sequential_qp", "optima/print_summary", "optima/problem", "optima/reports_compact_summary", "optima/reports_detailed_summary", "optima/reports_iter", "optima/reports_iteration_only_trace", "optima/reports_trace"]
+
+[[family]]
+path = "optim/septima"
+page = "api/optim/septima.md"
+title = "First-order and quasi-Newton optimization (Septima)"
+maxdepth = 2
+children = ["septima/AdamOptions", "septima/AdamState", "septima/LbfgsOptions", "septima/Lsr1ExitFlag", "septima/Lsr1Options", "septima/Lsr1ProgressSnapshot", "septima/Lsr1Result", "septima/Lsr1SolveOptions", "septima/Lsr1State", "septima/SeptimaConstraints", "septima/SeptimaExitFlag", "septima/SeptimaLbfgsLineSearch", "septima/SeptimaOptimizer", "septima/SeptimaOptions", "septima/SeptimaProgressSnapshot", "septima/SeptimaResult", "septima/SeptimaSolveOptions", "septima/SeptimaState", "septima/adam_state_like", "septima/adam_step", "septima/adam_step_inplace", "septima/l_sr1_trust_region", "septima/lsr1_exit_flag_name", "septima/septima", "septima/septima_exit_flag_name"]
+
+[[family]]
+path = "optim/dfo"
+page = "api/optim/dfo.md"
+title = "Derivative-free search"
+maxdepth = 2
+children = ["dfo/BlackboxAdvancedDiagnostics", "dfo/BlackboxAdvancedOutcome", "dfo/BlackboxEvaluation", "dfo/BlackboxSolverDiagnostics", "dfo/BlackboxSolverDisplay", "dfo/BlackboxSolverOutcome", "dfo/BlackboxSolverStatus", "dfo/ConstraintHandling", "dfo/CoopMadsConfig", "dfo/DFO", "dfo/DfoAutoPolicy", "dfo/DfoBuilder", "dfo/DfoConstraintValues", "dfo/DfoDiagnostics", "dfo/DfoOptions", "dfo/DfoProblem", "dfo/DfoResult", "dfo/DfoSolverKind", "dfo/DfoStatus", "dfo/DifferentialEvolutionConfig", "dfo/DifferentialEvolutionPrmmConfig", "dfo/DiscoMadsConfig", "dfo/MadsBlackboxAdvancedConfig", "dfo/MadsBlackboxConfig", "dfo/MadsPollScheme", "dfo/MultiObjectiveScalarization", "dfo/NelderMeadConfig", "dfo/NelderMeadDiagnostics", "dfo/NelderMeadOutcome", "dfo/PSBasisFamily", "dfo/PSConfig", "dfo/PSConstraintPolicy", "dfo/PSConstraintValues", "dfo/PSDiagnostics", "dfo/PSDirectionFamily", "dfo/PSDisplay", "dfo/PSMeshScaling", "dfo/PSOutcome", "dfo/PSPollPattern", "dfo/PSPollingOrder", "dfo/PSSearchStrategy", "dfo/PSStatus", "dfo/ParticleSwarmConfig", "dfo/ParticleSwarmDvConfig", "dfo/PopulationSolverDiagnostics", "dfo/PopulationSolverDisplay", "dfo/PopulationSolverExecutionMode", "dfo/PopulationSolverOutcome", "dfo/PopulationSolverStatus", "dfo/PsdMadsConfig", "dfo/SolverDisplay", "dfo/SolverStatus", "dfo/SurrogateMode", "dfo/VnsMadsConfig", "dfo/coopmads_blackbox_minimizer", "dfo/differential_evolution_minimizer", "dfo/differential_evolution_prmm_minimizer", "dfo/discomads_blackbox_minimizer", "dfo/ltmads_blackbox_minimizer", "dfo/ltmads_minimizer", "dfo/mads_blackbox_minimizer", "dfo/mesh_adaptive_direct_search_minimizer", "dfo/nelder_mead_minimizer", "dfo/orthomads_blackbox_minimizer", "dfo/orthomads_minimizer", "dfo/particle_swarm_dv_minimizer", "dfo/particle_swarm_minimizer", "dfo/pattern_search_minimizer", "dfo/psdmads_blackbox_minimizer", "dfo/solve_dfo", "dfo/to_string", "dfo/to_string_BlackboxSolverStatus", "dfo/to_string_PSStatus", "dfo/to_string_PopulationSolverStatus", "dfo/to_string_SolverStatus", "dfo/vnsmads_blackbox_minimizer"]
+
+[[symbol]]
+qualname = "roots::bisect"
+kind = "function"
+family = "optim/roots"
+page = "api/optim/roots/bisect.md"
+summary = "Finds a root of `f` in a bracket by repeatedly halving the interval, for every lane at once."
+overloads = 1
+
+[[symbol]]
+qualname = "roots::illinois"
+kind = "function"
+family = "optim/roots"
+page = "api/optim/roots/illinois.md"
+summary = "Finds a root in a bracket by regula falsi with the Illinois modification: bracketed like bisection, but superlinear."
+overloads = 1
+
+[[symbol]]
+qualname = "roots::newton"
+kind = "function"
+family = "optim/roots"
+page = "api/optim/roots/newton.md"
+summary = "Newton–Raphson iteration from a starting value, with an analytic derivative or a finite-difference slope."
+overloads = 2
+toggles = ["analytic derivative", "finite difference"]
+
+[[symbol]]
+qualname = "roots::secant"
+kind = "function"
+family = "optim/roots"
+page = "api/optim/roots/secant.md"
+summary = "The secant method: Newton's idea without a derivative, using the line through the last two iterates."
+overloads = 1
+
+[[symbol]]
+qualname = "roots::householder"
+kind = "function"
+family = "optim/roots"
+page = "api/optim/roots/householder.md"
+summary = "Fourth-order Householder iteration, given the function and its first three derivatives; the root is differentiable with respect to anything the function captures."
+overloads = 1
+
+[[symbol]]
+qualname = "roots::Options"
+kind = "options"
+family = "optim/roots"
+page = "api/optim/roots/Options.md"
+summary = "Iteration limit, stopping tolerances and checking cadence shared by every root finder."
+fields = ["max_iterations", "x_tolerance", "f_tolerance", "check_every", "derivative_step"]
+
+[[symbol]]
+qualname = "roots::Result"
+kind = "options"
+family = "optim/roots"
+page = "api/optim/roots/Result.md"
+summary = "What every root finder returns: the roots, the residuals, the iteration count and whether the brackets were valid."
+fields = ["root", "residual", "iterations", "bracketed"]
+
+[[symbol]]
+qualname = "roots::Derivatives"
+kind = "options"
+family = "optim/roots"
+page = "api/optim/roots/Derivatives.md"
+summary = "The value of a function and its first three derivatives at the same points: what the `householder` callback returns."
+fields = ["value", "first", "second", "third"]
+
+[[symbol]]
+qualname = "qp::solve"
+kind = "function"
+family = "optim/qp"
+page = "api/optim/qp/solve.md"
+summary = "Solves a convex quadratic program `minimise ½ xᵀPx + qᵀx` subject to `lower ≤ Ax ≤ upper`, for one problem or a whole batch."
+overloads = 1
+toggles = ["batch", "warm start", "options"]
+
+[[symbol]]
+qualname = "qp::prepare"
+kind = "function"
+family = "optim/qp"
+page = "api/optim/qp/prepare.md"
+summary = "Checks and factorises the fixed part of a quadratic program once, and returns a `Solver` that solves it repeatedly."
+overloads = 1
+
+[[symbol]]
+qualname = "qp::Options"
+kind = "options"
+family = "optim/qp"
+page = "api/optim/qp/Options.md"
+summary = "Iteration limit, stopping tolerances and penalty settings of the quadratic-program solver."
+fields = ["max_iters", "rho", "sigma", "alpha", "abs_tol", "rel_tol", "check_every", "adaptive_rho", "adaptive_rho_tolerance"]
+
+[[symbol]]
+qualname = "qp::WarmStart"
+kind = "options"
+family = "optim/qp"
+page = "api/optim/qp/WarmStart.md"
+summary = "A starting point for a solve: the primal variables, the constraint values and the multipliers of a previous solution."
+fields = ["x", "z", "y"]
+
+[[symbol]]
+qualname = "qp::Result"
+kind = "options"
+family = "optim/qp"
+page = "api/optim/qp/Result.md"
+summary = "What a quadratic-program solve returns: the solution, the objective, the multipliers, the residuals and whether it converged."
+fields = ["x", "objective", "z", "y", "primal_residual", "dual_residual", "iterations", "converged"]
+
+[[symbol]]
+qualname = "linprog::solve"
+kind = "function"
+family = "optim/linprog"
+page = "api/optim/linprog/solve.md"
+summary = "Solves a linear program `minimise cᵀx` subject to equality rows, inequality rows and bounds, for one problem or a batch, and returns the solution with its certificates."
+overloads = 1
+toggles = ["InteriorPoint", "Simplex", "batch", "max_lanes"]
+
+[[symbol]]
+qualname = "linprog::to_string"
+kind = "function"
+family = "optim/linprog"
+page = "api/optim/linprog/to_string.md"
+summary = "The name of a linear-programming `Status` as text."
+overloads = 1
+
+[[symbol]]
+qualname = "linprog::success"
+kind = "function"
+family = "optim/linprog"
+page = "api/optim/linprog/success.md"
+summary = "Whether a status counts as a usable solution: `Optimal` or `NearOptimal`."
+overloads = 1
+
+[[symbol]]
+qualname = "linprog::Problem"
+kind = "options"
+family = "optim/linprog"
+page = "api/optim/linprog/Problem.md"
+summary = "The data of a linear program: cost, equality and inequality rows, bounds, and an optional simplex warm start."
+fields = ["c", "a_eq", "b_eq", "a_ub", "b_ub", "lower", "upper", "warm_basis", "warm_at_upper"]
+
+[[symbol]]
+qualname = "linprog::Options"
+kind = "options"
+family = "optim/linprog"
+page = "api/optim/linprog/Options.md"
+summary = "Method, iteration limit, tolerances, polishing and chunking of the linear-programming solver."
+fields = ["method", "max_iterations", "tolerance", "ray_tolerance", "accept_tolerance", "stall_patience", "regularization", "primal_regularization", "refinement_sweeps", "polish", "confirm_unbounded", "max_lanes", "sparse_density"]
+
+[[symbol]]
+qualname = "linprog::Result"
+kind = "options"
+family = "optim/linprog"
+page = "api/optim/linprog/Result.md"
+summary = "What `linprog::solve` returns: solutions, objective values, duals, certificates, and (for the simplex) the optimal bases."
+fields = ["x", "objective", "dual_objective", "status", "dual_eq", "dual_ub", "ray", "farkas", "iterations", "basis", "at_upper", "warm_started"]
+
+[[symbol]]
+qualname = "linprog::Method"
+kind = "options"
+family = "optim/linprog"
+page = "api/optim/linprog/Method.md"
+summary = "The algorithm of the linear-programming solver: interior point or simplex."
+fields = ["InteriorPoint", "Simplex"]
+
+[[symbol]]
+qualname = "linprog::Status"
+kind = "options"
+family = "optim/linprog"
+page = "api/optim/linprog/Status.md"
+summary = "The verdict of a lane of a linear-programming solve."
+fields = ["Optimal", "PrimalInfeasible", "Unbounded", "IterationLimit", "NearOptimal"]
+
+[[symbol]]
+qualname = "milp::solve"
+kind = "function"
+family = "optim/milp"
+page = "api/optim/milp/solve.md"
+summary = "Solves a mixed-integer linear program by branch-and-bound and returns the best solution found with a proven bound."
+overloads = 1
+toggles = ["integer", "continuous", "max_nodes"]
+
+[[symbol]]
+qualname = "milp::to_string"
+kind = "function"
+family = "optim/milp"
+page = "api/optim/milp/to_string.md"
+summary = "The name of a mixed-integer `Status` as text."
+overloads = 1
+
+[[symbol]]
+qualname = "milp::Problem"
+kind = "options"
+family = "optim/milp"
+page = "api/optim/milp/Problem.md"
+summary = "A mixed-integer linear program: a linear program plus the flags of which variables are integer."
+fields = ["lp", "integer"]
+
+[[symbol]]
+qualname = "milp::Options"
+kind = "options"
+family = "optim/milp"
+page = "api/optim/milp/Options.md"
+summary = "Node limit, batch size and tolerances of the branch-and-bound search."
+fields = ["lp", "max_nodes", "batch", "integer_tolerance", "gap_tolerance"]
+
+[[symbol]]
+qualname = "milp::Result"
+kind = "options"
+family = "optim/milp"
+page = "api/optim/milp/Result.md"
+summary = "What `milp::solve` returns: the best integer solution, its objective, the proven bound and search counters."
+fields = ["x", "objective", "best_bound", "status", "nodes", "lp_rounds"]
+
+[[symbol]]
+qualname = "milp::Status"
+kind = "options"
+family = "optim/milp"
+page = "api/optim/milp/Status.md"
+summary = "The verdict of a mixed-integer solve."
+fields = ["Optimal", "Infeasible", "Unbounded", "NodeLimit"]
+
+[[symbol]]
+qualname = "optim::optima"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/optima.md"
+summary = "Minimises an objective subject to bounds, linear rows and nonlinear constraints, and returns the answer with the multipliers and the reason it stopped."
+overloads = 1
+toggles = ["Series start", "named blocks", "ConstrainedProblem", "analytic gradient", "algorithm"]
+
+[[symbol]]
+qualname = "optim::problem"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/problem.md"
+summary = "Starts a `ProblemBuilder` for describing an objective and constraints as one reusable value."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::constraints"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/constraints.md"
+summary = "Starts a builder for the constraints of a problem, to be passed to `optima` alongside a separately written objective."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::pack_scalars"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/pack_scalars.md"
+summary = "Builds a parameter pack of named scalar blocks: the natural way to name the unknowns of a model."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::pack_vector"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/pack_vector.md"
+summary = "Builds a parameter pack of named vector blocks."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::pack_series"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/pack_series.md"
+summary = "Wraps one Series as a single-block parameter pack, named `x` unless you choose a name."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::OptimaOptions"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaOptions.md"
+summary = "Chooses the algorithm of `optima` and carries the settings of each algorithm."
+fields = ["algorithm", "penalty", "sequential_qp", "working_set", "internal_protocol", "progress_hook"]
+
+[[symbol]]
+qualname = "optim::OptimaAlgorithm"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaAlgorithm.md"
+summary = "The four algorithms of `optima`."
+fields = ["MeritMethod", "SequentialQP", "WorkingSet", "InternalProtocol"]
+
+[[symbol]]
+qualname = "optim::OptimaExitFlag"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaExitFlag.md"
+summary = "Why a run of `optima` stopped."
+fields = ["Converged", "MaxIterations", "Stopped", "NoFeasiblePoint", "ObjectiveTargetReached", "NonFiniteEvaluation", "InvalidProblem", "NoProgress", "ConstraintStationary"]
+
+[[symbol]]
+qualname = "optim::optima_algorithm_name"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/optima_algorithm_name.md"
+summary = "The name of an `OptimaAlgorithm` as text."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::optima_exit_flag_name"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/optima_exit_flag_name.md"
+summary = "The name of an `OptimaExitFlag` as text."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::OptimaState"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaState.md"
+summary = "What `optima` returns: the point, how good it is, the multipliers, and how the run ended."
+fields = ["algorithm", "params", "evaluation", "iteration", "function_evaluations", "last_step_size", "backend_parameter", "stationarity", "converged", "exit_flag", "message", "output", "multipliers", "best_feasible"]
+
+[[symbol]]
+qualname = "optim::OptimaOutput"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaOutput.md"
+summary = "The detailed record of a run, with the counts, residual measures and the stall diagnosis."
+fields = ["algorithm", "iterations", "function_evaluations", "constraint_violation", "first_order_optimality", "step_size", "line_search_fraction", "backend_parameter", "complementarity", "krylov_iterations", "best_feasible_available", "returned_best_feasible", "best_feasible_value", "best_feasible_constraint_violation", "best_feasible_first_order_optimality", "multiplier_max_norm", "active_multiplier_count", "detail_message", "stall_category", "stall_measure", "stall_reference"]
+
+[[symbol]]
+qualname = "optim::ConstraintMultipliers"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/ConstraintMultipliers.md"
+summary = "The Lagrange multipliers of a solution, one vector per constraint family."
+fields = ["linear_equalities", "nonlinear_equalities", "linear_inequalities", "nonlinear_inequalities", "lower_bounds", "upper_bounds"]
+
+[[symbol]]
+qualname = "optim::SequentialQPOptions"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/SequentialQPOptions.md"
+summary = "Settings of the sequential quadratic programming algorithm: limits, tolerances, curvature model, linear algebra and scaling."
+fields = ["max_iterations", "max_line_search_iterations", "max_second_order_corrections", "max_restoration_iterations", "max_restoration_line_search_iterations", "initial_step_size", "backtracking", "armijo", "initial_penalty", "constraint_tolerance", "optimality_tolerance", "step_tolerance", "value_progress_tolerance", "active_set_tolerance", "regularization", "bfgs_curvature_tolerance", "second_order_correction_tolerance", "fraction_to_boundary", "pivot_threshold", "max_krylov_iterations", "iterative_dimension_threshold", "krylov_tolerance", "krylov_absolute_tolerance", "objective_limit", "project_bounds", "enable_restoration", "system_structure", "linear_system_solver", "hessian_approximation", "lbfgs_memory", "hvp_options", "problem_scaling", "progress_hook"]
+
+[[symbol]]
+qualname = "optim::WorkingSetOptions"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/WorkingSetOptions.md"
+summary = "Settings of the working-set algorithm: every sequential-QP setting plus the controls of the active-set bookkeeping."
+fields = ["favor_working_set_updates", "max_working_set_violations", "add_constraint_tolerance", "drop_multiplier_tolerance", "feasibility_priority_ratio", "max_stalled_iterations", "multiplier_smoothing", "multiplier_retention_tolerance"]
+
+[[symbol]]
+qualname = "optim::InternalProtocolOptions"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/InternalProtocolOptions.md"
+summary = "Settings of the interior (barrier) algorithm: barrier schedule, trust region, safeguards, linear algebra."
+fields = ["max_iterations", "initial_barrier_parameter", "minimum_barrier_parameter", "barrier_decay", "constraint_tolerance", "optimality_tolerance", "step_tolerance", "value_progress_tolerance", "armijo", "backtracking", "max_line_search_iterations", "fraction_to_boundary", "initialization_margin", "trust_region_initial_radius", "trust_region_min_radius", "trust_region_max_radius", "enable_watchdog", "nonmonotone_window", "enable_soc_correction", "enable_restoration", "enable_nonfinite_recovery", "enable_feasibility_phase", "independent_nonlinear_slacks", "hessian_approximation", "lbfgs_memory", "linear_system_solver", "system_structure", "problem_scaling", "objective_limit", "project_bounds", "progress_hook"]
+
+[[symbol]]
+qualname = "optim::PenaltyMethodOptions"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/PenaltyMethodOptions.md"
+summary = "Settings of the penalty (merit) algorithm."
+fields = ["max_iterations", "max_line_search_iterations", "initial_step_size", "backtracking", "armijo", "penalty", "constraint_tolerance", "optimality_tolerance", "project_bounds", "progress_hook"]
+
+[[symbol]]
+qualname = "optim::presets::sequential_qp"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/presets_sequential_qp.md"
+summary = "Options for sequential quadratic programming with a tight feasibility tolerance."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::presets::internal_protocol"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/presets_internal_protocol.md"
+summary = "Options for the interior algorithm with the safeguards used by the broad test suite."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::presets::robust_internal_protocol"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/presets_robust_internal_protocol.md"
+summary = "The interior preset with larger budgets for difficult problems."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::reports::iter"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/reports_iter.md"
+summary = "A ready-made progress hook that prints one line per iteration; it works for both `optima` and `septima`."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::reports::trace"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/reports_trace.md"
+summary = "A progress hook that prints a line for the start, each iteration and the end, with the algorithm's message."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::reports::iteration_only_trace"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/reports_iteration_only_trace.md"
+summary = "A progress hook that prints only iteration lines, without start, end, message or Krylov counts."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::print_summary"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/print_summary.md"
+summary = "Writes a one-line summary of an Optima result to a stream."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::reports::compact_summary"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/reports_compact_summary.md"
+summary = "Writes the one-line summary of a result; the same text as `print_summary`."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::reports::detailed_summary"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/reports_detailed_summary.md"
+summary = "Writes a multi-line summary of a result, one `name=value` per line."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::evaluate_problem"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/evaluate_problem.md"
+summary = "Evaluates a problem at a point: objective, gradient, constraint residuals and Jacobians, and the violation."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::ProblemEvaluation"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/ProblemEvaluation.md"
+summary = "A problem evaluated at a point: objective, gradient, constraint residuals, Jacobians and the violation."
+fields = ["status", "message", "value", "gradient", "nonlinear_equality_residual", "nonlinear_inequality_residual", "equality_residual", "inequality_residual", "equality_jacobian", "inequality_jacobian", "max_constraint_violation", "first_order_opt", "feasible"]
+
+[[symbol]]
+qualname = "optim::audit_optima_derivatives"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/audit_optima_derivatives.md"
+summary = "Compares hand-written derivatives with automatic ones for the objective and the nonlinear constraints."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::OptimaHessianApproximation"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaHessianApproximation.md"
+summary = "The curvature model of the quadratic subproblem: BFGS, limited-memory BFGS, exact, Hessian-vector products, or none."
+fields = ["Bfgs", "Identity", "Lbfgs", "Exact", "HessianVector"]
+
+[[symbol]]
+qualname = "optim::OptimaProblemScaling"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaProblemScaling.md"
+summary = "Whether `optima` rescales the problem before solving: not at all, by the start point, or the objective and each constraint."
+fields = ["None", "InitialPoint", "ObjectiveAndConstraints"]
+
+[[symbol]]
+qualname = "optim::optima_problem_scaling_name"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/optima_problem_scaling_name.md"
+summary = "The name of an `OptimaProblemScaling` as text."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::OptimaStallCategory"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaStallCategory.md"
+summary = "A diagnosis of why a run stalled or ended without converging."
+fields = ["None", "UserStop", "InvalidCallbackContract", "NonFiniteCallbackRegion", "SearchDirectionCollapse", "BoundaryLimited", "InfeasibleStationary", "ComplementarityStagnation", "FeasibilityFailure", "RecoveryFailure", "IterationLimit"]
+
+[[symbol]]
+qualname = "optim::optima_stall_category_name"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/optima_stall_category_name.md"
+summary = "The name of an `OptimaStallCategory` as text."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::OptimaLinearSystemSolver"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaLinearSystemSolver.md"
+summary = "How the linear system inside each iteration is solved."
+fields = ["Auto", "Cholesky", "PivotedDirect", "Inverse", "PseudoInverse", "ConjugateGradient"]
+
+[[symbol]]
+qualname = "optim::OptimaLinearSystemStructure"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaLinearSystemStructure.md"
+summary = "Whether the subproblem matrices are treated as dense or sparse."
+fields = ["Auto", "Dense", "Sparse"]
+
+[[symbol]]
+qualname = "optim::OptimaProgressSnapshot"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/OptimaProgressSnapshot.md"
+summary = "What a progress hook receives: the state of the run at one moment."
+fields = ["stage", "algorithm", "params", "evaluation", "iteration", "function_evaluations", "step_size", "backend_parameter", "stationarity", "complementarity", "krylov_iterations", "message", "stall_category", "stall_measure", "stall_reference", "best_feasible"]
+
+[[symbol]]
+qualname = "optim::optima_progress_stage_name"
+kind = "function"
+family = "optim/optima"
+page = "api/optim/optima/optima_progress_stage_name.md"
+summary = "The name of an `OptimaProgressStage` as text: `start`, `iter` or `done`."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::ConstrainedProblem"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/ConstrainedProblem.md"
+summary = "An optimization problem as a plain value: objective, nonlinear constraints, linear constraints and bounds."
+fields = ["objective", "nonlinear", "linear", "bounds"]
+
+[[symbol]]
+qualname = "optim::DerivativeAuditReport"
+kind = "options"
+family = "optim/optima"
+page = "api/optim/optima/DerivativeAuditReport.md"
+summary = "The outcome of `audit_optima_derivatives`: one entry per function checked, and an overall verdict."
+fields = ["objective", "nonlinear_equalities", "nonlinear_inequalities", "passed"]
+
+[[symbol]]
+qualname = "optim::septima"
+kind = "function"
+family = "optim/septima"
+page = "api/optim/septima/septima.md"
+summary = "Minimises a smooth objective with Adam or limited-memory BFGS, optionally under bounds, equalities and inequalities."
+overloads = 1
+toggles = ["Series start", "named blocks", "block vector", "Adam", "L-BFGS", "constraints", "complex"]
+
+[[symbol]]
+qualname = "optim::septima_exit_flag_name"
+kind = "function"
+family = "optim/septima"
+page = "api/optim/septima/septima_exit_flag_name.md"
+summary = "The name of a `SeptimaExitFlag` as text."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::SeptimaExitFlag"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaExitFlag.md"
+summary = "Why a run of `septima` stopped."
+fields = ["Converged", "MaxIterations", "Stopped", "NoProgress", "NonFiniteEvaluation", "InvalidProblem"]
+
+[[symbol]]
+qualname = "optim::SeptimaSolveOptions"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaSolveOptions.md"
+summary = "Budgets, stopping tolerances, the optimizer settings and the progress hook of a `septima` run."
+fields = ["step", "max_iterations", "max_no_progress_iterations", "objective_tolerance", "gradient_tolerance", "step_tolerance", "constraint_tolerance", "stop_on_nonfinite_objective", "progress_hook"]
+
+[[symbol]]
+qualname = "optim::SeptimaOptions"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaOptions.md"
+summary = "Chooses the optimizer of `septima` and holds the settings of Adam, L-BFGS and the constraint penalty schedule."
+fields = ["optimizer", "adam", "lbfgs", "dual_learning_rate", "equality_penalty", "inequality_penalty", "dual_update_ratio", "dual_update_floor", "dual_update_max_steps", "penalty_growth", "penalty_growth_trigger", "max_penalty", "project_bounds", "enable_constraint_autodiff", "nan_recovery_attempts", "nan_recovery_shrink"]
+
+[[symbol]]
+qualname = "optim::SeptimaOptimizer"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaOptimizer.md"
+summary = "The two optimizers of `septima`: Adam and limited-memory BFGS."
+fields = ["Adam", "Lbfgs"]
+
+[[symbol]]
+qualname = "optim::SeptimaLbfgsLineSearch"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaLbfgsLineSearch.md"
+summary = "Whether L-BFGS steps are shortened by a line search."
+fields = ["None", "StrongWolfe"]
+
+[[symbol]]
+qualname = "optim::SeptimaOptions::LbfgsOptions"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/LbfgsOptions.md"
+summary = "Settings of the L-BFGS optimizer: step scale, memory, curvature test and line search."
+fields = ["learning_rate", "history_size", "curvature_tolerance", "max_line_search_iterations", "tolerance_change", "wolfe_c1", "wolfe_c2", "line_search"]
+
+[[symbol]]
+qualname = "optim::AdamOptions"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/AdamOptions.md"
+summary = "Settings of the Adam optimizer: learning rate, moment decay, regularisation and variants."
+fields = ["learning_rate", "beta1", "beta2", "eps", "weight_decay", "amsgrad", "maximize", "decoupled_weight_decay"]
+
+[[symbol]]
+qualname = "optim::SeptimaConstraints"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaConstraints.md"
+summary = "The constraints of a `septima` run: residual functions for equalities and inequalities, and bounds."
+fields = ["equalities", "inequalities", "lbs", "ubs"]
+
+[[symbol]]
+qualname = "optim::SeptimaResult"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaResult.md"
+summary = "What `septima` returns: the answer blocks, the objective, the stopping measures and the exit flag."
+fields = ["params", "state", "objective", "iteration", "function_evaluations", "objective_value", "gradient_inf_norm", "stationarity", "step_inf_norm", "constraint_violation", "converged", "exit_flag", "message"]
+
+[[symbol]]
+qualname = "optim::SeptimaState"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaState.md"
+summary = "The optimizer's memory at the end of a run: Adam moments, L-BFGS history, multipliers and penalty bookkeeping."
+fields = ["adam", "lbfgs_s_history", "lbfgs_y_history", "lbfgs_prev_grad_flat", "lbfgs_prev_step_flat", "lambda_equalities", "lambda_inequalities", "constraint_violation", "stationarity", "steps_since_dual_update", "dual_updates", "penalty_scale", "last_update_violation", "step"]
+
+[[symbol]]
+qualname = "optim::SeptimaProgressSnapshot"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/SeptimaProgressSnapshot.md"
+summary = "What a `septima` progress hook receives each iteration."
+fields = ["iteration", "function_evaluations", "objective", "gradient_inf_norm", "stationarity", "step_inf_norm", "constraint_violation", "message"]
+
+[[symbol]]
+qualname = "optim::AdamState"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/AdamState.md"
+summary = "The running state of Adam: the moment estimates and the step count."
+fields = ["m", "v", "max_v", "step"]
+
+[[symbol]]
+qualname = "optim::adam_state_like"
+kind = "function"
+family = "optim/septima"
+page = "api/optim/septima/adam_state_like.md"
+summary = "Creates a zeroed `AdamState` for a list of parameters."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::adam_step_inplace"
+kind = "function"
+family = "optim/septima"
+page = "api/optim/septima/adam_step_inplace.md"
+summary = "Applies one Adam update to a list of parameters, in place, given their gradients."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::adam_step"
+kind = "function"
+family = "optim/septima"
+page = "api/optim/septima/adam_step.md"
+summary = "Applies one Adam update and returns the new parameters, leaving the inputs unchanged."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::l_sr1_trust_region"
+kind = "function"
+family = "optim/septima"
+page = "api/optim/septima/l_sr1_trust_region.md"
+summary = "Minimises a smooth objective by limited-memory SR1 with a trust region, which can follow negative curvature."
+overloads = 1
+toggles = ["single Series", "blocks", "complex"]
+
+[[symbol]]
+qualname = "optim::lsr1_exit_flag_name"
+kind = "function"
+family = "optim/septima"
+page = "api/optim/septima/lsr1_exit_flag_name.md"
+summary = "The name of an `Lsr1ExitFlag` as text."
+overloads = 1
+
+[[symbol]]
+qualname = "optim::Lsr1ExitFlag"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/Lsr1ExitFlag.md"
+summary = "Why a run of `l_sr1_trust_region` stopped."
+fields = ["Converged", "MaxIterations", "Stopped", "NoProgress", "NonFiniteEvaluation", "InvalidProblem"]
+
+[[symbol]]
+qualname = "optim::Lsr1SolveOptions"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/Lsr1SolveOptions.md"
+summary = "Budgets, tolerances, the L-SR1 settings and the progress hook of an `l_sr1_trust_region` run."
+fields = ["step", "max_iterations", "max_no_progress_iterations", "gradient_tolerance", "step_tolerance", "progress_hook"]
+
+[[symbol]]
+qualname = "optim::Lsr1Options"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/Lsr1Options.md"
+summary = "The L-SR1 method's own settings: memory, trust-region radius and its update rules, the SR1 skip test and the line search."
+fields = ["memory_size", "initial_radius", "max_radius", "initial_gamma", "gamma_shrink", "sr1_skip_tolerance", "tau_2", "tau_3", "eta_1", "eta_2", "eta_3", "eta_4", "wolfe_c1", "max_line_search_iterations", "line_search_shrink", "newton_tolerance", "max_newton_iterations", "zero_tolerance"]
+
+[[symbol]]
+qualname = "optim::Lsr1Result"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/Lsr1Result.md"
+summary = "What `l_sr1_trust_region` returns: the flat solution, the objective, the gradient norm and the exit flag."
+fields = ["params", "state", "objective", "iteration", "function_evaluations", "objective_value", "gradient_norm", "step_norm", "converged", "exit_flag", "message"]
+
+[[symbol]]
+qualname = "optim::Lsr1State"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/Lsr1State.md"
+summary = "The memory of the L-SR1 method at the end of a run: stored pairs, the scalar gamma and the trust radius."
+fields = ["s_history", "y_history", "prev_grad_flat", "gamma", "radius", "step"]
+
+[[symbol]]
+qualname = "optim::Lsr1ProgressSnapshot"
+kind = "options"
+family = "optim/septima"
+page = "api/optim/septima/Lsr1ProgressSnapshot.md"
+summary = "What an L-SR1 progress hook receives each iteration."
+fields = ["iteration", "function_evaluations", "objective", "gradient_norm", "trust_radius", "step_norm", "message"]
+
+[[symbol]]
+qualname = "dfo::DfoSolverKind"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoSolverKind.md"
+summary = "Which derivative-free method the front door runs."
+fields = ["Auto", "NelderMead", "PatternSearch", "DifferentialEvolution", "DifferentialEvolutionPrmm", "ParticleSwarm", "ParticleSwarmDv", "OrthoMads", "LtMads", "MadsAdvanced"]
+
+[[symbol]]
+qualname = "dfo::DfoStatus"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoStatus.md"
+summary = "Why a derivative-free run stopped."
+fields = ["Converged", "ReachedIterationBudget", "ReachedEvaluationBudget", "ReachedTimeBudget", "InfeasibleStationary"]
+
+[[symbol]]
+qualname = "dfo::to_string"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/to_string.md"
+summary = "Returns the name of a solver kind or a status as text."
+overloads = 2
+toggles = ["DfoSolverKind", "DfoStatus"]
+
+[[symbol]]
+qualname = "dfo::solve_dfo"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/solve_dfo.md"
+summary = "Minimises an objective from a starting point, choosing the method automatically."
+overloads = 1
+
+[[symbol]]
+qualname = "dfo::DfoConstraintValues"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoConstraintValues.md"
+summary = "The two kinds of nonlinear constraint values a constraint callback returns."
+fields = ["inequality", "equality"]
+
+[[symbol]]
+qualname = "dfo::DfoProblem"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoProblem.md"
+summary = "The data of a derivative-free problem: start, objective or black box, constraints and bounds."
+fields = ["initial", "objective", "constraints", "constraints_values", "blackbox", "lower_bounds", "upper_bounds"]
+
+[[symbol]]
+qualname = "dfo::DfoAutoPolicy"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoAutoPolicy.md"
+summary = "The dimension thresholds `Auto` uses to choose among the unconstrained and boxed methods."
+fields = ["low_dimension_threshold", "high_dimension_threshold", "prefer_pso_for_high_dimension"]
+
+[[symbol]]
+qualname = "dfo::DfoOptions"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoOptions.md"
+summary = "Method choice, budgets, tolerance, seed and the per-method settings of a derivative-free run."
+fields = ["solver", "max_iterations", "max_evaluations", "max_total_evaluations", "check_every", "relative_improvement_tolerance", "rng_seed", "promote_cpu_to_float64", "display_iter", "auto_policy", "nelder_mead", "differential_evolution", "differential_evolution_prmm", "particle_swarm", "particle_swarm_dv", "pattern_search", "mads"]
+
+[[symbol]]
+qualname = "dfo::DfoDiagnostics"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoDiagnostics.md"
+summary = "Counters and last-state values of a derivative-free run."
+fields = ["iterations", "evaluations", "total_evaluations", "cache_hits", "outer_iterations", "nups_updates", "search_trials", "search_successes", "mesh_size", "penalty", "max_constraint_violation", "last_phase"]
+
+[[symbol]]
+qualname = "dfo::DfoResult"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoResult.md"
+summary = "The outcome of a derivative-free run: the minimizer, the minimum, the status and which method ran."
+fields = ["minimizer", "objective_vector", "pareto_points", "pareto_objectives", "minimum", "status", "selected_solver", "selection_reason", "diagnostics"]
+
+[[symbol]]
+qualname = "dfo::nelder_mead_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/nelder_mead_minimizer.md"
+summary = "Minimises an objective with the Nelder-Mead simplex method."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::NelderMeadConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/NelderMeadConfig.md"
+summary = "Tolerances, budgets and step coefficients of the Nelder-Mead method."
+fields = ["position_tolerance", "value_tolerance", "max_iterations", "max_evaluations", "reflection", "expansion", "contraction", "shrink", "simplex_delta", "simplex_delta_zero", "promote_cpu_to_float64", "display"]
+
+[[symbol]]
+qualname = "dfo::NelderMeadOutcome"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/NelderMeadOutcome.md"
+summary = "The result of a Nelder-Mead run: the minimizer, the minimum, the status and the counters."
+fields = ["minimizer", "minimum", "status", "diagnostics"]
+
+[[symbol]]
+qualname = "dfo::NelderMeadDiagnostics"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/NelderMeadDiagnostics.md"
+summary = "The counters of a Nelder-Mead run."
+fields = ["iterations", "evaluations", "last_step"]
+
+[[symbol]]
+qualname = "dfo::SolverStatus"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/SolverStatus.md"
+summary = "Why a Nelder-Mead run stopped."
+fields = ["Converged", "ReachedIterationBudget", "ReachedEvaluationBudget"]
+
+[[symbol]]
+qualname = "dfo::SolverDisplay"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/SolverDisplay.md"
+summary = "Whether a Nelder-Mead run prints its progress."
+fields = ["None", "Iter"]
+
+[[symbol]]
+qualname = "dfo::to_string(SolverStatus)"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/to_string_SolverStatus.md"
+summary = "Returns the name of a Nelder-Mead status."
+overloads = 1
+
+[[symbol]]
+qualname = "dfo::pattern_search_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/pattern_search_minimizer.md"
+summary = "Minimises an objective by polling a pattern of directions on an adaptive mesh, with bounds, linear rows and nonlinear constraints."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::PSConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSConfig.md"
+summary = "Mesh, poll, search, constraint, cache, bound and budget settings of pattern search."
+fields = ["mesh_tolerance", "step_tolerance", "value_tolerance", "constraint_tolerance", "active_constraint_tolerance", "max_iterations", "max_evaluations", "time_limit_seconds", "initial_mesh_size", "max_mesh_size", "mesh_expansion", "mesh_contraction", "check_every", "relative_improvement_tolerance", "min_improvement", "poll_pattern", "polling_order", "complete_poll", "direction_family", "basis_family", "basis_refresh_interval", "mesh_scaling", "nups_expansion", "nups_contraction", "nups_decay", "nups_min_scale", "nups_max_scale", "search_strategy", "search_expansion", "search_trials", "search_complete", "constraint_policy", "initial_penalty", "penalty_growth", "al_max_outer_iterations", "al_penalty_growth", "al_violation_reduction_ratio", "al_multiplier_clip", "enable_cache", "cache_max_entries", "cache_tolerance", "lower_bounds", "upper_bounds", "linear_ineq_matrix", "linear_ineq_rhs", "linear_eq_matrix", "linear_eq_rhs", "nonlinear_constraints", "rng_seed", "promote_cpu_to_float64", "display"]
+
+[[symbol]]
+qualname = "dfo::PSOutcome"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSOutcome.md"
+summary = "The result of a pattern-search run."
+fields = ["minimizer", "minimum", "status", "diagnostics"]
+
+[[symbol]]
+qualname = "dfo::PSDiagnostics"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSDiagnostics.md"
+summary = "The counters and last-state values of a pattern-search run."
+fields = ["iterations", "evaluations", "cache_hits", "nups_updates", "search_trials", "search_successes", "outer_iterations", "last_step", "mesh_size", "penalty", "max_constraint_violation"]
+
+[[symbol]]
+qualname = "dfo::PSConstraintValues"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSConstraintValues.md"
+summary = "The nonlinear constraint values a pattern-search constraint callback returns."
+fields = ["inequality", "equality"]
+
+[[symbol]]
+qualname = "dfo::PSStatus"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSStatus.md"
+summary = "Why a pattern-search run stopped."
+fields = ["Converged", "ReachedIterationBudget", "ReachedEvaluationBudget", "ReachedTimeBudget", "InfeasibleStationary"]
+
+[[symbol]]
+qualname = "dfo::to_string(PSStatus)"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/to_string_PSStatus.md"
+summary = "Returns the name of a pattern-search status."
+overloads = 1
+
+[[symbol]]
+qualname = "dfo::PSDisplay"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSDisplay.md"
+summary = "Whether a pattern-search run prints its progress."
+fields = ["None", "Iter"]
+
+[[symbol]]
+qualname = "dfo::PSPollPattern"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSPollPattern.md"
+summary = "Which set of directions is polled."
+fields = ["PositiveBasis2N", "PositiveBasisNp1"]
+
+[[symbol]]
+qualname = "dfo::PSPollingOrder"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSPollingOrder.md"
+summary = "The order the poll points are tried in."
+fields = ["Consecutive", "Random", "SuccessFirst"]
+
+[[symbol]]
+qualname = "dfo::PSSearchStrategy"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSSearchStrategy.md"
+summary = "The extra search step tried before each poll."
+fields = ["Off", "ExpandAlongSuccess", "RandomDirections", "ExpandAndRandomDirections"]
+
+[[symbol]]
+qualname = "dfo::PSConstraintPolicy"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSConstraintPolicy.md"
+summary = "How nonlinear constraint violations are handled."
+fields = ["ExtremeBarrier", "MeritPenalty", "AugmentedLagrangian"]
+
+[[symbol]]
+qualname = "dfo::PSMeshScaling"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSMeshScaling.md"
+summary = "How the mesh is scaled per variable."
+fields = ["Off", "RangeLog", "NupsDynamic"]
+
+[[symbol]]
+qualname = "dfo::PSDirectionFamily"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSDirectionFamily.md"
+summary = "How poll directions are adapted to active constraints."
+fields = ["ProjectedTangent", "GSSAugmented"]
+
+[[symbol]]
+qualname = "dfo::PSBasisFamily"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PSBasisFamily.md"
+summary = "The set of directions the poll is built on."
+fields = ["Canonical", "RandomOrtho"]
+
+[[symbol]]
+qualname = "dfo::differential_evolution_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/differential_evolution_minimizer.md"
+summary = "Minimises an objective with differential evolution, a population method that needs no gradient."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::DifferentialEvolutionConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DifferentialEvolutionConfig.md"
+summary = "Population, mutation, crossover, stopping and sampling settings of differential evolution."
+fields = ["population_size", "max_generations", "max_evaluations", "check_every", "relative_improvement_tolerance", "mutation_factor", "crossover_rate", "best_mix", "initial_radius", "lower_bounds", "upper_bounds", "rng_seed", "promote_cpu_to_float64", "display", "execution_mode"]
+
+[[symbol]]
+qualname = "dfo::differential_evolution_prmm_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/differential_evolution_prmm_minimizer.md"
+summary = "Minimises an objective with differential evolution that adapts its own parameters and shrinks its population."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::DifferentialEvolutionPrmmConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DifferentialEvolutionPrmmConfig.md"
+summary = "Population, self-adaptation, reduction and budget settings of adaptive differential evolution."
+fields = ["population_size", "elite_count", "max_generations", "max_evaluations", "check_every", "reduction_passes", "pmax", "relative_improvement_tolerance", "initial_mutation_factor", "initial_crossover_rate", "mutation_lower", "mutation_upper", "tau_mutation", "tau_crossover", "random_main_strategy_probability", "diversity_epsilon", "initial_radius", "lower_bounds", "upper_bounds", "rng_seed", "promote_cpu_to_float64", "display", "execution_mode"]
+
+[[symbol]]
+qualname = "dfo::particle_swarm_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/particle_swarm_minimizer.md"
+summary = "Minimises an objective with a particle swarm: points that move with inertia toward their own best and the swarm's best."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::ParticleSwarmConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/ParticleSwarmConfig.md"
+summary = "Swarm size, inertia and acceleration schedules, velocity clamp and stopping settings of the particle swarm."
+fields = ["population_size", "max_generations", "max_evaluations", "check_every", "relative_improvement_tolerance", "center_particle", "linear_inertia_schedule", "time_varying_acceleration", "inertia", "inertia_max", "inertia_min", "inertia_damp", "cognitive", "social", "final_cognitive", "final_social", "velocity_clamp_ratio", "initial_radius", "lower_bounds", "upper_bounds", "rng_seed", "promote_cpu_to_float64", "display", "execution_mode"]
+
+[[symbol]]
+qualname = "dfo::particle_swarm_dv_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/particle_swarm_dv_minimizer.md"
+summary = "Minimises an objective with a swarm whose velocity is built from differences between particles."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::ParticleSwarmDvConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/ParticleSwarmDvConfig.md"
+summary = "Swarm size, differential and social scales, crossover and stagnation settings of the differential-velocity swarm."
+fields = ["population_size", "max_generations", "max_evaluations", "check_every", "relative_improvement_tolerance", "inertia", "inertia_damp", "beta", "social", "crossover_rate", "stagnation_limit", "initial_radius", "lower_bounds", "upper_bounds", "rng_seed", "promote_cpu_to_float64", "display", "execution_mode"]
+
+[[symbol]]
+qualname = "dfo::PopulationSolverOutcome"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PopulationSolverOutcome.md"
+summary = "The result of a differential-evolution or swarm run."
+fields = ["minimizer", "minimum", "status", "diagnostics"]
+
+[[symbol]]
+qualname = "dfo::PopulationSolverDiagnostics"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PopulationSolverDiagnostics.md"
+summary = "The counters of a differential-evolution or swarm run."
+fields = ["iterations", "evaluations", "last_step"]
+
+[[symbol]]
+qualname = "dfo::PopulationSolverStatus"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PopulationSolverStatus.md"
+summary = "Why a differential-evolution or swarm run stopped."
+fields = ["Converged", "ReachedIterationBudget", "ReachedEvaluationBudget"]
+
+[[symbol]]
+qualname = "dfo::to_string(PopulationSolverStatus)"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/to_string_PopulationSolverStatus.md"
+summary = "Returns the name of a population-method status."
+overloads = 1
+
+[[symbol]]
+qualname = "dfo::PopulationSolverDisplay"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PopulationSolverDisplay.md"
+summary = "Whether a differential-evolution or swarm run prints its progress."
+fields = ["None", "Iter"]
+
+[[symbol]]
+qualname = "dfo::PopulationSolverExecutionMode"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PopulationSolverExecutionMode.md"
+summary = "How a generation of a population method is computed."
+fields = ["Vectorized", "OptimMasterCompat"]
+
+[[symbol]]
+qualname = "dfo::mesh_adaptive_direct_search_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/mesh_adaptive_direct_search_minimizer.md"
+summary = "Minimises an objective with mesh adaptive direct search."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::orthomads_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/orthomads_minimizer.md"
+summary = "Minimises an objective with OrthoMADS, mesh adaptive direct search with orthogonal poll directions."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::ltmads_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/ltmads_minimizer.md"
+summary = "Minimises an objective with LT-MADS, mesh adaptive direct search with random lower-triangular poll directions."
+overloads = 2
+toggles = ["std::function objective", "callable objective"]
+
+[[symbol]]
+qualname = "dfo::MadsBlackboxConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/MadsBlackboxConfig.md"
+summary = "Mesh, frame, poll, search, budget and bound settings of the mesh-adaptive methods."
+fields = ["max_iterations", "max_evaluations", "check_every", "search_points", "relative_improvement_tolerance", "initial_mesh_size", "initial_frame_size", "mesh_refine_factor", "frame_refine_factor", "mesh_expand_factor", "frame_expand_factor", "mesh_tolerance", "min_improvement", "opportunistic", "poll_scheme", "lower_bounds", "upper_bounds", "rng_seed", "promote_cpu_to_float64", "display"]
+
+[[symbol]]
+qualname = "dfo::BlackboxEvaluation"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/BlackboxEvaluation.md"
+summary = "What a black-box callback returns: objectives, constraints and two flags."
+fields = ["objectives", "constraints", "evaluation_ok", "count_evaluation"]
+
+[[symbol]]
+qualname = "dfo::MadsBlackboxAdvancedConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/MadsBlackboxAdvancedConfig.md"
+summary = "The black-box mesh-adaptive settings: everything in the basic configuration plus constraints, several objectives, cache, surrogate and Pareto archive."
+fields = ["max_iterations", "max_evaluations", "check_every", "search_points", "relative_improvement_tolerance", "initial_mesh_size", "initial_frame_size", "mesh_refine_factor", "frame_refine_factor", "mesh_expand_factor", "frame_expand_factor", "mesh_tolerance", "min_improvement", "opportunistic", "poll_scheme", "lower_bounds", "upper_bounds", "rng_seed", "promote_cpu_to_float64", "display", "constraint_handling", "constraint_tolerance", "progressive_barrier_penalty", "multiobjective_scalarization", "objective_weights", "objective_reference", "enable_cache", "cache_max_entries", "cache_round_digits", "count_cache_hits_in_total_evaluations", "max_total_evaluations", "surrogate_mode", "surrogate_min_points", "surrogate_max_points", "surrogate_bandwidth", "accelerate_heavy_kernels", "auto_heavy_platform", "heavy_platform", "heavy_dtype", "pareto_epsilon", "pareto_archive_limit"]
+
+[[symbol]]
+qualname = "dfo::BlackboxSolverOutcome"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/BlackboxSolverOutcome.md"
+summary = "The result of a scalar mesh-adaptive run."
+fields = ["minimizer", "minimum", "status", "diagnostics"]
+
+[[symbol]]
+qualname = "dfo::BlackboxSolverDiagnostics"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/BlackboxSolverDiagnostics.md"
+summary = "The counters of a scalar mesh-adaptive run."
+fields = ["iterations", "evaluations", "last_phase", "mesh_size", "frame_size"]
+
+[[symbol]]
+qualname = "dfo::BlackboxAdvancedOutcome"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/BlackboxAdvancedOutcome.md"
+summary = "The result of a black-box mesh-adaptive run."
+fields = ["minimizer", "objective_vector", "scalarized_minimum", "status", "diagnostics", "pareto_points", "pareto_objectives"]
+
+[[symbol]]
+qualname = "dfo::BlackboxAdvancedDiagnostics"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/BlackboxAdvancedDiagnostics.md"
+summary = "The counters of a black-box mesh-adaptive run."
+fields = ["iterations", "evaluations", "total_evaluations", "cache_hits", "surrogate_orderings", "pareto_size", "objective_dimension", "constraint_dimension", "last_phase", "mesh_size", "frame_size"]
+
+[[symbol]]
+qualname = "dfo::mads_blackbox_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/mads_blackbox_minimizer.md"
+summary = "Minimises a black box with mesh adaptive direct search, with constraints, several objectives, failed evaluations, a cache and a surrogate."
+overloads = 2
+toggles = ["std::function black box", "callable black box"]
+
+[[symbol]]
+qualname = "dfo::orthomads_blackbox_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/orthomads_blackbox_minimizer.md"
+summary = "Minimises a black box with OrthoMADS, mesh adaptive direct search with orthogonal poll directions."
+overloads = 2
+toggles = ["std::function black box", "callable black box"]
+
+[[symbol]]
+qualname = "dfo::ltmads_blackbox_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/ltmads_blackbox_minimizer.md"
+summary = "Minimises a black box with LT-MADS, mesh adaptive direct search with random lower-triangular poll directions."
+overloads = 2
+toggles = ["std::function black box", "callable black box"]
+
+[[symbol]]
+qualname = "dfo::coopmads_blackbox_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/coopmads_blackbox_minimizer.md"
+summary = "Minimises a black box in many variables with cooperative MADS, which optimises blocks of variables in turn."
+overloads = 2
+toggles = ["std::function black box", "callable black box"]
+
+[[symbol]]
+qualname = "dfo::psdmads_blackbox_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/psdmads_blackbox_minimizer.md"
+summary = "Minimises a black box in many variables with partial-space decomposition MADS, which optimises random subsets of the variables."
+overloads = 2
+toggles = ["std::function black box", "callable black box"]
+
+[[symbol]]
+qualname = "dfo::discomads_blackbox_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/discomads_blackbox_minimizer.md"
+summary = "Minimises a black box that fails at many points with Disco MADS, which looks for valid points around each failure."
+overloads = 2
+toggles = ["std::function black box", "callable black box"]
+
+[[symbol]]
+qualname = "dfo::vnsmads_blackbox_minimizer"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/vnsmads_blackbox_minimizer.md"
+summary = "Minimises a black box with several basins with variable-neighbourhood MADS, which kicks the best point and searches again."
+overloads = 2
+toggles = ["std::function black box", "callable black box"]
+
+[[symbol]]
+qualname = "dfo::CoopMadsConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/CoopMadsConfig.md"
+summary = "Settings of cooperative MADS: the base MADS configuration plus the block structure."
+fields = ["base", "cooperative_rounds", "polish_fraction", "subproblem_size", "subproblems_per_round", "randomized_subproblems", "rng_seed"]
+
+[[symbol]]
+qualname = "dfo::PsdMadsConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/PsdMadsConfig.md"
+summary = "Settings of partial-space decomposition MADS: the base configuration plus the random subsets."
+fields = ["base", "rounds", "polish_fraction", "min_subproblem_size", "max_subproblem_size", "subproblems_per_round", "randomized_subproblems", "rng_seed"]
+
+[[symbol]]
+qualname = "dfo::DiscoMadsConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/DiscoMadsConfig.md"
+summary = "Settings of Disco MADS: the base configuration plus the rescue around failed evaluations."
+fields = ["base", "rescue_trials", "rescue_failure_rate", "rescue_radius", "rescue_radius_decay", "rng_seed"]
+
+[[symbol]]
+qualname = "dfo::VnsMadsConfig"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/VnsMadsConfig.md"
+summary = "Settings of variable-neighbourhood MADS: the base configuration plus the kicks."
+fields = ["base", "neighborhoods", "initial_kick_scale", "kick_growth", "rng_seed"]
+
+[[symbol]]
+qualname = "dfo::BlackboxSolverStatus"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/BlackboxSolverStatus.md"
+summary = "Why a mesh-adaptive run stopped."
+fields = ["Converged", "ReachedIterationBudget", "ReachedEvaluationBudget"]
+
+[[symbol]]
+qualname = "dfo::to_string(BlackboxSolverStatus)"
+kind = "function"
+family = "optim/dfo"
+page = "api/optim/dfo/to_string_BlackboxSolverStatus.md"
+summary = "Returns the name of a mesh-adaptive status."
+overloads = 1
+
+[[symbol]]
+qualname = "dfo::BlackboxSolverDisplay"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/BlackboxSolverDisplay.md"
+summary = "Whether a mesh-adaptive run prints its progress."
+fields = ["None", "Iter"]
+
+[[symbol]]
+qualname = "dfo::MadsPollScheme"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/MadsPollScheme.md"
+summary = "How the poll directions of a mesh-adaptive search are built."
+fields = ["Ortho2N", "LtMadsRandom2N"]
+
+[[symbol]]
+qualname = "dfo::ConstraintHandling"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/ConstraintHandling.md"
+summary = "What a black-box mesh-adaptive search does with constraint values."
+fields = ["Ignore", "ExtremeBarrier", "ProgressiveBarrier"]
+
+[[symbol]]
+qualname = "dfo::MultiObjectiveScalarization"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/MultiObjectiveScalarization.md"
+summary = "How several objectives are reduced to one value to minimise."
+fields = ["WeightedSum", "Chebyshev"]
+
+[[symbol]]
+qualname = "dfo::SurrogateMode"
+kind = "options"
+family = "optim/dfo"
+page = "api/optim/dfo/SurrogateMode.md"
+summary = "Whether a cheap model orders the poll candidates of a mesh-adaptive search."
+fields = ["Off", "CandidateOrdering"]
+
+[[symbol]]
+qualname = "qp::Solver"
+kind = "class"
+family = "optim/qp"
+page = "api/optim/qp/Solver.md"
+summary = "A quadratic program whose matrices have been checked and factorised once, ready to be solved for many right-hand sides."
+methods = ["constraints", "dtype", "platform", "solve", "variables"]
+
+[[symbol]]
+qualname = "optim::ProblemBuilder"
+kind = "class"
+family = "optim/optima"
+page = "api/optim/optima/ProblemBuilder.md"
+summary = "A chainable description of an optimization problem: one objective and any constraints, built into a reusable value."
+methods = ["build", "lbs", "ln_eq", "ln_ineq", "nl_eq", "nl_ineq", "nonlinear_analytic", "nonlinear_equality", "nonlinear_inequality", "objective", "objective_analytic", "ubs"]
+
+[[symbol]]
+qualname = "dfo::DFO"
+kind = "class"
+family = "optim/dfo"
+page = "api/optim/dfo/DFO.md"
+summary = "The derivative-free front door: holds a set of options and solves problems with them."
+methods = ["build", "run", "solve"]
+
+[[symbol]]
+qualname = "dfo::DfoBuilder"
+kind = "class"
+family = "optim/dfo"
+page = "api/optim/dfo/DfoBuilder.md"
+summary = "A chainable description of a derivative-free problem and its options, solved with `solve()`."
+methods = ["options", "problem", "solve", "with_auto_policy", "with_blackbox", "with_bounds", "with_check_every", "with_constraints", "with_constraints_values", "with_de_config", "with_de_prmm_config", "with_display_iter", "with_initial", "with_mads_config", "with_max_evaluations", "with_max_iterations", "with_max_total_evaluations", "with_nelder_mead_config", "with_objective", "with_options", "with_problem", "with_promote_cpu_to_float64", "with_pso_config", "with_pso_dv_config", "with_seed", "with_solver", "with_tolerance"]
+

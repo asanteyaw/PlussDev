@@ -9,39 +9,39 @@ look like joined strings, but operations use the structured case-label payloads.
 
 ## API Signature
 
-`DataFrame::labels().set(options: SetLabelOptions) -> DataFrame`
+`DataFrame DataFrame::labels().set(options: SetLabelOptions)`
 
-`DataFrame::labels().set(feature_name: string_view, drop_feature: bool = true) -> DataFrame`
+`DataFrame DataFrame::labels().set(feature_name: string_view, drop_feature: bool = true)`
 
-`DataFrame::labels().set(feature_names: initializer_list<string_view>, drop_features: bool = true, separator: string_view = "\x1F") -> DataFrame`
+`DataFrame DataFrame::labels().set(feature_names: initializer_list<string_view>, drop_features: bool = true, separator: string_view = "\x1F")`
 
-`DataFrame::labels().has() -> bool`
+`bool DataFrame::labels().has()`
 
-`DataFrame::labels().names() -> vector<string>`
+`vector<string> DataFrame::labels().names()`
 
-`DataFrame::labels().part(name: string_view) -> Slate`
+`Slate DataFrame::labels().part(name: string_view)`
 
-`DataFrame::labels().part(position: int64) -> Slate`
+`Slate DataFrame::labels().part(position: int64)`
 
-`DataFrameCaseStudyAccessor::pick(const CasePick& pick) const -> DataFrame`
+`DataFrame DataFrameCaseStudyAccessor::pick(const CasePick& pick) const`
 
-`DataFrame::labels().sort(options: SortLabelOptions) -> DataFrame`
+`DataFrame DataFrame::labels().sort(options: SortLabelOptions)`
 
-`DataFrame::group().by(keys: LabelGroup).agg(specs) -> DataFrame`
+`DataFrame DataFrame::group().by(keys: LabelGroup).agg(specs)`
 
-`DataFrame::labels().rename(renames: RangeView<LabelRename>) -> DataFrame`
+`DataFrame DataFrame::labels().rename(renames: RangeView<LabelRename>)`
 
-`DataFrame::labels().order(names: RangeView<string_view>) -> DataFrame`
+`DataFrame DataFrame::labels().order(names: RangeView<string_view>)`
 
-`DataFrame::labels().drop(names: RangeView<string_view>) -> DataFrame`
+`DataFrame DataFrame::labels().drop(names: RangeView<string_view>)`
 
-`DataFrame::labels().reset(options: ResetLabelOptions) -> DataFrame`
+`DataFrame DataFrame::labels().reset(options: ResetLabelOptions)`
 
-`DataFrame::stack(feature_name: string = "feature", value_name: string = "value") -> DataFrame`
+`DataFrame DataFrame::stack(feature_name: string = "feature", value_name: string = "value")`
 
-`DataFrame::unstack(options: UnstackOptions) -> DataFrame`
+`DataFrame DataFrame::unstack(options: UnstackOptions)`
 
-`DataFrame::unstack(label: string_view) -> DataFrame`
+`DataFrame DataFrame::unstack(label: string_view)`
 
 ## Options
 

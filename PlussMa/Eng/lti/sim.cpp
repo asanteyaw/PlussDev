@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <complex>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -35,7 +36,7 @@ void validate_time(const StateSpace &system, const Series &time) {
   PLUSS_CHECK(time.platform() == system.a().platform(),
               "eng::lti::sim: time and system must share one platform");
   const auto host =
-      time.to(Platform::CPU, ScalarType::Float64).pull<double>();
+      time.to(Platform::CPU, ScalarType::Float64).items<double>();
   for (std::size_t lane = 0; lane < host.size(); ++lane) {
     PLUSS_CHECK(std::isfinite(host[lane]),
                 "eng::lti::sim: time values must be finite");
@@ -115,6 +116,103 @@ Series stack_time(const std::vector<Series> &values, std::int64_t time_axis) {
   return first.unite(tail, time_axis, true);
 }
 
+
+template <class T>
+std::vector<T> host_values(const Series &value, ScalarType dtype) {
+  const Series flat = value.to(Platform::CPU, dtype).contiguous();
+  return flat.reshape({flat.numel()}).template items<T>();
+}
+
+// The step recursion is sequential in time but independent across lanes, so it runs as one tight loop per lane on
+// the host. `ad`, `bd0`, `bd1` are the per-interval propagators (continuous time) or A and B (discrete time).
+template <class T>
+SimRun host_recursion(const StateSpace &system, const Series &a, const Series &b, const Series &c, const Series &d,
+                      const Series &u, const Series &state0, const Series &transitions, bool uniform, Hold hold,
+                      const std::vector<std::int64_t> &batch, ScalarType dtype) {
+  const std::int64_t n = system.states();
+  const std::int64_t m = system.inputs();
+  const std::int64_t p = system.outputs();
+  const std::int64_t steps = u.size(static_cast<std::int64_t>(batch.size()));
+  std::int64_t lanes = 1;
+  for (const std::int64_t extent : batch) lanes *= extent;
+  const bool discrete = system.is_disc();
+  const bool linear = !discrete && hold == Hold::Linear;
+  const std::vector<T> cv = host_values<T>(c, dtype);
+  const std::vector<T> dv = host_values<T>(d, dtype);
+  const std::vector<T> uv = host_values<T>(u, dtype);
+  std::vector<T> x = host_values<T>(state0, dtype);
+  std::vector<T> av, bv, tv;
+  std::int64_t columns = 0;
+  if (discrete) {
+    av = host_values<T>(a, dtype);
+    bv = host_values<T>(b, dtype);
+  } else if (steps > 1) {
+    columns = transitions.size(-1);
+    tv = host_values<T>(transitions.slice(-2, 0, n).contiguous(), dtype);
+  }
+  std::vector<T> y(static_cast<std::size_t>(lanes * steps * p), T{});
+  std::vector<T> xs(static_cast<std::size_t>(lanes * steps * n), T{});
+  std::vector<T> next(static_cast<std::size_t>(n));
+  for (std::int64_t lane = 0; lane < lanes; ++lane) {
+    T *state = x.data() + lane * n;
+    for (std::int64_t t = 0; t < steps; ++t) {
+      const T *input = uv.data() + (lane * steps + t) * m;
+      T *out_state = xs.data() + (lane * steps + t) * n;
+      T *out_value = y.data() + (lane * steps + t) * p;
+      for (std::int64_t i = 0; i < n; ++i) out_state[i] = state[i];
+      for (std::int64_t o = 0; o < p; ++o) {
+        T acc{};
+        for (std::int64_t i = 0; i < n; ++i) acc += cv[static_cast<std::size_t>((lane * p + o) * n + i)] * state[i];
+        for (std::int64_t k = 0; k < m; ++k) acc += dv[static_cast<std::size_t>((lane * p + o) * m + k)] * input[k];
+        out_value[o] = acc;
+      }
+      if (t + 1 == steps) continue;
+      if (discrete) {
+        for (std::int64_t i = 0; i < n; ++i) {
+          T acc{};
+          for (std::int64_t j = 0; j < n; ++j) acc += av[static_cast<std::size_t>((lane * n + i) * n + j)] * state[j];
+          for (std::int64_t k = 0; k < m; ++k) acc += bv[static_cast<std::size_t>((lane * n + i) * m + k)] * input[k];
+          next[static_cast<std::size_t>(i)] = acc;
+        }
+      } else {
+        const T *rows = uniform ? tv.data() + lane * n * columns : tv.data() + (lane * (steps - 1) + t) * n * columns;
+        const T *following = uv.data() + (lane * steps + t + 1) * m;
+        for (std::int64_t i = 0; i < n; ++i) {
+          const T *row = rows + i * columns;
+          T acc{};
+          for (std::int64_t j = 0; j < n; ++j) acc += row[j] * state[j];
+          for (std::int64_t k = 0; k < m; ++k) {
+            const T held = row[n + k];
+            if (linear) {
+              const T slope = row[n + m + k];
+              acc += (held - slope) * input[k] + slope * following[k];
+            } else {
+              acc += held * input[k];
+            }
+          }
+          next[static_cast<std::size_t>(i)] = acc;
+        }
+      }
+      for (std::int64_t i = 0; i < n; ++i) state[i] = next[static_cast<std::size_t>(i)];
+    }
+  }
+  std::vector<std::int64_t> y_shape = batch;
+  y_shape.insert(y_shape.end(), {steps, p});
+  std::vector<std::int64_t> x_shape = batch;
+  x_shape.insert(x_shape.end(), {steps, n});
+  const Config cfg = Config{}.with_dtype(dtype).with_platform(system.a().platform());
+  return {pluss::make_series(y, y_shape, cfg), pluss::make_series(xs, x_shape, cfg)};
+}
+
+SimRun dispatch_host(const StateSpace &system, const Series &a, const Series &b, const Series &c, const Series &d,
+                     const Series &u, const Series &state0, const Series &transitions, bool uniform, Hold hold,
+                     const std::vector<std::int64_t> &batch, ScalarType dtype) {
+  if (dtype == ScalarType::Float64) return host_recursion<double>(system, a, b, c, d, u, state0, transitions, uniform, hold, batch, dtype);
+  if (dtype == ScalarType::Float32) return host_recursion<float>(system, a, b, c, d, u, state0, transitions, uniform, hold, batch, dtype);
+  if (dtype == ScalarType::Complex128) return host_recursion<std::complex<double>>(system, a, b, c, d, u, state0, transitions, uniform, hold, batch, dtype);
+  return host_recursion<std::complex<float>>(system, a, b, c, d, u, state0, transitions, uniform, hold, batch, dtype);
+}
+
 SimRun simulate(const StateSpace &system, const Series &input,
                 const Series &time, const Series *initial,
                 const SimOptions &options) {
@@ -171,8 +269,31 @@ SimRun simulate(const StateSpace &system, const Series &input,
   Series state_col = state.unsqueeze(-1);
 
   Series transitions = series::undefined();
-  if (system.is_cont() && time.numel() > 1)
-    transitions = propagators(a, b, time, batch, hold);
+  // On a uniform time grid every interval has the same propagator, so one matrix exponential serves all of them.
+  bool uniform = false;
+  if (system.is_cont() && time.numel() > 1) {
+    const std::vector<double> grid = time.to(Platform::CPU, ScalarType::Float64).items<double>();
+    const double step = grid[1] - grid[0];
+    uniform = true;
+    for (std::size_t i = 2; i < grid.size(); ++i) {
+      if (std::abs((grid[i] - grid[i - 1]) - step) > 1e-12 * std::max(std::abs(step), 1e-300)) {
+        uniform = false;
+        break;
+      }
+    }
+    if (uniform) {
+      const Series first_interval = time.slice(0, 0, 2);
+      transitions = propagators(a, b, first_interval, batch, hold);
+    } else {
+      transitions = propagators(a, b, time, batch, hold);
+    }
+  }
+
+  // Inputs that record the tape keep the Series recursion below; everything else runs as a host loop per lane.
+  const bool tracked = system.a().tracks_slope() || system.b().tracks_slope() || system.c().tracks_slope() ||
+                       system.d().tracks_slope() || input.tracks_slope() || (initial != nullptr && initial->tracks_slope());
+  if (system.a().platform() == Platform::CPU && !tracked)
+    return dispatch_host(system, a, b, c, d, u, state, transitions, uniform, hold, batch, dtype);
 
   std::vector<Series> outputs;
   std::vector<Series> states;
@@ -191,7 +312,7 @@ SimRun simulate(const StateSpace &system, const Series &input,
       continue;
     }
 
-    const Series transition = transitions.select(time_axis, lane);
+    const Series transition = transitions.select(time_axis, uniform ? 0 : lane);
     const Series ad =
         transition.slice(-2, 0, system.states()).slice(-1, 0, system.states());
     const Series bd0 =

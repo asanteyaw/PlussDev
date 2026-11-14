@@ -1,0 +1,63 @@
+# `thermal::ratio`
+
+The humidity ratio of moist air from relative humidity.
+
+## Signature
+
+```cpp
+Series thermal::ratio(const Series& temperature,
+                       const Series& relative,
+                       const Series& pressure);
+```
+
+## What It Does
+
+Returns `w = 0.621945 p_v / (p - p_v)` with the vapour pressure `p_v = relative * psat(temperature)`: kilograms of water per kilogram of dry air.
+
+## Parameters
+
+`temperature`
+: The dry-bulb temperature in degrees Celsius.
+
+`relative`
+: The relative humidity as a fraction in `[0, 1]`.
+
+`pressure`
+: The total pressure in Pa, positive.
+
+## Returns
+
+The humidity ratio in kg/kg with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for a temperature outside -60 to 150, a relative humidity outside `[0, 1]`, a non-positive pressure, and a vapour pressure that reaches the total pressure.
+
+## Interpretation and Use
+
+At the same temperature and relative humidity air at altitude carries more water per kilogram of dry air, because the total pressure is lower.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+25 degrees and 50 %.
+
+@@example Eng/api/thermal_ratio_basic.cpp@@
+
+### Example 2
+
+The effect of altitude.
+
+@@example Eng/api/thermal_ratio_pressure.cpp@@
+
+### Example 3
+
+Rejected inputs.
+
+@@example Eng/api/thermal_ratio_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

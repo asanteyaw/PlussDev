@@ -1,0 +1,63 @@
+# `thermal::shell`
+
+The conduction resistance of a spherical shell.
+
+## Signature
+
+```cpp
+Series thermal::shell(const Series& conductivity,
+                      const Series& r_in,
+                      const Series& r_out);
+```
+
+## What It Does
+
+Returns `(1 / r_in - 1 / r_out) / (4 pi k)` in kelvin per watt: radial conduction through a spherical wall. As the outer radius grows the resistance tends to `1 / (4 pi k r_in)`, the resistance of the medium around a sphere.
+
+## Parameters
+
+`conductivity`
+: The conductivity in W/(m K), positive.
+
+`r_in`
+: The inner radius in m, positive.
+
+`r_out`
+: The outer radius in m, larger than `r_in`.
+
+## Returns
+
+The resistance in K/W with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array, not finite or not positive, and when `r_out` does not exceed `r_in`.
+
+## Interpretation and Use
+
+Use it for spherical tanks and insulated spheres; combine it with `film` for the outside convection.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A spherical shell and its limit.
+
+@@example Eng/api/thermal_shell_basic.cpp@@
+
+### Example 2
+
+An insulated tank.
+
+@@example Eng/api/thermal_shell_tank.cpp@@
+
+### Example 3
+
+Rejected radii.
+
+@@example Eng/api/thermal_shell_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

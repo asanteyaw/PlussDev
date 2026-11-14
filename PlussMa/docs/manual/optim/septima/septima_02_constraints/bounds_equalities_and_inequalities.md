@@ -123,7 +123,7 @@ L-BFGS    1        default    Converged      16     6        10        5.7e-07  
 L-BFGS    10       default    Converged      15     5        1         2.4e-07     0.500       1.500, 0.500
 L-BFGS    100      default    Converged      10     3        1         1.2e-07     0.500       1.500, 0.500
 Adam      10       0.1        MaxIterations  3000   61       1e+03     4.8e-05     0.020       1.500, 0.500
-L-BFGS    10       0.1        Converged      31     11       1e+05     4.9e-07     0.011       1.500, 0.500
+L-BFGS    10       0.1        Converged      30     11       1e+05     4.9e-07     0.011       1.500, 0.500
 ```
 With the defaults every row converges to `(1.500, 0.500)` with a multiplier of exactly 0.500, whatever the starting penalty. L-BFGS needs 16, 15 and 10 iterations for penalties of 1, 10 and 100; Adam needs 696, 347 and 1392, because each step is bounded by its learning rate. The penalty column shows the schedule at work: from a penalty of 1 the run raised it by a factor of 10 for L-BFGS and 100 for Adam, because the violation did not shrink fast enough; from 10 and 100 it left the penalty alone. A penalty that is too small is repaired, and one that is generous costs nothing in accuracy, only some iterations for Adam.
 
@@ -193,9 +193,9 @@ Adam from (0, 0)                  295     0.8944, 0.4472      0.0e+00     0.6180
 Adam from (-2, 1.5)               660     0.8944, 0.4472      0.0e+00     0.6180
 L-BFGS from (0, 0)                19      0.8944, 0.4472      4.4e-07     0.6180
 L-BFGS from (-2, 1.5)             24      0.8944, 0.4472      4.4e-07     0.6180
-L-BFGS, strong Wolfe, far start   24      0.8944, 0.4472      4.4e-07     0.6180
+L-BFGS, strong Wolfe, far start   29      0.8944, 0.4472      4.4e-07     0.6180
 ```
-Every run finds the exact answer and the exact multiplier, 0.6180, from a start inside the disc and from one far outside it. Adam needs 295 and 660 iterations; L-BFGS needs 19 and 24. From the far start the multiplier first grows because the constraint is badly violated, and then has to come back down to 0.618 as the iterate returns; the multiplier update lets it do both. With constraints present, L-BFGS always protects each step with a backtracking test on the augmented function, because the inequality term has a kink where the constraint becomes active, so the line-search setting makes no difference in the last two rows: they are identical.
+Every run finds the exact answer and the exact multiplier, 0.6180, from a start inside the disc and from one far outside it. Adam needs 295 and 660 iterations; L-BFGS needs 19 and 24. From the far start the multiplier first grows because the constraint is badly violated, and then has to come back down to 0.618 as the iterate returns; the multiplier update lets it do both. With constraints present and no line search selected, L-BFGS protects each step with a backtracking test on the augmented function, because the inequality term has a kink where the constraint becomes active. The last row selects the strong-Wolfe search instead: it finds the same answer from the far start in 29 iterations against 24 for the backtracking test, so on this small problem the extra care buys nothing.
 
 ## Program 4: The same problem in both solvers
 
@@ -281,9 +281,9 @@ Output
 solver                    exit            evals   objective   violation   a, b, c
 Optima                    converged       6       -1.65076    2.2e-10     1.3309, 0.2254, 0.7746
 Septima, Adam             converged       854     -1.65075    8.3e-08     1.3309, 0.2254, 0.7746
-Septima, L-BFGS           converged       242     -1.65076    5.0e-07     1.3310, 0.2254, 0.7746
+Septima, L-BFGS           converged       240     -1.65076    5.0e-07     1.3310, 0.2254, 0.7746
 ```
-Septima reaches the same solution as Optima, `(1.331, 0.2254, 0.7746)` with an objective of -1.65076, with the default settings. Adam needs 854 evaluations and ends with a violation of 8.3e-08; L-BFGS needs 242 evaluations and ends with 5.0e-07. Optima needs 6 evaluations and ends with 2.2e-10. So the answers agree, and the differences are in cost and in precision: Septima stops when the violation is within its tolerance (1e-6 by default), Optima solves each step to a far tighter one, and Optima uses second-order information that lets it finish in a handful of steps.
+Septima reaches the same solution as Optima, `(1.331, 0.2254, 0.7746)` with an objective of -1.65076, with the default settings. Adam needs 854 evaluations and ends with a violation of 8.3e-08; L-BFGS needs 240 evaluations and ends with 5.0e-07. Optima needs 6 evaluations and ends with 2.2e-10. So the answers agree, and the differences are in cost and in precision: Septima stops when the violation is within its tolerance (1e-6 by default), Optima solves each step to a far tighter one, and Optima uses second-order information that lets it finish in a handful of steps.
 
 Choose by what the problem needs. For a small problem with a few nonlinear constraints that must hold to high precision, Optima is the better tool. For a problem with many parameters, mostly bounds and simple constraints, or complex parameters, or an objective you can differentiate but whose Hessian is out of reach, Septima gives the same answer with only gradients. Chapter 5 gives a decision table.
 
@@ -296,3 +296,8 @@ Choose by what the problem needs. For a small problem with a few nonlinear const
 - **For a small problem needing high precision, use Optima.** Septima reaches the same solution with many more evaluations and a violation of order 1e-7; its strength is size, complex parameters and objectives whose Hessian is out of reach.
 
 Where next: [Chapter 3](../septima_03_tuning_and_robustness.md) tunes the solvers.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,11 @@
+# Communications 1: Modulation and Detection
+
+A digital link turns bits into symbols, symbols into a waveform, sends the waveform through a noisy channel, and then decides what was sent. This chapter builds that chain on complete blocks of data: constellations and the mapping of bits to symbols, noise at a chosen energy per bit and the decisions that follow (hard bits and soft likelihood ratios) with their error rate against theory, pulse shaping with matched filtering, OFDM over a multipath channel, convolutional coding with Viterbi decoding, and timing and carrier synchronisation.
+
+- [Constellations and mapping](comms_01_modulation/constellations_and_mapping.md)
+- [Noise and detection](comms_01_modulation/noise_and_detection.md)
+- [Pulse shaping](comms_01_modulation/pulse_shaping.md)
+- [OFDM and multipath](comms_01_modulation/ofdm.md)
+- [Channel coding](comms_01_modulation/channel_coding.md)
+- [LDPC and turbo codes](comms_01_modulation/iterative_codes.md)
+- [Synchronisation](comms_01_modulation/synchronisation.md)

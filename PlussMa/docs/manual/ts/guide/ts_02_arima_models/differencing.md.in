@@ -24,7 +24,7 @@ namespace ts = pluss::subsp::stats::ts;
 using pluss::Series;
 
 Series drop_first(const Series& s, const pluss::Config& cfg) {
-  auto v = s.host<double>();
+  auto v = s.items<double>();
   v.erase(v.begin());
   return pluss::make_series(v, cfg);
 }
@@ -166,3 +166,12 @@ The forecasts of the level climb by the same amount at each step, the estimated 
 - **Likelihoods with different `d` are not comparable**, because they describe different series; compare models with the same `d` ([Choosing the orders](choosing_the_orders.md)).
 
 Where next: [Chapter 3](../ts_03_volatility_models.md) turns from the mean of a series to its variance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="seasonal_models.html">
+    <span class="label">Previous</span>
+    <span class="title">Seasonal models</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

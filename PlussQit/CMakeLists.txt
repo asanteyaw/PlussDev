@@ -81,8 +81,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(PLUSSQIT_BUILD_TESTS "Build tests" ON)
 option(PLUSSQIT_BUILD_EXAMPLES "Build examples" ON)
-option(PLUSSQIT_USE_FMT "Use fmt for messages" ON)
-option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (fmt/Catch2)" OFF)
+option(PLUSSQIT_FETCH_DEPS "Allow CMake to FetchContent dependencies (Catch2)" OFF)
 option(PLUSSQIT_BUILD_CODEM "Build CodeM (Series/Tensor)" OFF)
 option(PLUSSQIT_BUILD_CODEH "Build CodeH (Timeline/Duration/TimelineIndexAccessor)" ${PLUSSQIT_BUILD_CODEM})
 option(PLUSSQIT_BUILD_CODEM_SMOKE_TESTS "Build ad-hoc CodeM smoke executables" OFF)
@@ -111,55 +110,6 @@ elseif (EXISTS "${CMAKE_SOURCE_DIR}/../PlussTils/include")
 endif()
 
 include(FetchContent)
-
-set(PLUSSQIT_FMT_INCLUDE_DIR "" CACHE INTERNAL "Resolved fmt include directory for PlussQit SDK staging")
-
-if (PLUSSQIT_USE_FMT)
-  set(_plussqit_fmt_candidates
-    "${CMAKE_CURRENT_LIST_DIR}/../ExLibs/fmt/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../ExLibs/fmt/include"
-    "${CMAKE_SOURCE_DIR}/ExLibs/fmt/include"
-    "${CMAKE_SOURCE_DIR}/../ExLibs/fmt/include"
-  )
-  foreach(_plussqit_fmt_candidate IN LISTS _plussqit_fmt_candidates)
-    if(EXISTS "${_plussqit_fmt_candidate}/fmt/format.h")
-      set(PLUSSQIT_FMT_INCLUDE_DIR "${_plussqit_fmt_candidate}" CACHE INTERNAL "Resolved fmt include directory for PlussQit SDK staging" FORCE)
-      break()
-    endif()
-  endforeach()
-
-  if (NOT PLUSSQIT_FMT_INCLUDE_DIR)
-    find_package(fmt QUIET)
-    if (NOT fmt_FOUND AND PLUSSQIT_FETCH_DEPS)
-      FetchContent_Declare(
-        fmt
-        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-        GIT_TAG 10.2.1
-      )
-      FetchContent_MakeAvailable(fmt)
-    endif()
-
-    if (TARGET fmt::fmt-header-only)
-      get_target_property(_plussqit_fmt_target_includes fmt::fmt-header-only INTERFACE_INCLUDE_DIRECTORIES)
-    elseif (TARGET fmt::fmt)
-      get_target_property(_plussqit_fmt_target_includes fmt::fmt INTERFACE_INCLUDE_DIRECTORIES)
-    endif()
-
-    if (_plussqit_fmt_target_includes)
-      foreach(_plussqit_fmt_target_include IN LISTS _plussqit_fmt_target_includes)
-        if (EXISTS "${_plussqit_fmt_target_include}/fmt/format.h")
-          set(PLUSSQIT_FMT_INCLUDE_DIR "${_plussqit_fmt_target_include}" CACHE INTERNAL "Resolved fmt include directory for PlussQit SDK staging" FORCE)
-          break()
-        endif()
-      endforeach()
-    endif()
-  endif()
-
-  if (NOT PLUSSQIT_FMT_INCLUDE_DIR)
-    message(STATUS "fmt headers not found; disabling fmt support (install fmt, vendor ExLibs/fmt, or set PLUSSQIT_FETCH_DEPS=ON).")
-    set(PLUSSQIT_USE_FMT OFF)
-  endif()
-endif()
 
 
 # ---- CodeM (ATen-like) ----
@@ -433,15 +383,6 @@ endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
   target_compile_options(plussqit_codem PRIVATE -Wall -Wextra -Wpedantic)
-endif()
-
-if (PLUSSQIT_USE_FMT)
-  target_include_directories(plussqit_codem PUBLIC
-    $<BUILD_INTERFACE:${PLUSSQIT_FMT_INCLUDE_DIR}>
-  )
-  target_compile_definitions(plussqit_codem PUBLIC PLUSSQIT_HAS_FMT=1 FMT_HEADER_ONLY=1)
-else()
-  target_compile_definitions(plussqit_codem PUBLIC PLUSSQIT_HAS_FMT=0)
 endif()
 
 if (PLUSSQIT_BUILD_CODEM AND PLUSSQIT_BUILD_CODEM_SMOKE_TESTS)
@@ -774,7 +715,40 @@ if(PLUSSQIT_UNISTRING_INCLUDE_DIR AND PLUSSQIT_UNISTRING_LIBRARY)
   target_compile_definitions(
     plussqit_coden PRIVATE PLUSSQIT_HAS_LIBUNISTRING=1)
   target_link_libraries(
-    plussqit_coden PUBLIC ${PLUSSQIT_UNISTRING_LIBRARY})
+    plussqit_coden PUBLIC
+      $<BUILD_INTERFACE:${PLUSSQIT_UNISTRING_LIBRARY}>
+      $<INSTALL_INTERFACE:Pluss::Unistring>)
+  if(APPLE)
+    # Ship the Unicode backend used by this archive. A consumer must be able
+    # to extract the ZIP anywhere without installing our build host's copy.
+    get_filename_component(_pluss_unistring_real "${PLUSSQIT_UNISTRING_LIBRARY}" REALPATH)
+    get_filename_component(_pluss_unistring_file "${_pluss_unistring_real}" NAME)
+    install(FILES "${_pluss_unistring_real}" DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(CODE "
+      file(CHMOD \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${_pluss_unistring_file}\"
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+      execute_process(
+        COMMAND /usr/bin/install_name_tool -id \"@rpath/${_pluss_unistring_file}\"
+          \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${_pluss_unistring_file}\"
+        RESULT_VARIABLE _pluss_unistring_install_name_result)
+      if(NOT _pluss_unistring_install_name_result EQUAL 0)
+        message(FATAL_ERROR \"Could not make the bundled libunistring relocatable\")
+      endif()
+      execute_process(
+        COMMAND /usr/bin/codesign --force --sign -
+          \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${_pluss_unistring_file}\"
+        RESULT_VARIABLE _pluss_unistring_sign_result)
+      if(NOT _pluss_unistring_sign_result EQUAL 0)
+        message(FATAL_ERROR \"Could not sign the bundled libunistring\")
+      endif()
+    ")
+    get_filename_component(_pluss_unistring_libdir "${_pluss_unistring_real}" DIRECTORY)
+    get_filename_component(_pluss_unistring_prefix "${_pluss_unistring_libdir}" DIRECTORY)
+    if(EXISTS "${_pluss_unistring_prefix}/COPYING.LIB")
+      install(FILES "${_pluss_unistring_prefix}/COPYING.LIB"
+        DESTINATION share/licenses/PlussII RENAME libunistring-LGPL.txt)
+    endif()
+  endif()
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
@@ -1440,6 +1414,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
   PATTERN "optim.h" EXCLUDE
   PATTERN "optim_fwd.h" EXCLUDE
   PATTERN "parameter_pack.h" EXCLUDE
+  PATTERN "cmake_run_commands.txt" EXCLUDE
   PATTERN ".DS_Store" EXCLUDE
 )
 
@@ -1536,16 +1511,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/Flame/
   PATTERN "*.inc"
   PATTERN ".DS_Store" EXCLUDE
 )
-
-if (PLUSSQIT_USE_FMT AND PLUSSQIT_FMT_INCLUDE_DIR)
-  install(DIRECTORY ${PLUSSQIT_FMT_INCLUDE_DIR}/fmt/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/fmt
-    FILES_MATCHING
-    PATTERN "*.h"
-    PATTERN "*.hpp"
-    PATTERN ".DS_Store" EXCLUDE
-  )
-endif()
 
 if (PLUSSQIT_BUILD_CODEH)
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/CodeH/core/

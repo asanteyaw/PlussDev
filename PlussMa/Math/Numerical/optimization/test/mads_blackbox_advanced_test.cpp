@@ -213,6 +213,13 @@ int main() {
     const auto base = mads_blackbox_minimizer(flaky, pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, c64), plain);
     expect(out.scalarized_minimum <= base.scalarized_minimum + 1e-12,
            "Disco is never worse than plain MADS on the same flaky function", &failures);
+    // With 80% of the points failing, plain MADS stalls far from the minimum; the rescue has to be running (it makes
+    // extra calls of the black box) and has to find a clearly better valid point. A non-finite objective counts as a
+    // failure for the rescue.
+    expect(out.scalarized_minimum < base.scalarized_minimum - 0.5,
+           "Disco rescue finds a clearly better point than plain MADS when most evaluations fail", &failures);
+    expect(out.diagnostics.total_evaluations > base.diagnostics.total_evaluations,
+           "Disco rescue makes extra black-box calls around failures", &failures);
   }
 
   {
@@ -246,6 +253,39 @@ int main() {
         }
       }
       expect(minimum[1] < minimum[0], "a full-space polish improves a decomposition solver on a coupled function", &failures);
+    }
+  }
+
+  {
+    // On a constraint boundary the only improving moves lie in a narrow cone along the boundary; the poll alone stalls
+    // there and used to report convergence ~0.2 short of the optimum. The boundary-tangent poll must reach it. Minimise
+    // sum (x_i - 3)^2 under x0 <= 1 (optimum (1, 3)), x0 + x1 <= 2 (optimum (1, 1)) and the unit disc (0.7071, 0.7071).
+    const Config c64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
+    struct Case { const char* name; std::function<Series(const Series&)> g; double x0, x1; };
+    const std::vector<Case> cases = {
+        {"x0 <= 1", [](const Series& x) { return x.select(0, 0).sub(1.0).reshape({1}); }, 1.0, 3.0},
+        {"x0 + x1 <= 2", [](const Series& x) { return x.sum().sub(2.0).reshape({1}); }, 1.0, 1.0},
+        {"unit disc", [](const Series& x) { return x.square().sum().sub(1.0).reshape({1}); }, 0.70710678, 0.70710678},
+    };
+    for (const auto& c : cases) {
+      for (const auto scheme : {MadsPollScheme::Ortho2N, MadsPollScheme::LtMadsRandom2N}) {
+        for (const auto handling : {ConstraintHandling::ExtremeBarrier, ConstraintHandling::ProgressiveBarrier}) {
+          MadsBlackboxAdvancedConfig cfg;
+          cfg.poll_scheme = scheme;
+          cfg.constraint_handling = handling;
+          const auto out = mads_blackbox_minimizer(
+              [&](const Series& x) {
+                BlackboxEvaluation e;
+                e.objectives = x.sub(3.0).square().sum().reshape({1});
+                e.constraints = c.g(x);
+                return e;
+              },
+              pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, c64), cfg);
+          const auto m = out.minimizer.host<double>();
+          expect(std::abs(m[0] - c.x0) < 2e-2 && std::abs(m[1] - c.x1) < 2e-2,
+                 std::string("MADS reaches the constrained optimum on the boundary: ") + c.name, &failures);
+        }
+      }
     }
   }
 

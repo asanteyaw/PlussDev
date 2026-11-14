@@ -1,0 +1,36 @@
+# Reports and joins
+
+[Back to PlussMic by example](../guide.md)
+
+Most table work ends in a report: totals by group, the best few rows, customers matched to their orders. This page builds two such reports end to end, one from a single table and one from two tables that must be joined, with complete programs and the output they print.
+
+## The mental model
+
+A `DataFrame` is a set of named features (columns), each a typed `Slate`, with one row per case. Work on it is a pipeline of calls that each return a new frame, so a report is a chain: derive a feature with `assign`, filter with `query`, order with `arrange`, summarise with `group(...).by(...).agg(...)` or `aggregate`. Relational questions that involve several tables (a join, a left join to find what is missing) are easier in SQL: `frame.sql(options).execute(...)` runs a `SELECT` over the frame, which is named `df`, and over other frames you bind by name.
+
+## A sales report
+
+Six cities with units sold and a price. The program derives revenue, keeps the strong rows, ranks them, summarises by region and totals the table.
+
+@@example sales_report.cpp@@
+
+`assign` takes a function of the frame, so `revenue` is built from whichever features it needs. `query("revenue >= 28")` keeps four of the six rows; `arrange({"revenue"}, false)` orders descending and `head(3)` keeps the leaders, where Takoradi (31.5) edges out Accra and Kumasi (both 30). The grouped table has one row per region: the south has three cities and 26 units, the middle two cities and 18 units. Each aggregation names the result feature, the source feature and the operation, so the output is exactly the columns you asked for. `aggregate` is the same idea for the whole table and gives one row, 49 units and 171.5 of revenue.
+
+## Customers and their orders
+
+Four customers and five orders. The program totals spending per customer with a SQL left join, finds the customer who never ordered, repeats the totals with the group API, and runs a parameterised query.
+
+@@example orders_and_customers.cpp@@
+
+The frame the SQL is called on is `df`, and `orders` is bound in `SqlOptions::sources`. The `LEFT JOIN` keeps every customer, so Edsger appears with zero orders and zero spent, which an inner join would have hidden; `COALESCE` turns the missing sum into zero. The second block filters that result with `query` to list the customers who never ordered. The third reaches the same totals for the customers who did order without SQL, by grouping the orders alone; note that it cannot know about Edsger, which is the reason to join first when the question includes "who is missing". The last query takes its threshold from a parameter, `{minimum}`, so a value never has to be pasted into the statement.
+
+## Decisions
+
+- **Pipeline or SQL:** use the pipeline for derivations, filters and group summaries on one frame; use SQL when the question is relational (joins, left joins, anti-joins) or already exists as SQL.
+- **Inner or left join:** use a left join whenever "who is missing" is part of the question.
+- **Sorting and limits:** `arrange` then `head` for the leaders; `ORDER BY ... LIMIT` in SQL.
+- **Parameters:** pass values through `params`, identifiers through `identifier_params`, and never build SQL by concatenating user input.
+
+## Where next
+
+Reference pages: [`assign`](../api/dataframe/assign.md), [`query`](../api/dataframe/query.md), [`arrange`](../api/dataframe/arrange.md), [`head`](../api/dataframe/head.md), [`aggregate`](../api/dataframe/aggregate.md), [`to_string`](../api/dataframe/to_string.md). Next: [Files, missing data and time](files_and_time.md).

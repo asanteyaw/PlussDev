@@ -52,3 +52,12 @@ closed form e^(rT) N(d1)      0.5357
 standard error of the estimate  0.0020
 ```
 The estimate is 0.5329 and the closed form 0.5357. They differ by 0.0028, 1.4 standard errors, where the program prints the standard error 0.0020 of the 100000-path estimate. The loss is any scalar function of the final state, differentiated by the same engine, so a smooth payoff needs no hand-derived gradient.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="convergence_on_geometric_brownian_motion.html">
+    <span class="label">Previous</span>
+    <span class="title">Convergence on geometric Brownian motion</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

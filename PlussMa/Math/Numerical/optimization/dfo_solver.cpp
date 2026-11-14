@@ -436,6 +436,13 @@ PSConfig make_ps_config(
   return cfg;
 }
 
+void reject_constraints(const DfoProblem& problem, const char* solver) {
+  if (problem.constraints || problem.constraints_values) {
+    ::pluss::throw_error(std::string("DFO::solve(") + solver +
+                         "): nonlinear constraints are not supported; use PatternSearch or a MADS solver");
+  }
+}
+
 DfoResult run_nelder_mead(
     const DfoProblem& problem,
     const DfoOptions& options) {
@@ -500,6 +507,7 @@ DfoResult run_pattern_search(
 DfoResult run_de(
     const DfoProblem& problem,
     const DfoOptions& options) {
+  reject_constraints(problem, "DifferentialEvolution");
   const auto objective = make_scalar_objective(problem, DfoSolverKind::DifferentialEvolution);
   const DifferentialEvolutionConfig cfg = make_de_config(problem, options);
   const PopulationSolverOutcome out = differential_evolution_minimizer(objective, problem.initial, cfg);
@@ -519,6 +527,7 @@ DfoResult run_de(
 DfoResult run_de_prmm(
     const DfoProblem& problem,
     const DfoOptions& options) {
+  reject_constraints(problem, "DifferentialEvolutionPrmm");
   const auto objective = make_scalar_objective(problem, DfoSolverKind::DifferentialEvolutionPrmm);
   const DifferentialEvolutionPrmmConfig cfg = make_de_prmm_config(problem, options);
   const PopulationSolverOutcome out = differential_evolution_prmm_minimizer(objective, problem.initial, cfg);
@@ -538,6 +547,7 @@ DfoResult run_de_prmm(
 DfoResult run_pso(
     const DfoProblem& problem,
     const DfoOptions& options) {
+  reject_constraints(problem, "ParticleSwarm");
   const auto objective = make_scalar_objective(problem, DfoSolverKind::ParticleSwarm);
   const ParticleSwarmConfig cfg = make_pso_config(problem, options);
   const PopulationSolverOutcome out = particle_swarm_minimizer(objective, problem.initial, cfg);
@@ -557,6 +567,7 @@ DfoResult run_pso(
 DfoResult run_pso_dv(
     const DfoProblem& problem,
     const DfoOptions& options) {
+  reject_constraints(problem, "ParticleSwarmDv");
   const auto objective = make_scalar_objective(problem, DfoSolverKind::ParticleSwarmDv);
   const ParticleSwarmDvConfig cfg = make_pso_dv_config(problem, options);
   const PopulationSolverOutcome out = particle_swarm_dv_minimizer(objective, problem.initial, cfg);

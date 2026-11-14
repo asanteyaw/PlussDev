@@ -40,4 +40,10 @@ BlackboxAdvancedOutcome ltmads_blackbox_minimizer(blackbox, initial, MadsBlackbo
 6. Check feasibility at the returned point yourself.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_11_mads_black_box/the_black_box_minimisers
+```
 <!-- apiref:toctree:end -->

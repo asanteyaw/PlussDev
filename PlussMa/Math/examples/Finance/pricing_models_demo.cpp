@@ -11,7 +11,7 @@ int main() {
   inst.strike = pluss::series::full({6}, 100.0, cfg);
   inst.maturity = pluss::series::full({6}, 1.0, cfg);
 
-  const auto hest = fin::model::make(1.5, 0.04, 0.30, -0.70, 0.04, cfg);
+  const fin::model::Heston hest = fin::model::make(fin::model::Kind::Heston, {1.5, 0.04, 0.30, -0.70, 0.04}, cfg).as<fin::model::Heston>();
 
   auto mkt = fin::market::make(100.0, 0.03, 0.01, cfg);
   mkt.spot = pluss::series::full({6}, 100.0, cfg);
@@ -34,7 +34,7 @@ int main() {
   std::cout << "heston_cos_price=" << heston_cos.price << "\n";
   std::cout << "heston_cos_delta=" << heston_cos.greeks.delta << "\n";
 
-  const auto bates = fin::model::make(1.5, 0.04, 0.30, -0.70, 0.04, 0.21, -0.03, 0.01, cfg);
+  const fin::model::Bates bates = fin::model::make(fin::model::Kind::Bates, {1.5, 0.04, 0.30, -0.70, 0.04, 0.21, -0.03, 0.01}, cfg).as<fin::model::Bates>();
   auto res = fft.price(inst, bates, mkt, fin::pricer::RiskSpec::All);
   std::cout << "price=" << res.price << "\n";
   std::cout << "delta=" << res.greeks.delta << "\n";
@@ -42,17 +42,8 @@ int main() {
   std::cout << "bates_cos_price=" << bates_cos.price << "\n";
   std::cout << "bates_cos_delta=" << bates_cos.greeks.delta << "\n";
 
-  const auto sabr = fin::model::make(
-      0.20,
-      0.50,
-      0.40,
-      -0.30,
-      fin::pricing::SabrVolType::Lognormal,
-      fin::pricing::SabrApproxOptions{
-          .model = fin::pricing::SabrApproxModel::Hagan2002,
-          .shift = 0.0,
-      },
-      cfg);
+  fin::model::Sabr sabr = fin::model::make(fin::model::Kind::Sabr, {0.20, 0.50, 0.40, -0.30}, cfg).as<fin::model::Sabr>();
+  sabr.approx = fin::pricing::SabrApproxOptions{.model = fin::pricing::SabrApproxModel::Hagan2002, .shift = 0.0};
   fin::pricer::Analytic an;
   const auto sabr_px_approx = an.price(inst, sabr, mkt, fin::pricer::RiskSpec::PriceOnly, cfg).price;
   std::cout << "sabr_approx_price=" << sabr_px_approx << "\n";

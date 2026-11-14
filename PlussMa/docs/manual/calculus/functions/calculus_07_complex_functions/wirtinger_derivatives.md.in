@@ -141,3 +141,16 @@ int main() {
 ```
 
 The second ∂/∂z derivative of z⁵ is 20z³ = −5 + 5i at 0.5 + 0.5i, and the second conjugate derivative is exactly zero.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="complex_values.html">
+    <span class="label">Previous</span>
+    <span class="title">Complex values</span>
+  </a>
+  <a class="next-link" href="real_parameters_and_integrals.html">
+    <span class="label">Next</span>
+    <span class="title">Real parameters and integrals</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

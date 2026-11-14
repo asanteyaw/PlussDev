@@ -11,7 +11,7 @@ DataFrame DataFrame::summarize_specs(const std::vector<SummarySpec>& specs, bool
     PLUSS_CHECK(!spec.feature.empty(), "DataFrame::summarize: SummarySpec.feature cannot be empty");
     const auto feature_value = features(spec.feature);
     const auto out_name =
-        spec.output.empty() ? fmt::format("{}_{}", spec.feature, summary_op_name(spec.op)) : spec.output;
+        spec.output.empty() ? pluss::tils::OutputEngine::format("{}_{}", spec.feature, summary_op_name(spec.op)) : spec.output;
     PLUSS_CHECK(names_seen.insert(out_name).second, "DataFrame::summarize: duplicate output name '" + out_name + "'");
 
     if (spec.op == SummaryOp::Count) {
@@ -45,16 +45,16 @@ std::vector<std::string> contingency_names_(const DataFrame& frame,
                                             std::string_view where) {
   auto names = normalize_name_list(features);
   PLUSS_CHECK(!names.empty(),
-              fmt::format("{}: expected at least one {} feature", where, which));
+              pluss::tils::OutputEngine::format("{}: expected at least one {} feature", where, which));
   std::unordered_set<std::string> seen;
   seen.reserve(names.size());
   for (const auto& name : names) {
     PLUSS_CHECK(!name.empty(),
-                fmt::format("{}: {} feature names cannot be empty", where, which));
+                pluss::tils::OutputEngine::format("{}: {} feature names cannot be empty", where, which));
     PLUSS_CHECK(frame.get(name).has_value(),
-                fmt::format("{}: unknown {} feature '{}'", where, which, name));
+                pluss::tils::OutputEngine::format("{}: unknown {} feature '{}'", where, which, name));
     PLUSS_CHECK(seen.insert(name).second,
-                fmt::format("{}: duplicate {} feature '{}'", where, which, name));
+                pluss::tils::OutputEngine::format("{}: duplicate {} feature '{}'", where, which, name));
   }
   return names;
 }
@@ -443,11 +443,11 @@ std::vector<std::string> pivot_names_(const DataFrame& frame,
   out.reserve(names.size());
   for (const auto& name : names) {
     PLUSS_CHECK(!name.empty(),
-                fmt::format("{}: {} feature names cannot be empty", where, which));
+                pluss::tils::OutputEngine::format("{}: {} feature names cannot be empty", where, which));
     PLUSS_CHECK(frame.get(name).has_value(),
-                fmt::format("{}: unknown {} feature '{}'", where, which, name));
+                pluss::tils::OutputEngine::format("{}: unknown {} feature '{}'", where, which, name));
     PLUSS_CHECK(seen.insert(name).second,
-                fmt::format("{}: duplicate {} feature '{}'", where, which, name));
+                pluss::tils::OutputEngine::format("{}: duplicate {} feature '{}'", where, which, name));
     out.push_back(name);
   }
   return out;
@@ -501,7 +501,7 @@ PivotResolvedPlan_ pivot_resolve_plan_(const DataFrame& frame,
   std::unordered_set<std::string> key_seen(plan.index.begin(), plan.index.end());
   for (const auto& name : plan.columns) {
     PLUSS_CHECK(key_seen.insert(name).second,
-                fmt::format("{}: the same feature cannot appear on both index and column axes ('{}')",
+                pluss::tils::OutputEngine::format("{}: the same feature cannot appear on both index and column axes ('{}')",
                             where,
                             name));
   }
@@ -521,14 +521,14 @@ PivotResolvedPlan_ pivot_resolve_plan_(const DataFrame& frame,
         const auto feature = frame.features(spec.feature);
         PLUSS_CHECK(
             pivot_supports_feature_(feature, spec.op),
-            fmt::format("{}: feature '{}' does not support pivot aggregation '{}'",
+            pluss::tils::OutputEngine::format("{}: feature '{}' does not support pivot aggregation '{}'",
                         where,
                         spec.feature,
                         group_op_token_(spec.op)));
       }
       plan.specs.push_back(PivotResolvedSpec_{
           .feature = spec.feature,
-          .group_output = fmt::format("__pivot_v{}", i),
+          .group_output = pluss::tils::OutputEngine::format("__pivot_v{}", i),
           .display = spec.output.empty()
               ? pivot_default_value_label_(spec.feature, spec.op)
               : spec.output,
@@ -573,13 +573,13 @@ PivotResolvedPlan_ pivot_resolve_plan_(const DataFrame& frame,
         for (const auto op : ops) {
           PLUSS_CHECK(
               pivot_supports_feature_(value, op),
-              fmt::format("{}: feature '{}' does not support pivot aggregation '{}'",
+              pluss::tils::OutputEngine::format("{}: feature '{}' does not support pivot aggregation '{}'",
                           where,
                           feature_name,
                           group_op_token_(op)));
           plan.specs.push_back(PivotResolvedSpec_{
               .feature = feature_name,
-              .group_output = fmt::format("__pivot_v{}", next++),
+              .group_output = pluss::tils::OutputEngine::format("__pivot_v{}", next++),
               .display = pivot_default_value_label_(feature_name, op),
               .op = op,
           });
@@ -697,7 +697,7 @@ std::string pivot_level_key_(const Slate& key, std::int64_t row) {
     return "0;";
   }
   const auto token = slate_scalar_string_at(key, row);
-  return fmt::format("1{}:{};", token.size(), token);
+  return pluss::tils::OutputEngine::format("1{}:{};", token.size(), token);
 }
 
 std::string pivot_combo_key_(std::span<const Slate> keys, std::int64_t row) {
@@ -919,7 +919,7 @@ DataFrameView DataFrame::pivot_table(const PivotTableOptions& options) const {
     }
     std::string candidate;
     for (std::int64_t suffix = 1;; ++suffix) {
-      candidate = fmt::format("{}_{}", base, suffix);
+      candidate = pluss::tils::OutputEngine::format("{}_{}", base, suffix);
       if (used_names.insert(candidate).second) {
         return candidate;
       }
@@ -1347,7 +1347,7 @@ std::vector<std::string> ContingencyTable::dims() const {
 std::size_t ContingencyTable::dim_index_(std::string_view dim, std::string_view where) const {
   const auto it = std::find(dims_.begin(), dims_.end(), owned_name(dim));
   PLUSS_CHECK(it != dims_.end(),
-              fmt::format("{}: unknown contingency dimension '{}'", where, dim));
+              pluss::tils::OutputEngine::format("{}: unknown contingency dimension '{}'", where, dim));
   return static_cast<std::size_t>(std::distance(dims_.begin(), it));
 }
 
@@ -1360,7 +1360,7 @@ std::vector<std::size_t> ContingencyTable::dim_indices_(
   out.reserve(names.size());
   for (const auto& name : names) {
     PLUSS_CHECK(seen.insert(name).second,
-                fmt::format("{}: duplicate dimension '{}'", where, name));
+                pluss::tils::OutputEngine::format("{}: duplicate dimension '{}'", where, name));
     out.push_back(dim_index_(name, where));
   }
   return out;
@@ -1445,7 +1445,7 @@ std::int64_t ContingencyTable::level_index_(std::size_t dim_index,
       return index;
     }
   }
-  PLUSS_FAIL(fmt::format("{}: level '{}' was not found in dimension '{}'",
+  PLUSS_FAIL(pluss::tils::OutputEngine::format("{}: level '{}' was not found in dimension '{}'",
                          where,
                          value.to_str(),
                          dims_.at(dim_index)));
@@ -1742,7 +1742,7 @@ DataFrame ContingencyTable::to_frame(
     }
     std::size_t suffix = 2;
     while (true) {
-      auto candidate = fmt::format("{}_{}", base, suffix++);
+      auto candidate = pluss::tils::OutputEngine::format("{}_{}", base, suffix++);
       if (used_names.insert(candidate).second) {
         return candidate;
       }
@@ -1771,7 +1771,7 @@ DataFrame ContingencyTable::to_frame(
       const auto axis = col_axes[i];
       const auto axis_size = shape_now[static_cast<std::size_t>(axis)];
       const auto level = axis_size == 0 ? 0 : (residual / std::max<std::int64_t>(1, block)) % axis_size;
-      parts.push_back(fmt::format("{}={}",
+      parts.push_back(pluss::tils::OutputEngine::format("{}={}",
                                   col_names[i],
                                   contingency_token_(levels_[static_cast<std::size_t>(axis)],
                                                      level,
@@ -1949,7 +1949,7 @@ Atlas ContingencyTable::facet(
       const auto axis = static_cast<std::size_t>(facet_axes[i]);
       const auto axis_size = current_shape[axis];
       const auto level = axis_size == 0 ? 0 : (idx / std::max<std::int64_t>(1, block)) % axis_size;
-      parts.push_back(fmt::format("{}={}",
+      parts.push_back(pluss::tils::OutputEngine::format("{}={}",
                                   facet_dims[i],
                                   contingency_token_(levels_[axis], level, options.null_label)));
       sliced = sliced.slice_at_(sliced.dim_index_(facet_dims[i], "ContingencyTable::facet"), level);
@@ -1999,7 +1999,7 @@ DataFrame DataFrame::combine(const DataFrame& other, const CombineSpec& spec) co
     }
     std::size_t suffix_id = 2;
     while (true) {
-      const auto attempt = fmt::format("{}_{}", candidate, suffix_id);
+      const auto attempt = pluss::tils::OutputEngine::format("{}_{}", candidate, suffix_id);
       if (out_index.find(attempt) == out_index.end()) {
         return attempt;
       }

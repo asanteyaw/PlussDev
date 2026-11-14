@@ -1,0 +1,56 @@
+# `robot::DynamicsOptions`
+
+Controls of the dynamics functions.
+
+## Signature
+
+```cpp
+robot::DynamicsOptions
+```
+
+## What It Does
+
+Holds the gravity vector that the dynamics functions use.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `gravity` | The gravitational acceleration as a vector in the base frame, a real floating array of three components, in metres per second squared. Undefined means `(0, 0, -9.81)`. | `(0, 0, -9.81)` |
+
+## Returns
+
+A value; read by `torques`, `bias`, `accel` and `pe`.
+
+## Errors
+
+The functions throw `pluss::Error` for a gravity that is not a real floating vector of three components.
+
+## Interpretation and Use
+
+The default points along the negative z axis. A robot that moves in the x-y plane, as in the guide, needs gravity along negative y. Zero gravity isolates the velocity forces.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Earth, the moon and no gravity.
+
+@@example Eng/api/robot_options_gravity.cpp@@
+
+### Example 2
+
+The gravity torque of a planar arm.
+
+@@example Eng/api/robot_dyn_bias.cpp@@
+
+### Example 3
+
+Holding torques.
+
+@@example Eng/api/robot_dyn_inverse.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

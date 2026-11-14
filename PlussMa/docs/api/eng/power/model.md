@@ -21,7 +21,7 @@ Per-unit conversion on a 100 MVA, 230 kV base.
 #include <pluss/tils/kit/output.h>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -58,7 +58,7 @@ Compile a two-bus network.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -103,7 +103,7 @@ Generators and voltage-controlled buses.
 #include <pluss/tils/kit/output.h>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -143,24 +143,6 @@ voltage magnitudes: [1.04000, 1.02000, 1.00575]   angles (rad): [0.00000, 0.0113
 net active injections: [0.10314, 0.40000, -0.50000]   (bus 1: -0.2 load + 0.6 generator = 0.4)
 net reactive injections: [0.32097, -0.19852, -0.20000]
 converged true in 3 iterations
-```
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-model/BusKind
-model/Base
-model/Buses
-model/Gens
-model/Lines
-model/Net
-model/Grid
-model/make
-model/zbase
-model/ybase
-model/ibase
-model/pu
-model/si
 ```
 
 <!-- apiref:toctree:start -->

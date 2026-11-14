@@ -48,7 +48,66 @@ void expect_complex_close(const pluss::Series &actual,
 
 } // namespace
 
+// The host recurrence and the Series recurrence (used when an input records the tape) must agree for every dtype,
+// for several lanes along a non-last axis, and for a resumed run.
+void native_matches_tape() {
+  for (const auto dtype : {pluss::ScalarType::Float64, pluss::ScalarType::Float32, pluss::ScalarType::Complex128}) {
+    const auto cfg = pluss::Config{}.with_dtype(dtype);
+    const pluss::Series x = pluss::series::randn({3, 40, 2}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(dtype);
+    const pluss::Series b = pluss::series::make({0.2, 0.4, -0.1, 0.05}).to(dtype);
+    const pluss::Series a = pluss::series::make({1.0, -0.6, 0.3, -0.05}).to(dtype);
+    pluss::Series tracked_b = b.clone();
+    if (dtype != pluss::ScalarType::Complex128) tracked_b.tracks_slope_(true);
+    pluss::Series tracked_x = x.clone();
+    tracked_x.tracks_slope_(true);
+    const auto fast = eng_signal::filter(x, b, a, 1);
+    const auto tape = eng_signal::filter(tracked_x, b, a, 1);
+    const double tolerance = dtype == pluss::ScalarType::Float32 ? 1e-4 : 1e-10;
+    const double gap = fast.values.to(pluss::ScalarType::Complex128).sub(tape.values.to(pluss::ScalarType::Complex128)).abs().max().template item<double>();
+    expect(gap < tolerance, "host recurrence differs from the Series recurrence");
+    const double state_gap = fast.state.to(pluss::ScalarType::Complex128).sub(tape.state.to(pluss::ScalarType::Complex128)).abs().max().template item<double>();
+    expect(state_gap < tolerance, "host recurrence state differs from the Series recurrence");
+    // a run split in two blocks equals the run on the whole signal
+    const auto first = eng_signal::filter(x.slice(1, 0, 25), b, a, 1);
+    const auto rest = eng_signal::filter(x.slice(1, 25, 40), b, a, first.state, 1);
+    const double split_gap = first.values.unite({rest.values}, 1).to(pluss::ScalarType::Complex128).sub(fast.values.to(pluss::ScalarType::Complex128)).abs().max().template item<double>();
+    expect(split_gap < tolerance, "block-by-block host recurrence differs from one run");
+  }
+}
+
+// Short convolutions are summed on the host; they must agree with the transform path (used when an input records
+// the tape), be exact on small integers, and broadcast a shared kernel over a batch.
+void direct_conv_matches_transform() {
+  const auto exact = eng_signal::conv(pluss::series::make({1.0, 2.0, 3.0}), pluss::series::make({0.0, 1.0, 0.5}));
+  const auto values = exact.host<double>();
+  const std::vector<double> want{0.0, 1.0, 2.5, 4.0, 1.5};
+  for (std::size_t i = 0; i < want.size(); ++i) expect(values[i] == want[i], "short convolution is not exact");
+  for (const auto dtype : {pluss::ScalarType::Float64, pluss::ScalarType::Float32, pluss::ScalarType::Complex128}) {
+    const double tolerance = dtype == pluss::ScalarType::Float32 ? 1e-4 : 1e-10;
+    const pluss::Series x = pluss::series::randn({4, 30, 3}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(dtype);
+    const pluss::Series h = pluss::series::randn({5}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(dtype);
+    pluss::Series tracked = x.clone();
+    tracked.tracks_slope_(true);
+    for (const auto mode : {eng_signal::ConvMode::Full, eng_signal::ConvMode::Same, eng_signal::ConvMode::Valid}) {
+      const auto fast = eng_signal::conv(x, h, 1, mode);
+      const auto slow = eng_signal::conv(tracked, h, 1, mode);
+      expect(fast.sizes() == slow.sizes(), "short convolution has the wrong shape");
+      const double gap = fast.to(pluss::ScalarType::Complex128).sub(slow.to(pluss::ScalarType::Complex128)).abs().max().template item<double>();
+      expect(gap < tolerance, "short convolution differs from the transform path");
+    }
+    // a kernel longer than the signal, and a per-lane kernel
+    const pluss::Series longer = pluss::series::randn({70}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(dtype);
+    const pluss::Series short_x = pluss::series::randn({6}, pluss::Config{}.with_dtype(pluss::ScalarType::Float64)).to(dtype);
+    pluss::Series short_tracked = short_x.clone();
+    short_tracked.tracks_slope_(true);
+    const double gap = eng_signal::conv(short_x, longer).to(pluss::ScalarType::Complex128).sub(eng_signal::conv(short_tracked, longer).to(pluss::ScalarType::Complex128)).abs().max().template item<double>();
+    expect(gap < tolerance, "convolution with a longer kernel differs from the transform path");
+  }
+}
+
 int main() {
+  native_matches_tape();
+  direct_conv_matches_transform();
   using Complex = std::complex<double>;
   const auto x = pluss::series::make({1.0, 2.0, 3.0});
   const auto h = pluss::series::make({1.0, 1.0});

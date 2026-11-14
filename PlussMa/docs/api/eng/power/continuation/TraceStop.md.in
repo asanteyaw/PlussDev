@@ -1,0 +1,63 @@
+# `power::TraceStop`
+
+Where a continuation trace ends.
+
+## Signature
+
+```cpp
+power::TraceStop
+```
+
+## What It Does
+
+Chooses the end of a trace: `Target` follows the curve until the loading factor equals the target, `Nose` follows it until the factor reaches its maximum, the voltage-collapse point.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Target` | Stop when the loading factor equals `TraceOptions::target`. | default |
+| `Nose` | Stop at the maximum of the loading factor, the nose of the voltage curve. |  |
+
+## Returns
+
+An enumeration used in `TraceOptions::stop`.
+
+## Errors
+
+No validation error.
+
+## Interpretation and Use
+
+With `Target` a target beyond the nose cannot be reached: the trace ends at the nose and `reached` is false.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The nose of a line against its closed form.
+
+@@example Eng/api/power_trace_nose.cpp@@
+
+### Example 2
+
+A target beyond the nose.
+
+@@example Eng/api/power_trace_beyond.cpp@@
+
+### Example 3
+
+The nose of a network with a generator.
+
+@@example Eng/api/power_trace_generator.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="LoadPath.html">
+    <span class="label">Next</span>
+    <span class="title">LoadPath</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,68 @@
+# `power::OpfOptions`
+
+Iteration budget and tolerances of the optimal power flow.
+
+## Signature
+
+```cpp
+power::OpfOptions
+```
+
+## What It Does
+
+Controls for `opf`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `max_iterations` | The iteration budget of the sequential quadratic-programming method. | 160 |
+| `constraint_tolerance` | The largest violation of the network equations and limits accepted at convergence. | 1e-8 |
+| `optimality_tolerance` | The first-order optimality accepted at convergence. | 1e-8 |
+
+## Returns
+
+A value; validated by `opf`.
+
+## Errors
+
+A non-positive tolerance or a budget below one is rejected.
+
+## Interpretation and Use
+
+Loose tolerances stop sooner at lower accuracy. A budget that is too small returns `converged` false with a message naming the measure that was still too large.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Default, loose and short-budget runs.
+
+@@example Eng/api/power_opf_options.cpp@@
+
+### Example 2
+
+The default run on a ring.
+
+@@example Eng/api/power_opf_ring.cpp@@
+
+### Example 3
+
+An infeasible problem under the defaults.
+
+@@example Eng/api/power_opf_pitfalls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Limits.html">
+    <span class="label">Previous</span>
+    <span class="title">Limits</span>
+  </a>
+  <a class="next-link" href="OpfResult.html">
+    <span class="label">Next</span>
+    <span class="title">OpfResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

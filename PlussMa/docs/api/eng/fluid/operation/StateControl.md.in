@@ -1,0 +1,69 @@
+# `fluid::StateControl`
+
+An action that fires when a level or a pressure crosses a threshold.
+
+## Signature
+
+```cpp
+fluid::StateControl
+```
+
+## What It Does
+
+Watches a node and applies an `Action` when its value is on the given side of a threshold. The value is the tank level in m for a tank node and the pressure head in m for any other node.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `node` | The node index to watch. | 0 |
+| `sense` | Below or Above. | Below |
+| `threshold` | The level or pressure head, m. | 0 |
+| `action` | The `Action` to apply. |  |
+
+## Returns
+
+A value; carried by `Schedule::state`.
+
+## Errors
+
+A node outside the range, a non-finite threshold, and rules that cannot settle at an event are rejected by `run`.
+
+## Interpretation and Use
+
+Tank-level crossings are located from the tank's rate of change, so the event falls on the level itself. Pressure triggers on a junction are checked at the hydraulic events. Use two rules with different thresholds for a pump.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pump held between two levels.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 2
+
+The arithmetic of the cycle.
+
+@@example Eng/api/fluid_controls_actions.cpp@@
+
+### Example 3
+
+Thresholds the wrong way round, a bad node.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="TimeControl.html">
+    <span class="label">Previous</span>
+    <span class="title">TimeControl</span>
+  </a>
+  <a class="next-link" href="Schedule.html">
+    <span class="label">Next</span>
+    <span class="title">Schedule</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

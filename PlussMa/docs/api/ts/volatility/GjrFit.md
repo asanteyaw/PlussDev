@@ -280,3 +280,16 @@ same seed, same draws: true
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Gjr.html">
+    <span class="label">Previous</span>
+    <span class="title">Gjr</span>
+  </a>
+  <a class="next-link" href="GjrOptions.html">
+    <span class="label">Next</span>
+    <span class="title">GjrOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

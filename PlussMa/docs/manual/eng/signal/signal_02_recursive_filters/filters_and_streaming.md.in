@@ -1,0 +1,357 @@
+# Filters and streaming
+
+[Back to Signals 2: Recursive Filters](../signal_02_recursive_filters.md)
+
+You want a filter whose output depends on its own past output: an exponential smoother, a low-pass or high-pass design, a resonator. Such a filter is described by two coefficient vectors, and it can run on a signal that arrives in blocks, because the filter hands back the few numbers it needs to carry on. This page covers `filter`, what its coefficients mean, and how to run a long signal block by block with a result identical to processing it whole.
+
+## The mental model
+
+A recursive filter computes each output from the current and past inputs and from past outputs:
+
+```{math}
+a_0\,y[n] = \sum_{k=0}^{M} b_k\,x[n-k] - \sum_{k=1}^{L} a_k\,y[n-k].
+```
+
+The vector `numerator` holds the feed-forward coefficients `b`, and `denominator` the feedback coefficients `a`; `a[0]` scales the whole recurrence, and `filter` divides every coefficient by it, so `[2, -1]` and `[1, -0.5]` are the same filter. The **order** is one less than the longer of the two vectors. A filter of order `p` remembers `p` numbers between samples. That memory is the **state**: `filter` returns it with the output, and you pass it back in to continue.
+
+Three consequences matter in practice:
+
+- With no feedback (`denominator = [1]`) the filter is a finite-impulse-response filter and `filter` agrees with [`fir`](../signal_01_windows_and_convolution/convolution_and_correlation.md).
+- With feedback, a single input sample can keep influencing the output forever. The **impulse response** of a stable filter dies away; that of an unstable one grows without bound. `filter` does not check stability.
+- The state is a function of everything the filter has seen. Two runs agree exactly only if they start from the same state.
+
+The result of `filter` is a `FilterRun` with two members: `values`, the output with the same shape as the input, and `state`, the memory after the last sample. For input with batch axes, every lane has its own state: the state shape is the input shape with the sample axis removed and `order` appended.
+
+## An exponential smoother
+
+The filter `y[n] = 0.5 y[n-1] + 0.5 x[n]` has `numerator = [0.5]` and `denominator = [1, -0.5]`. Each output is the average of the new sample and the previous output. The first program feeds it a unit impulse and a unit step. By induction the impulse response is `0.5^(n+1)` and the step response is `1 - 0.5^(n+1)`, so both are checkable by hand.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.5});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.5});
+  const pluss::Series impulse = pluss::series::make(std::vector<double>{1, 0, 0, 0, 0, 0, 0, 0});
+  const pluss::Series step = pluss::series::make(std::vector<double>{1, 1, 1, 1, 1, 1, 1, 1});
+
+  const auto from_impulse = sig::filter(impulse, b, a);
+  out.writeln("impulse response", from_impulse.values.items<double>());
+  out.writeln("state after it  ", from_impulse.state.items<double>());
+  out.writeln("step response   ", sig::filter(step, b, a).values.items<double>());
+}
+```
+
+The impulse response halves at every sample, `0.5, 0.25, 0.125, ...`, and the step response climbs towards 1 by the same halving of the gap. The state after the impulse run, `0.00195`, is `0.5 y[7]`: for this first-order filter it is the feedback term the next output will start from.
+
+## A second-order filter
+
+Feedback and feed-forward terms combine in the usual way. The filter with `numerator = [0.2, 0.4, 0.2]` and `denominator = [1, -0.3, 0.1]` has order 2, so its state has two entries. The first outputs for an impulse follow from the recurrence directly: `y[0] = 0.2`, `y[1] = 0.4 + 0.3 * 0.2 = 0.46`, `y[2] = 0.2 + 0.3 * 0.46 - 0.1 * 0.2 = 0.318`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.2, 0.4, 0.2});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.3, 0.1});
+  const pluss::Series impulse = pluss::series::make(std::vector<double>{1, 0, 0, 0, 0, 0, 0, 0});
+  const auto run = sig::filter(impulse, b, a);
+  out.writeln("impulse response", run.values.items<double>());
+  out.writeln("state shape     ", run.state.sizes());
+}
+```
+
+The first three printed values are `0.2`, `0.46` and `0.318`, matching the hand calculation. The tail changes sign and decays: the poles are complex, so the response rings as it dies away.
+
+## Normalising, and filters without feedback
+
+Dividing by `a[0]` means a filter can be given with any leading scale. The program shows `denominator = [2, -1]` (the smoother again) giving the same response as before, and a numerator-only filter, which is a moving average of two samples and equals `fir`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series impulse = pluss::series::make(std::vector<double>{1, 0, 0, 0, 0, 0});
+  const pluss::Series one = pluss::series::make(std::vector<double>{1.0});
+  out.writeln("a0 = 2, b = [1], a = [2, -1]", sig::filter(impulse, one, pluss::series::make(std::vector<double>{2.0, -1.0})).values.items<double>());
+
+  const pluss::Series x = pluss::series::make(std::vector<double>{1, 2, 3, 4, 5});
+  const pluss::Series average = pluss::series::make(std::vector<double>{0.5, 0.5});
+  out.writeln("filter, no feedback", sig::filter(x, average, one).values.items<double>());
+  out.writeln("fir                ", sig::fir(x, average).items<double>());
+}
+```
+
+With `a = [2, -1]` and `b = [1]` the response is `0.5, 0.25, 0.125, ...`, the response of `y[n] = 0.5 y[n-1] + 0.5 x[n]`. Without feedback, `filter` and `fir` give the same five numbers.
+
+## Running a signal in blocks
+
+Real signals arrive in pieces: audio buffers, sensor packets, a file read in chunks. If you filter each piece from a zero state, you inject a start-up transient at every block boundary. Passing the `state` of one block to the next removes it exactly: the filter then behaves as if it had seen one long signal. The program filters a ramp of ten samples whole, then in two blocks with the state handed over, then in two blocks with the state forgotten.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.5});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.5});
+  const pluss::Series x = pluss::series::make(std::vector<double>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+
+  const auto whole = sig::filter(x, b, a);
+  const auto first = sig::filter(x.slice(0, 0, 4), b, a);
+  const auto second = sig::filter(x.slice(0, 4, 10), b, a, first.state);
+  const auto forgotten = sig::filter(x.slice(0, 4, 10), b, a);
+
+  out.writeln("whole signal         ", whole.values.items<double>());
+  out.writeln("two blocks, state kept", first.values.unite({second.values}, 0).items<double>());
+  out.writeln("second block, state lost", forgotten.values.items<double>());
+  out.writeln("final state, whole run  ", whole.state.items<double>());
+  out.writeln("final state, block run  ", second.state.items<double>());
+}
+```
+
+The block run reproduces the whole run in every entry, and its final state is the same as the whole run's. The run that forgot the state starts the second block at `2.5` instead of `4.03125`: it has lost the memory of the first four samples, and the error decays only as `0.5^n`, so it is visible for several samples.
+
+The state is an ordinary `Series`, so you can store it, send it between threads, or write it to disk and resume later. The requirement is that it comes from a compatible previous run: the same filter order and the same lanes.
+
+## Starting from a known state
+
+You can also start a filter somewhere other than at rest. For a constant input `c`, the smoother settles at `c`, and in steady state its one state number equals `0.5 c`. Starting there removes the transient that a start from zero would cause. The program filters a constant `4` from zero state and from the steady-state value `2`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.5});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.5});
+  const pluss::Series constant = pluss::series::make(std::vector<double>{4, 4, 4, 4, 4, 4});
+  const pluss::Series settled = pluss::series::make(std::vector<double>{2.0});
+
+  out.writeln("from rest         ", sig::filter(constant, b, a).values.items<double>());
+  out.writeln("from steady state ", sig::filter(constant, b, a, settled).values.items<double>());
+}
+```
+
+From rest the output climbs `2, 3, 3.5, ...`; from the steady state it is `4` throughout. [`zero_phase`](zero_phase_filtering.md) uses exactly this idea to avoid edge transients.
+
+## Several signals at once
+
+Every axis that is not the sample axis is a batch axis, and the filter runs on all lanes independently. The state then has a row per lane. The initial state you pass is broadcast to the lanes: a state with one row is shared, a state with one row per lane gives each lane its own start. The program filters two lanes of four samples, then gives the lanes different starting states, and finally filters the same data stored with time down the rows by passing `dim = 0`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.5});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.5});
+  const pluss::Series lanes = pluss::series::make(std::vector<double>{1, 2, 3, 4, 10, 20, 30, 40}).reshape({2, 4});
+
+  const auto run = sig::filter(lanes, b, a);
+  out.writeln("values shape", run.values.sizes(), " state shape", run.state.sizes());
+  out.writeln("lane 1      ", run.values.select(0, 1).items<double>());
+
+  const pluss::Series starts = pluss::series::make(std::vector<double>{0.25, -0.25}).reshape({2, 1});
+  const auto seeded = sig::filter(lanes, b, a, starts);
+  out.writeln("lane 0 from state 0.25  ", seeded.values.select(0, 0).items<double>());
+  out.writeln("lane 1 from state -0.25 ", seeded.values.select(0, 1).items<double>());
+
+  const auto by_rows = sig::filter(lanes.transpose(0, 1), b, a, 0);
+  out.writeln("time down the rows: shape", by_rows.values.sizes(), " state shape", by_rows.state.sizes(),
+              " lane 1", by_rows.values.select(1, 1).items<double>());
+}
+```
+
+Lane 1 is the same filter run on `10, 20, 30, 40`. A state of `0.25` adds `0.25` to the first output of lane 0 (`0.5 + 0.25 = 0.75`) and `-0.25` subtracts from lane 1. With `dim = 0` the lanes are the columns, the results are identical to the first run's, and the state has the same shape because it always puts the lanes first and the order last.
+
+## Complex data and the output type
+
+Signals and coefficients may be complex. The output type is the common type of the input, both coefficient vectors and any state you pass in; mixing `Float32` data with `Float64` coefficients therefore gives `Float64`. To get single-precision output, make the coefficients single precision too.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  using C = std::complex<double>;
+  const auto f32 = pluss::ScalarType::Float32;
+  const pluss::Series impulse = pluss::series::make(std::vector<double>{1, 0, 0, 0});
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.5});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.5});
+
+  out.writeln("float32 input, float64 coefficients ->", sig::filter(impulse.to(f32), b, a).values.dtype().name);
+  out.writeln("float32 everything                  ->", sig::filter(impulse.to(f32), b.to(f32), a.to(f32)).values.dtype().name);
+
+  const pluss::Series rotating = pluss::make_series(std::vector<C>{{0.0, 0.5}}, {1});
+  const pluss::Series feedback = pluss::make_series(std::vector<C>{{1.0, 0.0}, {0.0, -0.5}}, {2});
+  const auto run = sig::filter(impulse, rotating, feedback);
+  out.writeln("complex coefficients, dtype", run.values.dtype().name);
+  out.writeln("response", run.values.items<C>());
+}
+```
+
+The complex recursion `y[n] = 0.5i x[n] + 0.5i y[n-1]` turns the impulse into `0.5i, -0.25, -0.125i, 0.0625, ...`: each step multiplies by `0.5i`, a rotation by 90 degrees and a halving.
+
+## Instability
+
+`filter` applies the recurrence you give it. If a pole lies outside the unit circle the response grows without bound, and no error is raised. The program uses the feedback `y[n] = 1.5 y[n-1] + x[n]`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const pluss::Series impulse = pluss::series::make(std::vector<double>{1, 0, 0, 0, 0, 0, 0, 0});
+  const pluss::Series one = pluss::series::make(std::vector<double>{1.0});
+  const pluss::Series growing = pluss::series::make(std::vector<double>{1.0, -1.5});
+  out.writeln("impulse response", sig::filter(impulse, one, growing).values.items<double>());
+}
+```
+
+The response is `1.5^n`. A design routine such as [`butter`](../signal_03_frequency_response_and_design/iir_design.md) returns a stable filter by construction; coefficients you derive or estimate yourself need a stability check before they are used.
+
+## Errors
+
+The program shows a zero leading denominator, an empty numerator, a coefficient matrix instead of a vector, a state that cannot be matched to the lanes, and a `dim` out of range.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series x = pluss::series::zeros({2, 4});
+  const pluss::Series b = pluss::series::make(std::vector<double>{0.5});
+  const pluss::Series a = pluss::series::make(std::vector<double>{1.0, -0.5});
+  report([&] { (void)sig::filter(x, b, pluss::series::make(std::vector<double>{0.0, 1.0})); });
+  report([&] { (void)sig::filter(x, pluss::series::zeros({0}), a); });
+  report([&] { (void)sig::filter(x, pluss::series::zeros({2, 2}), a); });
+  report([&] { (void)sig::filter(x, b, a, pluss::series::zeros({3, 1})); });
+  report([&] { (void)sig::filter(x, b, a, pluss::series::zeros({1}), 4); });
+}
+```
+
+## Decisions
+
+- **A short signal in memory:** call `filter` once and ignore the state.
+- **A stream or a file in chunks:** keep the `state` of each block and pass it to the next, one state per stream.
+- **Several channels:** put them on a batch axis and call once; a loop over channels is slower and unnecessary.
+- **A high-order filter (order about 8 or more):** do not use a single `numerator`/`denominator` pair; cascade second-order sections instead, as in [Second-order sections](second_order_sections.md).
+- **A filter with no feedback:** `fir`, or `filter` with `denominator = [1]` when you also need the state.
+
+## Pitfalls
+
+The state belongs to the filter that produced it. A state taken from a different filter of the same order is accepted, because its shape is right, and gives a wrong answer without a message. The program continues the smoother of this page from the state of its own first block, and from the state of a different first-order filter run on the same data.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace sig = pluss::subsp::eng::signal;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const pluss::Series x = vec({1, 2, 3, 4, 5, 6, 7, 8});
+  const pluss::Series b = vec({0.5}), a = vec({1.0, -0.5});
+  const pluss::Series other_b = vec({0.2}), other_a = vec({1.0, 0.8});
+
+  const auto own = sig::filter(x.slice(0, 0, 4), b, a);
+  const auto stranger = sig::filter(x.slice(0, 0, 4), other_b, other_a);
+  out.writeln("second block, own state      ", sig::filter(x.slice(0, 4, 8), b, a, own.state).values.items<double>());
+  out.writeln("second block, other's state  ", sig::filter(x.slice(0, 4, 8), b, a, stranger.state).values.items<double>());
+}
+```
+
+With its own state the second block continues exactly the whole run (`4.03125, 5.01562, ...`, as in the blocks program). With the other filter's state it starts at `2.12112`, and the error persists for several samples.
+
+The other mistakes:
+
+- **Forgetting the state at a block boundary** gives the start-up transient again, as the blocks program shows.
+- **Coefficients derived by hand can be unstable,** and `filter` runs them anyway, as the instability program shows.
+- **Mixed precision promotes,** so `Float32` data with `Float64` coefficients is computed and returned in `Float64`.
+
+Reference: [`filter`](../../../../api/eng/signal/filtering/filter.md), [`fir`](../../../../api/eng/signal/filtering/fir.md).
+
+Where next: [Second-order sections](second_order_sections.md) shows why high-order filters should be cascaded, and [Zero-phase filtering](zero_phase_filtering.md) runs a filter forwards and backwards to remove its delay.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="second_order_sections.html">
+    <span class="label">Next</span>
+    <span class="title">Second-order sections</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -4,7 +4,7 @@
 
 [Back to Heston and Bates](../finance_03_heston_and_bates.md)
 
-The Heston prices become useful when they are read as implied volatilities. Pricing across strikes and inverting with `implied_vol` ([Implied Volatility](../finance_02_implied_volatility.md)) gives the *smile*, the curve of implied volatility against strike that Black-Scholes would make flat. Each parameter has a recognisable effect, and the program reads them off.
+The Heston prices become useful when they are read as implied volatilities. A field's `implied_vol()` ([Implied Volatility](../finance_02_implied_volatility.md)) prices the strip with the field's own model and engine and inverts each price, giving the *smile*, the curve of implied volatility against strike that Black-Scholes would make flat. Each parameter has a recognisable effect, and the programs read them off.
 
 ## Correlation and the skew
 
@@ -14,26 +14,31 @@ The correlation ρ tilts the smile. With ρ < 0, falling prices come with rising
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+
+// A strip of options on one underlying priced under Heston (or Bates, with eight parameters) by the chosen engine.
+mod::Field strip(mod::Engine engine, const std::vector<double> &strikes, const std::vector<double> &maturities, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04},
+                 prc::OptionType type = prc::Call, fin::model::Kind kind = fin::model::Kind::Heston) {
+  return mod::Field{.instrument = {.type = type, .strike = pluss::make_series(strikes), .maturity = pluss::make_series(maturities)},
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+std::vector<double> prices(const mod::Field &f) { return f.price().price.items<double>(); }
+double price1(const mod::Field &f) { return prices(f)[0]; }
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const double spot = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
-  auto smile = [&](const vol::HestonParams &p, double t) {
-    std::vector<double> v;
-    for (double strike : {80.0, 90.0, 100.0, 110.0, 120.0}) {
-      v.push_back(prc::implied_vol(prc::Call, prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, t, p), spot, strike, rate, dividend, t));
-    }
-    return v;
-  };
   out.writeln("implied volatility at strikes 80, 90, 100, 110, 120");
   for (double rho : {-0.9, -0.5, 0.0, 0.5}) {
-    vol::HestonParams p;
-    p.rho = rho;
-    out.writeln("rho", rho, smile(p, maturity));
+    out.writeln("rho", rho, strip(mod::Engine::Cos, {80.0, 90.0, 100.0, 110.0, 120.0}, {1.0}, {1.5, 0.04, 0.3, rho, 0.04}).implied_vol().items<double>());
   }
 }
 ```
@@ -58,24 +63,31 @@ The volatility of variance σ controls how much the variance moves, and with it 
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+
+// A strip of options on one underlying priced under Heston (or Bates, with eight parameters) by the chosen engine.
+mod::Field strip(mod::Engine engine, const std::vector<double> &strikes, const std::vector<double> &maturities, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04},
+                 prc::OptionType type = prc::Call, fin::model::Kind kind = fin::model::Kind::Heston) {
+  return mod::Field{.instrument = {.type = type, .strike = pluss::make_series(strikes), .maturity = pluss::make_series(maturities)},
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+std::vector<double> prices(const mod::Field &f) { return f.price().price.items<double>(); }
+double price1(const mod::Field &f) { return prices(f)[0]; }
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const double spot = 100.0, rate = 0.03, dividend = 0.01, maturity = 1.0;
   out.writeln("implied volatility at strikes 80, 90, 100, 110, 120, with rho = 0");
   for (double sigma : {0.1, 0.3, 0.6, 1.0}) {
-    vol::HestonParams p;
-    p.rho = 0.0;
-    p.sigma = sigma;
-    std::vector<double> v;
-    for (double strike : {80.0, 90.0, 100.0, 110.0, 120.0}) {
-      v.push_back(prc::implied_vol(prc::Call, prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, maturity, p), spot, strike, rate, dividend, maturity));
-    }
-    out.writeln("sigma", sigma, v);
+    out.writeln("sigma", sigma, strip(mod::Engine::Cos, {80.0, 90.0, 100.0, 110.0, 120.0}, {1.0}, {1.5, 0.04, sigma, 0.0, 0.04}).implied_vol().items<double>());
   }
 }
 ```
@@ -87,7 +99,7 @@ implied volatility at strikes 80, 90, 100, 110, 120, with rho = 0
 sigma 0.1000 [0.2004, 0.1995, 0.1992, 0.1993, 0.1997]
 sigma 0.3000 [0.2029, 0.1962, 0.1935, 0.1945, 0.1980]
 sigma 0.6000 [0.2073, 0.1887, 0.1794, 0.1829, 0.1940]
-sigma 1.0000 [0.2094, 0.1787, 0.1600, 0.1675, 0.1881]
+sigma 1.0000 [0.2094, 0.1787, 0.1600, 0.1675, 0.1880]
 ```
 
 With a volatility of variance of 0.1 the smile is almost flat (0.1992 to 0.2004). As σ rises the wings lift and the money level drops: at σ = 1 the volatilities are 0.2094, 0.1787, 0.1600, 0.1675 and 0.1881, a strong smile with an at-the-money volatility of 0.16 against 0.1992 at σ = 0.1.
@@ -100,24 +112,34 @@ The skew flattens with maturity: the variance has time to revert and the effect 
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+
+// A strip of options on one underlying priced under Heston (or Bates, with eight parameters) by the chosen engine.
+mod::Field strip(mod::Engine engine, const std::vector<double> &strikes, const std::vector<double> &maturities, std::vector<double> params = {1.5, 0.04, 0.3, -0.7, 0.04},
+                 prc::OptionType type = prc::Call, fin::model::Kind kind = fin::model::Kind::Heston) {
+  return mod::Field{.instrument = {.type = type, .strike = pluss::make_series(strikes), .maturity = pluss::make_series(maturities)},
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+std::vector<double> prices(const mod::Field &f) { return f.price().price.items<double>(); }
+double price1(const mod::Field &f) { return prices(f)[0]; }
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const double spot = 100.0, rate = 0.03, dividend = 0.01;
-  auto implied = [&](const vol::HestonParams &p, double strike, double t) {
-    return prc::implied_vol(prc::Call, prc::heston_price_cos(prc::Call, spot, strike, rate, dividend, t, p), spot, strike, rate, dividend, t);
-  };
   for (auto [label, v0] : {std::pair<const char *, double>{"v0 = 0.02 (below theta = 0.04)", 0.02}, {"v0 = 0.04 (equal to theta)    ", 0.04}, {"v0 = 0.09 (above theta)         ", 0.09}}) {
-    vol::HestonParams p;
-    p.v0 = v0;
     out.writeln(label);
     out.writeln("  maturity     at-the-money vol   skew (vol at 90 - vol at 110)");
     for (double t : {0.1, 0.5, 1.0, 2.0, 5.0}) {
-      out.writeln("  ", t, implied(p, 100.0, t), implied(p, 90.0, t) - implied(p, 110.0, t));
+      const auto smile = strip(mod::Engine::Cos, {90.0, 100.0, 110.0}, {t}, {1.5, 0.04, 0.3, -0.7, v0}).implied_vol().items<double>();
+      out.writeln("  ", t, smile[1], smile[0] - smile[2]);
     }
   }
 }
@@ -150,3 +172,16 @@ v0 = 0.09 (above theta)
 ```
 
 The term structure of the at-the-money volatility follows the starting variance. With v₀ = 0.02, below θ = 0.04, it rises with maturity, from 0.1447 at one month to 0.1886 at five years. With v₀ = θ it is nearly flat (0.1985 down to 0.1926 and back to 0.1950). With v₀ = 0.09 it falls, from 0.2926 to 0.2103. The skew (the volatility at 90 less that at 110) decays with maturity in all three cases, from 0.0606 to 0.0116 in the first, as the variance reverts and its correlation with the price averages out.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="jumps_the_bates_model.html">
+    <span class="label">Previous</span>
+    <span class="title">Jumps: the Bates model</span>
+  </a>
+  <a class="next-link" href="the_cos_pricer.html">
+    <span class="label">Next</span>
+    <span class="title">The COS pricer</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

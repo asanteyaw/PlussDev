@@ -81,16 +81,16 @@ int main() {
   const std::vector<double> params = {1.5, 2.0};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::Normal, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Normal, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Normal, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Normal, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::Normal, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Normal, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -130,7 +130,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::Normal, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({-0.5, 4.0}, f64);
-  const auto c = distr::cdf(dst::Normal, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Normal, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Normal, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= -0.5).to(pluss::ScalarType::Float64) * (draws <= 4.0).to(pluss::ScalarType::Float64)).mean());
@@ -171,16 +171,16 @@ int main() {
   const auto x = pluss::make_series({-1.0, 0.5, 1.5, 2.5, 4.0}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "sd 0.5:";
-  for (double v : distr::pdf(dst::Normal, x, {1.5, 0.5}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Normal, x, {1.5, 0.5}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "sd 1  :";
-  for (double v : distr::pdf(dst::Normal, x, {1.5, 1.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Normal, x, {1.5, 1.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "sd 2  :";
-  for (double v : distr::pdf(dst::Normal, x, {1.5, 2.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Normal, x, {1.5, 2.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -242,3 +242,16 @@ The two largest differences are 1.21e-06 for the density and 1.21e-06 for the di
 - [`Logistic`](../continuous_real_line/Logistic.md)
 - [`Nig`](../continuous_real_line/Nig.md)
 - [`distr::Normal`](../object_based/Normal.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Nig.html">
+    <span class="label">Previous</span>
+    <span class="title">Nig</span>
+  </a>
+  <a class="next-link" href="StudentT.html">
+    <span class="label">Next</span>
+    <span class="title">StudentT</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

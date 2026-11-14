@@ -1,0 +1,73 @@
+# `fluid::Schedule`
+
+The clock, patterns and controls of a run.
+
+## Signature
+
+```cpp
+fluid::Schedule
+```
+
+## What It Does
+
+Describes a run: its length, the longest hydraulic step, the period of the cyclic patterns, the patterns themselves and the controls. The clock lands on every pattern boundary, timed action, control crossing and tank limit.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `duration` | Length of the run, s. | required |
+| `step` | Longest hydraulic step, s. | 3600 |
+| `pattern_step` | Length of one pattern period, s. | 3600 |
+| `demand` | `[period, node]` multipliers on the base demands, cyclic. | undefined (constant) |
+| `pump` | `[period, pump]` multipliers on the relative speeds, cyclic. | undefined (constant) |
+| `valve` | `[period, valve]` absolute valve settings, cyclic. | undefined (constant) |
+| `time` | The `TimeControl`s. | none |
+| `state` | The `StateControl`s. | none |
+
+## Returns
+
+A value; validated by `run`, `transport` and `heat`.
+
+## Errors
+
+A non-positive duration or step, a pattern of the wrong width or with negative values, and invalid controls are rejected by `run`.
+
+## Interpretation and Use
+
+`step` is a ceiling, so a long step costs accuracy only in the tank balance, never in the timing. Rows are periods; columns follow the order of nodes, pumps and valves. For `transport` and `heat` the hydraulic step also cuts the quality step.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A day of demand patterns.
+
+@@example Eng/api/fluid_run_tank.cpp@@
+
+### Example 2
+
+Level and time controls.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 3
+
+Schedules that are refused.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="StateControl.html">
+    <span class="label">Previous</span>
+    <span class="title">StateControl</span>
+  </a>
+  <a class="next-link" href="RunResult.html">
+    <span class="label">Next</span>
+    <span class="title">RunResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

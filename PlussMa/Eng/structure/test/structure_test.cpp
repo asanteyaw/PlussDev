@@ -231,6 +231,79 @@ int main() {
       },
       "duplicate constraint was accepted");
 
+  // A 40-bay ladder truss is poorly conditioned (it needs a few hundred conjugate-gradient iterations): the default budget must
+  // cover it, and its tip deflection must agree with a very tight solve.
+  {
+    constexpr int bays = 40;
+    std::vector<double> coordinates;
+    std::vector<std::int64_t> starts, ends;
+    for (int level = 0; level < 2; ++level)
+      for (int i = 0; i <= bays; ++i) {
+        coordinates.push_back(i);
+        coordinates.push_back(level);
+      }
+    const auto top = [&](int i) { return bays + 1 + i; };
+    for (int i = 0; i < bays; ++i) {
+      starts.insert(starts.end(), {i, top(i), i});
+      ends.insert(ends.end(), {i + 1, top(i + 1), top(i + 1)});
+    }
+    for (int i = 0; i <= bays; ++i) {
+      starts.push_back(i);
+      ends.push_back(top(i));
+    }
+    const auto count = static_cast<std::int64_t>(starts.size());
+    const auto ladder = structure::truss(
+        {pluss::series::make(coordinates)
+             .reshape({2 * (bays + 1), 2})
+             .to(pluss::ScalarType::Float64),
+         starts, ends},
+        {pluss::series::make(std::vector<double>(count, 1e-3))
+             .to(pluss::ScalarType::Float64),
+         pluss::series::make(std::vector<double>(count, 200e9))
+             .to(pluss::ScalarType::Float64)});
+    std::vector<double> loads(4 * (bays + 1), 0.0);
+    loads[2 * bays + 1] = -1000.0;
+    const auto load = pluss::series::make(loads)
+                          .reshape({2 * (bays + 1), 2})
+                          .to(pluss::ScalarType::Float64);
+    const structure::Fix fix{{0, 0, top(0), top(0)}, {0, 1, 0, 1}, {}};
+    const auto answer = structure::solve(ladder, load, fix);
+    structure::SolveOptions tight;
+    tight.cg.relative_tolerance = 1e-14;
+    tight.cg.absolute_tolerance = 1e-30;
+    const auto reference = structure::solve(ladder, load, fix, tight);
+    const auto tip = [&](const structure::StaticResult &r) {
+      return r.displacement.select(-2, bays).select(-1, 1).item<double>();
+    };
+    expect(answer.converged.item<bool>() &&
+               std::abs(tip(answer) - tip(reference)) < 1e-10,
+           "a long ladder truss did not converge under the default budget");
+  }
+
+  // A mechanism is reported as one, not as a bare convergence failure.
+  {
+    const auto square = structure::truss(
+        {pluss::series::make({0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0})
+             .reshape({4, 2})
+             .to(pluss::ScalarType::Float64),
+         {0, 1, 2, 3},
+         {1, 2, 3, 0}},
+        {pluss::series::make(std::vector<double>(4, 1e-3))
+             .to(pluss::ScalarType::Float64),
+         pluss::series::make(std::vector<double>(4, 200e9))
+             .to(pluss::ScalarType::Float64)});
+    const auto push = pluss::series::make({0.0, 0.0, 0.0, 0.0, 1000.0, 0.0, 0.0, 0.0})
+                          .reshape({4, 2})
+                          .to(pluss::ScalarType::Float64);
+    bool named = false;
+    try {
+      (void)structure::solve(square, push, {{0, 0, 1}, {0, 1, 1}, {}});
+    } catch (const std::runtime_error &error) {
+      named = std::string(error.what()).find("mechanism") != std::string::npos;
+    }
+    expect(named, "a mechanism was not reported as a mechanism");
+  }
+
   std::cout << "eng structure checks passed\n";
   return 0;
 }

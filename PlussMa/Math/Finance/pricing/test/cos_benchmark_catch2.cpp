@@ -83,13 +83,13 @@ TEST_CASE("generate COS golden values", "[.generate]") {
   std::printf("inline const std::vector<double> heston_cos = {");
   for (std::int64_t n : {256, 1024, 4096}) for (double k : {70.0, 85.0, 100.0, 115.0, 130.0}) {
     prc::CosOptions o; o.num_terms = n;
-    std::printf("%.17g,", prc::heston_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, hp, o, f64()));
+    std::printf("%.17g,", prc::detail::heston_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, hp, o, f64()));
   }
   vol::BatesParams bp{.kappa = 1.6, .theta = 0.04, .sigma = 0.30, .rho = -0.65, .v0 = 0.04, .jump_intensity = 0.18, .jump_mean = -0.08, .jump_vol = 0.22};
   std::printf("};\ninline const std::vector<double> bates_cos = {");
   for (std::int64_t n : {256, 1024, 4096}) for (double k : {70.0, 85.0, 100.0, 115.0, 130.0}) {
     prc::CosOptions o; o.num_terms = n;
-    std::printf("%.17g,", prc::bates_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, bp, o, f64()));
+    std::printf("%.17g,", prc::detail::bates_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, bp, o, f64()));
   }
   std::printf("};\n");
 }
@@ -179,8 +179,8 @@ TEST_CASE("COS Heston and Bates match frozen values and MATLAB", "[cos][golden]"
   double worst_h = 0.0, worst_b = 0.0;
   for (std::int64_t n : {256, 1024, 4096}) for (double k : {70.0, 85.0, 100.0, 115.0, 130.0}) {
     prc::CosOptions o; o.num_terms = n;
-    worst_h = std::max(worst_h, std::abs(prc::heston_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, hp, o, f64()) - cos_legacy::heston_cos[idx]));
-    worst_b = std::max(worst_b, std::abs(prc::bates_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, bp, o, f64()) - cos_legacy::bates_cos[idx]));
+    worst_h = std::max(worst_h, std::abs(prc::detail::heston_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, hp, o, f64()) - cos_legacy::heston_cos[idx]));
+    worst_b = std::max(worst_b, std::abs(prc::detail::bates_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, bp, o, f64()) - cos_legacy::bates_cos[idx]));
     ++idx;
   }
   std::printf("heston-vs-legacy %.3e bates-vs-legacy %.3e\n", worst_h, worst_b);
@@ -195,8 +195,8 @@ TEST_CASE("COS Heston agrees with MATLAB numerical integration", "[cos][golden]"
   // reference rows were produced with the same spot/rate/maturity as the legacy Heston goldens
   double worst = 0.0;
   for (std::size_t i = 0; i < ks.size(); ++i) {
-    const double c = prc::heston_price_cos(prc::OptionType::Call, 100.0, ks[i], 0.02, 0.0, 1.0, hp, o, f64());
-    const double p = prc::heston_price_cos(prc::OptionType::Put, 100.0, ks[i], 0.02, 0.0, 1.0, hp, o, f64());
+    const double c = prc::detail::heston_price_cos(prc::OptionType::Call, 100.0, ks[i], 0.02, 0.0, 1.0, hp, o, f64());
+    const double p = prc::detail::heston_price_cos(prc::OptionType::Put, 100.0, ks[i], 0.02, 0.0, 1.0, hp, o, f64());
     worst = std::max({worst, std::abs(c - cos_legacy::matlab_heston_call[i]), std::abs(p - cos_legacy::matlab_heston_put[i])});
   }
   std::printf("heston-vs-matlab %.3e\n", worst);
@@ -210,8 +210,8 @@ TEST_CASE("COS timing with the Heston and Bates characteristic functions", "[.pe
   std::vector<double> strikes(1000);
   for (std::size_t i = 0; i < strikes.size(); ++i) strikes[i] = 60.0 + 0.08 * static_cast<double>(i);
   const auto spot = pluss::series::full({1000}, 100.0, f64()), strike = pluss::make_series(strikes, {1000}, f64()), maturity = pluss::series::full({1000}, 1.0, f64());
-  const double series = best_seconds(3, [&] { (void)prc::heston_price_cos(prc::OptionType::Call, spot, strike, 0.02, 0.0, maturity, hp, o, f64()).sum().item<double>(); });
-  const double scalar = best_seconds(1, [&] { for (const double k : strikes) (void)prc::bates_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, bp, o, f64()); });
+  const double series = best_seconds(3, [&] { (void)prc::detail::heston_price_cos(prc::OptionType::Call, spot, strike, 0.02, 0.0, maturity, hp, o, f64()).sum().item<double>(); });
+  const double scalar = best_seconds(1, [&] { for (const double k : strikes) (void)prc::detail::bates_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, bp, o, f64()); });
   std::printf("Heston N=256 x1000 strikes: series %.2f ms | scalar loop (Bates, zero jumps) %.2f ms\n", series * 1e3, scalar * 1e3);
 }
 
@@ -223,8 +223,8 @@ TEST_CASE("COS Heston crossover between scalar loop and Series chain", "[.perf]"
     std::vector<double> strikes(static_cast<std::size_t>(m));
     for (std::size_t i = 0; i < strikes.size(); ++i) strikes[i] = 80.0 + 40.0 * static_cast<double>(i) / static_cast<double>(m);
     const auto spot = pluss::series::full({m}, 100.0, f64()), strike = pluss::make_series(strikes, {m}, f64()), maturity = pluss::series::full({m}, 1.0, f64());
-    const double series = best_seconds(5, [&] { (void)prc::heston_price_cos(prc::OptionType::Call, spot, strike, 0.02, 0.0, maturity, hp, o, f64()).sum().item<double>(); });
-    const double scalar = best_seconds(5, [&] { for (const double k : strikes) (void)prc::bates_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, bp, o, f64()); });
+    const double series = best_seconds(5, [&] { (void)prc::detail::heston_price_cos(prc::OptionType::Call, spot, strike, 0.02, 0.0, maturity, hp, o, f64()).sum().item<double>(); });
+    const double scalar = best_seconds(5, [&] { for (const double k : strikes) (void)prc::detail::bates_price_cos(prc::OptionType::Call, 100.0, k, 0.02, 0.0, 1.0, bp, o, f64()); });
     std::printf("cross N=%lld m=%lld: series %.1f us | scalar %.1f us\n", static_cast<long long>(n), static_cast<long long>(m), series * 1e6, scalar * 1e6);
   }
 }
@@ -237,10 +237,10 @@ TEST_CASE("COS hybrid dispatch: loop and vectorized paths agree", "[cos][golden]
     std::vector<double> strikes(static_cast<std::size_t>(m));
     for (std::size_t i = 0; i < strikes.size(); ++i) strikes[i] = 70.0 + 60.0 * static_cast<double>(i) / static_cast<double>(m);
     const auto spot = pluss::series::full({m}, 100.0, f64()), strike = pluss::make_series(strikes, {m}, f64()), maturity = pluss::series::full({m}, 1.0, f64());
-    const auto px = prc::heston_price_cos(prc::OptionType::Put, spot, strike, 0.02, 0.0, maturity, hp, o, f64()).host<double>();
+    const auto px = prc::detail::heston_price_cos(prc::OptionType::Put, spot, strike, 0.02, 0.0, maturity, hp, o, f64()).host<double>();
     double worst = 0.0;
     for (std::size_t i = 0; i < strikes.size(); ++i)
-      worst = std::max(worst, std::abs(px[i] - prc::bates_price_cos(prc::OptionType::Put, 100.0, strikes[i], 0.02, 0.0, 1.0, bp, o, f64())));
+      worst = std::max(worst, std::abs(px[i] - prc::detail::bates_price_cos(prc::OptionType::Put, 100.0, strikes[i], 0.02, 0.0, 1.0, bp, o, f64())));
     std::printf("hybrid m=%lld worst %.3e\n", static_cast<long long>(m), worst);
     CHECK(worst < 1e-9);
   }

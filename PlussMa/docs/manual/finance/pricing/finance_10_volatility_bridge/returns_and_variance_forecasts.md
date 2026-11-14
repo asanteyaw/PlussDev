@@ -1,0 +1,184 @@
+<!-- generated from returns_and_variance_forecasts.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# From returns to variance forecasts
+
+[Back to The Volatility Bridge](../finance_10_volatility_bridge.md)
+
+Option prices are about future volatility, and the history of returns holds information about it. The **volatility bridge** connects the two. Its first half, on this page, takes a GARCH-type model fitted to returns (Time Series, chapter 3) and gives what a pricing problem needs from it: how well it explains the returns, the conditional variance on each day, and a forecast of the variance over the life of an option.
+
+## The models
+
+A GARCH model lets the variance of the next return depend on the last one. For a return {math}`y_t=\mu+\varepsilon_t` with {math}`\varepsilon_t=\sqrt{h_t}\,z_t`, the three variance recursions of the library are
+
+```{math}
+\begin{aligned}
+\textbf{GARCH(1,1):}\quad & h_t=\omega+\alpha\,\varepsilon_{t-1}^2+\beta\,h_{t-1},\\
+\textbf{GJR(1,1):}\quad & h_t=\omega+\big(\alpha+\gamma\,\mathbf 1_{\{\varepsilon_{t-1}<0\}}\big)\varepsilon_{t-1}^2+\beta\,h_{t-1},\\
+\textbf{EGARCH(1,1):}\quad & \ln h_t=\omega+\alpha\big(|z_{t-1}|-\mathbb{E}|z|\big)+\gamma\,z_{t-1}+\beta\ln h_{t-1}.
+\end{aligned}
+```
+
+GJR and EGARCH are **asymmetric**: a fall of the price raises the variance more than a rise of the same size, which is what equity returns show and what produces a skew in option prices. The fits come from `Garch::fit_mle`, `Gjr::fit_mle` and `Egarch::fit_mle` (and, for the symmetric model, `Garch11::fit_mle`); the bridge adds three things for a fit.
+
+```cpp
+fin::bridge::ReturnsMetrics fin::bridge::returns_metrics(const Series &returns, const ts::GarchFit &fit, Config cfg = {});
+fin::bridge::ReturnsMetrics fin::bridge::returns_metrics(const Series &returns, const ts::EgarchFit &fit, Config cfg = {});
+fin::bridge::ReturnsMetrics fin::bridge::returns_metrics(const Series &returns, const ts::GjrFit &fit, Config cfg = {});
+Series fin::bridge::variance_forecast(std::int64_t horizon, const Series &returns, const ts::GarchFit &fit, Config cfg = {});
+Series fin::bridge::variance_forecast(std::int64_t horizon, const Series &returns, const ts::EgarchFit &fit, Config cfg = {});
+Series fin::bridge::variance_forecast(std::int64_t horizon, const Series &returns, const ts::GjrFit &fit, Config cfg = {});
+```
+
+| `ReturnsMetrics` member | Shape | Contents |
+|---|---|---|
+| `loglik` | number | the log-likelihood of the returns under the fit |
+| `loglik_per_obs` | `[T]` | its terms, one per return; `loglik` is their sum |
+| `variance` | `[T]` | the conditional variance {math}`h_t` of each day, in the units of the returns squared |
+
+| Call | Returns |
+|---|---|
+| `variance_forecast(horizon, returns, fit)` | a `Series` of `horizon` values: the expected conditional variance on the 1st, 2nd, ... day after the last return |
+
+The returns are a vector, one per period, in whatever unit the fit was made. The variance and the forecast are in that unit squared per period: with daily returns in per cent, a variance of 0.4 is a daily volatility of 0.63% and an annual one of {math}`\sqrt{252\times0.4}=10.0\%`.
+
+## Program 1: what the bridge reports about a fit
+
+The program simulates 1,500 daily returns in per cent from a GJR model with a real asymmetry ({math}`\alpha=0.03`, {math}`\gamma=0.12`), fits a symmetric GARCH and a GJR to them, and prints the log-likelihood, the persistence and the conditional volatility of each. The two likelihoods can be compared: the GJR model contains the GARCH model, with one more parameter, so twice the difference of the log-likelihoods is a likelihood-ratio statistic with one degree of freedom. It then looks at the worst day of the sample and how each model's variance reacts to it.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  // 1500 daily returns, in per cent, from a GJR model: bad news raises the variance more than good news
+  ts::GjrFit truth;
+  truth.mean = 0.04;
+  truth.omega = 0.03;
+  truth.arch = {0.03};
+  truth.asym = {0.12};
+  truth.garch = {0.88};
+  const auto returns = truth.simulate(1500, as_f64(), 11);
+
+  const auto garch = ts::Garch::fit_mle(returns, {}, as_f64());
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, as_f64());
+  const auto g = fin::bridge::returns_metrics(returns, garch, as_f64());
+  const auto j = fin::bridge::returns_metrics(returns, gjr, as_f64());
+
+  out.writeln("returns", returns.sizes(), " loglik_per_obs", g.loglik_per_obs.sizes(), " variance", g.variance.sizes());
+  out.writeln("GARCH(1,1): alpha", garch.arch[0], " beta", garch.garch[0], " persistence", garch.persistence(), " log-likelihood", g.loglik);
+  out.writeln("GJR(1,1):   alpha", gjr.arch[0], " asymmetry", gjr.asym[0], " beta", gjr.garch[0], " persistence", gjr.persistence(), " log-likelihood", j.loglik);
+  out.writeln("the likelihoods are the library's own:", garch.loglik(returns), gjr.loglik(returns), " sum of the per-observation terms", g.loglik_per_obs.sum().item<double>());
+  out.writeln("likelihood-ratio statistic for the asymmetry", 2.0 * (j.loglik - g.loglik), " (5% point of chi-squared with 1 degree of freedom: 3.84)");
+  const auto last = g.variance.size(0) - 1;
+  out.writeln("conditional daily volatility (per cent) on the last day: GARCH", std::sqrt(g.variance.select(0, last).item<double>()), " GJR", std::sqrt(j.variance.select(0, last).item<double>()));
+  const auto y = returns.items<double>();
+  std::int64_t worst = 0;
+  for (std::int64_t t = 1; t < static_cast<std::int64_t>(y.size()) - 1; ++t) {
+    if (y[t] < y[worst]) worst = t;
+  }
+  out.writeln("worst day of the sample: return", y[worst], "; the GJR variance goes from", j.variance.select(0, worst).item<double>(), "that day to", j.variance.select(0, worst + 1).item<double>(), "the next, GARCH from", g.variance.select(0, worst).item<double>(), "to", g.variance.select(0, worst + 1).item<double>());
+}
+```
+
+Output
+
+```text
+returns [1500]  loglik_per_obs [1500]  variance [1500]
+GARCH(1,1): alpha 0.1089  beta 0.8341  persistence 0.9430  log-likelihood -1606.9948
+GJR(1,1):   alpha 0.0302  asymmetry 0.1142  beta 0.8556  persistence 0.9429  log-likelihood -1595.5360
+the likelihoods are the library's own: -1606.9948 -1595.5360  sum of the per-observation terms -1606.9948
+likelihood-ratio statistic for the asymmetry 22.9175  (5% point of chi-squared with 1 degree of freedom: 3.84)
+conditional daily volatility (per cent) on the last day: GARCH 0.6820  GJR 0.6175
+worst day of the sample: return -2.7328 ; the GJR variance goes from 1.1364 that day to 2.1028 the next, GARCH from 1.2748 to 1.9246
+```
+
+The shapes follow the table. The GJR fit finds the asymmetry (0.114 for the true 0.12; its {math}`\alpha` falls to 0.030, the true value) and the GARCH fit has to put it all into {math}`\alpha` (0.109) and a lower {math}`\beta`. The log-likelihoods are −1595.54 for GJR and −1606.99 for GARCH; twice the difference, 22.9, is far above the 3.84 that a chi-squared with one degree of freedom reaches 5% of the time, so the data reject the symmetric model, correctly. The likelihoods equal the fit's own `loglik`, and `loglik_per_obs` sums to it. On the last day the conditional volatility is 0.62% under GJR and 0.68% under GARCH. And after the worst day of the sample, a fall of 2.73%, the GJR variance goes from 1.136 to 2.103 the next day, more than the GARCH variance, from 1.275 to 1.925: a model with a leverage effect raises its volatility more after bad news.
+
+## Program 2: the variance forecast and an option
+
+A forecast of the variance over the next days is what a pricer needs. A GARCH variance mean-reverts to its long-run level at the rate of the persistence, so the forecast is a curve from today's conditional variance to the long-run variance. The program forecasts 252 days from the GJR fit and prints the daily variance, the annualised volatility of that day, and the average annualised volatility from today to that day, the quantity that prices an option of that maturity. It finishes with a three-month at-the-money call, priced by Black-Scholes with that average volatility.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace ts = pluss::subsp::stats::ts;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  ts::GjrFit truth;
+  truth.mean = 0.04;
+  truth.omega = 0.03;
+  truth.arch = {0.03};
+  truth.asym = {0.12};
+  truth.garch = {0.88};
+  const auto returns = truth.simulate(1500, as_f64(), 11);
+  const auto gjr = ts::Gjr::fit_mle(returns, {}, as_f64());
+
+  const std::int64_t horizon = 252;
+  const auto forecast = fin::bridge::variance_forecast(horizon, returns, gjr, as_f64());
+  const auto h = forecast.items<double>();
+  out.writeln("forecast", forecast.sizes(), " unconditional variance", gjr.unconditional_var(), " long-run daily volatility", std::sqrt(gjr.unconditional_var()));
+  out.writeln("days ahead  daily variance  annualised vol (per cent)  average annualised vol over the period");
+  double running = 0.0;
+  for (std::int64_t d = 1; d <= horizon; ++d) {
+    running += h[d - 1];
+    if (d == 1 || d == 5 || d == 21 || d == 63 || d == 126 || d == 252) {
+      out.writeln(d, h[d - 1], std::sqrt(252.0 * h[d - 1]), std::sqrt(252.0 * running / static_cast<double>(d)));
+    }
+  }
+  // the forecast is variance in per cent squared: a three-month volatility for pricing, as a fraction of 1
+  const auto price_call = [](double vol) {
+    fin::module::Field option{.instrument = fin::instrument::make(fin::pricing::Call, 100.0, 0.25), .market = fin::market::make(100.0, 0.02, 0.0),
+                              .model = fin::model::BlackScholes{.volatility = pluss::make_series({vol})}, .controls = {.engine = fin::module::Engine::Analytic}};
+    return option.price().price.items<double>()[0];
+  };
+  double sum63 = 0.0;
+  for (std::int64_t d = 0; d < 63; ++d) sum63 += h[d];
+  const double sigma = std::sqrt(252.0 * sum63 / 63.0) / 100.0;
+  out.writeln("volatility to use for a 3-month option", sigma, " at-the-money call price (S = K = 100, r = 2%)", price_call(sigma));
+}
+```
+
+Output
+
+```text
+forecast [252]  unconditional variance 0.5147  long-run daily volatility 0.7174
+days ahead  daily variance  annualised vol (per cent)  average annualised vol over the period
+1 0.3672 9.6201 9.6201
+5 0.3981 10.0165 9.8261
+21 0.4692 10.8736 10.3792
+63 0.5108 11.3461 10.9374
+126 0.5146 11.3878 11.1598
+252 0.5147 11.3888 11.2748
+volatility to use for a 3-month option 0.1094  at-the-money call price (S = K = 100, r = 2%) 2.4344
+```
+
+The variance forecast starts below the long-run level, 0.367 against 0.515 (a daily volatility of 0.61% and 0.72%), because the sample ends in a calm period, and it rises towards it: 0.398 after 5 days, 0.469 after 21 and 0.511 after 63, and it is the long-run level, 0.5147, after a year. In annual terms the volatility of the first day is 9.6%, and the long-run value is 11.4%. The **average** volatility over the period is what an option sees: 10.38% over 21 days, 10.94% over 63 and 11.27% over 252, a term structure that rises with maturity, as it does for a market in which volatility is expected to return to its mean from a low level. The three-month volatility, 10.94%, gives a call price of 2.4344 for a spot and strike of 100 and a rate of 2%.
+
+Two cautions. This price uses the physical-measure forecast as if it were the risk-neutral volatility, which ignores the price of volatility risk; the next page adds a risk premium. And the forecast ignores the asymmetry of the distribution of the returns: it prices the three-month option as a lognormal one, with no skew.
+
+## Checklist
+
+1. Fit in a scale that is natural for the optimiser (returns in per cent) and keep track of the unit: variances are in that unit squared per period.
+2. Compare the symmetric and the asymmetric fits with {math}`2\Delta\ln L`; for equity returns the asymmetric ones nearly always win.
+3. Turn a forecast into an option volatility by averaging the variance over the life of the option: {math}`\sqrt{(252/T)\sum_{d\le T}h_d}`.
+4. Do not treat a forecast from returns as a risk-neutral volatility without a risk premium.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ngarch_for_pricing.html">
+    <span class="label">Next</span>
+    <span class="title">The NGARCH model for pricing</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

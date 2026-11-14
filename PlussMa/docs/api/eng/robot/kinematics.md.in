@@ -1,0 +1,43 @@
+# Robot kinematics
+
+This branch places the links of a robot. `frames` gives the world frame of every link, `jac` the velocity map of one link, and `ik` the joint values that bring a link to a target. `Pose`, `IkOptions` and `IkResult` carry the inputs and results.
+
+## Choosing A Surface
+
+Use `frames` when the joint values are known, `jac` for velocities and forces at a configuration, and `ik` when the target is known and the joint values are wanted.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+The frames of a planar arm.
+
+@@example Eng/api/robot_fk_arm.cpp@@
+
+### Example 2
+
+The Jacobian of the elbow.
+
+@@example Eng/api/robot_jac_arm.cpp@@
+
+### Example 3
+
+A target reached by inverse kinematics.
+
+@@example Eng/api/robot_ik_position.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+kinematics/Pose
+kinematics/frames
+kinematics/jac
+kinematics/IkOptions
+kinematics/IkResult
+kinematics/ik
+```
+<!-- apiref:toctree:end -->

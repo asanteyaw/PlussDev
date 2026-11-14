@@ -26,8 +26,8 @@ int main() {
   reg::GLMOptions options;
   options.family = reg::GLMFamily::Poisson;
   const auto fit = reg::glm_fit(y, pluss::series::zeros({6, 0}, as_f64()), options);
-  out.writeln("coefficient", fit.coefficients.pull<double>(), " log of the mean 2:", std::log(2.0));
-  out.writeln("link is the log:", fit.link == reg::GLMLink::Log ? "yes" : "no", " fitted mean", fit.fitted_values.pull<double>()[0]);
+  out.writeln("coefficient", fit.coefficients.items<double>(), " log of the mean 2:", std::log(2.0));
+  out.writeln("link is the log:", fit.link == reg::GLMLink::Log ? "yes" : "no", " fitted mean", fit.fitted_values.items<double>()[0]);
 }
 ```
 
@@ -66,7 +66,7 @@ int main() {
   reg::GLMOptions options;
   options.family = reg::GLMFamily::Poisson;
   const auto fit = reg::glm_fit(y, x, options);
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
   out.writeln("coefficients", b, " iterations", fit.iterations, " converged", fit.converged);
 
   const auto mu = fit.fitted_values;
@@ -79,7 +79,7 @@ int main() {
 
   // Deviance: 2 sum[y ln(y/mu) - (y - mu)], with the first term absent for a zero count.
   double deviance = 0.0;
-  const auto fitted = mu.pull<double>();
+  const auto fitted = mu.items<double>();
   for (std::size_t i = 0; i < counts.size(); ++i) {
     deviance += 2.0 * ((counts[i] > 0 ? counts[i] * std::log(counts[i] / fitted[i]) : 0.0) - (counts[i] - fitted[i]));
   }
@@ -132,7 +132,7 @@ int main() {
     const auto fit = reg::glm_fit(y, x, options);
     const double pearson = y.sub(fit.fitted_values).pow(2.0).div(fit.fitted_values).sum().item<double>();
     const double ratio = pearson / static_cast<double>(fit.df_resid);
-    out.writeln(label, "Pearson/df", ratio, " slope std error", fit.std_errors.pull<double>()[1], " corrected", fit.std_errors.pull<double>()[1] * std::sqrt(std::max(ratio, 1.0)));
+    out.writeln(label, "Pearson/df", ratio, " slope std error", fit.std_errors.items<double>()[1], " corrected", fit.std_errors.items<double>()[1] * std::sqrt(std::max(ratio, 1.0)));
   };
   check("smooth counts :", {1, 0, 2, 1, 3, 2, 4, 3, 6, 5, 7, 8});
   check("bursty counts :", {0, 0, 5, 0, 1, 9, 0, 2, 12, 0, 3, 15});
@@ -149,3 +149,16 @@ bursty counts : Pearson/df 5.3030  slope std error 0.0487  corrected 0.1122
 The smooth counts have a ratio of 0.32: they vary less than a Poisson distribution would, so the standard errors are, if anything, conservative, and no correction is applied (the program multiplies by the square root of the larger of the ratio and 1). The bursty counts have a ratio of 5.30: their variance is about five times their mean, and the reported standard error of the slope, 0.0487, is too small by a factor of √5.30 = 2.30, whose corrected value is 0.1122. The estimates themselves are unchanged; only the statements of precision are affected.
 
 Counts observed over different exposures are modelled with the log exposure as an `offset` ([Weights and offsets](weights_and_offsets.md)).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="logistic_regression.html">
+    <span class="label">Previous</span>
+    <span class="title">Logistic regression</span>
+  </a>
+  <a class="next-link" href="families_and_links.html">
+    <span class="label">Next</span>
+    <span class="title">Families and links</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

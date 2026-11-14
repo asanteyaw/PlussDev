@@ -176,3 +176,16 @@ The two tests agree on the stationary series (ADF rejects, KPSS keeps; the KPSS 
 - **One rejection is not the whole story.** A series can have a unit root *and* a structural break, and the tests will disagree; look at the plot.
 
 Where next: [Volatility clustering](volatility_clustering.md) tests the other half of "is it noise": whether the *size* of the movements depends on the past.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="acf_and_pacf.html">
+    <span class="label">Previous</span>
+    <span class="title">ACF and PACF</span>
+  </a>
+  <a class="next-link" href="volatility_clustering.html">
+    <span class="label">Next</span>
+    <span class="title">Volatility clustering</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

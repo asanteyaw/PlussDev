@@ -199,3 +199,16 @@ Read down the rows: `s 0.5` peaks on this grid at x = 0 (value 0.6366); `s 1` pe
 - [`Normal`](../continuous_real_line/Normal.md)
 - [`Logistic`](../continuous_real_line/Logistic.md)
 - [`Cauchy`](../continuous_real_line/Cauchy.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Gh.html">
+    <span class="label">Previous</span>
+    <span class="title">Gh</span>
+  </a>
+  <a class="next-link" href="Laplace.html">
+    <span class="label">Next</span>
+    <span class="title">Laplace</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

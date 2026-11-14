@@ -1,0 +1,400 @@
+<!-- generated from controllability_and_gramians.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Controllability and gramians
+
+[Back to Systems 1: Models and Analysis](../lti_01_models_and_analysis.md)
+
+Before you design a controller or an observer you want to know whether it can work: can the inputs move the system anywhere in its state space, and do the outputs reveal what the states are doing? `ctrb` and `obsv` build the matrices whose rank answers those two questions, and `gram` computes the two gramians that say how strongly each state direction is driven and seen. This page shows all three with systems small enough to check by hand.
+
+## The mental model
+
+A system is **controllable** if some input takes the state from zero to any target. It is **observable** if the initial state can be recovered from the outputs. For a system with `n` states both are rank conditions:
+
+```{math}
+\mathcal C = \begin{bmatrix} B & AB & A^2B & \cdots & A^{n-1}B \end{bmatrix}, \qquad
+\mathcal O = \begin{bmatrix} C \\ CA \\ \vdots \\ CA^{n-1} \end{bmatrix}.
+```
+
+The system is controllable when `ctrb` has rank `n`, and observable when `obsv` has rank `n`. Rank is not robust numerically, and these matrices become badly scaled as `n` grows, so `ctrb` and `obsv` are best used for small systems and for understanding. For stable systems the **gramians** are the robust, quantitative version. The reachability gramian `W_c` and the observability gramian `W_o` solve Lyapunov equations:
+
+| | Continuous time | Discrete time |
+|---|---|---|
+| `Gram::Reach` | `A W + W A* + B B* = 0` | `A W A* - W + B B* = 0` |
+| `Gram::Observe` | `A* W + W A + C* C = 0` | `A* W A - W + C* C = 0` |
+
+They have a direct meaning. The energy `integral y(t)^2 dt` of the free output starting from the state `x0` is `x0* W_o x0`, and the smallest input energy needed to reach `x0` from rest is `x0* W_c^{-1} x0`. A state direction with a small `W_c` eigenvalue is expensive to reach, one with a small `W_o` eigenvalue is hard to see, and a zero eigenvalue is a direction that is not controllable (or observable) at all.
+
+## The two matrices
+
+For the mass on a spring of the previous page, `B = [0, 1]^T` and `A B = [1, -3]^T`, so `ctrb = [[0, 1], [1, -3]]`; `C = [1, 0]` and `C A = [0, 1]`, so `obsv` is the identity. Their shapes are `n x (n m)` and `(n p) x n`, with any batch axes in front. The program prints both and the singular values of each; a full-rank matrix has `n` singular values clearly above zero.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto spring = lti::state(matrix({0, 1, -2, -3}, 2, 2), matrix({0, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1));
+  const pluss::Series controllable = lti::ctrb(spring);
+  const pluss::Series observable = lti::obsv(spring);
+  out.writeln("ctrb shape", controllable.sizes(), " values", controllable.reshape({4}).items<double>());
+  out.writeln("obsv shape", observable.sizes(), " values", observable.reshape({4}).items<double>());
+  out.writeln("singular values of ctrb", controllable.linearalg.svd_s().items<double>());
+  out.writeln("singular values of obsv", observable.linearalg.svd_s().items<double>());
+}
+```
+
+Output
+
+```text
+ctrb shape [2, 2]  values [0.000000, 1.000000, 1.000000, -3.000000]
+obsv shape [2, 2]  values [1.000000, 0.000000, 0.000000, 1.000000]
+singular values of ctrb [3.302776, 0.302776]
+singular values of obsv [1.000000, 1.000000]
+```
+
+The first printed matrix is `[0, 1, 1, -3]`, as worked out above, and the second is the identity. Both have two singular values clearly above zero (`3.30` and `0.30` for `ctrb`, `1` and `1` for `obsv`): the spring is controllable and observable from the position.
+
+## When a rank is missing
+
+Two small diagonal systems show what a rank deficiency looks like. In the first, `B = [1, 0]^T` drives only the first state of `A = diag(-1, -2)`, so the second state never moves: `ctrb = [[1, -1], [0, 0]]` has rank 1. In the second, `C = [1, 0]` reads only the first state, while `B = [1, 1]^T` drives both: `obsv = [[1, 0], [-1, 0]]` has rank 1, and the second state cannot be seen. The program counts the singular values above a tolerance of `1e-10` times the largest.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+static int rank_of(const pluss::Series &m) {
+  const std::vector<double> s = m.linearalg.svd_s().items<double>();
+  int rank = 0;
+  for (const double v : s) {
+    if (v > 1e-10 * s[0]) ++rank;
+  }
+  return rank;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const pluss::Series a = matrix({-1, 0, 0, -2}, 2, 2);
+  const auto uncontrollable = lti::state(a, matrix({1, 0}, 2, 1), matrix({1, 1}, 1, 2), matrix({0}, 1, 1));
+  const auto unobservable = lti::state(a, matrix({1, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1));
+
+  out.writeln("ctrb", lti::ctrb(uncontrollable).reshape({4}).items<double>(), " rank", rank_of(lti::ctrb(uncontrollable)), "of 2");
+  out.writeln("obsv", lti::obsv(unobservable).reshape({4}).items<double>(), " rank", rank_of(lti::obsv(unobservable)), "of 2");
+}
+```
+
+Output
+
+```text
+ctrb [1.000, -1.000, 0.000, 0.000]  rank 1 of 2
+obsv [1.000, 0.000, -1.000, 0.000]  rank 1 of 2
+```
+
+## A system with several inputs
+
+With `m` inputs, `ctrb` has `n m` columns, and only `n` independent columns are needed. For the two-state system with three inputs of the previous page, `ctrb` is `2 x 6` and `obsv` is `6 x 2`. Their ranks are still at most 2.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto wide = lti::state(matrix({-1, 0, 0, -2}, 2, 2), matrix({1, 0, 0, 0, 1, 1}, 2, 3), matrix({1, 0, 0, 1, 1, 1}, 3, 2),
+                               pluss::series::zeros({3, 3}, f64));
+  out.writeln("ctrb", lti::ctrb(wide).sizes(), " singular values", lti::ctrb(wide).linearalg.svd_s().items<double>());
+  out.writeln("obsv", lti::obsv(wide).sizes(), " singular values", lti::obsv(wide).linearalg.svd_s().items<double>());
+}
+```
+
+Output
+
+```text
+ctrb [2, 6]  singular values [3.1623, 1.4142]
+obsv [6, 2]  singular values [3.3530, 1.6605]
+```
+
+## The gramians of a scalar system
+
+For `x' = -x + u`, `y = x` the reachability equation `-W - W + 1 = 0` gives `W_c = 1/2`, and so does the observability equation. For the discrete system `x[k+1] = 0.5 x[k] + u[k]` the equation `0.25 W - W + 1 = 0` gives `W_c = 4/3`. The program computes both with `gram`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series scalar(double value) { return pluss::series::make(std::vector<double>{value}).reshape({1, 1}); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto lag = lti::state(scalar(-1.0), scalar(1.0), scalar(1.0), scalar(0.0));
+  out.writeln("continuous: reach", lti::gram(lag, lti::Gram::Reach).squeeze().item<double>(), " observe", lti::gram(lag, lti::Gram::Observe).squeeze().item<double>());
+
+  const auto stepped = lti::state(scalar(0.5), scalar(1.0), scalar(1.0), scalar(0.0), 1.0);
+  out.writeln("discrete:   reach", lti::gram(stepped, lti::Gram::Reach).squeeze().item<double>(), " 4/3 =", 4.0 / 3.0);
+}
+```
+
+Output
+
+```text
+continuous: reach 0.500000  observe 0.500000
+discrete:   reach 1.333333  4/3 = 1.333333
+```
+
+## The gramian of the spring
+
+For the spring the reachability gramian is diagonal, `diag(1/12, 1/6)`. The program prints it and checks it against its defining equation: the residual of `A W + W A^T + B B^T` should be zero to rounding. The eigenvalues of `W` are both positive, which is the controllability test in gramian form, and they show the cost: the smallest input energy to reach a unit of velocity is `6` (one over `1/6`), and to reach a unit of position `12`, twice as much.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto spring = lti::state(matrix({0, 1, -2, -3}, 2, 2), matrix({0, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1));
+  const pluss::Series w = lti::gram(spring, lti::Gram::Reach);
+  const pluss::Series residual = spring.a().matmul(w) + w.matmul(spring.a().transpose(0, 1)) + spring.b().matmul(spring.b().transpose(0, 1));
+  out.writeln("reach gramian", w.reshape({4}).items<double>());
+  out.writeln("residual of the Lyapunov equation, largest entry:", residual.abs().max().item<double>());
+  out.writeln("eigenvalues of the gramian", w.linearalg.eigvalsh().items<double>());
+  out.writeln("observe gramian", lti::gram(spring, lti::Gram::Observe).reshape({4}).items<double>());
+}
+```
+
+Output
+
+```text
+reach gramian [0.083333, 0.000000, 0.000000, 0.166667]
+residual of the Lyapunov equation, largest entry: 0.000000
+eigenvalues of the gramian [0.083333, 0.166667]
+observe gramian [0.916667, 0.250000, 0.250000, 0.083333]
+```
+
+## An uncontrollable direction shows up as a zero eigenvalue
+
+The gramian of the uncontrollable diagonal system has a zero in the direction nothing can drive. Its reach gramian is `diag(1/2, 0)`, with eigenvalues `0` and `1/2`. Unlike the rank of `ctrb`, the eigenvalues also say how *weakly* controllable a direction is, not just whether it is controllable.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto uncontrollable = lti::state(matrix({-1, 0, 0, -2}, 2, 2), matrix({1, 0}, 2, 1), matrix({1, 1}, 1, 2), matrix({0}, 1, 1));
+  const pluss::Series w = lti::gram(uncontrollable, lti::Gram::Reach);
+  out.writeln("reach gramian", w.reshape({4}).items<double>());
+  out.writeln("eigenvalues", w.linearalg.eigvalsh().items<double>());
+}
+```
+
+Output
+
+```text
+reach gramian [0.500000, 0.000000, 0.000000, 0.000000]
+eigenvalues [0.000000, 0.500000]
+```
+
+## The energy of a free response
+
+The observability gramian predicts the output energy of a free response. For `x' = -x`, `y = x` started at `x0 = 3`, the output is `3 e^{-t}` and the energy is `integral 9 e^{-2t} dt = 9/2`; the gramian gives `x0^2 W_o = 9 * 1/2`. The program simulates the free response on a fine grid (see [Simulating a system](../lti_02_simulation/simulating_a_system.md)) and integrates the squared output with the trapezoid rule.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series scalar(double value) { return pluss::series::make(std::vector<double>{value}).reshape({1, 1}); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto lag = lti::state(scalar(-1.0), scalar(1.0), scalar(1.0), scalar(0.0));
+
+  const pluss::Series time = pluss::series::arange(0, 2001, f64) * 0.01;
+  const pluss::Series silence = pluss::series::zeros({2001, 1}, f64);
+  const pluss::Series output = lti::sim(lag, silence, time, pluss::series::make(std::vector<double>{3.0})).values.reshape({2001});
+  const double energy = pluss::ma::math::integ::trapezoid(output.square(), time).item<double>();
+  out.writeln("integral of y^2 from the simulation:", energy);
+  out.writeln("x0^2 times the observe gramian     :", 9.0 * lti::gram(lag, lti::Gram::Observe).squeeze().item<double>());
+}
+```
+
+Output
+
+```text
+integral of y^2 from the simulation: 4.5001
+x0^2 times the observe gramian     : 4.5000
+```
+
+The two numbers agree to within `1e-4` (`4.5001` against `4.5000`); the remaining difference is the trapezoid rule's error on a step of `0.01`.
+
+## Errors
+
+The gramian exists only for a stable system. For an unstable `A` the Lyapunov solution is not a gramian, and `gram` says so, naming the condition and quoting the solver's message.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series scalar(double value) { return pluss::series::make(std::vector<double>{value}).reshape({1, 1}); }
+
+int main() {
+  OutputEngine out;
+  const auto growing = lti::state(scalar(1.0), scalar(1.0), scalar(1.0), scalar(0.0));
+  try {
+    (void)lti::gram(growing, lti::Gram::Reach);
+  } catch (const std::exception &e) {
+    std::string text(e.what());
+    if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+    out.writeln(text);
+  }
+}
+```
+
+Output
+
+```text
+eng::lti::gram: the Gramian could not be computed; it exists only for a stable system (every eigenvalue of A in the left half-plane). Solver message: subsp::math::linalg::lu_solve: singular matrix
+```
+
+## Decisions
+
+- **Is the system controllable or observable at all:** `ctrb` and `obsv` and a rank count, for small systems.
+- **How controllable or observable, and in which directions:** `gram`, then its eigenvalues. This is the robust test and the one that scales.
+- **An unstable plant:** the gramians are not defined; stabilise it first, or work with `ctrb` and `obsv`, which have no stability condition.
+
+## Pitfalls
+
+The program makes three mistakes with the rank tests: trusting a rank that depends on a tolerance, trusting `ctrb` and `obsv` as the number of states grows, and reading a zero gramian eigenvalue as a defect of the code rather than of the model.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// the number of singular values above a relative tolerance
+static int rank_of(const pluss::Series &m, double tolerance) {
+  const auto sv = m.linearalg.svd_s().items<double>();
+  int count = 0;
+  for (double s : sv) count += s > tolerance * sv.front();
+  return count;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(3).with_sep(""));
+  const auto c = matrix({1, 1}, 1, 2), d = matrix({0}, 1, 1), a = matrix({-1, 0, 0, -2}, 2, 2);
+
+  // 1. rank depends on a tolerance: the second state is driven with strength 1e-9
+  const auto faint = lti::state(a, matrix({1, 1e-9}, 2, 1), c, d);
+  const auto ctrb = lti::ctrb(faint);
+  out.writeln("rank of ctrb at a relative tolerance of 1e-6: ", rank_of(ctrb, 1e-6), "   at 1e-12: ", rank_of(ctrb, 1e-12));
+  out.writeln("reachability gramian eigenvalues (the honest report): ", lti::gram(faint, lti::Gram::Reach).linearalg.svd_s().items<double>());
+
+  // 2. ctrb and obsv scale badly with the number of states, although the system is perfectly controllable
+  for (long n : {2L, 4L, 6L, 8L}) {
+    std::vector<double> diagonal(n * n, 0.0), input(n, 1.0);
+    for (long i = 0; i < n; ++i) diagonal[i * n + i] = -(1.0 + i);
+    const auto system = lti::state(matrix(diagonal, n, n), matrix(input, n, 1), matrix(std::vector<double>(n, 1.0), 1, n), d);
+    const auto sv = lti::ctrb(system).linearalg.svd_s().items<double>();
+    const auto eig = lti::gram(system, lti::Gram::Reach).linearalg.svd_s().items<double>();
+    out.writeln(n, " states: ctrb singular values span ", sv.front() / sv.back(), "   gramian eigenvalues span ", eig.front() / eig.back());
+  }
+
+  // 3. a zero gramian eigenvalue belongs to the model: the output reads only the first state
+  const auto blind = lti::state(a, matrix({1, 1}, 2, 1), matrix({1, 0}, 1, 2), d);
+  out.writeln("observability gramian eigenvalues, C = [1, 0]: ", lti::gram(blind, lti::Gram::Observe).linearalg.svd_s().items<double>());
+  const auto seeing = lti::state(a, matrix({1, 1}, 2, 1), matrix({1, 1}, 1, 2), d);
+  out.writeln("observability gramian eigenvalues, C = [1, 1]: ", lti::gram(seeing, lti::Gram::Observe).linearalg.svd_s().items<double>());
+}
+```
+
+Output
+
+```text
+rank of ctrb at a relative tolerance of 1e-6: 1   at 1e-12: 2
+reachability gramian eigenvalues (the honest report): [5.000e-01, 2.774e-20]
+2 states: ctrb singular values span 6.854e+00   gramian eigenvalues span 3.847e+01
+4 states: ctrb singular values span 1.171e+03   gramian eigenvalues span 4.588e+04
+6 states: ctrb singular values span 7.312e+05   gramian eigenvalues span 5.110e+07
+8 states: ctrb singular values span 9.521e+08   gramian eigenvalues span 5.639e+10
+observability gramian eigenvalues, C = [1, 0]: [5.000e-01, 0.000e+00]
+observability gramian eigenvalues, C = [1, 1]: [7.310e-01, 1.900e-02]
+```
+
+The second state of the first system is driven with a strength of `1e-9`. A rank test with a relative tolerance of `1e-6` calls the system uncontrollable and one of `1e-12` calls it controllable: the answer is the tolerance's, not the system's. The gramian gives the same fact as a number: its second eigenvalue, `2.8e-20`, says reaching that direction costs about `2e19` times the energy of the first. The scaling of `ctrb` with size is the second trap. The diagonal systems with a unit input are controllable at every size, and still the singular values of `ctrb` span a factor of `7` for two states and of `1e9` for eight, so a rank decision on it is unreliable beyond a handful of states; the gramian eigenvalues span more, since they are energies, and that is the quantity to read: the weakest direction of the eight-state system costs about `6e10` times the energy of the strongest. Last, an eigenvalue of exactly zero is not a numerical failure: with `C = [1, 0]` the output cannot see the second state, the observability gramian has a zero eigenvalue, and the cure is a different `C`: `[1, 1]` gives two positive eigenvalues.
+
+Reference: [`state`](../../../../api/eng/lti/state/state.md), [`ctrb`](../../../../api/eng/lti/state/ctrb.md), [`obsv`](../../../../api/eng/lti/state/obsv.md), [`gram`](../../../../api/eng/lti/state/gramian.md), [`Gram`](../../../../api/eng/lti/state/Gram.md), [`sim`](../../../../api/eng/lti/simulation/sim.md).
+
+Where next: [Poles, zeros and frequency response](poles_zeros_and_response.md) describes the same systems by their transfer function.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="state_space_models.html">
+    <span class="label">Previous</span>
+    <span class="title">State-space models</span>
+  </a>
+  <a class="next-link" href="poles_zeros_and_response.html">
+    <span class="label">Next</span>
+    <span class="title">Poles, zeros and frequency response</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

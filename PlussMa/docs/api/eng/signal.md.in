@@ -1,6 +1,6 @@
 # Signal
 
-The `pluss::ma::eng::signal` family supplies Series-native tools for shaping, filtering, correlating, and analyzing sampled signals. It keeps coefficient construction, filter execution, and recursive-filter design separate so each stage can be inspected and reused.
+The `pluss::subsp::eng::signal` family supplies Series-native tools for shaping, filtering, correlating, and analyzing sampled signals. It keeps coefficient construction, filter execution, and recursive-filter design separate so each stage can be inspected and reused.
 
 ## Branches
 

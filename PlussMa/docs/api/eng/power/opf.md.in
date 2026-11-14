@@ -1,0 +1,41 @@
+# Optimal power flow
+
+This branch solves the exact AC problem: least-cost generation with the full network equations, voltage and reactive limits, line ratings and bus prices.
+
+## Choosing A Surface
+
+Use `opf` where losses, reactive power or voltages are part of the question; use `dispatch` for lossless studies of many scenarios.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A ring checked against an independent solver.
+
+@@example Eng/api/power_opf_ring.cpp@@
+
+### Example 2
+
+Reactive, voltage and rating limits.
+
+@@example Eng/api/power_opf_limits.cpp@@
+
+### Example 3
+
+Tolerances and budget.
+
+@@example Eng/api/power_opf_options.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+opf/Limits
+opf/OpfOptions
+opf/OpfResult
+opf/opf
+```
+<!-- apiref:toctree:end -->

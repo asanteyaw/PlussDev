@@ -375,3 +375,20 @@ int main() {
 - [`Arima`](Arima.md)
 - [`ArimaOptions`](ArimaOptions.md)
 - [`ljung_box`](../diagnostics/ljung_box.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Arima.html">
+    <span class="label">Previous</span>
+    <span class="title">Arima</span>
+  </a>
+  <a class="next-link" href="ArimaOptions.html">
+    <span class="label">Next</span>
+    <span class="title">ArimaOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

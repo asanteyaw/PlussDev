@@ -9526,9 +9526,67 @@ inline void unscale_optima_state_(OptimaState& state, const ConstrainedProblem& 
 
 }  // namespace detail
 
-inline OptimaState optima(const ConstrainedProblem& problem_in,
-                          const ParameterPack<Series>& initial_params,
-                          const OptimaOptions& options = {}) {
+namespace detail {
+
+inline bool is_complex_(const Series& x) {
+  return x.defined() && x.dtype().is_complex();
+}
+
+// Pluss's counterpart to torch's `torch.view_as_real`: reinterpret a
+// complex Series as a real one with a NEW trailing dimension of size 2
+// (index 0 = real part, index 1 = imaginary part), so `adam_step_inplace`'s
+// existing (already real-dtype-correct) formula runs completely unchanged
+// and applies independently to the real and imaginary channels -- torch's
+// own approach for complex parameters (`_view_as_real` in
+// torch/optim/optimizer.py, applied to param/grad/exp_avg/exp_avg_sq/
+// max_exp_avg_sqs before the ordinary real update in torch/optim/adam.py):
+// a complex gradient's second-moment estimate needs real(g)^2 and imag(g)^2
+// tracked SEPARATELY -- not |g|^2, which mixes them, and not g^2 (what
+// `adam_step_inplace` computed pre-fix), which is itself complex and does
+// not match torch's actual numeric convention. Mirrors
+// `pluss::ai::nn::optim::Optimizer::view_as_real_` in
+// PlussAI/NodeK/NN/optim/optim_base.h exactly (same architecture,
+// oracle-verified there against live torch numbers) -- see that file's own
+// comment for the full derivation, including why no single intermediate
+// fix (e.g. `.square()` -> `.abs2()`) can replicate this: complex DIVISION
+// mixes real/imaginary components, so the whole formula must run twice.
+//
+// Real (non-complex) input passes through unchanged, so call sites don't
+// need to branch. UNLIKE torch's `view_as_real` (a true zero-copy view),
+// this is a COPY -- CodeM has no reinterpret-cast-dtype view primitive
+// (same known, deliberately out-of-scope limitation noted in optim_base.h).
+inline Series view_as_real_(const Series& x) {
+  if (!is_complex_(x)) return x;
+  const Series re = x.real();
+  const Series im = x.imag();
+  return re.pile(std::vector<Series>{im}, re.dim());
+}
+
+// Inverse of view_as_real_: given a real Series shaped [..., 2] (as
+// produced by view_as_real_) and the ORIGINAL complex dtype, reconstruct
+// the complex Series. `original_dtype` not being complex means the value
+// was never converted in the first place -- returns it unchanged. An
+// undefined input (e.g. an AMSGrad max_v buffer nobody has written to yet
+// on a fresh, never-stepped state) passes through unchanged too, matching
+// view_as_real_'s own symmetry.
+inline Series view_as_complex_(const Series& real_view, ScalarType original_dtype) {
+  if (!real_view.defined()) return real_view;
+  if (!pluss::codem::dtype_of(original_dtype).is_complex()) return real_view;
+  const std::int64_t last = real_view.dim() - 1;
+  const Series re = real_view.select(last, 0);
+  const Series im = real_view.select(last, 1);
+  const Series i_unit =
+      pluss::make_series(std::vector<std::complex<double>>{{0.0, 1.0}}, {})
+          .to(original_dtype)
+          .to(re.platform());
+  return re.to(original_dtype).add(im.to(original_dtype).mul(i_unit));
+}
+
+}  // namespace detail
+
+inline OptimaState optima_core_(const ConstrainedProblem& problem_in,
+                                const ParameterPack<Series>& initial_params,
+                                const OptimaOptions& options) {
   // Infinite bounds mean "unbounded": clamp them to a huge finite value so every algorithm sees ordinary,
   // permanently inactive rows.
   ConstrainedProblem problem = problem_in;
@@ -9554,7 +9612,7 @@ inline OptimaState optima(const ConstrainedProblem& problem_in,
     inner.sequential_qp.problem_scaling = OptimaProblemScaling::None;
     inner.working_set.problem_scaling = OptimaProblemScaling::None;
     inner.internal_protocol.problem_scaling = OptimaProblemScaling::None;
-    if (!scaling.active) return optima(problem, initial_params, inner);
+    if (!scaling.active) return optima_core_(problem, initial_params, inner);
     const auto user_hook = [&]() {
       if (options.algorithm == OptimaAlgorithm::SequentialQP && options.sequential_qp.progress_hook) return options.sequential_qp.progress_hook;
       if (options.algorithm == OptimaAlgorithm::WorkingSet && options.working_set.progress_hook) return options.working_set.progress_hook;
@@ -9574,7 +9632,7 @@ inline OptimaState optima(const ConstrainedProblem& problem_in,
       inner.working_set.progress_hook = wrapped;
       inner.internal_protocol.progress_hook = wrapped;
     }
-    OptimaState state = optima(detail::apply_problem_scaling_(problem, scaling), initial_params, inner);
+    OptimaState state = optima_core_(detail::apply_problem_scaling_(problem, scaling), initial_params, inner);
     detail::unscale_optima_state_(state, problem, scaling);
     return state;
   }
@@ -9609,6 +9667,163 @@ inline OptimaState optima(const ConstrainedProblem& problem_in,
   }
 
   ::pluss::throw_error("optim::optima: unknown algorithm");
+}
+
+
+namespace detail {
+
+// Complex parameters. A real objective of complex parameters is optimized over the real and imaginary parts as
+// independent real coordinates: the problem handed to the algorithms has every complex block replaced by its real
+// view (a trailing axis of size 2, real part first), the callbacks rebuild the complex values from it, and the
+// answer is mapped back. The gradient reported for a complex block is `dL/dRe + i dL/dIm`, the convention of the
+// Series tape.
+struct ComplexLayout {
+  std::vector<ScalarType> dtype;   // per block: its complex dtype, or the real dtype for a real block
+  std::vector<bool> complex;       // per block
+  std::vector<std::string> names;
+  bool any() const {
+    for (const bool c : complex) {
+      if (c) return true;
+    }
+    return false;
+  }
+};
+
+inline ComplexLayout complex_layout_(const ParameterPack<Series>& pack) {
+  ComplexLayout layout;
+  for (const auto& b : pack.blocks()) {
+    layout.names.push_back(b.name);
+    layout.complex.push_back(is_complex_(b.value));
+    layout.dtype.push_back(b.value.scalar_type());
+  }
+  return layout;
+}
+
+inline ParameterPack<Series> pack_to_real_(const ParameterPack<Series>& pack) {
+  std::vector<ParameterPack<Series>::Block> blocks;
+  for (const auto& b : pack.blocks()) blocks.push_back({b.name, view_as_real_(b.value)});
+  return ParameterPack<Series>(std::move(blocks));
+}
+
+inline ParameterPack<Series> pack_to_complex_(const ParameterPack<Series>& pack, const ComplexLayout& layout) {
+  if (pack.size() == 0) return pack;
+  std::vector<ParameterPack<Series>::Block> blocks;
+  std::size_t i = 0;
+  for (const auto& b : pack.blocks()) {
+    blocks.push_back({b.name, i < layout.complex.size() && layout.complex[i] ? view_as_complex_(b.value, layout.dtype[i]) : b.value});
+    ++i;
+  }
+  return ParameterPack<Series>(std::move(blocks));
+}
+
+inline ParameterPack<Trace> trace_pack_to_complex_(const ParameterPack<Trace>& pack, const ComplexLayout& layout) {
+  std::vector<ParameterPack<Trace>::Block> blocks;
+  std::size_t i = 0;
+  for (const auto& b : pack.blocks()) {
+    blocks.push_back({b.name, i < layout.complex.size() && layout.complex[i] ? Trace(view_as_complex_(b.value.value(), layout.dtype[i])) : b.value});
+    ++i;
+  }
+  return ParameterPack<Trace>(std::move(blocks));
+}
+
+enum class ComplexResidual : std::uint8_t { MustBeReal, ExpandToRealAndImaginary };
+
+inline TraceCallback complex_trace_callback_(const TraceCallback& callback, const ComplexLayout& layout, ComplexResidual kind, const char* what) {
+  if (!callback) return callback;
+  return TraceCallback(TraceCallback::Base([callback, layout, kind, what](const ParameterPack<Trace>& p) -> Trace {
+    Trace out = callback(trace_pack_to_complex_(p, layout));
+    const Series v = out.value();
+    if (!v.dtype().is_complex()) return out;
+    if (kind == ComplexResidual::MustBeReal) {
+      ::pluss::throw_error(std::string("optim::optima: the ") + what + " must be real-valued when the parameters are complex (take abs, real or imag of it)");
+    }
+    return Trace(view_as_real_(v).reshape({v.numel() * 2}));
+  }));
+}
+
+inline void check_complex_problem_(const ConstrainedProblem& problem, const ComplexLayout& layout) {
+  const auto is_complex_block = [&](const std::string& name) -> bool {
+    for (std::size_t i = 0; i < layout.names.size(); ++i) {
+      if (layout.names[i] == name) return static_cast<bool>(layout.complex[i]);
+    }
+    return false;
+  };
+  for (const auto* bound : {&problem.bounds.lower, &problem.bounds.upper}) {
+    if (!bound->has_value()) continue;
+    for (const auto& b : (*bound)->blocks()) {
+      if (is_complex_block(b.name)) {
+        ::pluss::throw_error("optim::optima: bounds on the complex parameter '" + b.name + "' are not supported: there is no ordering on the complex numbers (bound its real and imaginary parts as separate real parameters, or constrain abs(z))");
+      }
+    }
+  }
+  if (!problem.linear.empty()) {
+    ::pluss::throw_error("optim::optima: linear constraints are not supported when a parameter is complex (the matrix would act on the real and imaginary parts at once); write the constraint as a nonlinear equality or inequality");
+  }
+  if (problem.nonlinear.analytic) {
+    ::pluss::throw_error("optim::optima: analytic constraint Jacobians are not supported when a parameter is complex; give the constraints as callbacks and they are differentiated");
+  }
+}
+
+inline OptimaOptions complex_options_(const OptimaOptions& options, const ComplexLayout& layout) {
+  OptimaOptions out = options;
+  const auto wrap = [&](std::function<bool(const OptimaProgressSnapshot&)>& hook) {
+    if (!hook) return;
+    hook = [user = hook, layout](const OptimaProgressSnapshot& snapshot) {
+      OptimaProgressSnapshot s = snapshot;
+      s.params = pack_to_complex_(snapshot.params, layout);
+      s.evaluation.gradient = pack_to_complex_(snapshot.evaluation.gradient, layout);
+      return user(s);
+    };
+  };
+  wrap(out.progress_hook);
+  wrap(out.penalty.progress_hook);
+  wrap(out.sequential_qp.progress_hook);
+  wrap(out.working_set.progress_hook);
+  wrap(out.internal_protocol.progress_hook);
+  return out;
+}
+
+}  // namespace detail
+
+inline OptimaState optima(const ConstrainedProblem& problem,
+                          const ParameterPack<Series>& initial_params,
+                          const OptimaOptions& options = {}) {
+  const detail::ComplexLayout layout = detail::complex_layout_(initial_params);
+  if (!layout.any()) return optima_core_(problem, initial_params, options);
+
+  detail::check_complex_problem_(problem, layout);
+  ConstrainedProblem real_problem = problem;
+  real_problem.objective.autodiff = detail::complex_trace_callback_(problem.objective.autodiff, layout, detail::ComplexResidual::MustBeReal, "objective");
+  if (problem.objective.analytic) {
+    real_problem.objective.analytic = [f = problem.objective.analytic, layout](const ParameterPack<Series>& p) -> std::pair<Series, ParameterPack<Series>> {
+      auto [value, gradient] = f(detail::pack_to_complex_(p, layout));
+      if (value.dtype().is_complex()) {
+        ::pluss::throw_error("optim::optima: the objective must be real-valued when the parameters are complex (take abs, real or imag of it)");
+      }
+      return {std::move(value), detail::pack_to_real_(gradient)};
+    };
+  }
+  real_problem.nonlinear.equality = detail::complex_trace_callback_(problem.nonlinear.equality, layout, detail::ComplexResidual::ExpandToRealAndImaginary, "equality constraint");
+  real_problem.nonlinear.inequality = detail::complex_trace_callback_(problem.nonlinear.inequality, layout, detail::ComplexResidual::MustBeReal, "inequality constraint");
+
+  // The solver reports an exception inside a callback as a failed evaluation, so the dtype of the objective and of
+  // the inequality residual is checked once here, where it can be reported as what it is.
+  {
+    std::vector<ParameterPack<detail::Trace>::Block> trace_blocks;
+    for (const auto& b : initial_params.blocks()) trace_blocks.push_back({b.name, detail::Trace(b.value)});
+    const ParameterPack<detail::Trace> at_start(std::move(trace_blocks));
+    if (problem.objective.autodiff && problem.objective.autodiff(at_start).value().dtype().is_complex()) {
+      ::pluss::throw_error("optim::optima: the objective must be real-valued when the parameters are complex (take abs, real or imag of it)");
+    }
+    if (problem.nonlinear.inequality && problem.nonlinear.inequality(at_start).value().dtype().is_complex()) {
+      ::pluss::throw_error("optim::optima: the inequality constraint must be real-valued when the parameters are complex (take abs, real or imag of it)");
+    }
+  }
+  OptimaState state = optima_core_(real_problem, detail::pack_to_real_(initial_params), detail::complex_options_(options, layout));
+  state.params = detail::pack_to_complex_(state.params, layout);
+  state.evaluation.gradient = detail::pack_to_complex_(state.evaluation.gradient, layout);
+  if (state.best_feasible.has_value()) state.best_feasible->params = detail::pack_to_complex_(state.best_feasible->params, layout);
+  return state;
 }
 
 inline OptimaState optima(const ConstrainedProblem& problem,
@@ -9674,64 +9889,6 @@ inline OptimaState optima(
   problem.bounds = constraints.bounds;
   return optima(problem, pack_series(initial_params), options);
 }
-
-namespace detail {
-
-inline bool is_complex_(const Series& x) {
-  return x.defined() && x.dtype().is_complex();
-}
-
-// Pluss's counterpart to torch's `torch.view_as_real`: reinterpret a
-// complex Series as a real one with a NEW trailing dimension of size 2
-// (index 0 = real part, index 1 = imaginary part), so `adam_step_inplace`'s
-// existing (already real-dtype-correct) formula runs completely unchanged
-// and applies independently to the real and imaginary channels -- torch's
-// own approach for complex parameters (`_view_as_real` in
-// torch/optim/optimizer.py, applied to param/grad/exp_avg/exp_avg_sq/
-// max_exp_avg_sqs before the ordinary real update in torch/optim/adam.py):
-// a complex gradient's second-moment estimate needs real(g)^2 and imag(g)^2
-// tracked SEPARATELY -- not |g|^2, which mixes them, and not g^2 (what
-// `adam_step_inplace` computed pre-fix), which is itself complex and does
-// not match torch's actual numeric convention. Mirrors
-// `pluss::ai::nn::optim::Optimizer::view_as_real_` in
-// PlussAI/NodeK/NN/optim/optim_base.h exactly (same architecture,
-// oracle-verified there against live torch numbers) -- see that file's own
-// comment for the full derivation, including why no single intermediate
-// fix (e.g. `.square()` -> `.abs2()`) can replicate this: complex DIVISION
-// mixes real/imaginary components, so the whole formula must run twice.
-//
-// Real (non-complex) input passes through unchanged, so call sites don't
-// need to branch. UNLIKE torch's `view_as_real` (a true zero-copy view),
-// this is a COPY -- CodeM has no reinterpret-cast-dtype view primitive
-// (same known, deliberately out-of-scope limitation noted in optim_base.h).
-inline Series view_as_real_(const Series& x) {
-  if (!is_complex_(x)) return x;
-  const Series re = x.real();
-  const Series im = x.imag();
-  return re.pile(std::vector<Series>{im}, re.dim());
-}
-
-// Inverse of view_as_real_: given a real Series shaped [..., 2] (as
-// produced by view_as_real_) and the ORIGINAL complex dtype, reconstruct
-// the complex Series. `original_dtype` not being complex means the value
-// was never converted in the first place -- returns it unchanged. An
-// undefined input (e.g. an AMSGrad max_v buffer nobody has written to yet
-// on a fresh, never-stepped state) passes through unchanged too, matching
-// view_as_real_'s own symmetry.
-inline Series view_as_complex_(const Series& real_view, ScalarType original_dtype) {
-  if (!real_view.defined()) return real_view;
-  if (!pluss::codem::dtype_of(original_dtype).is_complex()) return real_view;
-  const std::int64_t last = real_view.dim() - 1;
-  const Series re = real_view.select(last, 0);
-  const Series im = real_view.select(last, 1);
-  const Series i_unit =
-      pluss::make_series(std::vector<std::complex<double>>{{0.0, 1.0}}, {})
-          .to(original_dtype)
-          .to(re.platform());
-  return re.to(original_dtype).add(im.to(original_dtype).mul(i_unit));
-}
-
-} // namespace detail
 
 struct AdamOptions {
   double learning_rate{1e-3};
@@ -9881,11 +10038,7 @@ struct SeptimaOptions {
     std::int64_t max_line_search_iterations{25};
     double tolerance_change{1e-9};
     double wolfe_c1{1e-4};
-    // Kept for API/ABI compatibility; no longer read by the StrongWolfe line search itself
-    // (Armijo alone is now the acceptance criterion -- see the long comment at that call site
-    // for why backtracking cannot reliably enforce the strong-Wolfe curvature condition, and why
-    // it isn't needed here: update_lbfgs_history_ already applies its own independent curvature
-    // skip, lbfgs_curvature_ok_, before adding any pair to the LBFGS history).
+    // Curvature constant of the StrongWolfe line search: a step is accepted when |phi'(a)| <= wolfe_c2 * |phi'(0)|.
     double wolfe_c2{0.9};
     LbfgsLineSearch line_search{LbfgsLineSearch::None};
   };
@@ -10016,7 +10169,7 @@ inline bool IterReport::operator()(const SeptimaProgressSnapshot& snapshot) cons
     os_->flags(flags);
     os_->precision(old_precision);
   }
-  return true;
+  return false;
 }
 
 }  // namespace reports
@@ -10792,8 +10945,7 @@ inline double septima_step_inplace_(std::vector<Series>& params,
     // backtracking search on the augmented value is used whenever they are present.
     const bool penalized = options.enable_constraint_autodiff && (constraints.equalities || constraints.inequalities) &&
                            objective_trace != nullptr;
-    const double descent_floor = penalized ? 0.0 : options.lbfgs.tolerance_change;
-    const bool no_descent = !(gtd < -descent_floor);
+    const bool no_descent = !(gtd < 0.0);
     if (no_descent) {
       accepted = true;
       step_inf_norm = 0.0;
@@ -10847,7 +10999,118 @@ inline double septima_step_inplace_(std::vector<Series>& params,
       double best_objective = base_objective;
       std::vector<Series> best_params;
 
-      for (std::int64_t ls = 0; ls < ls_iters; ++ls) {
+      auto commit_ = [&](std::vector<Series> next_params) {
+        params = std::move(next_params);
+        state.lbfgs_s_history = next_s_history;
+        state.lbfgs_y_history = next_y_history;
+        state.lbfgs_prev_grad_flat = flat_grad;
+        const Series next_flat = septima_flatten_values_(params).to(flat_params.platform());
+        state.lbfgs_prev_step_flat = next_flat.sub(flat_params);
+        step_inf_norm = septima_max_abs_(state.lbfgs_prev_step_flat);
+        accepted = true;
+      };
+
+      if (options.lbfgs.line_search == SeptimaOptions::LbfgsLineSearch::StrongWolfe) {
+        // Strong-Wolfe line search by bracketing and zoom (Nocedal & Wright, Algorithms 3.5 and 3.6). Unlike the
+        // backtracking search below it enforces the curvature condition |phi'(a)| <= c2 |phi'(0)| by also trying
+        // LONGER steps: a step that is still descending steeply is expanded, and a bracket around an acceptable step is
+        // then narrowed by interpolation. A trial that is non-finite counts as too long. If the evaluation budget runs
+        // out, the best step that satisfied sufficient decrease is taken, so a run never stalls where plain backtracking
+        // would have moved.
+        struct Trial {
+          double a{0.0};
+          double f{std::numeric_limits<double>::infinity()};
+          double dphi{0.0};
+          bool ok{false};
+          std::vector<Series> params{};
+        };
+        const double c1 = options.lbfgs.wolfe_c1;
+        const double c2 = options.lbfgs.wolfe_c2;
+        const double max_step = std::max(step_size, 1.0) * 1e3;
+        auto evaluate_ = [&](double a) {
+          Trial t;
+          t.a = a;
+          auto trial_params = septima_unflatten_values_(flat_params.add(direction.mul(a)), params_layout);
+          if (options.project_bounds) septima_project_bounds_(trial_params, constraints);
+          if (!septima_finite_(trial_params)) return t;
+          const auto [trial_value, trial_grads] = septima_augmented_value_grad_(
+              *objective_trace, trial_params, state, options, constraints);
+          if (function_evaluations) ++(*function_evaluations);
+          const bool defined =
+              std::all_of(trial_grads.begin(), trial_grads.end(), [](const Series& g) { return g.defined(); });
+          if (!septima_finite_(trial_value) || !defined || !septima_finite_(trial_grads)) return t;
+          t.f = trial_value.item<double>();
+          t.dphi = series_dot_(septima_flatten_values_(trial_grads).to(flat_params.platform()), direction);
+          t.ok = std::isfinite(t.f) && std::isfinite(t.dphi);
+          t.params = std::move(trial_params);
+          return t;
+        };
+        auto sufficient_ = [&](const Trial& t) { return t.ok && t.f <= base_objective + c1 * t.a * gtd; };
+        auto curvature_ = [&](const Trial& t) { return std::fabs(t.dphi) <= -c2 * gtd; };
+
+        Trial lo;  // the best step so far that satisfies sufficient decrease (a == 0: the start)
+        lo.f = base_objective;
+        lo.dphi = gtd;
+        lo.ok = true;
+        Trial hi;
+        bool bracketed = false;
+        bool found = false;
+        Trial wolfe;
+        std::int64_t used = 0;
+
+        double a = step_size;
+        for (; used < ls_iters && !bracketed && !found; ++used) {
+          Trial t = evaluate_(a);
+          if (!sufficient_(t) || (lo.a > 0.0 && t.f >= lo.f)) {
+            hi = std::move(t);
+            bracketed = true;
+          } else if (curvature_(t)) {
+            wolfe = std::move(t);
+            found = true;
+          } else if (t.dphi >= 0.0) {
+            hi = std::move(lo);
+            lo = std::move(t);
+            bracketed = true;
+          } else {
+            lo = std::move(t);
+            a = std::min(2.0 * a, max_step);
+            if (lo.a >= max_step) break;
+          }
+        }
+        for (; used < ls_iters && bracketed && !found; ++used) {
+          // Quadratic interpolation through lo's value and slope and hi's value, safeguarded into the interior of the
+          // bracket; bisection when hi has no usable value.
+          double a_j = 0.5 * (lo.a + hi.a);
+          if (hi.ok) {
+            const double width = hi.a - lo.a;
+            const double denom = 2.0 * (hi.f - lo.f - lo.dphi * width);
+            if (denom != 0.0) {
+              const double cand = lo.a - lo.dphi * width * width / denom;
+              const double lower = std::min(lo.a, hi.a) + 0.1 * std::fabs(width);
+              const double upper = std::max(lo.a, hi.a) - 0.1 * std::fabs(width);
+              if (std::isfinite(cand) && cand >= lower && cand <= upper) a_j = cand;
+            }
+          }
+          Trial t = evaluate_(a_j);
+          if (!sufficient_(t) || t.f >= lo.f) {
+            hi = std::move(t);
+          } else if (curvature_(t)) {
+            wolfe = std::move(t);
+            found = true;
+          } else {
+            if (t.dphi * (hi.a - lo.a) >= 0.0) hi = lo;
+            lo = std::move(t);
+          }
+          if (std::fabs(hi.a - lo.a) * septima_max_abs_(direction) <= options.lbfgs.tolerance_change * 1e-3) break;
+        }
+        if (found) {
+          commit_(std::move(wolfe.params));
+        } else if (lo.a > 0.0) {
+          commit_(std::move(lo.params));
+        }
+      }
+
+      for (std::int64_t ls = 0; !accepted && ls < ls_iters; ++ls) {
         const Series trial_flat = flat_params.add(direction.mul(step_size));
         auto trial_params = septima_unflatten_values_(trial_flat, params_layout);
         if (options.project_bounds) {
@@ -11179,7 +11442,7 @@ inline SeptimaResult septima_trace_(const SeptimaObjectiveTraceFn& objective_tra
     snapshot.step_inf_norm = out.step_inf_norm;
     snapshot.constraint_violation = out.constraint_violation;
     snapshot.message = out.message;
-    if (solve_options.progress_hook && !solve_options.progress_hook(snapshot)) {
+    if (solve_options.progress_hook && solve_options.progress_hook(snapshot)) {
       out.exit_flag = SeptimaExitFlag::Stopped;
       out.message = "stopped by progress hook";
     }

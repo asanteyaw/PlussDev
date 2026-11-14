@@ -1,0 +1,65 @@
+# `thermal::mesh`
+
+Divides a layered plane wall into a thermal network.
+
+## Signature
+
+```cpp
+thermal::Slab thermal::mesh(const thermal::Layers& layers,
+                         const Series& area);
+```
+
+## What It Does
+
+Compiles a layered wall into a one-dimensional finite-volume network. Each layer is cut into `cells[l]` equal cells; the cell capacity is `rho c dx A`, the conductance between two cell centres is the series of two half-cell conductances `2 k A / dx`, and the half-cells at the faces connect the cell next to a face to the surface node. The scheme is second order in space.
+
+## Parameters
+
+`layers`
+: The layers, inner face first.
+
+`area`
+: The wall area in m^2, positive, with the batch shape of the layer arrays (scalar when there is none).
+
+## Returns
+
+A `Slab`.
+
+## Errors
+
+Throws `pluss::Error` for a value that is not positive or not finite, for arrays that do not have one entry per layer, and for a layer with no cells.
+
+## Interpretation and Use
+
+Use a mesh when the Biot number is above about `0.1`, for composite walls with storage, and for the diffusion of a temperature step. Check convergence by doubling the cells.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The mesh of a two-layer wall.
+
+@@example Eng/api/thermal_mesh_layers.cpp@@
+
+### Example 2
+
+The steady flux does not depend on the division.
+
+@@example Eng/api/thermal_mesh_steady.cpp@@
+
+### Example 3
+
+A temperature step diffusing into a slab.
+
+@@example Eng/api/thermal_mesh_transient.cpp@@
+
+### Example 4
+
+Rejected descriptions.
+
+@@example Eng/api/thermal_mesh_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

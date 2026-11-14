@@ -7,6 +7,7 @@
 #include <string>
 
 namespace pluss::subsp::math::finance::pricing {
+using namespace detail;
 namespace {
 
 using pluss::Config;
@@ -197,7 +198,7 @@ Series maturity_vector_(const Series& spot, double maturity, Config cfg, const c
 
 } // namespace
 
-double black_scholes_price(OptionType type,
+double detail::black_scholes_price(OptionType type,
                            double spot,
                            double strike,
                            double rate,
@@ -221,7 +222,7 @@ double black_scholes_price(OptionType type,
   return core.price.host<double>().front();
 }
 
-Series black_scholes_price(OptionType type,
+Series detail::black_scholes_price(OptionType type,
                            const Series& spot,
                            double strike,
                            double rate,
@@ -242,7 +243,7 @@ Series black_scholes_price(OptionType type,
   return core.price.to(out_cfg.platform, out_cfg.dtype);
 }
 
-Series black_scholes_price(OptionType type,
+Series detail::black_scholes_price(OptionType type,
                            const Series& spot,
                            const Series& time_to_maturity,
                            double strike,
@@ -256,7 +257,7 @@ Series black_scholes_price(OptionType type,
   return core.price.to(out_cfg.platform, out_cfg.dtype);
 }
 
-BlackScholesGreeks black_scholes_greeks(OptionType type,
+BlackScholesGreeks detail::black_scholes_greeks(OptionType type,
                                         double spot,
                                         double strike,
                                         double rate,
@@ -286,7 +287,7 @@ BlackScholesGreeks black_scholes_greeks(OptionType type,
   };
 }
 
-BlackScholesSeriesGreeks black_scholes_greeks(OptionType type,
+BlackScholesSeriesGreeks detail::black_scholes_greeks(OptionType type,
                                               const Series& spot,
                                               double strike,
                                               double rate,
@@ -313,7 +314,7 @@ BlackScholesSeriesGreeks black_scholes_greeks(OptionType type,
   };
 }
 
-BlackScholesSeriesGreeks black_scholes_greeks(OptionType type,
+BlackScholesSeriesGreeks detail::black_scholes_greeks(OptionType type,
                                               const Series& spot,
                                               const Series& time_to_maturity,
                                               double strike,
@@ -333,7 +334,7 @@ BlackScholesSeriesGreeks black_scholes_greeks(OptionType type,
   };
 }
 
-double black_scholes_delta(OptionType type,
+double detail::black_scholes_delta(OptionType type,
                            double spot,
                            double strike,
                            double rate,
@@ -343,7 +344,7 @@ double black_scholes_delta(OptionType type,
   return black_scholes_greeks(type, spot, strike, rate, dividend_yield, maturity, volatility).delta;
 }
 
-double black_scholes_gamma(double spot,
+double detail::black_scholes_gamma(double spot,
                            double strike,
                            double rate,
                            double dividend_yield,
@@ -354,7 +355,7 @@ double black_scholes_gamma(double spot,
       .gamma;
 }
 
-double black_scholes_vega(double spot,
+double detail::black_scholes_vega(double spot,
                           double strike,
                           double rate,
                           double dividend_yield,
@@ -365,7 +366,7 @@ double black_scholes_vega(double spot,
       .vega;
 }
 
-double black_scholes_theta(OptionType type,
+double detail::black_scholes_theta(OptionType type,
                            double spot,
                            double strike,
                            double rate,
@@ -375,7 +376,7 @@ double black_scholes_theta(OptionType type,
   return black_scholes_greeks(type, spot, strike, rate, dividend_yield, maturity, volatility).theta;
 }
 
-double black_scholes_rho(OptionType type,
+double detail::black_scholes_rho(OptionType type,
                          double spot,
                          double strike,
                          double rate,

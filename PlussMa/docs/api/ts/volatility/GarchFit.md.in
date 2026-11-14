@@ -261,3 +261,20 @@ int main() {
 ## Changelog
 
 - **0.1** — Initial documented surface.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Garch11Options.html">
+    <span class="label">Previous</span>
+    <span class="title">Garch11Options</span>
+  </a>
+  <a class="next-link" href="GarchOptions.html">
+    <span class="label">Next</span>
+    <span class="title">GarchOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

@@ -1,0 +1,69 @@
+# `power::Measurements`
+
+A set of measurements with their values and accuracies.
+
+## Signature
+
+```cpp
+power::Measurements
+```
+
+## What It Does
+
+The data of one estimation: which quantity each measurement is, where it was taken, its value and its standard deviation. The values and standard deviations may carry leading scenario axes.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `kind` | The `MeasureKind` of each measurement. | required |
+| `index` | The bus or line each measurement belongs to. | required |
+| `value` | The measured values, `[..., measurement]`; angles in radians and powers per unit. | required |
+| `stddev` | The standard deviation of each value, `[..., measurement]`; strictly positive. | required |
+
+## Returns
+
+A value; validated by `estimate`.
+
+## Errors
+
+Fewer measurements than unknowns, a non-positive standard deviation, an index outside its family, or unequal lengths are rejected.
+
+## Interpretation and Use
+
+The estimate trusts a measurement in inverse proportion to its standard deviation, so give the real accuracy of each instrument. The measurements may be listed in any order.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Ten measurements of a three-bus network.
+
+@@example Eng/api/power_est_state.cpp@@
+
+### Example 2
+
+A gross error added to one value.
+
+@@example Eng/api/power_est_residuals.cpp@@
+
+### Example 3
+
+Refused measurement sets.
+
+@@example Eng/api/power_est_pitfalls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MeasureKind.html">
+    <span class="label">Previous</span>
+    <span class="title">MeasureKind</span>
+  </a>
+  <a class="next-link" href="EstimateOptions.html">
+    <span class="label">Next</span>
+    <span class="title">EstimateOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

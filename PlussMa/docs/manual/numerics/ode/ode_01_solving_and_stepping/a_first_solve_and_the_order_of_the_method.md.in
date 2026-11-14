@@ -6,3 +6,12 @@
 @@example Numerical/ode/guide/701_first_ode.cpp@@
 
 Doubling the steps divides the error by about 16, the signature of a fourth-order method: error ∝ h⁴. The ratio drifts from 19 toward 16 as the steps get small enough for the asymptotic behaviour to set in. Use this halving test on any solver and any problem to confirm you are in the regime where the error estimate means what it says.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="letting_the_solver_choose_the_steps.html">
+    <span class="label">Next</span>
+    <span class="title">Letting the solver choose the steps</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

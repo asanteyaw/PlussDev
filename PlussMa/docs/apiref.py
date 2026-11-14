@@ -32,6 +32,7 @@ Standard library only.
 from __future__ import annotations
 
 import argparse
+import os
 import hashlib
 import json
 import re
@@ -634,6 +635,31 @@ def cmd_wire(args: argparse.Namespace) -> int:
             new = _replace_block(mp.read_text(encoding="utf-8"), NAV_START, NAV_END, _nav(prev, nxt))
             apply(mp, new, f"{stem}/{child}.md")
 
+    # Family-level types and free functions are also a reading sequence. Give
+    # every symbol page named previous/next controls; method pages keep their
+    # tighter object-local sequence above.
+    for fam in m.families:
+        if args.family and not fam.path.startswith(args.family):
+            continue
+        seq = [s for s in m.symbols if s.family == fam.path]
+        order = {Path(ref).name: i for i, ref in enumerate(fam.children)}
+        seq.sort(key=lambda s: order.get(Path(s.page).stem, len(order)))
+        for i, sym in enumerate(seq):
+            page = DOCS / sym.page
+            if not page.exists():
+                continue
+            prev = None
+            nxt = None
+            if i:
+                prev_sym = seq[i - 1]
+                prev = (Path(prev_sym.page).stem, prev_sym.name)
+            if i + 1 < len(seq):
+                next_sym = seq[i + 1]
+                nxt = (Path(next_sym.page).stem, next_sym.name)
+            new = _replace_block(page.read_text(encoding="utf-8"),
+                                 NAV_START, NAV_END, _nav(prev, nxt))
+            apply(page, new, sym.page)
+
     if not args.check:
         _write_nav(m)
 
@@ -752,6 +778,86 @@ def _all_manifest_paths() -> list[Path]:
         else [MANIFEST, *found]
 
 
+TOPICS = DOCS / "apiref_topics.toml"
+TOPICS_START = "<!-- topics:start -->"
+TOPICS_END = "<!-- topics:end -->"
+
+
+def load_topics() -> list[dict]:
+    """The ordered topic registry (apiref_topics.toml)."""
+    data = tomllib.loads(TOPICS.read_text(encoding="utf-8"))
+    return list(data.get("topic", []))
+
+
+def _rel_from(base_dir: str, target: str) -> str:
+    """`target` (docs-root relative) as a link relative to the page in `base_dir`."""
+    return os.path.relpath(target, base_dir or ".").replace(os.sep, "/")
+
+
+def _write_if_changed(path: Path, text: str) -> None:
+    old = path.read_text(encoding="utf-8") if path.exists() else None
+    if old != text:
+        path.write_text(text, encoding="utf-8")
+        print(f"  rewrote {path.relative_to(DOCS)}")
+
+
+def write_landings(topics: list[dict]) -> None:
+    """Generate the User Guide and API Reference landing pages and the home-page cards.
+
+    One registry, three views: the lists can never disagree about which topics exist, their
+    order, or which section is still missing.
+    """
+    def row(t: dict, own: str, other: str, base: str, other_label: str) -> str:
+        own_link = f"[{t['title']}]({_rel_from(base, t[own])})" if t.get(own) else f"{t['title']}"
+        other_cell = f"[{other_label}]({_rel_from(base, t[other])})" if t.get(other) else "*coming*"
+        covers = t["summary"] if t.get(own) else f"{t['summary']} *(coming)*"
+        return f"| {own_link} | {covers} | {other_cell} |"
+
+    guide_rows = [row(t, "guide", "reference", "manual", "API reference") for t in topics]
+    ref_rows = [row(t, "reference", "guide", "", "User guide") for t in topics]
+    guide_refs = [_rel_from("manual", t["guide"])[:-3] for t in topics if t.get("guide")]
+    ref_refs = [t["reference"][:-3] for t in topics if t.get("reference")]
+
+    guide = "\n".join([
+        "# User Guide", "",
+        "Task-oriented guides to PlussMa, one per topic. Each guide is a short series of complete programs "
+        "whose printed output is the real output of the program, with the reasoning around them. "
+        "Every function, type and option the guides use has its own page in the "
+        "[API Reference](../api_reference.md), and the guides link to it.", "",
+        "| Topic | What it covers | Reference |", "|---|---|---|", *guide_rows, "",
+        "```{toctree}", ":maxdepth: 3", ":hidden:", "", *guide_refs, "```", ""])
+    ref = "\n".join([
+        "# API Reference", "",
+        "One page per function, method, enumeration and options structure, grouped by topic. "
+        "Every page states the signature, what the call does, every parameter, what it returns "
+        "and what it refuses, and shows complete programs with real output. "
+        "For the reasoning and worked problems, each topic has a matching "
+        "[User Guide](manual/index.md); the reference links to it and it links back.", "",
+        "| Topic | What it covers | Guide |", "|---|---|---|", *ref_rows, "",
+        "```{toctree}", ":maxdepth: 4", ":hidden:", "", *ref_refs, "```", ""])
+    _write_if_changed(DOCS / "manual" / "index.md", guide)
+    _write_if_changed(DOCS / "api_reference.md", ref)
+
+    cards = []
+    for t in topics:
+        def link(key: str, label: str) -> str:
+            if t.get(key):
+                return f'<a href="{t[key][:-3]}.html">{label}</a>'
+            return f'<span class="pluss-soon">{label} (coming)</span>'
+        cards.append("\n".join([
+            '<div class="pluss-card">',
+            f'<span class="card-name">{t["title"]}</span>',
+            f'<span class="card-model">{t.get("code", t["slug"])}</span>',
+            f'<p class="card-desc">{t["summary"]}</p>',
+            f'{link("guide", "User Guide")} &middot; {link("reference", "API Reference")}',
+            "</div>", ""]))
+    home = DOCS / "index.md"
+    text = home.read_text(encoding="utf-8")
+    if TOPICS_START in text:
+        new = _replace_block(text, TOPICS_START, TOPICS_END, "\n" + "\n".join(cards))
+        _write_if_changed(home, new)
+
+
 def _write_nav(m: Manifest) -> None:
     # The bundle carries one nav tree per framework manifest; the sidebar
     # renderer picks the block whose pages match the current URL. The
@@ -777,6 +883,13 @@ def _write_nav(m: Manifest) -> None:
         except Exception as exc:  # a half-written sibling manifest must not break wire
             print(f"  ! skipped {mp.name}: {exc}")
 
+    topics = load_topics()
+    write_landings(topics)
+    topics_js = [{"slug": t["slug"], "title": t["title"],
+                  "guide": (t["guide"][:-3] + ".html") if t.get("guide") else "",
+                  "reference": (t["reference"][:-3] + ".html") if t.get("reference") else ""}
+                 for t in topics]
+
     css = NAV_STYLES.read_text(encoding="utf-8") if NAV_STYLES.exists() else ""
     renderer = NAV_RENDERER.read_text(encoding="utf-8") if NAV_RENDERER.exists() else ""
     css_js = json.dumps(css)  # safe string literal for the <style> injector
@@ -785,6 +898,7 @@ def _write_nav(m: Manifest) -> None:
         "apiref_assets/. Do not edit. */\n"
         "window.APIREF_NAV = " + json.dumps(primary, indent=2) + ";\n\n"
         "window.APIREF_NAV_ALL = " + json.dumps(blocks, indent=2) + ";\n\n"
+        "window.PLUSS_TOPICS = " + json.dumps(topics_js, indent=2) + ";\n\n"
         "(function () {\n"
         "  try {\n"
         "    var s = document.createElement('style');\n"
@@ -898,7 +1012,7 @@ def cmd_lint(args: argparse.Namespace) -> int:
                              f"-- show public callable declarations, not a pasted body")
                 break
 
-    def check_examples(rel: str, text: str) -> None:
+    def check_examples(rel: str, text: str, sym: Symbol | None = None) -> None:
         mobj = re.search(r"##\s+Practical Examples\b(.*?)(?:\n##\s|\Z)", text, re.S)
         if not mobj:
             probs.append(f"{rel}: no ## Practical Examples section")
@@ -910,8 +1024,15 @@ def cmd_lint(args: argparse.Namespace) -> int:
             verifier_path = REPO_ROOT / verifier.group(1).strip()
             if not verifier_path.is_file():
                 probs.append(f"{rel}: verifier source does not exist: {verifier_path}")
-        if len(blocks) < 1:
-            probs.append(f"{rel}: no example under ## Practical Examples")
+        minimum = max(
+            sym.min_examples if sym else 1,
+            int(m.fw_extra.get("min_examples", 1)),
+        )
+        if len(blocks) < minimum:
+            probs.append(
+                f"{rel}: has {len(blocks)} practical example(s); "
+                f"this API requires at least {minimum}"
+            )
         for i, blk in enumerate(blocks, 1):
             if not verifier and "int main(" not in blk:
                 probs.append(f"{rel}: Example {i} is not an end-to-end `int main()` program")
@@ -932,7 +1053,7 @@ def cmd_lint(args: argparse.Namespace) -> int:
 
         if kind in ("method", "function"):
             check_signature_discipline(rel, text)
-            check_examples(rel, text)
+            check_examples(rel, text, sym)
             # A parameter counts as documented if it is named anywhere the page
             # explains inputs -- a ## Parameters deflist, or a prose section such
             # as ## Input Shapes for methods with several (features, label) forms.

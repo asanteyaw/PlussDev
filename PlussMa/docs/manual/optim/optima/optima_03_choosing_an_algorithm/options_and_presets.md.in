@@ -38,3 +38,12 @@ The first run asked for at most 2 iterations on the wrong struct and ran 6 to co
 - **A change that does not change the path may still change the cost.** Asking for conjugate gradients changed how subproblems were solved (88 Krylov iterations against 0) but not the path; look at the work counters, not only the answer.
 
 Where next: [Chapter 4](../optima_04_sequential_qp.md) opens up the default algorithm, sequential QP.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="curvature_scaling_and_size.html">
+    <span class="label">Previous</span>
+    <span class="title">Curvature, scaling and size</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

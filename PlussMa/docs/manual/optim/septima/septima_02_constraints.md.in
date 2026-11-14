@@ -54,4 +54,10 @@ The multipliers are in `result.state.lambda_equalities` and `result.state.lambda
 - For a small problem with nonlinear constraints that must hold to high precision, Optima needs far fewer evaluations.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+septima_02_constraints/bounds_equalities_and_inequalities
+```
 <!-- apiref:toctree:end -->

@@ -1,0 +1,48 @@
+# Network model
+
+This branch describes a pipe network. A `Net` collects the `Nodes`, the `Tanks`, the `Pipes`, the `Pumps` and the `Valves`; `network` validates it with a `Liquid` and compiles an immutable `Network` that every analysis takes.
+
+## Choosing A Surface
+
+Write every quantity in SI units. Give every array its node, pipe, pump, valve or tank axis last, and add leading axes to describe a batch of scenarios. Every connected part of the network needs a reservoir or a tank.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+The smallest network, solved against the textbook formula.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 2
+
+Three demand scenarios in one call.
+
+@@example Eng/api/fluid_net_batch.cpp@@
+
+### Example 3
+
+Descriptions that are refused.
+
+@@example Eng/api/fluid_net_errors.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+model/NodeKind
+model/ValveKind
+model/Nodes
+model/Tanks
+model/Pipes
+model/Pumps
+model/Valves
+model/Net
+model/Liquid
+model/Network
+model/network_fn
+```
+<!-- apiref:toctree:end -->

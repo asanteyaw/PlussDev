@@ -138,6 +138,32 @@ TEST_CASE("custom operators use the same value type and capability contract",
   CHECK(close(transformed({x}), x.pow(4)));
 }
 
+TEST_CASE("a custom operator supplies its adjoint through define",
+          "[calculus][operator][custom][adjoint]") {
+  const auto double_it = [](const math::Function &input) { return input * 2.0; };
+  const math::Function f = square_function();
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0});
+
+  // Declaring adjoint_known without the adjoint operator cannot work, so it is refused.
+  CHECK_THROWS_AS(operators::define("example.double", double_it, operators::Options{.adjoint_known = true}), pluss::Error);
+
+  // Doubling is self-adjoint: pass itself (a scale) as the adjoint.
+  const operators::Operator doubled = operators::define(
+      "example.double", double_it, operators::Options{.linear = true}, operators::scale(2.0));
+  CHECK(doubled.capabilities().adjoint_known);
+  CHECK(close(operators::adjoint(doubled)(f)({x}), x.pow(2).mul(2.0)));
+
+  // Without an adjoint the operator reports none and adjoint() names it.
+  const operators::Operator plain = operators::define("example.plain", double_it);
+  CHECK_FALSE(plain.capabilities().adjoint_known);
+  CHECK_THROWS_AS(operators::adjoint(plain), pluss::Error);
+
+  // Inside a composition the supplied adjoint is used, in reversed order: (D . doubled)* = doubled* . D*.
+  const operators::Operator chain = operators::compose(operators::differential("x"), doubled);
+  CHECK(chain.capabilities().adjoint_known);
+  CHECK(close(operators::adjoint(chain)(f)({x}), operators::compose(operators::scale(2.0), operators::scale(-1.0))(operators::differential("x")(f))({x})));
+}
+
 TEST_CASE("custom operators own move-only callable state",
           "[calculus][operator][custom]") {
   auto factor = std::make_unique<double>(4.0);

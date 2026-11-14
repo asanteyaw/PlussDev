@@ -53,6 +53,9 @@ statistics.
 - [`pdf`](api/series-stat/pdf.md) gives local density.
 - [`logpdf`](api/series-stat/logpdf.md) gives log density.
 - [`cdf`](api/series-stat/cdf.md) gives accumulated lower-tail probability.
+- [`icdf`](api/series-stat/icdf.md) maps probabilities back to normal quantiles.
+  It is deliberately normal-only; use PlussMa `distr::icdf(...)` to select any
+  other distribution family explicitly.
 - [`logcdf`](api/series-stat/logcdf.md) preserves very small lower-tail values
   in log space.
 
@@ -101,6 +104,7 @@ differentiate with respect to both point tables.
 api/series-stat/cdf
 api/series-stat/cdist
 api/series-stat/center
+api/series-stat/icdf
 api/series-stat/kurtosis
 api/series-stat/logcdf
 api/series-stat/logpdf

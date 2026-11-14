@@ -38,6 +38,6 @@ int main() {
     o.relative_tolerance = 1e-10;
     const auto r = krylov::gmres(convection, b, {-1}, o);
     std::cout << std::left << std::setw(10) << restart << std::setw(14) << r.iterations << std::setw(12) << r.restarts << std::setw(20) << r.operator_evaluations << std::scientific
-              << std::setprecision(1) << r.relative_residual.item<double>() << "\n";
+              << std::setprecision(1) << r.relative_residual.squeeze().item<double>() << "\n";
   }
 }

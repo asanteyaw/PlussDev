@@ -6,7 +6,7 @@ When an integrand has no exact primitive in the rule table, the integral is kept
 
 ## What is computed
 
-The integral is evaluated by `integ::quadra`, the library's adaptive composite quadrature, with its default rule (Simpson's rule) starting from 257 nodes, doubling the number of nodes until the error estimate reaches the tolerance or ten refinements are used. The tolerance follows the precision of the argument:
+The integral is evaluated by `integ::quadra`, the library's adaptive composite quadrature, with an open Gauss–Legendre rule (the integrand is never evaluated at an end point, so an integrand that is undefined there, such as `sin(x)/x` at 0, can still be integrated), starting from 32 panels of 5 points and doubling the number of panels until the error estimate reaches the tolerance or ten refinements are used. The tolerance follows the precision of the argument:
 
 | Precision of the integrated variable's argument | Tolerance |
 |---|---|
@@ -52,7 +52,7 @@ int main() {
   const math::Function f = math::function({"x", "upper"}, [](math::Function x, math::Function upper) { return (-(x * upper).pow(2)).exp(); });
   const math::Function area = operators::integral("x", 0.0, 1.0)(f);
   const auto upper = pluss::make_series({0.5, 1.0, 1.5, 2.0});
-  out.writeln("batch of four:", area({upper}).pull<double>());
+  out.writeln("batch of four:", area({upper}).items<double>());
 }
 ```
 
@@ -94,3 +94,16 @@ The derivative of an unresolved integral is built from the integrand's derivativ
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="anchored_and_definite_integrals.html">
+    <span class="label">Previous</span>
+    <span class="title">Anchored and definite integrals</span>
+  </a>
+  <a class="next-link" href="parity_and_the_fundamental_theorem.html">
+    <span class="label">Next</span>
+    <span class="title">Parity and the fundamental theorem</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -175,3 +175,16 @@ Read down the rows: `radius 0.5` peaks on this grid at x = 0 (value 1.2732); `ra
 - [`Triangular`](../continuous_bounded/Triangular.md)
 - [`Normal`](../continuous_real_line/Normal.md)
 - [`Cosine`](../continuous_bounded/Cosine.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Quadratic.html">
+    <span class="label">Previous</span>
+    <span class="title">Quadratic</span>
+  </a>
+  <a class="next-link" href="Triangular.html">
+    <span class="label">Next</span>
+    <span class="title">Triangular</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

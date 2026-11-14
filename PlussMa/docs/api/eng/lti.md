@@ -2,7 +2,7 @@
 
 # Linear time-invariant systems
 
-The `pluss::ma::eng::lti` family describes systems whose dynamics are linear and do not change with absolute time. It supports complementary state-space and pole-zero representations, structural analysis, frequency response, and time-domain simulation.
+The `pluss::subsp::eng::lti` family describes systems whose dynamics are linear and do not change with absolute time. It supports complementary state-space and pole-zero representations, structural analysis, frequency response, and time-domain simulation.
 
 ## Branches
 

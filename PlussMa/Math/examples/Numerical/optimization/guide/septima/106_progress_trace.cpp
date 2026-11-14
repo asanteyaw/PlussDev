@@ -25,7 +25,7 @@ int main() {
       std::cout << std::setw(6) << s.iteration << std::scientific << std::setprecision(3) << "  objective " << s.objective << "  gradient "
                 << s.gradient_inf_norm << "  step " << s.step_inf_norm << "\n";
     if (first_below == 0 && s.objective < 0.01) first_below = s.iteration;
-    return true;
+    return false;
   };
   const auto r = optim::septima(rosenbrock, optim::pack_scalars({{"x", scalar(-1.2)}, {"y", scalar(1.0)}}), options);
   std::cout << "the objective first fell below 0.01 at iteration " << first_below << "; the run used " << r.iteration << " iterations\n";

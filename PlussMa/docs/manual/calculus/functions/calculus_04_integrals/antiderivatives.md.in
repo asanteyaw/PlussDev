@@ -96,10 +96,10 @@ int main() {
   const math::Function primitive = operators::antiderivative("x")(f);
   const auto x = pluss::make_series({0.5, 1.0, 2.0});
 
-  out.writeln("F(x)            ", primitive({x}).pull<double>());
-  out.writeln("x^4/4 - cos(x)  ", x.pow(4).div(4.0).sub(x.cos()).pull<double>());
-  out.writeln("F'(x)           ", operators::differential("x")(primitive)({x}).pull<double>());
-  out.writeln("f(x)            ", f({x}).pull<double>());
+  out.writeln("F(x)            ", primitive({x}).items<double>());
+  out.writeln("x^4/4 - cos(x)  ", x.pow(4).div(4.0).sub(x.cos()).items<double>());
+  out.writeln("F'(x)           ", operators::differential("x")(primitive)({x}).items<double>());
+  out.writeln("f(x)            ", f({x}).items<double>());
   out.writeln("provenance exact:", primitive.provenance() == math::Provenance::Structural ? "yes" : "no");
 }
 ```
@@ -138,3 +138,12 @@ The numerical primitive is anchored at 0 and agrees with the error function to a
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="anchored_and_definite_integrals.html">
+    <span class="label">Next</span>
+    <span class="title">Anchored and definite integrals</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

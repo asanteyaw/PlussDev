@@ -174,3 +174,16 @@ Read down the rows: `p 1.5` peaks on this grid at x = 1 (value 0.3333); `p 3` pe
 - [`Zeta`](../discrete/Zeta.md)
 - [`Geometric`](../discrete/Geometric.md)
 - [`Pareto`](../continuous_positive/Pareto.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Skellam.html">
+    <span class="label">Previous</span>
+    <span class="title">Skellam</span>
+  </a>
+  <a class="next-link" href="Zeta.html">
+    <span class="label">Next</span>
+    <span class="title">Zeta</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

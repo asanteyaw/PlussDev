@@ -20,7 +20,7 @@ The sampling region is the box `[lower_bounds, upper_bounds]` when bounds are gi
 ## Parameters
 
 `Fn &&objective`
-: A callable `Series -> Series` (real scalar) or `Series -> number`.
+: A callable `Series (Series)` (real scalar) or `Series -> number`.
 
 `const pluss::Series &initial`
 : The starting point; fixes the dimension and the sampling box when there are no bounds.

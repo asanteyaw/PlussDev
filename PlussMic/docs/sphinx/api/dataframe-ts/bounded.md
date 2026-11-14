@@ -24,7 +24,7 @@ deliberately excludes the current row.
 
 **bounds** (`const WindowBoundsFn&`)
 
-A callback `(std::int64_t size, const WindowOptions& options) -> pair<vector<int64_t>, vector<int64_t>>`
+A callback `pair<vector<int64_t>, vector<int64_t>> (std::int64_t size, const WindowOptions& options)`
 returning one `[start, end)` pair per row. Must not be empty.
 
 **statistic** (`WindowStatistic`, default `Mean`)

@@ -152,3 +152,12 @@ fewer than 8 observations are rejected
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="EgarchFit.html">
+    <span class="label">Next</span>
+    <span class="title">EgarchFit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

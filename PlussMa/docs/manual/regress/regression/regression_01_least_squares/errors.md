@@ -81,3 +81,12 @@ predict, empty result -> subsp::stats::regression::ols_predict: fit.coefficients
 ```
 
 Each of the twelve conditions in the table is rejected with the message quoted there, preceded by the qualified name of the function that raised it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="collinear_predictors.html">
+    <span class="label">Previous</span>
+    <span class="title">Collinear predictors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

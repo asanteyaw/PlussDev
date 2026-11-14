@@ -16,3 +16,12 @@ The result extends `OdeResult` with `triggered`, `t_final`, `event_value`, and `
 @@example Numerical/ode/guide/703_events.cpp@@
 
 The impact time and speed agree with the closed form to the printed digits, and the event value (the height) is zero to the refinement tolerance. Asking for a rising crossing, which never happens, returns `triggered = 0` and the state at `t1`: always check `triggered`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="a_stiff_linear_system.html">
+    <span class="label">Next</span>
+    <span class="title">A stiff linear system</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

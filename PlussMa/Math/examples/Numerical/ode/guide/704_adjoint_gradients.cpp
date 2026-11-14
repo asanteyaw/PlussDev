@@ -24,8 +24,8 @@ int main() {
     ode::OdeOptions o;
     o.steps = steps;
     const auto g = ode::fluxa_adjoint(decay, vec({y0}), 0.0, T, vec({th}), vec({1.0}), o);
-    std::cout << std::left << std::fixed << std::setprecision(8) << std::setw(8) << steps << std::setw(18) << g.grad_y0.item<double>() << std::setw(18)
-              << g.grad_theta.item<double>() << std::scientific << std::setprecision(1) << std::abs(g.grad_theta.item<double>() - dth) << "\n";
+    std::cout << std::left << std::fixed << std::setprecision(8) << std::setw(8) << steps << std::setw(18) << g.grad_y0.squeeze().item<double>() << std::setw(18)
+              << g.grad_theta.squeeze().item<double>() << std::scientific << std::setprecision(1) << std::abs(g.grad_theta.squeeze().item<double>() - dth) << "\n";
   }
   std::cout << "exact   " << std::fixed << std::setprecision(8) << std::setw(18) << dy0 << std::setw(18) << dth << "\n";
 }

@@ -39,3 +39,12 @@ An equality is harder than an inequality for a method that only compares values:
 - **Check feasibility yourself.** Recompute the constraints at the returned point.
 
 Where next: [Mesh methods and infeasible problems](mesh_methods_and_infeasible_problems.md) covers the other constrained solvers and what happens when no point is feasible.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="mesh_methods_and_infeasible_problems.html">
+    <span class="label">Next</span>
+    <span class="title">Mesh methods with constraints, and infeasible problems</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

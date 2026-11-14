@@ -1,0 +1,69 @@
+# `thermal::ntu`
+
+The transfer units a heat exchanger needs.
+
+## Signature
+
+```cpp
+Series thermal::ntu(const Series& effectiveness,
+                     const Series& cr,
+                     thermal::Flow flow);
+```
+
+## What It Does
+
+Inverts `eff`: returns the number of transfer units that gives the required effectiveness. Parallel, counter, shell-and-tube and boiling arrangements have closed-form inverses; cross flow is found by a bracketed root search over the whole batch. An effectiveness that the arrangement cannot reach is an error, not a large number.
+
+## Parameters
+
+`effectiveness`
+: The required effectiveness, not negative and below the limit of the arrangement.
+
+`cr`
+: The capacity ratio `Cmin / Cmax` in `[0, 1]`.
+
+`flow`
+: The flow arrangement.
+
+## Returns
+
+The number of transfer units with the broadcast shape of the inputs; `UA = NTU Cmin`.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array or not finite, a negative effectiveness, a `cr` outside `[0, 1]`, an effectiveness at or above 1, and an effectiveness above the limit of the arrangement: `1 / (1 + cr)` for parallel flow and `2 / (1 + cr + sqrt(1 + cr^2))` for shell-and-tube.
+
+## Interpretation and Use
+
+Use it to size an exchanger: pick the effectiveness you need, get `NTU`, multiply by `Cmin` for `UA`, then divide by `U` for the area.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Sizing for a required effectiveness, in four arrangements.
+
+@@example Eng/api/thermal_ntu_roundtrip.cpp@@
+
+### Example 2
+
+The limits of the arrangements.
+
+@@example Eng/api/thermal_ntu_limits.cpp@@
+
+### Example 3
+
+Cross flow by root search.
+
+@@example Eng/api/thermal_ntu_cross.cpp@@
+
+### Example 4
+
+Rejected inputs.
+
+@@example Eng/api/thermal_ntu_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

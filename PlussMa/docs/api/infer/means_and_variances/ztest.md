@@ -74,7 +74,7 @@ int main() {
 
   const auto r = hyp::ztest(a, 5.0, 0.5);
   std::cout << "mean " << r.mean << ", z " << r.stat << ", p " << r.pvalue << ", standard error " << r.std_err << "\n";
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }
 ```
@@ -126,3 +126,16 @@ The conclusion depends on the standard deviation assumed: at sigma 0.3, 0.5 and 
 
 - [`ttest`](ttest.md)
 - [`vartest`](vartest.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ttest2.html">
+    <span class="label">Previous</span>
+    <span class="title">ttest2</span>
+  </a>
+  <a class="next-link" href="vartest.html">
+    <span class="label">Next</span>
+    <span class="title">vartest</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

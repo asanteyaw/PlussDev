@@ -44,8 +44,8 @@ int main() {
   const auto model = local_linear_trend(0.2, 0.05, 0.5);
   const int n = 60;
   const auto sim = ts::Ssm::simulate(n, model, 1, f64, /*seed=*/8);
-  auto data = sim.observations.reshape({n}).pull<double>();
-  const auto truth_level = sim.states.select(1, 0).reshape({n}).pull<double>();
+  auto data = sim.observations.reshape({n}).items<double>();
+  const auto truth_level = sim.states.select(1, 0).reshape({n}).items<double>();
   for (int t = 25; t < 30; ++t) data[t] = std::numeric_limits<double>::quiet_NaN();
   const Series y = matrix(data, {n, 1});
 
@@ -53,10 +53,10 @@ int main() {
   std::cout << std::fixed << std::setprecision(3);
   std::cout << std::setw(4) << "t" << std::setw(7) << "used" << std::setw(11) << "filtered" << std::setw(11) << "smoothed" << std::setw(13) << "smoothed sd" << std::setw(9) << "truth" << "\n";
   for (int t = 22; t < 33; ++t) {
-    const double used = s.filter.data_used.select(0, t).item<double>();
-    const double sd = std::sqrt(s.smoothed_states_cov.select(0, t).select(0, 0).select(0, 0).item<double>());
-    std::cout << std::setw(4) << t << std::setw(7) << (used > 0 ? "yes" : "no") << std::setw(11) << s.filter.filtered_states.select(0, t).select(0, 0).item<double>() << std::setw(11)
-              << s.smoothed_states.select(0, t).select(0, 0).item<double>() << std::setw(13) << sd << std::setw(9) << truth_level[t] << "\n";
+    const double used = s.filter.data_used.select(0, t).squeeze().item<double>();
+    const double sd = std::sqrt(s.smoothed_states_cov.select(0, t).select(0, 0).select(0, 0).squeeze().item<double>());
+    std::cout << std::setw(4) << t << std::setw(7) << (used > 0 ? "yes" : "no") << std::setw(11) << s.filter.filtered_states.select(0, t).select(0, 0).squeeze().item<double>() << std::setw(11)
+              << s.smoothed_states.select(0, t).select(0, 0).squeeze().item<double>() << std::setw(13) << sd << std::setw(9) << truth_level[t] << "\n";
   }
 }
 ```
@@ -116,8 +116,8 @@ int main() {
   int n_gap = 0, n_out = 0;
   for (int r = 0; r < reps; ++r) {
     const auto sim = ts::Ssm::simulate(n, model, 1, f64, /*seed=*/100 + r);
-    auto data = sim.observations.reshape({n}).pull<double>();
-    const auto truth = sim.states.select(1, 0).reshape({n}).pull<double>();
+    auto data = sim.observations.reshape({n}).items<double>();
+    const auto truth = sim.states.select(1, 0).reshape({n}).items<double>();
     for (int t = 25; t < 30; ++t) data[t] = std::numeric_limits<double>::quiet_NaN();
     const auto s = ts::Ssm::smooth(matrix(data, {n, 1}), model);
     const auto filt = s.filter.filtered_states.select(1, 0).host<double>();
@@ -181,12 +181,12 @@ int main() {
   double width[10] = {0};
   for (int r = 0; r < reps; ++r) {
     const auto sim = ts::Ssm::simulate(train + horizon, model, 1, f64, /*seed=*/500 + r);
-    const auto all = sim.observations.reshape({train + horizon}).pull<double>();
+    const auto all = sim.observations.reshape({train + horizon}).items<double>();
     const Series y = matrix(std::vector<double>(all.begin(), all.begin() + train), {train, 1});
     const auto f = ts::Ssm::forecast(horizon, y, model);
     for (int h = 0; h < horizon; ++h) {
-      const double mean = f.observations.select(0, h).item<double>();
-      const double half = 1.96 * std::sqrt(f.observations_cov.select(0, h).select(0, 0).select(0, 0).item<double>());
+      const double mean = f.observations.select(0, h).squeeze().item<double>();
+      const double half = 1.96 * std::sqrt(f.observations_cov.select(0, h).select(0, 0).select(0, 0).squeeze().item<double>());
       inside[h] += std::fabs(all[train + h] - mean) <= half;
       width[h] += half;
     }
@@ -221,3 +221,16 @@ The half-width grows with the horizon, from 1.3 at step 1 to 3.6 at step 10: the
 - **The intervals are only as good as the model.** Check calibration on held-out data when the noise levels are estimated.
 
 Where next: [Simulation as a check](simulation_as_a_check.md) uses the model to generate data, which tests both the model and the code that uses it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="filtering_a_local_linear_trend.html">
+    <span class="label">Previous</span>
+    <span class="title">Filtering a local linear trend</span>
+  </a>
+  <a class="next-link" href="simulation_as_a_check.html">
+    <span class="label">Next</span>
+    <span class="title">Simulation as a check</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

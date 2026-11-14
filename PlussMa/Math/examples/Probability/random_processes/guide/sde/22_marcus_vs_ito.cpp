@@ -17,11 +17,11 @@ int main() {
   const auto jp = sde::simulate_jump_diffusion_path(like, 0.0, 1.0, 4000, 11, 0.0, 0.2, 6.0, 0.0, 0.5);
   auto square = [](double, const pluss::Series& x) { return x.mul(x); };
 
-  const double xT = jp.path.w.select(0, jp.path.steps).item<double>();
+  const double xT = jp.path.w.select(0, jp.path.steps).squeeze().item<double>();
   const double exact = xT * xT * xT / 3.0;
-  const double marcus = sde::marcus_integral(square, jp.path, jp.jump_mask).value.item<double>();
-  const double strat = sde::strat_integral(square, jp.path).value.item<double>();
-  const double ito = sde::ito_integral(square, jp.path).value.item<double>();
+  const double marcus = sde::marcus_integral(square, jp.path, jp.jump_mask).value.squeeze().item<double>();
+  const double strat = sde::strat_integral(square, jp.path).value.squeeze().item<double>();
+  const double ito = sde::ito_integral(square, jp.path).value.squeeze().item<double>();
 
   std::cout << std::setprecision(6);
   std::cout << "X_T^3 / 3 (chain rule)  " << exact << "\n";
@@ -31,7 +31,7 @@ int main() {
 
   // Without a mask the jump steps are found from their size: |dX| > jump_sigma * sqrt(step). A jump smaller
   // than that threshold (here 8 * sqrt(1/4000) = 0.13) is treated as Brownian, which is why the number differs.
-  const double automatic = sde::marcus_integral(square, jp.path, 8.0).value.item<double>();
+  const double automatic = sde::marcus_integral(square, jp.path, 8.0).value.squeeze().item<double>();
   std::cout << "Marcus, jumps found by size  " << automatic << "\n";
   return 0;
 }

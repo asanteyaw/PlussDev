@@ -9,6 +9,7 @@
 ```cpp
 Series Series::bitwise_and(const Series& rhs) const
 Series& Series::bitwise_and_(const Series& rhs) const
+Series Series::operator&(const Series& rhs) const
 ```
 
 ## What It Does
@@ -18,6 +19,10 @@ Series& Series::bitwise_and_(const Series& rhs) const
 For each aligned position, the result bit is `1` only when that bit is `1` in
 both inputs. That makes `bitwise_and()` the "keep only the overlap" operator of
 the bitwise family.
+
+The symbolic form `lhs & rhs` is the out-of-place equivalent. It is especially
+useful for composing Boolean masks and retains integer bitwise semantics for
+integral Series.
 
 On ordinary integers, that means the operation works on the stored binary
 representation, not on numeric magnitude in the arithmetic sense. On booleans,
@@ -125,6 +130,7 @@ Use `bitwise_and()` when the question is "which bits survive in both inputs?"
 
 ## See Also
 
+- [`Series operators`](operators.md): `&`, `|`, and `~` taught together.
 - [`Series::bitwise_or`](bitwise_or.md): keeps bits that appear in either
   operand.
 - [`Series::bitwise_xor`](bitwise_xor.md): keeps bits that differ.

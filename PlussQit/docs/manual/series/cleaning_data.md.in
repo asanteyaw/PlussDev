@@ -1,0 +1,50 @@
+# Cleaning and scaling data
+
+[Back to Series by example](../series.md)
+
+Data arrives with holes, spikes and columns on wildly different scales. This page takes two raw inputs, a sensor log and a feature table, and turns them into something you can trust: unusable values found and replaced, columns put on a common scale, outliers flagged. The programs are complete; every output below was printed by the program above it.
+
+## The mental model
+
+A `Series` is a rectangular block of numbers or booleans with a **shape** and a **dtype**. Every operation works on the whole block at once, so you describe *what* you want for all elements and never write the loop. The idioms of data cleaning are three:
+
+- a **comparison** such as `lt`, `gt` or `isnan` produces a Boolean `Series` of the same shape, the **mask**;
+- masks combine with `logical_or`, `logical_and` and `logical_not`;
+- a mask then **selects** (`masked_select`, which returns only the chosen values), **replaces** (`where`, `masked_fill`) or **counts** (`sum`, because `true` counts as one).
+
+## A sensor log, start to finish
+
+One reading a minute from a room thermometer. Two readings are missing, one is a spike of 85 degrees and one a sensor fault of -40. The program builds a mask of unusable readings, summarises the usable ones, replaces the unusable ones by their median, and reports.
+
+@@example series/sensor_log.cpp@@
+
+Four of twelve readings are unusable: the two NaNs, the spike and the fault. The median of the eight usable readings is 22.0 and, unlike the mean, it would not have moved had the spike been 850. Replacing with it gives a mean of 21.99 and a standard deviation of 0.27, which describes the room; the raw log's mean would have been NaN, and with the NaNs removed it would still have been dragged to 22.09 by the spike and fault. The quartiles on the last line are the numbers you would put on a chart.
+
+Two details of the program matter in practice. `where` keeps the receiver where the condition is **false** and takes the replacement where it is true, so `log.where(unusable, centre)` reads "in `log`, put `centre` where it is unusable". And the comparison `log.gt(50.0)` on a NaN is false, which is why the missing values needed their own `isnan` test.
+
+## Putting columns on one scale
+
+A model that compares households should not be dominated by whichever column has the biggest numbers. This table has income in thousands, household size and floor area, one row per household, and one household with an income of 390.
+
+@@example series/feature_scaling.cpp@@
+
+Dimension 0 runs down the rows, so `standardize(0)` and `amin(0, true)` work column by column. The z-scores flag the outlier: income is 2.6 standard deviations above its column mean in row 6, and no other column has a value beyond two. The second scaling shows why that matters. Min-max scaling squeezes the other seven incomes into `0` to `0.09` because the outlier took the whole top of the range, and standardising shows the same thing as z-scores of `-0.2` to `-0.5` for the seven against `2.6` for the outlier: an outlier is a reason to look at the data before choosing a scaler. The correlation matrix finishes the job: size and area move together (0.98) while income is only loosely related to either, partly because of that one household.
+
+## Decisions
+
+- **Which values are unusable:** write the rule as a mask, test it by counting (`mask.sum()`), and keep the mask. You will want it again to report what you changed.
+- **Replace with what:** the median of the usable values is robust; the mean is not. For a trend use a moving statistic (see [Signals](signals.md)).
+- **Which scaler:** `standardize` when the data has outliers or you will compare distances; min-max when a bounded range is a requirement and the data is already clean.
+- **Which axis:** reductions and `standardize` take the dimension to run along; dimension 0 is down the rows (column statistics), dimension 1 is across (row statistics).
+
+## Pitfalls
+
+`where` is the one that catches people. The program below asks four ways for "x where it is big, otherwise 0":
+
+@@example series/pitfall_where.cpp@@
+
+`x.where(big, 0)` returned `[1, 2, 0, 0]`: it zeroed the values that were big, the opposite of the intention. Negate the condition (`x.where(big.logical_not(), 0)`), use `masked_fill`, which says what it does, or put the Boolean first, where `big.where(x, 0)` reads naturally.
+
+## Where next
+
+Reference pages: [`isnan`](../../sphinx/api/series/isnan.md), [`masked_select`](../../sphinx/api/series/masked_select.md), [`masked_fill`](../../sphinx/api/series/masked_fill.md), [`where`](../../sphinx/api/series/where.md), [`median`](../../sphinx/api/series/median.md), [`quantile`](../../sphinx/api/series/quantile.md), [`standardize`](../../sphinx/api/series/standardize.md), [`amin`](../../sphinx/api/series/amin.md), [`amax`](../../sphinx/api/series/amax.md), [`corrcoef`](../../sphinx/api/series/corrcoef.md). Next: [Summaries, rankings and tables](summaries_and_tables.md).

@@ -1,0 +1,96 @@
+# `circuit::ac`
+
+Computes the small-signal phasor response of a circuit.
+
+## Signature
+
+```cpp
+circuit::Result circuit::ac(const circuit::Circuit& circuit, const pluss::Series& omega);
+
+circuit::Result circuit::ac(const circuit::Circuit& circuit, const pluss::Series& omega, const circuit::Result& operating_point, const circuit::SolveOptions& options = {});
+```
+
+## What It Does
+
+Solves the phasor equations at every angular frequency in `omega`. The independent sources are phasors, a capacitor has admittance `j w C` and an inductor impedance `j w L`. The second overload analyses a circuit with diodes or transistors: every device is replaced by its small-signal conductances, evaluated at the junction voltages of `operating_point`, and the stored source values are the small-signal excitation. Build the circuit twice with the same topology, once with the bias values for `op` and once with the excitation (a supply that is an AC ground at zero volts), and pass the `op` result of the first to `ac` of the second.
+
+## Parameters
+
+`circuit`
+: The compiled circuit.
+
+`omega`
+: Angular frequencies in radians per second: a non-empty, finite, non-negative real vector on the circuit's platform.
+
+`operating_point`
+: The `op` result of the biased circuit. Required for a circuit with diodes or transistors; its `voltage` must have the circuit's node count and parameter batch.
+
+`options`
+: The `thermal_voltage` and `gmin` that the operating point was solved with; see `SolveOptions`. Use the same values as for `op`.
+
+## Returns
+
+A `Result` of complex arrays with a frequency axis before the final axis.
+
+## Errors
+
+Throws `pluss::Error` for a malformed `omega` or for singular equations at some frequency; for a circuit with devices, for the first overload (which has no operating point) and for an `operating_point` of a different shape.
+
+## Interpretation and Use
+
+`omega` is angular: for a frequency `f` in hertz use `2 pi f`. At `omega = 0` the result is the DC solution; with devices it is the linear response of the circuit to the excitation around the bias, not a second bias point. The gain of an amplifier stage is the ratio of the output phasor to the input excitation.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+An RC low-pass at its corner frequency.
+
+@@example Eng/api/circuit_rc.cpp@@
+
+### Example 2
+
+A series resonance and an integrator.
+
+@@example Eng/api/circuit_rlc.cpp@@
+
+### Example 3
+
+A sweep of component values.
+
+@@example Eng/api/circuit_ac_sweep.cpp@@
+
+### Example 4
+
+Rejected frequency vectors.
+
+@@example Eng/api/circuit_ac_errors.cpp@@
+
+### Example 5
+
+The small-signal response of a diode around its bias point.
+
+@@example Eng/api/circuit_ac_small_signal.cpp@@
+
+### Example 6
+
+The gain of a transistor stage against its formula.
+
+@@example Eng/api/circuit_ac_transistor_gain.cpp@@
+
+### Example 7
+
+A device circuit without its operating point, and with one of another circuit.
+
+@@example Eng/api/circuit_ac_needs_bias.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="op.html">
+    <span class="label">Previous</span>
+    <span class="title">op</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

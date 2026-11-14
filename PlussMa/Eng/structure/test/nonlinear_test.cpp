@@ -196,5 +196,63 @@ int main() {
       },
       "zero load-step count was accepted");
 
+  // A slender steel cantilever (axial stiffness about 1e5 times the bending stiffness): small loads must resolve to rounding-level
+  // accuracy, and a load that bends it appreciably must converge to the elastica answer rather than stall in the line search.
+  {
+    constexpr int pieces = 8;
+    constexpr double span = 2.0, modulus = 200e9, area = 1e-3, inertia = 8.333e-8;
+    std::vector<double> coordinates;
+    std::vector<std::int64_t> starts, ends;
+    for (int i = 0; i <= pieces; ++i) {
+      coordinates.push_back(span * i / pieces);
+      coordinates.push_back(0.0);
+    }
+    for (int i = 0; i < pieces; ++i) {
+      starts.push_back(i);
+      ends.push_back(i + 1);
+    }
+    const auto positions = pluss::series::make(coordinates)
+                               .reshape({pieces + 1, 2})
+                               .to(pluss::ScalarType::Float64);
+    const auto fill = [&](double value) {
+      return pluss::series::make(std::vector<double>(pieces, value))
+          .to(pluss::ScalarType::Float64);
+    };
+    const auto slender = structure::frame(
+        {positions, starts, ends},
+        {fill(area), fill(inertia), fill(modulus)});
+    const structure::Fix root{{0, 0, 0}, {0, 1, 2}, {}};
+    const auto tip_load = [&](double value) {
+      std::vector<double> entries(3 * (pieces + 1), 0.0);
+      entries[3 * pieces + 1] = -value;
+      return pluss::series::make(entries)
+          .reshape({pieces + 1, 3})
+          .to(pluss::ScalarType::Float64);
+    };
+    structure::NonlinearOptions soft;
+    soft.load_steps = 4;
+    const auto small = structure::solve(slender, tip_load(1.0), root, soft);
+    const auto small_linear = structure::solve(slender, tip_load(1.0), root);
+    expect(small.converged.all().item<bool>() &&
+               std::abs(small.displacement.select(-2, pieces).select(-1, 1).item<double>() -
+                        small_linear.displacement.select(-2, pieces).select(-1, 1).item<double>()) <
+                   1e-7 * std::abs(small_linear.displacement.select(-2, pieces).select(-1, 1).item<double>()),
+           "a small load on a slender cantilever did not reach the linear answer");
+    structure::NonlinearOptions stepped;
+    stepped.load_steps = 20;
+    // a tolerance far tighter than rounding allows must still be reachable
+    structure::NonlinearOptions strict = stepped;
+    strict.relative_tolerance = 1e-14;
+    strict.absolute_tolerance = 1e-30;
+    expect(structure::solve(slender, tip_load(5000.0), root, strict).converged.all().item<bool>(),
+           "a tolerance below the rounding floor stalled the nonlinear solve");
+    const auto large = structure::solve(slender, tip_load(5000.0), root, stepped);
+    // elastica (Euler's large-deflection beam, shot numerically): tip deflection / span = 0.349010 at P L^2 / (E I) = 1.2
+    expect(large.converged.all().item<bool>() &&
+               std::abs(-large.displacement.select(-2, pieces).select(-1, 1).item<double>() / span -
+                        0.349010) < 1e-3,
+           "a large load on a slender cantilever missed the elastica deflection");
+  }
+
   std::cout << "E6f nonlinear static checks passed\n";
 }

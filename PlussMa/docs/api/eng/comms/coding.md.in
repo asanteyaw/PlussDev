@@ -1,0 +1,45 @@
+# Channel coding
+
+This branch adds redundancy that corrects errors. `ConvolutionalCode` describes a feed-forward code, `encode` encodes with termination and `decode` decodes with soft or hard values. `gallager`, `encode` and `decode` give Gallager low-density parity-check codes with min-sum decoding, and `shuffle`, `encode` and `decode` give turbo codes with iterative max-log-MAP decoding.
+
+## Choosing A Surface
+
+Encode before `modulate`, decode after `llr`: the log-likelihood ratios of the demapper are the soft input of `decode`.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A codeword by hand.
+
+@@example Eng/api/comms_conv_codeword.cpp@@
+
+### Example 2
+
+Coded against uncoded BPSK.
+
+@@example Eng/api/comms_viterbi_gain.cpp@@
+
+### Example 3
+
+Soft against hard decoding.
+
+@@example Eng/api/comms_viterbi_soft_hard.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+coding/ConvolutionalCode
+coding/encode
+coding/decode
+coding/LdpcCode
+coding/gallager
+coding/LdpcResult
+coding/TurboCode
+coding/shuffle
+```
+<!-- apiref:toctree:end -->

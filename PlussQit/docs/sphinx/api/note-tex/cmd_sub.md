@@ -7,7 +7,7 @@
 
 ```cpp
 Note Note::TexAccessor::cmd_sub(std::string_view cmd,
-                             std::string_view repl) const
+                                  std::string_view repl) const
 ```
 
 ## Substitute One Control Word

@@ -56,18 +56,22 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install Windows SQLite3
+      - name: Install Linux curl development files
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+
+      - name: Install Windows native dependencies
         if: runner.os == 'Windows'
-        run: vcpkg install sqlite3:x64-windows-static
+        run: vcpkg install sqlite3:x64-windows-static curl:x64-windows-static
 
       - name: Configure Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DVCPKG_TARGET_TRIPLET=x64-windows-static "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -S . -B build -T ClangCL -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON -DVCPKG_TARGET_TRIPLET=x64-windows-static "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 
       - name: Configure macOS and Ubuntu
         if: runner.os != 'Windows'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -DPLUSSQIT_BUILD_TESTS=OFF -DPLUSSQIT_BUILD_EXAMPLES=OFF -DPLUSSMIC_FETCH_CURL=OFF -DPLUSSMIC_REQUIRE_CURL=ON
 
       - name: Stage distribution
         run: cmake --build build --config Release --target plussii_distribution_stage --parallel 2

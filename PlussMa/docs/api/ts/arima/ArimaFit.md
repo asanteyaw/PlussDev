@@ -400,3 +400,16 @@ information matrix is 2 x 2
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Arima.html">
+    <span class="label">Previous</span>
+    <span class="title">Arima</span>
+  </a>
+  <a class="next-link" href="ArimaOptions.html">
+    <span class="label">Next</span>
+    <span class="title">ArimaOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

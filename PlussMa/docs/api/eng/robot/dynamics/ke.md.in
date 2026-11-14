@@ -1,0 +1,61 @@
+# `robot::ke`
+
+The kinetic energy of a motion.
+
+## Signature
+
+```cpp
+pluss::Series robot::ke(const robot::Robot& robot, const pluss::Series& q, const pluss::Series& qd);
+```
+
+## What It Does
+
+Returns `0.5 qd^T M(q) qd` for every configuration and rate of the batch.
+
+## Parameters
+
+`robot`
+: The compiled robot, with mass properties.
+
+`q`
+: The joint values, `[..., links]`.
+
+`qd`
+: The joint rates, `[..., links]`.
+
+## Returns
+
+A real array of shape `[...]`, non-negative.
+
+## Errors
+
+Throws `pluss::Error` when the robot has no mass properties or an argument is malformed.
+
+## Interpretation and Use
+
+Together with `pe` it gives the total energy, which forward dynamics without applied torques must conserve.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Kinetic and potential energy of a planar arm.
+
+@@example Eng/api/robot_dyn_energy.cpp@@
+
+### Example 2
+
+Total energy through a simulation.
+
+@@example Eng/api/robot_dyn_simulate.cpp@@
+
+### Example 3
+
+The inertia matrix behind it.
+
+@@example Eng/api/robot_dyn_mass.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

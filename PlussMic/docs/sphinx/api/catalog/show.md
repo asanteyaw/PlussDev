@@ -15,13 +15,13 @@ void Catalog::show(std::ostream& os) const
 
 Renders the catalog's ASCII-table view directly to `os` — the same rendering
 `operator<<`, [`display()`](display.md), and [`info()`](info.md) all use internally.
-Unlike `Slate::show()`, `Catalog::show()` **requires** an explicit stream argument; there
+`Catalog::show()` **requires** an explicit stream argument; there
 is no no-argument overload, so there's no risk of it silently opening a GUI viewer window
 the way some other `show()`-named methods in this codebase can.
 
 ```{important} display(), info(), and show() all render identically — there is no separate metadata summary
 Unlike Slate::info(), which prints a name/kind/dtype/null-count summary distinct from
-Slate::show()'s row rendering, Catalog::info() and Catalog::display() both call the exact
+Slate::to_string()'s row rendering, Catalog::info() and Catalog::display() both call the exact
 same underlying render as show() and operator<<. All four produce byte-identical output;
 there is currently no metadata-only summary view for Catalog.
 ```

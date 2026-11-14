@@ -1,0 +1,46 @@
+# Operation over time
+
+This branch runs a network through time. `run` advances the clock event by event, applies demand, pump and valve patterns and the controls of a `Schedule`, moves the tank levels by exact volume balance and solves the steady problem at each event.
+
+## Choosing A Surface
+
+Use `run` for a day of operation, tank sizing, control rules and what-if schedules. Use a time control for a known program and a state control for a rule that depends on the water.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A day of demand patterns with a tank.
+
+@@example Eng/api/fluid_run_tank.cpp@@
+
+### Example 2
+
+A pump held between two levels.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 3
+
+Set, close and open on a clock.
+
+@@example Eng/api/fluid_controls_actions.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+operation/Device
+operation/Sense
+operation/Act
+operation/Action
+operation/TimeControl
+operation/StateControl
+operation/Schedule
+operation/RunResult
+operation/run
+```
+<!-- apiref:toctree:end -->

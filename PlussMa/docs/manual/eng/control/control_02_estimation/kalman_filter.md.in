@@ -1,0 +1,380 @@
+# The Kalman filter
+
+[Back to Control 2: Estimation](../control_02_estimation.md)
+
+You have a record of noisy measurements of a system and want, at each time, the best estimate of its state and how uncertain that estimate is. `control::kalman` runs the Kalman filter over the record. Unlike the steady-state estimator of the previous page, its gain changes with time: it starts by trusting the measurements when the initial guess is poor, and settles to the steady-state gain as the record grows. It also copes with missing measurements and with known inputs, and reports the likelihood of the data.
+
+## The mental model
+
+At each step the filter does two things. It **predicts**: from the filtered estimate at the previous step it computes the prior mean `A x^` and covariance `A P A^T + W` for the new state. It then **updates**: it compares the new measurement `y` with the predicted one `C x_pred`, and corrects the prediction by the gain times the innovation:
+
+```{math}
+K_t = P_t^{-} C^T (C P_t^{-} C^T + V)^{-1}, \qquad
+\hat x_t = \hat x_t^{-} + K_t\,(y_t - C \hat x_t^{-}), \qquad
+P_t = (I - K_t C)\,P_t^{-}.
+```
+
+`kalman(system, observations, process_cov, noise_cov, initial_mean, initial_cov)` takes the observations as a matrix `[time, outputs]` and returns a `KalmanResult` with one entry per time step:
+
+| Member | Shape | Meaning |
+|---|---|---|
+| `predicted_mean`, `predicted_cov` | `[T, n]`, `[T, n, n]` | the prior at each step, before seeing the measurement |
+| `filtered_mean`, `filtered_cov` | `[T, n]`, `[T, n, n]` | the posterior after the measurement |
+| `predicted_obs` | `[T, p]` | the measurement expected from the prior |
+| `innovation`, `innovation_cov` | `[T, p]`, `[T, p, p]` | the surprise `y - predicted_obs` and its covariance |
+| `gain` | `[T, n, p]` | the update gain `K_t` |
+| `data_used` | `[T, 1]` | `1` if the measurement was used, `0` if it was missing |
+| `loglik_terms`, `loglik` | per-step, scalar | the Gaussian log-likelihood of the data |
+
+The model must be discrete (it has a positive sample time), and the first prior is built from `initial_mean` and `initial_cov`.
+
+## One state, and the convergence of the gain
+
+The scalar system `x[k+1] = 0.9 x[k] + w`, `y = x + v` with `W = 0.1`, `V = 1` and a poor initial guess (`0` with variance `10`). The program generates 60 measurements from a test signal, runs the filter, and prints the first and last prior covariance. The first is `0.81 * 10 + 0.1 = 8.2`, large because the initial state is uncertain. The last is the steady-state value from `lqe` on the previous page, `0.274414`, and the last gain is `P / (P + V)`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series scalar(double value) { return pluss::series::make(std::vector<double>{value}).reshape({1, 1}); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(scalar(0.9), scalar(1.0), scalar(1.0), scalar(0.0), 1.0);
+
+  const int steps = 60;
+  std::vector<double> measurements;
+  double state = 1.0;
+  for (int t = 0; t < steps; ++t) {
+    measurements.push_back(state + 0.5 * std::sin(1.7 * t));
+    state = 0.9 * state + 0.3 * std::cos(2.3 * t);
+  }
+  const pluss::Series observations = pluss::make_series(measurements, {steps, 1}, f64);
+
+  const auto filter = ctl::kalman(plant, observations, scalar(0.1), scalar(1.0), pluss::series::make(std::vector<double>{0.0}), scalar(10.0));
+  const double steady = ctl::lqe(plant, scalar(0.1), scalar(1.0)).covariance.squeeze().item<double>();
+  out.writeln("shapes: filtered_mean", filter.filtered_mean.sizes(), " filtered_cov", filter.filtered_cov.sizes(), " gain", filter.gain.sizes());
+  out.writeln("prior covariance: first", filter.predicted_cov.select(0, 0).squeeze().item<double>(), " last", filter.predicted_cov.select(0, steps - 1).squeeze().item<double>(), " lqe", steady);
+  out.writeln("update gain: first", filter.gain.select(0, 0).squeeze().item<double>(), " last", filter.gain.select(0, steps - 1).squeeze().item<double>(), " P / (P + V) =", steady / (steady + 1.0));
+}
+```
+
+The first gain is close to `1` (`0.891`): with an initial variance of `10` the filter believes the first measurement almost completely. The gain falls as the filter learns, and by the last step the prior covariance has converged to `0.274414`, the `lqe` value, and the gain to `P / (P + V) = 0.215325`.
+
+## Tracking a moving target
+
+The constant-velocity model of the previous page, with the position measured, makes a realistic test. The program builds a target whose velocity drifts slowly, measures its position with noise of about `0.5`, and runs the filter from a vague start (position and velocity zero, variance `100`). It prints the root-mean-square error of the raw measurements and of the filtered position, and of the filtered velocity, which is never measured.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static double rms(const pluss::Series &e) { return std::sqrt(e.square().mean().item<double>()); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 1, 0, 1}, 2, 2), matrix({0.5, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 1.0);
+
+  const int steps = 80;
+  std::vector<double> position, velocity, measured;
+  double x = 0.0, v = 0.5;
+  for (int t = 0; t < steps; ++t) {
+    position.push_back(x);
+    velocity.push_back(v);
+    measured.push_back(x + std::sin(1.9 * t + 0.3) * std::cos(0.7 * t));
+    x += v;
+    v += 0.05 * std::sin(0.8 * t);
+  }
+  const pluss::Series truth_position = pluss::make_series(position, {steps}, f64);
+  const pluss::Series truth_velocity = pluss::make_series(velocity, {steps}, f64);
+  const pluss::Series observations = pluss::make_series(measured, {steps, 1}, f64);
+
+  const auto filter = ctl::kalman(plant, observations, matrix({0, 0, 0, 0.01}, 2, 2), matrix({1}, 1, 1), pluss::series::make(std::vector<double>{0.0, 0.0}),
+                                  matrix({100, 0, 0, 100}, 2, 2));
+  out.writeln("rms position error: raw measurements", rms(observations.reshape({steps}) - truth_position), " filtered", rms(filter.filtered_mean.select(1, 0) - truth_position));
+  out.writeln("rms velocity error, never measured:  filtered", rms(filter.filtered_mean.select(1, 1) - truth_velocity));
+}
+```
+
+The filtered position is more than twice as accurate as the measurements: `0.183` against `0.495`. The velocity, which no sensor reads, is recovered to `0.098`, against a typical value of `0.5` that the filter was not told.
+
+## Innovations
+
+The innovation `y - C x_pred` is what the filter did not expect. If the model and the covariances are right, the innovations are uncorrelated with zero mean and covariance `innovation_cov`. The identity `innovation = observations - predicted_obs` is exact, and the program prints the largest difference to confirm it, together with the filter's own claim about the innovation variance at the last step.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series scalar(double value) { return pluss::series::make(std::vector<double>{value}).reshape({1, 1}); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(scalar(0.9), scalar(1.0), scalar(1.0), scalar(0.0), 1.0);
+  const int steps = 60;
+  std::vector<double> measurements;
+  double state = 1.0;
+  for (int t = 0; t < steps; ++t) {
+    measurements.push_back(state + 0.5 * std::sin(1.7 * t));
+    state = 0.9 * state + 0.3 * std::cos(2.3 * t);
+  }
+  const pluss::Series observations = pluss::make_series(measurements, {steps, 1}, f64);
+  const auto filter = ctl::kalman(plant, observations, scalar(0.1), scalar(1.0), pluss::series::make(std::vector<double>{0.0}), scalar(10.0));
+
+  out.writeln("largest |innovation - (y - predicted_obs)|:", (filter.innovation - (observations - filter.predicted_obs)).abs().max().item<double>());
+  out.writeln("innovation covariance at the last step    :", filter.innovation_cov.select(0, steps - 1).squeeze().item<double>(), " = P + V =", 0.274414 + 1.0);
+  out.writeln("log-likelihood of the 60 measurements     :", filter.loglik.item<double>());
+}
+```
+
+The innovation covariance converges to `P + V = 1.274414`: the new measurement is surprising by the prior uncertainty plus the sensor noise. The log-likelihood is the sum of the per-step terms and measures how well the model explains the data; compare it between candidate models fitted to the same data, higher is better.
+
+## Missing measurements
+
+A missing measurement is marked by `NaN`. The filter predicts through the gap without updating, and `data_used` records which steps used data. The program removes steps 30 to 39 of the tracking record and prints the position standard deviation before, during and after the gap.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 1, 0, 1}, 2, 2), matrix({0.5, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 1.0);
+  const int steps = 80;
+  std::vector<double> measured;
+  double x = 0.0, v = 0.5;
+  for (int t = 0; t < steps; ++t) {
+    measured.push_back(x + std::sin(1.9 * t + 0.3) * std::cos(0.7 * t));
+    x += v;
+    v += 0.05 * std::sin(0.8 * t);
+  }
+  for (int t = 30; t < 40; ++t) measured[t] = std::nan("");
+
+  const auto filter = ctl::kalman(plant, pluss::make_series(measured, {steps, 1}, f64), matrix({0, 0, 0, 0.01}, 2, 2), matrix({1}, 1, 1),
+                                  pluss::series::make(std::vector<double>{0.0, 0.0}), matrix({100, 0, 0, 100}, 2, 2));
+  out.writeln("data_used, steps 28 to 41:", filter.data_used.slice(0, 28, 42).reshape({14}).items<double>());
+  for (const int t : {29, 30, 34, 39, 40}) {
+    out.writeln("position standard deviation at step", t, std::sqrt(filter.filtered_cov.select(0, t).select(0, 0).select(0, 0).squeeze().item<double>()));
+  }
+}
+```
+
+The `data_used` row is `1, 1, 0, 0, ...` through the ten missing steps and back to `1`. The position uncertainty grows steadily through the gap, from `0.60` just before it to `3.06` at the last missing step, because the velocity error accumulates with no measurement to correct it. At step 40 the first measurement returns and the standard deviation drops to `0.96`.
+
+## A known input
+
+When the system is driven by an input `u` that you know, pass it as the third argument: the filter then predicts with `A x + B u` and the measurement with `C x + D u`. The program supplies a constant acceleration of `0.2` to the tracking model. The estimate follows the data either way, but with the input accounted for the model no longer has to attribute the extra acceleration to noise, so the estimated velocity at the end is larger.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::state(matrix({1, 1, 0, 1}, 2, 2), matrix({0.5, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 1.0);
+  const int steps = 80;
+  std::vector<double> measured;
+  double x = 0.0, v = 0.5;
+  for (int t = 0; t < steps; ++t) {
+    measured.push_back(x + std::sin(1.9 * t + 0.3) * std::cos(0.7 * t));
+    x += v;
+    v += 0.05 * std::sin(0.8 * t);
+  }
+  const pluss::Series observations = pluss::make_series(measured, {steps, 1}, f64);
+  const pluss::Series push = pluss::make_series(std::vector<double>(steps, 0.2), {steps, 1}, f64);
+  const pluss::Series start = pluss::series::make(std::vector<double>{0.0, 0.0});
+  const pluss::Series spread = matrix({100, 0, 0, 100}, 2, 2);
+
+  const auto without = ctl::kalman(plant, observations, matrix({0, 0, 0, 0.01}, 2, 2), matrix({1}, 1, 1), start, spread);
+  const auto with = ctl::kalman(plant, observations, push, matrix({0, 0, 0, 0.01}, 2, 2), matrix({1}, 1, 1), start, spread);
+  out.writeln("final state, no input     ", without.filtered_mean.select(0, steps - 1).reshape({2}).items<double>());
+  out.writeln("final state, input 0.2     ", with.filtered_mean.select(0, steps - 1).reshape({2}).items<double>());
+}
+```
+
+## Errors
+
+The filter needs a discrete model. A continuous model is refused with a message that says so, and the covariances are checked like those of `lqe`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series scalar(double value) { return pluss::series::make(std::vector<double>{value}).reshape({1, 1}); }
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series observations = pluss::series::zeros({10, 1}, f64);
+  const pluss::Series start = pluss::series::make(std::vector<double>{0.0});
+  const auto continuous = lti::state(scalar(-1.0), scalar(1.0), scalar(1.0), scalar(0.0));
+  report([&] { (void)ctl::kalman(continuous, observations, scalar(0.1), scalar(1.0), start, scalar(1.0)); });
+}
+```
+
+## Decisions
+
+- **A stationary problem and a long record:** run `kalman` anyway; it converges to the `lqe` gain, and you also get the covariance at every step.
+- **A short record, or a poor initial guess:** the time-varying filter is essential; the steady-state gain would ignore the start-up.
+- **Choosing `initial_cov`:** large when you do not know the start (the filter then follows the first measurements), small when you do.
+- **Comparing candidate models:** the log-likelihood on the same data.
+
+## Pitfalls
+
+The program makes four mistakes with a filter: filling a gap in the data with zeros, giving a noise variance that is too small, trusting the reported uncertainty of a wrong model, and asking a filter for what only a smoother can give.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <limits>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series scalar(double value) { return pluss::series::make(std::vector<double>{value}).reshape({1, 1}); }
+static double rms(const pluss::Series &e) { return std::sqrt(e.square().mean().item<double>()); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const int steps = 80;
+
+  // a slowly decaying state kept alive by a small disturbance, measured with noise of variance 0.5
+  std::vector<double> truth, measured;
+  double x = 3.0;
+  for (int t = 0; t < steps; ++t) {
+    truth.push_back(x);
+    measured.push_back(x + std::sin(1.7 * t));
+    x = 0.97 * x + 0.3 * std::cos(2.3 * t);
+  }
+  const auto plant = lti::state(scalar(0.97), scalar(1.0), scalar(1.0), scalar(0.0), 1.0);
+  const auto start = pluss::series::make(std::vector<double>{0.0});
+  const auto state = pluss::make_series(truth, {steps}, f64);
+  const auto run = [&](const std::vector<double> &data, double process, double noise) {
+    return ctl::kalman(plant, pluss::make_series(data, {steps, 1}, f64), scalar(process), scalar(noise), start, scalar(10.0));
+  };
+
+  // 1. a missing sample is NaN: a zero is a measurement of zero
+  auto gap_nan = measured, gap_zero = measured;
+  for (int t = 30; t < 40; ++t) {
+    gap_nan[t] = std::numeric_limits<double>::quiet_NaN();
+    gap_zero[t] = 0.0;
+  }
+  const auto with_nan = run(gap_nan, 0.045, 0.5), with_zero = run(gap_zero, 0.045, 0.5);
+  out.writeln("true state at steps 29, 34, 39:       ", std::vector<double>{truth[29], truth[34], truth[39]});
+  out.writeln("estimate with NaN for the gap:        ", std::vector<double>{with_nan.filtered_mean.select(0, 29).squeeze().item<double>(), with_nan.filtered_mean.select(0, 34).squeeze().item<double>(), with_nan.filtered_mean.select(0, 39).squeeze().item<double>()});
+  out.writeln("estimate with zeros for the gap:      ", std::vector<double>{with_zero.filtered_mean.select(0, 29).squeeze().item<double>(), with_zero.filtered_mean.select(0, 34).squeeze().item<double>(), with_zero.filtered_mean.select(0, 39).squeeze().item<double>()});
+
+  // 2. a noise variance that is too small makes the filter overconfident; the innovations show it
+  for (const double v : {0.01, 0.5, 5.0}) {
+    const auto f = run(measured, 0.045, v);
+    const double ratio = (f.innovation.square().mean() / f.innovation_cov.mean()).item<double>();
+    out.writeln("V = ", v, ":  mean innovation^2 / mean innovation_cov = ", ratio, ",  error of the estimate ", rms(f.filtered_mean.reshape({steps}) - state), ",  reported standard deviation ", std::sqrt(f.filtered_cov.select(0, steps - 1).squeeze().item<double>()));
+  }
+
+  // 3. the covariance is conditional on the model: a filter that believes the state decays quickly
+  const auto wrong = lti::state(scalar(0.5), scalar(1.0), scalar(1.0), scalar(0.0), 1.0);
+  const auto believed = ctl::kalman(wrong, pluss::make_series(measured, {steps, 1}, f64), scalar(0.045), scalar(0.5), start, scalar(10.0));
+  out.writeln("decay 0.5 assumed instead of 0.97: error ", rms(believed.filtered_mean.reshape({steps}) - state), ", reported standard deviation ", std::sqrt(believed.filtered_cov.select(0, steps - 1).squeeze().item<double>()), "   (the right model: error ", rms(run(measured, 0.045, 0.5).filtered_mean.reshape({steps}) - state), ", reported ", std::sqrt(run(measured, 0.045, 0.5).filtered_cov.select(0, steps - 1).squeeze().item<double>()), ")");
+
+  // 4. the filter estimates the past and the present; the smoother uses the whole record
+  const auto smooth = ctl::smooth(plant, pluss::make_series(measured, {steps, 1}, f64), scalar(0.045), scalar(0.5), start, scalar(10.0));
+  const auto filtered = run(measured, 0.045, 0.5);
+  out.writeln("error of the filter: ", rms(filtered.filtered_mean.reshape({steps}) - state), "   of the smoother: ", rms(smooth.smoothed_mean.reshape({steps}) - state));
+}
+```
+
+A gap of ten samples, steps `30` to `39`, is marked `NaN` in one run and `0` in another. With `NaN` the filter coasts on its model and the estimate stays near the truth, `0.8394` at step `39` against `1.0540`; with zeros it believes the state is zero and falls to `0.0539`. A noise variance that is too small makes the filter overconfident: for `V = 0.01` the innovations are `6.5` times larger than the filter says they should be, the error is `0.5759` and the reported standard deviation only `0.0917`; with the right `V = 0.5` the ratio is `0.9928`, and with `V = 5` it is `0.1285`, a filter too cautious. The innovation ratio is the check to run. The reported covariance is only as good as the model: a filter that assumes a decay of `0.5` instead of `0.97` reports a standard deviation of `0.2280` and has an error of `1.0860`, while the right model's error, `0.1687`, is inside its report of `0.3464`. Last, the filter gives an error of `0.1687` while the smoother, which uses the whole record, reaches `0.1227`; if you can wait for the data, [smooth](smoothing.md).
+
+Reference: [`state`](../../../../api/eng/lti/state/state.md), [`kalman`](../../../../api/eng/control/estimation/kalman.md), [`lqe`](../../../../api/eng/control/estimation/lqe.md).
+
+Where next: [Smoothing](smoothing.md) uses the measurements after a time as well as before it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="steady_state_estimator.html">
+    <span class="label">Previous</span>
+    <span class="title">The steady-state estimator</span>
+  </a>
+  <a class="next-link" href="smoothing.html">
+    <span class="label">Next</span>
+    <span class="title">Smoothing</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,111 @@
+# `circuit::Diodes`
+
+Junction diodes of a circuit.
+
+## Signature
+
+```cpp
+circuit::Diodes
+```
+
+## What It Does
+
+Describes diodes by their two terminals and their model values. A diode carries the current `i = Is (exp(v / (n Vt)) - 1)` from `positive` (the anode) to `negative` (the cathode), where `v` is the anode voltage minus the cathode voltage, `Is` is the saturation current, `n` the ideality factor and `Vt` the thermal voltage of `SolveOptions`. A tiny conductance `gmin`, also from `SolveOptions`, is added across every junction. Circuits with diodes are solved by Newton iteration in `op`, `ac` (around an operating point) and `tran`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `positive` | The anode node of each diode. | empty |
+| `negative` | The cathode node of each diode; it must differ from the anode. | empty |
+| `saturation` | The saturation current `Is` of each diode in amperes, `[..., diodes]`; positive and finite. | required |
+| `ideality` | The emission coefficient `n` of each diode, `[..., diodes]`; positive and finite. | `1` |
+| `junction_capacitance` | The zero-bias depletion capacitance `Cj0` in farads, `[..., diodes]`; non-negative and finite. Constant (a linear capacitor appended to the net's capacitors) unless `junction_potential` is given. | undefined: none |
+| `junction_potential` | The junction potential `Vj` in volts, `[..., diodes]`; positive. Makes the depletion capacitance voltage dependent, `Cj0 / (1 - v / Vj)^m`, continued linearly above `Vj / 2`. | undefined: constant capacitance |
+| `grading` | The grading coefficient `m`, `[..., diodes]`, in `[0, 1)`. | `0.5` |
+| `transit_time` | The transit time `tau` in seconds, `[..., diodes]`; non-negative. Adds the diffusion charge `tau i`, a capacitance `tau g`. | undefined: none |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+`make` throws `pluss::Error` for an anode or cathode outside the circuit, a diode with both terminals on the same node, endpoint lists of different lengths, a missing, non-positive or non-finite `saturation` or `ideality`, values of a different dtype or platform than the other groups, or values with an incompatible batch axis.
+
+## Interpretation and Use
+
+Forward voltage rises by `n Vt ln 10`, about `60 mV` for `n = 1`, for each tenfold increase in current, so a conducting silicon diode sits near `0.6` to `0.7 V` whatever the current. Both `saturation` and `ideality` take leading batch axes like any other value, so a family of devices is one call. The diode current appears in `Result::diode_current`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A diode behind a resistor and its bias point.
+
+@@example Eng/api/circuit_diode_divider.cpp@@
+
+### Example 2
+
+A swept source: the diode characteristic.
+
+@@example Eng/api/circuit_diode_curve.cpp@@
+
+### Example 3
+
+The ideality factor widens the knee.
+
+@@example Eng/api/circuit_diode_ideality.cpp@@
+
+### Example 4
+
+A junction capacitance in a transient.
+
+@@example Eng/api/circuit_device_capacitance.cpp@@
+
+### Example 5
+
+Capacitors in parallel start at the same voltage.
+
+@@example Eng/api/circuit_device_capacitance_start.cpp@@
+
+### Example 6
+
+The reverse bias sets the depletion capacitance and the AC corner.
+
+@@example Eng/api/circuit_diode_depletion_ac.cpp@@
+
+### Example 7
+
+The time constant of a voltage-dependent junction.
+
+@@example Eng/api/circuit_diode_depletion_tran.cpp@@
+
+### Example 8
+
+Diffusion charge.
+
+@@example Eng/api/circuit_diode_diffusion.cpp@@
+
+### Example 9
+
+Switching a junction with stored charge.
+
+@@example Eng/api/circuit_diode_switching.cpp@@
+
+### Example 10
+
+Rejected charge parameters.
+
+@@example Eng/api/circuit_diode_charge_errors.cpp@@
+
+### Example 11
+
+Rejected diodes.
+
+@@example Eng/api/circuit_diode_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

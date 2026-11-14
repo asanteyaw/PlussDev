@@ -155,6 +155,17 @@ int main() {
       expect(f.std_errors.host<double>()[1] < 0.5, "an outlier does not inflate the quantile-regression standard errors");
     }
 
+    {
+      // a default-constructed fit has nothing to report: the summary names the missing coefficients instead of failing inside the formatter
+      bool threw = false;
+      try {
+        (void)reg::quantile_summary(reg::QuantileFitResult{});
+      } catch (const std::exception& e) {
+        threw = std::string(e.what()).find("print_quantile_summary: fit.coefficients is undefined") != std::string::npos;
+      }
+      expect(threw, "quantile_summary of an undefined fit reports the undefined coefficients");
+    }
+
     std::cout << "quantile_regression_test passed\n";
     return 0;
   } catch (const std::exception& e) {

@@ -1,0 +1,56 @@
+# `thermal::Start`
+
+The temperature of every store at the first time sample.
+
+## Signature
+
+```cpp
+thermal::Start
+```
+
+## What It Does
+
+Sets where every store begins a transient. `temperature` has one value per store, `[..., stores]`; leading axes are batches. Left undefined, all stores begin at zero on the temperature scale you are using.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `temperature` | The initial temperature of each store. | undefined (zero) |
+
+## Returns
+
+A value; read by `tran`.
+
+## Errors
+
+`tran` throws `pluss::Error` for a start with no stores in the network, a last axis that does not have one value per store, or a value that is not finite.
+
+## Interpretation and Use
+
+Zero is rarely the right start unless your scale is relative to the surroundings. Start at the ambient to see a response to a disturbance, or at a steady-state solution to continue from it.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A store started warm and cold.
+
+@@example Eng/api/thermal_tran_start.cpp@@
+
+### Example 2
+
+A body cooling from 100 degrees.
+
+@@example Eng/api/thermal_tran_cooling.cpp@@
+
+### Example 3
+
+Rejected starts.
+
+@@example Eng/api/thermal_errors_start.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

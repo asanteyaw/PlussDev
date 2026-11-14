@@ -139,10 +139,10 @@ Output
 ```text
 1. status      : Converged
 2. violation   : 0.0000  (reported 0.0e+00)
-3. second run  : (1.4622, 1.7311) vs (1.4000, 1.7000), objectives 0.8048 and 0.8000
+3. second run  : (1.4000, 1.7000) vs (1.4000, 1.7000), objectives 0.8000 and 0.8000
 4. improving coordinate steps: 0
 ```
-Reading the output: the status is `Converged`. The point is feasible: the recomputed violation and the solver's own report agree on zero. The independent mesh run, from the opposite corner, ends near the same point but a little above the optimum (0.8048 against 0.8000), the boundary effect of Chapter 3: its answer is feasible and close, not exact. No coordinate step improves the first answer. Two answers within 0.01 of each other from unrelated starts and methods are strong evidence; keep the lower one, and tighten the stopping criteria if you need more digits.
+Reading the output: the status is `Converged`. The point is feasible: the recomputed violation and the solver's own report agree on zero. The independent mesh run, from the opposite corner, ends at the same point with the same objective, 0.8000. No coordinate step improves the first answer. Two answers that agree from unrelated starts and methods are strong evidence; if they differed slightly, keep the lower one and tighten the stopping criteria for more digits.
 
 ## Decisions and pitfalls
 
@@ -153,3 +153,8 @@ Reading the output: the status is `Converged`. The point is feasible: the recomp
 - **Local probes are a necessary test, not a sufficient one.** They show the point is a local minimum; only an independent global search addresses the global question.
 
 Where next: The remaining chapters document each method on its own: [Nelder–Mead](../dfo_06_nelder_mead.md) first.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

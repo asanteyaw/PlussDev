@@ -53,3 +53,16 @@ rule used   : Simpson
 | `refinements` | how many times the node count was doubled |
 | `converged` | whether the error estimate reached `tolerance` |
 | `rule_used` | the rule that produced `value` (Simpson by default) |
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="integrating_data.html">
+    <span class="label">Previous</span>
+    <span class="title">Integrating data</span>
+  </a>
+  <a class="next-link" href="the_rules.html">
+    <span class="label">Next</span>
+    <span class="title">The rules</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

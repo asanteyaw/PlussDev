@@ -39,6 +39,61 @@ The following programs isolate this symbol's normal contract, a materially diffe
 
 ### Example 1
 
+The residual after one to four iterations: quadratic convergence.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit; the load has a power factor of about 0.93
+static power::Net two_bus(double active) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -0.4 * active});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.sci(2).with_sep(""));
+  const power::Grid grid = power::make(two_bus(0.5));
+  for (std::int64_t budget = 1; budget <= 4; ++budget) {
+    power::Options options;
+    options.tolerance = 1e-30;   // never met, so the run uses its whole budget
+    options.max_iterations = budget;
+    const auto r = power::ac(grid, options);
+    out.writeln("after ", budget, " iteration(s): residual ", r.residual.item<double>());
+  }
+}
+```
+
+Output
+
+```text
+after 1 iteration(s): residual 1.61e-02
+after 2 iteration(s): residual 4.08e-05
+after 3 iteration(s): residual 2.46e-10
+after 4 iteration(s): residual 2.22e-16
+```
+### Example 2
+
 Default, loose and tight tolerances and a short budget.
 
 ```cpp
@@ -49,7 +104,7 @@ Default, loose and tight tolerances and a short budget.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -93,7 +148,7 @@ tolerance 1e-3        : iterations 2, residual 4.08e-05, converged true
 tolerance 1e-14       : iterations 4, residual 2.22e-16, converged true
 max_iterations 2      : iterations 2, residual 4.08e-05, converged false
 ```
-### Example 2
+### Example 3
 
 The bisection of the loadability limit with a larger budget.
 
@@ -105,7 +160,7 @@ The bisection of the loadability limit with a larger budget.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -170,7 +225,7 @@ load 3.00000: converged true, load-bus voltage 0.69325, residual 0.00000
 load 3.15975: converged true, load-bus voltage 0.58482, residual 0.00000
 load 3.20000: converged false, load-bus voltage 0.47115, residual 0.20591
 ```
-### Example 3
+### Example 4
 
 An unconverged run.
 
@@ -182,7 +237,7 @@ An unconverged run.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }

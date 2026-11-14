@@ -1,0 +1,899 @@
+# apiref_manifest_eng.toml -- the `Engineering` guides of PlussMa.
+
+[framework.eng]
+nav_title = "Engineering guide"
+nav_prefix = "manual/eng/"
+root_page = "manual/eng.html"
+title = "Engineering"
+summary = "Signal processing, filter design, linear systems, control and circuits."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "eng/signal/signal_01_windows_and_convolution"
+page = "manual/eng/signal/signal_01_windows_and_convolution.md"
+title = "Signals 1: Windows and Convolution"
+maxdepth = 2
+children = ["signal_01_windows_and_convolution/windows", "signal_01_windows_and_convolution/convolution_and_correlation"]
+
+[[family]]
+path = "eng/signal/signal_02_recursive_filters"
+page = "manual/eng/signal/signal_02_recursive_filters.md"
+title = "Signals 2: Recursive Filters"
+maxdepth = 2
+children = ["signal_02_recursive_filters/filters_and_streaming", "signal_02_recursive_filters/second_order_sections", "signal_02_recursive_filters/zero_phase_filtering"]
+
+[[family]]
+path = "eng/signal/signal_03_frequency_response_and_design"
+page = "manual/eng/signal/signal_03_frequency_response_and_design.md"
+title = "Signals 3: Frequency Response and Design"
+maxdepth = 2
+children = ["signal_03_frequency_response_and_design/frequency_response", "signal_03_frequency_response_and_design/iir_design"]
+
+[[family]]
+path = "eng/signal"
+page = "manual/eng/signal.md"
+title = "Signal processing"
+maxdepth = 2
+children = ["signal/signal_01_windows_and_convolution", "signal/signal_02_recursive_filters", "signal/signal_03_frequency_response_and_design"]
+
+[[family]]
+path = "eng/lti/lti_01_models_and_analysis"
+page = "manual/eng/lti/lti_01_models_and_analysis.md"
+title = "Systems 1: Models and Analysis"
+maxdepth = 2
+children = ["lti_01_models_and_analysis/state_space_models", "lti_01_models_and_analysis/controllability_and_gramians", "lti_01_models_and_analysis/poles_zeros_and_response"]
+
+[[family]]
+path = "eng/lti/lti_02_simulation"
+page = "manual/eng/lti/lti_02_simulation.md"
+title = "Systems 2: Simulation"
+maxdepth = 2
+children = ["lti_02_simulation/simulating_a_system"]
+
+[[family]]
+path = "eng/lti"
+page = "manual/eng/lti.md"
+title = "Linear systems"
+maxdepth = 2
+children = ["lti/lti_01_models_and_analysis", "lti/lti_02_simulation"]
+
+[[family]]
+path = "eng/control/control_01_optimal_feedback"
+page = "manual/eng/control/control_01_optimal_feedback.md"
+title = "Control 1: Optimal Feedback"
+maxdepth = 2
+children = ["control_01_optimal_feedback/riccati_equations_and_lqr", "control_01_optimal_feedback/closed_loop_behaviour"]
+
+[[family]]
+path = "eng/control/control_02_estimation"
+page = "manual/eng/control/control_02_estimation.md"
+title = "Control 2: Estimation"
+maxdepth = 2
+children = ["control_02_estimation/steady_state_estimator", "control_02_estimation/kalman_filter", "control_02_estimation/smoothing"]
+
+[[family]]
+path = "eng/control/control_03_classical_design"
+page = "manual/eng/control/control_03_classical_design.md"
+title = "Control 3: Classical Design"
+maxdepth = 2
+children = ["control_03_classical_design/pole_placement", "control_03_classical_design/pid_controllers", "control_03_classical_design/loop_analysis_and_margins"]
+
+[[family]]
+path = "eng/control/control_04_model_predictive_control"
+page = "manual/eng/control/control_04_model_predictive_control.md"
+title = "Control 4: Model-Predictive Control"
+maxdepth = 2
+children = ["control_04_model_predictive_control/condensed_mpc", "control_04_model_predictive_control/receding_horizon_control"]
+
+[[family]]
+path = "eng/control"
+page = "manual/eng/control.md"
+title = "Control"
+maxdepth = 2
+children = ["control/control_01_optimal_feedback", "control/control_02_estimation", "control/control_03_classical_design", "control/control_04_model_predictive_control"]
+
+[[family]]
+path = "eng/circuit/circuit_01_linear_networks"
+page = "manual/eng/circuit/circuit_01_linear_networks.md"
+title = "Circuits 1: Linear Networks"
+maxdepth = 2
+children = ["circuit_01_linear_networks/describing_a_circuit", "circuit_01_linear_networks/dc_operating_point", "circuit_01_linear_networks/ac_analysis"]
+
+[[family]]
+path = "eng/circuit/circuit_02_transient"
+page = "manual/eng/circuit/circuit_02_transient.md"
+title = "Circuits 2: Transient Response"
+maxdepth = 2
+children = ["circuit_02_transient/step_response", "circuit_02_transient/time_varying_sources", "circuit_02_transient/schemes_and_step_size"]
+
+[[family]]
+path = "eng/circuit/circuit_03_devices"
+page = "manual/eng/circuit/circuit_03_devices.md"
+title = "Circuits 3: Diodes and Transistors"
+maxdepth = 2
+children = ["circuit_03_devices/diodes_and_bias", "circuit_03_devices/transistor_amplifier", "circuit_03_devices/rectifier_transient", "circuit_03_devices/mosfets_and_charge_storage"]
+
+[[family]]
+path = "eng/circuit"
+page = "manual/eng/circuit.md"
+title = "Circuits"
+maxdepth = 2
+children = ["circuit/circuit_01_linear_networks", "circuit/circuit_02_transient", "circuit/circuit_03_devices"]
+
+[[family]]
+path = "eng/structure/structure_01_trusses"
+page = "manual/eng/structure/structure_01_trusses.md"
+title = "Structures 1: Trusses"
+maxdepth = 2
+children = ["structure_01_trusses/describing_a_truss", "structure_01_trusses/static_analysis", "structure_01_trusses/supports_loads_and_sweeps"]
+
+[[family]]
+path = "eng/structure/structure_02_frames"
+page = "manual/eng/structure/structure_02_frames.md"
+title = "Structures 2: Frames"
+maxdepth = 2
+children = ["structure_02_frames/describing_a_frame", "structure_02_frames/beams_and_end_actions", "structure_02_frames/portal_frames"]
+
+[[family]]
+path = "eng/structure/structure_03_dynamics"
+page = "manual/eng/structure/structure_03_dynamics.md"
+title = "Structures 3: Dynamics"
+maxdepth = 2
+children = ["structure_03_dynamics/mass_and_modes", "structure_03_dynamics/buckling", "structure_03_dynamics/transient_response", "structure_03_dynamics/harmonic_response"]
+
+[[family]]
+path = "eng/structure/structure_04_large_displacements"
+page = "manual/eng/structure/structure_04_large_displacements.md"
+title = "Structures 4: Large Displacements"
+maxdepth = 2
+children = ["structure_04_large_displacements/nonlinear_statics", "structure_04_large_displacements/large_amplitude_motion"]
+
+[[family]]
+path = "eng/structure"
+page = "manual/eng/structure.md"
+title = "Structures"
+maxdepth = 2
+children = ["structure/structure_01_trusses", "structure/structure_02_frames", "structure/structure_03_dynamics", "structure/structure_04_large_displacements"]
+
+[[symbol]]
+qualname = "eng::signal_01_windows_and_convolution::Windows"
+kind = "page"
+family = "eng/signal/signal_01_windows_and_convolution"
+page = "manual/eng/signal/signal_01_windows_and_convolution/windows.md"
+summary = "Windows"
+
+[[symbol]]
+qualname = "eng::signal_01_windows_and_convolution::Convolution and correlation"
+kind = "page"
+family = "eng/signal/signal_01_windows_and_convolution"
+page = "manual/eng/signal/signal_01_windows_and_convolution/convolution_and_correlation.md"
+summary = "Convolution and correlation"
+
+[[symbol]]
+qualname = "eng::signal_02_recursive_filters::Filters and streaming"
+kind = "page"
+family = "eng/signal/signal_02_recursive_filters"
+page = "manual/eng/signal/signal_02_recursive_filters/filters_and_streaming.md"
+summary = "Filters and streaming"
+
+[[symbol]]
+qualname = "eng::signal_02_recursive_filters::Second-order sections"
+kind = "page"
+family = "eng/signal/signal_02_recursive_filters"
+page = "manual/eng/signal/signal_02_recursive_filters/second_order_sections.md"
+summary = "Second-order sections"
+
+[[symbol]]
+qualname = "eng::signal_02_recursive_filters::Zero-phase filtering"
+kind = "page"
+family = "eng/signal/signal_02_recursive_filters"
+page = "manual/eng/signal/signal_02_recursive_filters/zero_phase_filtering.md"
+summary = "Zero-phase filtering"
+
+[[symbol]]
+qualname = "eng::signal_03_frequency_response_and_design::Frequency response"
+kind = "page"
+family = "eng/signal/signal_03_frequency_response_and_design"
+page = "manual/eng/signal/signal_03_frequency_response_and_design/frequency_response.md"
+summary = "Frequency response"
+
+[[symbol]]
+qualname = "eng::signal_03_frequency_response_and_design::IIR design"
+kind = "page"
+family = "eng/signal/signal_03_frequency_response_and_design"
+page = "manual/eng/signal/signal_03_frequency_response_and_design/iir_design.md"
+summary = "IIR design"
+
+[[symbol]]
+qualname = "eng::lti_01_models_and_analysis::State-space models"
+kind = "page"
+family = "eng/lti/lti_01_models_and_analysis"
+page = "manual/eng/lti/lti_01_models_and_analysis/state_space_models.md"
+summary = "State-space models"
+
+[[symbol]]
+qualname = "eng::lti_01_models_and_analysis::Controllability and gramians"
+kind = "page"
+family = "eng/lti/lti_01_models_and_analysis"
+page = "manual/eng/lti/lti_01_models_and_analysis/controllability_and_gramians.md"
+summary = "Controllability and gramians"
+
+[[symbol]]
+qualname = "eng::lti_01_models_and_analysis::Poles, zeros and frequency response"
+kind = "page"
+family = "eng/lti/lti_01_models_and_analysis"
+page = "manual/eng/lti/lti_01_models_and_analysis/poles_zeros_and_response.md"
+summary = "Poles, zeros and frequency response"
+
+[[symbol]]
+qualname = "eng::lti_02_simulation::Simulating a system"
+kind = "page"
+family = "eng/lti/lti_02_simulation"
+page = "manual/eng/lti/lti_02_simulation/simulating_a_system.md"
+summary = "Simulating a system"
+
+[[symbol]]
+qualname = "eng::control_01_optimal_feedback::Riccati equations and LQR"
+kind = "page"
+family = "eng/control/control_01_optimal_feedback"
+page = "manual/eng/control/control_01_optimal_feedback/riccati_equations_and_lqr.md"
+summary = "Riccati equations and LQR"
+
+[[symbol]]
+qualname = "eng::control_01_optimal_feedback::Closed-loop behaviour"
+kind = "page"
+family = "eng/control/control_01_optimal_feedback"
+page = "manual/eng/control/control_01_optimal_feedback/closed_loop_behaviour.md"
+summary = "Closed-loop behaviour"
+
+[[symbol]]
+qualname = "eng::control_02_estimation::The steady-state estimator"
+kind = "page"
+family = "eng/control/control_02_estimation"
+page = "manual/eng/control/control_02_estimation/steady_state_estimator.md"
+summary = "The steady-state estimator"
+
+[[symbol]]
+qualname = "eng::control_02_estimation::The Kalman filter"
+kind = "page"
+family = "eng/control/control_02_estimation"
+page = "manual/eng/control/control_02_estimation/kalman_filter.md"
+summary = "The Kalman filter"
+
+[[symbol]]
+qualname = "eng::control_02_estimation::Smoothing"
+kind = "page"
+family = "eng/control/control_02_estimation"
+page = "manual/eng/control/control_02_estimation/smoothing.md"
+summary = "Smoothing"
+
+[[symbol]]
+qualname = "eng::control_03_classical_design::Pole placement"
+kind = "page"
+family = "eng/control/control_03_classical_design"
+page = "manual/eng/control/control_03_classical_design/pole_placement.md"
+summary = "Pole placement"
+
+[[symbol]]
+qualname = "eng::control_03_classical_design::PID controllers"
+kind = "page"
+family = "eng/control/control_03_classical_design"
+page = "manual/eng/control/control_03_classical_design/pid_controllers.md"
+summary = "PID controllers"
+
+[[symbol]]
+qualname = "eng::control_03_classical_design::Loop analysis and margins"
+kind = "page"
+family = "eng/control/control_03_classical_design"
+page = "manual/eng/control/control_03_classical_design/loop_analysis_and_margins.md"
+summary = "Loop analysis and margins"
+
+[[symbol]]
+qualname = "eng::control_04_model_predictive_control::The finite-horizon problem"
+kind = "page"
+family = "eng/control/control_04_model_predictive_control"
+page = "manual/eng/control/control_04_model_predictive_control/condensed_mpc.md"
+summary = "The finite-horizon problem"
+
+[[symbol]]
+qualname = "eng::control_04_model_predictive_control::Receding-horizon control"
+kind = "page"
+family = "eng/control/control_04_model_predictive_control"
+page = "manual/eng/control/control_04_model_predictive_control/receding_horizon_control.md"
+summary = "Receding-horizon control"
+
+[[symbol]]
+qualname = "eng::circuit_01_linear_networks::Describing a circuit"
+kind = "page"
+family = "eng/circuit/circuit_01_linear_networks"
+page = "manual/eng/circuit/circuit_01_linear_networks/describing_a_circuit.md"
+summary = "Describing a circuit"
+
+[[symbol]]
+qualname = "eng::circuit_01_linear_networks::DC operating point"
+kind = "page"
+family = "eng/circuit/circuit_01_linear_networks"
+page = "manual/eng/circuit/circuit_01_linear_networks/dc_operating_point.md"
+summary = "DC operating point"
+
+[[symbol]]
+qualname = "eng::circuit_01_linear_networks::AC analysis"
+kind = "page"
+family = "eng/circuit/circuit_01_linear_networks"
+page = "manual/eng/circuit/circuit_01_linear_networks/ac_analysis.md"
+summary = "AC analysis"
+
+[[symbol]]
+qualname = "eng::circuit_02_transient::Step response and starting state"
+kind = "page"
+family = "eng/circuit/circuit_02_transient"
+page = "manual/eng/circuit/circuit_02_transient/step_response.md"
+summary = "Step response and starting state"
+
+[[symbol]]
+qualname = "eng::circuit_02_transient::Time-varying sources"
+kind = "page"
+family = "eng/circuit/circuit_02_transient"
+page = "manual/eng/circuit/circuit_02_transient/time_varying_sources.md"
+summary = "Time-varying sources"
+
+[[symbol]]
+qualname = "eng::circuit_02_transient::Schemes and step size"
+kind = "page"
+family = "eng/circuit/circuit_02_transient"
+page = "manual/eng/circuit/circuit_02_transient/schemes_and_step_size.md"
+summary = "Schemes and step size"
+
+[[symbol]]
+qualname = "eng::circuit_03_devices::Diodes and bias points"
+kind = "page"
+family = "eng/circuit/circuit_03_devices"
+page = "manual/eng/circuit/circuit_03_devices/diodes_and_bias.md"
+summary = "Diodes and bias points"
+
+[[symbol]]
+qualname = "eng::circuit_03_devices::The transistor amplifier"
+kind = "page"
+family = "eng/circuit/circuit_03_devices"
+page = "manual/eng/circuit/circuit_03_devices/transistor_amplifier.md"
+summary = "The transistor amplifier"
+
+[[symbol]]
+qualname = "eng::circuit_03_devices::The rectifier in time"
+kind = "page"
+family = "eng/circuit/circuit_03_devices"
+page = "manual/eng/circuit/circuit_03_devices/rectifier_transient.md"
+summary = "The rectifier in time"
+
+[[family]]
+path = "eng/robot/robot_01_kinematics"
+page = "manual/eng/robot/robot_01_kinematics.md"
+title = "Robotics 1: Kinematics"
+maxdepth = 2
+children = ["robot_01_kinematics/describing_a_robot", "robot_01_kinematics/forward_kinematics_and_jacobians", "robot_01_kinematics/ik"]
+
+[[family]]
+path = "eng/robot/robot_02_dynamics"
+page = "manual/eng/robot/robot_02_dynamics.md"
+title = "Robotics 2: Dynamics"
+maxdepth = 2
+children = ["robot_02_dynamics/torques", "robot_02_dynamics/mass_matrix_and_simulation"]
+
+[[family]]
+path = "eng/robot/robot_03_constraints"
+page = "manual/eng/robot/robot_03_constraints.md"
+title = "Robotics 3: Constraints and Contacts"
+maxdepth = 2
+children = ["robot_03_constraints/contacts_and_support", "robot_03_constraints/pins", "robot_03_constraints/friction_and_impacts"]
+
+[[family]]
+path = "eng/robot"
+page = "manual/eng/robot.md"
+title = "Robotics"
+maxdepth = 2
+children = ["robot/robot_01_kinematics", "robot/robot_02_dynamics", "robot/robot_03_constraints"]
+
+[[family]]
+path = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation.md"
+title = "Communications 1: Modulation and Detection"
+maxdepth = 2
+children = ["comms_01_modulation/constellations_and_mapping", "comms_01_modulation/noise_and_detection", "comms_01_modulation/pulse_shaping", "comms_01_modulation/ofdm", "comms_01_modulation/channel_coding", "comms_01_modulation/iterative_codes", "comms_01_modulation/synchronisation"]
+
+[[family]]
+path = "eng/comms"
+page = "manual/eng/comms.md"
+title = "Communications"
+maxdepth = 2
+children = ["comms/comms_01_modulation"]
+
+[[symbol]]
+qualname = "eng::robot_01_kinematics::Describing a robot"
+kind = "page"
+family = "eng/robot/robot_01_kinematics"
+page = "manual/eng/robot/robot_01_kinematics/describing_a_robot.md"
+summary = "Describing a robot"
+
+[[symbol]]
+qualname = "eng::robot_01_kinematics::Forward kinematics and Jacobians"
+kind = "page"
+family = "eng/robot/robot_01_kinematics"
+page = "manual/eng/robot/robot_01_kinematics/forward_kinematics_and_jacobians.md"
+summary = "Forward kinematics and Jacobians"
+
+[[symbol]]
+qualname = "eng::robot_01_kinematics::Inverse kinematics"
+kind = "page"
+family = "eng/robot/robot_01_kinematics"
+page = "manual/eng/robot/robot_01_kinematics/ik.md"
+summary = "Inverse kinematics"
+
+[[symbol]]
+qualname = "eng::robot_02_dynamics::Inverse dynamics"
+kind = "page"
+family = "eng/robot/robot_02_dynamics"
+page = "manual/eng/robot/robot_02_dynamics/torques.md"
+summary = "Inverse dynamics"
+
+[[symbol]]
+qualname = "eng::robot_02_dynamics::Mass matrix and simulation"
+kind = "page"
+family = "eng/robot/robot_02_dynamics"
+page = "manual/eng/robot/robot_02_dynamics/mass_matrix_and_simulation.md"
+summary = "Mass matrix and simulation"
+
+[[symbol]]
+qualname = "eng::comms_01_modulation::Constellations and mapping"
+kind = "page"
+family = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation/constellations_and_mapping.md"
+summary = "Constellations and mapping"
+
+[[symbol]]
+qualname = "eng::comms_01_modulation::Noise and detection"
+kind = "page"
+family = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation/noise_and_detection.md"
+summary = "Noise and detection"
+
+[[symbol]]
+qualname = "eng::comms_01_modulation::OFDM and multipath"
+kind = "page"
+family = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation/ofdm.md"
+summary = "OFDM and multipath"
+
+[[symbol]]
+qualname = "eng::comms_01_modulation::Pulse shaping"
+kind = "page"
+family = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation/pulse_shaping.md"
+summary = "Pulse shaping"
+
+[[symbol]]
+qualname = "eng::circuit_03_devices::MOSFETs and charge storage"
+kind = "page"
+family = "eng/circuit/circuit_03_devices"
+page = "manual/eng/circuit/circuit_03_devices/mosfets_and_charge_storage.md"
+summary = "MOSFETs and charge storage"
+
+[[symbol]]
+qualname = "eng::robot_03_constraints::Contacts and support"
+kind = "page"
+family = "eng/robot/robot_03_constraints"
+page = "manual/eng/robot/robot_03_constraints/contacts_and_support.md"
+summary = "Contacts and support"
+
+[[symbol]]
+qualname = "eng::robot_03_constraints::Pins and closed chains"
+kind = "page"
+family = "eng/robot/robot_03_constraints"
+page = "manual/eng/robot/robot_03_constraints/pins.md"
+summary = "Pins and closed chains"
+
+[[symbol]]
+qualname = "eng::comms_01_modulation::Channel coding"
+kind = "page"
+family = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation/channel_coding.md"
+summary = "Channel coding"
+
+[[symbol]]
+qualname = "eng::comms_01_modulation::Synchronisation"
+kind = "page"
+family = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation/synchronisation.md"
+summary = "Synchronisation"
+
+[[symbol]]
+qualname = "eng::comms_01_modulation::LDPC and turbo codes"
+kind = "page"
+family = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation/iterative_codes.md"
+summary = "LDPC and turbo codes"
+
+[[symbol]]
+qualname = "eng::robot_03_constraints::Friction and impacts"
+kind = "page"
+family = "eng/robot/robot_03_constraints"
+page = "manual/eng/robot/robot_03_constraints/friction_and_impacts.md"
+summary = "Friction and impacts"
+
+[[symbol]]
+qualname = "eng::comms_01_modulation::LDPC and turbo codes"
+kind = "page"
+family = "eng/comms/comms_01_modulation"
+page = "manual/eng/comms/comms_01_modulation/iterative_codes.md"
+summary = "LDPC and turbo codes"
+
+[[symbol]]
+qualname = "eng::robot_03_constraints::Friction and impacts"
+kind = "page"
+family = "eng/robot/robot_03_constraints"
+page = "manual/eng/robot/robot_03_constraints/friction_and_impacts.md"
+summary = "Friction and impacts"
+
+[[symbol]]
+qualname = "eng::structure_01_trusses::Describing a truss"
+kind = "page"
+family = "eng/structure/structure_01_trusses"
+page = "manual/eng/structure/structure_01_trusses/describing_a_truss.md"
+summary = "Describing a truss"
+
+[[symbol]]
+qualname = "eng::structure_01_trusses::Static analysis"
+kind = "page"
+family = "eng/structure/structure_01_trusses"
+page = "manual/eng/structure/structure_01_trusses/static_analysis.md"
+summary = "Static analysis"
+
+[[symbol]]
+qualname = "eng::structure_01_trusses::Supports, loads and sweeps"
+kind = "page"
+family = "eng/structure/structure_01_trusses"
+page = "manual/eng/structure/structure_01_trusses/supports_loads_and_sweeps.md"
+summary = "Supports, loads and sweeps"
+
+[[symbol]]
+qualname = "eng::structure_02_frames::Describing a frame"
+kind = "page"
+family = "eng/structure/structure_02_frames"
+page = "manual/eng/structure/structure_02_frames/describing_a_frame.md"
+summary = "Describing a frame"
+
+[[symbol]]
+qualname = "eng::structure_02_frames::Beams and end actions"
+kind = "page"
+family = "eng/structure/structure_02_frames"
+page = "manual/eng/structure/structure_02_frames/beams_and_end_actions.md"
+summary = "Beams and end actions"
+
+[[symbol]]
+qualname = "eng::structure_02_frames::Portal frames"
+kind = "page"
+family = "eng/structure/structure_02_frames"
+page = "manual/eng/structure/structure_02_frames/portal_frames.md"
+summary = "Portal frames"
+
+[[symbol]]
+qualname = "eng::structure_03_dynamics::Mass and natural modes"
+kind = "page"
+family = "eng/structure/structure_03_dynamics"
+page = "manual/eng/structure/structure_03_dynamics/mass_and_modes.md"
+summary = "Mass and natural modes"
+
+[[symbol]]
+qualname = "eng::structure_03_dynamics::Buckling"
+kind = "page"
+family = "eng/structure/structure_03_dynamics"
+page = "manual/eng/structure/structure_03_dynamics/buckling.md"
+summary = "Buckling"
+
+[[symbol]]
+qualname = "eng::structure_03_dynamics::Transient response"
+kind = "page"
+family = "eng/structure/structure_03_dynamics"
+page = "manual/eng/structure/structure_03_dynamics/transient_response.md"
+summary = "Transient response"
+
+[[symbol]]
+qualname = "eng::structure_03_dynamics::Harmonic response"
+kind = "page"
+family = "eng/structure/structure_03_dynamics"
+page = "manual/eng/structure/structure_03_dynamics/harmonic_response.md"
+summary = "Harmonic response"
+
+[[symbol]]
+qualname = "eng::structure_04_large_displacements::Large-displacement statics"
+kind = "page"
+family = "eng/structure/structure_04_large_displacements"
+page = "manual/eng/structure/structure_04_large_displacements/nonlinear_statics.md"
+summary = "Large-displacement statics"
+
+[[symbol]]
+qualname = "eng::structure_04_large_displacements::Large-amplitude motion"
+kind = "page"
+family = "eng/structure/structure_04_large_displacements"
+page = "manual/eng/structure/structure_04_large_displacements/large_amplitude_motion.md"
+summary = "Large-amplitude motion"
+
+[[family]]
+path = "eng/power/power_01_networks_and_power_flow"
+page = "manual/eng/power/power_01_networks_and_power_flow.md"
+title = "Power 1: Networks and Power Flow"
+maxdepth = 2
+children = ["power_01_networks_and_power_flow/describing_a_network", "power_01_networks_and_power_flow/dc_power_flow", "power_01_networks_and_power_flow/ac_power_flow"]
+
+[[family]]
+path = "eng/power"
+page = "manual/eng/power.md"
+title = "Power systems"
+maxdepth = 2
+children = ["power/power_01_networks_and_power_flow", "power/power_02_sensitivities_and_contingencies", "power/power_03_dispatch_and_opf", "power/power_04_estimation_and_continuation"]
+
+[[symbol]]
+qualname = "eng::power_01_networks_and_power_flow::Describing a network"
+kind = "page"
+family = "eng/power/power_01_networks_and_power_flow"
+page = "manual/eng/power/power_01_networks_and_power_flow/describing_a_network.md"
+summary = "Describing a network"
+
+[[symbol]]
+qualname = "eng::power_01_networks_and_power_flow::DC power flow"
+kind = "page"
+family = "eng/power/power_01_networks_and_power_flow"
+page = "manual/eng/power/power_01_networks_and_power_flow/dc_power_flow.md"
+summary = "DC power flow"
+
+[[symbol]]
+qualname = "eng::power_01_networks_and_power_flow::AC power flow"
+kind = "page"
+family = "eng/power/power_01_networks_and_power_flow"
+page = "manual/eng/power/power_01_networks_and_power_flow/ac_power_flow.md"
+summary = "AC power flow"
+
+[[family]]
+path = "eng/power/power_02_sensitivities_and_contingencies"
+page = "manual/eng/power/power_02_sensitivities_and_contingencies.md"
+title = "Power 2: Sensitivities and Contingencies"
+maxdepth = 2
+children = ["power_02_sensitivities_and_contingencies/sensitivity_factors", "power_02_sensitivities_and_contingencies/line_outages"]
+
+[[symbol]]
+qualname = "eng::power_02_sensitivities_and_contingencies::Sensitivity factors"
+kind = "page"
+family = "eng/power/power_02_sensitivities_and_contingencies"
+page = "manual/eng/power/power_02_sensitivities_and_contingencies/sensitivity_factors.md"
+summary = "Sensitivity factors"
+
+[[symbol]]
+qualname = "eng::power_02_sensitivities_and_contingencies::Line outages"
+kind = "page"
+family = "eng/power/power_02_sensitivities_and_contingencies"
+page = "manual/eng/power/power_02_sensitivities_and_contingencies/line_outages.md"
+summary = "Line outages"
+
+[[family]]
+path = "eng/power/power_03_dispatch_and_opf"
+page = "manual/eng/power/power_03_dispatch_and_opf.md"
+title = "Power 3: Dispatch and Optimal Power Flow"
+maxdepth = 2
+children = ["power_03_dispatch_and_opf/economic_dispatch", "power_03_dispatch_and_opf/secure_dispatch", "power_03_dispatch_and_opf/optimal_power_flow"]
+
+[[symbol]]
+qualname = "eng::power_03_dispatch_and_opf::Economic dispatch"
+kind = "page"
+family = "eng/power/power_03_dispatch_and_opf"
+page = "manual/eng/power/power_03_dispatch_and_opf/economic_dispatch.md"
+summary = "Economic dispatch"
+
+[[symbol]]
+qualname = "eng::power_03_dispatch_and_opf::Secure dispatch"
+kind = "page"
+family = "eng/power/power_03_dispatch_and_opf"
+page = "manual/eng/power/power_03_dispatch_and_opf/secure_dispatch.md"
+summary = "Secure dispatch"
+
+[[symbol]]
+qualname = "eng::power_03_dispatch_and_opf::Optimal power flow"
+kind = "page"
+family = "eng/power/power_03_dispatch_and_opf"
+page = "manual/eng/power/power_03_dispatch_and_opf/optimal_power_flow.md"
+summary = "Optimal power flow"
+
+[[family]]
+path = "eng/power/power_04_estimation_and_continuation"
+page = "manual/eng/power/power_04_estimation_and_continuation.md"
+title = "Power 4: Estimation and Continuation"
+maxdepth = 2
+children = ["power_04_estimation_and_continuation/state_estimation", "power_04_estimation_and_continuation/continuation_power_flow"]
+
+[[symbol]]
+qualname = "eng::power_04_estimation_and_continuation::State estimation"
+kind = "page"
+family = "eng/power/power_04_estimation_and_continuation"
+page = "manual/eng/power/power_04_estimation_and_continuation/state_estimation.md"
+summary = "State estimation"
+
+[[symbol]]
+qualname = "eng::power_04_estimation_and_continuation::Continuation power flow"
+kind = "page"
+family = "eng/power/power_04_estimation_and_continuation"
+page = "manual/eng/power/power_04_estimation_and_continuation/continuation_power_flow.md"
+summary = "Continuation power flow"
+
+[[family]]
+path = "eng/fluid"
+page = "manual/eng/fluid.md"
+title = "Fluid networks"
+maxdepth = 2
+children = ["fluid/fluid_01_pipe_networks", "fluid/fluid_02_pumps_and_valves", "fluid/fluid_03_storage_and_operation", "fluid/fluid_04_transport"]
+
+[[family]]
+path = "eng/fluid/fluid_01_pipe_networks"
+page = "manual/eng/fluid/fluid_01_pipe_networks.md"
+title = "Fluid 1: Pipe Networks"
+maxdepth = 2
+children = ["fluid_01_pipe_networks/building_a_network", "fluid_01_pipe_networks/looped_networks", "fluid_01_pipe_networks/pipe_loss_models", "fluid_01_pipe_networks/scenarios_and_sensitivities"]
+
+[[symbol]]
+qualname = "eng::fluid_01_pipe_networks::Building a network"
+kind = "page"
+family = "eng/fluid/fluid_01_pipe_networks"
+page = "manual/eng/fluid/fluid_01_pipe_networks/building_a_network.md"
+summary = "Building a network"
+
+[[symbol]]
+qualname = "eng::fluid_01_pipe_networks::Looped networks"
+kind = "page"
+family = "eng/fluid/fluid_01_pipe_networks"
+page = "manual/eng/fluid/fluid_01_pipe_networks/looped_networks.md"
+summary = "Looped networks"
+
+[[symbol]]
+qualname = "eng::fluid_01_pipe_networks::Pipe loss models"
+kind = "page"
+family = "eng/fluid/fluid_01_pipe_networks"
+page = "manual/eng/fluid/fluid_01_pipe_networks/pipe_loss_models.md"
+summary = "Pipe loss models"
+
+[[symbol]]
+qualname = "eng::fluid_01_pipe_networks::Scenarios and sensitivities"
+kind = "page"
+family = "eng/fluid/fluid_01_pipe_networks"
+page = "manual/eng/fluid/fluid_01_pipe_networks/scenarios_and_sensitivities.md"
+summary = "Scenarios and sensitivities"
+
+[[family]]
+path = "eng/fluid/fluid_02_pumps_and_valves"
+page = "manual/eng/fluid/fluid_02_pumps_and_valves.md"
+title = "Fluid 2: Pumps and Valves"
+maxdepth = 2
+children = ["fluid_02_pumps_and_valves/pumps", "fluid_02_pumps_and_valves/control_valves"]
+
+[[symbol]]
+qualname = "eng::fluid_02_pumps_and_valves::Pumps"
+kind = "page"
+family = "eng/fluid/fluid_02_pumps_and_valves"
+page = "manual/eng/fluid/fluid_02_pumps_and_valves/pumps.md"
+summary = "Pumps"
+
+[[symbol]]
+qualname = "eng::fluid_02_pumps_and_valves::Control valves"
+kind = "page"
+family = "eng/fluid/fluid_02_pumps_and_valves"
+page = "manual/eng/fluid/fluid_02_pumps_and_valves/control_valves.md"
+summary = "Control valves"
+
+[[family]]
+path = "eng/fluid/fluid_03_storage_and_operation"
+page = "manual/eng/fluid/fluid_03_storage_and_operation.md"
+title = "Fluid 3: Storage and Operation"
+maxdepth = 2
+children = ["fluid_03_storage_and_operation/demand_policy", "fluid_03_storage_and_operation/tanks_and_patterns", "fluid_03_storage_and_operation/controls_and_rules"]
+
+[[symbol]]
+qualname = "eng::fluid_03_storage_and_operation::Demand policy"
+kind = "page"
+family = "eng/fluid/fluid_03_storage_and_operation"
+page = "manual/eng/fluid/fluid_03_storage_and_operation/demand_policy.md"
+summary = "Demand policy"
+
+[[symbol]]
+qualname = "eng::fluid_03_storage_and_operation::Tanks and patterns"
+kind = "page"
+family = "eng/fluid/fluid_03_storage_and_operation"
+page = "manual/eng/fluid/fluid_03_storage_and_operation/tanks_and_patterns.md"
+summary = "Tanks and patterns"
+
+[[symbol]]
+qualname = "eng::fluid_03_storage_and_operation::Controls and rules"
+kind = "page"
+family = "eng/fluid/fluid_03_storage_and_operation"
+page = "manual/eng/fluid/fluid_03_storage_and_operation/controls_and_rules.md"
+summary = "Controls and rules"
+
+[[family]]
+path = "eng/fluid/fluid_04_transport"
+page = "manual/eng/fluid/fluid_04_transport.md"
+title = "Fluid 4: Transport"
+maxdepth = 2
+children = ["fluid_04_transport/constituents_and_age", "fluid_04_transport/thermal_routing"]
+
+[[symbol]]
+qualname = "eng::fluid_04_transport::Constituents and water age"
+kind = "page"
+family = "eng/fluid/fluid_04_transport"
+page = "manual/eng/fluid/fluid_04_transport/constituents_and_age.md"
+summary = "Constituents and water age"
+
+[[symbol]]
+qualname = "eng::fluid_04_transport::Thermal routing"
+kind = "page"
+family = "eng/fluid/fluid_04_transport"
+page = "manual/eng/fluid/fluid_04_transport/thermal_routing.md"
+summary = "Thermal routing"
+
+[[family]]
+path = "eng/thermal/thermal_01_conduction"
+page = "manual/eng/thermal/thermal_01_conduction.md"
+title = "Thermal 1: Conduction"
+maxdepth = 2
+children = ["thermal_01_conduction/networks_and_steady_state", "thermal_01_conduction/transient_response", "thermal_01_conduction/walls_and_fins"]
+
+[[family]]
+path = "eng/thermal/thermal_02_exchangers_and_air"
+page = "manual/eng/thermal/thermal_02_exchangers_and_air.md"
+title = "Thermal 2: Exchangers and Air"
+maxdepth = 2
+children = ["thermal_02_exchangers_and_air/exchangers", "thermal_02_exchangers_and_air/moist_air", "thermal_02_exchangers_and_air/properties_and_systems"]
+
+[[family]]
+path = "eng/thermal"
+page = "manual/eng/thermal.md"
+title = "Thermal engineering"
+maxdepth = 2
+children = ["thermal/thermal_01_conduction", "thermal/thermal_02_exchangers_and_air"]
+
+[[symbol]]
+qualname = "eng::thermal_01_conduction::Networks and steady state"
+kind = "page"
+family = "eng/thermal/thermal_01_conduction"
+page = "manual/eng/thermal/thermal_01_conduction/networks_and_steady_state.md"
+summary = "Networks and steady state"
+
+[[symbol]]
+qualname = "eng::thermal_01_conduction::Transient response"
+kind = "page"
+family = "eng/thermal/thermal_01_conduction"
+page = "manual/eng/thermal/thermal_01_conduction/transient_response.md"
+summary = "Transient response"
+
+[[symbol]]
+qualname = "eng::thermal_01_conduction::Walls, fins and meshes"
+kind = "page"
+family = "eng/thermal/thermal_01_conduction"
+page = "manual/eng/thermal/thermal_01_conduction/walls_and_fins.md"
+summary = "Walls, fins and meshes"
+
+[[symbol]]
+qualname = "eng::thermal_02_exchangers_and_air::Heat exchangers"
+kind = "page"
+family = "eng/thermal/thermal_02_exchangers_and_air"
+page = "manual/eng/thermal/thermal_02_exchangers_and_air/exchangers.md"
+summary = "Heat exchangers"
+
+[[symbol]]
+qualname = "eng::thermal_02_exchangers_and_air::Moist air"
+kind = "page"
+family = "eng/thermal/thermal_02_exchangers_and_air"
+page = "manual/eng/thermal/thermal_02_exchangers_and_air/moist_air.md"
+summary = "Moist air"
+
+[[symbol]]
+qualname = "eng::thermal_02_exchangers_and_air::Properties and a recovery ventilator"
+kind = "page"
+family = "eng/thermal/thermal_02_exchangers_and_air"
+page = "manual/eng/thermal/thermal_02_exchangers_and_air/properties_and_systems.md"
+summary = "Properties and a recovery ventilator"

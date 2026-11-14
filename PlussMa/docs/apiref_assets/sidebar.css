@@ -211,10 +211,16 @@
 }
 
 /* ---- per-type styling ------------------------------------------------- */
+.apiref-nav__item[data-type="framework"] > .apiref-nav__row > .apiref-nav__link,
 .apiref-nav__item[data-type="family"] > .apiref-nav__row > .apiref-nav__link {
   font-weight: 600;
   letter-spacing: 0.02em;
   color: #2a3a4d;
+}
+
+.apiref-nav__item[data-type="framework"] > .apiref-nav__row > .apiref-nav__link {
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .apiref-nav__item[data-type="class"] > .apiref-nav__row > .apiref-nav__link,
@@ -318,4 +324,43 @@ div.sphinxsidebar:has(.apiref-nav) .sphinxsidebarwrapper {
   .apiref-nav.is-collapsed .apiref-nav__head::after {
     content: "▸";
   }
+}
+
+/* ---- User Guide / API Reference switch for the current topic ------------- */
+.apiref-nav__tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.55rem;
+  padding: 0.18rem;
+  border: 1px solid var(--ap-line);
+  border-radius: 0.5rem;
+  background: var(--ap-hover);
+}
+
+.apiref-nav__tab {
+  flex: 1 1 0;
+  padding: 0.28rem 0.3rem;
+  border-radius: 0.38rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ap-muted);
+}
+
+a.apiref-nav__tab:hover {
+  color: var(--ap-accent);
+  background: #fff;
+}
+
+.apiref-nav__tab.is-current {
+  color: var(--ap-accent);
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(18, 48, 71, 0.12);
+}
+
+.apiref-nav__tab.is-soon {
+  opacity: 0.6;
+  cursor: default;
 }

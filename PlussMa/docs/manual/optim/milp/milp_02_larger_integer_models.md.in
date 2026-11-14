@@ -46,4 +46,10 @@ A dense `milp::Problem` is solved with the sparse engine by `lp::solve_sparse(pr
 - Dense and sparse engines must agree on the optimum of a well-formed model.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+milp_02_larger_integer_models/larger_integer_models
+```
 <!-- apiref:toctree:end -->

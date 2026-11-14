@@ -22,7 +22,7 @@ integ::QuadraNdResult integ::quadra(const integ::IntegrandNdFn &fn, const std::v
 ## Parameters
 
 `const integ::IntegrandFn &fn`
-: `Series -> Series`: the integrand at a whole `Series` of nodes, same shape out, any leading batch axes with the node axis last.
+: `Series (Series)`: the integrand at a whole `Series` of nodes, same shape out, any leading batch axes with the node axis last.
 
 `double a, double b`
 : The interval; either may be ±infinity.
@@ -31,7 +31,7 @@ integ::QuadraNdResult integ::quadra(const integ::IntegrandNdFn &fn, const std::v
 : Rule, resolution, tolerance.
 
 `const integ::IntegrandNdFn &fn`
-: `std::vector<Series> -> Series`: one coordinate `Series` per axis.
+: `Series (std::vector<Series>)`: one coordinate `Series` per axis.
 
 `const std::vector<std::pair<double, double>> &bounds`
 : One `(lower, upper)` pair per axis.

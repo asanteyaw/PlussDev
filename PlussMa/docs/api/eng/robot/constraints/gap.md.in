@@ -1,0 +1,61 @@
+# `robot::gap`
+
+The distance of contact points from their planes.
+
+## Signature
+
+```cpp
+pluss::Series robot::gap(const robot::Robot& robot, const robot::Contacts& contacts, const pluss::Series& q);
+```
+
+## What It Does
+
+Returns `n . x - offset` for every contact: positive above the plane, zero on it, negative below.
+
+## Parameters
+
+`robot`
+: The compiled robot.
+
+`contacts`
+: The contacts.
+
+`q`
+: The joint values, `[..., links]`.
+
+## Returns
+
+A real `[..., m]` array in metres.
+
+## Errors
+
+Throws `pluss::Error` for contacts of the wrong shape, a link outside the robot, or a malformed `q`.
+
+## Interpretation and Use
+
+The gap tells whether a contact is in range; `constrain` returns it as `gap`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Heights above a floor and a tilted plane.
+
+@@example Eng/api/robot_contact_gap.cpp@@
+
+### Example 2
+
+The gap of three sliders.
+
+@@example Eng/api/robot_contact_rest.cpp@@
+
+### Example 3
+
+Rejected contacts.
+
+@@example Eng/api/robot_contact_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

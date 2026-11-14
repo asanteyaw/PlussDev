@@ -46,3 +46,16 @@ state 1: drift 0.6900 = 2 x mu + (sigma_1^2 + sigma_2^2) = 0.6900;  diffusion (1
 state 2: drift 0.2600 = 2 x mu + (sigma_1^2 + sigma_2^2) = 0.2600;  diffusion (-0.1200, -0.2400) = 2 x sigma = (-0.1200, -0.2400)
 ```
 The diffusion has shape `[3, 2]`: three states, two sources. For `g = x²` each row matches `2xμ + σ₁² + σ₂²` for the drift and `2xσ_k` for the diffusion, to the printed digits.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ito_s_lemma_for_three_functions.html">
+    <span class="label">Previous</span>
+    <span class="title">Ito's lemma for three functions</span>
+  </a>
+  <a class="next-link" href="products_and_quotients.html">
+    <span class="label">Next</span>
+    <span class="title">Products and quotients</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

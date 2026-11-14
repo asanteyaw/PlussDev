@@ -40,7 +40,7 @@ int main() {
   // Anchored at 1: F(x) = (x^3 - 1) / 3.
   const math::Function anchored = operators::integral("x", 1.0)(square);
   const auto x = pluss::make_series({1.0, 2.0, 4.0});
-  out.writeln("anchored x^2 from 1   (", kind(anchored), ")", anchored({x}).pull<double>(), " (x^3-1)/3:", x.pow(3).sub(1.0).div(3.0).pull<double>());
+  out.writeln("anchored x^2 from 1   (", kind(anchored), ")", anchored({x}).items<double>(), " (x^3-1)/3:", x.pow(3).sub(1.0).div(3.0).items<double>());
 
   // Definite: x is bound by the limits, so no argument remains.
   const math::Function definite = operators::integral("x", 1.0, 3.0)(square);
@@ -83,15 +83,15 @@ int main() {
 
   const auto a = pluss::make_series({0.5, 1.0, 2.0});
   const auto result = area({a});
-  out.writeln("a                ", a.pull<double>());
-  out.writeln("integral         ", result.pull<double>());
+  out.writeln("a                ", a.items<double>());
+  out.writeln("integral         ", result.items<double>());
   std::vector<double> exact;
-  for (const double value : a.pull<double>()) exact.push_back(std::sqrt(M_PI) / 2.0 * std::erf(value) / value);
+  for (const double value : a.items<double>()) exact.push_back(std::sqrt(M_PI) / 2.0 * std::erf(value) / value);
   out.writeln("sqrt(pi) erf(a)/(2a)", exact);
 
   // The anchored form also carries the other variables, at one upper limit.
   const math::Function anchored = operators::integral("x", 0.0)(f);
-  out.writeln("anchored, x = 1  ", anchored({pluss::make_series(1.0, as_f64()), a}).pull<double>());
+  out.writeln("anchored, x = 1  ", anchored({pluss::make_series(1.0, as_f64()), a}).items<double>());
 }
 ```
 
@@ -106,7 +106,7 @@ The integral reports one variable, `a`, and arity one. The three values agree wi
 | a variable that the function does not have | error when the operator is applied |
 | an integrand that is infinite at an endpoint | error from the integrand's own domain check |
 
-Quadrature evaluates the integrand at the endpoints, so an integrand that is singular there, such as `1/x` on `[0, 1]` or `1/sqrt(x)` on `[0, 1]`, is reported through the integrand's own domain error rather than returned as a number. The program shows each.
+An exact primitive is evaluated at the endpoints, so `1/x` on `[0, 1]` is reported through the logarithm's domain error. Numerical quadrature never evaluates the integrand at an endpoint, so `1/sqrt(x)` on `[0, 1]`, which is singular there, does not fail on the division; its slowly converging integral is reported as not converged rather than returned as a number. The program shows each.
 
 @@run@@
 ```cpp
@@ -148,7 +148,20 @@ int main() {
 }
 ```
 
-The first five rows are checked when the operator is created or applied, before any integrand is evaluated. The last three show endpoint behaviour. `1/x` has an exact primitive, log|x|, which cannot be evaluated at 0, and the error comes from that logarithm; `1/sqrt(x)` is integrated numerically, the rule evaluates the integrand at the endpoint 0, and the error comes from the division. Both integrals are in fact improper, and the correct answers (infinite for `1/x`, 2 for `1/sqrt(x)`) are outside the scope of a finite quadrature. Away from the singularity, `1/x` over [1, 2] is fine. For an improper integral, change the variable analytically or integrate from a small positive limit.
+The first five rows are checked when the operator is created or applied, before any integrand is evaluated. The last three show endpoint behaviour. `1/x` has an exact primitive, log|x|, which cannot be evaluated at 0, and the error comes from that logarithm; `1/sqrt(x)` is integrated numerically; the rule never evaluates the integrand at the endpoint 0, but the singularity keeps the integral from converging to the tolerance, and that is the error reported. Both integrals are in fact improper, and the correct answers (infinite for `1/x`, 2 for `1/sqrt(x)`) are outside the scope of a finite quadrature. Away from the singularity, `1/x` over [1, 2] is fine. For an improper integral, change the variable analytically or integrate from a small positive limit.
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="antiderivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">Antiderivatives</span>
+  </a>
+  <a class="next-link" href="numerical_integrals_and_batches.html">
+    <span class="label">Next</span>
+    <span class="title">Numerical integrals and batches</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

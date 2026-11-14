@@ -49,19 +49,19 @@ int main() {
   const auto weighted = reg::ols_fit(pluss::make_series(ys, {6}, as_f64()), pluss::make_series(xs, {6}, as_f64()), options);
   const auto repeated = reg::ols_fit(pluss::make_series(repeated_y, {10}, as_f64()), pluss::make_series(repeated_x, {10}, as_f64()));
 
-  out.writeln("coefficients   weighted", weighted.coefficients.pull<double>(), " repeated rows", repeated.coefficients.pull<double>());
+  out.writeln("coefficients   weighted", weighted.coefficients.items<double>(), " repeated rows", repeated.coefficients.items<double>());
   out.writeln("sse            weighted", weighted.sse, " repeated rows", repeated.sse);
   out.writeln("sst            weighted", weighted.sst, " repeated rows", repeated.sst);
   out.writeln("R-squared      weighted", weighted.rsquared, " repeated rows", repeated.rsquared);
   out.writeln("residual df    weighted", weighted.df_resid, " repeated rows", repeated.df_resid);
-  out.writeln("std errors     weighted", weighted.std_errors.pull<double>(), " repeated rows", repeated.std_errors.pull<double>());
-  out.writeln("ratio of std errors", weighted.std_errors.div(repeated.std_errors).pull<double>(), " = sqrt(df_repeated / df_weighted)", std::sqrt(8.0 / 4.0));
+  out.writeln("std errors     weighted", weighted.std_errors.items<double>(), " repeated rows", repeated.std_errors.items<double>());
+  out.writeln("ratio of std errors", weighted.std_errors.div(repeated.std_errors).items<double>(), " = sqrt(df_repeated / df_weighted)", std::sqrt(8.0 / 4.0));
 
   // Scaling every weight changes nothing but the units of the sums of squares.
   reg::OLSOptions scaled;
   scaled.weights = pluss::make_series(std::vector<double>{30, 10, 20, 10, 20, 10}, {6}, as_f64());
   const auto big = reg::ols_fit(pluss::make_series(ys, {6}, as_f64()), pluss::make_series(xs, {6}, as_f64()), scaled);
-  out.writeln("weights times 10: coefficients", big.coefficients.pull<double>(), " std errors", big.std_errors.pull<double>(), " R2", big.rsquared, " F", big.f_stat, "(F before", weighted.f_stat, ")");
+  out.writeln("weights times 10: coefficients", big.coefficients.items<double>(), " std errors", big.std_errors.items<double>(), " R2", big.rsquared, " F", big.f_stat, "(F before", weighted.f_stat, ")");
   out.writeln("                  sse", big.sse, " (ten times", 10.0 * weighted.sse, ")");
 }
 ```
@@ -98,12 +98,12 @@ int main() {
   options.weights = pluss::make_series(weights, {40}, as_f64());
   const auto weighted = reg::ols_fit(y, x, options);
   out.writeln("true coefficients [2.0000, 1.5000]");
-  out.writeln("OLS      ", plain.coefficients.pull<double>(), " std errors", plain.std_errors.pull<double>());
-  out.writeln("weighted ", weighted.coefficients.pull<double>(), " std errors", weighted.std_errors.pull<double>());
+  out.writeln("OLS      ", plain.coefficients.items<double>(), " std errors", plain.std_errors.items<double>());
+  out.writeln("weighted ", weighted.coefficients.items<double>(), " std errors", weighted.std_errors.items<double>());
 
   // The spread of the residuals in the first and second halves of the data.
   auto spread = [&](const pluss::Series &r, int first, int count) {
-    std::vector<double> v = r.pull<double>();
+    std::vector<double> v = r.items<double>();
     double sum = 0.0;
     for (int i = first; i < first + count; ++i) {
       sum += v[i] * v[i];
@@ -145,7 +145,7 @@ int main() {
   reg::OLSOptions zero;
   zero.weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 1, 0, 1}, {8}, as_f64());
   const auto fit = reg::ols_fit(y, x, zero);
-  out.writeln("weight 0 on the 7th row: nobs", fit.nobs, " dropped", fit.dropped_observations, " fitted values", fit.fitted_values.numel(), " coefficients", fit.coefficients.pull<double>());
+  out.writeln("weight 0 on the 7th row: nobs", fit.nobs, " dropped", fit.dropped_observations, " fitted values", fit.fitted_values.numel(), " coefficients", fit.coefficients.items<double>());
 
   auto attempt = [&](const char *label, std::vector<double> w, bool drop_missing = true) {
     reg::OLSOptions o;
@@ -169,3 +169,16 @@ int main() {
 ```
 
 A zero weight removes the row (`nobs` 7, `dropped_observations` 1, and the fitted values and residuals have 7 entries). A negative weight, a weight vector of the wrong length, and a case in which every weight is zero are errors. A `NaN` weight makes its row incomplete: it is dropped by default and is an error when `drop_missing` is off.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="options.html">
+    <span class="label">Previous</span>
+    <span class="title">Options</span>
+  </a>
+  <a class="next-link" href="missing_data.html">
+    <span class="label">Next</span>
+    <span class="title">Missing data</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

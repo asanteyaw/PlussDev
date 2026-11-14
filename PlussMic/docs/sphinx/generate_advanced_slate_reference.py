@@ -110,7 +110,7 @@ def render() -> str:
             "### API Signature",
             "",
             "```text",
-            f"{api.owner}::{api.name}({api.args}) -> {api.result}",
+            f"{api.result} {api.owner}::{api.name}({api.args})",
             "```",
             "",
             "### Notes",

@@ -25,8 +25,8 @@ int main() {
   const auto d = x.calc.diff.marcus([](const pluss::Series& s) { return s.log(); }, mu, sigma,
                                     [](const pluss::Series& s) { return s; }, jumps);
   std::cout << std::fixed << std::setprecision(6);
-  std::cout << "continuous drift  " << d.drift.item<double>() << "  (mu / x = " << 0.1 << ")\n";
-  std::cout << "diffusion         " << d.diffusion.item<double>() << "  (sigma / x = " << 0.3 << ")\n";
+  std::cout << "continuous drift  " << d.drift.squeeze().item<double>() << "  (mu / x = " << 0.1 << ")\n";
+  std::cout << "diffusion         " << d.diffusion.squeeze().item<double>() << "  (sigma / x = " << 0.3 << ")\n";
   const auto js = d.jump_sizes.host<double>();
   std::cout << "jump sizes of log X: " << js[0] << ", " << js[1] << "  (the atoms 0.4 and -0.7)\n";
   return 0;
@@ -41,3 +41,12 @@ diffusion         0.300000  (sigma / x = 0.300000)
 jump sizes of log X: 0.400000, -0.700000  (the atoms 0.4 and -0.7)
 ```
 The continuous part is the Stratonovich one: drift `μ/x = 0.1` and diffusion `σ/x = 0.3`, with no second-order term. The jump sizes of `log X` are 0.4 and −0.7, the atoms themselves.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="what_a_jump_does_to_the_state.html">
+    <span class="label">Previous</span>
+    <span class="title">What a jump does to the state</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

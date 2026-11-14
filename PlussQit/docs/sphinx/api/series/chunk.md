@@ -7,7 +7,7 @@
 ## Signature
 
 ```cpp
-Series::chunk(std::int64_t chunks, std::int64_t dim = 0) const
+std::vector<Series> Series::chunk(std::int64_t chunks, std::int64_t dim = 0) const
     -> std::vector<Series>
 ```
 

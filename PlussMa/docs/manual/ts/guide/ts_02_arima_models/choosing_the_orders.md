@@ -161,3 +161,16 @@ With 30 replications each fraction carries an error of up to about 0.09, so read
 - **Check the winner.** A model chosen by a criterion can still leave structure in the residuals.
 
 Where next: [Checking the residuals](checking_the_residuals.md) tests whether the chosen model has captured the dependence.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="forecasting.html">
+    <span class="label">Previous</span>
+    <span class="title">Forecasting</span>
+  </a>
+  <a class="next-link" href="checking_the_residuals.html">
+    <span class="label">Next</span>
+    <span class="title">Checking the residuals</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

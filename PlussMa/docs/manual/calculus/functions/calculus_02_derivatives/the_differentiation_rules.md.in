@@ -70,10 +70,10 @@ int main() {
       {"neg   ", -x, one.neg()},
   };
 
-  out.writeln("x     ", p.pull<double>());
+  out.writeln("x     ", p.items<double>());
   for (const Rule &rule : rules) {
     const auto derivative = d(rule.function)({p});
-    out.writeln(rule.name, derivative.pull<double>(), " closed form", rule.closed_form.pull<double>());
+    out.writeln(rule.name, derivative.items<double>(), " closed form", rule.closed_form.items<double>());
   }
 }
 ```
@@ -108,14 +108,14 @@ int main() {
 
   const auto hx = x.mul(2.0).div(y).add(y.mul(x.pow(y.sub(1.0)))).sub(x.pow(2).reciprocal().mul(2.0));
   const auto hy = x.pow(2).div(y.pow(2)).neg().sub(1.0).add(x.pow(y).mul(x.log()));
-  out.writeln("dh/dx        ", operators::differential("x")(h)({x, y}).pull<double>());
-  out.writeln("closed form  ", hx.pull<double>());
-  out.writeln("dh/dy        ", operators::differential("y")(h)({x, y}).pull<double>());
-  out.writeln("closed form  ", hy.pull<double>());
+  out.writeln("dh/dx        ", operators::differential("x")(h)({x, y}).items<double>());
+  out.writeln("closed form  ", hx.items<double>());
+  out.writeln("dh/dy        ", operators::differential("y")(h)({x, y}).items<double>());
+  out.writeln("closed form  ", hy.items<double>());
 
   const math::Function exponential = math::function({"x"}, [](math::Function v) { return math::function(2.0).pow(v); });
-  out.writeln("d(2^x)/dx    ", operators::differential("x")(exponential)({x}).pull<double>());
-  out.writeln("2^x log 2    ", x.mul(0.0).add(2.0).pow(x).mul(std::log(2.0)).pull<double>());
+  out.writeln("d(2^x)/dx    ", operators::differential("x")(exponential)({x}).items<double>());
+  out.writeln("2^x log 2    ", x.mul(0.0).add(2.0).pow(x).mul(std::log(2.0)).items<double>());
 }
 ```
 
@@ -142,9 +142,9 @@ int main() {
     return square + square;  // 2 x^2
   });
   const auto x = pluss::make_series({1.0, 2.0, 3.0});
-  out.writeln("f'   ", operators::differential("x")(f)({x}).pull<double>(), "  (4x:", x.mul(4.0).pull<double>(), ")");
-  out.writeln("f''  ", operators::differential("x", 2)(f)({x}).pull<double>());
-  out.writeln("f''' ", operators::differential("x", 3)(f)({x}).pull<double>());
+  out.writeln("f'   ", operators::differential("x")(f)({x}).items<double>(), "  (4x:", x.mul(4.0).items<double>(), ")");
+  out.writeln("f''  ", operators::differential("x", 2)(f)({x}).items<double>());
+  out.writeln("f''' ", operators::differential("x", 3)(f)({x}).items<double>());
 }
 ```
 
@@ -192,3 +192,16 @@ A budget of 50 is enough for the second derivative of `x⁵ sin x` but not for t
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="partial_derivatives_and_higher_orders.html">
+    <span class="label">Previous</span>
+    <span class="title">Partial derivatives and higher orders</span>
+  </a>
+  <a class="next-link" href="complex_derivatives.html">
+    <span class="label">Next</span>
+    <span class="title">Complex and Wirtinger derivatives</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

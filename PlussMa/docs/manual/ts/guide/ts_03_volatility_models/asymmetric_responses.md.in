@@ -144,3 +144,16 @@ EGARCH recovers a positive asymmetry (0.100 against 0.12) and has a log-likeliho
 - **Check the residuals of the chosen model**, not just its likelihood: [Checking the fit](checking_the_fit.md).
 
 Where next: [Checking the fit](checking_the_fit.md) tests whether the chosen volatility model has absorbed the clustering.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fitting_a_garch_1_1.html">
+    <span class="label">Previous</span>
+    <span class="title">Fitting a GARCH(1, 1)</span>
+  </a>
+  <a class="next-link" href="checking_the_fit.html">
+    <span class="label">Next</span>
+    <span class="title">Checking the fit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

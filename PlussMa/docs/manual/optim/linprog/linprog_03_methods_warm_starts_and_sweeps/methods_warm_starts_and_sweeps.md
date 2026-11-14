@@ -228,3 +228,8 @@ The batch gives exactly the answers of five separate solves (the largest differe
 - **Batches give exactly the answers of separate solves.** `max_lanes` changes the memory the call needs, not what it returns.
 
 Where next: [Chapter 4](../linprog_04_large_sparse_models.md) is for large, sparse models.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

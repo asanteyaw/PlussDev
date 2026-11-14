@@ -49,7 +49,7 @@ int main() {
   for (double cut : {-2.0, -3.0, -4.0}) {
     const double below = (x < cut).to(pluss::ScalarType::Float64).mean().item<double>();
     const auto t = pluss::make_series({cut}, f64);
-    out.writeln(cut, "  ", below, "  ", normal.model().cdf(t).item<double>(), "  ", nig.model().cdf(t).item<double>(), PrintOptions{}.fixed(5));
+    out.writeln(cut, "  ", below, "  ", normal.model().cdf(t).squeeze().item<double>(), "  ", nig.model().cdf(t).squeeze().item<double>(), PrintOptions{}.fixed(5));
   }
 }
 ```
@@ -168,3 +168,12 @@ The generalised hyperbolic fit has the higher log-likelihood by construction (it
 - **Tail estimates need data in the tail.** With a few hundred observations the extreme tail is an extrapolation; present such numbers as estimates with their uncertainty.
 
 Where next: [Mixtures](mixtures.md) builds multimodal and skewed shapes from simple parts instead.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="mixtures.html">
+    <span class="label">Next</span>
+    <span class="title">Mixtures</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -181,3 +181,16 @@ The right rank is the most common answer in every row, but the quality depends o
 - **Check every series has a unit root first.** If a series is already stationary it shows up as an extra relation; test each series with ADF and KPSS ([Chapter 1](../ts_01_describing_a_series/white_noise_unit_roots_stationarity.md)).
 
 Where next: [The error-correction model](the_error_correction_model.md) fits the model once the rank is known.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="granger_tests.html">
+    <span class="label">Previous</span>
+    <span class="title">Granger tests</span>
+  </a>
+  <a class="next-link" href="the_error_correction_model.html">
+    <span class="label">Next</span>
+    <span class="title">The error-correction model</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

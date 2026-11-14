@@ -54,8 +54,8 @@ Evaluate a state-space loop.
 
 #include <complex>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -92,8 +92,8 @@ Evaluate the same feedback quantities from poles, zeros, and gain.
 
 #include <complex>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -129,8 +129,8 @@ Observe the SISO contract at failure boundaries.
 #include <exception>
 #include <string>
 
-namespace control = pluss::ma::eng::control;
-namespace lti = pluss::ma::eng::lti;
+namespace control = pluss::subsp::eng::control;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -163,7 +163,6 @@ Output
 MIMO margin rejected = eng::control::margin: classical margins require a SISO system
 real response rejected = eng::control::margin: response must have a complex dtype
 ```
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="prev-link" href="MarginResult.html">

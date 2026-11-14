@@ -1,0 +1,69 @@
+# `fluid::Action`
+
+A change to one pump or one valve.
+
+## Signature
+
+```cpp
+fluid::Action
+```
+
+## What It Does
+
+Names a device and what to do to it. It is carried by a `TimeControl` or a `StateControl`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `device` | Pump or valve. | Pump |
+| `index` | The pump or valve index within its family. | 0 |
+| `act` | Open, Close or Set. | Open |
+| `value` | The speed, loss coefficient, flow or pressure head for `Set`. | 0 |
+
+## Returns
+
+A value.
+
+## Errors
+
+An index outside the family and an invalid `value` are rejected by `run`.
+
+## Interpretation and Use
+
+Aggregate-initialise it: `{fluid::Device::Pump, 0, fluid::Act::Set, 0.7}`. The meaning of `value` follows the device and, for a valve, its kind.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Three timed actions.
+
+@@example Eng/api/fluid_controls_actions.cpp@@
+
+### Example 2
+
+Actions fired by level.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 3
+
+Invalid actions.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Act.html">
+    <span class="label">Previous</span>
+    <span class="title">Act</span>
+  </a>
+  <a class="next-link" href="TimeControl.html">
+    <span class="label">Next</span>
+    <span class="title">TimeControl</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

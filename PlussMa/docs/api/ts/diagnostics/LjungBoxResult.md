@@ -22,3 +22,16 @@ The defaults are a sensible starting point; change a field only for the reason i
 ## See Also
 
 - [`ljung_box`](ljung_box.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LjungBoxOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">LjungBoxOptions</span>
+  </a>
+  <a class="next-link" href="pacf.html">
+    <span class="label">Next</span>
+    <span class="title">pacf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -60,7 +60,7 @@ Inspect stability, response, and second-order-section realization.
 #include <complex>
 #include <iostream>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -101,7 +101,7 @@ Compare frequency response across equivalent system representations.
 
 #include <complex>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -140,7 +140,7 @@ Exercise frequency-grid and realization validation.
 #include <exception>
 #include <string>
 
-namespace lti = pluss::ma::eng::lti;
+namespace lti = pluss::subsp::eng::lti;
 using namespace pluss::tils;
 
 int main() {
@@ -174,10 +174,6 @@ continuous SOS rejected = eng::lti::to_sos: only discrete systems can be realize
 
 See [Pole-zero and response](../response.md) for timebase, stability, and angular-frequency conventions.
 
-<!-- apiref:toctree:start -->
-
-<!-- apiref:toctree:end -->
-
 <!-- apiref:nav:start -->
 <div class="pluss-inline-prev-next">
   <a class="next-link" href="zpk.html">
@@ -186,3 +182,7 @@ See [Pole-zero and response](../response.md) for timebase, stability, and angula
   </a>
 </div>
 <!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

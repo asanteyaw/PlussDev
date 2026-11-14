@@ -177,3 +177,16 @@ pacf             1.0000   0.6502   0.0345   0.1795   0.0147   0.0374
 
 - [`acf`](acf.md)
 - [`PacfOptions`](PacfOptions.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LjungBoxResult.html">
+    <span class="label">Previous</span>
+    <span class="title">LjungBoxResult</span>
+  </a>
+  <a class="next-link" href="PacfOptions.html">
+    <span class="label">Next</span>
+    <span class="title">PacfOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

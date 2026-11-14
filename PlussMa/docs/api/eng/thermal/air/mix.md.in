@@ -1,0 +1,77 @@
+# `thermal::mix`
+
+Mixes two moist-air streams adiabatically.
+
+## Signature
+
+```cpp
+thermal::MixState thermal::mix(const Series& t1, const Series& w1, const Series& m1,
+                          const Series& t2, const Series& w2, const Series& m2);
+```
+
+## What It Does
+
+Conserves dry air, water and enthalpy: the humidity ratio is the flow-weighted mean `(m1 w1 + m2 w2) / (m1 + m2)`, the enthalpy is the flow-weighted mean of the two enthalpies, and the temperature is recovered from them by inverting `enth`.
+
+## Parameters
+
+`t1`
+: The temperature of the first stream in degrees Celsius.
+
+`w1`
+: The humidity ratio of the first stream, not negative.
+
+`m1`
+: The dry-air mass flow of the first stream, positive.
+
+`t2`
+: The temperature of the second stream.
+
+`w2`
+: The humidity ratio of the second stream.
+
+`m2`
+: The dry-air mass flow of the second stream.
+
+## Returns
+
+A `MixState` with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for a negative humidity ratio, a mass flow that is not positive, or an input that is not a real floating array or not finite.
+
+## Interpretation and Use
+
+The mixture temperature is a mass-weighted mean only approximately, because the specific heat of the mixture depends on `w`; `mix` uses enthalpy, which is exact. A mixture that is supersaturated condenses fog; the result is the state before condensation.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Equal flows of warm and cool air.
+
+@@example Eng/api/thermal_mix_basic.cpp@@
+
+### Example 2
+
+An outdoor-air fraction.
+
+@@example Eng/api/thermal_mix_ratio.cpp@@
+
+### Example 3
+
+Mixing saturated streams.
+
+@@example Eng/api/thermal_mix_condensing.cpp@@
+
+### Example 4
+
+Rejected inputs.
+
+@@example Eng/api/thermal_mix_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

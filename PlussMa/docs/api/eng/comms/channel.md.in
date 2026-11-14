@@ -1,0 +1,39 @@
+# Channel
+
+This branch models the channel. `noise` adds white Gaussian noise and `n0` converts an Eb/N0 into the noise variance to add.
+
+## Choosing A Surface
+
+Compute the variance from the Eb/N0 you want with `n0`, then add the noise with `noise`.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+Noise of a given variance.
+
+@@example Eng/api/comms_awgn_variance.cpp@@
+
+### Example 2
+
+Noise for an Eb/N0.
+
+@@example Eng/api/comms_noise_ebn0.cpp@@
+
+### Example 3
+
+Reproducible noise.
+
+@@example Eng/api/comms_awgn_seed.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+channel/noise
+channel/n0
+```
+<!-- apiref:toctree:end -->

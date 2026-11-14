@@ -88,6 +88,7 @@ endif()
 
 # Optional URL loading support for CSV/TXT/Excel loaders.
 option(PLUSSMIC_FETCH_CURL "Allow CMake to FetchContent libcurl when unavailable" ON)
+option(PLUSSMIC_REQUIRE_CURL "Fail configuration if URL loading cannot be built" OFF)
 
 find_package(CURL QUIET)
 set(PLUSSMIC_CURL_TARGET "")
@@ -127,6 +128,10 @@ if(NOT PLUSSMIC_CURL_TARGET AND PLUSSMIC_FETCH_CURL)
   endif()
 endif()
 
+if(PLUSSMIC_REQUIRE_CURL AND NOT PLUSSMIC_CURL_TARGET)
+  message(FATAL_ERROR "PlussMic URL loading requires libcurl, but CURL::libcurl was not found")
+endif()
+
 if(PLUSSMIC_CURL_TARGET)
   target_compile_definitions(PlussMic PRIVATE PLUSSMIC_HAS_CURL=1)
 
@@ -145,9 +150,8 @@ if(PLUSSMIC_CURL_TARGET)
 
   set(_plussmic_curl_install_link "")
 
-  # If curl came from FetchContent (non-imported target), install/export it with
-  # the distribution. If curl came from find_package(CURL), copy the resolved
-  # artifact and link to that installed file in the install interface.
+  # Export a logical dependency. A downloaded package must resolve curl on the
+  # consumer machine rather than copy a library built for the runner's system.
   get_target_property(_plussmic_curl_aliased_target ${PLUSSMIC_CURL_TARGET} ALIASED_TARGET)
   if(_plussmic_curl_aliased_target)
     set(_plussmic_curl_real_target ${_plussmic_curl_aliased_target})
@@ -156,55 +160,7 @@ if(PLUSSMIC_CURL_TARGET)
   endif()
   get_target_property(_plussmic_curl_imported ${_plussmic_curl_real_target} IMPORTED)
   if(_plussmic_curl_imported)
-    set(_plussmic_curl_location "")
-    foreach(_plussmic_curl_prop
-        IMPORTED_LOCATION
-        IMPORTED_LOCATION_RELEASE
-        IMPORTED_LOCATION_RELWITHDEBINFO
-        IMPORTED_LOCATION_MINSIZEREL
-        IMPORTED_LOCATION_DEBUG)
-      get_target_property(_plussmic_curl_candidate ${PLUSSMIC_CURL_TARGET} ${_plussmic_curl_prop})
-      if(_plussmic_curl_candidate AND EXISTS "${_plussmic_curl_candidate}")
-        set(_plussmic_curl_location "${_plussmic_curl_candidate}")
-        break()
-      endif()
-    endforeach()
-
-    if(NOT _plussmic_curl_location)
-      if(DEFINED CURL_LIBRARY_RELEASE AND EXISTS "${CURL_LIBRARY_RELEASE}")
-        set(_plussmic_curl_location "${CURL_LIBRARY_RELEASE}")
-      elseif(DEFINED CURL_LIBRARY AND EXISTS "${CURL_LIBRARY}")
-        set(_plussmic_curl_location "${CURL_LIBRARY}")
-      elseif(DEFINED CURL_LIBRARIES)
-        foreach(_plussmic_curl_candidate IN LISTS CURL_LIBRARIES)
-          if(EXISTS "${_plussmic_curl_candidate}")
-            set(_plussmic_curl_location "${_plussmic_curl_candidate}")
-            break()
-          endif()
-        endforeach()
-      endif()
-    endif()
-
-    if(_plussmic_curl_location)
-      # Resolve symlinks so we install the concrete dylib/so artifact, not a
-      # dangling symlink without its target.
-      get_filename_component(_plussmic_curl_realpath "${_plussmic_curl_location}" REALPATH)
-      get_filename_component(_plussmic_curl_filename "${_plussmic_curl_realpath}" NAME)
-      install(FILES "${_plussmic_curl_realpath}"
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-      )
-      set(_plussmic_curl_install_link
-        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/${_plussmic_curl_filename}>
-      )
-    else()
-      message(WARNING
-        "PlussMic loader: could not resolve a concrete curl library file from "
-        "${PLUSSMIC_CURL_TARGET}. The distribution will reference ${PLUSSMIC_CURL_TARGET} directly, "
-        "so downstream must provide curl via find_package(CURL).")
-      set(_plussmic_curl_install_link
-        $<INSTALL_INTERFACE:${PLUSSMIC_CURL_TARGET}>
-      )
-    endif()
+    set(_plussmic_curl_install_link $<INSTALL_INTERFACE:CURL::libcurl>)
   else()
     install(TARGETS ${_plussmic_curl_real_target}
       EXPORT PlussTargets

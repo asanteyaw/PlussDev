@@ -1,0 +1,72 @@
+# `fluid::Heat`
+
+The temperatures, conductances and specific heat of a thermal run.
+
+## Signature
+
+```cpp
+fluid::Heat
+```
+
+## What It Does
+
+Describes a thermal run: absolute temperatures, the conductance of each pipe and tank to its ambient, and a constant specific heat. The model is one-way coupled: the temperature does not change the hydraulics.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `initial` | The starting temperature at every node, K, `[..., node]`. | required |
+| `source` | The temperature held at a reservoir and of an injection, K, `[..., node]`. | `initial` |
+| `ambient` | The surrounding temperature of each pipe, K, `[..., pipe]`. | required where `ua > 0` |
+| `ua` | The total conductance of each pipe to its ambient, W/K, `[..., pipe]`. | undefined (zero) |
+| `tank_ambient` | The surrounding temperature of each tank, K, `[..., tank]`. | required where `tank_ua > 0` |
+| `tank_ua` | The total conductance of each tank, W/K, `[..., tank]`. | undefined (zero) |
+| `cp` | The specific heat, J/(kg K), constant for the call. | 4180 |
+
+## Returns
+
+A value; validated by `heat`.
+
+## Errors
+
+A missing initial temperature, negative or non-finite temperatures, a non-positive `cp`, a negative conductance, a conductance without its ambient temperature, the wrong width, and mixed precision are rejected.
+
+## Interpretation and Use
+
+`ua` is a total in W/K for the whole pipe, the per-metre figure times the length, and it is the whole resistance from the bulk water to the ambient. Density comes from the `Liquid` of the network. Pumps add no heat.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pipe cooling against its exact value.
+
+@@example Eng/api/fluid_heat_pipe.cpp@@
+
+### Example 2
+
+A tank cooling.
+
+@@example Eng/api/fluid_heat_tank.cpp@@
+
+### Example 3
+
+Descriptions that are refused.
+
+@@example Eng/api/fluid_heat_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="transport.html">
+    <span class="label">Previous</span>
+    <span class="title">transport</span>
+  </a>
+  <a class="next-link" href="HeatResult.html">
+    <span class="label">Next</span>
+    <span class="title">HeatResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -26,7 +26,7 @@ Generate every built-in window at the same odd length so their taper shapes can 
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -58,7 +58,7 @@ Contrast symmetric and periodic Hann coefficients while selecting a `Float32` ou
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -98,7 +98,7 @@ Exercise the two central construction guards: non-negative length and floating o
 #include <exception>
 #include <string>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {

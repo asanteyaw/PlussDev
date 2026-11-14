@@ -45,12 +45,12 @@ TEST_CASE("Taylor polynomials of the elementary functions", "[calculus][taylor]"
   // sin: odd terms only; log1p: (-1)^(k+1) x^k / k; (1 + x)^p: binomial coefficients
   const math::Function sine = expansion::taylor("x", 0.0, 7)(math::function({"x"}, [](math::Function x) { return x.sin(); }));
   CHECK(std::abs(at(sine, {0.4}) - (0.4 - std::pow(0.4, 3) / 6.0 + std::pow(0.4, 5) / 120.0 - std::pow(0.4, 7) / 5040.0)) < 1e-14);
-  const math::Function log1p = expansion::taylor_coefficients("x", 0.0, 5)(math::function({"x"}, [](math::Function x) { return x.log1p(); }));
+  const math::Function log1p = expansion::taylor().coefficients("x", 0.0, 5)(math::function({"x"}, [](math::Function x) { return x.log1p(); }));
   const std::vector<double> c = host(log1p());
   REQUIRE(c.size() == 6);
   CHECK(std::abs(c[0]) < 1e-14);
   for (int k = 1; k <= 5; ++k) CHECK(std::abs(c[static_cast<std::size_t>(k)] - (k % 2 ? 1.0 : -1.0) / k) < 1e-13);
-  const math::Function binomial = expansion::taylor_coefficients("x", 0.0, 4)(math::function({"x"}, [](math::Function x) { return (x + 1.0).pow(2.5); }));
+  const math::Function binomial = expansion::taylor().coefficients("x", 0.0, 4)(math::function({"x"}, [](math::Function x) { return (x + 1.0).pow(2.5); }));
   const std::vector<double> b = host(binomial());
   const double expected[] = {1.0, 2.5, 2.5 * 1.5 / 2.0, 2.5 * 1.5 * 0.5 / 6.0, 2.5 * 1.5 * 0.5 * -0.5 / 24.0};
   for (std::size_t k = 0; k < 5; ++k) CHECK(std::abs(b[k] - expected[k]) < 1e-13);
@@ -72,7 +72,7 @@ TEST_CASE("the Taylor remainder bounds the error", "[calculus][taylor]") {
   const std::int64_t order = 5;
   const double a = 0.3;
   const math::Function t = expansion::taylor("x", a, order)(f);
-  const math::Function factor = expansion::taylor_remainder("x", order)(f);
+  const math::Function factor = expansion::taylor().remainder("x", order)(f);
   double previous = 0.0;
   for (const double h : {0.4, 0.2, 0.1}) {
     const double error = std::abs(at(f, {a + h}) - at(t, {a + h}));
@@ -106,7 +106,7 @@ TEST_CASE("free variables stay free in the expansion", "[calculus][taylor]") {
   const math::Function t = expansion::taylor("x", 0.0, 4)(f);
   REQUIRE(t.arity() == 2);
   CHECK(std::abs(at(t, {0.5, 3.0}) - 3.0 * (1.0 + 0.5 + 0.125 + 0.5 * 0.5 * 0.5 / 6.0 + std::pow(0.5, 4) / 24.0)) < 1e-12);
-  const math::Function coefficients = expansion::taylor_coefficients("x", 0.0, 3)(f);
+  const math::Function coefficients = expansion::taylor().coefficients("x", 0.0, 3)(f);
   REQUIRE(coefficients.arity() == 1); // the expanded variable is bound; the coefficients depend on a only
   const std::vector<double> c = host(coefficients({scalar(2.0)}));
   CHECK(std::abs(c[2] - 1.0) < 1e-12); // a / 2!
@@ -142,11 +142,11 @@ TEST_CASE("Taylor operators validate, compose, serialize", "[calculus][taylor][i
   const math::Function polynomial = op(exp_function());
   math::io::save(polynomial, function_stream);
   CHECK(std::abs(at(math::io::load_function(function_stream), {0.6}) - at(polynomial, {0.6})) < 1e-15);
-  const operators::Operator coefficients = expansion::taylor_coefficients("x", 0.0, 3);
+  const operators::Operator coefficients = expansion::taylor().coefficients("x", 0.0, 3);
   std::stringstream c_stream;
   math::io::save(coefficients, c_stream);
   CHECK(math::io::load_operator(c_stream).key() == "taylor_coefficients");
-  const operators::Operator remainder = expansion::taylor_remainder("x", 3);
+  const operators::Operator remainder = expansion::taylor().remainder("x", 3);
   std::stringstream r_stream;
   math::io::save(remainder, r_stream);
   CHECK(math::io::load_operator(r_stream).key() == "taylor_remainder");
@@ -156,7 +156,7 @@ TEST_CASE("Taylor operators validate, compose, serialize", "[calculus][taylor][i
 
 TEST_CASE("the power-series engine reproduces known series to high order", "[calculus][taylor][series]") {
   const auto coefficients = [](const math::Function &f, std::int64_t order, double center = 0.0) {
-    return host(expansion::taylor_coefficients("x", center, order, {}, expansion::Engine::Jet)(f)());
+    return host(expansion::taylor().coefficients("x", center, order, {}, expansion::Engine::Jet)(f)());
   };
   // exp, order 30
   const std::vector<double> e = coefficients(exp_function(), 30);
@@ -187,8 +187,8 @@ TEST_CASE("the power-series engine reproduces known series to high order", "[cal
 
 TEST_CASE("the power-series engine agrees with the derivative graph", "[calculus][taylor][series]") {
   const math::Function f = math::function({"x"}, [](math::Function x) { return (x * x + 1.0).log() * x.cos() + x.exp() / (x + 3.0); });
-  const auto structural = host(expansion::taylor_coefficients("x", 0.4, 7, {}, expansion::Engine::Structural)(f)());
-  const auto jet = host(expansion::taylor_coefficients("x", 0.4, 7, {}, expansion::Engine::Jet)(f)());
+  const auto structural = host(expansion::taylor().coefficients("x", 0.4, 7, {}, expansion::Engine::Structural)(f)());
+  const auto jet = host(expansion::taylor().coefficients("x", 0.4, 7, {}, expansion::Engine::Jet)(f)());
   REQUIRE(structural.size() == jet.size());
   for (std::size_t k = 0; k < jet.size(); ++k) CHECK(std::abs(structural[k] - jet[k]) < 1e-11);
   // the polynomial built from jet coefficients is the same polynomial
@@ -212,7 +212,7 @@ TEST_CASE("jets are batched over the free variables", "[calculus][taylor][series
   const math::Function f = math::function({"x", "a"}, [](math::Function x, math::Function a) { return a * (a * x).exp(); });
   const pluss::Series a = pluss::make_series(std::vector<double>{1.0, 2.0, 0.5}, {3});
   // the expanded variable is replaced by its centre, so the coefficients depend on `a` only
-  const pluss::Series c = expansion::taylor_coefficients("x", 0.0, 6, {}, expansion::Engine::Jet)(f)({a});
+  const pluss::Series c = expansion::taylor().coefficients("x", 0.0, 6, {}, expansion::Engine::Jet)(f)({a});
   REQUIRE(c.dim() == 2);
   REQUIRE(c.size(0) == 3);
   REQUIRE(c.size(1) == 7);
@@ -225,44 +225,61 @@ TEST_CASE("jets are batched over the free variables", "[calculus][taylor][series
 TEST_CASE("operators on coefficient vectors", "[calculus][taylor][series]") {
   const math::Function sine = math::function({"x"}, [](math::Function x) { return x.sin(); });
   const math::Function cosine = math::function({"x"}, [](math::Function x) { return x.cos(); });
-  const auto coefficients_of = [](const math::Function &f, std::int64_t order) { return expansion::taylor_coefficients("x", 0.0, order, {}, expansion::Engine::Jet)(f); };
+  const auto coefficients_of = [](const math::Function &f, std::int64_t order) { return expansion::taylor().coefficients("x", 0.0, order, {}, expansion::Engine::Jet)(f); };
   // evaluating the coefficients gives back the Taylor polynomial
-  CHECK(std::abs(at(expansion::power_series("x", 0.0)(coefficients_of(sine, 9)), {0.6}) - at(expansion::taylor("x", 0.0, 9)(sine), {0.6})) < 1e-13);
+  CHECK(std::abs(at(expansion::power("x", 0.0)(coefficients_of(sine, 9)), {0.6}) - at(expansion::taylor("x", 0.0, 9)(sine), {0.6})) < 1e-13);
   // termwise derivative of the sine series is the cosine series (one coefficient fewer)
-  const std::vector<double> d = host(expansion::series_derivative()(coefficients_of(sine, 9))());
+  const std::vector<double> d = host(expansion::power().derivative()(coefficients_of(sine, 9))());
   const std::vector<double> cos_c = host(coefficients_of(cosine, 8)());
   REQUIRE(d.size() == 9);
   for (std::size_t k = 0; k < d.size(); ++k) CHECK(std::abs(d[k] - cos_c[k]) < 1e-13);
   // termwise integral of the cosine series is the sine series (one more), with a zero constant term
-  const std::vector<double> integral = host(expansion::series_integral()(coefficients_of(cosine, 8))());
+  const std::vector<double> integral = host(expansion::power().integral()(coefficients_of(cosine, 8))());
   const std::vector<double> sin_c = host(coefficients_of(sine, 9)());
   REQUIRE(integral.size() == 10);
   for (std::size_t k = 0; k < integral.size(); ++k) CHECK(std::abs(integral[k] - sin_c[k]) < 1e-13);
   // Cauchy product: sin x cos x = sin(2x) / 2
   const math::Function sin2 = math::function({"x"}, [](math::Function x) { return (x * 2.0).sin() * 0.5; });
-  const std::vector<double> product = host(expansion::series_product(coefficients_of(cosine, 9))(coefficients_of(sine, 9))());
+  const std::vector<double> product = host(expansion::power().product(coefficients_of(cosine, 9))(coefficients_of(sine, 9))());
   const std::vector<double> expected = host(coefficients_of(sin2, 9)());
   for (std::size_t k = 0; k < product.size(); ++k) CHECK(std::abs(product[k] - expected[k]) < 1e-12);
   // exp(x) exp(-x) = 1
   const math::Function inverse = math::function({"x"}, [](math::Function x) { return (x * -1.0).exp(); });
-  const std::vector<double> one_series = host(expansion::series_product(coefficients_of(inverse, 12))(coefficients_of(exp_function(), 12))());
+  const std::vector<double> one_series = host(expansion::power().product(coefficients_of(inverse, 12))(coefficients_of(exp_function(), 12))());
   CHECK(std::abs(one_series[0] - 1.0) < 1e-14);
   for (std::size_t k = 1; k < one_series.size(); ++k) CHECK(std::abs(one_series[k]) < 1e-12);
-  CHECK_THROWS_AS(expansion::series_derivative()(exp_function()), pluss::Error); // not a coefficient vector
+  CHECK_THROWS_AS(expansion::power().derivative()(exp_function()), pluss::Error); // not a coefficient vector
   // these three save; the product holds a Function and does not
   std::stringstream stream;
-  math::io::save(expansion::power_series("x", 0.25), stream);
+  math::io::save(expansion::power("x", 0.25), stream);
   CHECK(math::io::load_operator(stream).key() == "power_series");
   std::stringstream refused;
-  CHECK_THROWS(math::io::save(expansion::series_product(coefficients_of(sine, 3)), refused));
+  CHECK_THROWS(math::io::save(expansion::power().product(coefficients_of(sine, 3)), refused));
 }
 
 TEST_CASE("the power-series engine rejects what it cannot do", "[calculus][taylor][series][errors]") {
   const math::Function vector = math::function({"x"}, [](math::Function x) { return math::stack({x, x * x}); });
-  CHECK_THROWS_AS(expansion::taylor_coefficients("x", 0.0, 3, {}, expansion::Engine::Jet)(vector), pluss::Error);
+  CHECK_THROWS_AS(expansion::taylor().coefficients("x", 0.0, 3, {}, expansion::Engine::Jet)(vector), pluss::Error);
   const math::Function opaque = math::function({"x"}, [](const pluss::Series &x) { return x.mul(2.0); });
-  CHECK_THROWS_AS(expansion::taylor_coefficients("x", 0.0, 3, {}, expansion::Engine::Jet)(opaque), pluss::Error);
+  CHECK_THROWS_AS(expansion::taylor().coefficients("x", 0.0, 3, {}, expansion::Engine::Jet)(opaque), pluss::Error);
   const math::Function reciprocal = math::function({"x"}, [](math::Function x) { return 1.0 / x; });
-  CHECK_THROWS_AS(at(expansion::taylor_coefficients("x", 0.0, 3, {}, expansion::Engine::Jet)(reciprocal), {0.0}), pluss::Error);
-  CHECK_THROWS_AS(at(expansion::taylor_coefficients("x", -1.0, 3, {}, expansion::Engine::Jet)(math::function({"x"}, [](math::Function x) { return x.log(); })), {0.0}), pluss::Error);
+  CHECK_THROWS_AS(at(expansion::taylor().coefficients("x", 0.0, 3, {}, expansion::Engine::Jet)(reciprocal), {0.0}), pluss::Error);
+  CHECK_THROWS_AS(at(expansion::taylor().coefficients("x", -1.0, 3, {}, expansion::Engine::Jet)(math::function({"x"}, [](math::Function x) { return x.log(); })), {0.0}), pluss::Error);
+}
+
+TEST_CASE("power builds a polynomial from a plain coefficient vector",
+          "[calculus][taylor][power]") {
+  // [1, 2, 0, 4] is 1 + 2x + 4x^3; the variable is introduced by the operator
+  const math::Function coefficients = math::function(pluss::make_series({1.0, 2.0, 0.0, 4.0}));
+  const math::Function about_zero = operators::expansion::power("x", 0.0)(coefficients);
+  REQUIRE(about_zero.arity() == 1);
+  CHECK(about_zero.variables()[0] == "x");
+  CHECK(std::abs(about_zero(2.0).item<double>() - 37.0) < 1e-12);
+  CHECK(std::abs(operators::expansion::power("x", 1.0)(coefficients)(2.0).item<double>() - 7.0) < 1e-12);
+
+  // coefficients that depend on another variable keep it
+  const math::Function parametric = math::function({"a"}, [](math::Function a) { return math::stack({a * 0.0 + 1.0, a, a * a * 0.5}); });
+  const math::Function p = operators::expansion::power("x", 0.0)(parametric);
+  REQUIRE(p.arity() == 2);
+  CHECK(std::abs(p({pluss::make_series(1.0), pluss::make_series(2.0)}).item<double>() - (1.0 + 2.0 + 2.0)) < 1e-12);
 }

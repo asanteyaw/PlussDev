@@ -23,7 +23,7 @@ Solve a truss and read every result.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -98,7 +98,7 @@ Solve a cantilever frame.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -163,7 +163,7 @@ Bend a cantilever through a large angle.
 #include <cmath>
 #include <iostream>
 
-namespace structure = pluss::ma::eng::structure;
+namespace structure = pluss::subsp::eng::structure;
 using namespace pluss::tils;
 
 static pluss::Series grid(std::vector<double> v, std::int64_t cols) { return pluss::series::make(v).reshape({(std::int64_t)v.size() / cols, cols}); }
@@ -238,18 +238,6 @@ end actions of the member at the wall, in its own turned axes (Ni Vi Mi): -169.2
 tolerance 1e-12, 5 steps: tip down / L 0.3491, iterations 84, cutbacks 0
 one iteration per step, failure off: load factor reached 0.0000, converged false
 one iteration per step, failure on: eng::structure::solve: nonlinear equilibrium did not converge before the load-step cutback limit
-```
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-statics/SolveOptions
-statics/StaticResult
-statics/FrameResult
-statics/MemberLoad
-statics/NonlinearOptions
-statics/NonlinearResult
-statics/solve
 ```
 
 <!-- apiref:toctree:start -->

@@ -51,7 +51,7 @@ int main() {
   for (const auto& c : cases) {
     try {
       const auto r = sde::ito_integral(c.make, path);
-      std::cout << c.label << ": accepted, Ito integral = " << r.value.item<double>() << "\n";
+      std::cout << c.label << ": accepted, Ito integral = " << r.value.items<double>().front() << "\n";
     } catch (const std::exception& e) {
       std::string message = e.what();
       message = message.substr(0, message.find('\n'));
@@ -72,3 +72,16 @@ terminal value: rejected
     subsp::math::sde::ito_integral: the integrand at sample 0 changed when only samples after sample 40 of the path were redrawn, so it looks into the future of the path (it is not adapted) and the sum is not an Ito integral
 ```
 The running maximum is adapted and accepted. A centered moving average reads samples after the current one, and the terminal value reads the last sample from the first: both are rejected, and the message says at which sample the integrand changed. The test detects any dependence on the path itself. It cannot detect state a callback captured from outside, for example a precomputed copy of the whole path, so passing the test is evidence, not proof.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="values_that_were_not_simulated.html">
+    <span class="label">Previous</span>
+    <span class="title">Values that were not simulated</span>
+  </a>
+  <a class="next-link" href="is_it_a_standard_wiener_path.html">
+    <span class="label">Next</span>
+    <span class="title">Is it a standard Wiener path?</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

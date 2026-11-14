@@ -336,6 +336,27 @@ int main() {
            "Nelder-Mead treats +Inf as a forbidden region and finds the wall optimum", &failures);
   }
 
+  {
+    // Solvers that cannot honour nonlinear constraints must say so instead of returning an infeasible point.
+    const Config c64 = Config{}.with_dtype(ScalarType::Float64).with_platform(pCPU);
+    DfoProblem constrained;
+    constrained.initial = pluss::make_series(std::vector<double>{0.0, 0.0}, {2}, c64);
+    constrained.objective = [](const Series& x) { return (x - 3.0).square().sum(); };
+    constrained.constraints = [](const Series& x) { return x.sum() - 2.0; };
+    for (const auto kind : {DfoSolverKind::NelderMead, DfoSolverKind::DifferentialEvolution, DfoSolverKind::DifferentialEvolutionPrmm,
+                            DfoSolverKind::ParticleSwarm, DfoSolverKind::ParticleSwarmDv}) {
+      DfoOptions options;
+      options.solver = kind;
+      bool threw = false;
+      try {
+        (void)DFO::solve(constrained, options);
+      } catch (const std::exception&) {
+        threw = true;
+      }
+      expect(threw, "a solver without constraint support rejects nonlinear constraints: " + to_string(kind), &failures);
+    }
+  }
+
   if (failures != 0) {
     std::cerr << "dfo_solver_test: " << failures << " failure(s)\n";
     return 1;

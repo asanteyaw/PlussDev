@@ -1,0 +1,67 @@
+# `fluid::run`
+
+Simulates a network through time.
+
+## Signature
+
+```cpp
+RunResult run(const Network &network, const Schedule &schedule, const Options &options = {});
+```
+
+## What It Does
+
+Advances the event clock and the tank levels, applies the patterns and the controls, and solves the coupled steady problem of `steady` at each event with warm starts from the previous one. Physical lanes stay batched and differentiable; only the sequence of events is host-side.
+
+## Parameters
+
+`network`
+: The compiled `Network`.
+
+`schedule`
+: The `Schedule`.
+
+`options`
+: The `Options` of every hydraulic solve.
+
+## Returns
+
+A `RunResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for a malformed schedule or controls, an initial tank level outside its bounds, and demand or emitters at fixed-grade nodes. Throws `std::runtime_error` when a solve fails as in `steady`, when controls do not settle at an event after sixteen status passes, and when the clock cannot advance.
+
+## Interpretation and Use
+
+The state at `t` determines the tank levels at the next event, so the clock is sequential. A failure at an event usually means the controls have left the network unable to supply a demand: close and open pairs, a pump that cannot reach the lift, a tank that has drained.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A day of demand patterns with a tank.
+
+@@example Eng/api/fluid_run_tank.cpp@@
+
+### Example 2
+
+A pump held between two levels.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 3
+
+Runs that are refused.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="RunResult.html">
+    <span class="label">Previous</span>
+    <span class="title">RunResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

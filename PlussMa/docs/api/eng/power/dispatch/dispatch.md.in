@@ -1,0 +1,76 @@
+# `power::dispatch`
+
+Least-cost DC dispatch of the generators, optionally secure against single-line outages.
+
+## Signature
+
+```cpp
+power::DispatchResult power::dispatch(const power::Grid& grid, const power::GenCost& cost, const pluss::Series& line_limit, const power::DispatchOptions& options = {});
+```
+
+## What It Does
+
+Minimises the total generation cost `sum(a g^2 + b g)` subject to the DC power balance, the generator bounds and the line ratings, as a quadratic program. The loads are the fixed bus injections of the grid; the generators listed in the grid are the decision variables. With `options.secure` the flow after every valid single-line outage must also stay within its rating, with the generation unchanged by the outage.
+
+## Parameters
+
+`grid`
+: The compiled network; its generators are the decision variables and its bus injections the loads.
+
+`cost`
+: The bounds and cost curves of the generators.
+
+`line_limit`
+: The rating of each line, per unit, `[..., line]`, applied in both directions.
+
+`options`
+: Security and solver controls.
+
+## Returns
+
+A `DispatchResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for a negative quadratic coefficient, a lower bound above its upper bound, or ratings and costs of the wrong length. An infeasible problem does not throw; it returns `converged` false.
+
+## Interpretation and Use
+
+The price of one more per-unit of demand is the incremental cost `lambda`; a binding rating separates the incremental costs of the generators. Dispatch is lossless with flat voltage: use `opf` where losses or voltages matter.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The optimum of a ring against its hand value.
+
+@@example Eng/api/power_dispatch_hand.cpp@@
+
+### Example 2
+
+A line rating that binds.
+
+@@example Eng/api/power_dispatch_rating.cpp@@
+
+### Example 3
+
+Many demand scenarios in one call.
+
+@@example Eng/api/power_dispatch_scenarios.cpp@@
+
+### Example 4
+
+Security against outages.
+
+@@example Eng/api/power_dispatch_square.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DispatchResult.html">
+    <span class="label">Previous</span>
+    <span class="title">DispatchResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

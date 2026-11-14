@@ -176,3 +176,12 @@ Three things to read. The mean estimate sits above the true 2.5 at 40 observatio
 - **The log-likelihood is the test of a fixed value.** If changing a fixed parameter raises it a lot, the first choice was wrong.
 
 Where next: [Chapter 3](../dist_03_heavy_tails_and_mixtures.md) fits heavy-tailed and multimodal distributions, which are only available numerically.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_closed_form_families.html">
+    <span class="label">Previous</span>
+    <span class="title">The closed-form families</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

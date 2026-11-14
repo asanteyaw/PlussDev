@@ -83,4 +83,15 @@ int main() {
 ```
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+arima/Arima
+arima/ArimaFit
+arima/ArimaOptions
+arima/Sarima
+arima/SarimaFit
+arima/SarimaOptions
+```
 <!-- apiref:toctree:end -->

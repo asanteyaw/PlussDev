@@ -50,4 +50,11 @@ PSOutcome pattern_search_minimizer(objective, initial, PSConfig config = {});
 6. Read `status`, then `max_constraint_violation`.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_07_pattern_search/poll_search_and_mesh
+dfo_07_pattern_search/constraints_budgets_and_the_cache
+```
 <!-- apiref:toctree:end -->

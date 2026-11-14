@@ -44,4 +44,15 @@ The search runs over the partial autocorrelations of each polynomial (through `t
 5. For seasonal data use `Sarima` with the seasonal period; the seasonal and regular terms multiply.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ts_02_arima_models/fitting
+ts_02_arima_models/forecasting
+ts_02_arima_models/choosing_the_orders
+ts_02_arima_models/checking_the_residuals
+ts_02_arima_models/seasonal_models
+ts_02_arima_models/differencing
+```
 <!-- apiref:toctree:end -->

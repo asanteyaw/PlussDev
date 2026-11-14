@@ -28,7 +28,7 @@ double as_f64_scalar(const Series& x) {
 
 std::vector<double> as_f64_vec(const Series& x) {
   const Series cpu = x.to(pluss::pCPU, ScalarType::Float64);
-  return cpu.reshape({cpu.numel()}).pull<double>();
+  return cpu.reshape({cpu.numel()}).items<double>();
 }
 
 std::vector<std::int64_t> as_shape_vec(const Series& x) {

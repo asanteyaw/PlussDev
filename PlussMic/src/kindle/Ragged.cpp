@@ -2,10 +2,10 @@
 
 #include <algorithm>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "kindle/catalog.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::kindle {
 
@@ -37,11 +37,11 @@ RaggedPolicy RaggedPolicy::defaults(OpClass op) {
 }
 
 void RaggedPolicy::validate(std::string_view where) const {
-  PLUSS_CHECK(min_support >= 1, fmt::format("{}: min_support must be >= 1", where));
+  PLUSS_CHECK(min_support >= 1, pluss::tils::OutputEngine::format("{}: min_support must be >= 1", where));
   PLUSS_CHECK((absent == RaggedAbsent::Fill) == fill.has_value(),
-              fmt::format("{}: a fill value is required exactly when absent == Fill", where));
+              pluss::tils::OutputEngine::format("{}: a fill value is required exactly when absent == Fill", where));
   PLUSS_CHECK((domain == RaggedDomain::Anchor) == anchor_stream.has_value(),
-              fmt::format("{}: an anchor stream is required exactly when domain == Anchor", where));
+              pluss::tils::OutputEngine::format("{}: an anchor stream is required exactly when domain == Anchor", where));
 }
 
 std::vector<std::int64_t> RaggedLayout::presence() const {
@@ -61,13 +61,13 @@ std::vector<std::int64_t> RaggedLayout::presence() const {
 
 std::int64_t RaggedLayout::shift_of(std::string_view key) const {
   const auto it = std::find(keys.begin(), keys.end(), key);
-  PLUSS_CHECK(it != keys.end(), fmt::format("RaggedLayout: no stream '{}'", key));
+  PLUSS_CHECK(it != keys.end(), pluss::tils::OutputEngine::format("RaggedLayout: no stream '{}'", key));
   return window_begin - offset[static_cast<std::size_t>(it - keys.begin())];
 }
 
 RaggedLayout RaggedLayout::of(const Catalog& catalog, const RaggedPolicy& policy, std::string_view where) {
   policy.validate(where);
-  PLUSS_CHECK(catalog.defined(), fmt::format("{}: undefined catalog", where));
+  PLUSS_CHECK(catalog.defined(), pluss::tils::OutputEngine::format("{}: undefined catalog", where));
   RaggedLayout out;
   const auto& names = catalog.keys();
   out.keys = names;
@@ -95,7 +95,7 @@ RaggedLayout RaggedLayout::of(const Catalog& catalog, const RaggedPolicy& policy
       if (out.ragged()) {
         const auto lo = std::min_element(out.extent.begin(), out.extent.end()) - out.extent.begin();
         const auto hi = std::max_element(out.extent.begin(), out.extent.end()) - out.extent.begin();
-        PLUSS_FAIL(fmt::format("{}: streams must have equal length but '{}' has {} records and '{}' has {}",
+        PLUSS_FAIL(pluss::tils::OutputEngine::format("{}: streams must have equal length but '{}' has {} records and '{}' has {}",
                                where, out.keys[static_cast<std::size_t>(lo)], out.shortest,
                                out.keys[static_cast<std::size_t>(hi)], out.longest));
       }
@@ -106,7 +106,7 @@ RaggedLayout RaggedLayout::of(const Catalog& catalog, const RaggedPolicy& policy
     case RaggedDomain::Anchor: {
       const auto it = std::find(out.keys.begin(), out.keys.end(), *policy.anchor_stream);
       PLUSS_CHECK(it != out.keys.end(),
-                  fmt::format("{}: anchor stream '{}' is not in the catalog", where, *policy.anchor_stream));
+                  pluss::tils::OutputEngine::format("{}: anchor stream '{}' is not in the catalog", where, *policy.anchor_stream));
       const auto s = static_cast<std::size_t>(it - out.keys.begin());
       out.window_begin = out.offset[s];
       out.window_end = out.offset[s] + out.extent[s];
@@ -114,7 +114,7 @@ RaggedLayout RaggedLayout::of(const Catalog& catalog, const RaggedPolicy& policy
     }
   }
   PLUSS_CHECK(policy.loss != RaggedLoss::Error || out.trimmed() == 0,
-              fmt::format("{}: the policy would cut {} of {} index(es) and loss is set to Error", where,
+              pluss::tils::OutputEngine::format("{}: the policy would cut {} of {} index(es) and loss is set to Error", where,
                           out.trimmed(), out.longest));
   return out;
 }
@@ -191,7 +191,7 @@ RaggedPolicy to_ragged(const TabelizePolicy& policy) {
 TabelizePolicy to_tabelize(const RaggedPolicy& policy, std::string_view where) {
   policy.validate(where);
   PLUSS_CHECK(policy.alignment != RaggedAlignment::Tail,
-              fmt::format("{}: tabelize cannot align by Tail; use Head or Label", where));
+              pluss::tils::OutputEngine::format("{}: tabelize cannot align by Tail; use Head or Label", where));
   TabelizePolicy out;
   switch (policy.domain) {
     case RaggedDomain::Longest:

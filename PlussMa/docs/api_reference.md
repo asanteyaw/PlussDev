@@ -1,20 +1,20 @@
 # API Reference
 
-PlussMa is organized by public framework first, so you can enter through the exact namespace you are using in code.
+One page per function, method, enumeration and options structure, grouped by topic. Every page states the signature, what the call does, every parameter, what it returns and what it refuses, and shows complete programs with real output. For the reasoning and worked problems, each topic has a matching [User Guide](manual/index.md); the reference links to it and it links back.
 
-| Framework | What it covers | Reference |
+| Topic | What it covers | Guide |
 |---|---|---|
-| `ts` | Time series: transforms, diagnostics, ARIMA, volatility, vector, state-space and direct forecasting models | [API reference](api/plussma_ts.md) |
-| Distributions | Probability families, sampling and maximum-likelihood fitting | [API reference](api/plussma_distr.md) · [Guides](manual/distr.md) |
-| Inference | Tests of means, variances, ranks, distributions and tables | [API reference](api/plussma_infer.md) · [Guides](manual/infer.md) |
-| Regression | Least squares, generalised linear, quantile and polynomial regression | [Guides](manual/regress.md) |
-| Optimization | Constrained and unconstrained optimization, linear and mixed-integer programming, derivative-free search, root finding | [Guides](manual/optim.md) |
-| Calculus | Functions as values, exact derivatives and integrals, vector calculus and operators | [Guides](manual/calculus.md) |
-| Numerical methods | Integration, differential equations, interpolation and large linear systems | [Guides](manual/numerics.md) |
-| Stochastic processes | Stochastic integrals, Itô calculus, jump processes, SDE simulation | [Guides](manual/stochastic.md) |
-| Finance | Option pricing: Black-Scholes, implied volatility and stochastic-volatility models | [Guides](manual/finance.md) |
-
-Time series, distributions and inference have a full API reference, one page per function or family. The other frameworks are documented through their guides, which cover every public entry point with complete programs and real output.
+| [Time series](api/plussma_ts.md) | Transforms, diagnostics, ARIMA, volatility, vector, state-space and direct forecasting models. | [User guide](manual/ts/guide.md) |
+| [Distributions](api/plussma_distr.md) | Sixty probability families, sampling and maximum-likelihood fitting. | [User guide](manual/distr.md) |
+| [Hypothesis testing](api/plussma_infer.md) | Tests of means, variances, ranks, distributions and tables, with exact small-sample p-values. | [User guide](manual/infer.md) |
+| [Regression](api/plussma_regression.md) | Least squares, generalised linear, quantile and polynomial regression. | [User guide](manual/regress.md) |
+| [Optimization](api/plussma_optim.md) | Constrained and derivative-free optimization, linear and mixed-integer programming, root finding. | [User guide](manual/optim.md) |
+| [Calculus](api/plussma_calculus.md) | Functions as values: exact derivatives, integrals and vector calculus, and operators that transform them. | [User guide](manual/calculus.md) |
+| [Numerical methods](api/plussma_numerics.md) | Integration, differential equations, interpolation and large linear systems. | [User guide](manual/numerics.md) |
+| [Stochastic processes](api/plussma_stochastic.md) | Stochastic integrals, Itô calculus, jumps, SDE simulation and Malliavin calculus. | [User guide](manual/stochastic.md) |
+| [Finance](api/plussma_finance.md) | Option pricing: Black-Scholes, implied volatility and stochastic-volatility models. | [User guide](manual/finance.md) |
+| [Actuarial mathematics](api/plussma_actuarial.md) | Mortality and life tables, contingent present values, aggregate losses, ratemaking and reserving. | [User guide](manual/actuarial.md) |
+| [Engineering](api/plussma_eng.md) | Signal processing, dynamic systems, controls, circuits, power, fluids and structures. | [User guide](manual/eng.md) |
 
 ```{toctree}
 :maxdepth: 4
@@ -23,4 +23,12 @@ Time series, distributions and inference have a full API reference, one page per
 api/plussma_ts
 api/plussma_distr
 api/plussma_infer
+api/plussma_regression
+api/plussma_optim
+api/plussma_calculus
+api/plussma_numerics
+api/plussma_stochastic
+api/plussma_finance
+api/plussma_actuarial
+api/plussma_eng
 ```

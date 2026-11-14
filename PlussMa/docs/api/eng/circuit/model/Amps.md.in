@@ -1,0 +1,69 @@
+# `circuit::Amps`
+
+Ideal operational amplifiers.
+
+## Signature
+
+```cpp
+circuit::Amps
+```
+
+## What It Does
+
+An ideal op amp has infinite gain: its output and reference nodes supply whatever current is needed to make its two inputs equal.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `output` | The output node of each amplifier. | empty |
+| `reference` | The node the output current returns to. | empty |
+| `positive_input` | The non-inverting input node. | empty |
+| `negative_input` | The inverting input node. | empty |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+Mismatched list lengths or nodes outside the circuit are rejected by `make`.
+
+## Interpretation and Use
+
+The amplifier carries no input current and enforces `V(positive_input) = V(negative_input)`; its supplied current is `amp_current`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+An inverting amplifier of gain -5.
+
+@@example Eng/api/circuit_opamp.cpp@@
+
+### Example 2
+
+An op amp in all-elements circuit.
+
+@@example Eng/api/circuit_all_elements.cpp@@
+
+### Example 3
+
+An integrator at AC.
+
+@@example Eng/api/circuit_integrator.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Controls.html">
+    <span class="label">Previous</span>
+    <span class="title">Controls</span>
+  </a>
+  <a class="next-link" href="Net.html">
+    <span class="label">Next</span>
+    <span class="title">Net</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

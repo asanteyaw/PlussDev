@@ -8,3 +8,12 @@
 @@example Probability/random_processes/guide/sde/01_wiener_path.cpp@@
 
 The path has `steps + 1` samples because the first is the start. The quadratic variation is random at 10 steps (between 0.55 and 1.12 across the three paths) and settles toward the elapsed time, 1, as the grid is refined; at 10000 steps the three paths give 1.0027, 1.0172 and 1.0117. This number is the reason the two integrals differ, and it is what the diagnostics of Program 7 compare against.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ito_and_stratonovich_on_the_same_path.html">
+    <span class="label">Next</span>
+    <span class="title">Ito and Stratonovich on the same path</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

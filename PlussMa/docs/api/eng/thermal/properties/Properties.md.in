@@ -1,0 +1,60 @@
+# `thermal::Properties`
+
+The properties of a fluid at a temperature.
+
+## Signature
+
+```cpp
+thermal::Properties
+```
+
+## What It Does
+
+Holds the outputs of `props`, each with the shape of the temperature (and of the pressure, when given).
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `density` | The density in kg/m^3. |  |
+| `specific_heat` | The specific heat at constant pressure in J/(kg K). |  |
+| `conductivity` | The thermal conductivity in W/(m K). |  |
+| `viscosity` | The dynamic viscosity in Pa s. |  |
+| `prandtl` | The Prandtl number `mu cp / k`. |  |
+
+## Returns
+
+A value returned by `props`.
+
+## Errors
+
+None: a value is only constructed by a successful call.
+
+## Interpretation and Use
+
+Viscosities are of order `1e-3` Pa s for water and `2e-5` for air; print them in micropascal-seconds to see the digits. The Prandtl number is derived, so it is consistent with the three properties it is built from.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Liquid water from 0 to 100 degrees.
+
+@@example Eng/api/thermal_props_water.cpp@@
+
+### Example 2
+
+Dry air from 250 to 600 K.
+
+@@example Eng/api/thermal_props_air.cpp@@
+
+### Example 3
+
+Pressure dependence.
+
+@@example Eng/api/thermal_props_pressure.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

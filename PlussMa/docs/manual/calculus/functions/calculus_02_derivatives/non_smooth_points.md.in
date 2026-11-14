@@ -31,7 +31,7 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(2));
   const math::Function absolute = math::function({"x"}, [](math::Function x) { return x.abs(); });
   const auto points = pluss::make_series({-2.0, 0.0, 3.0});
-  out.writeln("x                 ", points.pull<double>());
+  out.writeln("x                 ", points.items<double>());
 
   const std::pair<const char *, math::NonSmooth> policies[] = {{"Strict     ", math::NonSmooth::Strict},
                                                                 {"Piecewise  ", math::NonSmooth::Piecewise},
@@ -41,7 +41,7 @@ int main() {
     for (const std::int64_t order : {1, 2}) {
       const math::Function derivative = operators::differential("x", order, {.nonsmooth = policy})(absolute);
       try {
-        out.writeln(name, "derivative of order", order, derivative({points}).pull<double>());
+        out.writeln(name, "derivative of order", order, derivative({points}).items<double>());
       } catch (const pluss::Error &e) {
         const std::string text(e.what());
         out.writeln(name, "derivative of order", order, "->", text.substr(text.find(' ') + 1, text.find('\n') - text.find(' ') - 1));
@@ -73,11 +73,11 @@ int main() {
   out.print_defaults(PrintOptions{}.fixed(2));
   const math::Function relu = math::function({"x"}, [](math::Function x) { return (x + x.abs()) * 0.5; });
   const auto points = pluss::make_series({-2.0, 0.0, 3.0});
-  out.writeln("x           ", points.pull<double>());
-  out.writeln("relu        ", relu({points}).pull<double>());
+  out.writeln("x           ", points.items<double>());
+  out.writeln("relu        ", relu({points}).items<double>());
   for (const auto &[name, policy] : {std::pair<const char *, math::NonSmooth>{"Piecewise  ", math::NonSmooth::Piecewise},
                                      {"Subgradient", math::NonSmooth::Subgradient}}) {
-    out.writeln(name, operators::differential("x", 1, {.nonsmooth = policy})(relu)({points}).pull<double>());
+    out.writeln(name, operators::differential("x", 1, {.nonsmooth = policy})(relu)({points}).items<double>());
   }
   try {
     (void)operators::differential("x")(relu)({points});
@@ -107,7 +107,7 @@ using namespace pluss::tils;
 
 static void evaluate(OutputEngine &out, const char *label, const math::Function &f, std::vector<double> at) {
   try {
-    const auto values = f({pluss::make_series(at, {static_cast<std::int64_t>(at.size())}, as_f64())}).pull<double>();
+    const auto values = f({pluss::make_series(at, {static_cast<std::int64_t>(at.size())}, as_f64())}).items<double>();
     out.writeln(label, values);
   } catch (const pluss::Error &e) {
     const std::string text(e.what());
@@ -141,3 +141,16 @@ int main() {
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="complex_derivatives.html">
+    <span class="label">Previous</span>
+    <span class="title">Complex and Wirtinger derivatives</span>
+  </a>
+  <a class="next-link" href="opaque_functions_and_the_autodiff_fallback.html">
+    <span class="label">Next</span>
+    <span class="title">Opaque functions and the autodiff fallback</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

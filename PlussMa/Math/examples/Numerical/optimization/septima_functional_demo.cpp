@@ -43,7 +43,7 @@ int main() {
                 << " grad_inf=" << s.gradient_inf_norm
                 << " step_inf=" << s.step_inf_norm << '\n';
     }
-    return true;
+    return false;
   };
 
   const auto fit = pluss::subsp::math::optim::septima(

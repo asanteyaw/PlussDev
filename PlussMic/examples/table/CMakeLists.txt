@@ -269,7 +269,6 @@ target_compile_definitions(plussmic_dataframe_slate_values_demo PRIVATE
 )
 target_compile_definitions(plussmic_loader_saver_parity_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"
-  FMT_HEADER_ONLY=1
 )
 target_compile_definitions(plussmic_bike_sharing_eda_dfplot_demo PRIVATE
   PLUSSMIC_SOURCE_DIR=\"${PLUSSMIC_ROOT_DIR}\"

@@ -17,7 +17,7 @@ Returns the total length of the part of `[a, b]` on which `fn(x) > level`. The b
 ## Parameters
 
 `const integ::IntegrandFn &fn`
-: `Series -> Series`.
+: `Series (Series)`.
 
 `double a, double b`
 : A finite interval.

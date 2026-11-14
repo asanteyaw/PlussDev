@@ -235,3 +235,16 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`InverseGaussian`](../continuous_positive/InverseGaussian.md)
 - [`Gig`](../continuous_positive/Gig.md)
 - [`Lognormal`](../continuous_positive/Lognormal.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Rice.html">
+    <span class="label">Previous</span>
+    <span class="title">Rice</span>
+  </a>
+  <a class="next-link" href="Weibull.html">
+    <span class="label">Next</span>
+    <span class="title">Weibull</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

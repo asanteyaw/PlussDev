@@ -78,10 +78,10 @@ int main() {
     expect(approx(as_f64_scalar(pure_endowment(q, 0.0)), 0.72, 1e-12), "pure_endowment (i=0)", &failures);
     expect(approx(as_f64_scalar(endowment_insurance(q, 0.0)), 1.0, 1e-12), "endowment_insurance (i=0)", &failures);
 
-    const auto lx = as_f64_vec(lx_from_qx(q, 100000.0));
-    expect(lx.size() == 3, "lx_from_qx output size", &failures);
+    const auto lx = as_f64_vec(lx_qx(q, 100000.0));
+    expect(lx.size() == 3, "lx_qx output size", &failures);
     expect(approx(lx[0], 100000.0, 1e-9) && approx(lx[1], 80000.0, 1e-9) && approx(lx[2], 72000.0, 1e-9),
-           "lx_from_qx values",
+           "lx_qx values",
            &failures);
 
     const auto ct = commutation_table(q, 0.0, 100000.0);
@@ -109,12 +109,12 @@ int main() {
            "commutation M",
            &failures);
 
-    const double p = as_f64_scalar(net_level_premium_endowment(q, 0.0));
-    expect(approx(p, 1.0 / 1.8, 1e-12), "net_level_premium_endowment", &failures);
-    const auto rv = as_f64_vec(reserve_curve_endowment(q, 0.0));
-    expect(rv.size() == 3, "reserve_curve_endowment size", &failures);
+    const double p = as_f64_scalar(endowment_premium(q, 0.0));
+    expect(approx(p, 1.0 / 1.8, 1e-12), "endowment_premium", &failures);
+    const auto rv = as_f64_vec(endowment_reserve(q, 0.0));
+    expect(rv.size() == 3, "endowment_reserve size", &failures);
     expect(approx(rv[0], 0.0, 1e-12) && approx(rv[1], 1.0 - p, 1e-12) && approx(rv[2], 1.0, 1e-12),
-           "reserve_curve_endowment values",
+           "endowment_reserve values",
            &failures);
   }
 

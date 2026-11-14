@@ -1,0 +1,63 @@
+# `fluid::QualityMode`
+
+Whether the transported quantity is a concentration or an age.
+
+## Signature
+
+```cpp
+fluid::QualityMode
+```
+
+## What It Does
+
+Chooses what `transport` follows. `Constituent` is a non-negative concentration with an initial field, optional sources and first-order reactions. `Age` is the same conservation law with age zero at the reservoirs and a unit source of one second per second.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Constituent` | A concentration-like scalar. |  |
+| `Age` | The time since the water left a reservoir, s. No source or reaction field is accepted. |  |
+
+## Returns
+
+An enumeration; `Quality::mode`.
+
+## Errors
+
+Age with a source or reaction field is rejected by `transport`.
+
+## Interpretation and Use
+
+Use `Age` to find where the water has sat without knowing what is in it. In steady flow the age at the end of a pipe settles at its volume over the flow.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The age of the water along a pipe.
+
+@@example Eng/api/fluid_transport_age.cpp@@
+
+### Example 2
+
+A constituent that mixes.
+
+@@example Eng/api/fluid_transport_mix.cpp@@
+
+### Example 3
+
+Fields that Age refuses.
+
+@@example Eng/api/fluid_transport_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Quality.html">
+    <span class="label">Next</span>
+    <span class="title">Quality</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

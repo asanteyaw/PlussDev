@@ -173,3 +173,12 @@ features 5, longest lag 1, steps looked ahead 1
 
 - [`LagPlanOptions`](LagPlanOptions.md)
 - [`build_lagged_predictors`](build_lagged_predictors.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="build_lagged_predictors.html">
+    <span class="label">Next</span>
+    <span class="title">build_lagged_predictors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

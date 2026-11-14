@@ -111,3 +111,16 @@ f( 2.00000000 ) =  0.27067057    t e^-t =  0.27067057
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="geometry_operators.html">
+    <span class="label">Previous</span>
+    <span class="title">Geometry operators</span>
+  </a>
+  <a class="next-link" href="measures.html">
+    <span class="label">Next</span>
+    <span class="title">Integration against a measure</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

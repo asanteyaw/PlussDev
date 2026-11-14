@@ -1,0 +1,206 @@
+# apiref_manifest_actuarial.toml -- the `Actuarial` guides of PlussMa.
+
+[framework.actuarial]
+nav_title = "Actuarial guide"
+nav_prefix = "manual/actuarial/"
+root_page = "manual/actuarial.html"
+title = "Actuarial mathematics"
+summary = "Mortality, contingent valuation, loss contracts, pricing and reserving."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "actuarial/actuarial_01_mortality_and_life_tables"
+page = "manual/actuarial/actuarial_01_mortality_and_life_tables.md"
+title = "Mortality and life tables"
+maxdepth = 2
+children = ["actuarial_01_mortality_and_life_tables/mortality_probability_survival_and_force"]
+
+[[family]]
+path = "actuarial/actuarial_02_life_contingencies_premiums_and_reserves"
+page = "manual/actuarial/actuarial_02_life_contingencies_premiums_and_reserves.md"
+title = "Life contingencies, premiums and reserves"
+maxdepth = 2
+children = ["actuarial_02_life_contingencies_premiums_and_reserves/annuities_insurance_and_endowments", "actuarial_02_life_contingencies_premiums_and_reserves/the_valuation_operator", "actuarial_02_life_contingencies_premiums_and_reserves/commutation_columns", "actuarial_02_life_contingencies_premiums_and_reserves/net_premiums", "actuarial_02_life_contingencies_premiums_and_reserves/reserves"]
+
+[[family]]
+path = "actuarial/actuarial_05_worked_problems"
+page = "manual/actuarial/actuarial_05_worked_problems.md"
+title = "Worked problems"
+maxdepth = 2
+children = ["actuarial_05_worked_problems/pricing_a_term_life_policy", "actuarial_05_worked_problems/a_deferred_retirement_annuity", "actuarial_05_worked_problems/designing_a_reinsurance_programme", "actuarial_05_worked_problems/a_rate_review_by_territory", "actuarial_05_worked_problems/a_reserving_review"]
+
+[[symbol]]
+qualname = "actuarial::actuarial_01_mortality_and_life_tables::Mortality probability, survival probability and force"
+kind = "page"
+family = "actuarial/actuarial_01_mortality_and_life_tables"
+page = "manual/actuarial/actuarial_01_mortality_and_life_tables/mortality_probability_survival_and_force.md"
+summary = "Mortality probability, survival probability and force"
+
+[[symbol]]
+qualname = "actuarial::actuarial_02_life_contingencies_premiums_and_reserves::Annuities, insurance and endowments"
+kind = "page"
+family = "actuarial/actuarial_02_life_contingencies_premiums_and_reserves"
+page = "manual/actuarial/actuarial_02_life_contingencies_premiums_and_reserves/annuities_insurance_and_endowments.md"
+summary = "Annuities, insurance and endowments"
+
+[[symbol]]
+qualname = "actuarial::actuarial_02_life_contingencies_premiums_and_reserves::The valuation operator"
+kind = "page"
+family = "actuarial/actuarial_02_life_contingencies_premiums_and_reserves"
+page = "manual/actuarial/actuarial_02_life_contingencies_premiums_and_reserves/the_valuation_operator.md"
+summary = "The valuation operator"
+
+[[symbol]]
+qualname = "actuarial::actuarial_02_life_contingencies_premiums_and_reserves::Commutation columns"
+kind = "page"
+family = "actuarial/actuarial_02_life_contingencies_premiums_and_reserves"
+page = "manual/actuarial/actuarial_02_life_contingencies_premiums_and_reserves/commutation_columns.md"
+summary = "Commutation columns"
+
+[[symbol]]
+qualname = "actuarial::actuarial_02_life_contingencies_premiums_and_reserves::Net premiums"
+kind = "page"
+family = "actuarial/actuarial_02_life_contingencies_premiums_and_reserves"
+page = "manual/actuarial/actuarial_02_life_contingencies_premiums_and_reserves/net_premiums.md"
+summary = "Net premiums"
+
+[[symbol]]
+qualname = "actuarial::actuarial_02_life_contingencies_premiums_and_reserves::Reserves"
+kind = "page"
+family = "actuarial/actuarial_02_life_contingencies_premiums_and_reserves"
+page = "manual/actuarial/actuarial_02_life_contingencies_premiums_and_reserves/reserves.md"
+summary = "Reserves"
+
+[[family]]
+path = "actuarial/actuarial_03_frequency_severity_and_insurance_layers"
+page = "manual/actuarial/actuarial_03_frequency_severity_and_insurance_layers.md"
+title = "Frequency, severity and insurance layers"
+maxdepth = 2
+children = ["actuarial_03_frequency_severity_and_insurance_layers/claim_frequency_and_severity", "actuarial_03_frequency_severity_and_insurance_layers/aggregate_losses", "actuarial_03_frequency_severity_and_insurance_layers/deductibles_limits_and_coinsurance", "actuarial_03_frequency_severity_and_insurance_layers/layers_and_stop_loss", "actuarial_03_frequency_severity_and_insurance_layers/limited_expected_values_and_parametric_layers", "actuarial_03_frequency_severity_and_insurance_layers/a_policy_from_frequency_severity_and_terms"]
+
+[[symbol]]
+qualname = "actuarial::actuarial_03_frequency_severity_and_insurance_layers::Claim Frequency and Severity"
+kind = "page"
+family = "actuarial/actuarial_03_frequency_severity_and_insurance_layers"
+page = "manual/actuarial/actuarial_03_frequency_severity_and_insurance_layers/claim_frequency_and_severity.md"
+summary = "Claim Frequency and Severity"
+
+[[symbol]]
+qualname = "actuarial::actuarial_03_frequency_severity_and_insurance_layers::Aggregate Losses"
+kind = "page"
+family = "actuarial/actuarial_03_frequency_severity_and_insurance_layers"
+page = "manual/actuarial/actuarial_03_frequency_severity_and_insurance_layers/aggregate_losses.md"
+summary = "Aggregate Losses"
+
+[[symbol]]
+qualname = "actuarial::actuarial_03_frequency_severity_and_insurance_layers::Deductibles, Limits and Coinsurance"
+kind = "page"
+family = "actuarial/actuarial_03_frequency_severity_and_insurance_layers"
+page = "manual/actuarial/actuarial_03_frequency_severity_and_insurance_layers/deductibles_limits_and_coinsurance.md"
+summary = "Deductibles, Limits and Coinsurance"
+
+[[symbol]]
+qualname = "actuarial::actuarial_03_frequency_severity_and_insurance_layers::Layers and Stop-Loss"
+kind = "page"
+family = "actuarial/actuarial_03_frequency_severity_and_insurance_layers"
+page = "manual/actuarial/actuarial_03_frequency_severity_and_insurance_layers/layers_and_stop_loss.md"
+summary = "Layers and Stop-Loss"
+
+[[symbol]]
+qualname = "actuarial::actuarial_03_frequency_severity_and_insurance_layers::Limited Expected Values and Parametric Layers"
+kind = "page"
+family = "actuarial/actuarial_03_frequency_severity_and_insurance_layers"
+page = "manual/actuarial/actuarial_03_frequency_severity_and_insurance_layers/limited_expected_values_and_parametric_layers.md"
+summary = "Limited Expected Values and Parametric Layers"
+
+[[symbol]]
+qualname = "actuarial::actuarial_03_frequency_severity_and_insurance_layers::A Policy from Frequency, Severity and Terms"
+kind = "page"
+family = "actuarial/actuarial_03_frequency_severity_and_insurance_layers"
+page = "manual/actuarial/actuarial_03_frequency_severity_and_insurance_layers/a_policy_from_frequency_severity_and_terms.md"
+summary = "A Policy from Frequency, Severity and Terms"
+
+[[family]]
+path = "actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving"
+page = "manual/actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving.md"
+title = "Ratemaking, credibility and loss reserving"
+maxdepth = 2
+children = ["actuarial_04_ratemaking_credibility_and_loss_reserving/pure_premium_loss_ratio_and_claim_cost", "actuarial_04_ratemaking_credibility_and_loss_reserving/indicated_premium_and_rate_change", "actuarial_04_ratemaking_credibility_and_loss_reserving/credibility", "actuarial_04_ratemaking_credibility_and_loss_reserving/claims_triangles", "actuarial_04_ratemaking_credibility_and_loss_reserving/chain_ladder", "actuarial_04_ratemaking_credibility_and_loss_reserving/bornhuetter_ferguson"]
+
+[[symbol]]
+qualname = "actuarial::actuarial_04_ratemaking_credibility_and_loss_reserving::Pure Premium, Loss Ratio and Claim Cost"
+kind = "page"
+family = "actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving"
+page = "manual/actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving/pure_premium_loss_ratio_and_claim_cost.md"
+summary = "Pure Premium, Loss Ratio and Claim Cost"
+
+[[symbol]]
+qualname = "actuarial::actuarial_04_ratemaking_credibility_and_loss_reserving::Indicated Premium and Rate Change"
+kind = "page"
+family = "actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving"
+page = "manual/actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving/indicated_premium_and_rate_change.md"
+summary = "Indicated Premium and Rate Change"
+
+[[symbol]]
+qualname = "actuarial::actuarial_04_ratemaking_credibility_and_loss_reserving::Credibility"
+kind = "page"
+family = "actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving"
+page = "manual/actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving/credibility.md"
+summary = "Credibility"
+
+[[symbol]]
+qualname = "actuarial::actuarial_04_ratemaking_credibility_and_loss_reserving::Claims Triangles"
+kind = "page"
+family = "actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving"
+page = "manual/actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving/claims_triangles.md"
+summary = "Claims Triangles"
+
+[[symbol]]
+qualname = "actuarial::actuarial_04_ratemaking_credibility_and_loss_reserving::Chain Ladder"
+kind = "page"
+family = "actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving"
+page = "manual/actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving/chain_ladder.md"
+summary = "Chain Ladder"
+
+[[symbol]]
+qualname = "actuarial::actuarial_04_ratemaking_credibility_and_loss_reserving::Bornhuetter-Ferguson"
+kind = "page"
+family = "actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving"
+page = "manual/actuarial/actuarial_04_ratemaking_credibility_and_loss_reserving/bornhuetter_ferguson.md"
+summary = "Bornhuetter-Ferguson"
+
+[[symbol]]
+qualname = "actuarial::actuarial_05_worked_problems::Pricing a Term Life Policy"
+kind = "page"
+family = "actuarial/actuarial_05_worked_problems"
+page = "manual/actuarial/actuarial_05_worked_problems/pricing_a_term_life_policy.md"
+summary = "Pricing a Term Life Policy"
+
+[[symbol]]
+qualname = "actuarial::actuarial_05_worked_problems::A Deferred Retirement Annuity"
+kind = "page"
+family = "actuarial/actuarial_05_worked_problems"
+page = "manual/actuarial/actuarial_05_worked_problems/a_deferred_retirement_annuity.md"
+summary = "A Deferred Retirement Annuity"
+
+[[symbol]]
+qualname = "actuarial::actuarial_05_worked_problems::Designing a Reinsurance Programme"
+kind = "page"
+family = "actuarial/actuarial_05_worked_problems"
+page = "manual/actuarial/actuarial_05_worked_problems/designing_a_reinsurance_programme.md"
+summary = "Designing a Reinsurance Programme"
+
+[[symbol]]
+qualname = "actuarial::actuarial_05_worked_problems::A Rate Review by Territory"
+kind = "page"
+family = "actuarial/actuarial_05_worked_problems"
+page = "manual/actuarial/actuarial_05_worked_problems/a_rate_review_by_territory.md"
+summary = "A Rate Review by Territory"
+
+[[symbol]]
+qualname = "actuarial::actuarial_05_worked_problems::A Reserving Review"
+kind = "page"
+family = "actuarial/actuarial_05_worked_problems"
+page = "manual/actuarial/actuarial_05_worked_problems/a_reserving_review.md"
+summary = "A Reserving Review"

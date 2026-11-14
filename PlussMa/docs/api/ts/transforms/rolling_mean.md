@@ -117,3 +117,16 @@ rolling_mean(x, 2)  10.0000      nan      nan  11.5000  12.5000
 
 - [`expanding_mean`](expanding_mean.md): the same with a window that grows
 - [`zscore_rolling`](zscore_rolling.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="rolling_max.html">
+    <span class="label">Previous</span>
+    <span class="title">rolling_max</span>
+  </a>
+  <a class="next-link" href="rolling_min.html">
+    <span class="label">Next</span>
+    <span class="title">rolling_min</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

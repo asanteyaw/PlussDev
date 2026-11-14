@@ -1,0 +1,244 @@
+# Designing a Reinsurance Programme
+
+[Back to Worked Problems](../actuarial_05_worked_problems.md)
+
+**The problem.** A property insurer expects 150 claims a year, with sizes that follow a lognormal law with log-mean 9.0 and log-standard-deviation 1.3: typical claims of a few thousand, an average near 19,000, and an occasional very large one. It wants excess-of-loss reinsurance that keeps any one claim to 25,000 and covers the rest in three layers, **75,000 excess of 25,000**, **150,000 excess of 100,000** and **750,000 excess of 250,000**, leaving anything above 1,000,000 with the insurer. It needs to know how large the year's total losses are, what each layer is expected to cost, what a reinsurer would charge, whether the analytic figures can be trusted, and how much the answers depend on the claim count being exactly Poisson.
+
+The problem draws on [Actuarial 3](../actuarial_03_frequency_severity_and_insurance_layers.md) throughout: aggregate moments, layers, limited expected values, and the contract operators, and on the loading formula of [Actuarial 4](../actuarial_04_ratemaking_credibility_and_loss_reserving.md). It also introduces a habit that matters in practice: **compute analytically, then confirm by simulation**.
+
+## The plan
+
+A layer of width {math}`l` above attachment {math}`a` pays {math}`\min\big((X-a)_+,l\big)` on a claim {math}`X`, whose expected value is the difference of two limited expected values,
+
+```{math}
+E\big[\min((X-a)_+,l)\big]=E[\min(X,a+l)]-E[\min(X,a)] ,
+```
+
+and with a Poisson number of claims of mean {math}`\lambda` the expected annual loss to the layer is {math}`\lambda` times that. The reinsurer's premium is that expected loss grossed up for its own expenses and profit, as in the indicated-premium formula. Each analytic number is then compared with a simulation of ten thousand years of claims, which also gives what the formulas do not: how variable each layer's loss is from year to year.
+
+## Step 1: the size of the year
+
+Before reinsuring anything, find out what is being reinsured. The program computes the mean and variance of one claim, then those of the year's total as a compound Poisson, and reports the coefficient of variation of each: the standard deviation as a fraction of the mean.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  const double lambda = 150.0, mu = 9.0, sigma = 1.3;
+  const auto sev_moments = losses::lognormal_moments(mu, sigma);
+  const double sev_mean = sev_moments.mean.item<double>(), sev_var = sev_moments.variance.item<double>();
+  const auto year = losses::compound_poisson(lambda, sev_mean, sev_var);
+  const double year_mean = year.mean.item<double>(), year_sd = std::sqrt(year.variance.item<double>());
+  out.writeln("one claim:   mean", sev_mean, " standard deviation", std::sqrt(sev_var), " coefficient of variation", std::sqrt(sev_var) / sev_mean);
+  out.writeln("the year:    mean", year_mean, " standard deviation", year_sd, " coefficient of variation", year_sd / year_mean);
+  out.writeln("a year's total is within 2 sd of the mean between", year_mean - 2.0 * year_sd, "and", year_mean + 2.0 * year_sd);
+}
+```
+
+## Step 2: the cost of each layer
+
+For each layer the program prints the chance that a claim reaches it, the expected number of claims a year that do, the expected loss to it per claim, and the expected loss per year, together with the part the insurer keeps: the first 25,000 of every claim and everything above 1,000,000. The probability of reaching an attachment comes from the lognormal distribution function. The layers and the retained parts tile the claim exactly, so the shares of the expected annual loss must add to 100%.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double lambda = 150.0, mu = 9.0, sigma = 1.3;
+  const auto sev_moments = losses::lognormal_moments(mu, sigma);
+  const double sev_mean = sev_moments.mean.item<double>(), sev_var = sev_moments.variance.item<double>();
+  struct Cover { const char *name; double attachment; double limit; };
+  const std::vector<Cover> program = {{"75,000 xs 25,000", 25000.0, 75000.0}, {"150,000 xs 100,000", 100000.0, 150000.0}, {"750,000 xs 250,000", 250000.0, 750000.0}};
+  const distr::Lognormal severity(mu, sigma);
+  const double total = lambda * sev_mean;
+  double check = 0.0;
+  const double kept_low = losses::lognormal_lev(mu, sigma, 25000.0).item<double>();
+  const double kept_high = sev_mean - losses::lognormal_lev(mu, sigma, 1000000.0).item<double>();
+  out.writeln("part                    P(claim reaches it)   claims a year   loss per claim   loss per year   share");
+  out.writeln("retained below 25,000   1.0     ", lambda, " ", kept_low, " ", lambda * kept_low, " ", lambda * kept_low / total);
+  check += lambda * kept_low;
+  for (const Cover &c : program) {
+    const double reach = 1.0 - severity.cdf(pluss::make_series(c.attachment)).item<double>();
+    const double per_claim = losses::lognormal_layer(mu, sigma, c.attachment, c.limit).item<double>();
+    out.writeln(c.name, " ", reach, " ", lambda * reach, " ", per_claim, " ", lambda * per_claim, " ", lambda * per_claim / total);
+    check += lambda * per_claim;
+  }
+  out.writeln("retained above 1,000,000 ", 1.0 - severity.cdf(pluss::make_series(1000000.0)).item<double>(), " ", lambda * (1.0 - severity.cdf(pluss::make_series(1000000.0)).item<double>()), " ", kept_high, " ", lambda * kept_high, " ", lambda * kept_high / total);
+  check += lambda * kept_high;
+  out.writeln("parts add to", check, " against the expected annual loss", total);
+}
+```
+
+## Step 3: the reinsurer's premium
+
+A reinsurer must cover the expected loss and its own costs. Suppose it spends 10% of premium on expenses and aims for 15% profit. Those are shares of the premium, so, as in [Indicated Premium and Rate Change](../actuarial_04_ratemaking_credibility_and_loss_reserving/indicated_premium_and_rate_change.md), the premium is the expected loss divided by {math}`1-0.10-0.15=0.75`. The program prices the three layers and reports for each the premium per claim as a fraction of the limit: the premium divided by the expected number of claims times the limit, which is the price of each unit of cover bought per claim insured. Higher layers are less likely to be hit, so they cost far less per unit.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const double lambda = 150.0, mu = 9.0, sigma = 1.3;
+  const auto sev_moments = losses::lognormal_moments(mu, sigma);
+  const double sev_mean = sev_moments.mean.item<double>(), sev_var = sev_moments.variance.item<double>();
+  struct Cover { const char *name; double attachment; double limit; };
+  const std::vector<Cover> program = {{"75,000 xs 25,000", 25000.0, 75000.0}, {"150,000 xs 100,000", 100000.0, 150000.0}, {"750,000 xs 250,000", 250000.0, 750000.0}};
+  out.writeln("layer                   expected loss   premium   premium per claim / limit");
+  double premium_total = 0.0;
+  for (const Cover &c : program) {
+    const double expected = lambda * losses::lognormal_layer(mu, sigma, c.attachment, c.limit).item<double>();
+    const double premium = models::indicated_premium(pluss::make_series(expected), 0.0, 0.10, 0.15).item<double>();
+    premium_total += premium;
+    out.writeln(c.name, " ", expected, " ", premium, " ", premium / (lambda * c.limit));
+  }
+  out.writeln("whole programme premium", premium_total);
+}
+```
+
+## Step 4: checking the formulas by simulation
+
+The analytic layer costs rest on the lognormal and Poisson assumptions and a numerical integral. The simulation does not use any of that machinery: it draws ten thousand years of claim counts, draws that many claim sizes per year, applies each layer to every claim with the contract operators, and sums within each year. If the simulated mean loss to a layer matches the formula, both are right. The simulation also supplies what the formulas do not, the **year-to-year variability** of each layer, and the probability that a layer pays anything in a year, which the Poisson assumption also predicts: the number of claims reaching the layer is itself Poisson with mean {math}`\\lambda\\,\\Pr(X>a)`, so the chance of at least one is {math}`1-e^{-\\lambda\\Pr(X>a)}`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const double lambda = 150.0, mu = 9.0, sigma = 1.3;
+  const auto sev_moments = losses::lognormal_moments(mu, sigma);
+  const double sev_mean = sev_moments.mean.item<double>(), sev_var = sev_moments.variance.item<double>();
+  struct Cover { const char *name; double attachment; double limit; };
+  const std::vector<Cover> program = {{"75,000 xs 25,000", 25000.0, 75000.0}, {"150,000 xs 100,000", 100000.0, 150000.0}, {"750,000 xs 250,000", 250000.0, 750000.0}};
+  const std::int64_t years = 10000, maxn = 300;
+  const pluss::Series counts = distr::Poisson(lambda).sample({years}, pluss::Config{}, 11);
+  const pluss::Series draws = distr::Lognormal(mu, sigma).sample({years, maxn}, pluss::Config{}, 12);
+  const pluss::Series position = pluss::series::arange(0, maxn).to(pluss::ScalarType::Float64).reshape({1, maxn});
+  const pluss::Series present = position.lt(counts.to(pluss::ScalarType::Float64).reshape({years, 1})).to(pluss::ScalarType::Float64);
+  const pluss::Series flat = draws.reshape({years * maxn});
+  const auto annual = [&](const actuarial::LossTransform &cover) {
+    return cover(flat).reshape({years, maxn}).mul(present).sum(1);
+  };
+  out.writeln("layer                   analytic mean   simulated mean   standard error   simulated sd   P(any loss): simulated   analytic");
+  for (const Cover &c : program) {
+    const pluss::Series yearly = annual(actuarial::operators::layer(c.attachment, c.limit));
+    const double analytic = lambda * losses::lognormal_layer(mu, sigma, c.attachment, c.limit).item<double>();
+    const double reach = 1.0 - distr::Lognormal(mu, sigma).cdf(pluss::make_series(c.attachment)).item<double>();
+    out.writeln(c.name, " ", analytic, " ", yearly.mean().item<double>(), " ", yearly.std().item<double>() / std::sqrt(static_cast<double>(years)), " ", yearly.std().item<double>(), " ", yearly.gt(0.0).to(pluss::ScalarType::Float64).mean().item<double>(), " ", 1.0 - std::exp(-lambda * reach));
+  }
+  const pluss::Series gross = annual(actuarial::make_operator<pluss::Series(const pluss::Series &)>("identity", [](const pluss::Series &x) { return x; }));
+  const auto year = losses::compound_poisson(lambda, sev_mean, sev_var);
+  out.writeln("total losses: analytic mean", year.mean.item<double>(), " simulated", gross.mean().item<double>(), "  analytic sd", std::sqrt(year.variance.item<double>()), " simulated", gross.std().item<double>());
+}
+```
+
+## Step 5: if the claim count is not Poisson
+
+A Poisson count has variance equal to its mean, which is rarely true of real claims: weather, a bad year for fraud or a portfolio of mixed quality all make some years heavier than others. A negative binomial count with the same mean of 150 but variance 200 (success probability 0.75 and 450 successes) has the same expected number of claims and therefore the **same expected layer costs**, because the cost is the mean count times the cost per claim. What changes is the spread of the year's total. The program compares the two analytically and then checks the negative binomial figure by simulation.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace actuarial = pluss::ma::actuarial;
+namespace life = actuarial::life_contingencies;
+namespace losses = actuarial::losses;
+namespace models = actuarial::models;
+namespace distr = pluss::subsp::stats::distr;
+using namespace pluss::tils;
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(2));
+  const double lambda = 150.0, mu = 9.0, sigma = 1.3;
+  const auto sev_moments = losses::lognormal_moments(mu, sigma);
+  const double sev_mean = sev_moments.mean.item<double>(), sev_var = sev_moments.variance.item<double>();
+  const auto poisson_year = losses::compound_poisson(lambda, sev_mean, sev_var);
+  const auto negbin_year = losses::compound_negbin(450.0, 0.75, sev_mean, sev_var);
+  out.writeln("claim count:   Poisson mean", losses::poisson_moments(lambda).mean.item<double>(), " variance", losses::poisson_moments(lambda).variance.item<double>());
+  out.writeln("               negative binomial mean", losses::negbin_moments(450.0, 0.75).mean.item<double>(), " variance", losses::negbin_moments(450.0, 0.75).variance.item<double>());
+  out.writeln("year's total:  Poisson sd", std::sqrt(poisson_year.variance.item<double>()), "  negative binomial sd", std::sqrt(negbin_year.variance.item<double>()), "  same mean", poisson_year.mean.item<double>(), negbin_year.mean.item<double>());
+
+  const std::int64_t years = 10000, maxn = 600;
+  const pluss::Series counts = distr::NegativeBinomial(450.0, 0.75).sample({years}, pluss::Config{}, 21);
+  const pluss::Series draws = distr::Lognormal(mu, sigma).sample({years, maxn}, pluss::Config{}, 22);
+  const pluss::Series position = pluss::series::arange(0, maxn).to(pluss::ScalarType::Float64).reshape({1, maxn});
+  const pluss::Series present = position.lt(counts.to(pluss::ScalarType::Float64).reshape({years, 1})).to(pluss::ScalarType::Float64);
+  const pluss::Series totals = draws.mul(present).sum(1);
+  out.writeln("simulated negative binomial: mean count", counts.to(pluss::ScalarType::Float64).mean().item<double>(), " sd of count", counts.to(pluss::ScalarType::Float64).std().item<double>(), " mean total", totals.mean().item<double>(), " sd of total", totals.std().item<double>());
+}
+```
+
+## Reading the results
+
+**The year.** One claim has mean 18,864 and standard deviation 39,657, a coefficient of variation of 2.1: individual claims are wildly variable, dominated by the lognormal's long right tail. The year's total, a sum of about 150 of them, has mean 2,829,570 and standard deviation 537,841, a coefficient of variation of only 0.19. Pooling many independent claims averages out most of the variability, roughly by the square root of the claim count, which is the whole economic case for insurance. A year's total is expected to fall between about 1.75 million and 3.91 million (two standard deviations either side).
+
+**The layers.** The share table shows where the money goes. The retained first 25,000 of each claim takes **58.8%** of the expected loss, the 75,000 xs 25,000 layer 29.0%, the 150,000 xs 100,000 layer 8.7%, the 750,000 xs 250,000 layer 3.3%, and the retained part above a million only 0.25%. The parts add back to 2,829,569.94 exactly, because the pieces tile every claim. Notice how quickly the probability of reaching a layer falls: 19.3% of claims reach 25,000, 2.7% reach 100,000, 0.4% reach 250,000, and about one claim in ten thousand reaches a million. The first layer is hit by about 29 claims a year, the second by four, the third by fewer than one.
+
+**The price.** Grossing the expected losses up by 1/0.75 gives premiums of 1,092,177, 328,510 and 123,395, a programme total of 1,544,081. Per unit of cover the layers differ enormously: the premium per claim as a fraction of the limit falls from 9.7% for the first layer to 1.5% for the second and 0.11% for the third. A reinsurer sells low layers as a near-certain, frequent cost and high layers as cheap insurance against rare disasters.
+
+**The simulation.** The simulated means agree with the analytic ones to within 2.4 standard errors in every case (819,876 against 819,132; 250,276 against 246,383; 95,428 against 92,546), and the total agrees too (2,838,105 against 2,829,570). The layers are simulated from the same claims, so their errors move together; ten thousand years of a heavy-tailed severity leave a standard error of about 0.2% on the total, so the differences are consistent with sampling noise, and a longer run would tighten them. The probability that a layer pays anything in a year matches the Poisson prediction: 1.00, 0.98 and 0.47 simulated against 1.00, 0.98 and 0.47 analytic. The simulation shows what the means hide. The second layer's loss has a standard deviation of 163,950 against a mean of 250,276 and the third has 183,586 against 95,428: **the higher the layer, the more volatile its loss relative to its cost**, and a reinsurer will want more than a flat 25% loading for the top layer for that reason.
+
+**The count.** A negative binomial count with the same mean of 150 and variance 200 leaves every expected layer cost unchanged, since each is the mean count times a per-claim cost, but raises the standard deviation of the year's total from 537,841 to 554,134, a 3.0% increase. The simulation of the negative binomial confirms its mean count (150.12) and standard deviation (14.26 against the theoretical 14.14). The lesson is that **expected costs depend only on the mean frequency**, while **the risk loading depends on the whole distribution**, so assumptions about the shape of the count belong in the capital and risk margin, not in the expected-loss premium.
+
+## What to carry forward
+
+- A layer's expected cost is the difference of two limited expected values, multiplied by the expected claim count when the count is Poisson.
+- The shares of expected loss across retained parts and layers must add to 100%; check it.
+- Confirm analytic results by simulation with a fixed seed: it validates the algebra and also exposes the variability the means hide.
+- Higher layers are rarer and more volatile; price them per unit of cover and load them for volatility.
+- Expected losses need only the mean claim count; risk margins need its variance.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_deferred_retirement_annuity.html">
+    <span class="label">Previous</span>
+    <span class="title">A Deferred Retirement Annuity</span>
+  </a>
+  <a class="next-link" href="a_rate_review_by_territory.html">
+    <span class="label">Next</span>
+    <span class="title">A Rate Review by Territory</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

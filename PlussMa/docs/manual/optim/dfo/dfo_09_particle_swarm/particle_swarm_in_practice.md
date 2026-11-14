@@ -257,3 +257,8 @@ With the test off the run uses its whole generation budget. With `check_every` 1
 - **For rugged functions leave the stopping test off and rely on a budget.** Otherwise the swarm may collapse before it has found the global basin.
 
 Where next: [Chapter 10](../dfo_10_mesh_adaptive_search.md) describes the mesh adaptive direct search family.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

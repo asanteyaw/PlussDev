@@ -45,19 +45,19 @@ int main() {
   const math::Function square = math::function({"x"}, [](math::Function x) { return x.pow(2); });
   const auto x = pluss::make_series({-1.0, 0.0, 2.0});
 
-  out.writeln("x                 ", x.pull<double>());
-  out.writeln("f(x) = x^2        ", square({x}).pull<double>());
-  out.writeln("identity          ", operators::identity()(square)({x}).pull<double>());
-  out.writeln("shift(x, 1.5)     ", operators::shift("x", 1.5)(square)({x}).pull<double>(), " = (x + 1.5)^2:", x.add(1.5).pow(2).pull<double>());
-  out.writeln("scale(3)          ", operators::scale(3.0)(square)({x}).pull<double>());
-  out.writeln("multiply(x)       ", operators::multiply(square.arg("x"))(square)({x}).pull<double>(), " = x^3:", x.pow(3).pull<double>());
-  out.writeln("multiply(5)       ", operators::multiply(math::function(5.0))(square)({x}).pull<double>());
+  out.writeln("x                 ", x.items<double>());
+  out.writeln("f(x) = x^2        ", square({x}).items<double>());
+  out.writeln("identity          ", operators::identity()(square)({x}).items<double>());
+  out.writeln("shift(x, 1.5)     ", operators::shift("x", 1.5)(square)({x}).items<double>(), " = (x + 1.5)^2:", x.add(1.5).pow(2).items<double>());
+  out.writeln("scale(3)          ", operators::scale(3.0)(square)({x}).items<double>());
+  out.writeln("multiply(x)       ", operators::multiply(square.arg("x"))(square)({x}).items<double>(), " = x^3:", x.pow(3).items<double>());
+  out.writeln("multiply(5)       ", operators::multiply(math::function(5.0))(square)({x}).items<double>());
 
   // An operator is a value: keep one, apply it to several functions.
   const operators::Operator advance = operators::shift("x", 1.0);
   const math::Function cube = math::function({"x"}, [](math::Function v) { return v.pow(3); });
-  out.writeln("advance(f)        ", advance(square)({x}).pull<double>());
-  out.writeln("advance(cube)     ", advance(cube)({x}).pull<double>());
+  out.writeln("advance(f)        ", advance(square)({x}).items<double>());
+  out.writeln("advance(cube)     ", advance(cube)({x}).items<double>());
 }
 ```
 
@@ -163,3 +163,12 @@ Every built-in operator reports `structural` and `platform_pure`, and all are li
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="composing_and_combining.html">
+    <span class="label">Next</span>
+    <span class="title">Composing and combining operators</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

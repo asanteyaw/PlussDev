@@ -104,7 +104,7 @@ int main() {
   const std::vector<pluss::Series> w{pluss::make_series(0.3), pluss::make_series(-0.2), pluss::make_series(0.5), pluss::make_series(0.9)};
 
   const math::Function F = path([](math::Function, math::Function, math::Function c, math::Function) { return c.exp(); });   // exp(W_3)
-  out.writeln("D exp(W_3)      ", stochastic::malliavin_derivative({"w1", "w2", "w3", "w4"})(F)(w).pull<double>(), "   exp(0.5) = ", std::exp(0.5));
+  out.writeln("D exp(W_3)      ", stochastic::malliavin_derivative({"w1", "w2", "w3", "w4"})(F)(w).items<double>(), "   exp(0.5) = ", std::exp(0.5));
 
   const math::Function u = path([](math::Function, math::Function, math::Function, math::Function d) { return math::stack({d, d, d, d}); });
   const math::Function delta = stochastic::skorokhod_integral({"w1", "w2", "w3", "w4"}, 0.25)(u);
@@ -142,7 +142,7 @@ int main() {
   const auto point = pluss::make_series(x, as_f64());
 
   const auto coefficients = [&](stochastic::Convention c) {
-    return stochastic::stochastic_differential(drift, diffusion, {"x"}, c)(square)({point}).pull<double>();
+    return stochastic::stochastic_differential(drift, diffusion, {"x"}, c)(square)({point}).items<double>();
   };
   const auto ito = coefficients(stochastic::Convention::Ito);
   const auto strat = coefficients(stochastic::Convention::Stratonovich);
@@ -175,3 +175,16 @@ Ito drift at x          0.595000    a x + b^2 x / 2 =  0.595000
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="saving_and_loading.html">
+    <span class="label">Previous</span>
+    <span class="title">Saving and loading</span>
+  </a>
+  <a class="next-link" href="taylor_and_power_series.html">
+    <span class="label">Next</span>
+    <span class="title">Taylor operators and power series</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

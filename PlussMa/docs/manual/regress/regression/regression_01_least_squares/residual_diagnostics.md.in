@@ -95,7 +95,7 @@ int main() {
   }
   const auto ordered = reg::ols_fit(pluss::make_series(wave, {n}, as_f64()), pluss::make_series(t, {n}, as_f64()));
   const auto shuffled = reg::ols_fit(pluss::make_series(wave_shuffled, {n}, as_f64()), pluss::make_series(t_shuffled, {n}, as_f64()));
-  out.writeln("coefficients ordered ", ordered.coefficients.pull<double>(), " shuffled", shuffled.coefficients.pull<double>());
+  out.writeln("coefficients ordered ", ordered.coefficients.items<double>(), " shuffled", shuffled.coefficients.items<double>());
   out.writeln("skewness     ordered ", ordered.skewness, " shuffled", shuffled.skewness);
   out.writeln("Jarque-Bera  ordered ", ordered.jarque_bera, " shuffled", shuffled.jarque_bera);
   out.writeln("Durbin-Watson ordered", ordered.durbin_watson, " shuffled", shuffled.durbin_watson);
@@ -133,3 +133,16 @@ int main() {
 ```
 
 At ten observations the omnibus statistic is 5.42 (p = 0.067). At seven and four it is `NaN` with its p-value, while Jarque–Bera and Durbin–Watson are still computed; their p-values rest on large-sample theory and should not be trusted with so few residuals. For the exact line the residuals are all zero, so skewness and kurtosis are reported at the normal values (0 and 3), and Jarque–Bera, the omnibus statistic and Durbin–Watson, which divide by a zero spread, are `NaN`.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="every_number_in_the_result.html">
+    <span class="label">Previous</span>
+    <span class="title">Every number in the result</span>
+  </a>
+  <a class="next-link" href="the_summary_report.html">
+    <span class="label">Next</span>
+    <span class="title">The summary report</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

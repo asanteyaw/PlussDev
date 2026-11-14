@@ -44,4 +44,15 @@ operators::Operator operators::covariant(std::string_view variable, math::Functi
 6. For code that is not written as a `Function`, request `Fallback::Autodiff`; it is accepted by every differential operator.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_02_derivatives/partial_derivatives_and_higher_orders
+calculus_02_derivatives/the_differentiation_rules
+calculus_02_derivatives/complex_derivatives
+calculus_02_derivatives/non_smooth_points
+calculus_02_derivatives/opaque_functions_and_the_autodiff_fallback
+calculus_02_derivatives/absolute_and_covariant_differentials
+```
 <!-- apiref:toctree:end -->

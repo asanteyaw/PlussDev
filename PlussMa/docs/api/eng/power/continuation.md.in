@@ -1,0 +1,42 @@
+# Continuation power flow
+
+This branch follows a network through increasing load, past the point where the ordinary power flow fails, and finds the nose of the voltage curve.
+
+## Choosing A Surface
+
+Use `trace` for the voltage at a load that may be close to collapse and, with `TraceStop::Nose`, for the loading margin.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A line against its closed-form nose.
+
+@@example Eng/api/power_trace_nose.cpp@@
+
+### Example 2
+
+A target checked against the ordinary power flow.
+
+@@example Eng/api/power_trace_target.cpp@@
+
+### Example 3
+
+Stepping controls.
+
+@@example Eng/api/power_trace_stepping.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+continuation/TraceStop
+continuation/LoadPath
+continuation/TraceOptions
+continuation/TraceResult
+continuation/trace
+```
+<!-- apiref:toctree:end -->

@@ -321,4 +321,25 @@ int main() {
             scalar(1.0));
       },
       "continuous state-space model was accepted by the discrete filter");
+
+  // clear errors for an indefinite R and for an unstabilisable pair
+  {
+    const auto a = pluss::series::make({1.0, 0.0, 0.0, -1.0}).reshape({2, 2});
+    const auto b = pluss::series::make({0.0, 1.0}).reshape({2, 1});
+    const auto q = pluss::series::eye(2, pluss::Config{}.with_dtype(pluss::ScalarType::Float64));
+    const auto r = pluss::series::make({1.0}).reshape({1, 1});
+    const auto described = [&](auto call, const std::string &fragment) {
+      try {
+        call();
+      } catch (const pluss::Error &error) {
+        return std::string(error.what()).find(fragment) != std::string::npos;
+      }
+      return false;
+    };
+    expect(described([&] { (void)control::care(a, b, q, r); }, "no stabilising solution"), "an unstabilisable pair was not explained");
+    expect(described([&] { (void)control::care(a, b, q, pluss::series::make({0.0}).reshape({1, 1})); }, "R must be positive definite"),
+           "a zero R was not explained");
+    expect(described([&] { (void)control::care(a, b, q, pluss::series::make({-1.0}).reshape({1, 1})); }, "R must be positive definite"),
+           "a negative R was not explained");
+  }
 }

@@ -247,3 +247,12 @@ Which fill is right depends on what the gap means. Carrying the last value forwa
 - **A rolling statistic at the start of the series is not comparable** with one deep inside it unless `min_periods` equals the window.
 
 Where next: [ACF and PACF](acf_and_pacf.md) measures how an observation depends on its own past, which is what tells you which of these transforms (and later which model) to use.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="acf_and_pacf.html">
+    <span class="label">Next</span>
+    <span class="title">ACF and PACF</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

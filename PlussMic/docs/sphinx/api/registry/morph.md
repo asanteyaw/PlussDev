@@ -17,7 +17,7 @@ Returns a new registry with one named field's values each individually
 transformed by `fn` — every other field is left untouched. Built on
 [`Slot::transform()`](../slot/transform.md). Unlike [`map()`](map.md), which
 replaces a whole field's `Slot` (`Slot -> Slot`), `morph()` works one *value* at
-a time (`Slot::Value -> Slot::Value`), preserving the field's length.
+a time (`Slot::Value Slot::Value`), preserving the field's length.
 
 ## Parameters
 

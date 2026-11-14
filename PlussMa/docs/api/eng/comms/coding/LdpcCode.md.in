@@ -1,0 +1,60 @@
+# `comms::LdpcCode`
+
+A binary low-density parity-check code.
+
+## Signature
+
+```cpp
+comms::LdpcCode
+```
+
+## What It Does
+
+Holds a sparse parity-check matrix, a systematic generator derived from it by Gauss-Jordan elimination over GF(2), and the columns that carry the information bits. `gallager` makes one; the encoder and decoder read it.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `parity_check` | The parity-check matrix `H`, `[m, n]`, zeros and ones (Int64). |  |
+| `generator` | The systematic generator `G`, `[k, n]`, with `G H^T = 0` modulo two. |  |
+| `info_positions` | The columns of a codeword that hold the information bits, length `k`. |  |
+| `length` | The codeword length `n`. |  |
+| `dimension` | The number of information bits `k`; at least `n - m`, equal to it when the checks are independent. |  |
+
+## Returns
+
+Returned by `gallager`.
+
+## Errors
+
+`encode` and `decode` throw `pluss::Error` for a code that is not one made by `gallager`.
+
+## Interpretation and Use
+
+The rate is `k / n`, at least `1 - column_weight / row_weight` for a regular code. A code is a value: build it once and reuse it for every frame.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A (3, 6) code of length 1200.
+
+@@example Eng/api/comms_ldpc_code.cpp@@
+
+### Example 2
+
+Encoding and decoding with it.
+
+@@example Eng/api/comms_ldpc_encode_decode.cpp@@
+
+### Example 3
+
+Rejected codes.
+
+@@example Eng/api/comms_ldpc_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

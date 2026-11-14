@@ -61,7 +61,7 @@ int main() {
   out.print_defaults(PrintOptions{}.sci(3));
   const auto ols_ci = ols.conf_int.host<double>().array().data;
   const auto glm_ci = glm.conf_int.host<double>().array().data;
-  out.writeln("p values  (t on 9 df)", ols.p_values.pull<double>(), " (normal)", glm.p_values.pull<double>());
+  out.writeln("p values  (t on 9 df)", ols.p_values.items<double>(), " (normal)", glm.p_values.items<double>());
   out.writeln("interval half-width of b1  (t)", (ols_ci[3] - ols_ci[2]) / 2.0, " (normal)", (glm_ci[3] - glm_ci[2]) / 2.0, " ratio", (ols_ci[3] - ols_ci[2]) / (glm_ci[3] - glm_ci[2]), "= 2.2622 / 1.9600");
 }
 ```
@@ -115,13 +115,13 @@ int main() {
   const auto glm = reg::glm_fit(y, x, options);
   const auto on_log_scale = reg::ols_fit(y.log(), x);
   out.writeln("generating values            [0.5000, 0.2000]");
-  out.writeln("normal family, log link      ", glm.coefficients.pull<double>(), " converged", glm.converged, " iterations", glm.iterations);
-  out.writeln("least squares on ln(y)       ", on_log_scale.coefficients.pull<double>());
+  out.writeln("normal family, log link      ", glm.coefficients.items<double>(), " converged", glm.converged, " iterations", glm.iterations);
+  out.writeln("least squares on ln(y)       ", on_log_scale.coefficients.items<double>());
 
   const auto at = pluss::make_series(std::vector<double>{0.0, 5.0, 10.0}, {3}, as_f64());
-  out.writeln("true mean at 0, 5, 10        ", at.mul(0.2).add(0.5).exp().pull<double>());
-  out.writeln("GLM mean (predict, Mean)     ", reg::glm_predict(glm, at).pull<double>());
-  out.writeln("exp of the ln(y) line        ", reg::ols_predict(on_log_scale, at).exp().pull<double>());
+  out.writeln("true mean at 0, 5, 10        ", at.mul(0.2).add(0.5).exp().items<double>());
+  out.writeln("GLM mean (predict, Mean)     ", reg::glm_predict(glm, at).items<double>());
+  out.writeln("exp of the ln(y) line        ", reg::ols_predict(on_log_scale, at).exp().items<double>());
 }
 ```
 
@@ -137,3 +137,16 @@ exp of the ln(y) line         [1.6569, 4.4533, 11.9689]
 ```
 
 The normal family with the log link recovers the generating values closely (0.5137 and 0.1972 against 0.5 and 0.2) in 12 iterations. Least squares on ln y gives 0.5050 and 0.1977, but it estimates a different quantity, the mean of ln y, so exponentiating its line does not give the mean of y. The GLM's `Mean` predictions are fitted to the mean of y on its own scale, and they differ from the exponentiated line at the three test points (1.6714 and 1.6569 against the true mean 1.6487, then 4.4803 and 4.4533 against 4.4817, then 12.0099 and 11.9689 against 12.1825).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="families_and_links.html">
+    <span class="label">Previous</span>
+    <span class="title">Families and links</span>
+  </a>
+  <a class="next-link" href="iteration_controls_and_separation.html">
+    <span class="label">Next</span>
+    <span class="title">Iteration controls and separation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

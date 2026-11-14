@@ -1,0 +1,36 @@
+# Comparing and matching text
+
+[Back to Note by example](../note.md)
+
+Two versions of a file, two listings of the same product: the question is how alike two texts are. This page diffs two configuration versions and finds near-duplicate product listings, with a threshold you can see and change.
+
+## The mental model
+
+Texts are compared at three levels: **lines** (what was added or removed), **words** (what changed inside a line) and **vocabulary** (how much of the word set is shared, the Jaccard similarity: shared words over all words, from 0 to 1). The first two come back as a ragged token batch of marked differences, the third as a number per pair.
+
+## What changed in a file
+
+Two versions of a configuration file. The program lists the differing lines, measures the similarity of the vocabularies, looks inside one changed line and counts lines.
+
+@@example note/text_diff.cpp@@
+
+`diff_lines` marks removed lines with `-` and added lines with `+`: the connection limit changed, the log level changed, and one setting was added. The vocabulary similarity is `0.5`, which says the files share half of their words, a blunt number that does not say where. The word diff of the `log_level` line is the precise tool: `-info`, `+debug`. The line counts (four before, five after) close the review summary.
+
+## Near-duplicate listings
+
+Six product listings, three products, written differently. The program normalises them, computes the Jaccard similarity of every pair and groups the listings at two thresholds.
+
+@@example note/near_duplicates.cpp@@
+
+Normalising (lower case, no punctuation, single spaces) makes the first and last listings identical (similarity `1`) and the reordered second listing `0.667`; the AirPods listing shares only `0.2` with them, so it stays apart. The two Samsung listings are the interesting case: their similarity is `0.556` because one writes `512GB` and the other `512 GB, by`, and at a threshold of `0.6` they are not grouped, giving four groups, while at `0.5` they are, giving the three real products. The threshold is a decision with a cost, and the output shows both sides of it. Normalising unit spellings (`512GB` against `512 GB`) before comparing would raise the similarity without changing the threshold.
+
+## Decisions
+
+- **Which level:** lines for "what changed", words for "where in the line", Jaccard for "are these the same thing".
+- **Normalise first:** the similarity of un-normalised text mostly measures formatting.
+- **Thresholds:** print the similarities, look at the pairs near the threshold, and choose; do not trust a default.
+- **Scale:** comparing every pair is quadratic; for thousands of listings, bucket by a key (brand, model number) first.
+
+## Where next
+
+Reference pages: [`diff_lines`](../../sphinx/api/note/diff_lines.md), [`split_lines`](../../sphinx/api/note/split_lines.md), [`lower`](../../sphinx/api/note/lower.md), [`collapse_spaces`](../../sphinx/api/note/collapse_spaces.md), [`remove_punctuation`](../../sphinx/api/note/remove_punctuation.md), [`jaccard_tokens`](../../sphinx/api/note-nlp/jaccard_tokens.md), [`diff_words`](../../sphinx/api/note-nlp/diff_words.md). Next: [Documents: generating and checking](documents.md).

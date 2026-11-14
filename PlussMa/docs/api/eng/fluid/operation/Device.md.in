@@ -1,0 +1,63 @@
+# `fluid::Device`
+
+Which family a control acts on.
+
+## Signature
+
+```cpp
+fluid::Device
+```
+
+## What It Does
+
+Names the family of the link that an `Action` changes. The index of the action counts within that family.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Pump` | The `index` of the action is a pump index. |  |
+| `Valve` | The `index` of the action is a valve index. |  |
+
+## Returns
+
+An enumeration; `Action::device`.
+
+## Errors
+
+An index outside the family is rejected by `run`.
+
+## Interpretation and Use
+
+Counting is within the family: pump `0` is the first pump, not link `0`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pump closed and opened by level.
+
+@@example Eng/api/fluid_run_controls.cpp@@
+
+### Example 2
+
+The actions on one pump.
+
+@@example Eng/api/fluid_controls_actions.cpp@@
+
+### Example 3
+
+An index outside the family.
+
+@@example Eng/api/fluid_run_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Sense.html">
+    <span class="label">Next</span>
+    <span class="title">Sense</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

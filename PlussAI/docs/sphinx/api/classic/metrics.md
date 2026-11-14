@@ -53,7 +53,7 @@ int main() {
   const pluss::Series truth = pluss::make_series(std::vector<double>{0, 0, 1, 1, 1, 0}, {6}, cfg);
   const pluss::Series predicted = pluss::make_series(std::vector<double>{0, 1, 1, 1, 0, 0}, {6}, cfg);
   const cls::StatusOr<cls::ClassReport> report = cls::classification_summary(truth, predicted);
-  const std::vector<double> macro = report.value().macro_average.to(pluss::pCPU, pluss::ScalarType::Float64).reshape({3}).pull<double>();
+  const std::vector<double> macro = report.value().macro_average.to(pluss::pCPU, pluss::ScalarType::Float64).reshape({3}).items<double>();
   std::cout << "macro precision = " << macro[0] << "\n";
   std::cout << "macro recall = " << macro[1] << "\n";
   std::cout << "macro F1 = " << macro[2] << "\n";

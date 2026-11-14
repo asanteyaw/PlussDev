@@ -71,7 +71,7 @@ int main() {
   const auto rolls = pluss::make_series(std::vector<double>{13, 17, 24, 22, 19, 25}, {6}, as_f64());
   const auto r = hyp::chisq_gof(rolls);
   std::cout << "chi-squared " << r.stat << " on " << r.dof << " df, p " << r.pvalue << ", critical " << r.critical << "\n";
-  std::cout << "each expected count " << r.expected.pull<double>()[0] << " of " << r.total_count << " rolls\n";
+  std::cout << "each expected count " << r.expected.items<double>()[0] << " of " << r.total_count << " rolls\n";
 }
 ```
 
@@ -95,7 +95,7 @@ int main() {
   const auto rolls = pluss::make_series(std::vector<double>{13, 17, 24, 22, 19, 25}, {6}, as_f64());
   const auto weights = pluss::make_series(std::vector<double>{1, 1, 1, 1, 1, 2}, {6}, as_f64());
   const auto r = hyp::chisq_gof(rolls, weights);
-  const auto expected = r.expected.pull<double>();
+  const auto expected = r.expected.items<double>();
   std::cout << "expected counts " << expected[0] << " (five faces) and " << expected[5] << " (the sixth)\n";
   std::cout << "chi-squared " << r.stat << ", p " << r.pvalue << "\n";
 }
@@ -131,4 +131,17 @@ Each parameter estimated from the data removes one degree of freedom: with one e
 ## See Also
 
 - [`chisq_indep`](chisq_indep.md)
-- [`kstest`](kstest.md)
+- [`kstest`](../distributions/kstest.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="anova_1w.html">
+    <span class="label">Previous</span>
+    <span class="title">anova_1w</span>
+  </a>
+  <a class="next-link" href="chisq_indep.html">
+    <span class="label">Next</span>
+    <span class="title">chisq_indep</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

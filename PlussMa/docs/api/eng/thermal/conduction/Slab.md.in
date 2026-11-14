@@ -1,0 +1,59 @@
+# `thermal::Slab`
+
+A meshed wall as a thermal network.
+
+## Signature
+
+```cpp
+thermal::Slab
+```
+
+## What It Does
+
+A plane wall compiled into a `Net`. Node `0` is the inner surface, nodes `1 .. cells` are the cell centres from inside to outside and node `cells + 1` is the outer surface; the surface nodes have no capacity. The links between nodes include the half-cells next to the surfaces, so a fixed temperature or a film attached to a surface node acts on the true surface.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `net` | The network: `cells + 2` nodes, `cells + 1` links and one store per cell. |  |
+| `inner` | The index of the inner surface node, `0`. |  |
+| `outer` | The index of the outer surface node, `cells + 1`. |  |
+| `cells` | The total number of cells. |  |
+
+## Returns
+
+A value returned by `mesh`.
+
+## Errors
+
+None: a slab is only constructed by a successful call.
+
+## Interpretation and Use
+
+Extend `net` before solving: fix the surface temperatures, or add nodes for the air on each side and films between them and the surfaces. The conductances of the net are per mesh, so `net.nodes` grows when you add nodes.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The nodes, conductances and capacities of a two-layer slab.
+
+@@example Eng/api/thermal_mesh_layers.cpp@@
+
+### Example 2
+
+A steady flux through a slab.
+
+@@example Eng/api/thermal_mesh_steady.cpp@@
+
+### Example 3
+
+A slab diffusing in time.
+
+@@example Eng/api/thermal_mesh_transient.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

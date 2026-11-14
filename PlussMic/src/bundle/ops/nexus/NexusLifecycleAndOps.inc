@@ -45,7 +45,7 @@ bool Nexus::has(std::string_view key) const {
 pluss::table::DataFrame Nexus::frame(std::string_view key) const {
   const auto& src = impl_ref_();
   const auto it = src.name_to_pos_.find(std::string(key));
-  PLUSS_CHECK(it != src.name_to_pos_.end(), "Nexus::frame: unknown key '" + std::string(key) + "'");
+  PLUSS_CHECK(it != src.name_to_pos_.end(), "Nexus::frame: unknown key '" + std::string(key) + "'", std::string(key), pluss::exception::map_keys(src.name_to_pos_));
   return src.frames_[static_cast<std::size_t>(it->second)];
 }
 
@@ -106,7 +106,7 @@ Nexus Nexus::select(pluss::msharp::RangeView::Of<std::string_view> selected_keys
   out.reserve(owned.size());
   for (const auto& key : owned) {
     const auto it = src.name_to_pos_.find(key);
-    PLUSS_CHECK(it != src.name_to_pos_.end(), "Nexus::select: unknown key '" + key + "'");
+    PLUSS_CHECK(it != src.name_to_pos_.end(), "Nexus::select: unknown key '" + key + "'", key, pluss::exception::map_keys(src.name_to_pos_));
     out.emplace_back(key, src.frames_[static_cast<std::size_t>(it->second)]);
   }
   auto next = pluss::msharp::make_intrusive<detail::NexusImpl>(std::move(out));
@@ -154,7 +154,7 @@ Nexus& Nexus::rename_(std::string_view from, std::string_view to) {
 
   auto& dst = mut_impl_();
   const auto it = dst.name_to_pos_.find(from_key);
-  PLUSS_CHECK(it != dst.name_to_pos_.end(), "Nexus::rename: unknown key '" + from_key + "'");
+  PLUSS_CHECK(it != dst.name_to_pos_.end(), "Nexus::rename: unknown key '" + from_key + "'", from_key, pluss::exception::map_keys(dst.name_to_pos_));
   PLUSS_CHECK(dst.name_to_pos_.find(to_key) == dst.name_to_pos_.end(),
               "Nexus::rename: target key already exists '" + to_key + "'");
 
@@ -258,7 +258,7 @@ Nexus& Nexus::apply_(std::string_view key, const std::function<pluss::table::Dat
   PLUSS_CHECK(static_cast<bool>(fn), "Nexus::apply: callback is empty");
   auto& dst = mut_impl_();
   const auto it = dst.name_to_pos_.find(std::string(key));
-  PLUSS_CHECK(it != dst.name_to_pos_.end(), "Nexus::apply: unknown key '" + std::string(key) + "'");
+  PLUSS_CHECK(it != dst.name_to_pos_.end(), "Nexus::apply: unknown key '" + std::string(key) + "'", std::string(key), pluss::exception::map_keys(dst.name_to_pos_));
   const auto updated = fn(dst.frames_[static_cast<std::size_t>(it->second)]);
   PLUSS_CHECK(updated.defined(), "Nexus::apply: callback returned undefined DataFrame");
   dst.frames_[static_cast<std::size_t>(it->second)] = updated;

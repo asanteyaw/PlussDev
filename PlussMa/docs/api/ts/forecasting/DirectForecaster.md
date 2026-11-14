@@ -363,3 +363,16 @@ mae 0.470
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="DirectCVForecaster.html">
+    <span class="label">Previous</span>
+    <span class="title">DirectCVForecaster</span>
+  </a>
+  <a class="next-link" href="DirectForecasterOptions.html">
+    <span class="label">Next</span>
+    <span class="title">DirectForecasterOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

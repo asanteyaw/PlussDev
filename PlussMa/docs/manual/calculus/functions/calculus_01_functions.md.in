@@ -42,4 +42,14 @@ The header is `<pluss/ma.h>`; the types are `pluss::math::Function` and, from Ch
 6. Use the `Function` vocabulary when you can. An opaque `Series` callable works but has no exact derivative and cannot be saved.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+calculus_01_functions/building_and_evaluating
+calculus_01_functions/the_expression_vocabulary
+calculus_01_functions/simplification_and_assumptions
+calculus_01_functions/domains_and_errors
+calculus_01_functions/functions_from_series_code
+```
 <!-- apiref:toctree:end -->

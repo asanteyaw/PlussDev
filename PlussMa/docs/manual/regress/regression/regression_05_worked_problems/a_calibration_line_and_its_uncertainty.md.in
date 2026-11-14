@@ -34,16 +34,16 @@ int main() {
   options.predictor_names = {"concentration"};
   const auto fit = reg::ols_fit(y, x, options);
 
-  const auto b = fit.coefficients.pull<double>();
-  const auto se = fit.std_errors.pull<double>();
+  const auto b = fit.coefficients.items<double>();
+  const auto se = fit.std_errors.items<double>();
   const distr::StudentT t(static_cast<double>(fit.df_resid), 0.0, 1.0);
   auto two_sided = [&](double statistic) {
-    return 1.0 - t.cdf(pluss::make_series(std::vector<double>{std::abs(statistic)}, {1}, as_f64())).pull<double>()[0];
+    return 1.0 - t.cdf(pluss::make_series(std::vector<double>{std::abs(statistic)}, {1}, as_f64())).items<double>()[0];
   };
   out.writeln("slope", b[1], "+/-", se[1], " residual sd", fit.rmse, " R2", fit.rsquared);
   const double stat = (b[1] - 0.50) / se[1];
   out.writeln("H0: slope = 0.50  t =", stat, " p =", 2.0 * two_sided(stat));
-  out.writeln("H0: intercept = 0 t =", fit.t_values.pull<double>()[0], " p =", fit.p_values.pull<double>()[0], "(the fit's own table)");
+  out.writeln("H0: intercept = 0 t =", fit.t_values.items<double>()[0], " p =", fit.p_values.items<double>()[0], "(the fit's own table)");
   const auto ci = fit.conf_int.host<double>().array().data;
   out.writeln("95% interval of the slope", ci[2], ci[3], "contains 0.50:", (ci[2] <= 0.5 && 0.5 <= ci[3]) ? "yes" : "no");
 }
@@ -76,10 +76,10 @@ int main() {
     readings.push_back(0.12 + 0.52 * i + 0.05 * (2.0 * std::fmod(i * 0.6180339887498949, 1.0) - 1.0));
   }
   const auto fit = reg::ols_fit(pluss::make_series(readings, {10}, as_f64()), pluss::make_series(standards, {10}, as_f64()));
-  const auto b = fit.coefficients.pull<double>();
+  const auto b = fit.coefficients.items<double>();
   const auto cov = fit.covariance.host<double>().array().data;  // 2 x 2, row-major
   const auto ci = fit.conf_int.host<double>().array().data;
-  const double multiplier = (ci[3] - ci[2]) / 2.0 / fit.std_errors.pull<double>()[1];
+  const double multiplier = (ci[3] - ci[2]) / 2.0 / fit.std_errors.items<double>()[1];
 
   const double reading = 2.90;
   const double x0 = (reading - b[0]) / b[1];
@@ -108,3 +108,12 @@ int main() {
 The reading of 2.90 implies a concentration of 5.343, with a delta-method standard error of 0.0616 and an interval of [5.2010, 5.4849]. Inverting the prediction band gives [5.2011, 5.4851], the same to three decimals. The interval is nearly symmetric about the estimate (the midpoint of the band interval is 5.3431) because the slope is estimated very precisely (it is 155 standard errors from zero) and the reading lies in the middle of the standards. The interval would be asymmetric, and the delta method less trustworthy, for a reading near the end of the range or for a noisier line.
 
 The intervals describe the imprecision of the line and of one reading. Averaging several readings of the same unknown shrinks the reading-error term `mse` to `mse / m`, which is the usual way to tighten a calibration estimate.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="dose_response_and_the_median_effective_dose.html">
+    <span class="label">Next</span>
+    <span class="title">Dose-response and the median effective dose</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

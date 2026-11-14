@@ -420,6 +420,19 @@ simulated 0      0.0081  -0.3884
 - [`GrangerOptions`](GrangerOptions.md)
 - [`var_to_vecm`](var_to_vecm.md)
 
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="var_to_vecm.html">
+    <span class="label">Previous</span>
+    <span class="title">var_to_vecm</span>
+  </a>
+  <a class="next-link" href="VarOptions.html">
+    <span class="label">Next</span>
+    <span class="title">VarOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->

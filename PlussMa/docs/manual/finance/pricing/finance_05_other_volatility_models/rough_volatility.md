@@ -1,0 +1,179 @@
+<!-- generated from rough_volatility.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Rough volatility
+
+[Back to Other Volatility Models](../finance_05_other_volatility_models.md)
+
+A *rough* model drives the variance with a fractional process of Hurst exponent H = α + ½ < ½, which makes the short-maturity skew steeper than any Markovian model can. A `Field` holds the two rough models, `RoughHeston` (parameters `kappa, theta, sigma, alpha, rho, v0`) and `RoughBergomi` (`xi, eta, alpha, rho`), and prices them with the `MonteCarlo` engine, with the same `field.controls.mc` as the earlier chapters.
+
+```cpp
+module::Model model::make(model::Kind kind, std::initializer_list<double> params, Config cfg = f64_default());
+module::Engine module::Controls::engine = module::Engine::Analytic;
+module::Field::Result module::Field::price(Config cfg = {}) const;
+```
+
+Rough Heston takes `kappa, theta, sigma, alpha, rho, v0` and is simulated, so the engine is `MonteCarlo`:
+
+```cpp
+mod::Field field{.instrument = ..., .market = ...,
+                 .model = fin::model::make(fin::model::Kind::RoughHeston, {kappa, theta, sigma, alpha, rho, v0}),   // H = alpha + 1/2
+                 .controls = {.engine = mod::Engine::MonteCarlo}};
+```
+
+The programs reuse the helper `forward_strip` of the previous page.
+
+## Roughness and the short-maturity skew
+
+The program prices rough Heston at three values of α (the Hurst exponent is H = α + ½), reads the implied volatilities at strikes 95 and 105 from the field itself with `implied_vol()`, and prints the skew, their difference, at one month.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+// A strip of calls on a forward of 100 (zero rate and yield, so spot = forward), priced by the given engine under the given model.
+mod::Field forward_strip(fin::model::Kind kind, const std::vector<double> &params, mod::Engine engine, const std::vector<double> &strikes, double maturity) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({maturity})},
+                    .market = fin::market::make(100.0, 0.0, 0.0),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("alpha  H     implied vol at 95, 105   skew");
+  for (double alpha : {-0.4, -0.2, -0.05}) {
+    mod::Field field = forward_strip(fin::model::Kind::RoughHeston, {1.5, 0.04, 0.3, alpha, -0.7, 0.04}, mod::Engine::MonteCarlo, {95.0, 105.0}, 1.0 / 12.0);
+    field.controls.mc.paths = 20000;
+    field.controls.mc.steps = 50;
+    field.controls.mc.antithetic = true;
+    const auto v = field.implied_vol().items<double>();
+    out.writeln(alpha, alpha + 0.5, v[0], v[1], v[0] - v[1]);
+  }
+}
+```
+
+Output
+
+```text
+alpha  H     implied vol at 95, 105   skew
+-0.4000 0.1000 0.2279 0.1570 0.0709
+-0.2000 0.3000 0.2184 0.1719 0.0465
+-0.0500 0.4500 0.2131 0.1835 0.0296
+```
+
+The skew grows as the process gets rougher: 0.0296 at H = 0.45, 0.0465 at H = 0.3 and 0.0709 at H = 0.1. A model with a rough variance has a short-maturity skew that grows steeply as the maturity falls, which a Markovian model fits only with extreme parameters.
+
+## The skew term structure
+
+The signature of roughness is how the skew decays with maturity: in a rough model the at-the-money skew falls like T^(H − ½), far more slowly than the 1/T of a Markovian model. The program prices rough Bergomi, whose variance is a pure exponential of a fractional process, at three maturities, and prints the skew, the volatility at strike 95 less that at 105.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+// A strip of calls on a forward of 100 (zero rate and yield, so spot = forward), priced by the given engine under the given model.
+mod::Field forward_strip(fin::model::Kind kind, const std::vector<double> &params, mod::Engine engine, const std::vector<double> &strikes, double maturity) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({maturity})},
+                    .market = fin::market::make(100.0, 0.0, 0.0),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  out.writeln("maturity   implied vol at 95, 105   skew");
+  for (double maturity : {1.0 / 12.0, 0.25, 1.0}) {
+    mod::Field field = forward_strip(fin::model::Kind::RoughBergomi, {0.04, 1.5, -0.4, -0.7}, mod::Engine::MonteCarlo, {95.0, 105.0}, maturity);
+    field.controls.mc.paths = 20000;
+    field.controls.mc.steps = 50;
+    field.controls.mc.antithetic = true;
+    const auto v = field.implied_vol().items<double>();
+    out.writeln(maturity, v[0], v[1], v[0] - v[1]);
+  }
+}
+```
+
+Output
+
+```text
+maturity   implied vol at 95, 105   skew
+0.0833 0.2199 0.1592 0.0607
+0.2500 0.2031 0.1642 0.0389
+1.0000 0.1865 0.1649 0.0216
+```
+
+The skew falls from 0.0607 at one month through 0.0389 at three months to 0.0216 at a year: twelve times the maturity divides the skew by 2.8, which is 12^0.41, close to the T^(H − ½) = T^(−0.4) of this model (H = 0.1). A Markovian model would divide it by about twelve.
+
+## Cost and the martingale check
+
+The cost of a rough simulation grows with the square of the number of steps, because every step sums over the whole history, so the number of steps is a trade between cost and discretisation bias, and needs checking by convergence. The program checks that the rough simulation is still risk neutral, with the mean of the discounted terminal asset, and prices a rough Heston call with 25, 50 and 100 steps.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
+using namespace pluss::tils;
+using pluss::Series;
+
+// A strip of calls on a forward of 100 (zero rate and yield, so spot = forward), priced by the given engine under the given model.
+mod::Field forward_strip(fin::model::Kind kind, const std::vector<double> &params, mod::Engine engine, const std::vector<double> &strikes, double maturity) {
+  return mod::Field{.instrument = {.type = prc::Call, .strike = pluss::make_series(strikes), .maturity = pluss::make_series({maturity})},
+                    .market = fin::market::make(100.0, 0.0, 0.0),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = engine, .risk = mod::Risk::PriceOnly}};
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  mod::Field field = forward_strip(fin::model::Kind::RoughHeston, {1.5, 0.04, 0.3, -0.3, -0.7, 0.04}, mod::Engine::MonteCarlo, {100.0}, 1.0);
+  field.controls.mc.paths = 20000;
+  field.controls.mc.steps = 50;
+  field.controls.mc.antithetic = true;
+  field.controls.mc.seed = 3;
+  const auto terminal = field.simulate_paths().asset.select(1, 50);
+  const double mean = terminal.mean().item<double>();
+  out.writeln("E[S_T] =", mean, " (forward 100, standard error", std::sqrt(terminal.sub(mean).pow(2.0).mean().item<double>() / 20000.0), ")");
+  for (std::int64_t steps : {25, 50, 100}) {
+    field.controls.mc.steps = steps;
+    out.writeln("steps", steps, " call", field.price().price.items<double>()[0]);
+  }
+}
+```
+
+Output
+
+```text
+E[S_T] = 99.9188  (forward 100, standard error 0.1356 )
+steps 25  call 7.6614
+steps 50  call 7.5483
+steps 100  call 7.5059
+```
+
+The terminal asset has mean 99.92 against the forward 100, within one standard error (0.14), so the rough simulation is risk neutral. The call price falls as the steps increase (7.66, 7.55, 7.51): a coarse rough simulation carries a discretisation bias that shrinks slowly, so the number of steps is chosen by checking that the price has stopped moving, at a cost that grows with the square of the steps.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="sabr.html">
+    <span class="label">Previous</span>
+    <span class="title">SABR</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

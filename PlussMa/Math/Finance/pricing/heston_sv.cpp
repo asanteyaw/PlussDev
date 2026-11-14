@@ -14,6 +14,7 @@
 #include <vector>
 
 namespace pluss::subsp::math::finance::pricing {
+using namespace detail;
 namespace {
 
 using pluss::Config;
@@ -292,6 +293,81 @@ ComplexSeries_ c_sqrt_(const ComplexSeries_& z) {
   return c_make_(radius.mul(half_angle.cos()), radius.mul(half_angle.sin()));
 }
 
+// The log-spot characteristic function of Heston or Bates with every parameter a Series: [1, n] entries (one per option) or a single entry,
+// broadcast against the frequency axis [N, 1]. With the jump members defined the Merton jump factor of Bates is applied. Besides phi it returns the
+// two logarithmic derivatives the closed-form Greeks need: d log phi / d v0 (the affine coefficient D) and d log phi / d tau.
+struct SvCfPieces_ {
+  ComplexSeries_ phi, dlog_v0, dlog_tau;
+};
+
+SvCfPieces_ sv_logspot_cf_pieces_(const Series& u,
+                                  const Series& spot,
+                                  const Series& maturity,
+                                  const Series& rate,
+                                  const Series& dividend_yield,
+                                  const SvParamsSeries& p,
+                                  Config cfg) {
+  const auto row = [&](const Series& x) { return as_f64_series_(x, cfg).flatten(0, -1).reshape({1, x.numel()}); };
+  const Series spot2 = row(spot), tau = row(maturity);
+  const Series uu = as_f64_series_(u, cfg);
+  const Series kappa = row(p.kappa), theta = row(p.theta), v0 = row(p.v0);
+  const Series sigma = row(p.sigma).clamp_min(1e-12);
+  const Series sigma2 = sigma.square();
+  const Series rho = row(p.rho).clamp_min(-0.999999).clamp_max(0.999999);
+
+  const ComplexSeries_ alpha = c_make_(uu.square().mul(-0.5), uu.mul(-0.5));
+  const ComplexSeries_ beta = c_make_(kappa, uu.mul(rho.mul(sigma).neg()));
+  const ComplexSeries_ disc = c_sub_(c_mul_(beta, beta), c_mul_real_(alpha, sigma2.mul(2.0)));
+  const ComplexSeries_ d = c_sqrt_(disc);
+  const ComplexSeries_ beta_minus_d = c_sub_(beta, d);
+  const ComplexSeries_ g = c_div_(beta_minus_d, c_add_(beta, d));
+  const ComplexSeries_ exp_md = c_exp_(c_mul_real_(c_mul_(d, -1.0), tau));
+  const ComplexSeries_ one = c_scalar_(1.0, cfg);
+  const ComplexSeries_ psi = c_div_(c_sub_(one, c_mul_(g, exp_md)), c_sub_(one, g));
+  const ComplexSeries_ a_term = c_mul_real_(
+      c_sub_(c_mul_real_(beta_minus_d, tau), c_mul_(c_log_(psi), 2.0)),
+      kappa.mul(theta).div(sigma2));
+  const ComplexSeries_ one_minus_g_e = c_sub_(one, c_mul_(g, exp_md));
+  const ComplexSeries_ b_term = c_mul_(
+      c_make_(beta_minus_d.re.div(sigma2), beta_minus_d.im.div(sigma2)),
+      c_div_(c_sub_(one, exp_md), one_minus_g_e));
+
+  Series carry = row(rate).sub(row(dividend_yield));
+  const bool jumps = p.jump_intensity.defined();
+  Series lambda, m, delta;
+  if (jumps) {
+    // the compensator keeps the discounted price a martingale: the drift loses lambda * k, with k = E[e^J] - 1
+    lambda = row(p.jump_intensity); m = row(p.jump_mean); delta = row(p.jump_vol);
+    carry = carry.sub(lambda.mul(m.add(delta.square().mul(0.5)).exp().sub(1.0)));
+  }
+  ComplexSeries_ drift = c_make_(scalar_series_(0.0, cfg), uu.mul(spot2.log()).add(uu.mul(carry).mul(tau)));
+  ComplexSeries_ log_phi = c_add_(c_add_(a_term, c_mul_real_(b_term, v0)), drift);
+  // d log phi / d tau = (kappa theta / sigma^2)[(beta - d) - 2 d g e^{-d tau}/(1 - g e^{-d tau})] + v0 D_tau + i u carry (+ jumps)
+  const ComplexSeries_ d_g_e = c_mul_(c_mul_(d, g), exp_md);
+  const ComplexSeries_ a_tau = c_mul_real_(c_sub_(beta_minus_d, c_mul_(c_div_(d_g_e, one_minus_g_e), 2.0)), kappa.mul(theta).div(sigma2));
+  const ComplexSeries_ d_tau = c_mul_(c_make_(beta_minus_d.re.div(sigma2), beta_minus_d.im.div(sigma2)),
+                                      c_div_(c_mul_(c_mul_(d, exp_md), c_sub_(one, g)), c_mul_(one_minus_g_e, one_minus_g_e)));
+  ComplexSeries_ dlog_tau = c_add_(c_add_(a_tau, c_mul_real_(d_tau, v0)), c_make_(scalar_series_(0.0, cfg), uu.mul(carry)));
+  if (jumps) {
+    const Series mag = uu.square().mul(delta.square()).mul(-0.5).exp();
+    const Series ang = uu.mul(m);
+    const ComplexSeries_ jump = c_make_(mag.mul(ang.cos()).sub(1.0).mul(lambda).mul(tau), mag.mul(ang.sin()).mul(lambda).mul(tau));
+    log_phi = c_add_(log_phi, jump);
+    dlog_tau = c_add_(dlog_tau, c_make_(mag.mul(ang.cos()).sub(1.0).mul(lambda), mag.mul(ang.sin()).mul(lambda)));
+  }
+  return SvCfPieces_{c_exp_(log_phi), b_term, dlog_tau};
+}
+
+ComplexSeries_ sv_logspot_cf_series_(const Series& u,
+                                     const Series& spot,
+                                     const Series& maturity,
+                                     const Series& rate,
+                                     const Series& dividend_yield,
+                                     const SvParamsSeries& p,
+                                     Config cfg) {
+  return sv_logspot_cf_pieces_(u, spot, maturity, rate, dividend_yield, p, cfg).phi;
+}
+
 ComplexSeries_ heston_logspot_cf_series_(const Series& u,
                                           const Series& spot,
                                           const Series& maturity,
@@ -299,32 +375,9 @@ ComplexSeries_ heston_logspot_cf_series_(const Series& u,
                                           double dividend_yield,
                                           const HestonParams& p,
                                           Config cfg) {
-  const Series spot2 = as_f64_series_(spot, cfg).flatten(0, -1).reshape({1, spot.numel()});
-  const Series tau = as_f64_series_(maturity, cfg).flatten(0, -1).reshape({1, maturity.numel()});
-  const Series uu = as_f64_series_(u, cfg);
-  const double sigma = std::max(p.sigma, p.variance_floor);
-  const double sigma2 = sigma * sigma;
-  const double rho = std::clamp(p.rho, -0.999999, 0.999999);
-
-  const ComplexSeries_ alpha = c_make_(uu.square().mul(-0.5), uu.mul(-0.5));
-  const ComplexSeries_ beta = c_make_(scalar_series_(p.kappa, cfg), uu.mul(-rho * sigma));
-  const ComplexSeries_ disc = c_sub_(c_mul_(beta, beta), c_mul_(alpha, 2.0 * sigma2));
-  const ComplexSeries_ d = c_sqrt_(disc);
-  const ComplexSeries_ beta_minus_d = c_sub_(beta, d);
-  const ComplexSeries_ g = c_div_(beta_minus_d, c_add_(beta, d));
-  const ComplexSeries_ exp_md = c_exp_(c_mul_real_(c_mul_(d, -1.0), tau));
-  const ComplexSeries_ one = c_scalar_(1.0, cfg);
-  const ComplexSeries_ psi = c_div_(c_sub_(one, c_mul_(g, exp_md)), c_sub_(one, g));
-  const ComplexSeries_ a_term = c_mul_(
-      c_sub_(c_mul_real_(beta_minus_d, tau), c_mul_(c_log_(psi), 2.0)),
-      p.kappa * p.theta / sigma2);
-  const ComplexSeries_ b_term = c_mul_(
-      c_div_(beta_minus_d, sigma2),
-      c_div_(c_sub_(one, exp_md), c_sub_(one, c_mul_(g, exp_md))));
-  const ComplexSeries_ drift = c_make_(
-      scalar_series_(0.0, cfg),
-      uu.mul(spot2.log()).add(uu.mul(rate - dividend_yield).mul(tau)));
-  return c_exp_(c_add_(c_add_(a_term, c_mul_(b_term, p.v0)), drift));
+  const auto c = [&](double v) { return pluss::series::full({1}, v, f64_cfg_(cfg)); };
+  const SvParamsSeries params{.kappa = c(p.kappa), .theta = c(p.theta), .sigma = c(std::max(p.sigma, p.variance_floor)), .rho = c(p.rho), .v0 = c(p.v0)};
+  return sv_logspot_cf_series_(u, spot, maturity, c(rate), c(dividend_yield), params, cfg);
 }
 
 std::complex<double> heston_cf_(std::complex<double> phi,
@@ -518,7 +571,7 @@ std::vector<std::complex<double>> fourier_(
   const auto n = static_cast<std::int64_t>(values.size());
   const Series input = pluss::make_series(values, {n});
   const Series output = inverse ? input.ifft() : input.fft();
-  return output.pull<std::complex<double>>();
+  return output.items<std::complex<double>>();
 }
 
 std::vector<std::complex<double>> frft_(const std::vector<std::complex<double>>& x, double a) {
@@ -538,7 +591,7 @@ std::vector<std::complex<double>> frft_(const std::vector<std::complex<double>>&
 
   const Series fu = pluss::make_series(u, {m}).fft();
   const Series fv = pluss::make_series(v, {m}).fft();
-  const auto convolution = fu.mul(fv).ifft().pull<std::complex<double>>();
+  const auto convolution = fu.mul(fv).ifft().items<std::complex<double>>();
 
   std::vector<std::complex<double>> out(static_cast<std::size_t>(n), {0.0, 0.0});
   for (std::int64_t k = 0; k < n; ++k) {
@@ -606,7 +659,10 @@ std::pair<std::vector<double>, std::vector<double>> option_fft_grid_values_(doub
                                                                              double dividend_yield,
                                                                              double maturity,
                                                                              const CharacteristicFn& char_fn,
-                                                                             const HestonFftOptions& options) {
+                                                                             const HestonFftOptions& options,
+                                                                             const CharacteristicFn* multiplier = nullptr,
+                                                                             double forced_alpha = -1.0,
+                                                                             double* alpha_out = nullptr) {
   // `char_fn` is the characteristic function of ln S_T, E[exp(i u ln S_T)], as for the COS pricer; the Carr-Madan transform is of the
   // discounted payoff, so the discount factor is applied here.
   const double discount = std::exp(-rate * maturity);
@@ -634,7 +690,8 @@ std::pair<std::vector<double>, std::vector<double>> option_fft_grid_values_(doub
   auto integrand = [&](double a, std::vector<std::complex<double>>& psi) {
     for (std::int64_t j = 0; j < n; ++j) {
       const double u = eta * static_cast<double>(j);
-      const auto f2 = discount * char_fn(std::complex<double>(u, 0.0) - (a + 1.0) * i);
+      const std::complex<double> z = std::complex<double>(u, 0.0) - (a + 1.0) * i;
+      const auto f2 = discount * char_fn(z) * (multiplier ? (*multiplier)(z) : std::complex<double>(1.0, 0.0));
       const auto den = (a * a + a - u * u) + i * u * (2.0 * a + 1.0);
       psi[static_cast<std::size_t>(j)] = f2 / den;
     }
@@ -654,6 +711,11 @@ std::pair<std::vector<double>, std::vector<double>> option_fft_grid_values_(doub
   double alpha = options.damping_factor;
   double first_valid = -1.0;
   bool accepted = false;
+  if (forced_alpha > 0.0) {   // a Greek's transform reuses the damping exponent chosen for the price
+    alpha = forced_alpha;
+    integrand(alpha, psi);
+    accepted = true;
+  }
   for (int halving = 0; halving < 12 && !accepted; ++halving) {
     const double candidate = options.damping_factor * std::pow(0.5, halving);
     if (!moment_exists(candidate)) {
@@ -676,6 +738,7 @@ std::pair<std::vector<double>, std::vector<double>> option_fft_grid_values_(doub
     alpha = first_valid;
     integrand(alpha, psi);
   }
+  if (alpha_out) *alpha_out = alpha;
   const double frft_param = (lambda * eta) / (2.0 * kPi);
   const double fft_param = 1.0 / static_cast<double>(n);
 
@@ -715,6 +778,15 @@ std::pair<std::vector<double>, std::vector<double>> option_fft_grid_values_(doub
     const double call = eta * std::exp(-alpha * logk) / kPi * std::real(transform[static_cast<std::size_t>(j)]);
     strikes[static_cast<std::size_t>(j)] = strike;
     prices[static_cast<std::size_t>(j)] = call;
+  }
+
+  // The original Heston form of the characteristic function has a branch discontinuity that overflows at long maturities, and the
+  // transform then comes back as NaN: say so instead of returning NaN prices.
+  for (const double price : prices) {
+    PLUSS_CHECK(std::isfinite(price),
+                "subsp::math::finance::pricing::option_price_fft: the transform produced a non-finite price (the characteristic function "
+                "overflowed, as the original Heston form does at long maturities or large volatilities of variance); use HestonCfMode::LittleTrap "
+                "or the COS pricer");
   }
 
   return {std::move(prices), std::move(strikes)};
@@ -816,7 +888,7 @@ double heston_nandi_prob_j_(int numeraire,
 
 } // namespace
 
-double heston_price(OptionType type,
+double detail::heston_price(OptionType type,
                     double spot,
                     double strike,
                     double rate,
@@ -847,7 +919,7 @@ double heston_price(OptionType type,
   return std::max(0.0, call + parity);
 }
 
-HestonFftResult heston_price_fft_grid(OptionType type,
+HestonFftResult detail::heston_price_fft_grid(OptionType type,
                                       double spot,
                                       double rate,
                                       double dividend_yield,
@@ -901,7 +973,138 @@ HestonFftResult heston_price_fft_grid(OptionType type,
   };
 }
 
-double heston_price_fft(OptionType type,
+namespace {
+
+struct CfPieces_ {
+  std::complex<double> phi, dlog_v0, dlog_tau;
+};
+
+// Characteristic function of ln S_T for Heston (LittleTrap form) or Bates with its two logarithmic derivatives, d log phi / d v0 and d log phi / d tau, at a
+// complex frequency.
+CfPieces_ sv_cf_pieces_host_(std::complex<double> phi, double spot, double rate, double dividend_yield, double tau, const BatesParams& p, bool bates, double vrp) {
+  using C = std::complex<double>;
+  const C i(0.0, 1.0);
+  double carry_rate = rate;
+  if (bates) carry_rate = rate - p.jump_intensity * (std::exp(p.jump_mean + 0.5 * p.jump_vol * p.jump_vol) - 1.0);
+  const double sigma2 = p.sigma * p.sigma, a = p.kappa * p.theta, b = p.kappa + vrp;
+  const C bt = b - p.rho * p.sigma * i * phi;
+  const C d = std::sqrt(bt * bt - sigma2 * (-i * phi - phi * phi));
+  const C g = (bt - d) / (bt + d);
+  const C e = std::exp(-d * tau);
+  const C one(1.0, 0.0);
+  const C c_term = (carry_rate - dividend_yield) * i * phi * tau + (a / sigma2) * ((bt - d) * tau - 2.0 * std::log((one - g * e) / (one - g)));
+  const C d_term = ((bt - d) / sigma2) * ((one - e) / (one - g * e));
+  C log_phi = c_term + d_term * p.v0 + i * phi * std::log(spot);
+  C dlog_tau = (carry_rate - dividend_yield) * i * phi + (a / sigma2) * ((bt - d) - 2.0 * d * g * e / (one - g * e)) +
+               p.v0 * (((bt - d) / sigma2) * d * e * (one - g) / ((one - g * e) * (one - g * e)));
+  if (bates) {
+    const C jump = std::exp(i * phi * p.jump_mean - 0.5 * p.jump_vol * p.jump_vol * phi * phi) - 1.0;
+    log_phi += p.jump_intensity * tau * jump;
+    dlog_tau += p.jump_intensity * jump;
+  }
+  return CfPieces_{std::exp(log_phi), d_term, dlog_tau};
+}
+
+// Value, first and second derivative with respect to x of the cubic through the four grid points around x (uniform grid in x).
+void lagrange4_(const std::vector<double>& xs, const std::vector<double>& ys, std::size_t lo, double x, double& value, double& d1, double& d2) {
+  const std::size_t first = lo >= 1 ? lo - 1 : 0;
+  const std::size_t base = std::min(first, xs.size() - 4);
+  value = d1 = d2 = 0.0;
+  for (std::size_t a = 0; a < 4; ++a) {
+    // basis polynomial L_a(x) = prod_{c != a} (x - x_c) / (x_a - x_c)
+    double denom = 1.0;
+    for (std::size_t c = 0; c < 4; ++c) if (c != a) denom *= xs[base + a] - xs[base + c];
+    double l = 1.0, dl = 0.0, ddl = 0.0;
+    for (std::size_t c = 0; c < 4; ++c) {
+      if (c == a) continue;
+      const double f = x - xs[base + c];
+      ddl = ddl * f + 2.0 * dl;
+      dl = dl * f + l;
+      l *= f;
+    }
+    value += ys[base + a] * l / denom;
+    d1 += ys[base + a] * dl / denom;
+    d2 += ys[base + a] * ddl / denom;
+  }
+}
+
+}  // namespace
+
+McStripGreeks detail::sv_fft_strip(const BatesParams& params,
+                                   bool bates,
+                                   double spot,
+                                   double rate,
+                                   double dividend_yield,
+                                   double maturity,
+                                   const std::vector<double>& strikes,
+                                   const std::vector<bool>& is_call,
+                                   const HestonFftOptions& options,
+                                   bool greeks,
+                                   Config cfg) {
+  (void)cfg;
+  const char* op = bates ? "bates_price_fft" : "heston_price_fft";
+  validate_heston_fft_(options, op);
+  const std::size_t n = strikes.size();
+  McStripGreeks out;
+  out.price.assign(n, 0.0); out.delta.assign(n, 0.0); out.gamma.assign(n, 0.0); out.vega.assign(n, 0.0); out.theta.assign(n, 0.0); out.rho.assign(n, 0.0);
+  if (maturity <= 0.0) {
+    for (std::size_t i = 0; i < n; ++i) {
+      out.price[i] = intrinsic_(is_call[i] ? OptionType::Call : OptionType::Put, spot, strikes[i]);
+      out.delta[i] = is_call[i] ? (spot > strikes[i] ? 1.0 : 0.0) : (spot < strikes[i] ? -1.0 : 0.0);
+    }
+    return out;
+  }
+  const double vrp = options.vol_risk_premium;
+  const CharacteristicFn cf = [&](std::complex<double> z) { return sv_cf_pieces_host_(z, spot, rate, dividend_yield, maturity, params, bates, vrp).phi; };
+  double alpha = 0.0;
+  const auto [call_grid, strike_grid] = option_fft_grid_values_(spot, rate, dividend_yield, maturity, cf, options, nullptr, -1.0, &alpha);
+  const double disc_r = std::exp(-rate * maturity), disc_q = std::exp(-dividend_yield * maturity);
+  std::vector<double> log_strikes(strike_grid.size());
+  for (std::size_t j = 0; j < strike_grid.size(); ++j) log_strikes[j] = std::log(strike_grid[j]);
+  const auto locate = [&](double strike) {
+    PLUSS_CHECK(strike >= strike_grid.front() && strike <= strike_grid.back(),
+                std::string("subsp::math::finance::pricing::") + op + ": strike must lie in FFT strike grid range");
+    return static_cast<std::size_t>(std::distance(strike_grid.begin(), std::lower_bound(strike_grid.begin(), strike_grid.end(), strike)));
+  };
+  std::vector<std::size_t> position(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    position[i] = std::max<std::size_t>(locate(strikes[i]), 1) - 1;
+    const double call = interp_linear_on_log_strike_(strike_grid, call_grid, strikes[i]);
+    out.price[i] = is_call[i] ? call : call + strikes[i] * disc_r - spot * disc_q;
+  }
+  if (!greeks) return out;
+
+  // delta and gamma from the homogeneity V(S, K) = S g(K / S): delta = (V - V_k) / S, gamma = (V_kk - V_k) / S^2, with k = ln K read off the same grid
+  std::vector<double> call_value(n), vk(n), vkk(n);
+  for (std::size_t i = 0; i < n; ++i) lagrange4_(log_strikes, call_grid, position[i], std::log(strikes[i]), call_value[i], vk[i], vkk[i]);
+  // vega, rho and theta: the transform of phi times the Greek's factor, with the damping exponent of the price
+  const auto transform_of = [&](const std::function<std::complex<double>(std::complex<double>)>& factor) {
+    const CharacteristicFn m = factor;
+    return option_fft_grid_values_(spot, rate, dividend_yield, maturity, cf, options, &m, alpha, nullptr).first;
+  };
+  const auto vega_grid = transform_of([&](std::complex<double> z) { return sv_cf_pieces_host_(z, spot, rate, dividend_yield, maturity, params, bates, vrp).dlog_v0; });
+  const auto rho_grid = transform_of([&](std::complex<double> z) { return std::complex<double>(0.0, 1.0) * z * maturity; });
+  const auto tau_grid = transform_of([&](std::complex<double> z) { return sv_cf_pieces_host_(z, spot, rate, dividend_yield, maturity, params, bates, vrp).dlog_tau; });
+  for (std::size_t i = 0; i < n; ++i) {
+    const double k = strikes[i];
+    const double call_delta = (call_value[i] - vk[i]) / spot, gamma = (vkk[i] - vk[i]) / (spot * spot);
+    const double vega = interp_linear_on_log_strike_(strike_grid, vega_grid, k);
+    // the call grids of the multiplied transforms are already discounted by e^{-rT}; the derivative of the discount adds -T V (rho) and -r V (tau)
+    double rho = interp_linear_on_log_strike_(strike_grid, rho_grid, k) - maturity * call_value[i];
+    double dtau = interp_linear_on_log_strike_(strike_grid, tau_grid, k) - rate * call_value[i];
+    double delta = call_delta;
+    if (!is_call[i]) {   // P = C - S e^{-qT} + K e^{-rT}
+      delta -= disc_q;
+      rho -= maturity * k * disc_r;
+      dtau += dividend_yield * spot * disc_q - rate * k * disc_r;
+    }
+    out.delta[i] = delta; out.gamma[i] = gamma; out.vega[i] = vega; out.rho[i] = rho; out.theta[i] = -dtau;
+  }
+  return out;
+}
+
+
+double detail::heston_price_fft(OptionType type,
                         double spot,
                         double strike,
                         double rate,
@@ -1008,7 +1211,7 @@ double option_price_fft(OptionType type,
   return call + strike * disc_r - spot * disc_q;
 }
 
-HestonFftResult bates_price_fft_grid(OptionType type,
+HestonFftResult detail::bates_price_fft_grid(OptionType type,
                                      double spot,
                                      double rate,
                                      double dividend_yield,
@@ -1023,7 +1226,7 @@ HestonFftResult bates_price_fft_grid(OptionType type,
   return option_price_fft_grid(type, spot, rate, dividend_yield, maturity, cf, options, cfg);
 }
 
-double bates_price_fft(OptionType type,
+double detail::bates_price_fft(OptionType type,
                        double spot,
                        double strike,
                        double rate,
@@ -1039,7 +1242,7 @@ double bates_price_fft(OptionType type,
   return option_price_fft(type, spot, strike, rate, dividend_yield, maturity, cf, options, cfg);
 }
 
-double heston_price_cos(OptionType type,
+double detail::heston_price_cos(OptionType type,
                         double spot,
                         double strike,
                         double rate,
@@ -1059,7 +1262,7 @@ double heston_price_cos(OptionType type,
   return heston_price_cos(type, s, k, rate, dividend_yield, t, params, options, out_cfg).reshape({1}).select(0, 0).item<double>();
 }
 
-Series heston_price_cos(OptionType type,
+Series detail::heston_price_cos(OptionType type,
                         const Series& spot,
                         const Series& strike,
                         double rate,
@@ -1103,7 +1306,65 @@ Series heston_price_cos(OptionType type,
   return option_price_cos(type, spot_c, strike, rate, dividend_yield, maturity_c, cf, options, out_cfg);
 }
 
-double bates_price_cos(OptionType type,
+CosGreeksV detail::sv_cos_greeks_v(const Series& is_call,
+                                   const Series& spot,
+                                   const Series& strike,
+                                   const Series& rate,
+                                   const Series& dividend_yield,
+                                   const Series& maturity,
+                                   const SvParamsSeries& params,
+                                   const CosOptions& options,
+                                   Config cfg) {
+  validate_cos_options_(options, "cos_greeks");
+  const Config out_cfg = f64_cfg_(cfg);
+  const CosCfPiecesFn pieces = [&](const Series& u) {
+    const SvCfPieces_ z = sv_logspot_cf_pieces_(u, spot, maturity, rate, dividend_yield, params, out_cfg);
+    return CosCfPieces{ComplexSeries{z.phi.re, z.phi.im}, ComplexSeries{z.dlog_v0.re, z.dlog_v0.im}, ComplexSeries{z.dlog_tau.re, z.dlog_tau.im}};
+  };
+  return cos_greeks_v(is_call, spot, strike, rate, dividend_yield, maturity, pieces, options, out_cfg);
+}
+
+Series detail::heston_price_cos_v(OptionType type,
+                                  const Series& spot,
+                                  const Series& strike,
+                                  const Series& rate,
+                                  const Series& dividend_yield,
+                                  const Series& maturity,
+                                  const SvParamsSeries& params,
+                                  const CosOptions& options,
+                                  Config cfg) {
+  validate_option_(type, "heston_price_cos");
+  validate_cos_options_(options, "heston_price_cos");
+  const Config out_cfg = f64_cfg_(cfg);
+  const CharacteristicSeriesFn cf = [&](const Series& u) {
+    const ComplexSeries_ z = sv_logspot_cf_series_(u, spot, maturity, rate, dividend_yield, params, out_cfg);
+    return ComplexSeries{z.re, z.im};
+  };
+  return option_price_cos_v(type, spot, strike, rate, dividend_yield, maturity, cf, options, out_cfg);
+}
+
+Series detail::bates_price_cos_v(OptionType type,
+                                 const Series& spot,
+                                 const Series& strike,
+                                 const Series& rate,
+                                 const Series& dividend_yield,
+                                 const Series& maturity,
+                                 const SvParamsSeries& params,
+                                 const CosOptions& options,
+                                 Config cfg) {
+  validate_option_(type, "bates_price_cos");
+  validate_cos_options_(options, "bates_price_cos");
+  PLUSS_CHECK(params.jump_intensity.defined() && params.jump_mean.defined() && params.jump_vol.defined(),
+              "subsp::math::finance::pricing::bates_price_cos: the jump parameters must be defined");
+  const Config out_cfg = f64_cfg_(cfg);
+  const CharacteristicSeriesFn cf = [&](const Series& u) {
+    const ComplexSeries_ z = sv_logspot_cf_series_(u, spot, maturity, rate, dividend_yield, params, out_cfg);
+    return ComplexSeries{z.re, z.im};
+  };
+  return option_price_cos_v(type, spot, strike, rate, dividend_yield, maturity, cf, options, out_cfg);
+}
+
+double detail::bates_price_cos(OptionType type,
                        double spot,
                        double strike,
                        double rate,
@@ -1122,7 +1383,7 @@ double bates_price_cos(OptionType type,
   return option_price_cos(type, spot, strike, rate, dividend_yield, maturity, cf, options, cfg);
 }
 
-double heston_price_mc(OptionType type,
+double detail::heston_price_mc(OptionType type,
                        double spot,
                        double strike,
                        double rate,
@@ -1154,7 +1415,7 @@ double heston_price_mc(OptionType type,
   sim_opt.offset = options.offset;
 
   const double dt = maturity / static_cast<double>(options.steps);
-  const auto sim = volatility::heston_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
+  const auto sim = volatility::detail::heston_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
@@ -1172,7 +1433,7 @@ double heston_price_mc(OptionType type,
   return mc_cv_estimate_(target, control, control_mean);
 }
 
-double sv_price_mc(OptionType type,
+double detail::sv_price_mc(OptionType type,
                    double spot,
                    double strike,
                    double rate,
@@ -1204,7 +1465,7 @@ double sv_price_mc(OptionType type,
   sim_opt.offset = options.offset;
 
   const double dt = maturity / static_cast<double>(options.steps);
-  const auto sim = volatility::sv_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
+  const auto sim = volatility::detail::sv_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
@@ -1222,7 +1483,7 @@ double sv_price_mc(OptionType type,
   return mc_cv_estimate_(target, control, control_mean);
 }
 
-double heston_nandi_price(OptionType type,
+double detail::heston_nandi_price(OptionType type,
                           double spot,
                           double strike,
                           double rate,
@@ -1265,7 +1526,7 @@ double heston_nandi_price(OptionType type,
   return std::max(0.0, call + parity);
 }
 
-double heston_nandi_price_mc(OptionType type,
+double detail::heston_nandi_price_mc(OptionType type,
                              double spot,
                              double strike,
                              double rate,
@@ -1299,10 +1560,13 @@ double heston_nandi_price_mc(OptionType type,
   sim_opt.seed = options.seed;
   sim_opt.offset = options.offset;
 
-  const double dt = maturity / static_cast<double>(options.steps);
-  const auto sim =
-      volatility::heston_nandi_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
-  const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
+  // The GARCH recursion is defined per period, so the number of periods is part of the model, not of the discretisation: as in the
+  // closed form, `steps` counts periods per year and the path has round(maturity * steps) of them.
+  const std::int64_t periods =
+      std::max<std::int64_t>(1, static_cast<std::int64_t>(std::llround(maturity * static_cast<double>(options.steps))));
+  const double dt = maturity / static_cast<double>(periods);
+  const auto sim = volatility::detail::heston_nandi_paths(periods, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
+  const Series terminal = sim.spot.select(0, periods).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
                                                 : pluss::series::full({options.paths}, 1.0, out_cfg);
@@ -1319,7 +1583,254 @@ double heston_nandi_price_mc(OptionType type,
   return mc_cv_estimate_(target, control, control_mean);
 }
 
-double bates_price_mc(OptionType type,
+using McSimulateFn_ = std::function<volatility::StochVolPaths(double level, const pluss::codem::Series* tracked)>;
+
+// The shared-path estimator behind every Monte Carlo strip: `simulate(level)` returns the paths with the volatility level (initial variance, forward variance...)
+// set to `level` (or read from the tracked scalar, which makes the paths differentiable in it for the pathwise vega). `cv_sigma` is the default volatility of the Black-Scholes control variate.
+McStripGreeks mc_strip_core_(const McSimulateFn_& simulate,
+                             double base_level,
+                             double cv_sigma,
+                             const char* op,
+                             double spot,
+                             double rate,
+                             double dividend_yield,
+                             double maturity,
+                             const std::vector<double>& strikes,
+                             const std::vector<bool>& is_call,
+                             const MonteCarloOptions& options,
+                             bool greeks,
+                             Config cfg) {
+  validate_mc_(options, op);
+  validate_common_(spot, strikes.empty() ? 1.0 : strikes.front(), rate, dividend_yield, maturity, op);
+  const std::size_t n = strikes.size();
+  McStripGreeks out;
+  out.price.assign(n, 0.0); out.delta.assign(n, 0.0); out.gamma.assign(n, 0.0); out.vega.assign(n, 0.0); out.theta.assign(n, 0.0); out.rho.assign(n, 0.0);
+  const auto type_of = [&](std::size_t i) { return is_call[i] ? OptionType::Call : OptionType::Put; };
+  if (maturity <= 0.0) {
+    for (std::size_t i = 0; i < n; ++i) {
+      out.price[i] = intrinsic_(type_of(i), spot, strikes[i]);
+      out.delta[i] = is_call[i] ? (spot > strikes[i] ? 1.0 : 0.0) : (spot < strikes[i] ? -1.0 : 0.0);
+    }
+    return out;
+  }
+  const auto out_cfg = f64_cfg_(cfg);
+  const double dt = maturity / static_cast<double>(options.steps);
+  const auto sim = simulate(base_level, nullptr);
+  const double sigma_cv = positive_or_(options.control_vol, cv_sigma);
+
+  // lr[c]: importance likelihood ratio using the first c steps; payoff of option i at date c with the spot scaled and the rate shifted
+  std::vector<Series> lr_cache(static_cast<std::size_t>(options.steps) + 1);
+  const auto lr_at = [&](std::int64_t c) -> const Series& {
+    Series& cached = lr_cache[static_cast<std::size_t>(c)];
+    if (!cached.defined()) {
+      cached = options.importance_sampling ? importance_lr_(sim.innovation_spot.slice(0, 0, c), options.importance_shift) : pluss::series::full({options.paths}, 1.0, out_cfg);
+    }
+    return cached;
+  };
+  const auto terminal_at = [&](std::int64_t c, double scale, double rate_shift) {
+    return sim.spot.select(0, c).reshape({options.paths}).mul(scale * std::exp(rate_shift * static_cast<double>(c) * dt));
+  };
+  const auto plain = [&](std::size_t i, std::int64_t c, double scale, double rate_shift) {
+    const double t = static_cast<double>(c) * dt;
+    return discounted_payoff_(type_of(i), terminal_at(c, scale, rate_shift), strikes[i], rate + rate_shift, t).mul(lr_at(c)).mean().item<double>();
+  };
+  for (std::size_t i = 0; i < n; ++i) {
+    if (!options.control_variate) {
+      out.price[i] = plain(i, options.steps, 1.0, 0.0);
+    } else {
+      const Series target = discounted_payoff_(type_of(i), terminal_at(options.steps, 1.0, 0.0), strikes[i], rate, maturity).mul(lr_at(options.steps));
+      const Series control = bs_control_discounted_payoff_(type_of(i), sim.innovation_spot, spot, strikes[i], rate, dividend_yield, maturity, sigma_cv).mul(lr_at(options.steps));
+      out.price[i] = mc_cv_estimate_(target, control, black_scholes_price(type_of(i), spot, strikes[i], rate, dividend_yield, maturity, sigma_cv));
+    }
+  }
+  if (!greeks) return out;
+
+  // delta and rho pathwise on the shared paths; gamma by a second difference of the payoff in the spot scale; theta by a backward difference over dates
+  const double eps = 0.01;   // relative spot step of the second difference: the payoff is piecewise linear, a wider step lowers the variance
+  const Series terminal = terminal_at(options.steps, 1.0, 0.0);
+  const Series lr = lr_at(options.steps);
+  const double disc = std::exp(-rate * maturity);
+  for (std::size_t i = 0; i < n; ++i) {
+    const bool call = is_call[i];
+    const Series itm = call ? terminal.gt(strikes[i]) : terminal.lt(strikes[i]);
+    const Series ind = itm.where(terminal, terminal.mul(0.0));                       // S_T on the exercise region
+    const double sign = call ? 1.0 : -1.0;
+    out.delta[i] = sign * disc * ind.mul(lr).mean().item<double>() / spot;
+    const Series payoff = discounted_payoff_(type_of(i), terminal, strikes[i], rate, maturity);
+    out.rho[i] = maturity * (sign * disc * ind.mul(lr).mean().item<double>() - payoff.mul(lr).mean().item<double>());
+    const double up = plain(i, options.steps, 1.0 + eps, 0.0), down = plain(i, options.steps, 1.0 - eps, 0.0);
+    out.gamma[i] = (up - 2.0 * plain(i, options.steps, 1.0, 0.0) + down) / (eps * eps * spot * spot);
+    if (options.steps >= 3) {
+      const double p0 = plain(i, options.steps, 1.0, 0.0), p1 = plain(i, options.steps - 1, 1.0, 0.0), p2 = plain(i, options.steps - 2, 1.0, 0.0);
+      out.theta[i] = -(3.0 * p0 - 4.0 * p1 + p2) / (2.0 * dt);
+    } else {
+      out.theta[i] = -(plain(i, options.steps, 1.0, 0.0) - plain(i, options.steps - 1, 1.0, 0.0)) / dt;
+    }
+  }
+  // vega in the initial variance (forward-variance level): pathwise, by differentiating the simulated paths themselves with the level a tracked scalar
+  {
+    Series level = pluss::make_series(base_level).to(out_cfg.platform, out_cfg.dtype);
+    level.tracks_slope_(true);
+    const auto sim_t = simulate(base_level, &level);
+    const Series terminal_t = sim_t.spot.select(0, options.steps).reshape({options.paths});
+    for (std::size_t i = 0; i < n; ++i) {
+      discounted_payoff_(type_of(i), terminal_t, strikes[i], rate, maturity).mul(lr_at(options.steps)).mean().reverse(true);   // the graph is kept for the next strike
+      out.vega[i] = level.sensitivity().item<double>();
+      level.clear();
+    }
+  }
+  return out;
+}
+McStripGreeks detail::sv_mc_strip(const BatesParams& params, bool bates, double spot, double rate, double dividend_yield, double maturity, const std::vector<double>& strikes,
+                                  const std::vector<bool>& is_call, const MonteCarloOptions& options, bool greeks, Config cfg) {
+  const auto out_cfg = f64_cfg_(cfg);
+  volatility::SimOptions sim_opt;
+  sim_opt.scheme = options.scheme; sim_opt.method = options.rand_method; sim_opt.randomized_quasi = options.randomized_quasi; sim_opt.sobol_scrambling = options.sobol_scrambling;
+  sim_opt.antithetic = options.antithetic; sim_opt.normal_shift = options.importance_sampling ? options.importance_shift : 0.0; sim_opt.seed = options.seed; sim_opt.offset = options.offset;
+  const double dt = maturity / static_cast<double>(options.steps);
+  const McSimulateFn_ simulate = [&](double v0, const Series* tracked) {
+    volatility::SimOptions so = sim_opt;
+    so.tracked_level = tracked;
+    BatesParams q = params;
+    q.mu = rate - dividend_yield;
+    q.v0 = v0;
+    if (!bates) q.jump_intensity = 0.0;
+    return bates ? volatility::detail::bates_paths(options.steps, options.paths, spot, dt, q, so, out_cfg, options.seed)
+                 : volatility::detail::heston_paths(options.steps, options.paths, spot, dt, HestonParams{.kappa = q.kappa, .theta = q.theta, .sigma = q.sigma, .rho = q.rho, .v0 = q.v0, .mu = q.mu, .variance_floor = q.variance_floor},
+                                                    so, out_cfg, options.seed);
+  };
+  return mc_strip_core_(simulate, params.v0, std::sqrt(std::max(params.theta, 1e-12)), bates ? "bates_price_mc" : "heston_price_mc", spot, rate, dividend_yield, maturity, strikes, is_call, options, greeks, cfg);
+}
+
+McStripGreeks detail::rough_heston_mc_strip(const RoughHestonParams& params, double spot, double rate, double dividend_yield, double maturity, const std::vector<double>& strikes,
+                                            const std::vector<bool>& is_call, const MonteCarloOptions& options, bool greeks, Config cfg) {
+  validate_rough_heston_(params, "rough_heston_price_mc");
+  const auto out_cfg = f64_cfg_(cfg);
+  volatility::SimOptions sim_opt;
+  sim_opt.scheme = options.scheme; sim_opt.method = options.rand_method; sim_opt.randomized_quasi = options.randomized_quasi; sim_opt.sobol_scrambling = options.sobol_scrambling;
+  sim_opt.antithetic = options.antithetic; sim_opt.normal_shift = options.importance_sampling ? options.importance_shift : 0.0; sim_opt.seed = options.seed; sim_opt.offset = options.offset;
+  const double dt = maturity / static_cast<double>(std::max<std::int64_t>(options.steps, 1));
+  const McSimulateFn_ simulate = [&](double v0, const Series* tracked) {
+    volatility::SimOptions so = sim_opt;
+    so.tracked_level = tracked;
+    RoughHestonParams q = params;
+    q.mu = rate - dividend_yield;
+    q.v0 = v0;
+    return volatility::detail::rough_heston_paths(options.steps, options.paths, spot, dt, q, so, out_cfg, options.seed);
+  };
+  return mc_strip_core_(simulate, params.v0, std::sqrt(std::max(params.theta, 1e-12)), "rough_heston_price_mc", spot, rate, dividend_yield, maturity, strikes, is_call, options, greeks, cfg);
+}
+
+McStripGreeks detail::rough_bergomi_mc_strip(const RoughBergomiParams& params, double spot, double rate, double dividend_yield, double maturity, const std::vector<double>& strikes,
+                                             const std::vector<bool>& is_call, const MonteCarloOptions& options, bool greeks, Config cfg) {
+  validate_rough_bergomi_(params, "rough_bergomi_price_mc");
+  const auto out_cfg = f64_cfg_(cfg);
+  volatility::SimOptions sim_opt;
+  sim_opt.scheme = options.scheme; sim_opt.method = options.rand_method; sim_opt.randomized_quasi = options.randomized_quasi; sim_opt.sobol_scrambling = options.sobol_scrambling;
+  sim_opt.antithetic = options.antithetic; sim_opt.normal_shift = options.importance_sampling ? options.importance_shift : 0.0; sim_opt.seed = options.seed; sim_opt.offset = options.offset;
+  const double dt = maturity / static_cast<double>(std::max<std::int64_t>(options.steps, 1));
+  const McSimulateFn_ simulate = [&](double xi, const Series* tracked) {
+    volatility::SimOptions so = sim_opt;
+    so.tracked_level = tracked;
+    RoughBergomiParams q = params;
+    q.mu = rate - dividend_yield;
+    q.xi = xi;
+    return volatility::detail::rough_bergomi_paths(options.steps, options.paths, spot, dt, q, so, out_cfg, options.seed);
+  };
+  return mc_strip_core_(simulate, params.xi, std::sqrt(std::max(params.xi, 1e-12)), "rough_bergomi_price_mc", spot, rate, dividend_yield, maturity, strikes, is_call, options, greeks, cfg);
+}
+
+std::vector<McStripGreeks> detail::sv_mc_assets(const std::vector<McAsset>& assets, double maturity, const MonteCarloOptions& options, bool greeks, Config cfg) {
+  validate_mc_(options, "sv_mc_assets");
+  PLUSS_CHECK(!assets.empty(), "subsp::math::finance::pricing::sv_mc_assets: no assets");
+  PLUSS_CHECK(!options.control_variate && !options.importance_sampling,
+              "subsp::math::finance::pricing::sv_mc_assets: control variates and importance sampling need one asset at a time");
+  const std::int64_t A = static_cast<std::int64_t>(assets.size());
+  const auto out_cfg = f64_cfg_(cfg);
+  std::vector<McStripGreeks> results(assets.size());
+  for (std::size_t a = 0; a < assets.size(); ++a) {
+    const std::size_t n = assets[a].strikes.size();
+    results[a].price.assign(n, 0.0); results[a].delta.assign(n, 0.0); results[a].gamma.assign(n, 0.0);
+    results[a].vega.assign(n, 0.0); results[a].theta.assign(n, 0.0); results[a].rho.assign(n, 0.0);
+  }
+  if (maturity <= 0.0) {
+    for (std::size_t a = 0; a < assets.size(); ++a) {
+      for (std::size_t i = 0; i < assets[a].strikes.size(); ++i) {
+        const double k = assets[a].strikes[i], s = assets[a].spot;
+        results[a].price[i] = intrinsic_(assets[a].is_call[i] ? OptionType::Call : OptionType::Put, s, k);
+        results[a].delta[i] = assets[a].is_call[i] ? (s > k ? 1.0 : 0.0) : (s < k ? -1.0 : 0.0);
+      }
+    }
+    return results;
+  }
+  const double dt = maturity / static_cast<double>(options.steps);
+  volatility::SimOptions sim_opt;
+  sim_opt.scheme = options.scheme; sim_opt.method = options.rand_method; sim_opt.randomized_quasi = options.randomized_quasi;
+  sim_opt.sobol_scrambling = options.sobol_scrambling; sim_opt.antithetic = options.antithetic; sim_opt.seed = options.seed; sim_opt.offset = options.offset;
+  const auto column = [&](const std::vector<double>& v) { return pluss::make_series(v, {A}, out_cfg); };
+  const auto simulate = [&](const Series& v0_column) {
+    volatility::detail::MultiSvParams p;
+    std::vector<double> spot, growth, kappa, theta, sigma, rho, lambda, jm, jv;
+    for (const auto& as : assets) {
+      spot.push_back(as.spot); growth.push_back(as.rate - as.dividend_yield); kappa.push_back(as.params.kappa); theta.push_back(as.params.theta);
+      sigma.push_back(as.params.sigma); rho.push_back(as.params.rho);
+      lambda.push_back(as.bates ? as.params.jump_intensity : 0.0); jm.push_back(as.params.jump_mean); jv.push_back(as.params.jump_vol);
+    }
+    p.spot0 = column(spot); p.growth = column(growth); p.kappa = column(kappa); p.theta = column(theta); p.sigma = column(sigma); p.rho = column(rho); p.v0 = v0_column;
+    p.jump_intensity = column(lambda); p.jump_mean = column(jm); p.jump_vol = column(jv);
+    return volatility::detail::multi_sv_paths(options.steps, options.paths, dt, p, sim_opt, out_cfg, options.seed).spot;   // [paths, steps + 1, A]
+  };
+  std::vector<double> v0;
+  for (const auto& as : assets) v0.push_back(as.params.v0);
+  const Series base = simulate(column(v0));
+
+  const auto terminal_of = [&](const Series& paths, std::int64_t a, std::int64_t c, double scale, double rate_shift) {
+    return paths.select(2, a).select(1, c).mul(scale * std::exp(rate_shift * static_cast<double>(c) * dt));
+  };
+  const auto plain = [&](const Series& paths, std::size_t a, std::size_t i, std::int64_t c, double scale, double rate_shift) {
+    return discounted_payoff_(assets[a].is_call[i] ? OptionType::Call : OptionType::Put, terminal_of(paths, static_cast<std::int64_t>(a), c, scale, rate_shift), assets[a].strikes[i],
+                              assets[a].rate + rate_shift, static_cast<double>(c) * dt).mean().item<double>();
+  };
+  constexpr double eps = 0.01;
+  for (std::size_t a = 0; a < assets.size(); ++a) {
+    const double rate = assets[a].rate, spot = assets[a].spot, disc = std::exp(-rate * maturity);
+    const Series terminal = terminal_of(base, static_cast<std::int64_t>(a), options.steps, 1.0, 0.0);
+    for (std::size_t i = 0; i < assets[a].strikes.size(); ++i) {
+      const bool call = assets[a].is_call[i];
+      const double k = assets[a].strikes[i], sign = call ? 1.0 : -1.0;
+      const double p0 = plain(base, a, i, options.steps, 1.0, 0.0);
+      results[a].price[i] = p0;
+      if (!greeks) continue;
+      const Series itm = call ? terminal.gt(k) : terminal.lt(k);
+      const double indicator_mean = itm.where(terminal, terminal.mul(0.0)).mean().item<double>();
+      results[a].delta[i] = sign * disc * indicator_mean / spot;
+      results[a].rho[i] = maturity * (sign * disc * indicator_mean - p0);
+      results[a].gamma[i] = (plain(base, a, i, options.steps, 1.0 + eps, 0.0) - 2.0 * p0 + plain(base, a, i, options.steps, 1.0 - eps, 0.0)) / (eps * eps * spot * spot);
+      if (options.steps >= 3) {
+        results[a].theta[i] = -(3.0 * p0 - 4.0 * plain(base, a, i, options.steps - 1, 1.0, 0.0) + plain(base, a, i, options.steps - 2, 1.0, 0.0)) / (2.0 * dt);
+      } else {
+        results[a].theta[i] = -(p0 - plain(base, a, i, options.steps - 1, 1.0, 0.0)) / dt;
+      }
+    }
+  }
+  if (greeks) {
+    // pathwise vega: the initial variances are a tracked column, and the assets are independent, so the sensitivity of an asset's estimate is read at its entry
+    Series level = column(v0);
+    level.tracks_slope_(true);
+    const Series sim_t = simulate(level);
+    for (std::size_t a = 0; a < assets.size(); ++a) {
+      for (std::size_t i = 0; i < assets[a].strikes.size(); ++i) {
+        discounted_payoff_(assets[a].is_call[i] ? OptionType::Call : OptionType::Put, terminal_of(sim_t, static_cast<std::int64_t>(a), options.steps, 1.0, 0.0), assets[a].strikes[i],
+                           assets[a].rate, maturity).mean().reverse(true);
+        results[a].vega[i] = level.sensitivity().items<double>()[a];
+        level.clear();
+      }
+    }
+  }
+  return results;
+}
+
+double detail::bates_price_mc(OptionType type,
                       double spot,
                       double strike,
                       double rate,
@@ -1351,7 +1862,7 @@ double bates_price_mc(OptionType type,
   sim_opt.offset = options.offset;
 
   const double dt = maturity / static_cast<double>(options.steps);
-  const auto sim = volatility::bates_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
+  const auto sim = volatility::detail::bates_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
@@ -1369,7 +1880,7 @@ double bates_price_mc(OptionType type,
   return mc_cv_estimate_(target, control, control_mean);
 }
 
-double sabr_price_mc(OptionType type,
+double detail::sabr_price_mc(OptionType type,
                      double forward,
                      double strike,
                      double rate,
@@ -1400,7 +1911,7 @@ double sabr_price_mc(OptionType type,
   sim_opt.offset = options.offset;
 
   const double dt = maturity / static_cast<double>(options.steps);
-  const auto sim = volatility::sabr_paths(options.steps, options.paths, forward, dt, q_params, sim_opt, out_cfg, options.seed);
+  const auto sim = volatility::detail::sabr_paths(options.steps, options.paths, forward, dt, q_params, sim_opt, out_cfg, options.seed);
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
@@ -1419,7 +1930,82 @@ double sabr_price_mc(OptionType type,
   return mc_cv_estimate_(target, control, control_mean);
 }
 
-double slv_price_mc(OptionType type,
+ScalarGreeks detail::sabr_mc_greeks(OptionType type, double spot, double strike, double rate, double dividend_yield, double maturity, const SabrParams& params,
+                                    const MonteCarloOptions& options, Config cfg) {
+  validate_option_(type, "sabr_mc_greeks");
+  validate_common_(spot, strike, rate, dividend_yield, maturity, "sabr_mc_greeks");
+  validate_sabr_(params, "sabr_mc_greeks");
+  validate_mc_(options, "sabr_mc_greeks");
+  ScalarGreeks g;
+  const double forward = spot * std::exp((rate - dividend_yield) * maturity);
+  if (maturity <= 0.0) {
+    g.price = intrinsic_(type, spot, strike);
+    g.delta = type == OptionType::Call ? (spot > strike ? 1.0 : 0.0) : (spot < strike ? -1.0 : 0.0);
+    return g;
+  }
+  const auto out_cfg = f64_cfg_(cfg);
+  SabrParams q_params = params;
+  q_params.mu = 0.0;
+  volatility::SimOptions sim_opt;
+  sim_opt.scheme = options.scheme; sim_opt.method = options.rand_method; sim_opt.randomized_quasi = options.randomized_quasi; sim_opt.sobol_scrambling = options.sobol_scrambling;
+  sim_opt.antithetic = options.antithetic; sim_opt.normal_shift = options.importance_sampling ? options.importance_shift : 0.0; sim_opt.seed = options.seed; sim_opt.offset = options.offset;
+  const double dt = maturity / static_cast<double>(options.steps);
+  // the initial forward (one copy per path) and the initial volatility are tracked, so the paths are differentiable in both
+  Series f0 = pluss::series::full({options.paths}, forward, out_cfg);
+  f0.tracks_slope_(true);
+  Series a0 = pluss::make_series(params.alpha0).to(out_cfg.platform, out_cfg.dtype);
+  a0.tracks_slope_(true);
+  sim_opt.tracked_spot = &f0;
+  sim_opt.tracked_level = &a0;
+  const auto sim = volatility::detail::sabr_paths(options.steps, options.paths, forward, dt, q_params, sim_opt, out_cfg, options.seed);
+  const Series path = sim.spot;   // [steps + 1, paths]
+  const Series terminal = path.select(0, options.steps).reshape({options.paths});
+  const double disc = std::exp(-rate * maturity);
+  const bool call = type == OptionType::Call;
+  const double sign = call ? 1.0 : -1.0;
+  const auto payoff = [&](const Series& f) { return (call ? f.sub(strike) : f.mul(-1.0).add(strike)).clamp_min(0.0); };
+  // importance sampling reweights every payoff by the likelihood ratio of the innovations, which does not depend on the parameters
+  const auto lr_at = [&](std::int64_t c) {
+    return options.importance_sampling ? importance_lr_(sim.innovation_spot.slice(0, 0, c), options.importance_shift) : pluss::series::full({options.paths}, 1.0, out_cfg);
+  };
+  const Series lr = lr_at(options.steps);
+  const Series estimate = payoff(terminal).mul(lr).mean().mul(disc);
+  g.price = estimate.item<double>();
+  // delta (in the forward) and vega: one reverse pass on the estimate
+  estimate.reverse(true);
+  const double dp_df = f0.sensitivity().sum().item<double>();
+  g.vega = a0.sensitivity().item<double>();
+  f0.clear();
+  a0.clear();
+  // the pathwise Jacobian of the terminal forward in the initial forward, for the second difference of the payoff
+  terminal.sum().reverse(true);
+  const Series jac = f0.sensitivity().reshape({options.paths});
+  f0.clear();
+  const double h = 0.01 * forward;
+  const auto shifted = [&](double sgn) { return payoff(terminal.add(jac.mul(sgn * h))).mul(lr).mean().item<double>() * disc; };
+  const double d2 = (shifted(1.0) - 2.0 * g.price + shifted(-1.0)) / (h * h);
+  const double growth = std::exp((rate - dividend_yield) * maturity);
+  g.delta = dp_df * growth;
+  g.gamma = d2 * growth * growth;
+  // rho: the discount factor and the forward's growth with the rate; theta: the same terms plus the forward process's own time derivative, a second-order
+  // backward difference over the two earlier dates of the same paths
+  g.rho = -maturity * g.price + maturity * forward * dp_df;
+  const auto at_step = [&](std::int64_t c) { return payoff(path.select(0, c).reshape({options.paths})).mul(lr_at(c)).mean().item<double>(); };
+  const double p0 = at_step(options.steps);
+  const double g_time = options.steps >= 3 ? (3.0 * p0 - 4.0 * at_step(options.steps - 1) + at_step(options.steps - 2)) / (2.0 * dt) : (p0 - at_step(options.steps - 1)) / dt;
+  const double dp_dt = -rate * g.price + (rate - dividend_yield) * forward * dp_df + disc * g_time;   // total derivative in the maturity
+  g.theta = -dp_dt;
+  (void)sign;
+  if (options.control_variate) {   // the control variate sharpens the price; the Greeks stay those of the unbiased plain estimator
+    const double sigma_sabr = sabr_black_vol(forward, strike, maturity, params);
+    const double sigma_cv = positive_or_(options.control_vol, positive_or_(sigma_sabr, std::max(params.alpha0, 1e-8)));
+    const Series control = bs_control_discounted_payoff_(type, sim.innovation_spot, forward, strike, rate, rate, maturity, sigma_cv).mul(lr);
+    g.price = mc_cv_estimate_(payoff(terminal).mul(disc).mul(lr), control, black_scholes_price(type, forward, strike, rate, rate, maturity, sigma_cv));
+  }
+  return g;
+}
+
+double detail::slv_price_mc(OptionType type,
                     double spot,
                     double strike,
                     double rate,
@@ -1451,7 +2037,7 @@ double slv_price_mc(OptionType type,
   sim_opt.offset = options.offset;
 
   const double dt = maturity / static_cast<double>(options.steps);
-  const auto sim = volatility::slv_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
+  const auto sim = volatility::detail::slv_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
@@ -1470,7 +2056,7 @@ double slv_price_mc(OptionType type,
   return mc_cv_estimate_(target, control, control_mean);
 }
 
-double rough_heston_price_mc(OptionType type,
+double detail::rough_heston_price_mc(OptionType type,
                              double spot,
                              double strike,
                              double rate,
@@ -1501,7 +2087,7 @@ double rough_heston_price_mc(OptionType type,
 
   const double dt = maturity / static_cast<double>(options.steps);
   const auto sim =
-      volatility::rough_heston_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
+      volatility::detail::rough_heston_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)
@@ -1517,7 +2103,7 @@ double rough_heston_price_mc(OptionType type,
   return mc_cv_estimate_(target, control, control_mean);
 }
 
-double rough_bergomi_price_mc(OptionType type,
+double detail::rough_bergomi_price_mc(OptionType type,
                               double spot,
                               double strike,
                               double rate,
@@ -1548,7 +2134,7 @@ double rough_bergomi_price_mc(OptionType type,
 
   const double dt = maturity / static_cast<double>(options.steps);
   const auto sim =
-      volatility::rough_bergomi_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
+      volatility::detail::rough_bergomi_paths(options.steps, options.paths, spot, dt, q_params, sim_opt, out_cfg, options.seed);
   const Series terminal = sim.spot.select(0, options.steps).reshape({options.paths});
   const Series disc_payoff = discounted_payoff_(type, terminal, strike, rate, maturity);
   const Series lr = options.importance_sampling ? importance_lr_(sim.innovation_spot, options.importance_shift)

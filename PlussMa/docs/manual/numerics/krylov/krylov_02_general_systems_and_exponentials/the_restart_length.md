@@ -40,7 +40,7 @@ int main() {
     o.relative_tolerance = 1e-10;
     const auto r = krylov::gmres(convection, b, {-1}, o);
     std::cout << std::left << std::setw(10) << restart << std::setw(14) << r.iterations << std::setw(12) << r.restarts << std::setw(20) << r.operator_evaluations << std::scientific
-              << std::setprecision(1) << r.relative_residual.item<double>() << "\n";
+              << std::setprecision(1) << r.relative_residual.squeeze().item<double>() << "\n";
   }
 }
 ```
@@ -54,3 +54,12 @@ restart   iterations    restarts    operator calls      relative residual
 40        480           12          493                 8.5e-11
 ```
 A convection–diffusion operator is not symmetric, so conjugate gradients does not apply. The restart length trades memory and per-iteration work against the number of restarts, and there is no universal best: here the shortest basis needs the fewest operator calls (253 against 493 for the longest). Try a few lengths on your own operator, and count `operator_evaluations`, the cost that matters when applying the operator is expensive. A preconditioner for GMRES, applied inside your `apply`, helps in the same way as in Chapter 1.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="heat_flow.html">
+    <span class="label">Next</span>
+    <span class="title">Heat flow</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

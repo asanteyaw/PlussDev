@@ -54,14 +54,14 @@ inline void require_square_(const Series& a, const char* op) {
   }
 }
 
-// Row-major flat copy of any-rank real data: host<T>() keeps the rank, a flat vector needs pull<T>() on a rank-one view.
+// Row-major flat copy of any-rank real data: host<T>() keeps the rank, a flat vector needs items<T>() on a rank-one view.
 inline std::vector<double> flat_f64_(const Series& a) {
-  return a.contiguous().reshape({a.numel()}).pull<double>();
+  return a.contiguous().reshape({a.numel()}).items<double>();
 }
 
 inline std::vector<double> to_row_major_f64_(const Series& a) {
   auto cpu = a.to(pluss::pCPU, ScalarType::Float64).contiguous();
-  return cpu.reshape({cpu.numel()}).pull<double>();
+  return cpu.reshape({cpu.numel()}).items<double>();
 }
 
 inline bool is_complex_(const Series& a) {

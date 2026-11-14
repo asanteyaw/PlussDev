@@ -129,3 +129,12 @@ Rows 1 and 3 are identical, and so are rows 4 and 5. The Rastrigin function used
 - **A looser `relative_improvement_tolerance` stops earlier with a coarser answer.** It is the knob that trades accuracy for evaluations.
 
 Where next: [Chapter 2](../dfo_02_the_solvers.md) compares the seven methods.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="first_solves.html">
+    <span class="label">Previous</span>
+    <span class="title">First derivative-free solves</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

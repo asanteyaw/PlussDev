@@ -29,7 +29,7 @@ Compare full and same convolution, correlation, causal FIR output, and complex f
 #include <cmath>
 #include <complex>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -67,7 +67,7 @@ Carry recurrence state between blocks and contrast that causal workflow with a f
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -116,7 +116,7 @@ Show the explicit failures for integer signal data and a direct-form denominator
 #include <exception>
 #include <string>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {

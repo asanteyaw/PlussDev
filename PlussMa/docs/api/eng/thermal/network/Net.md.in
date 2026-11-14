@@ -1,0 +1,60 @@
+# `thermal::Net`
+
+A lumped thermal network.
+
+## Signature
+
+```cpp
+thermal::Net
+```
+
+## What It Does
+
+Describes a network of nodes joined by conductances, with capacities, fixed temperatures and heat sources. It is the thermal counterpart of an electrical network, and it is solved by the same engine: temperature plays the part of voltage and heat flow the part of current.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `nodes` | The number of nodes, at least one. Nodes are numbered from zero. | required |
+| `links` | A `Links`: the conductances between nodes. | empty |
+| `stores` | A `Stores`: the thermal capacities of nodes. | empty |
+| `fixed` | A `Fixed`: the nodes held at a prescribed temperature. | empty |
+| `heats` | A `Heats`: the heat injected into nodes. | empty |
+
+## Returns
+
+A value; read by `steady` and `tran`.
+
+## Errors
+
+`steady` and `tran` throw `pluss::Error` for fewer than one node, and for the errors of the four groups; the message names the group.
+
+## Interpretation and Use
+
+Build the network once and pass it to `steady` for the long-run answer and to `tran` for the time response. Leading axes on any group form a batch; groups without a batch axis are shared by every member.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A room with a wall, ventilation and a heater.
+
+@@example Eng/api/thermal_net_room.cpp@@
+
+### Example 2
+
+The same network seen in steady state.
+
+@@example Eng/api/thermal_steady_series.cpp@@
+
+### Example 3
+
+A lumped body cooling.
+
+@@example Eng/api/thermal_tran_cooling.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

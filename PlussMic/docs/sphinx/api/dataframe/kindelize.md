@@ -83,7 +83,7 @@ o3   | 3     Kumasi  90
 auto catalog = orders.kindelize();
 std::cout << catalog.nkeys() << "\n";
 for (const auto& key : catalog.keys()) {
-  std::cout << key << ": " << catalog.at(key).size() << " cases\n";
+  std::cout << key << ": " << catalog.keys(key).size() << " cases\n";
 }
 ```
 

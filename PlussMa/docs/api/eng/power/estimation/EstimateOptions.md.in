@@ -1,0 +1,68 @@
+# `power::EstimateOptions`
+
+Tolerance and iteration budget of the state estimator.
+
+## Signature
+
+```cpp
+power::EstimateOptions
+```
+
+## What It Does
+
+Controls for `estimate`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `tolerance` | The size of the state update at which the Gauss-Newton iteration stops. | 1e-8 |
+| `max_iterations` | The iteration budget. | 20 |
+| `observability_tolerance` | The smallest eigenvalue of the gain matrix accepted as observable. | 1e-10 |
+
+## Returns
+
+A value; validated by `estimate`.
+
+## Errors
+
+A non-positive tolerance or a budget below one is rejected. An observability tolerance above the gain's smallest eigenvalue makes the problem unobservable.
+
+## Interpretation and Use
+
+Leave the observability tolerance alone unless you want to reject poorly conditioned measurement sets.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Loose tolerance, short budget and a large observability tolerance.
+
+@@example Eng/api/power_est_options.cpp@@
+
+### Example 2
+
+The default estimation.
+
+@@example Eng/api/power_est_state.cpp@@
+
+### Example 3
+
+Gross-error detection with the default controls.
+
+@@example Eng/api/power_est_residuals.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Measurements.html">
+    <span class="label">Previous</span>
+    <span class="title">Measurements</span>
+  </a>
+  <a class="next-link" href="EstimateResult.html">
+    <span class="label">Next</span>
+    <span class="title">EstimateResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

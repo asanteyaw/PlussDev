@@ -2539,11 +2539,11 @@ Series binom_cdf_series_(const Series& x, const Series& n, const Series& p) {
   return make_f64_series_like_(out, xx);
 }
 
-Series chisq_pdf_(const Series& x, std::int64_t r) { return gamma_pdf_(x, 0.0, 2.0, 0.5 * static_cast<double>(r)); }
-Series chisq_logpdf_(const Series& x, std::int64_t r) { return gamma_logpdf_(x, 0.0, 2.0, 0.5 * static_cast<double>(r)); }
-Series chisq_cdf_(const Series& x, std::int64_t r) { return gamma_cdf_(x, 0.0, 2.0, 0.5 * static_cast<double>(r)); }
-Series chisq_sample_(std::int64_t r, pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed) {
-  return gamma_sample_(0.0, 2.0, 0.5 * static_cast<double>(r), sizes, cfg, seed);
+Series chisq_pdf_(const Series& x, double r) { return gamma_pdf_(x, 0.0, 2.0, 0.5 * r); }
+Series chisq_logpdf_(const Series& x, double r) { return gamma_logpdf_(x, 0.0, 2.0, 0.5 * r); }
+Series chisq_cdf_(const Series& x, double r) { return gamma_cdf_(x, 0.0, 2.0, 0.5 * r); }
+Series chisq_sample_(double r, pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed) {
+  return gamma_sample_(0.0, 2.0, 0.5 * r, sizes, cfg, seed);
 }
 
 Series student_t_pdf_(const Series& x, double nu, double chi, double eta) {
@@ -3323,41 +3323,41 @@ Series chi_sample_(double a, double b, double nu, pluss::msharp::RangeView::Int 
   });
 }
 
-Series chisqnc_pdf_(const Series& x, double lambda, std::int64_t r) {
+Series chisqnc_pdf_(const Series& x, double lambda, double r) {
   PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stats::distr::chisqnc pdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     return poisson_mix_scalar_(0.5 * lambda, [=](int j) {
-      const double df = static_cast<double>(r + 2 * j);
+      const double df = r + 2.0 * j;
       const double logp = (0.5 * df - 1.0) * std::log(y) - 0.5 * y - 0.5 * df * std::log(2.0) - std::lgamma(0.5 * df);
       return std::exp(logp);
     });
   });
 }
 
-Series chisqnc_logpdf_(const Series& x, double lambda, std::int64_t r) {
+Series chisqnc_logpdf_(const Series& x, double lambda, double r) {
   return map_series_f64_(chisqnc_pdf_(x, lambda, r), [](double y) {
     return (y <= 0.0) ? -std::numeric_limits<double>::infinity() : std::log(y);
   });
 }
 
-Series chisqnc_cdf_(const Series& x, double lambda, std::int64_t r) {
+Series chisqnc_cdf_(const Series& x, double lambda, double r) {
   PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stats::distr::chisqnc cdf: invalid parameters");
   return map_series_f64_(x, [=](double y) {
     if (y <= 0.0) return 0.0;
     return std::clamp(poisson_mix_scalar_(0.5 * lambda, [=](int j) {
-      return regularized_gamma_p_scalar_(0.5 * static_cast<double>(r + 2 * j), 0.5 * y);
+      return regularized_gamma_p_scalar_(0.5 * (r + 2.0 * j), 0.5 * y);
     }), 0.0, 1.0);
   });
 }
 
-Series chisqnc_sample_(double lambda, std::int64_t r, pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed) {
+Series chisqnc_sample_(double lambda, double r, pluss::msharp::RangeView::Int sizes, Config cfg, std::uint64_t seed) {
   PLUSS_CHECK(lambda >= 0.0 && r > 0, "subsp::stats::distr::chisqnc sample: invalid parameters");
-  return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {
-    std::normal_distribution<double> normal(std::sqrt(lambda), 1.0);
-    std::gamma_distribution<double> chisq(0.5 * static_cast<double>(r - 1), 2.0);
-    const double z = normal(rng);
-    return z * z + ((r > 1) ? chisq(rng) : 0.0);
+  return sample_host_<double>(sizes, cfg, ScalarType::Float64, seed, [=](std::mt19937_64& rng) {  // Poisson mixture of central chi-squares: valid for real r
+    std::poisson_distribution<int> mixing(0.5 * lambda > 0.0 ? 0.5 * lambda : 1e-300);
+    const int j = lambda > 0.0 ? mixing(rng) : 0;
+    std::gamma_distribution<double> chisq(0.5 * r + static_cast<double>(j), 2.0);
+    return chisq(rng);
   });
 }
 
@@ -4121,10 +4121,10 @@ Series sample(dst::Kind kind,
                  : chi_sample_(params[0], params[1], params[2], sizes, cfg, seed);
     case Family::ChiSquare:
       expect_param_count_("chisquare sample", params, {1});
-      return chisq_sample_(static_cast<std::int64_t>(params[0]), sizes, cfg, seed);
+      return chisq_sample_(params[0], sizes, cfg, seed);
     case Family::ChiSquareNoncentral:
       expect_param_count_("chisqnc sample", params, {2});
-      return chisqnc_sample_(params[0], static_cast<std::int64_t>(params[1]), sizes, cfg, seed);
+      return chisqnc_sample_(params[0], params[1], sizes, cfg, seed);
     case Family::Cosine:
       expect_param_count_("cosine sample", params, {0, 2});
       return cosine_sample_(param_or_(params, 0, 0.0), param_or_(params, 1, std::numbers::pi_v<double>), sizes, cfg, seed);
@@ -4727,10 +4727,10 @@ Series pdf(dst::Kind kind, const Series& x, std::span<const double> params) {
       return (params.size() == 1) ? chi_pdf_(x, 0.0, 1.0, params[0]) : chi_pdf_(x, params[0], params[1], params[2]);
     case Family::ChiSquare:
       expect_param_count_("chisquare pdf", params, {1});
-      return chisq_pdf_(x, static_cast<std::int64_t>(params[0]));
+      return chisq_pdf_(x, params[0]);
     case Family::ChiSquareNoncentral:
       expect_param_count_("chisqnc pdf", params, {2});
-      return chisqnc_pdf_(x, params[0], static_cast<std::int64_t>(params[1]));
+      return chisqnc_pdf_(x, params[0], params[1]);
     case Family::Cosine:
       expect_param_count_("cosine pdf", params, {0, 2});
       return cosine_pdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, std::numbers::pi_v<double>));
@@ -5008,10 +5008,10 @@ Series logpdf(dst::Kind kind, const Series& x, std::span<const double> params) {
       return (params.size() == 1) ? chi_logpdf_(x, 0.0, 1.0, params[0]) : chi_logpdf_(x, params[0], params[1], params[2]);
     case Family::ChiSquare:
       expect_param_count_("chisquare logpdf", params, {1});
-      return chisq_logpdf_(x, static_cast<std::int64_t>(params[0]));
+      return chisq_logpdf_(x, params[0]);
     case Family::ChiSquareNoncentral:
       expect_param_count_("chisqnc logpdf", params, {2});
-      return chisqnc_logpdf_(x, params[0], static_cast<std::int64_t>(params[1]));
+      return chisqnc_logpdf_(x, params[0], params[1]);
     case Family::Cosine:
       expect_param_count_("cosine logpdf", params, {0, 2});
       return cosine_logpdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, std::numbers::pi_v<double>));
@@ -5289,10 +5289,10 @@ Series cdf(dst::Kind kind, const Series& x, std::span<const double> params) {
       return (params.size() == 1) ? chi_cdf_(x, 0.0, 1.0, params[0]) : chi_cdf_(x, params[0], params[1], params[2]);
     case Family::ChiSquare:
       expect_param_count_("chisquare cdf", params, {1});
-      return chisq_cdf_(x, static_cast<std::int64_t>(params[0]));
+      return chisq_cdf_(x, params[0]);
     case Family::ChiSquareNoncentral:
       expect_param_count_("chisqnc cdf", params, {2});
-      return chisqnc_cdf_(x, params[0], static_cast<std::int64_t>(params[1]));
+      return chisqnc_cdf_(x, params[0], params[1]);
     case Family::Cosine:
       expect_param_count_("cosine cdf", params, {0, 2});
       return cosine_cdf_(x, param_or_(params, 0, 0.0), param_or_(params, 1, std::numbers::pi_v<double>));

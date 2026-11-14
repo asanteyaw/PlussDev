@@ -133,6 +133,17 @@ int main() {
       expect(approx(pv[0], 1.0 + 1.2 - 0.7 + 0.75 * 1.2 * -0.7, 1e-6), "poly cross predict");
     }
 
+    {
+      // a default-constructed fit has nothing to report: the summary names the missing coefficients instead of failing inside the formatter
+      bool threw = false;
+      try {
+        (void)reg::poly_summary(reg::PolyFitResult{});
+      } catch (const std::exception& e) {
+        threw = std::string(e.what()).find("print_poly_summary: fit.ols.coefficients is undefined") != std::string::npos;
+      }
+      expect(threw, "poly_summary of an undefined fit reports the undefined coefficients");
+    }
+
     std::cout << "poly_regression_test passed\n";
     return 0;
   } catch (const std::exception& e) {

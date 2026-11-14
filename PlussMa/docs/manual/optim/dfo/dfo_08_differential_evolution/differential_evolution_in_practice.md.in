@@ -60,3 +60,8 @@ On the 6-variable function plain differential evolution is far from the minimum 
 - **Try the self-adapting variant when you cannot tune.** It is what `Auto` chooses for unbounded problems of medium size and found the minimum exactly where the plain method was far away.
 
 Where next: [Chapter 9](../dfo_09_particle_swarm.md) describes the other population method.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

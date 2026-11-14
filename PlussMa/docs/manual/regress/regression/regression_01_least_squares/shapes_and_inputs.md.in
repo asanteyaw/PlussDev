@@ -42,7 +42,7 @@ int main() {
 
   auto show = [&](const char *label, const pluss::Series &y, const pluss::Series &x) {
     const auto fit = reg::ols_fit(y, x);
-    out.writeln(label, fit.coefficients.pull<double>(), " nobs", fit.nobs, " predictors", fit.num_predictors);
+    out.writeln(label, fit.coefficients.items<double>(), " nobs", fit.nobs, " predictors", fit.num_predictors);
   };
   show("y [8]    x [8]    ", y_vector, x_vector);
   show("y [8, 1] x [8, 1] ", y_column, x_column);
@@ -75,13 +75,13 @@ int main() {
 
   const auto double_fit = reg::ols_fit(pluss::make_series(ys, {8}, as_f64()), pluss::make_series(xs, {8}, as_f64()));
   const auto single_fit = reg::ols_fit(pluss::make_series(ys, {8}, as_f32()), pluss::make_series(xs, {8}, as_f32()));
-  out.writeln("Float64 input coefficients", double_fit.coefficients.pull<double>());
-  out.writeln("Float32 input coefficients", single_fit.coefficients.pull<double>(), " result dtype", single_fit.coefficients.dtype());
+  out.writeln("Float64 input coefficients", double_fit.coefficients.items<double>());
+  out.writeln("Float32 input coefficients", single_fit.coefficients.items<double>(), " result dtype", single_fit.coefficients.dtype());
 
   // Integer responses are converted the same way.
   const auto counts = pluss::make_series(std::vector<std::int64_t>{1, 2, 3, 4, 5, 6, 7, 9}, {8}, pluss::Config{}.with_dtype(pluss::ScalarType::Int64));
   const auto int_fit = reg::ols_fit(counts, pluss::make_series(xs, {8}, as_f64()));
-  out.writeln("Int64 response coefficients", int_fit.coefficients.pull<double>());
+  out.writeln("Int64 response coefficients", int_fit.coefficients.items<double>());
 }
 ```
 
@@ -170,3 +170,16 @@ int main() {
 ```
 
 Each message begins with the qualified name of the function that raised it and then states the problem, so a failure inside a larger program points at the call that caused it.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_first_fit_checked_by_hand.html">
+    <span class="label">Previous</span>
+    <span class="title">A first fit, checked by hand</span>
+  </a>
+  <a class="next-link" href="several_predictors.html">
+    <span class="label">Next</span>
+    <span class="title">Several predictors</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

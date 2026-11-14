@@ -1,0 +1,44 @@
+# Reports from timestamps
+
+[Back to Timeline and Duration by example](../timeline.md)
+
+Three operational reports built from nothing but instants and the lengths between them: a support desk measured against its promise, subscription renewals with a fair refund, and a service's availability from its heartbeats. Each is one complete program using only `Timeline`, `Duration` and `Series`.
+
+## The mental model
+
+Every report here follows one pattern. Take two `Timeline`s, subtract them to get a `Duration` per row, compare the `Duration` with a limit to get a Boolean `Series`, and convert the `Duration` to numbers (`host()` gives nanoseconds) when you need statistics. Calendar questions (which weekday, which hour, which month end) are asked of the `Timeline` itself, and calendar moves (`add_months`) are kept apart from elapsed lengths (`duration::days`) because they disagree exactly where the money is.
+
+## A support desk against its promise
+
+Eight tickets with opening and closing times. The program computes the time each took, counts those that broke a 24-hour promise, summarises the typical and worst case, and looks at when trouble arrives.
+
+@@example timeline/ticket_sla.cpp@@
+
+`closed - opened` is a `Duration` per ticket, and comparing it with `duration::hours(24)` flags three breaches out of eight. In hours the tickets took `1.75` to `58.8`. The mean is `20.0` hours but the median is `5.25`: a few slow tickets pull the mean far from what a typical customer sees, which is why a service-level report quotes a median and a high percentile (the 90th is `47.4`), not a mean alone. Calendar fields answer the other questions: weekday 0 is Monday, the mean time by weekday shows Wednesday and Friday tickets are the slow ones, and the last line flags the two tickets opened at 22:00 and 08:00, outside the 09:00 to 17:00 desk hours. Weekdays with no tickets, Saturday and Sunday here, come back as `nan`, not zero.
+
+## Subscription renewals and refunds
+
+Customers who started on the 31st, the 30th and the 15th of a month, and a second group who started in September. The program renews them monthly, shows why a calendar rule beats adding thirty days, and prorates a refund.
+
+@@example timeline/subscription_renewals.cpp@@
+
+`add_months` is a calendar rule: a plan that started on 31 January renews on `Sat 28 Feb` and then on `Tue 31 Mar`, clamping to the end of a short month without drifting. Adding thirty days gives `Mon 02 Mar` for the same customer and would keep the customer at the wrong day of the month forever. The second group shows ageing and proration: as of 10 December the three customers have `20`, `16` and `5` days left in their paid period, each period is exactly 30 days long, and the unused share of a price of `30` is therefore `20`, `16` and `5`. The same lines work when the periods differ in length, because the proration divides one `Duration` by another instead of assuming a month. The last block flags the renewals an operations team cares about: the first customer's second renewal falls on a month end and the second customer's next charge lands on a Saturday.
+
+## Availability from heartbeats
+
+A service reports in about once a minute. The program finds the gaps between heartbeats, flags those longer than two expected beats as outages, ranks them and computes availability over the window.
+
+@@example timeline/heartbeat_gaps.cpp@@
+
+The gap before each heartbeat is the difference between neighbouring instants, which the program gets by building the `Timeline` twice, shifted by one place, and subtracting: a `Duration` per pair. Most gaps are one minute; three are not, `5`, `7` and `5` minutes. Comparing the `Duration` with `duration::minutes(2)` flags exactly those three, the worst began at 08:13 and lasted seven minutes, and the outages total 17 minutes of silence. The availability counts, for each outage, the minutes beyond the one beat that was expected anyway: 14 minutes down in a 35-minute window is `60 %`. How you define "down" is a policy choice; the code makes it a single line you can change.
+
+## Decisions
+
+- **Duration against a limit:** compare `Duration`s with `duration::hours(...)` or `duration::minutes(...)`; do not convert to numbers to compare.
+- **Statistics:** convert to numbers with `host()` only when you need them, and quote medians and percentiles for waiting times.
+- **Renewal rules:** `add_months` for "the same day next month", `duration::days` for "thirty days of terms"; they differ at month ends.
+- **Gaps:** shift the axis by one and subtract; do not loop.
+
+## Where next
+
+Reference pages: [`from_ymdhms`](../../sphinx/api/timeline/from_ymdhms.md), [`weekday`](../../sphinx/api/timeline/weekday.md), [`hour`](../../sphinx/api/timeline/hour.md), [`add_months`](../../sphinx/api/timeline/add_months.md), [`is_month_end`](../../sphinx/api/timeline/is_month_end.md), [`is_weekend`](../../sphinx/api/timeline/is_weekend.md), [`strftime`](../../sphinx/api/timeline/strftime.md), [`operators`](../../sphinx/api/timeline/operators.md), [`hours`](../../sphinx/api/duration/hours.md), [`minutes`](../../sphinx/api/duration/minutes.md), [`gt`](../../sphinx/api/duration/gt.md), [`host`](../../sphinx/api/duration/host.md). Back to [Timeline and Duration by example](../timeline.md).

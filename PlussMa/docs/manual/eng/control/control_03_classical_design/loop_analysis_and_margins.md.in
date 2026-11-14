@@ -1,0 +1,346 @@
+# Loop analysis and margins
+
+[Back to Control 3: Classical Design](../control_03_classical_design.md)
+
+A feedback loop that is stable on paper can be one small change away from oscillating. The **margins** say how far: how much extra gain, or how much extra delay, the loop can take before it goes unstable. `control::loop` computes the loop transfer function and the sensitivity functions that govern disturbance rejection and noise, and `control::margin` reads the gain margin, the phase margin and the minimum distance to instability from the frequency response. This page works through a plant with a known answer, tunes a PID against its margins, and treats discrete loops.
+
+## The mental model
+
+Put a controller `C` and a plant `P` in a unity-feedback loop. The **loop transfer function** is `L = C P`. Three functions of `L` matter:
+
+| Function | Formula | Meaning |
+|---|---|---|
+| `L` | `C P` | the open loop; its Nyquist curve decides stability |
+| `S` | `1 / (1 + L)` | sensitivity: how much a disturbance at the plant output is passed on; small is good at low frequency |
+| `T` | `L / (1 + L)` | complementary sensitivity: how well the output follows the reference, and how much sensor noise reaches the output |
+
+They satisfy `S + T = 1` at every frequency. The margins measure how near the Nyquist curve of `L` passes to the critical point `-1`:
+
+- The **gain margin** is the factor by which the loop gain could grow before instability: `1 / |L|` at the frequency where the phase of `L` is `-180` degrees. It is returned as a ratio (`8` means the gain can grow eightfold), and is infinite when the phase never reaches `-180`.
+- The **phase margin** is how far, in degrees, the phase of `L` is above `-180` where `|L| = 1`. A phase margin near 60 degrees gives a well-damped loop; one below 30 is nearly oscillatory. It is infinite when `|L|` never reaches 1.
+- The **stability margin** is the smallest distance from the curve `L(jw)` to `-1`. It is the one number that fails safe: a small value means a fragile loop however the individual margins look.
+
+`loop(system, omega)` returns a `LoopResult` with `response` (`L`), `sens` (`S`) and `comp` (`T`). `margin` returns a `MarginResult` with `gain`, `phase` (degrees), `stability`, and the frequencies at which each is attained: `gain_freq`, `phase_freq` and `stability_freq`. Crossings are interpolated between adjacent frequency samples, so a fine grid is not needed, but the grid must span the crossing. Both accept a `StateSpace`, a `PoleZero` or (for `margin`) the frequency response itself.
+
+## A plant with a known answer
+
+The open loop `L(s) = 1 / (s (s + 1))` is a motor with an integrator behind a lag. Its gain crosses 1 where `w^4 + w^2 = 1`, at `w = 0.786`, and the phase there is `-90 - arctan(0.786)`, a phase margin of `180 - 90 - 38.17 = 51.83` degrees. The phase tends to `-180` only as `w` grows, so the gain margin is infinite. The program computes the margins on a grid of 2000 frequencies and prints the hand values beside them.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto motor = lti::zpk(pluss::series::zeros({0}, f64), vec({0.0, -1.0}), pluss::series::make(std::vector<double>{1.0}));
+  const pluss::Series omega = pluss::series::linspace(0.01, 10.0, 2000, f64);
+
+  const auto margins = ctl::margin(motor, omega);
+  const double crossover = std::sqrt((-1.0 + std::sqrt(5.0)) / 2.0);
+  out.writeln("phase margin     ", margins.phase.reshape({1}).items<double>(), " at w =", margins.phase_freq.reshape({1}).items<double>());
+  out.writeln("hand             ", 90.0 - std::atan(crossover) * 180.0 / M_PI, " at w =", crossover);
+  out.writeln("gain margin      ", margins.gain.reshape({1}).items<double>(), "(infinite: the phase never reaches -180)");
+  out.writeln("stability margin ", margins.stability.reshape({1}).items<double>(), " at w =", margins.stability_freq.reshape({1}).items<double>());
+}
+```
+
+The phase margin `51.827` degrees at `w = 0.78616` matches the hand value to the grid resolution. The stability margin, `0.681`, is the closest the curve comes to `-1`, at `w = 1.169`.
+
+## A finite gain margin
+
+`L(s) = 1 / (s + 1)^3` has phase `-180` at `w = sqrt(3)`, where `|L| = 1/8`, so the gain can be raised eightfold: a gain margin of `8` (18 dB). Its gain never reaches 1 except at `w = 0` (`L(0) = 1`), so the phase margin is infinite. The program also evaluates the sensitivity functions of the earlier motor at three frequencies and verifies `S + T = 1`.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const pluss::Series omega = pluss::series::linspace(0.01, 10.0, 2000, f64);
+  const pluss::Series one = pluss::series::make(std::vector<double>{1.0});
+  const pluss::Series none = pluss::series::zeros({0}, f64);
+
+  const auto cubic = lti::zpk(none, vec({-1.0, -1.0, -1.0}), one);
+  const auto margins = ctl::margin(cubic, omega);
+  out.writeln("1 / (s + 1)^3: gain margin", margins.gain.reshape({1}).items<double>(), " at w =", margins.gain_freq.reshape({1}).items<double>(), " hand: 8 at", std::sqrt(3.0));
+  out.writeln("               phase margin", margins.phase.reshape({1}).items<double>(), "(infinite)");
+
+  const auto motor = lti::zpk(none, vec({0.0, -1.0}), one);
+  const auto shapes = ctl::loop(motor, vec({0.1, 1.0, 10.0}));
+  out.writeln("|L|", shapes.response.abs().items<double>());
+  out.writeln("|S|", shapes.sens.abs().items<double>());
+  out.writeln("|T|", shapes.comp.abs().items<double>());
+  out.writeln("largest |S + T - 1|:", (shapes.sens + shapes.comp - 1.0).abs().max().item<double>());
+}
+```
+
+At `w = 0.1` the loop gain is large (`9.95`), so the sensitivity is small (`0.101`): the loop rejects slow disturbances. At `w = 10` the gain is small (`0.00995`), `S` is close to 1 (disturbances pass through) and `T` is small (`0.01`): sensor noise at that frequency is rejected. Near `w = 1` both are above 1, the peak that is the price of the roll-off.
+
+## A model, or measured data
+
+`margin` accepts a `StateSpace` or a `PoleZero` and evaluates its frequency response itself, or the response as data (a complex vector) with the matching frequency vector. The last form is the one for a loop you measured. The program computes the motor's margin from the state-space matrices, then from a precomputed response, and the results agree.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto motor = lti::state(matrix({0, 1, 0, -1}, 2, 2), matrix({0, 1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1));
+  const pluss::Series omega = pluss::series::linspace(0.01, 10.0, 2000, f64);
+
+  out.writeln("from the state-space model:", ctl::margin(motor, omega).phase.reshape({1}).items<double>());
+  const pluss::Series data = lti::freqresp(motor, omega).reshape({2000});
+  out.writeln("from the response data    :", ctl::margin(data, omega).phase.reshape({1}).items<double>());
+}
+```
+
+## Tuning a PI controller against the margins
+
+The plant `P = 1 / (s + 1)` with the PI controller `C = Kp + Ki / s` has the loop `L = (Kp s + Ki) / (s (s + 1))`. When `Ki = Kp` the controller's zero cancels the plant's pole and `L = Kp / s`: a pure integrator with the crossover at `w = Kp` and a phase margin of exactly 90 degrees. The program forms `L = C P` from the controller's response (`freqresp`) and the plant's, and prints the phase margin and crossover for `Kp = 2` and three values of `Ki`. Too little integral action (`Ki = 0.5`) leaves a phase margin above 90; the cancelling value gives exactly 90; more integral action (`Ki = 8`) eats the margin.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::zpk(pluss::series::zeros({0}, f64), vec({-1.0}), pluss::series::make(std::vector<double>{1.0}));
+  const pluss::Series omega = pluss::series::linspace(0.01, 100.0, 20000, f64);
+  const pluss::Series plant_response = lti::freqresp(plant, omega);
+
+  out.writeln("Kp = 2    Ki     phase margin   crossover");
+  for (const double ki : {0.5, 2.0, 8.0}) {
+    const auto controller = ctl::pid(vec({2.0}), vec({ki}), vec({0.0}), vec({0.0}));
+    const pluss::Series loop_response = ctl::freqresp(controller, omega).reshape({20000}) * plant_response;
+    const auto margins = ctl::margin(loop_response, omega);
+    out.writeln("         ", ki, margins.phase.reshape({1}).items<double>(), margins.phase_freq.reshape({1}).items<double>());
+  }
+}
+```
+
+With `Ki = 2` the margin is `90.0000` degrees at `w = 2.0000`, the exact values for the cancelling design. With `Ki = 0.5` it is `111.56`, with `Ki = 8` only `55.67`, and the crossover moves out from `1.76` to `3.10`.
+
+## Adding a derivative term
+
+The plant `1 / (s + 1)^2` with a proportional controller `Kp = 4` has `|L| = 4 / (1 + w^2)`, which is 1 at `w = sqrt(3)`; the phase there is `-2 arctan(sqrt(3)) = -120`, a margin of exactly 60 degrees. Adding a derivative term with a small filter increases the phase near the crossover and the margin rises. The program prints the margins without and with `Kd = 1` (filter `0.05`).
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto plant = lti::zpk(pluss::series::zeros({0}, f64), vec({-1.0, -1.0}), pluss::series::make(std::vector<double>{1.0}));
+  const pluss::Series omega = pluss::series::linspace(0.01, 100.0, 20000, f64);
+  const pluss::Series plant_response = lti::freqresp(plant, omega);
+
+  out.writeln("Kp = 4    Kd     phase margin   crossover");
+  for (const double kd : {0.0, 1.0}) {
+    const auto controller = ctl::pid(vec({4.0}), vec({0.0}), vec({kd}), vec({0.05}));
+    const auto margins = ctl::margin(ctl::freqresp(controller, omega).reshape({20000}) * plant_response, omega);
+    out.writeln("         ", kd, margins.phase.reshape({1}).items<double>(), margins.phase_freq.reshape({1}).items<double>());
+  }
+}
+```
+
+The derivative term raises the margin from `60` to `79.9` degrees and moves the crossover from `1.73` to `1.89`.
+
+## A discrete loop
+
+For a discrete loop the frequency grid runs up to the Nyquist frequency `pi / T`. The program takes `L(z) = 0.8 / (z (z - 0.5))` with `T = 1`, which has an interior phase crossing, and computes all three margins.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto loop = lti::zpk(pluss::series::zeros({0}, f64), vec({0.0, 0.5}), pluss::series::make(std::vector<double>{0.8}), 1.0);
+  const pluss::Series omega = pluss::series::linspace(0.001, M_PI, 4000, f64);
+
+  const auto margins = ctl::margin(loop, omega);
+  out.writeln("gain margin ", margins.gain.reshape({1}).items<double>(), " at w =", margins.gain_freq.reshape({1}).items<double>());
+  out.writeln("phase margin", margins.phase.reshape({1}).items<double>(), " at w =", margins.phase_freq.reshape({1}).items<double>());
+  out.writeln("stability margin", margins.stability.reshape({1}).items<double>());
+}
+```
+
+The loop can take 25 percent more gain (`1.25`) before instability, and the phase margin is `45.5` degrees. The crossings are in radians per sample: `0.9147` for the gain crossover.
+
+## Errors
+
+`margin` needs a frequency grid with at least two points, and the frequency response must match it. `loop` needs a non-empty grid. The program shows the messages.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto motor = lti::zpk(pluss::series::zeros({0}, f64), vec({0.0, -1.0}), pluss::series::make(std::vector<double>{1.0}));
+  report([&] { (void)ctl::margin(motor, vec({1.0})); });
+  report([&] { (void)ctl::loop(motor, pluss::series::zeros({0}, f64)); });
+}
+```
+
+## Decisions
+
+- **Rules of thumb for acceptable margins:** a phase margin of 45 to 60 degrees, a gain margin of at least 2 (6 dB), and a stability margin above `0.5`.
+- **A loop you have modelled:** pass the model to `margin`. **A loop you have measured:** pass the response data.
+- **Tuning:** change one parameter, recompute `margin`, and look at the phase margin, the crossover (its speed) and the stability margin together.
+- **Choosing the grid:** span the decade or two on each side of the crossover; for a discrete loop, go up to `pi / T`.
+
+## Pitfalls
+
+The program makes four mistakes with margins: reading an infinite margin from a grid that stops too soon, taking the margins of the plant instead of the open loop, trusting one margin as a measure of robustness, and forgetting that a delay costs phase.
+
+@@run@@
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static double one(const pluss::Series &s) { return s.reshape({1}).items<double>()[0]; }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto none = pluss::series::zeros({0}, f64);
+  const auto unit = vec({1.0});
+
+  // 1. a grid that misses the crossing reports no margin: 1 / (s + 1)^3 crosses -180 degrees at w = sqrt(3)
+  const auto cubic = lti::zpk(none, vec({-1.0, -1.0, -1.0}), unit);
+  out.writeln("gain margin on a grid up to 1:  ", one(ctl::margin(cubic, pluss::series::linspace(0.01, 1.0, 400, f64)).gain), "   up to 10: ", one(ctl::margin(cubic, pluss::series::linspace(0.01, 10.0, 2000, f64)).gain), "   (exact 8)");
+
+  // 2. the margins are of the open loop: a proportional controller of 2 around the same plant
+  const pluss::Series omega = pluss::series::linspace(0.01, 10.0, 2000, f64);
+  const auto controller = ctl::pid(vec({2.0}), vec({0.0}), vec({0.0}), vec({0.0}));
+  const pluss::Series open_loop = ctl::freqresp(controller, omega).reshape({2000}) * lti::freqresp(cubic, omega).reshape({2000});
+  out.writeln("margin of the plant alone: ", one(ctl::margin(cubic, omega).gain), "   of the open loop C P: ", one(ctl::margin(open_loop, omega).gain), "   (8 / 2 = 4)");
+
+  // 3. one margin is not robustness: infinite phase margin, and a Nyquist curve that comes close to -1
+  const Complex j(0.0, 1.0);
+  const auto resonant = lti::zpk(none, pluss::series::make(std::vector<Complex>{Complex(-0.5, 9.987), Complex(-0.5, -9.987), Complex(-2.0, 0.0)}), pluss::series::make(std::vector<double>{0.3 * 100.25 * 2.0}));
+  const auto m = ctl::margin(resonant, pluss::series::linspace(0.01, 50.0, 20000, f64));
+  out.writeln("gain margin ", one(m.gain), ", phase margin ", one(m.phase), " degrees, stability margin ", one(m.stability), " at w = ", one(m.stability_freq));
+
+  // 4. delay subtracts w d radians of phase: the motor loop 1 / (s (s + 1)) tolerates a delay of pm / wc
+  const auto motor = lti::zpk(none, vec({0.0, -1.0}), unit);
+  const auto base = ctl::margin(motor, omega);
+  const double tolerated = one(base.phase) * M_PI / 180.0 / one(base.phase_freq);
+  out.writeln("phase margin ", one(base.phase), " degrees at ", one(base.phase_freq), " rad/s: tolerated delay ", tolerated);
+  for (const double delay : {0.5 * tolerated, tolerated, 1.5 * tolerated}) {
+    std::vector<Complex> lagged;
+    const auto response = lti::freqresp(motor, omega).reshape({2000}).items<Complex>();
+    const auto frequencies = omega.items<double>();
+    for (std::size_t i = 0; i < response.size(); ++i) lagged.push_back(response[i] * std::exp(-j * frequencies[i] * delay));
+    const auto margin = ctl::margin(pluss::make_series(lagged, {2000}), omega);
+    out.writeln("with a delay of ", delay, ": phase margin ", one(margin.phase), " degrees");
+  }
+}
+```
+
+For `1 / (s + 1)^3` the phase reaches `-180` degrees at `w = sqrt(3) = 1.73`. On a grid that ends at `1` there is no crossing and the gain margin is reported as `inf`; on a grid up to `10` it is `8.0001`, the exact `8` to the grid resolution. The margins are those of the open loop: the plant alone has `8.0001`, but with a proportional controller of `2` in the loop the gain margin is `4.0000`, so multiply the responses before asking. A single margin is not a measure of robustness: the third loop has an infinite phase margin, since its gain never reaches `1`, and still a gain margin of only `1.7621`, and its Nyquist curve passes `0.4251` from `-1`, at `w = 10.056`; read `stability` next to the other two. A delay `d` takes `w d` radians off the phase at every frequency and nothing off the gain, so the motor loop, with `51.8275` degrees at `0.7862` rad/s, tolerates `1.1506` seconds: with half of that the margin is `25.9140` degrees, with all of it `0.0006` and with half as much again `-25.9128`.
+
+Reference: [`zpk`](../../../../api/eng/lti/response/zpk.md), [`margin`](../../../../api/eng/control/loop/margin.md), [`loop`](../../../../api/eng/control/loop/loop.md), [`state`](../../../../api/eng/lti/state/state.md), [`freqresp`](../../../../api/eng/lti/response/freqresp.md), [`pid`](../../../../api/eng/control/controllers/pid.md), [`freqresp`](../../../../api/eng/control/controllers/freqresp.md).
+
+Where next: the [control reference](../../../../api/eng/control.md) lists every call used in these chapters.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pid_controllers.html">
+    <span class="label">Previous</span>
+    <span class="title">PID controllers</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

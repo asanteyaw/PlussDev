@@ -18,7 +18,7 @@ The differential-velocity swarm combines the two population ideas. A particle's 
 ## Parameters
 
 `Fn &&objective`
-: A callable `Series -> Series` (real scalar) or `Series -> number`.
+: A callable `Series (Series)` (real scalar) or `Series -> number`.
 
 `const pluss::Series &initial`
 : The starting point.

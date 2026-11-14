@@ -8,3 +8,12 @@ Pass `±infinity` as a limit. `quadra` rewrites the integral on a finite interva
 @@example Numerical/integration/guide/611_infinite_domains.cpp@@
 
 Complex integrands work the same way: the real and imaginary parts are integrated together.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="batches_and_derivatives.html">
+    <span class="label">Next</span>
+    <span class="title">Batches and derivatives</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

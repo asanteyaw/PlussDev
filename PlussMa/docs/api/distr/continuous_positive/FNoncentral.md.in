@@ -174,3 +174,16 @@ Read down the rows: `lambda 0.5` peaks on this grid at x = 0.5 (value 0.6209); `
 
 - [`F`](../continuous_positive/F.md)
 - [`ChiSquareNoncentral`](../continuous_positive/ChiSquareNoncentral.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="F.html">
+    <span class="label">Previous</span>
+    <span class="title">F</span>
+  </a>
+  <a class="next-link" href="Gamma.html">
+    <span class="label">Next</span>
+    <span class="title">Gamma</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

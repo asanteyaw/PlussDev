@@ -152,3 +152,20 @@ int main() {
 ## See Also
 
 - [`MvGarch`](MvGarch.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="MvGarch.html">
+    <span class="label">Previous</span>
+    <span class="title">MvGarch</span>
+  </a>
+  <a class="next-link" href="MvGarchOptions.html">
+    <span class="label">Next</span>
+    <span class="title">MvGarchOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
+
+<!-- apiref:toctree:start -->
+
+<!-- apiref:toctree:end -->

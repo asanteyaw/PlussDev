@@ -33,4 +33,10 @@ The two methods also differ in which optimal point they return when the optimum 
 - A sweep of a weight is a way to find the breakpoints at which the best plan changes.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+linprog_03_methods_warm_starts_and_sweeps/methods_warm_starts_and_sweeps
+```
 <!-- apiref:toctree:end -->

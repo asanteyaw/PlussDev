@@ -83,16 +83,16 @@ int main() {
   const std::vector<double> params = {2.5, 4.0};
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "pdf:";
-  for (double v : distr::pdf(dst::Beta, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Beta, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "cdf:";
-  for (double v : distr::cdf(dst::Beta, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::cdf(dst::Beta, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "logpdf:";
-  for (double v : distr::logpdf(dst::Beta, x, params).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::logpdf(dst::Beta, x, params).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -132,7 +132,7 @@ int main() {
   const double area = as_f64(distr::pdf(dst::Beta, grid, params).antidiff(grid).trapezoid());
 
   const auto edges = pluss::make_series({0.1, 0.7}, f64);
-  const auto c = distr::cdf(dst::Beta, edges, params).pull<double>();
+  const auto c = distr::cdf(dst::Beta, edges, params).items<double>();
 
   const auto draws = distr::sample(dst::Beta, params, {200000}, f64, 7ULL);
   const double fraction = as_f64(((draws >= 0.1).to(pluss::ScalarType::Float64) * (draws <= 0.7).to(pluss::ScalarType::Float64)).mean());
@@ -173,19 +173,19 @@ int main() {
   const auto x = pluss::make_series({0.05, 0.2, 0.4, 0.6, 0.8, 0.95}, f64);
 
   std::cout << "x:";
-  for (double v : x.pull<double>()) std::cout << ' ' << v;
+  for (double v : x.items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "a 2, b 2  :";
-  for (double v : distr::pdf(dst::Beta, x, {2.0, 2.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Beta, x, {2.0, 2.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "a 2, b 5  :";
-  for (double v : distr::pdf(dst::Beta, x, {2.0, 5.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Beta, x, {2.0, 5.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "a 5, b 2  :";
-  for (double v : distr::pdf(dst::Beta, x, {5.0, 2.0}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Beta, x, {5.0, 2.0}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
   std::cout << "a 0.7, b 0.7:";
-  for (double v : distr::pdf(dst::Beta, x, {0.7, 0.7}).pull<double>()) std::cout << ' ' << v;
+  for (double v : distr::pdf(dst::Beta, x, {0.7, 0.7}).items<double>()) std::cout << ' ' << v;
   std::cout << '\n';
 }
 ```
@@ -247,3 +247,16 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`Triangular`](../continuous_bounded/Triangular.md)
 - [`Binomial`](../discrete/Binomial.md)
 - [`distr::Beta`](../object_based/Beta.md) -- the object form
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Arcsin.html">
+    <span class="label">Previous</span>
+    <span class="title">Arcsin</span>
+  </a>
+  <a class="next-link" href="Bradford.html">
+    <span class="label">Next</span>
+    <span class="title">Bradford</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

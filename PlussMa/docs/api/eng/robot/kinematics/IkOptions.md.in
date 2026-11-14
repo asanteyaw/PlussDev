@@ -1,0 +1,67 @@
+# `robot::IkOptions`
+
+Controls of the inverse-kinematics iteration.
+
+## Signature
+
+```cpp
+robot::IkOptions
+```
+
+## What It Does
+
+Sets when the damped least-squares iteration of `ik` stops and how it takes its steps.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `max_iterations` | The largest number of iterations, at least `1`. | `100` |
+| `tolerance` | The iteration stops when the largest error norm over the batch is below `tolerance` (metres, with the orientation error in the same units). | `1e-8` |
+| `damping` | The starting Levenberg damping `lambda`, positive. A step solves `(J J^T + lambda^2 I) y = e` and moves the joints by `J^T y`; the damping is then halved after an accepted step and quadrupled after a rejected one, per target, so a larger value only starts the iteration more cautiously. | `1e-3` |
+| `orientation_weight` | The weight of the orientation error against the position error when a target rotation is given; `0` ignores the orientation. | `1` |
+| `lower` | The lower joint limit of each link, a real floating vector with one value per link, in the units of the joints (radians or metres). The iteration never goes below it; undefined means no lower limit. | undefined |
+| `upper` | The upper joint limit of each link, in the same form. The iteration never goes above it; undefined means no upper limit. | undefined |
+
+## Returns
+
+A value; read by `ik`.
+
+## Errors
+
+`ik` throws `pluss::Error` for `max_iterations` below `1`, a non-positive or non-finite `tolerance` or `damping`, a negative or non-finite `orientation_weight`, joint limits that are not real floating vectors with one value per link, or a lower limit above its upper limit.
+
+## Interpretation and Use
+
+Convergence is quadratic near a solution with the default damping, so tightening the tolerance adds an iteration or two. Steps that do not reduce the error are rejected, so the error never grows. Joint limits are applied to every step: a target that the limits exclude is not reached, and `converged` is false.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Damping, tolerance and orientation weight against the iterations used.
+
+@@example Eng/api/robot_ik_options.cpp@@
+
+### Example 2
+
+A target that cannot be reached.
+
+@@example Eng/api/robot_ik_unreachable.cpp@@
+
+### Example 3
+
+Joint limits.
+
+@@example Eng/api/robot_ik_limits.cpp@@
+
+### Example 4
+
+Rejected controls.
+
+@@example Eng/api/robot_ik_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

@@ -115,3 +115,16 @@ rows 7, columns 2
 
 - [`build_lag_plan`](build_lag_plan.md)
 - [`DirectForecaster`](DirectForecaster.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="build_lag_plan.html">
+    <span class="label">Previous</span>
+    <span class="title">build_lag_plan</span>
+  </a>
+  <a class="next-link" href="DirectCVForecaster.html">
+    <span class="label">Next</span>
+    <span class="title">DirectCVForecaster</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

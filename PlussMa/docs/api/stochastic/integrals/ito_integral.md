@@ -25,10 +25,10 @@ Both forms validate the path and report the realised quadratic variation.
 ## Parameters
 
 `const sde::WienerIntegrandFn &f`
-: `(double t, const Series &w) -> Series`, read at the start of each step; shaped like the batch.
+: `Series (double t, const Series &w)`, read at the start of each step; shaped like the batch.
 
 `const sde::SampledIntegrandFn &make`
-: `(const Series &path) -> Series`: the integrand at every sample; checked for adaptedness.
+: `Series (const Series &path)`: the integrand at every sample; checked for adaptedness.
 
 `const sde::WienerPath &path`
 : The path to integrate along.

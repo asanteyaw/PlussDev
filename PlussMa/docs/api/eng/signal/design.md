@@ -26,8 +26,8 @@ Design three fourth-order digital low-pass systems, inspect stability, and conve
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace lti = pluss::ma::eng::lti;
-namespace sig = pluss::ma::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -69,8 +69,8 @@ Compare band-pass and band-stop responses and construct a continuous-time analog
 #include <cmath>
 #include <optional>
 
-namespace lti = pluss::ma::eng::lti;
-namespace sig = pluss::ma::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {
@@ -115,7 +115,7 @@ Demonstrate rejected Nyquist cutoffs, invalid Chebyshev ripple, and a scalar cut
 #include <exception>
 #include <string>
 
-namespace sig = pluss::ma::eng::signal;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {

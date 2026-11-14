@@ -106,8 +106,7 @@ try {
 ### Output
 
 ```text
-true
-DataFrame::labels().map: structured labels are not supported; map a label part instead
+true DataFrame::labels().map: structured labels are not supported; map a label part instead
 ```
 
 `labeled`'s case labels came from `set("region")`, which always creates a

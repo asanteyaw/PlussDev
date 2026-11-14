@@ -1,0 +1,70 @@
+# `fluid::Net`
+
+The description of a pipe network.
+
+## Signature
+
+```cpp
+fluid::Net
+```
+
+## What It Does
+
+Collects the arrays that describe a network: the nodes, the tanks, the pipes, the pumps and the valves. `network` validates it and compiles it into an immutable `Network`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `nodes` | A `Nodes`: kinds, elevations, demands, heads and emitters. | required |
+| `tanks` | A `Tanks`: area, level limits and overflow. | empty (no tanks) |
+| `pipes` | A `Pipes`: ends, dimensions, roughness and minor losses. | empty (no pipes) |
+| `pumps` | A `Pumps`: ends, curves and speeds. | empty (no pumps) |
+| `valves` | A `Valves`: kinds, bores, losses and settings. | empty (no valves) |
+
+## Returns
+
+A value; compiled by `network`.
+
+## Errors
+
+Every inconsistency of the groups is reported by `network`: see the individual groups.
+
+## Interpretation and Use
+
+Every array ends in its node, pipe, pump, valve or tank axis, and may carry leading scenario axes. Arrays that carry them must agree on those axes, and an array without them is shared by every scenario. All arrays must share one precision, `Float32` or `Float64`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A reservoir and a junction.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 2
+
+Three demand scenarios in one call.
+
+@@example Eng/api/fluid_net_batch.cpp@@
+
+### Example 3
+
+Descriptions that are refused.
+
+@@example Eng/api/fluid_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Valves.html">
+    <span class="label">Previous</span>
+    <span class="title">Valves</span>
+  </a>
+  <a class="next-link" href="Liquid.html">
+    <span class="label">Next</span>
+    <span class="title">Liquid</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

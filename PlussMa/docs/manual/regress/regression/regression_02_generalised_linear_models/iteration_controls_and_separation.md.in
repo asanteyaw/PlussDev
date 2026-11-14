@@ -35,7 +35,7 @@ int main() {
     options.family = reg::GLMFamily::Binomial;
     options.max_iter = limit;
     const auto fit = reg::glm_fit(passed, hours, options);
-    out.writeln("max_iter", limit, " iterations", fit.iterations, " converged", fit.converged, " coefficients", fit.coefficients.pull<double>(), " warnings", fit.warnings.size());
+    out.writeln("max_iter", limit, " iterations", fit.iterations, " converged", fit.converged, " coefficients", fit.coefficients.items<double>(), " warnings", fit.warnings.size());
   }
 }
 ```
@@ -65,7 +65,7 @@ int main() {
     options.family = reg::GLMFamily::Binomial;
     options.tol = tol;
     const auto fit = reg::glm_fit(passed, hours, options);
-    out.writeln("tol", label, " iterations", fit.iterations, " converged", fit.converged, " coefficients", fit.coefficients.pull<double>());
+    out.writeln("tol", label, " iterations", fit.iterations, " converged", fit.converged, " coefficients", fit.coefficients.items<double>());
   }
 }
 ```
@@ -95,8 +95,8 @@ int main() {
 
   auto report = [&](const char *label, const std::vector<double> &outcome) {
     const auto fit = reg::glm_fit(pluss::make_series(outcome, {10}, as_f64()), hours, options);
-    out.writeln(label, "converged", fit.converged, " iterations", fit.iterations, " coefficients", fit.coefficients.pull<double>());
-    out.writeln("      deviance", fit.deviance, " std errors", fit.std_errors.pull<double>(), " warnings", fit.warnings.size());
+    out.writeln(label, "converged", fit.converged, " iterations", fit.iterations, " coefficients", fit.coefficients.items<double>());
+    out.writeln("      deviance", fit.deviance, " std errors", fit.std_errors.items<double>(), " warnings", fit.warnings.size());
   };
   report("perfectly separated   :", {0, 0, 0, 0, 0, 1, 1, 1, 1, 1});
   report("one overlapping point :", {0, 0, 0, 0, 1, 0, 1, 1, 1, 1});
@@ -106,7 +106,7 @@ int main() {
     reg::GLMOptions more = options;
     more.max_iter = limit;
     const auto fit = reg::glm_fit(pluss::make_series(std::vector<double>{0, 0, 0, 0, 0, 1, 1, 1, 1, 1}, {10}, as_f64()), hours, more);
-    out.writeln("separated, max_iter", limit, " slope", fit.coefficients.pull<double>()[1], " converged", fit.converged);
+    out.writeln("separated, max_iter", limit, " slope", fit.coefficients.items<double>()[1], " converged", fit.converged);
   }
 }
 ```
@@ -114,3 +114,16 @@ int main() {
 The separated data end at 200 iterations with `converged` false, coefficients of −513.6 and 186.8, a deviance of zero at the digits shown, and standard errors of 68,313 and 22,019: nonsense that is the signature of separation. With one overlapping point the fit converges in 8 iterations to finite coefficients (−7.159 and 2.603) with a deviance of 5.02 and standard errors of 4.76 and 1.68. The last four lines show the slope of the separated fit growing with every extra iteration allowed (67.5, 95.9, 186.8, 671.6) and never settling.
 
 There is nothing to fix in the iteration. The data are telling you that the predictor is a perfect classifier, and the fitted odds ratio is not a number the data can estimate. Report the separation, collect more data near the boundary, or use fewer or coarser predictors.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_normal_family_and_least_squares.html">
+    <span class="label">Previous</span>
+    <span class="title">The normal family and least squares</span>
+  </a>
+  <a class="next-link" href="deviance_and_model_comparison.html">
+    <span class="label">Next</span>
+    <span class="title">Deviance and model comparison</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

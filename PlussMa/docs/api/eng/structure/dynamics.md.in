@@ -28,21 +28,6 @@ A frequency sweep.
 
 @@example Eng/api/structure_harmonic.cpp@@
 
-```{toctree}
-:maxdepth: 2
-:hidden:
-
-dynamics/MotionState
-dynamics/MotionOptions
-dynamics/NonlinearMotionOptions
-dynamics/HarmonicOptions
-dynamics/MotionResult
-dynamics/NonlinearMotionResult
-dynamics/HarmonicResult
-dynamics/motion
-dynamics/harmonic
-```
-
 <!-- apiref:toctree:start -->
 ```{toctree}
 :maxdepth: 2

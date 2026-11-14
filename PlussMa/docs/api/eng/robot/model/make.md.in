@@ -1,0 +1,55 @@
+# `robot::make`
+
+Validates a robot description and compiles it.
+
+## Signature
+
+```cpp
+robot::Robot robot::make(const robot::Links& links);
+```
+
+## What It Does
+
+Checks a `Links` description and compiles the constant transforms (unit axes and the fixed joint-frame rotations) once, so that every analysis reuses them.
+
+## Parameters
+
+`links`
+: The description of the robot.
+
+## Returns
+
+An immutable `robot::Robot`.
+
+## Errors
+
+Throws `pluss::Error` for a description with no links, an inconsistent length or shape, a bad parent, joint kind, axis, mass or inertia, or values of mixed dtype or platform. The message names the offending field.
+
+## Interpretation and Use
+
+Validation happens here once; the analyses only check their own arguments. A robot without `mass` compiles and supports kinematics.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A planar arm compiled.
+
+@@example Eng/api/robot_make_arm.cpp@@
+
+### Example 2
+
+A tree compiled.
+
+@@example Eng/api/robot_make_tree.cpp@@
+
+### Example 3
+
+Rejected descriptions.
+
+@@example Eng/api/robot_make_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

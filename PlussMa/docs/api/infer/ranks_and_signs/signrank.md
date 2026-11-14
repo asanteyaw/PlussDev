@@ -148,5 +148,18 @@ One of the eight values equals the hypothesised median 5.5 and is dropped; the o
 ## See Also
 
 - [`signtest`](signtest.md)
-- [`ttest_paired`](ttest_paired.md)
+- [`ttest_paired`](../means_and_variances/ttest_paired.md)
 - [`ranksum`](ranksum.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ranksum.html">
+    <span class="label">Previous</span>
+    <span class="title">ranksum</span>
+  </a>
+  <a class="next-link" href="signtest.html">
+    <span class="label">Next</span>
+    <span class="title">signtest</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

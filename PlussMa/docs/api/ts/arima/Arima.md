@@ -415,3 +415,12 @@ a two-observation series is rejected
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="ArimaFit.html">
+    <span class="label">Next</span>
+    <span class="title">ArimaFit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

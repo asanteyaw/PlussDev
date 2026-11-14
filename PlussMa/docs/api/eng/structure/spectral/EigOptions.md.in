@@ -17,7 +17,7 @@ Controls for `modes` and `buckling`, which find the lowest few eigenpairs of a f
 | Field | Meaning | Default |
 |---|---|---|
 | `count` | How many modes to find, at most the number of free degrees of freedom. | `1` |
-| `max_iterations` | Iterations allowed to the eigen search. | `64` |
+| `max_iterations` | Iterations allowed to the subspace search. A pair that has not reached its tolerance within it is flagged in `converged`. | `64` |
 | `relative_tolerance` | Relative convergence tolerance of each pair. | `1e-8` |
 | `absolute_tolerance` | Absolute convergence tolerance. | `1e-10` |
 | `solve` | Conjugate-gradient controls of the inner stiffness solves (budget 8192, relative tolerance `1e-10`). |  |
@@ -46,11 +46,17 @@ Count, tolerance and iteration budget on a cantilever.
 
 ### Example 2
 
+The absolute tolerance on its own.
+
+@@example Eng/api/structure_dynamic_controls.cpp@@
+
+### Example 3
+
 Four end conditions of a column with default options.
 
 @@example Eng/api/structure_buckling_cases.cpp@@
 
-### Example 3
+### Example 4
 
 Rejected counts.
 

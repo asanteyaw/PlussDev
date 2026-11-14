@@ -6,7 +6,7 @@
 
 A Septima call returns one result object, and learning to read it is the difference between trusting a run and checking it. The result holds the answer (`params`, one `Series` per block, in the order you gave them), the objective at the answer, two different gradient norms (the gradient of the objective alone and the *stationarity* of the constrained problem, which is the number actually compared with the tolerance), the size of the last step, the worst constraint violation, and the cost (iterations and function evaluations).
 
-The page also shows how a run can end: five exit flags, each produced on purpose, so you know what each looks like and what it promises. And it shows the progress hook, a function called after every iteration with a snapshot of the run, which returns `true` to continue and `false` to stop; it is the tool for logging, for stopping at a target, and for watching a long run.
+The page also shows how a run can end: five exit flags, each produced on purpose, so you know what each looks like and what it promises. And it shows the progress hook, a function called after every iteration with a snapshot of the run, which returns `true` to stop the run and `false` to keep going, exactly as in `optima`; it is the tool for logging, for stopping at a target, and for watching a long run.
 
 ## Program 4: Reading the result
 
@@ -115,8 +115,8 @@ int main() {
   {
     optim::SeptimaSolveOptions o;
     o.step.adam.learning_rate = 0.1;
-    o.progress_hook = [](const optim::SeptimaProgressSnapshot& s) { return s.iteration < 7; };  // true keeps going
-    row("a hook that returns false at 7", optim::septima(quadratic, vec({0.0, 0.0}), o));
+    o.progress_hook = [](const optim::SeptimaProgressSnapshot& s) { return s.iteration >= 7; };  // true stops
+    row("a hook that returns true at 7", optim::septima(quadratic, vec({0.0, 0.0}), o));
   }
   {
     optim::SeptimaSolveOptions o;  // a learning rate so small that nothing changes within the tolerances
@@ -159,7 +159,7 @@ Output
 ```text
 L-BFGS on a quadratic                   Converged            iterations 3     converged
 Adam with its default settings          MaxIterations        iterations 200   max iterations reached
-a hook that returns false at 7          Stopped              iterations 7     stopped by progress hook
+a hook that returns true at 7           Stopped              iterations 7     stopped by progress hook
 a learning rate of 1e-18                NoProgress           iterations 6     no progress
 a step into log's undefined region      NonFiniteEvaluation  iterations 20    objective became non-finite
 
@@ -171,7 +171,7 @@ Invalid settings throw:
 |---|---|---|
 | `Converged` | gradient, step and violation are all within tolerance | L-BFGS on a quadratic, in 3 iterations |
 | `MaxIterations` | the budget ran out first | Adam with its defaults, 200 iterations |
-| `Stopped` | the progress hook returned `false` | a hook that stops at iteration 7 |
+| `Stopped` | the progress hook returned `true` | a hook that stops at iteration 7 |
 | `NoProgress` | the objective and the step stopped changing before the tolerances were met | a learning rate of 1e-18, after 6 iterations |
 | `NonFiniteEvaluation` | the objective or its gradient became NaN or infinite | a step of size 100 into the region where `log` is undefined |
 
@@ -179,7 +179,7 @@ Invalid settings throw:
 
 ## Program 6: Watching a run
 
-The progress hook is called after every iteration with a snapshot (iteration, function evaluations, objective, gradient, stationarity, step, violation, message). It returns `true` to keep going and `false` to stop with `Stopped`. This program prints every 150th iteration of an Adam run on the Rosenbrock valley with a learning rate of 0.05 and records when the objective first fell below 0.01.
+The progress hook is called after every iteration with a snapshot (iteration, function evaluations, objective, gradient, stationarity, step, violation, message). It returns `true` to stop with `Stopped` and `false` to keep going. This program prints every 150th iteration of an Adam run on the Rosenbrock valley with a learning rate of 0.05 and records when the objective first fell below 0.01.
 
 ```cpp
 #include <pluss/ma.h>
@@ -206,7 +206,7 @@ int main() {
       std::cout << std::setw(6) << s.iteration << std::scientific << std::setprecision(3) << "  objective " << s.objective << "  gradient "
                 << s.gradient_inf_norm << "  step " << s.step_inf_norm << "\n";
     if (first_below == 0 && s.objective < 0.01) first_below = s.iteration;
-    return true;
+    return false;
   };
   const auto r = optim::septima(rosenbrock, optim::pack_scalars({{"x", scalar(-1.2)}, {"y", scalar(1.0)}}), options);
   std::cout << "the objective first fell below 0.01 at iteration " << first_below << "; the run used " << r.iteration << " iterations\n";
@@ -279,15 +279,11 @@ iter 55  objective 2.993e-01  gradient 1.674e+00  step 3.243e-03
 iter 60  objective 2.653e-01  gradient 3.139e+00  step 3.728e-02
 iter 65  objective 3.881e-02  gradient 2.623e-01  step 1.578e-01
 iter 70  objective 5.086e-03  gradient 7.959e-02  step 3.376e-02
-iter 75  objective 5.146e-06  gradient 6.019e-02  step 2.913e-03
-iter 80  objective 5.507e-11  gradient 2.546e-04  step 0.000e+00
-iter 85  objective 5.507e-11  gradient 2.546e-04  step 0.000e+00
-iter 90  objective 5.507e-11  gradient 2.546e-04  step 0.000e+00
-iter 95  objective 5.507e-11  gradient 2.546e-04  step 0.000e+00
-iter 100  objective 5.507e-11  gradient 2.546e-04  step 0.000e+00
-finished after 102 iterations: NoProgress
+iter 75  objective 5.145e-06  gradient 6.019e-02  step 2.913e-03
+iter 80  objective 1.645e-20  gradient 3.161e-09  step 2.036e-10
+finished after 81 iterations: Converged
 ```
-The objective falls from 24.2 at the first iteration to 4.5 by iteration 5 and 1.0 by iteration 40, then drops quickly as the iterates reach the floor of the valley: 0.0051 at iteration 70, 5.1e-6 at iteration 75 and 5.5e-11 at iteration 80. After that the objective, the gradient (2.5e-4) and the step (zero) stop changing: the step has shrunk to zero, and the run ends at iteration 102 with the exit flag `NoProgress`, not `Converged`. This is what the report is for: the gradient entry is still 2.5e-4, above the default tolerance, so a run that looks finished by its objective is stopped by lack of progress rather than by the optimality test, and the iteration at which the lines stop changing tells you when.
+The objective falls from 24.2 at the first iteration to 4.5 by iteration 5 and 1.0 by iteration 40, then drops quickly as the iterates reach the floor of the valley: 0.0051 at iteration 70, 5.1e-6 at iteration 75 and 1.6e-20 at iteration 80, where the gradient is 3.2e-9 and the step 2e-10. Those are within every tolerance, so the run ends at iteration 81 with `Converged`. This is what the report is for: the gradient and step columns show the approach to the answer, and the iteration at which they collapse tells you when the valley was found.
 
 ## Decisions and pitfalls
 
@@ -297,3 +293,12 @@ The objective falls from 24.2 at the first iteration to 4.5 by iteration 5 and 1
 - **A hook can be used to act, not only to look.** It can stop at a target value, log to a file or adjust something outside the solver; keep it cheap, since it runs every iteration.
 
 Where next: [Chapter 2](../septima_02_constraints.md) adds bounds, equalities and inequalities.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="first_problems.html">
+    <span class="label">Previous</span>
+    <span class="title">First problems with Septima</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

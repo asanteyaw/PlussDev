@@ -236,3 +236,16 @@ The two largest differences are 0 for the density and 0 for the distribution fun
 - [`Rayleigh`](../continuous_positive/Rayleigh.md)
 - [`ChiSquare`](../continuous_positive/ChiSquare.md)
 - [`Gamma`](../continuous_positive/Gamma.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Lomax.html">
+    <span class="label">Previous</span>
+    <span class="title">Lomax</span>
+  </a>
+  <a class="next-link" href="Nakagami.html">
+    <span class="label">Next</span>
+    <span class="title">Nakagami</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

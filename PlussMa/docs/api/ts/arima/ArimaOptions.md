@@ -37,3 +37,16 @@ Choose the orders from the autocorrelation and partial autocorrelation functions
 - [`Arima`](Arima.md)
 - [`ArimaFit`](ArimaFit.md)
 - [`SarimaOptions`](SarimaOptions.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ArimaFit.html">
+    <span class="label">Previous</span>
+    <span class="title">ArimaFit</span>
+  </a>
+  <a class="next-link" href="Sarima.html">
+    <span class="label">Next</span>
+    <span class="title">Sarima</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -98,3 +98,16 @@ int main() {
 
 - [`log_returns`](log_returns.md)
 - [`diff`](diff.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="resample.html">
+    <span class="label">Previous</span>
+    <span class="title">resample</span>
+  </a>
+  <a class="next-link" href="rolling_max.html">
+    <span class="label">Next</span>
+    <span class="title">rolling_max</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

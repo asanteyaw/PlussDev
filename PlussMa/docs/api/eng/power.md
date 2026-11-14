@@ -10,6 +10,11 @@ Transmission networks described in per unit, compiled into an immutable grid, an
 |---|---|
 | Describe a network, convert units and compile a grid | [Network model](power/model.md) |
 | DC and AC power flow | [Power flow](power/flow.md) |
+| Power transfer and line outage distribution factors | [Sensitivity and outage factors](power/security.md) |
+| Least-cost generation, with and without security | [Economic dispatch](power/dispatch.md) |
+| Exact AC least-cost operation | [Optimal power flow](power/opf.md) |
+| Voltages from noisy measurements | [State estimation](power/estimation.md) |
+| Voltage collapse and loading margin | [Continuation power flow](power/continuation.md) |
 
 ## Practical Examples
 
@@ -26,7 +31,7 @@ Compile a two-bus network and compare its admittance matrix with a hand value.
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -73,7 +78,7 @@ Solve a ring with the DC power flow against hand values.
 #include <cmath>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -128,7 +133,7 @@ Solve a three-bus network with the AC power flow and check it against its defini
 #include <complex>
 
 using namespace pluss::tils;
-namespace power = pluss::ma::eng::power;
+namespace power = pluss::subsp::eng::power;
 
 static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
 static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
@@ -194,13 +199,6 @@ bus 2: reported -0.50000 + -0.20000j    V conj(Y V) = -0.50000 + -0.20000j
 largest difference: 0.00000
 active losses from the line ends: 0.00314   sum of the injections: 0.00314
 ```
-```{toctree}
-:maxdepth: 3
-:hidden:
-
-power/model
-power/flow
-```
 
 <!-- apiref:toctree:start -->
 ```{toctree}
@@ -209,5 +207,10 @@ power/flow
 
 power/model
 power/flow
+power/security
+power/dispatch
+power/opf
+power/estimation
+power/continuation
 ```
 <!-- apiref:toctree:end -->

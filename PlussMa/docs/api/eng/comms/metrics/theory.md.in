@@ -1,0 +1,64 @@
+# `comms::theory`
+
+The theoretical bit error probability.
+
+## Signature
+
+```cpp
+pluss::Series comms::theory(const comms::Constellation& constellation, const pluss::Series& ebn0_db);
+```
+
+## What It Does
+
+Evaluates the bit error probability of Gray-coded coherent detection in white Gaussian noise: `Q(sqrt(2 Eb/N0))` for BPSK and QPSK (exact), `(2 / k) Q(sqrt(2 k Eb/N0) sin(pi / M))` for higher-order PSK, and `(4 / k) (1 - 1 / sqrt(M)) Q(sqrt(3 k Eb/N0 / (M - 1)))` for square QAM, where `k` is the bits per symbol and `M` the order.
+
+## Parameters
+
+`constellation`
+: The constellation.
+
+`ebn0_db`
+: Eb/N0 in decibels, a real floating array of any shape.
+
+## Returns
+
+A real array of the shape of `ebn0_db`.
+
+## Errors
+
+Throws `pluss::Error` for a constellation not made by `psk` or `qam` or an `ebn0_db` that is not a real floating array.
+
+## Interpretation and Use
+
+The higher-order formulas are the nearest-neighbour approximation, accurate when the error rate is small, a few percent in the range the examples simulate. Use it as the reference line of a simulation.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Simulation against theory.
+
+@@example Eng/api/comms_theory_table.cpp@@
+
+### Example 2
+
+A waterfall in one call.
+
+@@example Eng/api/comms_theory_curve.cpp@@
+
+### Example 3
+
+Phase shift keying of increasing order.
+
+@@example Eng/api/comms_theory_psk.cpp@@
+
+### Example 4
+
+Rejected arguments.
+
+@@example Eng/api/comms_theory_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

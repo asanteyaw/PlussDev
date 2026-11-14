@@ -35,7 +35,7 @@ resolve.
 
 Behaviour:
 
-- `Q(a, 0) = 1` and `Q(a, x) -> 0` as `x -> inf`; monotone decreasing in `x`.
+- `Q(a, 0) = 1` and `0 Q(a, x)` as `x -> inf`; monotone decreasing in `x`.
 - `P(a, x) + Q(a, x) = 1`.
 - Defined for `a > 0` and `x >= 0`; `NaN` outside.
 

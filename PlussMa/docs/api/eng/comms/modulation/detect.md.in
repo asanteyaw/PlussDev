@@ -1,0 +1,58 @@
+# `comms::detect`
+
+Nearest-point symbol decisions.
+
+## Signature
+
+```cpp
+pluss::Series comms::detect(const comms::Constellation& constellation, const pluss::Series& received);
+```
+
+## What It Does
+
+Returns, for every received symbol, the label of the constellation point at the smallest Euclidean distance. This is the maximum-likelihood decision in white Gaussian noise when the symbols are equally likely.
+
+## Parameters
+
+`constellation`
+: The constellation the symbols were sent from.
+
+`received`
+: The received complex symbols, a `[..., N]` array.
+
+## Returns
+
+An `Int64` array of labels with the shape of `received`.
+
+## Errors
+
+Throws `pluss::Error` for a constellation not made by `psk` or `qam` or an undefined or scalar `received`.
+
+## Interpretation and Use
+
+The call builds a `[..., N, order]` array of distances, so very large blocks of high-order constellations are worth splitting into frames. Compare with the sent labels using `ser`.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Noisy decisions and a far-out symbol.
+
+@@example Eng/api/comms_detect_noisy.cpp@@
+
+### Example 2
+
+A batch of 8-PSK frames.
+
+@@example Eng/api/comms_detect_batch.cpp@@
+
+### Example 3
+
+Symbol and bit error rates.
+
+@@example Eng/api/comms_ser_basic.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

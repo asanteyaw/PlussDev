@@ -40,7 +40,7 @@ void Catalog::save_streams(std::string_view directory, std::string_view store_ki
   const auto& names = this->keys();
   for (std::size_t i = 0; i < names.size(); ++i) {
     const Stream s = at(names[i]);
-    const auto file = fmt::format("stream_{:06d}{}", i, ext);
+    const auto file = pluss::tils::OutputEngine::format("stream_{:06d}{}", i, ext);
     std::vector<std::pair<std::string, pluss::table::Slate>> cols;
     if (kind != "parquet") {
       // A single column with a null renders as a blank line, which text readers
@@ -90,7 +90,7 @@ Catalog Catalog::load_streams(std::string_view directory) {
                 "Catalog::load_streams: missing stream file '" + path.string() + "' for key '" + key + "'");
     auto frame = pluss::table::DataFrame::load(store, path.string());
     PLUSS_CHECK(frame.ncases() == expected,
-                fmt::format("Catalog::load_streams: '{}' has {} records, manifest says {}", key,
+                pluss::tils::OutputEngine::format("Catalog::load_streams: '{}' has {} records, manifest says {}", key,
                             frame.ncases(), expected));
     std::optional<pluss::table::Slate> label;
     if (labeled) label = frame.features(kStreamLabel);

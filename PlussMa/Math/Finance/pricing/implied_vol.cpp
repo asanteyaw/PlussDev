@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace pluss::subsp::math::finance::pricing {
+using namespace detail;
 namespace {
 
 using pluss::Config;
@@ -414,7 +415,7 @@ Series implied_vol_series_(OptionType type,
 
 } // namespace
 
-double implied_vol(OptionType type,
+double detail::implied_vol(OptionType type,
                    double option_price,
                    double spot,
                    double strike,
@@ -425,7 +426,7 @@ double implied_vol(OptionType type,
   return implied_vol_scalar_(type, option_price, spot, strike, rate, dividend_yield, maturity, options);
 }
 
-Series implied_vol(OptionType type,
+Series detail::implied_vol(OptionType type,
                    const Series& option_price,
                    const Series& spot,
                    double strike,
@@ -440,7 +441,7 @@ Series implied_vol(OptionType type,
   return implied_vol_series_(type, option_price, s, tau, strike, rate, dividend_yield, options, out_cfg);
 }
 
-Series implied_vol(OptionType type,
+Series detail::implied_vol(OptionType type,
                    const Series& option_price,
                    const Series& spot,
                    const Series& time_to_maturity,

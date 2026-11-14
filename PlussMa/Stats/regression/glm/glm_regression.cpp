@@ -602,6 +602,7 @@ std::string glm_summary(const GLMFitResult& fit) {
 }
 
 std::ostream& print_glm_summary(std::ostream& os, const GLMFitResult& fit) {
+  PLUSS_CHECK(fit.coefficients.defined(), "subsp::stats::regression::print_glm_summary: fit.coefficients is undefined");
   auto row = [&](const std::string& l1, const std::string& v1, const std::string& l2, const std::string& v2) {
     os << std::left << std::setw(18) << l1 << std::right << std::setw(22) << v1
        << "   "

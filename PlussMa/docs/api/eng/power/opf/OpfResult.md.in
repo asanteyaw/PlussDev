@@ -1,0 +1,83 @@
+# `power::OpfResult`
+
+Optimal generation, voltages, flows, prices and diagnostics.
+
+## Signature
+
+```cpp
+power::OpfResult
+```
+
+## What It Does
+
+The result of `opf`. Arrays keep the leading scenario axes of the grid.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `generation_p` | The optimal active output of each generator, `[..., generator]`. |  |
+| `generation_q` | The optimal reactive output, `[..., generator]`. |  |
+| `voltage` | Complex bus voltages, `[..., bus]`. |  |
+| `magnitude` | Voltage magnitudes, `[..., bus]`. |  |
+| `angle` | Voltage angles in radians, `[..., bus]`. |  |
+| `injection` | Complex net injection at each bus, `[..., bus]`. |  |
+| `from_power` | Complex power entering each line at its sending end, `[..., line]`. |  |
+| `to_power` | Complex power entering each line at its receiving end, `[..., line]`. |  |
+| `objective` | The optimal cost, `[...]`. |  |
+| `p_price` | The multiplier of the active power balance at each bus: the cost of one more per-unit of demand there, `[..., bus]`. |  |
+| `q_price` | The multiplier of the reactive power balance, `[..., bus]`. |  |
+| `from_shadow` | The multiplier of the sending-end rating, `[..., line]`; nonzero only for a binding rating. |  |
+| `to_shadow` | The multiplier of the receiving-end rating. |  |
+| `converged` | True when the optimiser met both tolerances. |  |
+| `iterations` | Iterations used. |  |
+| `constraint_violation` | The largest violation of the constraints at the returned point. |  |
+| `first_order_optimality` | The first-order optimality measure. |  |
+| `message` | A description of why the optimiser stopped. |  |
+
+## Returns
+
+Returned by `opf`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+The objective of an unconverged result is the cost of the least-violating point, not an optimum. At an optimum every unconstrained generator runs where its marginal cost equals the price of power at its bus.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field checked against an independent solver and the optimality condition.
+
+@@example Eng/api/power_opf_ring.cpp@@
+
+### Example 2
+
+Rating multipliers when a line rating binds.
+
+@@example Eng/api/power_opf_limits.cpp@@
+
+### Example 3
+
+An unconverged result.
+
+@@example Eng/api/power_opf_options.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OpfOptions.html">
+    <span class="label">Previous</span>
+    <span class="title">OpfOptions</span>
+  </a>
+  <a class="next-link" href="opf.html">
+    <span class="label">Next</span>
+    <span class="title">opf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

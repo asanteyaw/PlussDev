@@ -1,0 +1,68 @@
+# `fluid::Liquid`
+
+Density, viscosity and gravity of the fluid.
+
+## Signature
+
+```cpp
+fluid::Liquid
+```
+
+## What It Does
+
+Gives the physical constants of the liquid: its density, which turns heads into pressures, its kinematic viscosity, which sets the Reynolds number and so the friction factor, and the gravity of the head-loss laws. The defaults are water at 20 °C.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `density` | kg/m³. | 998.2 |
+| `kinematic_viscosity` | m²/s. | 1.0038e-6 |
+| `gravity` | m/s². | 9.80665 |
+
+## Returns
+
+A value; passed to `network`.
+
+## Errors
+
+Values that are not finite and positive are rejected by `network`.
+
+## Interpretation and Use
+
+The heads and flows of a network depend on the liquid only through the viscosity; the pressures depend on the density as well. A hot liquid has a lower viscosity and a lower density: its head loss is smaller and a given head is a lower pressure.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Water at two temperatures and an oil.
+
+@@example Eng/api/fluid_liquid.cpp@@
+
+### Example 2
+
+The liquid of a compiled network.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 3
+
+The liquid of a thermal run.
+
+@@example Eng/api/fluid_heat_pipe.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Net.html">
+    <span class="label">Previous</span>
+    <span class="title">Net</span>
+  </a>
+  <a class="next-link" href="Network.html">
+    <span class="label">Next</span>
+    <span class="title">Network</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -45,11 +45,17 @@ A generator on a voltage-controlled bus.
 
 ### Example 2
 
+A generator taken out of service with `active`.
+
+@@example Eng/api/power_gens_shunt_shift.cpp@@
+
+### Example 3
+
 Generator-off-grid validation.
 
 @@example Eng/api/power_net_errors.cpp@@
 
-### Example 3
+### Example 4
 
 Generation moved from the slack to a generator in the DC flow.
 

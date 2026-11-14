@@ -8,9 +8,9 @@
 #include <string>
 #include <utility>
 
-#include <fmt/format.h>
 
 #include "table/display/Display.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::table {
 
@@ -43,12 +43,12 @@ std::string Slate::info_string() const {
 
   std::string out;
   out += "Slate Info\n";
-  out += fmt::format("Name: {}\n", named() ? name() : "<unnamed>");
-  out += fmt::format("Kind: {}\n", kind_name);
-  out += fmt::format("Dtype: {}\n", dtype());
-  out += fmt::format("Cases: {}\n", size());
-  out += fmt::format("Non-Null Cases: {}\n", non_null);
-  out += fmt::format("Null Cases: {}", null_count);
+  out += pluss::tils::OutputEngine::format("Name: {}\n", named() ? name() : "<unnamed>");
+  out += pluss::tils::OutputEngine::format("Kind: {}\n", kind_name);
+  out += pluss::tils::OutputEngine::format("Dtype: {}\n", dtype());
+  out += pluss::tils::OutputEngine::format("Cases: {}\n", size());
+  out += pluss::tils::OutputEngine::format("Non-Null Cases: {}\n", non_null);
+  out += pluss::tils::OutputEngine::format("Null Cases: {}", null_count);
   return out;
 }
 

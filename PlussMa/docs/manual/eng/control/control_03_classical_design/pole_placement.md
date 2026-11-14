@@ -1,0 +1,445 @@
+<!-- generated from pole_placement.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Pole placement
+
+[Back to Control 3: Classical Design](../control_03_classical_design.md)
+
+Sometimes you know how you want the closed loop to behave: a response that settles in a given time, with a given damping. That specification is a set of **poles**. `control::place` finds the state-feedback gain `K` that puts the eigenvalues of `A - B K` exactly where you ask. It is the direct counterpart of the optimal design on the previous pages: LQR chooses the poles by minimising a cost, `place` takes them from you.
+
+## The mental model
+
+With the law `u = -K x` the closed loop is `x' = (A - B K) x`, and its poles are the eigenvalues of `A - B K`. A plant that is **controllable** (see [controllability](../../lti/lti_01_models_and_analysis/controllability_and_gramians.md)) can have all of them moved to any positions, with the condition that complex poles of a real plant come in conjugate pairs. The poles you give are the closed-loop poles, one per state.
+
+For a single input the gain is unique. With several inputs there are many gains that place the same poles, and `place` chooses one that leaves the closed-loop eigenvectors as well conditioned as it can, which makes the poles insensitive to small errors in the model. The call is `place(A, B, poles)` or `place(system, poles)`, and it returns a `PlaceResult`:
+
+| Member | Meaning |
+|---|---|
+| `gain` | the matrix `K` |
+| `closed_loop` | `A - B K` |
+| `basis` | the matrix `V` of closed-loop eigenvectors the algorithm chose; `A - B K = V diag(poles) V^-1` |
+| `residual` | the relative error in `(A - B K) V = V diag(poles)`, a measure of how exactly the poles were placed; it is zero to rounding for a sound design |
+| `condition` | the condition number of `V`; the larger it is, the more a small error in `A` or `B` moves the poles |
+| `sweeps` | the number of conditioning sweeps completed (only with more than one input, where there is freedom to improve `V`) |
+
+`PlaceOptions` holds the limits:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `sweeps` | 5 | how many sweeps to spend improving the conditioning of `V` when there are several inputs; `0` skips them |
+| `tolerance` | `1e-10` | the tolerance for the numerical ranks of `B` and of the controllability matrix; must be positive |
+| `condition_limit` | `1e12` | the largest `condition` accepted; a basis worse than this is refused as ill-conditioned |
+
+## A double integrator
+
+The mass driven by a force, `x1' = x2`, `x2' = u`, has `A = [[0, 1], [0, 0]]`, `B = [[0], [1]]`. The closed loop is `s^2 + K2 s + K1`, so placing the poles at `-1 +- j` (the polynomial `s^2 + 2 s + 2`) requires `K = [2, 2]`. The program asks for those poles and prints the result members.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series poles = pluss::make_series(std::vector<Complex>{{-1.0, 1.0}, {-1.0, -1.0}}, {2});
+  const auto result = ctl::place(matrix({0, 1, 0, 0}, 2, 2), matrix({0, 1}, 2, 1), poles);
+
+  out.writeln("K            ", result.gain.reshape({2}).items<double>());
+  out.writeln("A - B K      ", result.closed_loop.reshape({4}).items<double>());
+  out.writeln("residual     ", result.residual.reshape({result.residual.numel()}).items<double>());
+  out.writeln("condition    ", result.condition.reshape({result.condition.numel()}).items<double>());
+  out.writeln("sweeps       ", result.sweeps, " basis shape", result.basis.sizes());
+}
+```
+
+Output
+
+```text
+K             [2.000000, 2.000000]
+A - B K       [0.000000, 1.000000, -2.000000, -2.000000]
+residual      [0.000000]
+condition     [2.618034]
+sweeps        0  basis shape [2, 2]
+```
+
+The gain is `[2, 2]` and the closed-loop matrix `[[0, 1], [-2, -2]]` has the characteristic polynomial `s^2 + 2 s + 2`, as the hand calculation says. The residual is zero: the poles are exactly the requested ones.
+
+## Three states
+
+A chain of three integrators has `A = [[0,1,0],[0,0,1],[0,0,0]]` and `B = [0, 0, 1]^T`. The closed-loop polynomial is `s^3 + K3 s^2 + K2 s + K1`, so poles at `-1, -2, -3`, which give `(s + 1)(s + 2)(s + 3) = s^3 + 6 s^2 + 11 s + 6`, need `K = [6, 11, 6]`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series poles = pluss::make_series(std::vector<Complex>{{-1.0, 0.0}, {-2.0, 0.0}, {-3.0, 0.0}}, {3});
+  const auto result = ctl::place(matrix({0, 1, 0, 0, 0, 1, 0, 0, 0}, 3, 3), matrix({0, 0, 1}, 3, 1), poles);
+  out.writeln("K", result.gain.reshape({3}).items<double>(), " expected [6, 11, 6]");
+  out.writeln("residual", result.residual.reshape({result.residual.numel()}).items<double>());
+}
+```
+
+Output
+
+```text
+K [6.000000, 11.000000, 6.000000]  expected [6, 11, 6]
+residual [0.000000]
+```
+
+## The price of speed
+
+Faster poles need larger gains, and the gain grows quickly. For the double integrator, poles at `-a +- j a` give `s^2 + 2 a s + 2 a^2`, so `K = [2 a^2, 2 a]`. The program places the poles at `a = 1, 5, 20` and prints the gain: poles twenty times faster (`a = 1` to `a = 20`) cost four hundred times the position gain (`2` to `800`). Large gains amplify measurement noise and call for large control effort, which is why LQR's trade-off is often preferable to a bare pole choice.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(3));
+  out.writeln("  a      gain K            condition");
+  for (const double a : {1.0, 5.0, 20.0}) {
+    const pluss::Series poles = pluss::make_series(std::vector<Complex>{{-a, a}, {-a, -a}}, {2});
+    const auto result = ctl::place(matrix({0, 1, 0, 0}, 2, 2), matrix({0, 1}, 2, 1), poles);
+    out.writeln(a, result.gain.reshape({2}).items<double>(), result.condition.reshape({result.condition.numel()}).items<double>());
+  }
+}
+```
+
+Output
+
+```text
+  a      gain K            condition
+1.000 [2.000, 2.000] [2.618]
+5.000 [50.000, 10.000] [10.101]
+20.000 [800.000, 40.000] [40.025]
+```
+
+## Several inputs
+
+With two independent inputs, `B = I` for the double integrator written as `x' = A x + u`, there are many gains that place the same poles. The program places the poles at `-2` and `-3`; `place` returns a gain with the closed loop `diag(-2, -3)`, whose eigenvectors are the orthogonal unit vectors, the best-conditioned choice. The gain has one row per input.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series a = matrix({0, 1, 0, 0}, 2, 2);
+  const pluss::Series b = matrix({1, 0, 0, 1}, 2, 2);
+
+  const auto distinct = ctl::place(a, b, pluss::make_series(std::vector<Complex>{{-2.0, 0.0}, {-3.0, 0.0}}, {2}));
+  out.writeln("K shape", distinct.gain.sizes(), " K", distinct.gain.reshape({4}).items<double>());
+  out.writeln("A - B K", distinct.closed_loop.reshape({4}).items<double>());
+
+  const auto repeated = ctl::place(a, b, pluss::make_series(std::vector<Complex>{{-2.0, 0.0}, {-2.0, 0.0}}, {2}));
+  out.writeln("a repeated pole at -2 (two inputs allow it): A - B K", repeated.closed_loop.reshape({4}).items<double>());
+}
+```
+
+Output
+
+```text
+K shape [2, 2]  K [2.000000, 1.000000, 0.000000, 3.000000]
+A - B K [-2.000000, 0.000000, 0.000000, -3.000000]
+a repeated pole at -2 (two inputs allow it): A - B K [-2.000000, 0.000000, 0.000000, -2.000000]
+```
+
+A pole can be repeated only as many times as there are independent inputs. With two inputs, two poles at `-2` are possible, and the closed loop becomes `-2 I`; the next program shows that one input cannot do it.
+
+## The options
+
+The options matter when there are several inputs. The program places three poles of a three-state plant with two inputs, with `sweeps` set to 0, 1 and 5, then shows the refusals: a `condition_limit` that the basis cannot meet, a negative `sweeps`, and a zero `tolerance`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const pluss::Series a = matrix({0, 1, 0, 0, 0, 1, 1, -2, 0.5}, 3, 3);
+  const pluss::Series b = matrix({0, 0, 1, 0, 0, 1}, 3, 2);
+  const pluss::Series poles = pluss::make_series(std::vector<Complex>{{-1, 0}, {-2, 0}, {-3, 0}}, {3});
+
+  for (const long sweeps : {0L, 1L, 5L}) {
+    ctl::PlaceOptions options;
+    options.sweeps = sweeps;
+    const auto result = ctl::place(a, b, poles, options);
+    out.writeln("sweeps", sweeps, " completed", result.sweeps, " condition", result.condition.reshape({1}).items<double>(), " K", result.gain.reshape({6}).items<double>());
+  }
+
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  ctl::PlaceOptions strict;
+  strict.condition_limit = 2.0;
+  ctl::PlaceOptions negative;
+  negative.sweeps = -1;
+  ctl::PlaceOptions zero;
+  zero.tolerance = 0.0;
+  report([&] { (void)ctl::place(a, b, poles, strict); });
+  report([&] { (void)ctl::place(a, b, poles, negative); });
+  report([&] { (void)ctl::place(a, b, poles, zero); });
+}
+```
+
+Output
+
+```text
+sweeps 0  completed 0  condition [4.236068]  K [3.000000, 4.000000, 1.000000, 1.000000, -2.000000, 2.500000]
+sweeps 1  completed 1  condition [4.236068]  K [3.000000, 4.000000, 1.000000, 1.000000, -2.000000, 2.500000]
+sweeps 5  completed 5  condition [4.236068]  K [3.000000, 4.000000, 1.000000, 1.000000, -2.000000, 2.500000]
+eng::control::place: the assigned eigenvector basis is ill-conditioned
+eng::control::place: sweeps must be non-negative
+eng::control::place: tolerance must be finite and positive
+```
+
+This plant's basis is already well conditioned (`4.236`), so the gain is the same for 0, 1 and 5 sweeps and the count of completed sweeps simply follows the option. The sweeps pay off on plants whose first basis is poor. A `condition_limit` of `2` is below what is possible, so the call is refused with the message about ill-conditioning.
+
+## A model, and a discrete plant
+
+`place(system, poles)` takes a `StateSpace` and uses its `A` and `B`. For a discrete plant the poles are inside the unit circle. The program places a sampled double integrator (`T = 0.1`, `A = [[1, 0.1], [0, 1]]`, `B = [0.005, 0.1]^T`) at `0.8 +- 0.1 j`. The closed-loop trace is `2 * 0.8 = 1.6` and the determinant is `0.8^2 + 0.1^2 = 0.65`, so the program checks both.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(6));
+  const auto plant = lti::state(matrix({1, 0.1, 0, 1}, 2, 2), matrix({0.005, 0.1}, 2, 1), matrix({1, 0}, 1, 2), matrix({0}, 1, 1), 0.1);
+  const pluss::Series poles = pluss::make_series(std::vector<Complex>{{0.8, 0.1}, {0.8, -0.1}}, {2});
+  const auto result = ctl::place(plant, poles);
+  const pluss::Series m = result.closed_loop;
+  const double trace = (m.select(0, 0).select(0, 0) + m.select(0, 1).select(0, 1)).squeeze().item<double>();
+  const double det = (m.select(0, 0).select(0, 0) * m.select(0, 1).select(0, 1) - m.select(0, 0).select(0, 1) * m.select(0, 1).select(0, 0)).squeeze().item<double>();
+  out.writeln("K", result.gain.reshape({2}).items<double>());
+  out.writeln("trace of A - B K", trace, " expected 1.6; determinant", det, " expected 0.65");
+}
+```
+
+Output
+
+```text
+K [5.000000, 3.750000]
+trace of A - B K 1.600000  expected 1.6; determinant 0.650000  expected 0.65
+```
+
+## Errors
+
+The program shows a repeated pole that the inputs cannot support, complex poles that are not a conjugate pair, an uncontrollable plant, and the wrong number of poles.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <complex>
+
+using namespace pluss::tils;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+
+int main() {
+  OutputEngine out;
+  const auto report = [&](const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(text);
+    }
+  };
+  const pluss::Series a = matrix({0, 1, 0, 0}, 2, 2);
+  const pluss::Series b = matrix({0, 1}, 2, 1);
+  report([&] { (void)ctl::place(a, b, pluss::make_series(std::vector<Complex>{{-2.0, 0.0}, {-2.0, 0.0}}, {2})); });
+  report([&] { (void)ctl::place(a, b, pluss::make_series(std::vector<Complex>{{-1.0, 1.0}, {-2.0, 0.0}}, {2})); });
+  report([&] { (void)ctl::place(matrix({1, 0, 0, 2}, 2, 2), matrix({1, 0}, 2, 1), pluss::make_series(std::vector<Complex>{{-2.0, 0.0}, {-3.0, 0.0}}, {2})); });
+  report([&] { (void)ctl::place(a, b, pluss::make_series(std::vector<Complex>{{-2.0, 0.0}}, {1})); });
+}
+```
+
+Output
+
+```text
+eng::control::place: pole multiplicity exceeds input rank
+eng::control::place: complex poles for a real system must appear in conjugate pairs
+eng::control::place: (A, B) must be controllable
+eng::control::place: poles must be a vector with one value per state
+```
+
+## Decisions
+
+- **You have a response specification (settling time, damping):** `place`, choosing the poles from it. For a second-order response with natural frequency `w` and damping `z`, the poles are `-z w +- j w sqrt(1 - z^2)`.
+- **You have a cost to trade off:** [LQR](../control_01_optimal_feedback/riccati_equations_and_lqr.md), which chooses the poles for you.
+- **Several inputs:** `place` uses the extra freedom to condition the eigenvectors; check `condition` in the result.
+
+## Pitfalls
+
+The program makes four mistakes with pole placement: pushing the poles very far left, assuming that the poles fix the response, ignoring the conditioning of the design, and listing one complex pole without its partner.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+
+using namespace pluss::tils;
+namespace lti = pluss::subsp::eng::lti;
+namespace ctl = pluss::subsp::eng::control;
+using Complex = std::complex<double>;
+
+static pluss::Series matrix(std::vector<double> values, long rows, long columns) {
+  return pluss::series::make(values).reshape({rows, columns});
+}
+static pluss::Series poles_of(std::vector<Complex> p) { return pluss::make_series(p, {static_cast<long>(p.size())}); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(4).with_sep(""));
+  const auto f64 = pluss::Config{}.with_dtype(pluss::ScalarType::Float64);
+  const auto report = [&](const char *label, const auto &call) {
+    try {
+      call();
+    } catch (const std::exception &e) {
+      std::string text(e.what());
+      if (const auto cut = text.find("Triggered"); cut != std::string::npos) text.erase(cut);
+      while (!text.empty() && text.back() == '\n') text.pop_back();
+      out.writeln(std::string(label) + ": " + text);
+    }
+  };
+  const auto a = matrix({0, 1, 0, 0}, 2, 2), b = matrix({0, 1}, 2, 1);
+
+  // 1. poles far to the left cost gain: poles at -p and -2p need K = [2 p^2, 3 p]
+  for (const double p : {1.0, 10.0, 100.0}) out.writeln("poles at ", -p, " and ", -2.0 * p, ": K = ", flat(ctl::place(a, b, poles_of({{-p, 0.0}, {-2.0 * p, 0.0}})).gain));
+
+  // 2. only the poles are fixed: the same two poles, -2 and -3,, with and without a zero in the output
+  const auto k = flat(ctl::place(a, b, poles_of({{-2.0, 0.0}, {-3.0, 0.0}})).gain);
+  const auto closed = a - b.matmul(matrix(k, 1, 2));
+  const auto time = pluss::series::arange(0, 801, f64) * 0.01;
+  const auto step = pluss::series::ones({801, 1}, f64);
+  for (const auto &c : {std::vector<double>{6, 0}, std::vector<double>{6, 12}}) {
+    const auto y = lti::sim(lti::state(closed, b, matrix(c, 1, 2), matrix({0}, 1, 1)), step, time).values.reshape({801});
+    out.writeln("output C = ", c, ": final value ", flat(y).back(), ", peak ", y.max().item<double>(), ", overshoot ", 100.0 * (y.max().item<double>() / flat(y).back() - 1.0), " percent");
+  }
+
+  // 3. a fragile design: the second state is almost out of reach
+  const auto weak = ctl::place(matrix({-1, 0, 0, -1.001}, 2, 2), matrix({1, 1e-4}, 2, 1), poles_of({{-3.0, 0.0}, {-4.0, 0.0}}));
+  const auto sound = ctl::place(a, b, poles_of({{-3.0, 0.0}, {-4.0, 0.0}}));
+  out.writeln("double integrator: condition ", sound.condition.item<double>(), ", K = ", flat(sound.gain));
+  out.writeln("a nearly uncontrollable pair: condition ", weak.condition.item<double>(), ", K = ", flat(weak.gain));
+
+  // 4. a complex pole needs its conjugate
+  report("one complex pole", [&] { (void)ctl::place(a, b, poles_of({{-1.0, 2.0}, {-3.0, 0.0}})); });
+  out.writeln("the pair -1 +- 2j: K = ", flat(ctl::place(a, b, poles_of({{-1.0, 2.0}, {-1.0, -2.0}})).gain), "   hand: [5, 2]");
+}
+```
+
+Output
+
+```text
+poles at -1.0000 and -2.0000: K = [2.0000, 3.0000]
+poles at -10.0000 and -20.0000: K = [200.0000, 30.0000]
+poles at -100.0000 and -200.0000: K = [20000.0000, 300.0000]
+output C = [6.0000, 0.0000]: final value 1.0000, peak 1.0000, overshoot 0.0000 percent
+output C = [6.0000, 12.0000]: final value 1.0000, peak 2.0800, overshoot 107.9996 percent
+double integrator: condition 26.0384, K = [12.0000, 7.0000]
+a nearly uncontrollable pair: condition 119900017.8831, K = [5999.9998, -59950008.3416]
+one complex pole: eng::control::place: complex poles for a real system must appear in conjugate pairs
+the pair -1 +- 2j: K = [5.0000, 2.0000]   hand: [5, 2]
+```
+
+For the double integrator, poles at `-p` and `-2p` need `K = [2 p^2, 3 p]`: `[2, 3]`, `[200, 30]` and `[20000, 300]` for `p = 1`, `10` and `100`; a gain that large is rarely implementable. The poles do not fix the response: the same poles at `-2` and `-3` give a step response that never overshoots when the output is the position, and `108` percent overshoot, a peak of `2.08`, when the output also contains a velocity term, which puts a zero at `-0.5`. The condition number is the warning for a fragile design: `26.04` for the double integrator, and `1.2e8` for a pair whose second state is almost out of reach, where the gain on that state is `-6e7`. And a complex pole must be paired with its conjugate: one pole `-1 + 2j` is refused, and the pair `-1 +- 2j` gives `[5, 2]`, the hand value.
+
+Reference: [`place`](../../../../api/eng/control/controllers/place.md), [`PlaceOptions`](../../../../api/eng/control/controllers/PlaceOptions.md), [`state`](../../../../api/eng/lti/state/state.md).
+
+Where next: [PID controllers](pid_controllers.md) builds the controller used when only the output is measured.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="pid_controllers.html">
+    <span class="label">Next</span>
+    <span class="title">PID controllers</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

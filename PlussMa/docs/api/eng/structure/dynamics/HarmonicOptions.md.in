@@ -18,8 +18,8 @@ Controls for `harmonic`, which solves `(K + i omega C - omega^2 M) u = f` with a
 |---|---|---|
 | `mass_damping` | The coefficient `a` of `a M`; the damping ratio of mode `n` is `a / (2 omega_n)`. | `0` |
 | `stiffness_damping` | The coefficient `b` of `b K`; the damping ratio of mode `n` is `b omega_n / 2`. | `0` |
-| `solve` | GMRES controls: `max_iterations` (128), `restart` (24), `relative_tolerance` (1e-8), `absolute_tolerance` (1e-10), `rank_tolerance` (1e-12). |  |
-| `fail_on_nonconvergence` | When true a frequency whose solve does not converge throws; when false `converged` is false at that frequency. | `true` |
+| `solve` | GMRES controls: `max_iterations` (128), `restart` (24), `relative_tolerance` (1e-8), `absolute_tolerance` (1e-10), `rank_tolerance` (1e-12). A larger frame may need a longer restart and a larger budget. |  |
+| `fail_on_nonconvergence` | When true a frequency whose solve does not converge throws; when false `converged` is false at that frequency. A frequency at a natural frequency of an undamped frame is singular by physics and does not converge. | `true` |
 
 ## Returns
 
@@ -31,7 +31,7 @@ Negative damping coefficients or invalid GMRES controls are rejected.
 
 ## Interpretation and Use
 
-Damping is what keeps the response finite at a natural frequency; an undamped structure driven exactly at one has no steady response and does not converge.
+Damping is what keeps the response finite at a natural frequency: with none the amplitude grows without bound as the frequency approaches one, and exactly at it the dynamic stiffness is singular and the solve reports nonconvergence.
 
 ## Practical Examples
 
@@ -39,17 +39,23 @@ The following programs isolate this symbol's normal contract, a materially diffe
 
 ### Example 1
 
-Stiffness and mass damping compared at four frequencies, and an undamped resonance.
+Stiffness and mass damping compared at four frequencies, and the approach to an undamped resonance.
 
 @@example Eng/api/structure_harmonic.cpp@@
 
 ### Example 2
 
+Every GMRES control and its effect on the iteration.
+
+@@example Eng/api/structure_dynamic_controls.cpp@@
+
+### Example 3
+
 Damped response checked against a mode sum.
 
 @@example Eng/api/structure_harmonic_modal.cpp@@
 
-### Example 3
+### Example 4
 
 Rejected inputs.
 

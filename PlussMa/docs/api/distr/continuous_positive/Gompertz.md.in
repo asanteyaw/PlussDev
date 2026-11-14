@@ -213,3 +213,16 @@ The formula and `distr::cdf` agree to 2.22e-16 over the grid, so the library imp
 - [`Weibull`](../continuous_positive/Weibull.md)
 - [`ExtremeValue`](../continuous_real_line/ExtremeValue.md)
 - [`Exponential`](../continuous_positive/Exponential.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Gig.html">
+    <span class="label">Previous</span>
+    <span class="title">Gig</span>
+  </a>
+  <a class="next-link" href="InverseGaussian.html">
+    <span class="label">Next</span>
+    <span class="title">InverseGaussian</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

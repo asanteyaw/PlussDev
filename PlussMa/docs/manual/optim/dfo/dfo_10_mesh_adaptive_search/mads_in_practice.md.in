@@ -49,3 +49,8 @@ By default both the improvement-window test and the frame test must hold, so the
 - **The window test only delays a stop.** By default both tests must hold; switching it off (`check_every` 0) lets the frame alone end the run, here after 8822 evaluations instead of 19280.
 
 Where next: [Chapter 11](../dfo_11_mads_black_box.md) uses MADS as a black-box minimiser.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

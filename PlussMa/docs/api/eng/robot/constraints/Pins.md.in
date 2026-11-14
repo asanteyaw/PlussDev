@@ -1,0 +1,57 @@
+# `robot::Pins`
+
+Points held at rest in the world.
+
+## Signature
+
+```cpp
+robot::Pins
+```
+
+## What It Does
+
+Describes bilateral constraints: point `i` is fixed to link `link[i]` at `point[i]` in that link's frame and its world acceleration is held at zero (a pin to the ground, or a point held fixed). Each pin removes three degrees of freedom and carries a free three-component force.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `link` | The link of each pinned point. Length `p`. | empty |
+| `point` | The pinned points in their link frames, `[p, 3]`, in metres. | required |
+
+## Returns
+
+A value; read by `constrain`.
+
+## Errors
+
+`constrain` throws `pluss::Error` for a link outside the robot or a `point` that is not `[p, 3]` with one row per link entry.
+
+## Interpretation and Use
+
+A pin keeps the point's acceleration zero, which holds the point where it is only if its velocity is zero too: start the robot with the pinned point at rest in the world. Pinning more than the robot has degrees of freedom is allowed but only the consistent part can be satisfied.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A pinned tip.
+
+@@example Eng/api/robot_pin_arm.cpp@@
+
+### Example 2
+
+The pin carries the weight the joints do not.
+
+@@example Eng/api/robot_pin_balance.cpp@@
+
+### Example 3
+
+Rejected pins.
+
+@@example Eng/api/robot_pin_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

@@ -12,13 +12,13 @@ A state-space model for the particle filter: how particles move, how likely an o
 
 `filtering::ParticleTransitionFn`, default `empty`.
 
-`(const Series &particles, std::int64_t t) -> Series`: `[N, n]` to `[N, n]`. Required.
+`Series (const Series &particles, std::int64_t t)`: `[N, n]` to `[N, n]`. Required.
 
 ### `loglik`
 
 `filtering::ParticleLogLikFn`, default `empty`.
 
-`(const Series &particles, const Series &observation, std::int64_t t) -> Series`: `[N]`. Required.
+`Series (const Series &particles, const Series &observation, std::int64_t t)`: `[N]`. Required.
 
 ### `initial_particles`
 

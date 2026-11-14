@@ -69,3 +69,12 @@ The impossible problem returns the start point, `[0, 0]`, which looks like a per
 - **After a failure `params` is a point, not a solution.** Always read the flag and the constraint violation before using it.
 
 Where next: [The report, summaries and multipliers](the_report_summaries_and_multipliers.md) reads every field of the structured output.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="the_report_summaries_and_multipliers.html">
+    <span class="label">Next</span>
+    <span class="title">The report, the summaries and the multipliers</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

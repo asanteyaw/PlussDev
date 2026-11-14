@@ -1,0 +1,388 @@
+<!-- generated from continuation_power_flow.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Continuation power flow
+
+[Back to Power 4: Estimation and Continuation](../power_04_estimation_and_continuation.md)
+
+A network loaded more and more heavily has a voltage that falls, and at some load it has none: beyond it, no operating point exists and the voltage collapses. The ordinary power flow cannot tell you where that is, since Newton's method fails beyond the limit and also struggles close to it. The **continuation power flow** follows the solution along the load, with the load as a variable, and passes through the limit, the **nose** of the voltage curve. `power::trace` does it. This page explains the method, traces the curve of a two-bus network and finds the nose against its closed form, follows it to a target load and checks the points against the ordinary power flow, finds the nose of a network with a generator against a bisection on the power flow, and controls the stepping.
+
+## The mental model
+
+A `LoadPath` names a target: the net active and reactive injection at every bus at **loading factor `1`**. The grid's own injections are loading factor `0`, and the load at factor `lambda` is the linear interpolation `(1 - lambda) base + lambda target`. The continuation solves the power-flow equations together with that factor as an extra unknown, by a **predictor-corrector** step: a tangent step along the solution curve (the predictor) followed by Newton iterations at a fixed factor (the corrector), with a step size that adapts to how well the predictor does. Through the nose the Jacobian of the ordinary power flow is singular, but the extended system, with the factor as a variable, is not, and the curve is followed round the nose and onto the lower branch.
+
+`trace(grid, path, options)` returns a `TraceResult`, one entry for every point on the curve:
+
+| Member | Shape | Meaning |
+|---|---|---|
+| `factor` | `[..., point]` | the loading factor of each point |
+| `voltage`, `magnitude`, `angle` | `[..., point, bus]` | the bus voltages at each point |
+| `injection`, `from_power`, `to_power` | `[..., point, bus]`, `[..., point, line]` | the powers at each point |
+| `tangent` | `[..., point, state + 1]` | the unit tangent of the curve at each point |
+| `residual` | `[..., point]` | the power mismatch at each point |
+| `valid` | `[..., point]` | false for the points after a scenario has stopped |
+| `reached` | `[...]` | true if the requested target or the nose was reached |
+| `points` | a number | the number of points |
+
+`TraceOptions::stop` chooses the end of the trace: `TraceStop::Target` follows the curve until the factor equals `target` (default `1`), and `TraceStop::Nose` follows it until the factor reaches its maximum.
+
+## The nose of a line
+
+A line of `0.01 + 0.1j` per unit feeding a load whose reactive power is `0.4` of its active power has a closed-form load limit. The voltage at the load satisfies a quadratic, and a solution exists while its discriminant is non-negative: the limit is `P = 3.15975` per unit, and the voltage there is `0.58482`. The program traces the line from no load, with the target load `1 + 0.4j`, so that the factor is the active load in per unit, all the way to the nose, and prints the curve.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit, with the given load
+static power::Net two_bus(double active, double reactive) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -reactive});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const power::Grid grid = power::make(two_bus(0.0, 0.0));
+  power::LoadPath path;
+  path.p = vec({0.0, -1.0});
+  path.q = vec({0.0, -0.4});
+  power::TraceOptions options;
+  options.stop = power::TraceStop::Nose;
+  const auto curve = power::trace(grid, path, options);
+
+  const auto factor = flat(curve.factor), voltage = flat(curve.magnitude.select(-1, 1));
+  out.writeln(curve.points, " points; the nose was reached: ", curve.reached.item<bool>());
+  out.writeln("load (p.u.)  load-bus voltage");
+  for (std::size_t i = 0; i < factor.size(); i += 4) out.writeln(factor[i], "      ", voltage[i]);
+  out.writeln("last point: load ", factor.back(), ", voltage ", voltage.back());
+  out.writeln("closed form: load 3.15975, voltage 0.58482;  largest residual on the curve ", curve.residual.max().item<double>());
+}
+```
+
+Output
+
+```text
+29 points; the nose was reached: true
+load (p.u.)  load-bus voltage
+0.00000      1.00000
+0.54653      0.97038
+1.34002      0.91705
+2.12982      0.84405
+2.72728      0.75893
+3.03128      0.68243
+3.14588      0.61759
+3.15975      0.58482
+last point: load 3.15975, voltage 0.58482
+closed form: load 3.15975, voltage 0.58482;  largest residual on the curve 0.00000
+```
+
+The trace ends at a load of `3.15975` and a voltage of `0.58482`, the closed-form nose. The curve is the familiar **nose curve**: the voltage falls slowly at first, then faster, and the points crowd together toward the end, where the adaptive step shrinks to follow the sharp turn. Every point satisfies the power-flow equations, with a residual at the level of rounding.
+
+## To a target load
+
+A study often asks for the voltage at a particular load, with the knowledge that it is on the upper branch, but without a guarantee that the ordinary power flow converges there. The program follows the same line from a base load of `0.5 + 0.2j` to a target of `1.5 + 0.6j`, with the default `Target` stop, and compares the points with the ordinary power flow of the same network: at factor `0` the voltage must equal that of the base load and at factor `1` that of the target.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit, with the given load
+static power::Net two_bus(double active, double reactive) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -reactive});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const power::Grid base = power::make(two_bus(0.5, 0.2));
+  power::LoadPath path;
+  path.p = vec({0.0, -1.5});
+  path.q = vec({0.0, -0.6});
+  const auto curve = power::trace(base, path);   // the default options stop at the target, factor 1
+
+  const auto factor = flat(curve.factor), voltage = flat(curve.magnitude.select(-1, 1));
+  out.writeln("factors: ", factor);
+  out.writeln("shapes: voltage ", curve.magnitude.sizes(), ", power entering the line ", curve.from_power.sizes(), ", tangent ", curve.tangent.sizes());
+  out.writeln("first point ", voltage.front(), "   ordinary power flow at the base load ", flat(power::ac(base).magnitude)[1]);
+  out.writeln("last point  ", voltage.back(), "   ordinary power flow at the target load ", flat(power::ac(power::make(two_bus(1.5, 0.6))).magnitude)[1]);
+  out.writeln("target reached: ", curve.reached.item<bool>());
+}
+```
+
+Output
+
+```text
+factors: [-0.00000, 0.04966, 0.14896, 0.34747, 0.54586, 0.74409, 0.94214, 1.00000]
+shapes: voltage [8, 2], power entering the line [8, 1], tangent [8, 3]
+first point 0.97309   ordinary power flow at the base load 0.97309
+last point  0.90430   ordinary power flow at the target load 0.90430
+target reached: true
+```
+
+The first point is the base case and the last, at exactly factor `1`, is the target; both equal the ordinary power flow to the printed digits. The step is shortened on the last point so the curve ends exactly on the target rather than overshooting it.
+
+## A network with a generator
+
+The same method handles a network with generators and voltage-controlled buses. The program loads the three-bus network of the first chapter: the load at bus `2` grows from `0.5 + 0.2j` to `1.0 + 0.4j` at factor `1`, the net injection at the generator bus is unchanged, and the trace follows the curve to the nose. As an independent check, it finds the largest loading factor at which the ordinary power flow converges, by bisection, and compares the two. Trace and bisection agree: the factor of the nose is `5.11481`.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// the three-bus network of chapter 1
+static power::Net three_bus() {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PV, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -0.2, -0.5});
+  net.buses.q = vec({0.0, 0.0, -0.2});
+  net.buses.vm = vec({1.04, 1.02, 1.0});
+  net.buses.va = vec({0.0, 0.0, 0.0});
+  net.gens.bus = {1};
+  net.gens.p = vec({0.6});
+  net.gens.q = vec({0.0});
+  net.lines.from = {0, 1, 0};
+  net.lines.to = {1, 2, 2};
+  net.lines.r = vec({0.01, 0.02, 0.015});
+  net.lines.x = vec({0.1, 0.2, 0.25});
+  net.lines.charge = vec({0.02, 0.05, 0.04});
+  return net;
+}
+
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const power::Grid grid = power::make(three_bus());
+  power::LoadPath path;
+  path.p = vec({0.0, 0.4, -1.0});    // bus 1 keeps its net injection of 0.4; the load at bus 2 grows to 1.0
+  path.q = vec({0.0, 0.0, -0.4});
+  power::TraceOptions options;
+  options.stop = power::TraceStop::Nose;
+  const auto curve = power::trace(grid, path, options);
+  out.writeln("trace: nose reached ", curve.reached.item<bool>(), " at loading factor ", flat(curve.factor).back(), " after ", curve.points, " points, load-bus voltage ", flat(curve.magnitude.select(-1, 2)).back());
+
+  // bisection on the ordinary power flow: the load at bus 2 is 0.5 + factor * 0.5 and 0.2 + factor * 0.2
+  double low = 0.0, high = 20.0;
+  const auto converges = [&](double factor) {
+    power::Net net = three_bus();
+    net.buses.p = vec({0.0, -0.2, -0.5 - 0.5 * factor});
+    net.buses.q = vec({0.0, 0.0, -0.2 - 0.2 * factor});
+    power::Options newton;
+    newton.max_iterations = 60;
+    return power::ac(power::make(net), newton).converged.item<bool>();
+  };
+  for (int i = 0; i < 40; ++i) (converges(0.5 * (low + high)) ? low : high) = 0.5 * (low + high);
+  out.writeln("largest factor at which the ordinary power flow converges: ", low);
+}
+```
+
+Output
+
+```text
+trace: nose reached true at loading factor 5.11481 after 36 points, load-bus voltage 0.60798
+largest factor at which the ordinary power flow converges: 5.11481
+```
+
+Both give `5.11481`: the load at bus `2` can grow to `3.06` per unit before the network collapses, and the voltage there has then fallen to about `0.608`. The trace also gave the whole curve, and the bisection needed forty power flows to find one number.
+
+## Stepping
+
+`TraceOptions` controls how the curve is followed: `step` is the first step in the loading factor, `step_min` and `step_max` bound it, `adaptive` lets it grow and shrink with the curvature (`adapt_tolerance` and `adapt_damping` tune that), `tolerance` and `max_iterations` govern each corrector, and `max_steps` bounds the number of points. The program traces the line to a load factor of `2` four ways: with the defaults, with a fixed step of `0.1` (adaptive off), with a `step_max` of `0.5`, and with a first step above the bound, which is an error.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit, with the given load
+static power::Net two_bus(double active, double reactive) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -reactive});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const power::Grid grid = power::make(two_bus(0.0, 0.0));
+  power::LoadPath path;
+  path.p = vec({0.0, -1.0});
+  path.q = vec({0.0, -0.4});
+  const auto run = [&](const char *label, power::TraceOptions options) {
+    options.target = 2.0;
+    try {
+      const auto r = power::trace(grid, path, options);
+      out.writeln(label, ": ", r.points, " points, reached ", r.reached.item<bool>(), ", last factor ", flat(r.factor).back(), ", voltage ", flat(r.magnitude.select(-1, 1)).back());
+    } catch (const std::exception &e) {
+      std::cout << label << ": " << e.what() << "\n";
+    }
+  };
+  run("defaults (adaptive)        ", power::TraceOptions{});
+  power::TraceOptions fixed;
+  fixed.adaptive = false;
+  fixed.step = 0.1;
+  run("fixed step 0.1             ", fixed);
+  power::TraceOptions wide;
+  wide.step_max = 0.5;
+  run("step_max 0.5               ", wide);
+  power::TraceOptions oversized;
+  oversized.step = 0.5;
+  run("first step above step_max  ", oversized);
+  power::TraceOptions few;
+  few.max_steps = 3;
+  run("max_steps 3                ", few);
+}
+```
+
+Output
+
+```text
+defaults (adaptive)        : 13 points, reached true, last factor 2.00000, voltage 0.85811
+fixed step 0.1             : 22 points, reached true, last factor 2.00000, voltage 0.85811
+step_max 0.5               : 10 points, reached true, last factor 2.00000, voltage 0.85811
+first step above step_max  : eng::power::trace: step bounds, tolerance, and iteration limits must be positive and ordered
+max_steps 3                : 4 points, reached false, last factor 0.34786, voltage 0.98170
+```
+
+The adaptive trace reaches a load of `2` in `13` points and a fixed step of `0.1` needs `22`, the adaptive method taking the larger steps where the curve is nearly straight. A first step above `step_max` is refused. With only three steps the trace stops short and reports that it did not reach the target.
+
+## Decisions
+
+- **Voltage at a load that might be near collapse:** `trace` to the target, not a power flow from a flat start.
+- **How close to collapse:** `TraceStop::Nose`; the distance from the operating factor to the nose factor is the loading margin.
+- **Many scenarios:** leading axes on the network's injections and on the path, traced together; each stops at its own nose or target.
+
+## Pitfalls
+
+The program makes two mistakes. It asks for a target beyond the nose, which the network cannot reach: the trace stops at the nose, and `reached` says false. And it asks the ordinary power flow, from a flat start, for the same load, which also fails but without telling where the limit is.
+
+```cpp
+#include <pluss/ma.h>
+#include <pluss/tils/kit/output.h>
+
+#include <cmath>
+
+using namespace pluss::tils;
+namespace power = pluss::subsp::eng::power;
+
+static pluss::Series vec(std::vector<double> v) { return pluss::series::make(v); }
+static std::vector<double> flat(const pluss::Series &s) { return s.reshape({s.numel()}).items<double>(); }
+
+// a slack and a load bus joined by a line of 0.01 + 0.1j per unit, with the given load
+static power::Net two_bus(double active, double reactive) {
+  power::Net net;
+  net.base = {100e6, 230e3};
+  net.buses.kind = {power::BusKind::Slack, power::BusKind::PQ};
+  net.buses.p = vec({0.0, -active});
+  net.buses.q = vec({0.0, -reactive});
+  net.buses.vm = vec({1.0, 1.0});
+  net.buses.va = vec({0.0, 0.0});
+  net.lines.from = {0};
+  net.lines.to = {1};
+  net.lines.r = vec({0.01});
+  net.lines.x = vec({0.1});
+  return net;
+}
+
+int main() {
+  OutputEngine out;
+  out.print_defaults(PrintOptions{}.fixed(5).with_sep(""));
+  const power::Grid grid = power::make(two_bus(0.0, 0.0));
+  power::LoadPath path;
+  path.p = vec({0.0, -1.0});
+  path.q = vec({0.0, -0.4});
+  power::TraceOptions beyond;
+  beyond.target = 4.0;   // the nose is at 3.15975
+  const auto curve = power::trace(grid, path, beyond);
+  out.writeln("target 4.0: reached ", curve.reached.item<bool>(), ", the curve ends at the nose, load ", flat(curve.factor).back(), ", valid points ", curve.valid.all().item<bool>());
+
+  power::Options newton;
+  newton.max_iterations = 60;
+  const auto direct = power::ac(power::make(two_bus(4.0, 1.6)), newton);
+  out.writeln("ordinary power flow at that load: converged ", direct.converged.item<bool>(), ", residual ", direct.residual.item<double>(), " (no voltage exists there, and it does not say where the limit is)");
+}
+```
+
+Output
+
+```text
+target 4.0: reached false, the curve ends at the nose, load 3.15975, valid points true
+ordinary power flow at that load: converged false, residual 3.49984 (no voltage exists there, and it does not say where the limit is)
+```
+
+The trace follows the curve to its end and reports that it could not reach the target, with the factor of the last point, `3.15975`, the loading limit. The ordinary power flow only reports that it failed. Compare the target with the nose factor before asking for a voltage at a load that may be beyond it.
+
+Reference: [`trace`](../../../../api/eng/power/continuation/trace.md), [`LoadPath`](../../../../api/eng/power/continuation/LoadPath.md), [`TraceOptions`](../../../../api/eng/power/continuation/TraceOptions.md), [`TraceStop`](../../../../api/eng/power/continuation/TraceStop.md), [`TraceResult`](../../../../api/eng/power/continuation/TraceResult.md), [`ac`](../../../../api/eng/power/flow/ac.md).
+
+Where next: this completes the power-systems guide. The hydraulic and transport networks of the fluid guide share the same network-solving ideas.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="state_estimation.html">
+    <span class="label">Previous</span>
+    <span class="title">State estimation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

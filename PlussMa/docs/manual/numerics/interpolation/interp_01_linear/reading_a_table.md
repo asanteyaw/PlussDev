@@ -37,3 +37,12 @@ at 3.5 min : 72.00
 at 0, 1, 5, 7.5, 20 min : 90.00 84.00 66.00 59.00 38.00
 ```
 A query exactly on a table point returns the table value, and the spacing is free to vary: the intervals here are 2, 3, 5 and 10 minutes wide.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="queries_outside_the_table.html">
+    <span class="label">Next</span>
+    <span class="title">Queries outside the table</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

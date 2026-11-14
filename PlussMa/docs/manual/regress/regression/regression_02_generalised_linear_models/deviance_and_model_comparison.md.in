@@ -97,12 +97,12 @@ int main() {
   const auto with_both = reg::glm_fit(y, pluss::make_series(both, {40, 2}, as_f64()), options);
 
   auto tail = [&](double statistic, std::int64_t degrees) {
-    return 1.0 - distr::ChiSquare(degrees).cdf(pluss::make_series(std::vector<double>{statistic}, {1}, as_f64())).pull<double>()[0];
+    return 1.0 - distr::ChiSquare(degrees).cdf(pluss::make_series(std::vector<double>{statistic}, {1}, as_f64())).items<double>()[0];
   };
   const double lr_x1 = constant.deviance - with_x1.deviance;
   const double lr_x2 = with_x1.deviance - with_both.deviance;
-  out.writeln("x1 against the constant : LR", lr_x1, " df 1  p", tail(lr_x1, 1), " | Wald z", with_x1.z_values.pull<double>()[1], " p", with_x1.p_values.pull<double>()[1]);
-  out.writeln("x2 given x1             : LR", lr_x2, " df 1  p", tail(lr_x2, 1), " | Wald z", with_both.z_values.pull<double>()[2], " p", with_both.p_values.pull<double>()[2]);
+  out.writeln("x1 against the constant : LR", lr_x1, " df 1  p", tail(lr_x1, 1), " | Wald z", with_x1.z_values.items<double>()[1], " p", with_x1.p_values.items<double>()[1]);
+  out.writeln("x2 given x1             : LR", lr_x2, " df 1  p", tail(lr_x2, 1), " | Wald z", with_both.z_values.items<double>()[2], " p", with_both.p_values.items<double>()[2]);
   const double lr_both = constant.deviance - with_both.deviance;
   out.writeln("both against the constant: LR", lr_both, " df 2  p", tail(lr_both, 2));
   out.writeln("the LR statistic is also twice the log-likelihood gain:", 2.0 * (with_both.log_likelihood - constant.log_likelihood));
@@ -113,3 +113,16 @@ int main() {
 x₁ against the constant gives a likelihood-ratio statistic of 6.84 (p = 0.0089), against a Wald p-value of 0.0171 for the same coefficient: close, not identical. x₂ given x₁ gives 10.06 (p = 0.0015) against a Wald p-value of 0.0080. Both terms against the constant give 16.91 on 2 degrees of freedom (p = 0.0002). The statistic is also twice the log-likelihood gain, and AIC is lowest for the largest model. Where the two tests disagree materially, the likelihood-ratio test is generally the more reliable in small samples.
 
 The chi-squared reference needs the two models to be fitted to the same rows and the smaller to be a special case of the larger; AIC and BIC need only the same rows and the same family and response.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="iteration_controls_and_separation.html">
+    <span class="label">Previous</span>
+    <span class="title">Iteration controls and separation</span>
+  </a>
+  <a class="next-link" href="weights_and_offsets.html">
+    <span class="label">Next</span>
+    <span class="title">Weights and offsets</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

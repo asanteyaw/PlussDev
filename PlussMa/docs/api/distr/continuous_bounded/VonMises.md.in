@@ -174,3 +174,12 @@ Read down the rows: `kappa 0.5` peaks on this grid at x = 0.5 (value 0.2467); `k
 - [`Normal`](../continuous_real_line/Normal.md)
 - [`Cosine`](../continuous_bounded/Cosine.md)
 - [`Uniform`](../continuous_bounded/Uniform.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Uniform.html">
+    <span class="label">Previous</span>
+    <span class="title">Uniform</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

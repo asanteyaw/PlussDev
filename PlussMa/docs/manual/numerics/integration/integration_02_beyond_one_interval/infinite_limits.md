@@ -59,3 +59,12 @@ exp(-x), [0, inf)      : 1  (exact 1)  converged 1
 exp(-x) e^{ix}, [0,inf): 0.499999999932 + 0.500000000087i  (exact 0.5 + 0.5i)
 ```
 Complex integrands work the same way: the real and imaginary parts are integrated together.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="batches_and_derivatives.html">
+    <span class="label">Next</span>
+    <span class="title">Batches and derivatives</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

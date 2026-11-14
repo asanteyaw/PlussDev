@@ -100,7 +100,7 @@ Archive ArchiveLabelAccessor::align(const Stream& labels) const {
   for (std::int64_t i = 0; i < labels.size(); ++i) {
     const auto key = label_string_at(labels, i);
     const auto it = pos.find(key);
-    PLUSS_CHECK(it != pos.end(), "Archive::label().align: label not found '" + key + "'");
+    PLUSS_CHECK(it != pos.end(), "Archive::label().align: label not found '" + key + "'", key, pluss::exception::map_keys(pos));
     out.push_back(archive_.impl_ref_().catalogs_[static_cast<std::size_t>(it->second)]);
   }
   return Archive(std::move(out), labels);

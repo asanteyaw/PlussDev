@@ -11,4 +11,12 @@ Tests of a whole distribution: Kolmogorov–Smirnov (one and two samples) and Ja
 | [`jbtest`](distributions/jbtest.md) | Jarque–Bera test of normality, from the skewness and kurtosis. |
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+distributions/kstest
+distributions/kstest2
+distributions/jbtest
+```
 <!-- apiref:toctree:end -->

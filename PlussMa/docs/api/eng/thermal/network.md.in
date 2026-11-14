@@ -1,0 +1,28 @@
+# Thermal networks
+
+A thermal network is nodes joined by conductances, with capacities, fixed temperatures and heat sources. Solve it for the long-run state with `steady` and for its time response with `tran`.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A chain between two temperatures.
+
+@@example Eng/api/thermal_steady_series.cpp@@
+
+### Example 2
+
+A body cooling through one conductance.
+
+@@example Eng/api/thermal_tran_cooling.cpp@@
+
+### Example 3
+
+A room with a wall, ventilation and a heater.
+
+@@example Eng/api/thermal_net_room.cpp@@
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

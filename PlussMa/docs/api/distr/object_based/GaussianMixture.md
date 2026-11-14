@@ -269,3 +269,16 @@ The probability of the first component falls from 0.993 at x = -3 to 0.873 at -1
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Gamma.html">
+    <span class="label">Previous</span>
+    <span class="title">Gamma</span>
+  </a>
+  <a class="next-link" href="Geometric.html">
+    <span class="label">Next</span>
+    <span class="title">Geometric</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

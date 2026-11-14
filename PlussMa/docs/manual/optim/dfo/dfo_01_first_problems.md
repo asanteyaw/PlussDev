@@ -29,7 +29,7 @@ Bounds and constraints are optional everywhere. Leave `lower_bounds`, `upper_bou
 | Piece | Meaning |
 |---|---|
 | `DfoProblem::initial` | starting point (a one-dimensional Series); also fixes the number of variables |
-| `DfoProblem::objective` | `Series -> Series` returning one number |
+| `DfoProblem::objective` | `Series (Series)` returning one number |
 | `lower_bounds`, `upper_bounds` | optional box |
 | `DfoOptions::solver` | `Auto` (default) or a named method |
 | `max_evaluations`, `max_iterations` | budgets; 0 means the method's own default |

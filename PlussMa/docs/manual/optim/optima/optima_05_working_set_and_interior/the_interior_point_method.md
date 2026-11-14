@@ -224,3 +224,12 @@ The interior method converges in 11 iterations to 0.660517, and its smallest ite
 - **Complementarity is the quantity to watch.** It must fall to the tolerance together with the stationarity; a run that ends with large complementarity has stalled.
 
 Where next: [Chapter 6](../optima_06_curvature_linear_algebra_scaling.md) looks at the curvature models and the linear algebra under every step.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_working_set_method.html">
+    <span class="label">Previous</span>
+    <span class="title">The working-set method</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

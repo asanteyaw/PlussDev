@@ -1,0 +1,64 @@
+# `circuit::Branches`
+
+Two-terminal elements of one kind: their nodes and values.
+
+## Signature
+
+```cpp
+circuit::Branches
+```
+
+## What It Does
+
+A group of two-terminal elements, a resistor group or a source group. Element `i` joins node `positive[i]` to node `negative[i]` and has value `value[..., i]`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `positive` | The positive node of each element. Node `0` is the ground. | empty |
+| `negative` | The negative node of each element. | empty |
+| `value` | The element values, last axis the elements; leading axes are a batch of circuits with the same topology. Resistance in ohms, capacitance in farads, inductance in henries, source current in amperes, source voltage in volts. | undefined |
+
+## Returns
+
+A value; validated by `make`.
+
+## Errors
+
+Lists of different lengths, a node outside `[0, nodes)`, an element from a node to itself, or a non-positive resistance or inductance is rejected by `make`.
+
+## Interpretation and Use
+
+The orientation is the same for every group: positive to negative. A voltage source fixes `V(positive) - V(negative)`; a current source delivers into its negative node.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A divider built from two resistor branches and a voltage source.
+
+@@example Eng/api/circuit_divider.cpp@@
+
+### Example 2
+
+One of every element kind.
+
+@@example Eng/api/circuit_all_elements.cpp@@
+
+### Example 3
+
+A batched resistor value.
+
+@@example Eng/api/circuit_batch_net.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="Controls.html">
+    <span class="label">Next</span>
+    <span class="title">Controls</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

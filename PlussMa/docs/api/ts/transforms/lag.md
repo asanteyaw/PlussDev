@@ -113,3 +113,16 @@ lead(x)         12.0000  11.0000  15.0000  14.0000  18.0000  17.0000      nan
 
 - [`lead`](lead.md)
 - [`diff`](diff.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fill_gaps.html">
+    <span class="label">Previous</span>
+    <span class="title">fill_gaps</span>
+  </a>
+  <a class="next-link" href="lead.html">
+    <span class="label">Next</span>
+    <span class="title">lead</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

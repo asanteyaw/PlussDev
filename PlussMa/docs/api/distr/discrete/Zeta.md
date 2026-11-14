@@ -199,3 +199,12 @@ Read down the rows: `s 2` peaks on this grid at x = 1 (value 0.6079); `s 3.5` pe
 - [`Yule`](../discrete/Yule.md)
 - [`Geometric`](../discrete/Geometric.md)
 - [`Pareto`](../continuous_positive/Pareto.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Yule.html">
+    <span class="label">Previous</span>
+    <span class="title">Yule</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

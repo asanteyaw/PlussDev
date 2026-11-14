@@ -82,4 +82,24 @@ int main() {
 ```
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+vector/FevdOptions
+vector/GrangerOptions
+vector/GrangerResult
+vector/IrfOptions
+vector/johansen_test
+vector/JohansenOptions
+vector/JohansenResult
+vector/Var
+vector/var_to_vecm
+vector/VarFit
+vector/VarOptions
+vector/Vecm
+vector/vecm_to_var
+vector/VecmFit
+vector/VecmOptions
+```
 <!-- apiref:toctree:end -->

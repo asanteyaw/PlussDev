@@ -1,0 +1,71 @@
+# `fluid::Pipes`
+
+The ends, dimensions, roughness and minor losses of the pipes.
+
+## Signature
+
+```cpp
+fluid::Pipes
+```
+
+## What It Does
+
+Describes the pipes of a `Net`. A pipe joins its `from` node to its `to` node, and a positive flow runs in that direction.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `from` | The upstream node index of each pipe, a plain `std::vector`. | required |
+| `to` | The downstream node index of each pipe. | required |
+| `length` | Length, m, `[..., pipe]`. | required |
+| `diameter` | Internal diameter, m, `[..., pipe]`. | required |
+| `roughness` | Absolute roughness in m for `LossModel::DarcyWeisbach`; the coefficient `C` for `LossModel::HazenWilliams`, `[..., pipe]`. | required |
+| `minor` | Dimensionless minor-loss coefficient `K`, `[..., pipe]`. | undefined (zero) |
+
+## Returns
+
+A value; validated by `network`.
+
+## Errors
+
+An endpoint outside the node range, a pipe from a node to itself, a non-positive length or diameter, a negative roughness or minor loss, and mixed precision are rejected. Hazen-Williams coefficients that are not positive are rejected by `steady`.
+
+## Interpretation and Use
+
+Roughness means a different thing under each loss law, so check its magnitude: roughness lengths are a millimetre or less, Hazen-Williams coefficients are tens or hundreds. Declare a pipe in the direction of its expected flow so that results read as positive numbers; a negative flow is valid and means the water runs the other way.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+One pipe checked against the Darcy-Weisbach formula.
+
+@@example Eng/api/fluid_net_pipe.cpp@@
+
+### Example 2
+
+Both loss laws, roughness and minor losses.
+
+@@example Eng/api/fluid_loss_models.cpp@@
+
+### Example 3
+
+Pipes that are refused.
+
+@@example Eng/api/fluid_net_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Tanks.html">
+    <span class="label">Previous</span>
+    <span class="title">Tanks</span>
+  </a>
+  <a class="next-link" href="Pumps.html">
+    <span class="label">Next</span>
+    <span class="title">Pumps</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

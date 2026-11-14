@@ -55,3 +55,12 @@ With only the general hook set it received all four snapshots. After adding a se
 - **Stopping from a hook is a decision about quality.** Stop on a condition you can state (feasible and below a value), and check the flag afterwards: the result is `Stopped`, not `Converged`.
 
 Where next: [Chapter 3](../optima_03_choosing_an_algorithm.md) compares the four algorithms and how to choose between them.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_report_summaries_and_multipliers.html">
+    <span class="label">Previous</span>
+    <span class="title">The report, the summaries and the multipliers</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

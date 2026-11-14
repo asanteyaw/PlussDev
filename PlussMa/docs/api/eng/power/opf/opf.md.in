@@ -1,0 +1,76 @@
+# `power::opf`
+
+Exact AC optimal power flow by sequential quadratic programming.
+
+## Signature
+
+```cpp
+power::OpfResult power::opf(const power::Grid& grid, const power::GenCost& cost, const power::Limits& limits, const power::OpfOptions& options = {});
+```
+
+## What It Does
+
+Minimises the generation cost over the bus voltages and the generator outputs, subject to the complex power balance at every bus, the generator bounds, the voltage bounds and, if given, the line apparent-power ratings. The derivatives are analytic. The slack bus holds its angle at zero; its magnitude is a decision variable bounded by `vm_lower` and `vm_upper`.
+
+## Parameters
+
+`grid`
+: The compiled network.
+
+`cost`
+: The bounds and cost curves of the generators, including the optional reactive terms.
+
+`limits`
+: The reactive, voltage and optional line limits.
+
+`options`
+: The iteration budget and tolerances.
+
+## Returns
+
+An `OpfResult`.
+
+## Errors
+
+Throws `std::invalid_argument` for a lower bound above its upper bound or for arrays of the wrong length. An infeasible or unconverged problem does not throw; it returns `converged` false with a message.
+
+## Interpretation and Use
+
+Use it where losses, reactive power or voltages are part of the question, and as the reference that the lossless `dispatch` is checked against. Keep batches modest, since the optimiser is dense.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A ring checked against an independent solver.
+
+@@example Eng/api/power_opf_ring.cpp@@
+
+### Example 2
+
+Reactive, voltage and rating limits.
+
+@@example Eng/api/power_opf_limits.cpp@@
+
+### Example 3
+
+Tolerances and iteration budget.
+
+@@example Eng/api/power_opf_options.cpp@@
+
+### Example 4
+
+Infeasible limits and refused inputs.
+
+@@example Eng/api/power_opf_pitfalls.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OpfResult.html">
+    <span class="label">Previous</span>
+    <span class="title">OpfResult</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

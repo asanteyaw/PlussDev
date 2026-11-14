@@ -681,7 +681,7 @@ std::optional<std::vector<Slate>> dataframe_replace_selected_impl(
   } else {
     for (const auto& name : normalize_name_list(features)) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       target_indices.insert(it->second);
     }
   }
@@ -1040,7 +1040,7 @@ std::vector<std::size_t> resolve_bool_reduce_indices_(
       PLUSS_CHECK(!key.empty(), std::string(where) + ": feature name cannot be empty");
       PLUSS_CHECK(seen.insert(key).second, std::string(where) + ": duplicate feature '" + key + "'");
       const auto it = src.name_to_idx_.find(key);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + key + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), std::string(where) + ": unknown feature '" + key + "'", key, pluss::exception::map_keys(src.name_to_idx_));
       indices.push_back(it->second);
     }
   }
@@ -1521,7 +1521,7 @@ Slate DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> featur
         continue;
       }
       const auto it = src.name_to_idx_.find(key);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ndistinct: unknown feature '" + key + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ndistinct: unknown feature '" + key + "'", key, pluss::exception::map_keys(src.name_to_idx_));
       names.push_back(key);
     }
   }
@@ -1532,7 +1532,7 @@ Slate DataFrame::ndistinct(pluss::msharp::RangeView::Of<std::string_view> featur
   values.reserve(names.size());
   for (const auto& name : names) {
     const auto it = src.name_to_idx_.find(name);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ndistinct: unknown feature '" + name + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ndistinct: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
     values.push_back(src.columns_[it->second].ndistinct(dropnull).as_series().host<std::int64_t>().front());
   }
 
@@ -1691,7 +1691,7 @@ DataFrameView DataFrame::corr(pluss::msharp::RangeView::Of<std::string_view> fea
         continue;
       }
       const auto it = src.name_to_idx_.find(key);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::corr: unknown feature '" + key + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::corr: unknown feature '" + key + "'", key, pluss::exception::map_keys(src.name_to_idx_));
       const auto& col = src.columns_[it->second];
       PLUSS_CHECK(col.kind() == SlateKind::Series && is_numeric_series_type(col.as_series()),
                   "DataFrame::corr: feature '" + key + "' must be numeric");
@@ -1762,7 +1762,7 @@ DataFrame DataFrame::missing(const MissingSpec& spec) const {
     seen.reserve(spec.features.size());
     for (const auto& name : spec.features) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::missing: unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::missing: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       if (seen.insert(it->second).second) {
         target_indices.push_back(it->second);
       }
@@ -1929,7 +1929,7 @@ DataFrame DataFrame::cast(pluss::msharp::RangeView::Of<CastSpec> specs) const {
   for (const auto& spec : specs) {
     PLUSS_CHECK(!spec.feature.empty(), "DataFrame::cast: feature name cannot be empty");
     const auto it = src.name_to_idx_.find(spec.feature);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + spec.feature + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + spec.feature + "'", spec.feature, pluss::exception::map_keys(src.name_to_idx_));
     if (!seen.insert(spec.feature).second) {
       continue;
     }
@@ -1950,7 +1950,7 @@ DataFrame DataFrame::cast(
     const auto key = owned_name(name);
     PLUSS_CHECK(!key.empty(), "DataFrame::cast: feature name cannot be empty");
     const auto it = src.name_to_idx_.find(key);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + key + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + key + "'", key, pluss::exception::map_keys(src.name_to_idx_));
     if (!seen.insert(key).second) {
       continue;
     }
@@ -1979,7 +1979,7 @@ DataFrame DataFrame::cast(
     const auto key = owned_name(name);
     PLUSS_CHECK(!key.empty(), "DataFrame::cast: feature name cannot be empty");
     const auto it = src.name_to_idx_.find(key);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + key + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::cast: unknown feature '" + key + "'", key, pluss::exception::map_keys(src.name_to_idx_));
     if (!seen.insert(key).second) {
       continue;
     }
@@ -2019,13 +2019,13 @@ DataFrame DataFrame::window(pluss::msharp::RangeView::Of<WindowSpec> specs, bool
   for (const auto& spec : specs) {
     PLUSS_CHECK(!spec.feature.empty(), "DataFrame::window: WindowSpec.feature cannot be empty");
     const auto it = src.name_to_idx_.find(spec.feature);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::window: unknown feature '" + spec.feature + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::window: unknown feature '" + spec.feature + "'", spec.feature, pluss::exception::map_keys(src.name_to_idx_));
     PLUSS_CHECK(spec.window > 0, "DataFrame::window: WindowSpec.window must be > 0");
     PLUSS_CHECK(spec.min_periods > 0, "DataFrame::window: WindowSpec.min_periods must be > 0");
 
     auto out_name = spec.output;
     if (out_name.empty()) {
-      out_name = fmt::format("{}_{}_{}", spec.feature, window_op_name(spec.op), spec.window);
+      out_name = pluss::tils::OutputEngine::format("{}_{}_{}", spec.feature, window_op_name(spec.op), spec.window);
     }
 
     if (!keep_input) {
@@ -2098,7 +2098,7 @@ DataFrame DataFrame::fillnull(std::string_view value, pluss::msharp::RangeView::
   } else {
     for (const auto& name : normalize_name_list(features)) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull(string): unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull(string): unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       target_indices.insert(it->second);
     }
   }
@@ -2144,7 +2144,7 @@ DataFrame DataFrame::fillnull(
   } else {
     for (const auto& name : normalize_name_list(features)) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull(Timeline): unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull(Timeline): unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       target_indices.insert(it->second);
     }
   }
@@ -2227,7 +2227,7 @@ DataFrame DataFrame::fillnull(pluss::msharp::RangeView::Of<FillSpec> specs) cons
   for (const auto& spec : specs) {
     PLUSS_CHECK(!spec.feature.empty(), "DataFrame::fillnull: FillSpec.feature cannot be empty");
     const auto it = src.name_to_idx_.find(spec.feature);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull: unknown feature '" + spec.feature + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::fillnull: unknown feature '" + spec.feature + "'", spec.feature, pluss::exception::map_keys(src.name_to_idx_));
     PLUSS_CHECK(spec.value.defined(), "DataFrame::fillnull: FillSpec.value is undefined for feature '" + spec.feature + "'");
     if (!seen.insert(spec.feature).second) {
       continue;
@@ -2301,7 +2301,7 @@ DataFrame DataFrame::dropnull(const DropOptions& options) const {
     seen.reserve(options.features.size());
     for (const auto& name : options.features) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::dropnull: unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::dropnull: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       if (seen.insert(it->second).second) {
         target_indices.push_back(it->second);
       }
@@ -2384,7 +2384,7 @@ DataFrame DataFrame::ffill(const FillOptions& options) const {
     seen.reserve(options.features.size());
     for (const auto& name : options.features) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ffill: unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::ffill: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       if (seen.insert(it->second).second) {
         out_cols[it->second] = src.columns_[it->second].ffill(options.limit);
       }
@@ -2413,7 +2413,7 @@ DataFrame DataFrame::bfill(const FillOptions& options) const {
     seen.reserve(options.features.size());
     for (const auto& name : options.features) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::bfill: unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::bfill: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       if (seen.insert(it->second).second) {
         out_cols[it->second] = src.columns_[it->second].bfill(options.limit);
       }
@@ -2448,7 +2448,7 @@ DataFrame DataFrame::interp(const FillOptions& options) const {
     seen.reserve(options.features.size());
     for (const auto& name : options.features) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::interp: unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::interp: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       if (!seen.insert(it->second).second) {
         continue;
       }
@@ -2502,7 +2502,7 @@ DataFrame DataFrame::mask(const Slate& bool_mask,
     seen.reserve(picked.size());
     for (const auto& name : picked) {
       const auto it = src.name_to_idx_.find(name);
-      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::mask: unknown feature '" + name + "'");
+      PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::mask: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
       if (seen.insert(it->second).second) {
         out_cols[it->second] = src.columns_[it->second].put(Slate(mask), pluss::series::null);
       }
@@ -2610,7 +2610,7 @@ DataFrameView DataFrame::tally_impl(const std::vector<std::string>& feature_name
     PLUSS_CHECK(!name.empty(), "DataFrame::tally: feature name cannot be empty");
     PLUSS_CHECK(seen_keys.insert(name).second, "DataFrame::tally: duplicate feature '" + name + "'");
     const auto it = src.name_to_idx_.find(name);
-    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::tally: unknown feature '" + name + "'");
+    PLUSS_CHECK(it != src.name_to_idx_.end(), "DataFrame::tally: unknown feature '" + name + "'", name, pluss::exception::map_keys(src.name_to_idx_));
     const auto& col = src.columns_[it->second];
     key_infos.push_back({
         name,

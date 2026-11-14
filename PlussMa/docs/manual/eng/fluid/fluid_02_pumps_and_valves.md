@@ -1,0 +1,18 @@
+<!-- generated from fluid_02_pumps_and_valves.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Fluid 2: Pumps and Valves
+
+Gravity moves water downhill; everything else in a distribution system is a device. A pump lifts it, and a valve spends the head the pump or the reservoir gave it. This chapter describes the pump curve and finds the operating point where the pump meets its system, and then the four kinds of control valve, with the settings a network can and cannot satisfy.
+
+- [Pumps](fluid_02_pumps_and_valves/pumps.md)
+- [Control valves](fluid_02_pumps_and_valves/control_valves.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+fluid_02_pumps_and_valves/pumps
+fluid_02_pumps_and_valves/control_valves
+```
+<!-- apiref:toctree:end -->

@@ -1,0 +1,69 @@
+# `thermal::eff`
+
+The effectiveness of a heat exchanger.
+
+## Signature
+
+```cpp
+Series thermal::eff(const Series& ntu,
+                     const Series& cr,
+                     thermal::Flow flow);
+```
+
+## What It Does
+
+Returns the fraction of the largest possible heat transfer that the exchanger achieves, given `ntu = UA / Cmin` and the capacity ratio `cr = Cmin / Cmax`. Every flow arrangement has a closed form (see `Flow`). The inputs broadcast.
+
+## Parameters
+
+`ntu`
+: The number of transfer units, not negative.
+
+`cr`
+: The capacity ratio `Cmin / Cmax` in `[0, 1]`.
+
+`flow`
+: The flow arrangement.
+
+## Returns
+
+The effectiveness in `[0, 1)` with the broadcast shape of the inputs.
+
+## Errors
+
+Throws `pluss::Error` for an input that is not a real floating array or not finite, a negative `ntu`, or a `cr` outside `[0, 1]`.
+
+## Interpretation and Use
+
+Balanced counter flow (`cr = 1`) is evaluated without a special case, to about `1e-8` relative accuracy. Cross flow is an approximation of the exact series solution and is the least precise of the five.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+All five arrangements.
+
+@@example Eng/api/thermal_eff_flows.cpp@@
+
+### Example 2
+
+Balanced counter flow and its neighbours.
+
+@@example Eng/api/thermal_eff_balanced.cpp@@
+
+### Example 3
+
+A grid of NTU against capacity ratio.
+
+@@example Eng/api/thermal_eff_batch.cpp@@
+
+### Example 4
+
+Rejected inputs.
+
+@@example Eng/api/thermal_eff_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

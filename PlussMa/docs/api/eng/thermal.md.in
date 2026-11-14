@@ -1,0 +1,38 @@
+# Thermal engineering
+
+Lumped thermal networks, conduction and fins, heat exchangers, moist air and a property provider. A network is solved by the circuit engine, so batches, step schemes and sensitivities carry over. Closed-form pieces take and return arrays that broadcast, so one call sweeps a design.
+
+## Choosing A Surface
+
+| Task | Branch |
+|---|---|
+| Network of nodes with capacities, fixed temperatures and heats; steady and transient | [Thermal networks](thermal/network.md) |
+| Wall, tube, shell and film resistances, Biot number, fins and a layered wall mesh | [Conduction and fins](thermal/conduction.md) |
+| Effectiveness, transfer units, rating and log-mean difference | [Heat exchangers](thermal/exchangers.md) |
+| Saturation, humidity ratio, enthalpy, dew point, wet bulb and mixing | [Moist air](thermal/air.md) |
+| Properties with ranges and provenance | [Fluid properties](thermal/properties.md) |
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+A room as a thermal network.
+
+@@example Eng/api/thermal_net_room.cpp@@
+
+### Example 2
+
+A fin and its tip conditions.
+
+@@example Eng/api/thermal_fin_tips.cpp@@
+
+### Example 3
+
+The state of moist air.
+
+@@example Eng/api/thermal_wet_basic.cpp@@
+
+<!-- apiref:toctree:start -->
+<!-- apiref:toctree:end -->

@@ -50,4 +50,10 @@ PopulationSolverOutcome differential_evolution_prmm_minimizer(objective, initial
 5. When you cannot tune the parameters, use the self-adapting variant.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+dfo_08_differential_evolution/differential_evolution_in_practice
+```
 <!-- apiref:toctree:end -->

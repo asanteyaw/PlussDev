@@ -1,0 +1,60 @@
+# `thermal::Layers`
+
+The layers of a plane wall.
+
+## Signature
+
+```cpp
+thermal::Layers
+```
+
+## What It Does
+
+Describes a wall as layers from the inner face to the outer face. Each layer has a thickness, a conductivity, a density, a specific heat and a number of cells into which it is divided; `mesh` turns the description into a network.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `cells` | The number of equal cells in each layer, at least one each. One entry per layer. | required |
+| `thickness` | The thickness of each layer in m, `[..., layers]`, positive. | required |
+| `conductivity` | The conductivity of each layer in W/(m K), `[..., layers]`, positive. | required |
+| `density` | The density of each layer in kg/m^3, `[..., layers]`, positive. | required |
+| `specific_heat` | The specific heat of each layer in J/(kg K), `[..., layers]`, positive. | required |
+
+## Returns
+
+A value; read by `mesh`.
+
+## Errors
+
+`mesh` throws `pluss::Error` for arrays whose last axis does not have one value per layer, a cell count below one, or a value that is not positive or not finite.
+
+## Interpretation and Use
+
+More cells resolve the temperature profile; the steady heat flow does not depend on the number of cells, but a transient does. Put more cells where the temperature changes fastest, normally near the faces.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Two layers divided into five cells.
+
+@@example Eng/api/thermal_mesh_layers.cpp@@
+
+### Example 2
+
+The steady flux for different divisions.
+
+@@example Eng/api/thermal_mesh_steady.cpp@@
+
+### Example 3
+
+Rejected layer descriptions.
+
+@@example Eng/api/thermal_mesh_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

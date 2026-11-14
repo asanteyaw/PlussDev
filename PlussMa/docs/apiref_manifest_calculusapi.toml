@@ -1,0 +1,757 @@
+# apiref_manifest_calculusapi.toml -- the `Calculus` API reference of PlussMa.
+
+[framework.calculus_api]
+title = "Calculus"
+nav_title = "Calculus API"
+nav_prefix = "api/calculus/"
+root_page = "api/plussma_calculus.html"
+summary = "Functions as values and the operators that act on them: derivatives, integrals, transforms, series, vector calculus, measures and stochastic calculus."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "calculus/functions"
+page = "api/calculus/functions.md"
+title = "Functions"
+maxdepth = 2
+children = ["functions/Function", "functions/function_factory", "functions/operator_add", "functions/operator_div", "functions/operator_mul", "functions/operator_sub", "functions/stack"]
+
+[[family]]
+path = "calculus/operators"
+page = "api/calculus/operators.md"
+title = "Operators"
+maxdepth = 2
+children = ["operators/Capabilities", "operators/DiffOptions", "operators/Operator", "operators/Options", "operators/adjoint", "operators/bind", "operators/commutator", "operators/compose", "operators/define", "operators/identity", "operators/linear_combination", "operators/multiply", "operators/scale", "operators/shift"]
+
+[[family]]
+path = "calculus/differential"
+page = "api/calculus/differential.md"
+title = "Derivatives"
+maxdepth = 2
+children = ["differential/conjugate_wirtinger", "differential/covariant", "differential/differential", "differential/gradient", "differential/hessian", "differential/jacobian", "differential/magnitude_differential", "differential/wirtinger"]
+
+[[family]]
+path = "calculus/integral"
+page = "api/calculus/integral.md"
+title = "Integrals"
+maxdepth = 2
+children = ["integral/antiderivative", "integral/convolution", "integral/integral"]
+
+[[family]]
+path = "calculus/geometry"
+page = "api/calculus/geometry.md"
+title = "Differential geometry"
+maxdepth = 2
+children = ["geometry/TensorSignature", "geometry/absolute_differential", "geometry/covariant", "geometry/levi_civita"]
+
+[[family]]
+path = "calculus/fourier"
+page = "api/calculus/fourier.md"
+title = "Fourier series and transforms"
+maxdepth = 2
+children = ["fourier/coefficients", "fourier/cosine_coefficients", "fourier/cosine_series", "fourier/cosine_transform", "fourier/inverse_transform", "fourier/series", "fourier/sine_coefficients", "fourier/sine_series", "fourier/sine_transform", "fourier/transform"]
+
+[[family]]
+path = "calculus/measure"
+page = "api/calculus/measure.md"
+title = "Measures"
+maxdepth = 2
+children = ["measure/atomic", "measure/lebesgue", "measure/stieltjes", "measure/weighted"]
+
+[[family]]
+path = "calculus/vector_calculus"
+page = "api/calculus/vector_calculus.md"
+title = "Vector calculus"
+maxdepth = 2
+children = ["vector_calculus/curl", "vector_calculus/directional", "vector_calculus/divergence", "vector_calculus/laplacian", "vector_calculus/material"]
+
+[[family]]
+path = "calculus/variational"
+page = "api/calculus/variational.md"
+title = "Calculus of variations"
+maxdepth = 2
+children = ["variational/euler_lagrange", "variational/functional_derivative"]
+
+[[family]]
+path = "calculus/fractional"
+page = "api/calculus/fractional.md"
+title = "Fractional calculus"
+maxdepth = 2
+children = ["fractional/differential", "fractional/integral"]
+
+[[family]]
+path = "calculus/laplace"
+page = "api/calculus/laplace.md"
+title = "Laplace transforms"
+maxdepth = 2
+children = ["laplace/inverse_transform", "laplace/transform"]
+
+[[family]]
+path = "calculus/expansion"
+page = "api/calculus/expansion.md"
+title = "Taylor and power series"
+maxdepth = 2
+children = ["expansion/Power", "expansion/Taylor", "expansion/power_operator", "expansion/taylor_operator"]
+
+[[family]]
+path = "calculus/stochastic"
+page = "api/calculus/stochastic.md"
+title = "Stochastic calculus"
+maxdepth = 2
+children = ["stochastic/IntegralOptions", "stochastic/PathOptions", "stochastic/convention_change", "stochastic/covariation", "stochastic/generator", "stochastic/malliavin_derivative", "stochastic/quadratic_variation", "stochastic/skorokhod_integral", "stochastic/stochastic_differential", "stochastic/stochastic_integral", "stochastic/theta_of"]
+
+[[family]]
+path = "calculus/io"
+page = "api/calculus/io.md"
+title = "Saving and loading"
+maxdepth = 2
+children = ["io/load_function", "io/load_operator", "io/save"]
+
+[[symbol]]
+qualname = "math::operator+"
+kind = "function"
+family = "calculus/functions"
+page = "api/calculus/functions/operator_add.md"
+summary = "The infix sum: a function plus a function, a real number or a complex number, in either order."
+overloads = 5
+
+[[symbol]]
+qualname = "math::operator-"
+kind = "function"
+family = "calculus/functions"
+page = "api/calculus/functions/operator_sub.md"
+summary = "The infix difference: a function minus a function, a real number or a complex number, in either order."
+overloads = 5
+
+[[symbol]]
+qualname = "math::operator*"
+kind = "function"
+family = "calculus/functions"
+page = "api/calculus/functions/operator_mul.md"
+summary = "The infix product: a function times a function, a real number or a complex number, in either order."
+overloads = 5
+
+[[symbol]]
+qualname = "math::operator/"
+kind = "function"
+family = "calculus/functions"
+page = "api/calculus/functions/operator_div.md"
+summary = "The infix quotient: a function divided by a function, a real number or a complex number, or a number divided by a function."
+overloads = 5
+
+[[symbol]]
+qualname = "math::function"
+kind = "function"
+family = "calculus/functions"
+page = "api/calculus/functions/function_factory.md"
+summary = "Creates a `Function`: from a callable (which is traced once), or from a constant."
+overloads = 6
+
+[[symbol]]
+qualname = "math::stack"
+kind = "function"
+family = "calculus/functions"
+page = "api/calculus/functions/stack.md"
+summary = "Assembles a vector- or matrix-valued function from several functions, adding a trailing output axis."
+overloads = 2
+
+[[symbol]]
+qualname = "operators::Capabilities"
+kind = "options"
+family = "calculus/operators"
+page = "api/calculus/operators/Capabilities.md"
+summary = "The record of properties an operator promises: structural, linear, savable, with a known adjoint."
+fields = ["structural", "evaluated_only", "linear", "adjoint_known", "serializable", "platform_pure", "path_functional"]
+
+[[symbol]]
+qualname = "operators::Options"
+kind = "options"
+family = "calculus/operators"
+page = "api/calculus/operators/Options.md"
+summary = "What you declare about an operator you define with `operators::define`."
+fields = ["version", "structural", "evaluated_only", "linear", "adjoint_known", "serializable", "platform_pure", "payload"]
+
+[[symbol]]
+qualname = "operators::DiffOptions"
+kind = "options"
+family = "calculus/operators"
+page = "api/calculus/operators/DiffOptions.md"
+summary = "How the differential operators treat non-smooth points, opaque functions and runaway expression growth."
+fields = ["nonsmooth", "fallback", "max_nodes"]
+
+[[symbol]]
+qualname = "operators::identity"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/identity.md"
+summary = "The operator that returns its input unchanged: the neutral element of composition and of linear combinations."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::scale"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/scale.md"
+summary = "The operator that multiplies a function by a fixed real number."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::multiply"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/multiply.md"
+summary = "The operator that multiplies a function by a given function of the same variables."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::shift"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/shift.md"
+summary = "The translation operator: replaces `x` by `x + amount`, so `(shift f)(x) = f(x + amount)`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::compose"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/compose.md"
+summary = "Chains two operators into one: first `inner`, then `outer`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::linear_combination"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/linear_combination.md"
+summary = "The weighted sum of operators: `c₁A₁ + c₂A₂ + …`."
+overloads = 3
+
+[[symbol]]
+qualname = "operators::commutator"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/commutator.md"
+summary = "The commutator `[A, B] = AB − BA` of two operators."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::adjoint"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/adjoint.md"
+summary = "The formal adjoint of an operator: the operator `A*` with `⟨A f, g⟩ = ⟨f, A* g⟩`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::define"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/define.md"
+summary = "Builds your own `Operator` from a callable that turns a function into a function."
+overloads = 2
+
+[[symbol]]
+qualname = "operators::bind"
+kind = "function"
+family = "calculus/operators"
+page = "api/calculus/operators/bind.md"
+summary = "Registers a loader that rebuilds a custom operator when it is read back from a saved artifact."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::differential"
+kind = "function"
+family = "calculus/differential"
+page = "api/calculus/differential/differential.md"
+summary = "The partial derivative of a function with respect to one variable, to any order."
+overloads = 1
+toggles = ["order > 1", "Fallback::Autodiff", "NonSmooth"]
+
+[[symbol]]
+qualname = "operators::wirtinger"
+kind = "function"
+family = "calculus/differential"
+page = "api/calculus/differential/wirtinger.md"
+summary = "The Wirtinger derivative `∂/∂z` of a function of a complex variable."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::conjugate_wirtinger"
+kind = "function"
+family = "calculus/differential"
+page = "api/calculus/differential/conjugate_wirtinger.md"
+summary = "The conjugate Wirtinger derivative `∂/∂z̄`; it vanishes exactly where a function is holomorphic."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::magnitude_differential"
+kind = "function"
+family = "calculus/differential"
+page = "api/calculus/differential/magnitude_differential.md"
+summary = "The absolute value of a derivative: `|f⁽ⁿ⁾|`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::gradient"
+kind = "function"
+family = "calculus/differential"
+page = "api/calculus/differential/gradient.md"
+summary = "The vector of first partial derivatives of a scalar function."
+overloads = 1
+toggles = ["named variables"]
+
+[[symbol]]
+qualname = "operators::jacobian"
+kind = "function"
+family = "calculus/differential"
+page = "api/calculus/differential/jacobian.md"
+summary = "The matrix of first partial derivatives of a vector-valued function."
+overloads = 1
+toggles = ["named variables"]
+
+[[symbol]]
+qualname = "operators::hessian"
+kind = "function"
+family = "calculus/differential"
+page = "api/calculus/differential/hessian.md"
+summary = "The matrix of second partial derivatives of a scalar function."
+overloads = 1
+toggles = ["named variables"]
+
+[[symbol]]
+qualname = "operators::covariant"
+kind = "function"
+family = "calculus/differential"
+page = "api/calculus/differential/covariant.md"
+summary = "The covariant derivative of a scalar field along one variable: `∂f/∂x + Γ f`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::antiderivative"
+kind = "function"
+family = "calculus/integral"
+page = "api/calculus/integral/antiderivative.md"
+summary = "A function whose derivative is the input: an indefinite integral with respect to one variable."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::integral"
+kind = "function"
+family = "calculus/integral"
+page = "api/calculus/integral/integral.md"
+summary = "The integral of a function over a range: anchored at a lower limit (a function of the upper limit) or definite (a number, or a function of the other variables)."
+overloads = 2
+toggles = ["infinite limits", "vector-valued"]
+
+[[symbol]]
+qualname = "operators::convolution"
+kind = "function"
+family = "calculus/integral"
+page = "api/calculus/integral/convolution.md"
+summary = "The convolution of a function with a fixed kernel over the real line: `(f ∗ k)(x) = ∫ f(t) k(x − t) dt`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::geometry::levi_civita"
+kind = "function"
+family = "calculus/geometry"
+page = "api/calculus/geometry/levi_civita.md"
+summary = "The Levi-Civita connection (Christoffel symbols) of a metric, as a function of the coordinates."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::geometry::covariant"
+kind = "function"
+family = "calculus/geometry"
+page = "api/calculus/geometry/covariant.md"
+summary = "The covariant derivative of a tensor field in the direction of one coordinate: the ordinary derivative plus the connection terms for each index."
+overloads = 1
+toggles = ["vector", "covector", "scalar", "mixed"]
+
+[[symbol]]
+qualname = "operators::geometry::absolute_differential"
+kind = "function"
+family = "calculus/geometry"
+page = "api/calculus/geometry/absolute_differential.md"
+summary = "The absolute (intrinsic) derivative of a tensor along a curve: how fast it changes relative to parallel transport."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::geometry::TensorSignature"
+kind = "options"
+family = "calculus/geometry"
+page = "api/calculus/geometry/TensorSignature.md"
+summary = "How many contravariant (upper) and covariant (lower) indices a tensor field has."
+fields = ["contravariant", "covariant"]
+
+[[symbol]]
+qualname = "operators::fourier::cosine_coefficients"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/cosine_coefficients.md"
+summary = "The cosine-series coefficients `A₀ … A_{terms−1}` of a function on an interval, as a vector function."
+overloads = 2
+toggles = ["parameter dependence"]
+
+[[symbol]]
+qualname = "operators::fourier::sine_coefficients"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/sine_coefficients.md"
+summary = "The sine-series coefficients `B₁ … B_terms` of a function on an interval, as a vector function."
+overloads = 2
+
+[[symbol]]
+qualname = "operators::fourier::cosine_series"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/cosine_series.md"
+summary = "The truncated half-range cosine series of a function, as a function of the original variable."
+overloads = 1
+toggles = ["parameter dependence"]
+
+[[symbol]]
+qualname = "operators::fourier::sine_series"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/sine_series.md"
+summary = "The truncated half-range sine series of a function, as a function of the original variable."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::fourier::coefficients"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/coefficients.md"
+summary = "The full trigonometric Fourier coefficients of a function on a symmetric period `[−L, L]`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::fourier::series"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/series.md"
+summary = "The truncated full Fourier series of a function on a symmetric period `[−L, L]`, as a function of the original variable."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::fourier::transform"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/transform.md"
+summary = "The Fourier transform of a function over the real line, as a function of a new frequency variable."
+overloads = 1
+toggles = ["Angular", "Unitary", "Ordinary"]
+
+[[symbol]]
+qualname = "operators::fourier::inverse_transform"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/inverse_transform.md"
+summary = "The inverse Fourier transform: recovers a function of the original variable from its transform."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::fourier::cosine_transform"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/cosine_transform.md"
+summary = "The Fourier cosine transform over the half line `[0, ∞)`."
+overloads = 1
+toggles = ["Angular", "Unitary", "Ordinary"]
+
+[[symbol]]
+qualname = "operators::fourier::sine_transform"
+kind = "function"
+family = "calculus/fourier"
+page = "api/calculus/fourier/sine_transform.md"
+summary = "The Fourier sine transform over the half line `[0, ∞)`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::measure::lebesgue"
+kind = "function"
+family = "calculus/measure"
+page = "api/calculus/measure/lebesgue.md"
+summary = "Integration against Lebesgue measure on an interval, with optional null points that are never sampled."
+overloads = 1
+toggles = ["null points", "infinite limits"]
+
+[[symbol]]
+qualname = "operators::measure::weighted"
+kind = "function"
+family = "calculus/measure"
+page = "api/calculus/measure/weighted.md"
+summary = "Integration against a density: `∫ f(x) ρ(x) dx`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::measure::atomic"
+kind = "function"
+family = "calculus/measure"
+page = "api/calculus/measure/atomic.md"
+summary = "Integration against a finite set of point masses: the exact sum `Σ wᵢ f(xᵢ)`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::measure::stieltjes"
+kind = "function"
+family = "calculus/measure"
+page = "api/calculus/measure/stieltjes.md"
+summary = "Lebesgue–Stieltjes integration: a continuous part given by a distribution function plus a list of jumps."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::divergence"
+kind = "function"
+family = "calculus/vector_calculus"
+page = "api/calculus/vector_calculus/divergence.md"
+summary = "The divergence of a vector field: `Σ ∂Fᵢ/∂xᵢ`, a scalar function."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::curl"
+kind = "function"
+family = "calculus/vector_calculus"
+page = "api/calculus/vector_calculus/curl.md"
+summary = "The curl of a vector field: its local rotation. A vector function in three dimensions, a scalar function in two."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::laplacian"
+kind = "function"
+family = "calculus/vector_calculus"
+page = "api/calculus/vector_calculus/laplacian.md"
+summary = "The Laplacian of a scalar function: `Σ ∂²f/∂xᵢ²`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::directional"
+kind = "function"
+family = "calculus/vector_calculus"
+page = "api/calculus/vector_calculus/directional.md"
+summary = "The derivative of a scalar function along a direction field: `v · ∇f`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::material"
+kind = "function"
+family = "calculus/vector_calculus"
+page = "api/calculus/vector_calculus/material.md"
+summary = "The material (convective) derivative of a scalar function in a flow: `∂f/∂t + v · ∇f`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::variational::functional_derivative"
+kind = "function"
+family = "calculus/variational"
+page = "api/calculus/variational/functional_derivative.md"
+summary = "The functional derivative `δF/δu` of the functional `F[u] = ∫ L(x, u, u′, …) dx`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::variational::euler_lagrange"
+kind = "function"
+family = "calculus/variational"
+page = "api/calculus/variational/euler_lagrange.md"
+summary = "The Euler–Lagrange expression of a Lagrangian: the function whose zeros are the stationary functions."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::fractional::integral"
+kind = "function"
+family = "calculus/fractional"
+page = "api/calculus/fractional/integral.md"
+summary = "The Riemann–Liouville fractional integral of order `α > 0`: the `α`-fold integral, for non-integer `α`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::fractional::differential"
+kind = "function"
+family = "calculus/fractional"
+page = "api/calculus/fractional/differential.md"
+summary = "The fractional derivative of order `α > 0`, in the Caputo, Riemann–Liouville or Grünwald–Letnikov sense."
+overloads = 1
+toggles = ["Caputo", "RiemannLiouville", "GrunwaldLetnikov"]
+
+[[symbol]]
+qualname = "operators::laplace::transform"
+kind = "function"
+family = "calculus/laplace"
+page = "api/calculus/laplace/transform.md"
+summary = "The one-sided Laplace transform `∫₀^∞ f(t) e^{−st} dt` as a function of a new variable."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::laplace::inverse_transform"
+kind = "function"
+family = "calculus/laplace"
+page = "api/calculus/laplace/inverse_transform.md"
+summary = "The inverse Laplace transform by Talbot's method: an explicit formula in `t`, with no quadrature at evaluation."
+overloads = 1
+toggles = ["terms"]
+
+[[symbol]]
+qualname = "operators::expansion::taylor"
+kind = "function"
+family = "calculus/expansion"
+page = "api/calculus/expansion/taylor_operator.md"
+summary = "The truncated Taylor expansion of a function: a polynomial function that approximates it near a point."
+overloads = 3
+toggles = ["Auto", "Structural", "Jet"]
+
+[[symbol]]
+qualname = "operators::expansion::power"
+kind = "function"
+family = "calculus/expansion"
+page = "api/calculus/expansion/power_operator.md"
+summary = "Builds the polynomial `Σ cₖ (x − a)ᵏ` from a coefficient vector."
+overloads = 2
+
+[[symbol]]
+qualname = "operators::stochastic::stochastic_integral"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/stochastic_integral.md"
+summary = "The stochastic integral of a function of a sampled path against a noise path, in the Itô, Stratonovich, Klimontovich or general θ convention."
+overloads = 1
+toggles = ["Ito", "Stratonovich", "Klimontovich", "Theta"]
+
+[[symbol]]
+qualname = "operators::stochastic::quadratic_variation"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/quadratic_variation.md"
+summary = "The quadratic variation `[X]` of a sampled path: the sum of squared increments."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::stochastic::covariation"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/covariation.md"
+summary = "The quadratic covariation `[X, Y]` of two sampled paths: the sum of products of their increments."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::stochastic::generator"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/generator.md"
+summary = "The infinitesimal generator of a diffusion: `L g = μ·∇g + ½ tr(σσᵀ ∇²g)`."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::stochastic::stochastic_differential"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/stochastic_differential.md"
+summary = "Itô's formula (and its Stratonovich and θ versions): the drift and diffusion of `g(X)` for `dX = μ dt + σ ∘_θ dW`."
+overloads = 1
+toggles = ["Ito", "Stratonovich", "Klimontovich", "Theta"]
+
+[[symbol]]
+qualname = "operators::stochastic::convention_change"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/convention_change.md"
+summary = "Rewrites a drift so that the same process is described in another convention."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::stochastic::malliavin_derivative"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/malliavin_derivative.md"
+summary = "The Malliavin derivative of a functional of a discretised Wiener path, as a vector of sensitivities to each increment."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::stochastic::skorokhod_integral"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/skorokhod_integral.md"
+summary = "The Skorokhod integral of a vector process on a discretised Wiener path: an Itô integral that also accepts anticipating integrands."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::stochastic::theta_of"
+kind = "function"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/theta_of.md"
+summary = "The `θ` of a convention: where in each step the integrand is read."
+overloads = 1
+
+[[symbol]]
+qualname = "operators::stochastic::PathOptions"
+kind = "options"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/PathOptions.md"
+summary = "Options of the path-variation operators: whether to keep the running value and which axis is the path."
+fields = ["cumulative", "path_axis"]
+
+[[symbol]]
+qualname = "operators::stochastic::IntegralOptions"
+kind = "options"
+family = "calculus/stochastic"
+page = "api/calculus/stochastic/IntegralOptions.md"
+summary = "Options of the stochastic integral: the convention, `θ`, whether to keep the running integral, and the path axis."
+fields = ["convention", "theta", "cumulative", "path_axis"]
+
+[[symbol]]
+qualname = "math::io::save"
+kind = "function"
+family = "calculus/io"
+page = "api/calculus/io/save.md"
+summary = "Writes a function or an operator to a stream or a file."
+overloads = 4
+
+[[symbol]]
+qualname = "math::io::load_function"
+kind = "function"
+family = "calculus/io"
+page = "api/calculus/io/load_function.md"
+summary = "Reads a function back from a stream or a file written by `save`."
+overloads = 2
+
+[[symbol]]
+qualname = "math::io::load_operator"
+kind = "function"
+family = "calculus/io"
+page = "api/calculus/io/load_operator.md"
+summary = "Reads an operator back from a stream or a file written by `save`."
+overloads = 2
+
+[[symbol]]
+qualname = "math::Function"
+kind = "class"
+family = "calculus/functions"
+page = "api/calculus/functions/Function.md"
+summary = "A formula in named variables, recorded once and evaluated on any `Series` data."
+methods = ["abs", "add", "angle", "arg", "arity", "assume", "assumption", "call", "compose", "conj", "contract", "cos", "cosh", "defined", "det", "div", "exp", "expm1", "imag", "inverse", "log", "log1p", "matmul", "mul", "negate", "pow", "provenance", "rank", "real", "select", "shape", "sin", "sinh", "sqrt", "sub", "tan", "tanh", "trace", "transpose", "variables"]
+
+[[symbol]]
+qualname = "operators::Operator"
+kind = "class"
+family = "calculus/operators"
+page = "api/calculus/operators/Operator.md"
+summary = "A transformation that takes a `math::Function` and returns another one."
+methods = ["call", "capabilities", "defined", "key", "version"]
+
+[[symbol]]
+qualname = "operators::expansion::Taylor"
+kind = "class"
+family = "calculus/expansion"
+page = "api/calculus/expansion/Taylor.md"
+summary = "The companions of the Taylor operator: the coefficient vector and the Lagrange remainder."
+methods = ["coefficients", "remainder"]
+
+[[symbol]]
+qualname = "operators::expansion::Power"
+kind = "class"
+family = "calculus/expansion"
+page = "api/calculus/expansion/Power.md"
+summary = "Termwise calculus on coefficient vectors: derivative, integral and product of power series."
+methods = ["derivative", "integral", "product"]
+

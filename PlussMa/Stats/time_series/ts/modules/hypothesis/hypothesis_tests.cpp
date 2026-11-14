@@ -229,7 +229,7 @@ double kpss_pvalue_approx_(double stat, const std::array<double, 4>& criticals) 
 
 double normal_cdf_(double z, Config cfg) {
   const Series q = pluss::make_series(std::vector<double>{z}, {1}, f64_cfg_(cfg));
-  return clamp01_(pluss::subsp::stats::distr::Normal{}.cdf(q).item<double>());
+  return clamp01_(pluss::subsp::stats::distr::Normal{}.cdf(q).items<double>().front());
 }
 
 double normal_quantile_(double p, Config cfg) {

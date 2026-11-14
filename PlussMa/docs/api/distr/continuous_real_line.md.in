@@ -18,4 +18,19 @@ Families whose values range over the whole real line: the normal and its heavy-t
 | [`TukeyLambda`](continuous_real_line/TukeyLambda.md) | The Tukey lambda distribution: a one-parameter family defined through its quantile function that contains the logistic, uniform and approximately the normal and heavy-tailed distributions. |
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+continuous_real_line/Cauchy
+continuous_real_line/ExtremeValue
+continuous_real_line/Gh
+continuous_real_line/HyperbolicSecant
+continuous_real_line/Laplace
+continuous_real_line/Logistic
+continuous_real_line/Nig
+continuous_real_line/Normal
+continuous_real_line/StudentT
+continuous_real_line/TukeyLambda
+```
 <!-- apiref:toctree:end -->

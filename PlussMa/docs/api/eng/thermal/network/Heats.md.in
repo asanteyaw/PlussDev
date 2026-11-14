@@ -1,0 +1,57 @@
+# `thermal::Heats`
+
+Heat inflows into nodes.
+
+## Signature
+
+```cpp
+thermal::Heats
+```
+
+## What It Does
+
+Injects heat into nodes: a heater, an electronic component, solar gain. Heat `k` is `power[k]` watts delivered into `node[k]`; a negative power withdraws heat. In `tran` a heat source that varies in time is a `Drive::power`.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `node` | The node of each heat source, an integer in `0 .. nodes - 1`. | empty |
+| `power` | The power of each source in W. The last axis has one value per source; leading axes are batches. | undefined (no heat sources) |
+
+## Returns
+
+A value; read by `steady` and `tran`.
+
+## Errors
+
+`steady` and `tran` throw `pluss::Error` for a node index outside the network, a power array whose last axis does not have one value per source, or a power that is not finite.
+
+## Interpretation and Use
+
+In steady state the heat injected into a network leaves through its fixed nodes; `fixed_flow` of the result sums to the negative of the injected power.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+30 W injected into the middle of a chain.
+
+@@example Eng/api/thermal_steady_heat.cpp@@
+
+### Example 2
+
+A heater switched on and off.
+
+@@example Eng/api/thermal_tran_drive.cpp@@
+
+### Example 3
+
+Rejected heat sources, and a negative power.
+
+@@example Eng/api/thermal_errors_heats.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

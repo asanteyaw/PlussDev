@@ -1,0 +1,14 @@
+# Actuarial 1: Mortality and Life Tables
+
+Mortality calculations use several quantities that look similar but answer different questions. This chapter keeps their meanings separate before combining them into present values or reserves.
+
+- [Mortality Probability, Survival Probability and Force](actuarial_01_mortality_and_life_tables/mortality_probability_survival_and_force.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+actuarial_01_mortality_and_life_tables/mortality_probability_survival_and_force
+```
+<!-- apiref:toctree:end -->

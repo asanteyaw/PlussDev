@@ -1,0 +1,67 @@
+# `fluid::DemandMode`
+
+Whether a demand is fixed or falls with the pressure.
+
+## Signature
+
+```cpp
+fluid::DemandMode
+```
+
+## What It Does
+
+Chooses how the demand at a junction behaves. `Fixed` delivers the whole demand whatever the pressure. `Pressure` delivers it by the Wagner law: nothing at or below `min_pressure`, the whole demand at or above `full_pressure`, and a power law between.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `Fixed` | The delivered demand is the requested demand. Pressures can fall below zero; they are reported without complaint. |  |
+| `Pressure` | `d(p) = D ((p - p_min) / (p_full - p_min))^γ` between the pressures, with the exponent `γ = Options::demand_exponent`. A source (negative demand) is never throttled. |  |
+
+## Returns
+
+An enumeration; `Options::demand_mode`.
+
+## Errors
+
+`steady` rejects pressure bounds that are not ordered and exponents that are not positive.
+
+## Interpretation and Use
+
+Use `Fixed` while the pressures are decent. Use `Pressure` to see what a stressed network delivers. Check `SteadyResult::pressure` after a `Fixed` solve of a stressed network.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Fixed against Pressure on a starved junction.
+
+@@example Eng/api/fluid_demand_modes.cpp@@
+
+### Example 2
+
+Thresholds and exponents.
+
+@@example Eng/api/fluid_demand_thresholds.cpp@@
+
+### Example 3
+
+Bounds that are refused.
+
+@@example Eng/api/fluid_steady_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="LossModel.html">
+    <span class="label">Previous</span>
+    <span class="title">LossModel</span>
+  </a>
+  <a class="next-link" href="Options.html">
+    <span class="label">Next</span>
+    <span class="title">Options</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

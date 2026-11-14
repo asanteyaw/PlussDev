@@ -4,7 +4,7 @@
 
 [Back to Monte Carlo](../finance_04_monte_carlo.md)
 
-A pseudo-random sample of *N* points fills space irregularly, so the Monte Carlo error falls only as 1/√N. A *low-discrepancy* (quasi-random) sequence fills it evenly, and for smooth, low-dimensional problems the error can fall nearly as 1/N. `MonteCarloOptions::rand_method` (and `SimOptions::method`) selects the source of the shocks:
+A pseudo-random sample of *N* points fills space irregularly, so the Monte Carlo error falls only as 1/√N. A *low-discrepancy* (quasi-random) sequence fills it evenly, and for smooth, low-dimensional problems the error can fall nearly as 1/N. `field.controls.mc.rand_method` selects the source of the shocks:
 
 | `RandMethod` | Sequence |
 |---|---|
@@ -15,7 +15,7 @@ A pseudo-random sample of *N* points fills space irregularly, so the Monte Carlo
 
 ## Paths are points, steps are dimensions
 
-A path is one *point* of the sequence and each time step is one *dimension*; a Heston path with 32 steps uses 32 dimensions for its spot shocks and 32 more for the variance shocks, taken from separate blocks of one sequence, and a Bates path adds blocks for the jumps. A quasi-random sequence loses its advantage as the dimension grows, and the early dimensions of Sobol are better distributed than the late ones, so quasi-random sampling is most useful with few steps. The program shows the layout of the underlying generator, a Sobol sequence of `[points, dimensions]`, and the first points: dimension 1 is the van der Corput sequence 0.5, 0.75, 0.25, ... .
+A path is one *point* of the sequence and each time step is one *dimension*; a Heston path with 32 steps uses 32 dimensions for its asset shocks and 32 more for the variance shocks, taken from separate blocks of one sequence, and a Bates path adds blocks for the jumps. A quasi-random sequence loses its advantage as the dimension grows, and the early dimensions of Sobol are better distributed than the late ones, so quasi-random sampling is most useful with few steps. The program shows the layout of the underlying generator, a Sobol sequence of `[points, dimensions]`, and the first points: dimension 1 is the van der Corput sequence 0.5, 0.75, 0.25, ... .
 
 ```cpp
 #include <pluss/ma.h>
@@ -32,8 +32,8 @@ int main() {
   options.start = 1;
   const auto points = rng::sobol({1024, 3}, options, as_f64());
   out.writeln("shape [points, dimensions]", points.sizes());
-  const std::vector<double> first = points.select(1, 0).pull<double>();
-  const std::vector<double> second = points.select(1, 1).pull<double>();
+  const std::vector<double> first = points.select(1, 0).items<double>();
+  const std::vector<double> second = points.select(1, 1).items<double>();
   out.writeln("first dimension, first eight points ", std::vector<double>(first.begin(), first.begin() + 8));
   out.writeln("second dimension, first eight points", std::vector<double>(second.begin(), second.begin() + 8));
   out.writeln("means of the three dimensions over 1024 points (0.5):", points.select(1, 0).mean().item<double>(), points.select(1, 1).mean().item<double>(), points.select(1, 2).mean().item<double>());
@@ -59,55 +59,72 @@ A deterministic quasi-random set has no random error to measure, only an error a
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(4));
-  const vol::HestonParams params;
-  const double reference = prc::heston_price_cos(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, params);
+  const double reference = cos_reference(100.0);
   out.writeln("COS reference", reference);
+  using fin::volatility::RandMethod;
 
   out.writeln("deterministic sequences, 16384 paths, 16 steps: error against the reference");
-  for (auto [name, method] : {std::pair<const char *, vol::RandMethod>{"Pseudo ", vol::RandMethod::Pseudo}, {"Sobol  ", vol::RandMethod::Sobol}, {"Halton ", vol::RandMethod::Halton}, {"Torus  ", vol::RandMethod::Torus}}) {
-    prc::MonteCarloOptions options;
-    options.paths = 16384;
-    options.steps = 16;
-    options.rand_method = method;
-    out.writeln("  ", name, prc::heston_price_mc(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, params, options) - reference);
+  for (auto [name, method] : {std::pair<const char *, RandMethod>{"Pseudo ", RandMethod::Pseudo}, {"Sobol  ", RandMethod::Sobol}, {"Halton ", RandMethod::Halton}, {"Torus  ", RandMethod::Torus}}) {
+    mod::Field field = monte_carlo(fin::model::Kind::Heston, kHeston);
+    field.controls.mc.paths = 16384;
+    field.controls.mc.steps = 16;
+    field.controls.mc.rand_method = method;
+    out.writeln("  ", name, price1(field) - reference);
   }
 
-  auto spread = [&](prc::MonteCarloOptions options) {
+  auto spread = [&](std::int64_t paths, auto edit) {
     std::vector<double> prices;
     for (int seed = 1; seed <= 16; ++seed) {
-      options.seed = 37 * seed;
-      prices.push_back(prc::heston_price_mc(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, params, options));
+      mod::Field field = monte_carlo(fin::model::Kind::Heston, kHeston);
+      field.controls.mc.paths = paths;
+      field.controls.mc.steps = 16;
+      field.controls.mc.seed = 37 * seed;
+      edit(field.controls.mc);
+      prices.push_back(price1(field));
     }
-    double mean = 0.0;
-    for (double p : prices) {
-      mean += p / 16.0;
-    }
-    double variance = 0.0;
-    for (double p : prices) {
-      variance += (p - mean) * (p - mean) / 15.0;
-    }
-    return std::make_pair(mean - reference, std::sqrt(variance));
+    const auto [mean, sd] = mean_sd(prices);
+    return std::make_pair(mean - reference, sd);
   };
   out.writeln("randomised runs (16 seeds): bias of the mean and standard deviation of one run");
   for (std::int64_t paths : {1024, 4096, 16384}) {
-    prc::MonteCarloOptions pseudo;
-    pseudo.paths = paths;
-    pseudo.steps = 16;
-    prc::MonteCarloOptions sobol = pseudo;
-    sobol.rand_method = vol::RandMethod::Sobol;
-    sobol.randomized_quasi = true;
-    prc::MonteCarloOptions scrambled = sobol;
-    scrambled.sobol_scrambling = 2;
-    const auto a = spread(pseudo);
-    const auto b = spread(sobol);
-    const auto c = spread(scrambled);
+    const auto a = spread(paths, [](auto &) {});
+    const auto b = spread(paths, [](auto &mc) { mc.rand_method = RandMethod::Sobol; mc.randomized_quasi = true; });
+    const auto c = spread(paths, [](auto &mc) { mc.rand_method = RandMethod::Sobol; mc.randomized_quasi = true; mc.sobol_scrambling = 2; });
     out.writeln("  paths", paths, " pseudo", a.first, a.second, " | randomised Sobol", b.first, b.second, " | scrambling 2", c.first, c.second);
   }
 }
@@ -138,26 +155,54 @@ For a pseudo-random run the `seed` selects the stream. For a deterministic quasi
 #include <pluss/ma.h>
 #include <pluss/tils/kit/output.h>
 
-namespace prc = pluss::subsp::math::finance::pricing;
-namespace vol = pluss::subsp::math::finance::volatility;
+namespace fin = pluss::subsp::math::finance;
+namespace mod = fin::module;
+namespace prc = fin::pricing;
 using namespace pluss::tils;
+using pluss::Series;
+
+constexpr double kSpot = 100.0, kRate = 0.03, kDiv = 0.01;
+const std::vector<double> kHeston{1.5, 0.04, 0.3, -0.7, 0.04};
+
+// A call under the given model, priced (or simulated) by Monte Carlo; the controls in field.controls.mc are the caller's to set.
+mod::Field monte_carlo(fin::model::Kind kind, const std::vector<double> &params, double strike = 100.0, double maturity = 1.0) {
+  return mod::Field{.instrument = fin::instrument::make(prc::Call, strike, maturity),
+                    .market = fin::market::make(kSpot, kRate, kDiv),
+                    .model = fin::model::make(kind, params),
+                    .controls = {.engine = mod::Engine::MonteCarlo, .risk = mod::Risk::PriceOnly}};
+}
+// The COS price of the same Heston call: the reference the simulation is judged against.
+double cos_reference(double strike, const std::vector<double> &params = kHeston, double maturity = 1.0) {
+  mod::Field f = monte_carlo(fin::model::Kind::Heston, params, strike, maturity);
+  f.controls.engine = mod::Engine::Cos;
+  return f.price().price.items<double>()[0];
+}
+double price1(const mod::Field &f) { return f.price().price.items<double>()[0]; }
+// Mean and standard deviation of a set of repeated prices.
+std::pair<double, double> mean_sd(const std::vector<double> &x) {
+  double mean = 0.0;
+  for (double v : x) mean += v / x.size();
+  double variance = 0.0;
+  for (double v : x) variance += (v - mean) * (v - mean) / (x.size() - 1);
+  return {mean, std::sqrt(variance)};
+}
 
 int main() {
   OutputEngine out;
   out.print_defaults(PrintOptions{}.fixed(5));
-  const vol::HestonParams params;
-  const double reference = prc::heston_price_cos(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, params);
-  auto price = [&](prc::MonteCarloOptions options) { return prc::heston_price_mc(prc::Call, 100.0, 100.0, 0.03, 0.01, 1.0, params, options); };
-
-  prc::MonteCarloOptions sobol;
-  sobol.paths = 8192;
-  sobol.steps = 16;
-  sobol.rand_method = vol::RandMethod::Sobol;
-  out.writeln("deterministic Sobol: seed 1", price([&] { auto o = sobol; o.seed = 1; return o; }()), " seed 2", price([&] { auto o = sobol; o.seed = 2; return o; }()), "(no effect)");
-  out.writeln("                     offset 0", price(sobol), " offset 8192", price([&] { auto o = sobol; o.offset = 8192; return o; }()), " offset 16384", price([&] { auto o = sobol; o.offset = 16384; return o; }()));
-  out.writeln("randomised:          seed 1", price([&] { auto o = sobol; o.randomized_quasi = true; o.seed = 1; return o; }()), " seed 2", price([&] { auto o = sobol; o.randomized_quasi = true; o.seed = 2; return o; }()));
-  out.writeln("Sobol + antithetic   deterministic", price([&] { auto o = sobol; o.antithetic = true; return o; }()), " randomised", price([&] { auto o = sobol; o.antithetic = true; o.randomized_quasi = true; return o; }()));
-  out.writeln("reference", reference);
+  auto price = [&](auto edit) {
+    mod::Field field = monte_carlo(fin::model::Kind::Heston, kHeston);
+    field.controls.mc.paths = 8192;
+    field.controls.mc.steps = 16;
+    field.controls.mc.rand_method = fin::volatility::RandMethod::Sobol;
+    edit(field.controls.mc);
+    return price1(field);
+  };
+  out.writeln("deterministic Sobol: seed 1", price([](auto &mc) { mc.seed = 1; }), " seed 2", price([](auto &mc) { mc.seed = 2; }), "(no effect)");
+  out.writeln("                     offset 0", price([](auto &) {}), " offset 8192", price([](auto &mc) { mc.offset = 8192; }), " offset 16384", price([](auto &mc) { mc.offset = 16384; }));
+  out.writeln("randomised:          seed 1", price([](auto &mc) { mc.randomized_quasi = true; mc.seed = 1; }), " seed 2", price([](auto &mc) { mc.randomized_quasi = true; mc.seed = 2; }));
+  out.writeln("Sobol + antithetic   deterministic", price([](auto &mc) { mc.antithetic = true; }), " randomised", price([](auto &mc) { mc.antithetic = true; mc.randomized_quasi = true; }));
+  out.writeln("reference", cos_reference(100.0));
 }
 ```
 
@@ -172,3 +217,16 @@ reference 8.54226
 ```
 
 A deterministic Sobol run does not depend on the seed (8.48051 for both) and depends on the offset (8.4805, 8.6200 and 8.5990 for three starting points, each a different point set of the same quality). A randomised run depends on the seed (8.4967 and 8.7294). Antithetic pairing combines with both (8.4569 and 8.5555).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="pricing_by_simulation.html">
+    <span class="label">Previous</span>
+    <span class="title">Pricing by simulation</span>
+  </a>
+  <a class="next-link" href="simulated_paths.html">
+    <span class="label">Next</span>
+    <span class="title">Simulated paths</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

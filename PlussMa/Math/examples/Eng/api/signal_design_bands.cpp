@@ -4,8 +4,8 @@
 #include <cmath>
 #include <optional>
 
-namespace lti = pluss::ma::eng::lti;
-namespace sig = pluss::ma::eng::signal;
+namespace lti = pluss::subsp::eng::lti;
+namespace sig = pluss::subsp::eng::signal;
 using namespace pluss::tils;
 
 int main() {

@@ -1,0 +1,91 @@
+# `robot::constrain`
+
+Joint accelerations under pins and contacts.
+
+## Signature
+
+```cpp
+robot::ConstrainedResult robot::constrain(const robot::Robot& robot, const robot::Contacts& contacts, const robot::Pins& pins, const pluss::Series& q, const pluss::Series& qd, const pluss::Series& tau, const robot::ConstraintOptions& options = {});
+```
+
+## What It Does
+
+Finds the joint accelerations of the motion `(q, qd)` under joint forces `tau` that also satisfy the constraints. Pin rows are equations `J qdd + J' qd = 0` with free forces. A contact row is the inequality `n . (J qdd + J' qd) >= 0` with a force `lambda >= 0` along the normal and complementarity `lambda (a_n) = 0`, active while the gap is at most the threshold. With the Delassus matrix `W = J M^-1 J^T` the forces solve the linear complementarity problem `W lambda + a0 >= 0`, `lambda >= 0`, which is the optimality system of a box-constrained quadratic program and is solved by `math::qp` for the whole batch.
+
+## Parameters
+
+`robot`
+: The compiled robot, with mass properties.
+
+`contacts`
+: The contacts; may be empty.
+
+`pins`
+: The pins; may be empty.
+
+`q`
+: The joint values, `[..., links]`.
+
+`qd`
+: The joint rates.
+
+`tau`
+: The applied joint forces.
+
+`options`
+: Gravity and the contact threshold; see `ConstraintOptions`.
+
+## Returns
+
+A `ConstrainedResult` with the accelerations, contact forces, pin forces and gaps.
+
+## Errors
+
+Throws `pluss::Error` when the robot has no mass properties, for a malformed argument, or for a contact threshold that is negative.
+
+## Interpretation and Use
+
+The forces are accurate to the tolerance of the quadratic-program solver (about `1e-6` in the examples). Contacts with `friction` add two tangent rows each, whose forces are limited to the friction coefficient times the normal force (solved by a short fixed-point iteration over the quadratic program). A contact removes the acceleration into the plane but not an incoming velocity: use `impact` for that. Redundant constraints are tolerated; inconsistent ones return the least-violating forces.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A slider on a floor: support, release and free fall.
+
+@@example Eng/api/robot_contact_rest.cpp@@
+
+### Example 2
+
+Support as a function of the pull.
+
+@@example Eng/api/robot_contact_support.cpp@@
+
+### Example 3
+
+A pinned tip.
+
+@@example Eng/api/robot_pin_arm.cpp@@
+
+### Example 4
+
+A resting simulation.
+
+@@example Eng/api/robot_constrained_rest.cpp@@
+
+### Example 5
+
+No constraints.
+
+@@example Eng/api/robot_constrained_none.cpp@@
+
+### Example 6
+
+Rejected arguments.
+
+@@example Eng/api/robot_pin_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

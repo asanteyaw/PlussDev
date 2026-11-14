@@ -15,7 +15,7 @@ std::string Slate::info_string() const
 
 Builds a short, fixed-format summary of the slate's metadata — name, payload kind, dtype,
 row count, and a valid/null breakdown — as a plain `std::string`. This is metadata only;
-unlike [`to_string()`](to_string.md) or [`show()`](show.md), it never renders the slate's
+unlike [`to_string()`](to_string.md), it never renders the slate's
 actual row values. Use it for logging, quick sanity checks, or anywhere you want a
 one-glance summary of what a slate contains without printing every row.
 
@@ -109,8 +109,8 @@ Null Cases: 0
 
 ## Notes
 
-- Metadata only — never renders row values. Use [`to_string()`](to_string.md) or
-  [`show()`](show.md) instead if you want the actual data rendered.
+- Metadata only — never renders row values. Use [`to_string()`](to_string.md)
+  instead if you want the actual data rendered.
 - The returned string has **no trailing newline** — [`info()`](info.md) is the
   convenience wrapper that both calls this and adds one when writing to a stream.
 - `Name:` reads `<unnamed>` unless the slate was given one via [`name()`](name.md).
@@ -119,7 +119,7 @@ Null Cases: 0
 
 - [`Slate::info`](info.md): writes this same text straight to a stream (`std::cout` by
   default) with a trailing newline, instead of returning it as a string.
-- [`Slate::to_string`](to_string.md) / [`Slate::show`](show.md): render the slate's
+- [`Slate::to_string`](to_string.md): render the slate's
   actual row values, rather than metadata.
 - [`Slate::name`](name.md) / [`Slate::named`](named.md): set or check the display name
   that shows up as `Name:` here.

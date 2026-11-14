@@ -59,3 +59,12 @@ polynomial 1 + 2x + 3x^2 over [0, 2]: 14.0000000000  (exact 14)
 sine(k = 2) over [0, pi/2]: 1.0000000000  (exact 1)
 ```
 The jump cannot reach 1e-10 by quadrature, and the dispatcher compares the two error estimates and keeps the better answer (quadrature's 2e-5 beats Monte Carlo's). The closed forms agree with quadrature to ten digits and serve as independent checks.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="monte_carlo.html">
+    <span class="label">Previous</span>
+    <span class="title">Monte Carlo</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

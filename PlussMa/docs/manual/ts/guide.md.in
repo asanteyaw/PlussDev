@@ -24,4 +24,16 @@ Chapters, in reading order:
 - [Time Series 7: Plots](guide/ts_07_plots.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+guide/ts_01_describing_a_series
+guide/ts_02_arima_models
+guide/ts_03_volatility_models
+guide/ts_04_vector_models
+guide/ts_05_state_space_models
+guide/ts_06_direct_forecasting
+guide/ts_07_plots
+```
 <!-- apiref:toctree:end -->

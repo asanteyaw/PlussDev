@@ -29,7 +29,6 @@
 #include <utility>
 #include <vector>
 
-#include <fmt/format.h>
 
 #include "CodeM/core/Errors.h"
 #include "scribble/registry.h"
@@ -41,6 +40,7 @@
 #include "table/DataFrame.h"
 #include "table/io/CsvSchemaConvert.h"
 #include "table/plot/detail/Plot3DConfig.h"
+#include <pluss/tils/kit/output.h>
 
 namespace pluss::kindle {
 
@@ -187,7 +187,7 @@ std::int64_t find_anchor_idx(const std::vector<std::string>& keys,
   for (std::size_t i = 0; i < keys.size(); ++i) {
     if (keys[i] == anchor) return static_cast<std::int64_t>(i);
   }
-  pluss::codem::throw_error(fmt::format("{}: anchor key '{}' not found", where, anchor));
+  pluss::codem::throw_error(pluss::tils::OutputEngine::format("{}: anchor key '{}' not found", where, anchor));
   return 0;
 }
 
@@ -489,7 +489,7 @@ std::string unique_label_feature_name(std::string base, const std::unordered_set
   std::string candidate = base + "_label";
   std::int64_t suffix = 1;
   while (taken.find(candidate) != taken.end()) {
-    candidate = fmt::format("{}_{}", base, suffix++);
+    candidate = pluss::tils::OutputEngine::format("{}_{}", base, suffix++);
   }
   return candidate;
 }

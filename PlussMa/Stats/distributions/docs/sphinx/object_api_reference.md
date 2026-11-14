@@ -7,6 +7,7 @@ The object wrappers bind distribution parameters once, then expose a method surf
 - `pdf(...)`
 - `logpdf(...)`
 - `cdf(...)`
+- `icdf(...)` through the generic `Distribution` wrapper
 - `logcdf(...)`
 - `cgf(...)`
 - `cumulant(...)`

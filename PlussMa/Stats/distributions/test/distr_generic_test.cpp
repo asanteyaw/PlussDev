@@ -40,6 +40,12 @@ int main() {
     near(as_f64((g.logcdf(x) - o.logcdf(x)).abs().max()), 0.0, 1e-15, "Normal logcdf equals the object");
     near(as_f64((g.sample({6}, f64, 11ULL) - o.sample({6}, f64, 11ULL)).abs().max()), 0.0, 0.0, "Normal draws equal the object's");
     near(as_f64((g.pdf(x) - distr::pdf(dst::Normal, x, {0.5, 1.5})).abs().max()), 0.0, 0.0, "pdf equals the kind-based function");
+    const auto probabilities = pluss::make_series({0.025, 0.5, 0.975}, f64);
+    const auto quantiles = g.icdf(probabilities);
+    near(as_f64((g.cdf(quantiles) - probabilities).abs().max()), 0.0, 2e-10,
+         "generic icdf inverts cdf");
+    near(as_f64((distr::icdf(dst::Normal, probabilities, {0.5, 1.5}) - quantiles).abs().max()),
+         0.0, 0.0, "kind-based icdf equals the object");
     const auto like = pluss::make_series({0.0, 0.0, 0.0}, f64).reshape({3, 1});
     expect(g.sample_like(like, 3ULL).sizes()[0] == 3, "sample_like takes the shape of its argument");
   }

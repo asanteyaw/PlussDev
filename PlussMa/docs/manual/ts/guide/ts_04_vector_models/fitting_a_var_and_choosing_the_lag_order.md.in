@@ -178,3 +178,12 @@ The VAR has the lower error for both series, by about 3% (0.308 against 0.318 fo
 - **Compare on equal footing.** Criteria for different `p` use slightly different samples; keep `n` large relative to `p`.
 
 Where next: [Impulse responses and variance decompositions](impulse_responses_and_variance_decompositions.md) traces how a shock to one series travels through the system.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="impulse_responses_and_variance_decompositions.html">
+    <span class="label">Next</span>
+    <span class="title">Impulse responses and variance decompositions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

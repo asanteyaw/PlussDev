@@ -18,4 +18,12 @@ Every program is complete and its output is the output of that program.
 4. Pass `theta` as a Series whenever you want its gradient.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ode_02_events_stiffness_and_gradients/stopping_at_an_event
+ode_02_events_stiffness_and_gradients/a_stiff_linear_system
+ode_02_events_stiffness_and_gradients/gradients_through_a_solve
+```
 <!-- apiref:toctree:end -->

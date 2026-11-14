@@ -11,4 +11,16 @@ Chapters, in reading order:
 - [Calculus 7: Complex Functions](functions/calculus_07_complex_functions.md)
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+functions/calculus_01_functions
+functions/calculus_02_derivatives
+functions/calculus_03_vector_calculus
+functions/calculus_04_integrals
+functions/calculus_05_operators
+functions/calculus_06_worked_problems
+functions/calculus_07_complex_functions
+```
 <!-- apiref:toctree:end -->

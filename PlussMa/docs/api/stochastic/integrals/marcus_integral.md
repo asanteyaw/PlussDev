@@ -20,7 +20,7 @@ The two signatures differ in how the jump steps are found. With the **mask** for
 ## Parameters
 
 `const sde::WienerIntegrandFn &f`
-: `(double t, const Series &x) -> Series`; the integrand.
+: `Series (double t, const Series &x)`; the integrand.
 
 `const sde::WienerPath &path`
 : The path, typically `JumpPath::path`.

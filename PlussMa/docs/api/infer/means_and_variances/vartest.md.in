@@ -70,7 +70,7 @@ int main() {
 
   const auto r = hyp::vartest(a, 0.25);
   std::cout << "sample variance " << r.sample_variance << ", chi-squared " << r.stat << " on " << r.dof << " df, p " << r.pvalue << "\n";
-  const auto ci = r.ci.pull<double>();
+  const auto ci = r.ci.items<double>();
   std::cout << "95% interval [" << ci[0] << ", " << ci[1] << "]\n";
 }
 ```
@@ -107,4 +107,17 @@ One-sided, the question is whether the variance exceeds the specified value: p 0
 
 - [`vartest2`](vartest2.md)
 - [`ztest`](ztest.md)
-- [`jbtest`](jbtest.md)
+- [`jbtest`](../distributions/jbtest.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="ztest.html">
+    <span class="label">Previous</span>
+    <span class="title">ztest</span>
+  </a>
+  <a class="next-link" href="vartest2.html">
+    <span class="label">Next</span>
+    <span class="title">vartest2</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

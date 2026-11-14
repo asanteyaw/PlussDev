@@ -1,0 +1,20 @@
+<!-- generated from circuit_01_linear_networks.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Circuits 1: Linear Networks
+
+A linear circuit is a network of resistors, capacitors, inductors, sources and ideal amplifiers. This chapter describes a network to the solver, finds its DC operating point, and computes its sinusoidal response over a range of frequencies, always with circuits whose answers can be checked by hand.
+
+- [Describing a circuit](circuit_01_linear_networks/describing_a_circuit.md)
+- [DC operating point](circuit_01_linear_networks/dc_operating_point.md)
+- [AC analysis](circuit_01_linear_networks/ac_analysis.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+circuit_01_linear_networks/describing_a_circuit
+circuit_01_linear_networks/dc_operating_point
+circuit_01_linear_networks/ac_analysis
+```
+<!-- apiref:toctree:end -->

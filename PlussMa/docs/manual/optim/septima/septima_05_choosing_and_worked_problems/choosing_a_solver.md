@@ -6,7 +6,7 @@
 
 Which solver should you use? This page answers with three problems, each chosen because it favours a different answer. A **model fitted to data** (logistic regression with a small penalty) is convex and smooth, so every optimiser must find the same answer; the comparison is cost. **Constrained least squares** (non-negative weights that sum to one, matching a target) is a quadratic program, which Optima solves exactly as the reference; here the question is how close Septima's bound projection and augmented Lagrangian get. And the **chained Rosenbrock function** with no constraints is solved by Optima and all three first-order methods, to read off what each is best at.
 
-The conclusion of the third table is the practical rule: fewest evaluations, Optima; most accurate, L-SR1; simplest and cheapest per iteration, L-BFGS if a gradient of 1e-4 is good enough; Adam when nothing else works or when the gradient is noisy.
+The conclusion of the third table is the practical rule: fewest evaluations, Optima; simplest and cheapest per iteration, L-BFGS; saddle-prone objectives, L-SR1; Adam when nothing else works or when the gradient is noisy.
 
 ## Program 1: A model fitted to data
 
@@ -107,7 +107,7 @@ Output
 ```text
 optimizer exit          iters   evals   loss        weights, bias
 Adam      Converged     190     190     0.557757    0.7150, -0.4648, -0.0354
-L-BFGS    NoProgress    33      33      0.557757    0.7150, -0.4648, -0.0354
+L-BFGS    Converged     11      11      0.557757    0.7150, -0.4648, -0.0354
 L-SR1     Converged     8       9       0.557757    0.7150, -0.4648, -0.0354
 
 largest difference between the three answers: 2.3e-05
@@ -115,7 +115,7 @@ fraction classified correctly: 0.825
 ```
 The problem is convex, so every optimizer must find the same answer, and they do: the three fits agree to 2.3e-05, with a loss of 0.557757, weights `(0.7150, -0.4648)` and a bias of -0.0354. The weights are in the ratio 1.54 to -1, close to the 1.5 to -1 of the line that generated the labels, and the model classifies 82.5% of the points correctly, which is about as good as it can do when one label in ten is wrong.
 
-The cost is where they differ. L-SR1 converges in 7 iterations and 8 evaluations, L-BFGS in 33 (and ends with `NoProgress`, having reached the limit of its tolerances), Adam in 190. For a smooth model fitted to a modest amount of data, with all the data in the objective at once, a curvature method is the right choice. Adam's strength is elsewhere: it needs only a gradient and tolerates a gradient that is noisy, which a curvature method does not.
+The cost is where they differ. L-SR1 converges in 8 iterations and 9 evaluations, L-BFGS in 11 iterations and 11 evaluations, Adam in 190. For a smooth model fitted to a modest amount of data, with all the data in the objective at once, a curvature method is the right choice. Adam's strength is elsewhere: it needs only a gradient and tolerates a gradient that is noisy, which a curvature method does not.
 
 ## Program 2: Constrained least squares, checked against Optima
 
@@ -269,21 +269,26 @@ Output
 
 ```text
 solver          exit            iters   evals   objective   gradient
-Optima          converged       72      80      3.6e-09     1.3e-06
+Optima          converged       74      83      1.2e-10     3.8e-07
 Septima, Adam   converged       4388    4388    2.1e-17     3.6e-09
-Septima, L-BFGS NoProgress      124     124     3.3e-10     2.5e-04
-L-SR1           converged       119     286     9.2e-20     1.1e-08
+Septima, L-BFGS converged       108     108     5.3e-20     6.1e-09
+L-SR1           converged       115     262     2.0e-20     6.8e-09
 ```
-Optima converges in 72 iterations and 80 evaluations to an objective of 3.6e-09. L-SR1 converges in 119 iterations and 286 evaluations to 9.2e-20 with a gradient of 1.1e-08, a far more accurate answer, at more work. L-BFGS stops with `NoProgress` after 124 iterations at 3.3e-10 and a gradient of 2.5e-04. Adam converges after 4388 iterations to 2.1e-17.
+Optima converges in 74 iterations and 83 evaluations to an objective of 1.2e-10. L-SR1 converges in 115 iterations and 262 evaluations to 2.0e-20 with a gradient of 6.8e-09. L-BFGS converges in 108 iterations and 108 evaluations to 5.3e-20 and 6.1e-09, the cheapest of the accurate runs. Adam converges after 4388 iterations to 2.1e-17.
 
-Read the table by what you need. Fewest evaluations: Optima. Most accurate: L-SR1. Fewest evaluations per iteration and simplest: L-BFGS, if a gradient of 1e-4 is good enough. Adam: when nothing else works or when the gradient is noisy.
+Read the table by what you need. Fewest evaluations: Optima. Most accurate per evaluation: L-BFGS. Saddle-prone objective: L-SR1. Adam: when nothing else works or when the gradient is noisy.
 
 ## Decisions and pitfalls
 
-- **Use a curvature method for a smooth model on all the data at once.** L-SR1 needed 7 iterations and L-BFGS 33 where Adam needed 190 on the logistic regression.
+- **Use a curvature method for a smooth model on all the data at once.** L-SR1 needed 8 iterations and L-BFGS 11 where Adam needed 190 on the logistic regression.
 - **Adam's strength is noisy gradients and huge parameter sets.** When the loss is computed from mini-batches or the problem is badly scaled, it is the right tool; for a smooth deterministic fit it is not.
 - **Check a constrained fit against a reference.** On a quadratic program, Optima gives the exact answer in 15 evaluations; Septima agrees (weights to four digits) in 319 evaluations with a violation of 7e-8.
 - **Septima is at its best when the objective is convex, the equality is linear and the rest is bounds.** For a few nonlinear constraints that must hold to high precision, use Optima.
 - **Compare solutions, not only flags.** Several solvers can report convergence at different accuracy; the objective and the gradient at the answer are the real comparison.
 
 Where next: That completes the Septima chapters. The linear-programming chapters begin with [First programs](../../linprog.md).
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

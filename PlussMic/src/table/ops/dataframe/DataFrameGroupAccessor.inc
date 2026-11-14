@@ -130,7 +130,7 @@ DataFrame DataFrameGrouped::keyed_frame_(std::vector<std::string>& key_names) co
     auto temp = "__pluss_case_level_" + level_name;
     std::int64_t suffix = 1;
     while (keyed.get(temp).has_value()) {
-      temp = fmt::format("__pluss_case_level_{}_{}", level_name, suffix++);
+      temp = pluss::tils::OutputEngine::format("__pluss_case_level_{}_{}", level_name, suffix++);
     }
     auto level_values = keyed.caselbl(level_name);
     if (detail::has_display_labels(level_values)) {
@@ -522,7 +522,7 @@ DataFrame DataFrameGrouped::mode_ties(std::string_view feature, std::string_view
   auto out_cols = group_key_columns_expanded_(state, expanded_positions);
 
   const auto out_name = !output.empty() ? std::string(output)
-                                        : fmt::format("{}_mode_ties", feature);
+                                        : pluss::tils::OutputEngine::format("{}_mode_ties", feature);
   const bool any_null = std::any_of(
       valid_out.begin(), valid_out.end(), [](bool v) { return !v; });
 

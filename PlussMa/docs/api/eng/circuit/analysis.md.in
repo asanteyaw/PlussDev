@@ -1,0 +1,46 @@
+# Circuit analysis
+
+This branch solves a compiled circuit. `op` gives the DC operating point, `ac` the phasor response at a vector of frequencies and `tran` the response in time to a source step or a waveform. `Drive`, `Start`, `TranOptions` and `Scheme` configure `tran`, and `SolveOptions` controls the Newton iteration that `op`, `ac` and `tran` use for circuits with diodes and transistors.
+
+## Choosing A Surface
+
+Use `op` for steady constant sources, `ac` for the settled response to a sinusoid at each frequency, and `tran` when you need how the circuit gets there: a switch-on, a pulse, a waveform of any shape, or an oscillation.
+
+## Practical Examples
+
+The examples exercise the principal surface of this branch.
+
+### Example 1
+
+The DC operating point of a divider.
+
+@@example Eng/api/circuit_dc_divider.cpp@@
+
+### Example 2
+
+An RC low-pass in AC.
+
+@@example Eng/api/circuit_rc.cpp@@
+
+### Example 3
+
+A sweep of component values.
+
+@@example Eng/api/circuit_ac_sweep.cpp@@
+
+### Example 4
+
+A step response in time.
+
+@@example Eng/api/circuit_tran_rc.cpp@@
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+analysis/Result
+analysis/op
+analysis/ac
+```
+<!-- apiref:toctree:end -->

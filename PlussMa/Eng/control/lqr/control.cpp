@@ -34,13 +34,19 @@ void validate_matrix(const Series &value, std::string_view operation,
                   " must have a floating or complex dtype");
 }
 
+struct Labels {
+  std::string_view q{"Q"};
+  std::string_view r{"R"};
+  std::string_view cross{"cross"};
+};
+
 void validate_problem(const Series &a, const Series &b, const Series &q,
                       const Series &r, const Series *cross,
-                      std::string_view operation) {
+                      std::string_view operation, const Labels &labels) {
   validate_matrix(a, operation, "A");
   validate_matrix(b, operation, "B");
-  validate_matrix(q, operation, "Q");
-  validate_matrix(r, operation, "R");
+  validate_matrix(q, operation, labels.q);
+  validate_matrix(r, operation, labels.r);
   const std::string prefix =
       std::string("eng::control::") + std::string(operation) + ": ";
   PLUSS_CHECK(a.size(-2) == a.size(-1), prefix + "A must be square");
@@ -49,18 +55,18 @@ void validate_problem(const Series &a, const Series &b, const Series &q,
   PLUSS_CHECK(b.size(-2) == states,
               prefix + "B rows must equal the state count");
   PLUSS_CHECK(q.size(-2) == states && q.size(-1) == states,
-              prefix + "Q must have shape [..., states, states]");
+              prefix + std::string(labels.q) + " must have shape [..., states, states]");
   PLUSS_CHECK(r.size(-2) == inputs && r.size(-1) == inputs,
-              prefix + "R must have shape [..., inputs, inputs]");
+              prefix + std::string(labels.r) + " must have shape [..., " + (operation == "lqe" ? "outputs, outputs" : "inputs, inputs") + "]");
   PLUSS_CHECK(a.platform() == b.platform() && a.platform() == q.platform() &&
                   a.platform() == r.platform(),
-              prefix + "A, B, Q, and R must share one platform");
+              prefix + "the system matrices and weights must share one platform");
   if (cross != nullptr) {
-    validate_matrix(*cross, operation, "cross");
+    validate_matrix(*cross, operation, labels.cross);
     PLUSS_CHECK(cross->size(-2) == states && cross->size(-1) == inputs,
-                prefix + "cross must have shape [..., states, inputs]");
+                prefix + std::string(labels.cross) + " must have shape [..., states, " + (operation == "lqe" ? "outputs" : "inputs") + "]");
     PLUSS_CHECK(cross->platform() == a.platform(),
-                prefix + "cross must share the system platform");
+                prefix + std::string(labels.cross) + " must share the system platform");
   }
 }
 
@@ -82,23 +88,26 @@ double tolerance_for(ScalarType dtype, double requested) {
 }
 
 void validate_weights(const Series &q, const Series &r,
-                      std::string_view operation, double tolerance) {
+                      std::string_view operation, double tolerance, const Labels &labels) {
   const std::string prefix =
       std::string("eng::control::") + std::string(operation) + ": ";
   PLUSS_CHECK(q.allclose(adjoint(q), tolerance, tolerance),
-              prefix + "Q must be Hermitian");
+              prefix + std::string(labels.q) + " must be Hermitian");
   PLUSS_CHECK(r.allclose(adjoint(r), tolerance, tolerance),
-              prefix + "R must be Hermitian");
+              prefix + std::string(labels.r) + " must be Hermitian");
   const double q_min = q.linearalg.eigvalsh().amin().item<double>();
   PLUSS_CHECK(std::isfinite(q_min) && q_min >= -tolerance,
-              prefix + "Q must be positive semidefinite");
+              prefix + std::string(labels.q) + " must be positive semidefinite");
+  const double r_min = r.linearalg.eigvalsh().amin().item<double>();
+  PLUSS_CHECK(std::isfinite(r_min) && r_min > tolerance,
+              prefix + std::string(labels.r) + " must be positive definite");
 }
 
 RiccatiResult solve_problem(const Series &a, const Series &b, const Series &q,
                             const Series &r, const Series *cross, bool discrete,
                             pluss::subsp::linearalg::MatrixEqOptions options,
-                            std::string_view operation) {
-  validate_problem(a, b, q, r, cross, operation);
+                            std::string_view operation, const Labels &labels = {}) {
+  validate_problem(a, b, q, r, cross, operation, labels);
   const ScalarType dtype = problem_dtype(a, b, q, r, cross);
   const Series aa = a.to(dtype);
   const Series bb = b.to(dtype);
@@ -106,7 +115,7 @@ RiccatiResult solve_problem(const Series &a, const Series &b, const Series &q,
   const Series rr = r.to(dtype);
   const Series nn = cross == nullptr ? bb.mul(0.0) : cross->to(dtype);
   const double tolerance = tolerance_for(dtype, options.tolerance);
-  validate_weights(qq, rr, operation, tolerance);
+  validate_weights(qq, rr, operation, tolerance, labels);
 
   // Cholesky validates strict positive definiteness and is reused for every
   // R solve; no explicit inverse is formed.
@@ -123,11 +132,26 @@ RiccatiResult solve_problem(const Series &a, const Series &b, const Series &q,
   const double reduced_q_min = q_bar.linearalg.eigvalsh().amin().item<double>();
   PLUSS_CHECK(std::isfinite(reduced_q_min) && reduced_q_min >= -tolerance,
               std::string("eng::control::") + std::string(operation) +
-                  ": the joint [Q, cross; cross^H, R] cost must be "
-                  "positive semidefinite");
+                  ": the joint [" + std::string(labels.q) + ", " + std::string(labels.cross) + "; " + std::string(labels.cross) +
+                  "^H, " + std::string(labels.r) + "] cost must be positive semidefinite");
 
-  Series value = discrete ? a_bar.linearalg.dare(g, q_bar, options)
-                          : a_bar.linearalg.care(g, q_bar, options);
+  // A Riccati equation has a stabilising solution only when (A, B) is stabilisable and the weighted states are
+  // detectable. The solvers report a violation as a singular matrix or a non-finite iteration, so the failure is
+  // re-raised with the condition that was violated.
+  Series value;
+  try {
+    value = discrete ? a_bar.linearalg.dare(g, q_bar, options) : a_bar.linearalg.care(g, q_bar, options);
+  } catch (const pluss::Error &error) {
+    std::string cause(error.what());
+    cause = cause.substr(0, cause.find("Triggered"));
+    while (!cause.empty() && (cause.back() == '\n' || cause.back() == ' '))
+      cause.pop_back();
+    const std::string condition =
+        operation == "lqe" ? "(A, C) must be detectable (every unstable mode must be visible in the outputs)"
+                           : "(A, B) must be stabilisable (every unstable mode reachable from the input) and the states weighted by Q must be detectable";
+    PLUSS_CHECK(false, std::string("eng::control::") + std::string(operation) + ": no stabilising solution; " + condition +
+                           ". Solver message: " + cause);
+  }
   Series gain;
   if (discrete) {
     const Series gain_weight = rr.add(b_h.matmul(value).matmul(bb));
@@ -156,7 +180,7 @@ LqeResult solve_estimator(const lti::StateSpace &system,
   }
   const RiccatiResult dual =
       solve_problem(dual_a, dual_b, process_cov, noise_cov, &dual_cross,
-                    system.is_disc(), options, "lqe");
+                    system.is_disc(), options, "lqe", Labels{"process_cov", "noise_cov", "cross"});
   const Series gain = adjoint(dual.gain);
   return {dual.value, gain, system.a().sub(gain.matmul(system.c()))};
 }

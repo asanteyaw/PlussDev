@@ -15,7 +15,7 @@ bool Catalog::has(std::string_view key) const
 
 Checks whether a named stream exists in the catalog, without throwing regardless of the
 answer. This is the safe way to test for a key's presence before calling
-[`at()`](at.md) (which throws on a missing key) — or use [`get()`](get.md) directly if you
+[`keys(key)`](keys.md) (which throws on a missing key) — or use [`get()`](get.md) directly if you
 also want the stream itself when present.
 
 ## Parameters
@@ -85,13 +85,13 @@ false true
 
 ## Notes
 
-- Never throws — `has()` is the safe presence check, unlike [`at()`](at.md), which throws
+- Never throws — `has()` is the safe presence check, unlike [`keys(key)`](keys.md), which throws
   on a missing key.
 - Key comparison is exact and case-sensitive.
 
 ## See Also
 
-- [`Catalog::at`](at.md): fetch the stream directly, throwing if the key is missing.
+- [`Catalog::keys`](keys.md): `keys(key)` fetches the stream directly, throwing if the key is missing.
 - [`Catalog::get`](get.md): fetch the stream as `std::optional<Stream>`, combining the
   presence check and the fetch into one call.
 

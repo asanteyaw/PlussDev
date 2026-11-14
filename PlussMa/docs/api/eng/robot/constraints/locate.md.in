@@ -1,0 +1,64 @@
+# `robot::locate`
+
+The world position of points fixed to links.
+
+## Signature
+
+```cpp
+pluss::Series robot::locate(const robot::Robot& robot, const pluss::Series& q, const std::vector<std::int64_t>& link, const pluss::Series& point);
+```
+
+## What It Does
+
+Returns the world position of point `i`, fixed to link `link[i]` at `point[i]` in that link's frame.
+
+## Parameters
+
+`robot`
+: The compiled robot.
+
+`q`
+: The joint values, `[..., links]`.
+
+`link`
+: The link of each point, length `m`.
+
+`point`
+: The points in their link frames, `[m, 3]`.
+
+## Returns
+
+A real `[..., m, 3]` array of world positions.
+
+## Errors
+
+Throws `pluss::Error` for a link outside the robot, a `point` of the wrong shape, or a `q` that is not a real floating `[..., links]` array.
+
+## Interpretation and Use
+
+Use it to place a pin or a contact point and to check a constraint: the tip of an arm, a foot, a tool point.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Points of a planar arm.
+
+@@example Eng/api/robot_point_position.cpp@@
+
+### Example 2
+
+The foot of a slider.
+
+@@example Eng/api/robot_contact_gap.cpp@@
+
+### Example 3
+
+Rejected arguments.
+
+@@example Eng/api/robot_point_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

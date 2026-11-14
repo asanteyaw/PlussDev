@@ -1,0 +1,77 @@
+# `fluid::SteadyResult`
+
+Heads, pressures, flows and residuals of a steady solve.
+
+## Signature
+
+```cpp
+fluid::SteadyResult
+```
+
+## What It Does
+
+The result of `steady`. Arrays keep the leading scenario axes; link arrays follow the order pipes, pumps, valves.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `head` | Node head, m, `[..., node]`. |  |
+| `pressure` | Gauge pressure, Pa, `[..., node]`: `ρ g (head - elevation)`. |  |
+| `flow` | Link flow, m³/s, `[..., link]`; negative means against the declared direction. |  |
+| `velocity` | Link velocity, m/s, `[..., link]`; 0 for a pump. |  |
+| `head_loss` | Head lost across a link, m, `[..., link]`; negative across a pump. |  |
+| `friction_factor` | Darcy friction factor, `[..., link]`; 0 for non-Darcy links. |  |
+| `balance` | Inflow minus outflow minus demand, m³/s, `[..., node]`; at a reservoir it is minus the supply. |  |
+| `energy_residual` | The residual of each link equation, `[..., link]`. |  |
+| `converged` | Whether each scenario met the tolerances, `[...]`. |  |
+| `demand` | Delivered ordinary demand, m³/s, `[..., node]`. |  |
+| `emitter` | Emitter outflow, m³/s, `[..., node]`. |  |
+| `iterations` | The Newton iterations taken. |  |
+
+## Returns
+
+Returned by `steady`.
+
+## Errors
+
+Reading a field does not solve again.
+
+## Interpretation and Use
+
+Check `converged` when `fail_on_nonconvergence` is false. `balance` is zero at every junction; the residual arrays show how well the equations hold. Under a fixed demand also read `pressure`: a delivered demand can come with a negative pressure.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Every field of a looped network.
+
+@@example Eng/api/fluid_steady_basic.cpp@@
+
+### Example 2
+
+Residuals of an unfinished solve.
+
+@@example Eng/api/fluid_steady_options.cpp@@
+
+### Example 3
+
+A pump gain and a pump velocity.
+
+@@example Eng/api/fluid_pump_build.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Options.html">
+    <span class="label">Previous</span>
+    <span class="title">Options</span>
+  </a>
+  <a class="next-link" href="steady.html">
+    <span class="label">Next</span>
+    <span class="title">steady</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

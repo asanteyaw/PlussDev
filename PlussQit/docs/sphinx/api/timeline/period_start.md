@@ -52,7 +52,7 @@ const auto value = pluss::timeline::make(
 auto show = [](std::string_view label, const pluss::Timeline& result) {
   std::cout << "\n=== " << label << " ===\n"
             << pluss::note::print(
-                   pluss::timeline::format(result, "%FT%T.%f%z"))
+                                  pluss::timeline::format(result, "%FT%T.%f%z"))
             << '\n';
 };
 

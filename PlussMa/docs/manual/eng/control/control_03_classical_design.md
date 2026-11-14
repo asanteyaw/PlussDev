@@ -1,0 +1,20 @@
+<!-- generated from control_03_classical_design.md.in by PlussMa/docs/tools/render_guide.py; edit the template -->
+
+# Control 3: Classical Design
+
+Not every design is an optimisation. This chapter places the closed-loop poles where a specification puts them, builds the PID controller that needs only the output, and measures how robust a loop is with its gain, phase and stability margins.
+
+- [Pole placement](control_03_classical_design/pole_placement.md)
+- [PID controllers](control_03_classical_design/pid_controllers.md)
+- [Loop analysis and margins](control_03_classical_design/loop_analysis_and_margins.md)
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+control_03_classical_design/pole_placement
+control_03_classical_design/pid_controllers
+control_03_classical_design/loop_analysis_and_margins
+```
+<!-- apiref:toctree:end -->

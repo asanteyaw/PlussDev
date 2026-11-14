@@ -44,7 +44,7 @@ int main() {
   // Interval probability = difference of cdf values; cdf = running sum of the mass.
   const auto c = normal.cdf(pluss::make_series({-1.96, 1.96}, f64)).host<double>();
   out.writeln("\nP(-1.96 < Z < 1.96) = cdf(1.96) - cdf(-1.96) =", c[1] - c[0]);
-  out.writeln("sum of the Poisson masses at 0..5 =", poisson.pdf(k).sum().item<double>(), "  cdf(5) =", poisson.cdf(pluss::make_series({5.0}, f64)).item<double>());
+  out.writeln("sum of the Poisson masses at 0..5 =", poisson.pdf(k).sum().squeeze().item<double>(), "  cdf(5) =", poisson.cdf(pluss::make_series({5.0}, f64)).squeeze().item<double>());
 }
 ```
 
@@ -212,3 +212,12 @@ The normal's third and fourth cumulants are zero. The gamma and exponential fami
 - **Series parameters pair element by element.** The lengths must agree with the points; one call then replaces a loop.
 
 Where next: [Random draws](random_draws.md) turns the same families into data.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="random_draws.html">
+    <span class="label">Next</span>
+    <span class="title">Random draws</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

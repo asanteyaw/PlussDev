@@ -54,3 +54,16 @@ d log X, ordinary chain rule:   drift 0.04000, diffusion 0.40000
 both equal mu - sigma^2/2 = 0.04000 and sigma = 0.40000
 ```
 The converted drifts are 0.02, 0.04, 0.08 for the three states, equal to `(μ − σ²/2) x`, and converting back recovers 0.06, 0.12, 0.24. Both routes for `log X` give drift 0.04 and diffusion 0.4: Ito's lemma subtracts `σ²/2` explicitly, while the ordinary chain rule applied to the Stratonovich drift needs no extra term.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="explicit_time_dependence.html">
+    <span class="label">Previous</span>
+    <span class="title">Explicit time dependence</span>
+  </a>
+  <a class="next-link" href="checking_a_prediction_by_simulation.html">
+    <span class="label">Next</span>
+    <span class="title">Checking a prediction by simulation</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

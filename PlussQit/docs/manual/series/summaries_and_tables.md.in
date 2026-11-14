@@ -1,0 +1,58 @@
+# Summaries, rankings and tables
+
+[Back to Series by example](../series.md)
+
+Most analysis is a summary: who is best, how much per group, how does this year compare with that one. This page works three such questions end to end: ranking candidates, totalling sales by region and reading a year-by-month table.
+
+## The mental model
+
+Three families of operations do nearly all the work.
+
+- **Order:** `argsort` gives the positions that would sort a series, `topk` the best few with their positions.
+- **Reduce along an axis:** `sum(1)`, `mean(0)`, `argmax(1)` collapse one dimension; the dimension you name disappears from the shape.
+- **Group:** `grouped_sum(keys, count)` and its relatives reduce the values that share a key, and `scatter_add` is the same idea written by hand.
+
+Reshaping (`reshape`, `permute`, `select`) changes how the same numbers are indexed without copying them.
+
+## Ranking candidates
+
+Eight candidates with scores, two of them tied. The program orders them, finds the top three, computes everyone's rank, and compares with the average.
+
+@@example series/ranking.cpp@@
+
+`argsort(0, true)` gives the positions best first: candidate 3 (92.3), then 1 and 5 (both 88.0), and so on. The rank of every candidate is the argsort of that order, because sorting positions inverts the permutation: candidate 0 has rank 5, candidate 3 rank 0. `topk_pair(3)` returns values and positions together. Notice the tied pair: `argsort` lists 1 before 5 (a stable sort keeps tied elements in their original order) while `topk` lists 5 before 1. If ties matter to you, say so in your own tie-break rather than rely on either order. The histogram counts scores in four equal bins between the lowest and the highest: 2, 1, 1, 4.
+
+## Totals by group
+
+Ten sales in three regions, labelled by an integer key. The program computes count, total, mean and largest sale per region, each region's share of the whole, and each sale's share of its own region, then rebuilds the totals by hand with `scatter_add`.
+
+@@example series/sales_by_region.cpp@@
+
+The region totals are 300, 285 and 380, and the east is the largest at 39 % of the whole even though the north has the most sales (four). `index_select(0, region)` pushes each region's total back onto its sales, which turns a per-group number into a per-row one; that is the usual way to compute shares and deviations within groups. The last lines show that `grouped_sum` is the optimised form of "add every amount into the slot named by its region": `scatter_add` gives the same totals.
+
+## A year-by-month table
+
+Three years of monthly rainfall are stored flat. `reshape({3, 12})` lays them out as years by months without copying, after which every question is a reduction along an axis.
+
+@@example series/monthly_table.cpp@@
+
+Dimension 1 runs across the months of a year, so `sum(1)` gives yearly totals (703, 705, 703 mm) and `argmax(1)` the wettest month of each year (11, December, three times). Dimension 0 runs down the years, so `mean(0)` is the average for each calendar month. `cumsum(1)` is the running total within a year and ends at the yearly total; `diff(1, 1)` is the change from one month to the next and is one element shorter. `permute({1, 0})` swaps the axes so that `select(0, 2)` is March across the years, and its `strides=[12]` in the output shows that this is a view onto the same numbers, not a copy.
+
+## Decisions
+
+- **One axis or all:** `sum()` reduces everything to one number; `sum(1)` keeps the other axes. Name the axis whenever the table has structure.
+- **Rank or order:** `argsort` when you need positions, `topk` when you need only the best few.
+- **Groups:** keys are integers `0 .. count - 1`; `grouped_*` reductions for the standard statistics, `scatter_add` and `scatter_reduce` for anything else.
+- **Per-row values from per-group values:** `index_select(0, keys)`.
+
+## Pitfalls
+
+Shapes line up from the right. A column of shape `[3, 1]` and a row of shape `[4]` make a `3 x 4` table; a `[4]` and a `[3]` have nothing to align and are refused.
+
+@@example series/pitfall_shapes.cpp@@
+
+If you meant a table, `unsqueeze(1)` the series that should become the column.
+
+## Where next
+
+Reference pages: [`argsort`](../../sphinx/api/series/argsort.md), [`topk_pair`](../../sphinx/api/series/topk_pair.md), [`histc`](../../sphinx/api/series/histc.md), [`grouped_sum`](../../sphinx/api/series/grouped_sum.md), [`grouped_mean`](../../sphinx/api/series/grouped_mean.md), [`grouped_max`](../../sphinx/api/series/grouped_max.md), [`grouped_count`](../../sphinx/api/series/grouped_count.md), [`scatter_add`](../../sphinx/api/series/scatter_add.md), [`index_select`](../../sphinx/api/series/index_select.md), [`reshape`](../../sphinx/api/series/reshape.md), [`permute`](../../sphinx/api/series/permute.md), [`cumsum`](../../sphinx/api/series/cumsum.md), [`diff`](../../sphinx/api/series/diff.md), [`argmax`](../../sphinx/api/series/argmax.md). Next: [Estimation and uncertainty](estimation.md).

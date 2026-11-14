@@ -72,6 +72,7 @@ PUBLIC_PREFIXES = [
   "pluss::subsp::math::qp",
   "pluss::subsp::math::bezier",
   "pluss::subsp::math::multigrid",
+  "pluss::subsp::math::operators::expansion",
 ].freeze
 
 PUBLIC_PATHS = [
@@ -80,6 +81,7 @@ PUBLIC_PATHS = [
   "PlussMa/include/pluss/subsp/math/qp.h",
   "PlussMa/include/pluss/subsp/math/bezier.h",
   "PlussMa/include/pluss/subsp/math/multigrid.h",
+  "PlussMa/include/pluss/subsp/math/operators.h",
 ].freeze
 
 def namespace_of(item)
@@ -212,6 +214,8 @@ family_for = lambda do |name|
     ["Engineering", first ? "pluss::subsp::eng::#{first}" : "pluss::subsp::eng"]
   elsif name.start_with?("pluss::subsp::math::qp")
     ["Engineering shared owner", "pluss::subsp::math::qp"]
+  elsif name.start_with?("pluss::subsp::math::operators::expansion")
+    ["Shared math owners", "pluss::subsp::math::operators::expansion"]
   else
     ["Shared math owners", name.split("::")[0, 4].join("::")]
   end

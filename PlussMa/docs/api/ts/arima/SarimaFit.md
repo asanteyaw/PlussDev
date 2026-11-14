@@ -185,3 +185,16 @@ forecast         0.2404   0.1413   0.0531   0.1265  -0.0459   0.2256
 <!-- apiref:toctree:start -->
 
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Sarima.html">
+    <span class="label">Previous</span>
+    <span class="title">Sarima</span>
+  </a>
+  <a class="next-link" href="SarimaOptions.html">
+    <span class="label">Next</span>
+    <span class="title">SarimaOptions</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

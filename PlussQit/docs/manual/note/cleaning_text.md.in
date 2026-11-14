@@ -1,0 +1,56 @@
+# Cleaning text and protecting data
+
+[Back to Note by example](../note.md)
+
+Text columns are messy in predictable ways: stray spaces, inconsistent capitals, invalid addresses, duplicates, and personal data that must not leave the building. This page cleans a customer table and prepares support tickets for sharing, with complete programs and printed results.
+
+## The mental model
+
+A `Note` is to text what a `Series` is to numbers: a block of cells with a shape, processed as a whole. Every operation applies to every cell and returns a `Note`, so a cleaning pipeline is a chain of calls with no loop. Two properties are worth knowing before the first program.
+
+- **The type is closed.** A test such as `contains` or `regex().match` returns a *Bool* `Note`, not a `Series` and not a `std::vector<bool>`. You read its lanes with `bools()`, which borrows them from the `Note`, so keep the `Note` in a variable while you read.
+- **Specialised work lives in accessors.** `note.regex()` holds the pattern operations and `note.nlp()` the text-analysis ones; the plain `Note` methods cover trimming, case, splitting and replacing.
+
+## A customer table
+
+Five customer rows with ragged spacing and capitals, and five email addresses of which one is malformed. The program tidies the names, validates the addresses with a regular expression, finds the duplicates and pulls out the domains.
+
+@@example note/customer_records.cpp@@
+
+`strip`, `collapse_spaces` and `title` turn `"  ada   LOVELACE "` into `"Ada Lovelace"` for every row in three calls, and once the names are tidy the two Grace Hopper rows are visibly the same customer: `unique` returns four distinct customers from five rows, sorted. `regex().match` anchors the pattern to the whole cell, so it is a validity test; it flags `alan@@bad` and passes the rest. The domain column shows a limit of the replace: for the invalid address the pattern strips everything up to the last `@` and leaves `bad`. Compute domains only for rows the validity test passed.
+
+## Preparing tickets for sharing
+
+Three support tickets contain an HTML tag, an email address, a phone number, an order number, a URL, an amount, a date and typographic quotes. The program removes the markup, masks each kind of personal data with a placeholder, normalises the quotes and dashes, and finally audits the result.
+
+@@example note/share_safely.cpp@@
+
+Each masker replaces what it finds with a placeholder (`[EMAIL]`, `[URL]`, `[DATE]`, `[CUR]`, `[NUM]`), so the structure of the sentence survives and the data does not. `normalize_quotes` and `normalize_dashes` replace the curly quotes and the en dash with plain ones, so that later matching is not defeated by typography. The audit tests for at-signs, links and digits and finds none. Read its last line carefully: the maskers do not know names, and the first ticket still names Dana. An audit proves only what it tests, so decide what counts as personal data first, mask that, and test for each kind.
+
+## Text scraped from the web
+
+Web text arrives wrapped in layers: percent-escapes, HTML entities, invisible characters and two ways of writing the same accented letter. The program unwraps them in order, repairs the invisible and composed forms, and round-trips a value through two text-safe encodings.
+
+@@example note/encoding_cleanup.cpp@@
+
+`url_decode` turns `caf%C3%A9%20au%20lait` into `café au lait`, and `html_unescape` turns `&amp;`, `&#8212;` and `&#163;` into `&`, `—` and `£`. It knows the five markup entities and numeric references only, so `&copy;` is left exactly as written: nothing is dropped, but nothing outside that set is converted either, and an audit for leftover `&` is how you notice. `strip_zero_width` removes the invisible character in `naïve word`, whose length was 10 characters with the invisible one counted. The last two cells look identical, `Café`, but the first is five characters (`e` plus a combining accent) and the second four; after `to_nfc` both are four and compare equal. `base64_encode` and `hex_encode` give text-safe forms of a value and `base64_decode` returns it exactly.
+
+## Slugs and file names
+
+Five article titles with accents, symbols and one pair that differ only in case and accents. The program makes URL slugs, finds the collision and resolves it, and builds file names.
+
+@@example note/slugs_and_filenames.cpp@@
+
+`strip_accents`, `to_ascii` and `lower` give plain text, though `to_ascii` replaces the em dash with `?`, which the next step then turns into a separator along with every other run of non-alphanumerics. Two titles collapse to `cafe-culture-in-sao-paulo`, so five titles give only four distinct slugs; a uniqueness check is part of any slug pipeline. The program numbers the repeats (`-2`) on the host, because "the second occurrence of this value" depends on order, and then `ensure_prefix` and `ensure_suffix` build the file names, whose lengths are checked against a limit. Notice what a slug loses: `C++` becomes `c`, so decide whether symbols that carry meaning need spelling out before slugging.
+
+## Decisions
+
+- **Cleaning order:** strip and collapse whitespace first, change case second, validate last; each step makes the next one reliable.
+- **Validation or repair:** use `regex().match` to *decide* whether a value is valid; do not repair a value you cannot trust.
+- **Duplicates:** compare after cleaning, never before.
+- **Masking:** mask before you analyse or share, audit after, and name what the maskers cannot do (names, free-form addresses).
+- **Reading Bool results:** keep the Bool `Note` in a variable and read `bools()`; the span borrows from it.
+
+## Where next
+
+Reference pages: [`strip`](../../sphinx/api/note/strip.md), [`collapse_spaces`](../../sphinx/api/note/collapse_spaces.md), [`title`](../../sphinx/api/note/title.md), [`lower`](../../sphinx/api/note/lower.md), [`unique`](../../sphinx/api/note/unique.md), [`contains`](../../sphinx/api/note/contains.md), [`contains_any_digit`](../../sphinx/api/note/contains_any_digit.md), [`normalize_quotes`](../../sphinx/api/note/normalize_quotes.md), [`normalize_dashes`](../../sphinx/api/note/normalize_dashes.md), [`bools`](../../sphinx/api/note/bools.md), [`url_decode`](../../sphinx/api/note/url_decode.md), [`html_unescape`](../../sphinx/api/note/html_unescape.md), [`strip_zero_width`](../../sphinx/api/note/strip_zero_width.md), [`to_nfc`](../../sphinx/api/note/to_nfc.md), [`strip_accents`](../../sphinx/api/note/strip_accents.md), [`to_ascii`](../../sphinx/api/note/to_ascii.md), [`ensure_prefix`](../../sphinx/api/note/ensure_prefix.md), [`base64_encode`](../../sphinx/api/note/base64_encode.md), [`match`](../../sphinx/api/note-regex/match.md), [`replace`](../../sphinx/api/note-regex/replace.md), [`remove_html`](../../sphinx/api/note-nlp/remove_html.md), [`mask_emails`](../../sphinx/api/note-nlp/mask_emails.md), [`mask_urls`](../../sphinx/api/note-nlp/mask_urls.md), [`mask_dates`](../../sphinx/api/note-nlp/mask_dates.md), [`mask_currency`](../../sphinx/api/note-nlp/mask_currency.md), [`mask_numbers`](../../sphinx/api/note-nlp/mask_numbers.md). Next: [Parsing, counting and reading text](parsing_and_counting.md).

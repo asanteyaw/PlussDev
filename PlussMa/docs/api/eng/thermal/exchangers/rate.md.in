@@ -1,0 +1,87 @@
+# `thermal::rate`
+
+Rates a heat exchanger of given conductance.
+
+## Signature
+
+```cpp
+thermal::Exchange thermal::rate(const Series& hot_c,
+                             const Series& cold_c,
+                             const Series& hot_in,
+                             const Series& cold_in,
+                             const Series& ua,
+                             thermal::Flow flow);
+```
+
+## What It Does
+
+Computes the duty and the outlet temperatures of an exchanger of conductance `ua`. The smaller capacity rate is `Cmin`, `NTU = ua / Cmin`, `cr = Cmin / Cmax`, and the duty is `eff(NTU, cr, flow) * Cmin * (hot_in - cold_in)`.
+
+## Parameters
+
+`hot_c`
+: The capacity rate `m cp` of the hot stream in W/K, positive.
+
+`cold_c`
+: The capacity rate of the cold stream in W/K, positive.
+
+`hot_in`
+: The inlet temperature of the hot stream.
+
+`cold_in`
+: The inlet temperature of the cold stream.
+
+`ua`
+: The conductance `U A` in W/K, not negative.
+
+`flow`
+: The flow arrangement. For `Boil` give the phase-changing stream a very large capacity rate.
+
+## Returns
+
+An `Exchange`.
+
+## Errors
+
+Throws `pluss::Error` for a capacity rate that is not positive, a `ua` that is negative, or an input that is not a real floating array or not finite.
+
+## Interpretation and Use
+
+The duty saturates at `Cmin (hot_in - cold_in)` as `ua` grows: more area cannot beat the second law. For a given duty and approach temperature, size with `ntu` instead.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A counter-flow exchanger.
+
+@@example Eng/api/thermal_rate_basic.cpp@@
+
+### Example 2
+
+The same exchanger in four arrangements.
+
+@@example Eng/api/thermal_rate_flows.cpp@@
+
+### Example 3
+
+A sweep of UA.
+
+@@example Eng/api/thermal_rate_ua_sweep.cpp@@
+
+### Example 4
+
+A boiler.
+
+@@example Eng/api/thermal_rate_boil.cpp@@
+
+### Example 5
+
+Rejected inputs.
+
+@@example Eng/api/thermal_rate_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

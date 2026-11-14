@@ -85,13 +85,13 @@ Null Cases: 0
 - Unlike [`info_string()`](info_string.md)'s returned string, the stream output *does* end
   with a trailing newline.
 - Metadata only — like `info_string()`, this never renders the slate's actual row values.
-  Use [`show()`](show.md) for that.
+  Use [`to_string()`](to_string.md) for that.
 
 ## See Also
 
 - [`Slate::info_string`](info_string.md): the same summary, returned as a `std::string`
   instead of written to a stream — see that page for the exact field-by-field format.
-- [`Slate::show`](show.md): render the slate's actual row values to a stream, rather than
+- [`Slate::to_string`](to_string.md): render the slate's actual row values, rather than
   metadata.
 
 <div class="pluss-inline-prev-next">

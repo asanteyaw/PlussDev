@@ -1,0 +1,77 @@
+# `thermal::tran`
+
+Solves the transient response of a thermal network.
+
+## Signature
+
+```cpp
+thermal::Result thermal::tran(const thermal::Net& net,
+                     const Series& time,
+                     const thermal::Drive& drive = {},
+                     const thermal::Start& start = {},
+                     circuit::Scheme scheme = circuit::Scheme::Trapezoid);
+```
+
+## What It Does
+
+Integrates `C dT/dt = -G T + q` over a uniform time grid. `time` is a rank-1 array of at least two samples in seconds; `drive` supplies boundary temperatures and heats that change in time; `start` gives the initial store temperatures. The step is second order: `Trapezoid` conserves energy and is exact for a straight-line response, `Gear2` damps a response that is faster than the step.
+
+## Parameters
+
+`net`
+: The network.
+
+`time`
+: The sample times in seconds, uniform, rank 1, at least two.
+
+`drive`
+: Time-varying boundary temperatures and heats; undefined members hold the stored values.
+
+`start`
+: The initial store temperatures; undefined means zero.
+
+`scheme`
+: The time-stepping rule: `Trapezoid` or `Gear2`.
+
+## Returns
+
+A `Result` in which every array gains a time axis before its element axis.
+
+## Errors
+
+Throws `pluss::Error` for an invalid network, a time array that is not rank 1 with two samples, a drive or start that does not match the network, or a singular step equation.
+
+## Interpretation and Use
+
+Pick the step from the time constants of the network. When the step is much longer than the fastest time constant the trapezoid rule rings and `Gear2` does not; if both agree the step is safe. Nodes that have no store settle instantly at each sample.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+A body cooling through one conductance.
+
+@@example Eng/api/thermal_tran_cooling.cpp@@
+
+### Example 2
+
+Surroundings that step and a heater pulse.
+
+@@example Eng/api/thermal_tran_drive.cpp@@
+
+### Example 3
+
+The two time-stepping rules on a long step.
+
+@@example Eng/api/thermal_tran_scheme.cpp@@
+
+### Example 4
+
+Rejected arguments.
+
+@@example Eng/api/thermal_tran_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

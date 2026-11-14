@@ -100,3 +100,16 @@ lag array shape: 1 x 3 x 3
 
 - [`var_to_vecm`](var_to_vecm.md)
 - [`VecmFit`](VecmFit.md)
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="Vecm.html">
+    <span class="label">Previous</span>
+    <span class="title">Vecm</span>
+  </a>
+  <a class="next-link" href="VecmFit.html">
+    <span class="label">Next</span>
+    <span class="title">VecmFit</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

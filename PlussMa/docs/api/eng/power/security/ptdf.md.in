@@ -1,0 +1,65 @@
+# `power::ptdf`
+
+Power transfer distribution factors of a grid.
+
+## Signature
+
+```cpp
+pluss::Series power::ptdf(const power::Grid& grid);
+```
+
+## What It Does
+
+Returns the matrix whose entry for a line and a bus is the change of the DC active flow on the line, from its first bus to its second, per unit of power injected at the bus and withdrawn at the slack. The matrix depends only on the network, so one matrix gives the effect of any change of injection: `flow + ptdf * delta_p`.
+
+## Parameters
+
+`grid`
+: The compiled network.
+
+## Returns
+
+A `Series` of shape `[..., line, bus]`; the column of the slack bus and the row of an out-of-service line are zero.
+
+## Errors
+
+Throws `std::invalid_argument` for a malformed grid.
+
+## Interpretation and Use
+
+A transfer between two buses is the difference of their columns. The factors are exact for the DC model and say nothing about losses or voltages.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+The factors of a ring against hand values.
+
+@@example Eng/api/power_ptdf_ring.cpp@@
+
+### Example 2
+
+Predicting the effect of a change of load, checked against a new solve.
+
+@@example Eng/api/power_ptdf_predict.cpp@@
+
+### Example 3
+
+A transfer between two buses, and the wrong reading of one column.
+
+@@example Eng/api/power_ptdf_transfer.cpp@@
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="OutageResult.html">
+    <span class="label">Previous</span>
+    <span class="title">OutageResult</span>
+  </a>
+  <a class="next-link" href="lodf.html">
+    <span class="label">Next</span>
+    <span class="title">lodf</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

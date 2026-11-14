@@ -8,3 +8,12 @@ Ito's lemma also predicts what simulation should find. For `g = x²` the drift d
 @@example Probability/random_processes/guide/sde/17_check_by_simulation.cpp@@
 
 The rate from the lemma is 0.42250, equal to `2μ + σ²`. The prediction 2.19711 and the simulated 2.19433 differ by 0.00278, less than the standard error 0.00705.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_stratonovich_convention.html">
+    <span class="label">Previous</span>
+    <span class="title">The Stratonovich convention</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

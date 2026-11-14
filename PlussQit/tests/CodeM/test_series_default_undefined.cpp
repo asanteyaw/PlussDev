@@ -62,7 +62,7 @@ TEST_CASE("host is the bulk extraction boundary", "[series][host]") {
   REQUIRE_FALSE(singleton.is_scalar());
 }
 
-TEST_CASE("item accepts only rank-zero Series", "[series][host][item]") {
+TEST_CASE("item accepts only rank-zero Series", "[series][host][items]") {
   const auto scalar = pluss::make_series(2.5);
   REQUIRE(scalar.item<double>() == 2.5);
 
@@ -73,14 +73,33 @@ TEST_CASE("item accepts only rank-zero Series", "[series][host][item]") {
                       Catch::Matchers::ContainsSubstring("Series::item<T>(): expected a rank-zero Series"));
 }
 
-TEST_CASE("pull accepts only rank-one Series", "[series][host][pull]") {
+TEST_CASE("items<T> accepts only rank-one Series", "[series][host][items]") {
   const auto values = pluss::make_series({10, 20, 30, 40});
-  REQUIRE(values.pull<std::int64_t>() ==
+  REQUIRE(values.items<std::int64_t>() ==
           std::vector<std::int64_t>{10, 20, 30, 40});
 
-  REQUIRE_THROWS_WITH(pluss::make_series(10).pull<std::int64_t>(),
-                      Catch::Matchers::ContainsSubstring("Series::pull<T>(): expected a rank-one Series"));
+  REQUIRE_THROWS_WITH(pluss::make_series(10).items<std::int64_t>(),
+                      Catch::Matchers::ContainsSubstring("Series::items<T>(): expected a rank-one Series"));
   REQUIRE_THROWS_WITH(
-      pluss::make_series({10, 20, 30, 40}, {2, 2}).pull<std::int64_t>(),
-                      Catch::Matchers::ContainsSubstring("Series::pull<T>(): expected a rank-one Series"));
+      pluss::make_series({10, 20, 30, 40}, {2, 2}).items<std::int64_t>(),
+                      Catch::Matchers::ContainsSubstring("Series::items<T>(): expected a rank-one Series"));
+}
+
+TEST_CASE("rank mismatches name the call that fits", "[series][host][items]") {
+  using Catch::Matchers::ContainsSubstring;
+  const auto zero = pluss::make_series(2.5);
+  const auto one = pluss::make_series({1.0, 2.0, 3.0});
+  const auto two = pluss::make_series({1.0, 2.0, 3.0, 4.0}, {2, 2});
+  const auto three = pluss::make_series({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, {2, 2, 2});
+
+  REQUIRE_THROWS_WITH(zero.items<double>(), ContainsSubstring("rank-0 Series (shape []). Use item<T>()"));
+  REQUIRE_THROWS_WITH(one.item<double>(), ContainsSubstring("rank-1 Series (shape [3]). Use items<T>()"));
+  REQUIRE_THROWS_WITH(two.items<double>(), ContainsSubstring("rank-2 Series (shape [2, 2]). Use host<T>()"));
+  REQUIRE_THROWS_WITH(three.item<double>(), ContainsSubstring("rank-3 Series (shape [2, 2, 2]). Use host<T>()"));
+  REQUIRE_THROWS_WITH(two.item(), ContainsSubstring("Use host<T>()"));
+  REQUIRE_THROWS_WITH(one.host<double>().scalar(), ContainsSubstring("Use items<T>()"));
+  REQUIRE_THROWS_WITH(zero.host().vector(), ContainsSubstring("Use item<T>()"));
+  REQUIRE_THROWS_WITH(static_cast<std::vector<double>>(zero.host<double>()), ContainsSubstring("Use item<T>()"));
+  REQUIRE_THROWS_WITH(static_cast<std::vector<double>>(two.host<double>()), ContainsSubstring("rank-2 Series (shape [2, 2])"));
+  REQUIRE_THROWS_WITH(static_cast<std::vector<std::vector<double>>>(one.host<double>()), ContainsSubstring("Use items<T>()"));
 }

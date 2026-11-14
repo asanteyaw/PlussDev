@@ -41,17 +41,17 @@ int main() {
   });
   const math::Function gamma = geometry::levi_civita(metric);   // staged: keep the connection
   const double theta = 1.0;
-  out.writeln("Gamma[i][j][k], i,j,k in {theta, phi}: ", gamma({pluss::make_series(theta), pluss::make_series(0.3)}).reshape({8}).pull<double>());
+  out.writeln("Gamma[i][j][k], i,j,k in {theta, phi}: ", gamma({pluss::make_series(theta), pluss::make_series(0.3)}).reshape({8}).items<double>());
   out.writeln("-sin cos = ", -std::sin(theta) * std::cos(theta), "   cot = ", 1.0 / std::tan(theta));
 
   const math::Function field = math::function({"theta", "phi"}, [](math::Function th, math::Function) { return math::stack({th * 0.0, th * 0.0 + 1.0}); });
   const math::Function nabla_phi = geometry::covariant("phi", gamma, {1, 0})(field);   // compact: apply at once
-  out.writeln("nabla_phi V = ", nabla_phi({pluss::make_series(theta), pluss::make_series(0.3)}).pull<double>());
+  out.writeln("nabla_phi V = ", nabla_phi({pluss::make_series(theta), pluss::make_series(0.3)}).items<double>());
 
   const math::Function curve = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0 + std::acos(-1.0) / 2, t}); });
   const math::Function transported = math::function({"t"}, [](math::Function t) { return math::stack({t * 0.0, t * 0.0 + 1.0}); });
   const math::Function D = geometry::absolute_differential(curve, gamma, "t")(transported);
-  out.writeln("DV/dt on the equator = ", D({pluss::make_series(0.7)}).pull<double>());
+  out.writeln("DV/dt on the equator = ", D({pluss::make_series(0.7)}).items<double>());
 }
 ```
 
@@ -70,3 +70,16 @@ DV/dt on the equator =  [-0.000000, 0.000000]
 
 <!-- apiref:toctree:start -->
 <!-- apiref:toctree:end -->
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="fourier_series.html">
+    <span class="label">Previous</span>
+    <span class="title">Fourier series operators</span>
+  </a>
+  <a class="next-link" href="integral_transforms.html">
+    <span class="label">Next</span>
+    <span class="title">Fourier and Laplace transforms</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

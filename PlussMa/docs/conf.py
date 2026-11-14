@@ -1,8 +1,14 @@
 project = 'PlussMa'
 author = 'PlussMa Contributors'
 
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('_ext'))
+
 extensions = [
     'myst_parser',
+    'pluss_symbols',
 ]
 
 source_suffix = {

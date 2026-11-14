@@ -8,3 +8,16 @@ An integrand and integrator may come from data rather than from a simulated Wien
 @@example Probability/random_processes/guide/sde/05_sampled_values.cpp@@
 
 The Stratonovich value 3.754421 is close to `x_T³/3 = 3.752384`, as the ordinary chain rule predicts; the Ito value 2.733069 is not, because `x` has quadratic variation. The covariation obeys the polarization identity `[x + y] = [x] + [y] + 2[x, y]` exactly, 1.938163 on both sides.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_forms_of_the_call.html">
+    <span class="label">Previous</span>
+    <span class="title">The forms of the call</span>
+  </a>
+  <a class="next-link" href="integrands_that_look_into_the_future.html">
+    <span class="label">Next</span>
+    <span class="title">Integrands that look into the future</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

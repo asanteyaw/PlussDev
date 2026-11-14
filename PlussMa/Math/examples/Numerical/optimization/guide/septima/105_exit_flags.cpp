@@ -33,8 +33,8 @@ int main() {
   {
     optim::SeptimaSolveOptions o;
     o.step.adam.learning_rate = 0.1;
-    o.progress_hook = [](const optim::SeptimaProgressSnapshot& s) { return s.iteration < 7; };  // true keeps going
-    row("a hook that returns false at 7", optim::septima(quadratic, vec({0.0, 0.0}), o));
+    o.progress_hook = [](const optim::SeptimaProgressSnapshot& s) { return s.iteration >= 7; };  // true stops
+    row("a hook that returns true at 7", optim::septima(quadratic, vec({0.0, 0.0}), o));
   }
   {
     optim::SeptimaSolveOptions o;  // a learning rate so small that nothing changes within the tolerances

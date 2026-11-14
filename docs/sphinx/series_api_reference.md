@@ -13,33 +13,33 @@ misread.
 
 ### Shape Introspection
 
-- [`size`](api/series/size.md): ask for one axis extent, including negative-dim
+- [`size`](_local/PlussQit/sphinx/api/series/size.md): ask for one axis extent, including negative-dim
   indexing.
-- [`sizes`](api/series/sizes.md): borrow the full current shape as a lightweight
+- [`sizes`](_local/PlussQit/sphinx/api/series/sizes.md): borrow the full current shape as a lightweight
   view.
 
 ### Layout and Views
 
-- [`view`](api/series/view.md): reinterpret a contiguous layout without copying.
-- [`reshape`](api/series/reshape.md): `view()` when possible, contiguous fallback
+- [`view`](_local/PlussQit/sphinx/api/series/view.md): reinterpret a contiguous layout without copying.
+- [`reshape`](_local/PlussQit/sphinx/api/series/reshape.md): `view()` when possible, contiguous fallback
   when not.
 
 ### Scalar Position and Rectangular Selection
 
-- [`pos`](api/series/pos.md): rank-checked scalar selection for 1D, 2D, and 3D
+- [`pos`](_local/PlussQit/sphinx/api/series/pos.md): rank-checked scalar selection for 1D, 2D, and 3D
   series.
-- [`slice`](api/series/slice.md): cheap positive-step slicing views.
-- [`block`](api/series/block.md): 2D rectangular subview extraction.
+- [`slice`](_local/PlussQit/sphinx/api/series/slice.md): cheap positive-step slicing views.
+- [`block`](_local/PlussQit/sphinx/api/series/block.md): 2D rectangular subview extraction.
 
 ### Dynamic Indexing
 
-- [`extract`](api/series/extract.md): the full dynamic selector surface
+- [`extract`](_local/PlussQit/sphinx/api/series/extract.md): the full dynamic selector surface
   (`Slice`, scalar indices, `Ellipsis`, `NewAxis`, bool/int advanced indices).
-- [`index`](api/series/index.md): the Torch-style indexing entrypoint, especially
+- [`index`](_local/PlussQit/sphinx/api/series/index.md): the Torch-style indexing entrypoint, especially
   relevant when one or more advanced index tensors are involved.
-- [`extract_put`](api/series/extract_put.md): non-mutating selector-based writes.
-- [`extract_put_`](api/series/extract_put_.md): in-place selector-based writes.
-- [`index_put_`](api/series/index_put_.md): in-place advanced-index and
+- [`extract_put`](_local/PlussQit/sphinx/api/series/extract_put.md): non-mutating selector-based writes.
+- [`extract_put_`](_local/PlussQit/sphinx/api/series/extract_put_.md): in-place selector-based writes.
+- [`index_put_`](_local/PlussQit/sphinx/api/series/index_put_.md): in-place advanced-index and
   convenience-index writes.
 
 ## Broader Usage Guides
@@ -54,16 +54,16 @@ misread.
 :maxdepth: 1
 :hidden:
 
-api/series/pos
-api/series/size
-api/series/sizes
-api/series/view
-api/series/reshape
-api/series/slice
-api/series/block
-api/series/extract
-api/series/extract_put
-api/series/extract_put_
-api/series/index
-api/series/index_put_
+_local/PlussQit/sphinx/api/series/pos
+_local/PlussQit/sphinx/api/series/size
+_local/PlussQit/sphinx/api/series/sizes
+_local/PlussQit/sphinx/api/series/view
+_local/PlussQit/sphinx/api/series/reshape
+_local/PlussQit/sphinx/api/series/slice
+_local/PlussQit/sphinx/api/series/block
+_local/PlussQit/sphinx/api/series/extract
+_local/PlussQit/sphinx/api/series/extract_put
+_local/PlussQit/sphinx/api/series/extract_put_
+_local/PlussQit/sphinx/api/series/index
+_local/PlussQit/sphinx/api/series/index_put_
 ```

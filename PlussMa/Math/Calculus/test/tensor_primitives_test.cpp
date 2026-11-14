@@ -198,3 +198,22 @@ TEST_CASE("tensor Functions round-trip through serialization", "[calculus][tenso
   const math::Function restored_derivative = math::io::load_function(derivative_stream);
   CHECK(close(restored_derivative({scalar(0.6)}), finite_difference(composite, 0.6), 1e-6));
 }
+
+TEST_CASE("stack broadcasts constant components against batched ones",
+          "[calculus][tensor][stack]") {
+  const math::Function mixed = math::function({"x"}, [](math::Function x) {
+    return math::stack({x, math::function(2.0), x * x});
+  });
+  const pluss::Series x = pluss::make_series({1.0, 2.0, 3.0});
+  const pluss::Series out = mixed({x});
+  REQUIRE(out.sizes() == std::vector<std::int64_t>{3, 3});
+  CHECK(out.allclose(pluss::make_series({1.0, 2.0, 1.0, 2.0, 2.0, 4.0, 3.0, 2.0, 9.0}).reshape({3, 3})));
+  CHECK(mixed(2.0).allclose(pluss::make_series({2.0, 2.0, 4.0})));
+
+  const math::Function matrix = math::function({"x"}, [](math::Function x) {
+    return math::stack({math::stack({x, math::function(1.0)}), math::stack({math::function(0.0), 2.0 * x})});
+  });
+  const pluss::Series grid = matrix({x});
+  REQUIRE(grid.sizes() == std::vector<std::int64_t>{3, 2, 2});
+  CHECK(grid.select(0, 2).allclose(pluss::make_series({3.0, 0.0, 1.0, 6.0}).reshape({2, 2})));
+}

@@ -33,3 +33,12 @@ Check feasibility yourself after a black-box solve: `max_constraint_violation` i
 - **Check feasibility yourself after a black-box solve.** `max_constraint_violation` is filled by pattern search only; evaluate the constraints at `minimizer`.
 
 Where next: [Chapter 5](../dfo_05_worked_problems.md) works through a fit and the checks that verify an answer.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="failing_and_expensive_functions.html">
+    <span class="label">Previous</span>
+    <span class="title">Functions that fail and functions that are expensive</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

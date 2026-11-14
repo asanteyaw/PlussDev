@@ -199,3 +199,12 @@ The AR(1) forecast of a whole 50-observation test window from its first observat
 - **Several folds, not one.** Report the average and the spread; one fold can be lucky.
 
 Where next: [Direct forecasts](direct_forecasts.md) fits the forecasting models that these windows are used to evaluate.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="next-link" href="direct_forecasts.html">
+    <span class="label">Next</span>
+    <span class="title">Direct forecasts</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

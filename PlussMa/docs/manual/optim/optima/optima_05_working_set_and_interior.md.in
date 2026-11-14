@@ -41,4 +41,11 @@ Two consequences matter in practice. The interior method never lets a bound or a
 Chapter 6 turns to what all three share: the curvature model (BFGS, limited memory, exact Hessians), the linear algebra of each step, and scaling.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+optima_05_working_set_and_interior/the_working_set_method
+optima_05_working_set_and_interior/the_interior_point_method
+```
 <!-- apiref:toctree:end -->

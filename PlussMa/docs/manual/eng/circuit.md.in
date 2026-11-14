@@ -1,0 +1,26 @@
+# Circuits
+
+A circuit is a set of elements joined at nodes. The analysis solves Kirchhoff's laws for the node voltages and the branch currents of the whole network at once.
+
+1. **What are the voltages and currents with constant sources, and what is the response at each frequency?** Linear networks of resistors, capacitors, inductors, independent and controlled sources, and ideal op amps, solved for their DC operating point and their small-signal phasor response, with sweeps of component values in one call.
+
+2. **How do the voltages and currents evolve in time?** The response of the same networks to a switch-on, a stored charge or flux, a pulse or any waveform, with a choice between a rule that keeps an oscillation's energy and a rule that damps what a long step cannot resolve.
+
+3. **What happens when a device is not linear?** Diodes and bipolar transistors: the bias point of a diode and of a transistor stage found by Newton iteration, the small-signal gain around a bias point, and a rectifier in time.
+
+Chapters, in reading order:
+
+- [Circuits 1: Linear Networks](circuit/circuit_01_linear_networks.md)
+- [Circuits 2: Transient Response](circuit/circuit_02_transient.md)
+- [Circuits 3: Diodes and Transistors](circuit/circuit_03_devices.md)
+
+Every chapter follows the same format: a mental model, complete programs, and output produced by those programs.
+
+<!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+circuit/circuit_01_linear_networks
+```
+<!-- apiref:toctree:end -->

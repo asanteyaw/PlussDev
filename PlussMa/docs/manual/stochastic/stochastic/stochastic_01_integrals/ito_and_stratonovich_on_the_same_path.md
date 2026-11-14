@@ -27,17 +27,17 @@ int main() {
     const auto path = sde::simulate_wiener_path(like, 0.0, 1.0, steps, /*seed=*/7);
     const auto ito = sde::ito_integral(w_of_t, path);
     const auto strat = sde::strat_integral(w_of_t, path);
-    const double wt = path.w.select(0, steps).item<double>();
-    const double qv = ito.realized_quadratic_variation.item<double>();
-    std::cout << std::setw(6) << steps << "  " << std::setw(8) << ito.value.item<double>() << "   "
-              << std::setw(8) << strat.value.item<double>() << "     " << std::setw(8) << 0.5 * (wt * wt - qv)
+    const double wt = path.w.select(0, steps).squeeze().item<double>();
+    const double qv = ito.realized_quadratic_variation.squeeze().item<double>();
+    std::cout << std::setw(6) << steps << "  " << std::setw(8) << ito.value.squeeze().item<double>() << "   "
+              << std::setw(8) << strat.value.squeeze().item<double>() << "     " << std::setw(8) << 0.5 * (wt * wt - qv)
               << "   " << std::setw(8) << 0.5 * wt * wt << "  " << std::setw(8) << 0.5 * qv << "  "
-              << std::setw(8) << strat.value.item<double>() - ito.value.item<double>() << "\n";
+              << std::setw(8) << strat.value.squeeze().item<double>() - ito.value.squeeze().item<double>() << "\n";
   }
 
   const auto path = sde::simulate_wiener_path(like, 0.0, 1.0, 10000, /*seed=*/7);
-  const double wt = path.w.select(0, 10000).item<double>();
-  const double ito = sde::ito_integral(w_of_t, path).value.item<double>();
+  const double wt = path.w.select(0, 10000).squeeze().item<double>();
+  const double ito = sde::ito_integral(w_of_t, path).value.squeeze().item<double>();
   std::cout << "\nat 10000 steps: Ito = " << ito << ", (W_T^2 - T)/2 = " << 0.5 * (wt * wt - 1.0)
             << "  (the continuous-time Ito value)\n";
   return 0;
@@ -56,3 +56,16 @@ steps      Ito     Stratonovich   (W^2 - QV)/2   W^2/2     QV/2    Strat - Ito
 at 10000 steps: Ito = 1.37809, (W_T^2 - T)/2 = 1.38336  (the continuous-time Ito value)
 ```
 The first two columns equal the third and fourth to all printed digits at every step count, and the last two columns agree: the identities are exact for the sampled path, not approximate. What changes with the step count is only `QV`, which approaches 1, so `QV/2` approaches 0.5. At 10000 steps the Ito sum is 1.37809 and the continuous-time value `(W_T² − T)/2` is 1.38336; they differ because the sampled `QV` is 1.0105, not exactly 1. The Stratonovich value `W²/2` has no such gap, which is why it is the one that obeys the ordinary chain rule.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="a_wiener_path.html">
+    <span class="label">Previous</span>
+    <span class="title">A Wiener path</span>
+  </a>
+  <a class="next-link" href="the_family_in_between.html">
+    <span class="label">Next</span>
+    <span class="title">The family in between</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

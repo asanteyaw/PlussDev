@@ -116,7 +116,7 @@ Data make_data(int n, std::uint64_t seed, const pluss::Config& cfg) {
 // Out-of-sample errors of a cross-validated direct forecaster, on the rows covered by a test set.
 std::vector<double> errors(const Series& x, const Series& y, const ts::TsPartition& part, const ts::DirectForecasterOptions& o, const pluss::Config& cfg) {
   const auto cv = ts::DirectCVForecaster::fit(x, y, part, o, cfg);
-  const auto pred = cv.cvpredict(x, y, cfg).reshape({y.numel()}).pull<double>();
+  const auto pred = cv.cvpredict(x, y, cfg).reshape({y.numel()}).items<double>();
   const auto actual = y.host<double>();
   std::vector<double> e;
   for (std::size_t t = 0; t < actual.size(); ++t)
@@ -185,7 +185,7 @@ using pluss::Series;
 
 std::vector<double> errors(const Series& x, const Series& y, const ts::TsPartition& part, const ts::DirectForecasterOptions& o, const pluss::Config& cfg) {
   const auto cv = ts::DirectCVForecaster::fit(x, y, part, o, cfg);
-  const auto pred = cv.cvpredict(x, y, cfg).reshape({y.numel()}).pull<double>();
+  const auto pred = cv.cvpredict(x, y, cfg).reshape({y.numel()}).items<double>();
   const auto actual = y.host<double>();
   std::vector<double> e;
   for (std::size_t t = 0; t < actual.size(); ++t)
@@ -250,7 +250,7 @@ using pluss::Series;
 
 std::vector<double> errors(const Series& x, const Series& y, const ts::TsPartition& part, const ts::DirectForecasterOptions& o, const pluss::Config& cfg) {
   const auto cv = ts::DirectCVForecaster::fit(x, y, part, o, cfg);
-  const auto pred = cv.cvpredict(x, y, cfg).reshape({y.numel()}).pull<double>();
+  const auto pred = cv.cvpredict(x, y, cfg).reshape({y.numel()}).items<double>();
   const auto actual = y.host<double>();
   std::vector<double> e;
   for (std::size_t t = 0; t < actual.size(); ++t)
@@ -311,3 +311,12 @@ With the horizon set to 5 the test uses four lags of the loss-difference autocor
 - **A non-significant difference is not equality.** With little data the test cannot separate close models; then prefer the simpler one.
 
 That completes the direct-forecasting chapter. [Chapter 7](../ts_07_plots.md) shows the correlation and residual plots that accompany these checks.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="direct_forecasts.html">
+    <span class="label">Previous</span>
+    <span class="title">Direct forecasts</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->

@@ -1,0 +1,78 @@
+# `robot::Contacts`
+
+Frictionless unilateral contacts of link points with planes.
+
+## Signature
+
+```cpp
+robot::Contacts
+```
+
+## What It Does
+
+Describes contacts: point `i` is fixed to link `link[i]` at `point[i]` in that link's frame, and it must stay in the half-space `n . x >= offset` with the unit normal `normal[i]` and `offset[i]` in the world. A contact pushes along its normal, never pulls, and acts only while its gap `n . x - offset` is at most the contact threshold.
+
+## Fields
+
+| Field | Meaning | Default |
+|---|---|---|
+| `link` | The link each contact point is fixed to. Length `m`. | empty |
+| `point` | The contact points in their link frames, `[m, 3]`, in metres. | required |
+| `normal` | The unit normal of each plane in the world, `[m, 3]`. | required |
+| `offset` | The plane offsets `n . x`, `[m]`, in metres. | required |
+| `friction` | The Coulomb friction coefficient of each contact, `[m]`, non-negative. | undefined: frictionless |
+
+## Returns
+
+A value; read by `gap` and `constrain`.
+
+## Errors
+
+The functions throw `pluss::Error` for a link outside the robot, a `point` that is not `[m, 3]` or has a row count different from `link`, or a `normal` and `offset` of the wrong shape.
+
+## Interpretation and Use
+
+With `friction` the tangential force is limited to `friction` times the normal force along two tangent directions of the plane (a pyramid approximation of the friction cone, exact when the motion is along a tangent): sticking contacts carry whatever friction they need up to that limit and sliding ones carry the limit against the sliding. A point that arrives with downward velocity keeps it in `constrain`; use `impact` for the collision.
+
+## Practical Examples
+
+The following programs isolate this symbol's normal contract, a materially different mode or configuration, and relevant validation or interpretation behavior. Every program and displayed output is generated from the same compiled source.
+
+### Example 1
+
+Support, release and free fall.
+
+@@example Eng/api/robot_contact_rest.cpp@@
+
+### Example 2
+
+The gap of a point and of a tilted plane.
+
+@@example Eng/api/robot_contact_gap.cpp@@
+
+### Example 3
+
+Friction on a slope: sticking and sliding.
+
+@@example Eng/api/robot_friction_slope.cpp@@
+
+### Example 4
+
+Sliding accelerations against the closed form.
+
+@@example Eng/api/robot_friction_sliding.cpp@@
+
+### Example 5
+
+Rejected friction values.
+
+@@example Eng/api/robot_friction_errors.cpp@@
+
+### Example 6
+
+Rejected contacts.
+
+@@example Eng/api/robot_contact_errors.cpp@@
+
+<!-- apiref:nav:start -->
+<!-- apiref:nav:end -->

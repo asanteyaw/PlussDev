@@ -34,3 +34,8 @@ The final lines prove the answer optimal without either solver. If 22 employees 
 - **Model with the smallest integer part you can.** Every 0/1 variable multiplies the search; formulate cuts and bounds tightly.
 
 Where next: That completes integer programming. [Root finding](../../roots.md) is next.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+</div>
+<!-- apiref:nav:end -->

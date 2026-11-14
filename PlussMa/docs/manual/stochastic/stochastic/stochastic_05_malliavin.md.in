@@ -27,4 +27,12 @@ For an adapted `u` the second sum vanishes and `δ(u)` is the Ito sum. The two a
 - Use pathwise derivatives for smooth payoffs and a Malliavin weight for payoffs with jumps. The weight must be derived for the model and the sensitivity at hand; the library provides the derivative and the integral that make that derivation checkable.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+stochastic_05_malliavin/the_derivative_of_two_functionals
+stochastic_05_malliavin/the_skorokhod_integral
+stochastic_05_malliavin/a_digital_option_s_delta
+```
 <!-- apiref:toctree:end -->

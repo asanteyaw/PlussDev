@@ -55,4 +55,14 @@ where the columns of `β` (k × r) are the cointegrating vectors (`y_{t−1} β`
 5. Fit the VECM with the chosen rank; read `beta` as the long-run relation and `alpha` as the speed of adjustment.
 
 <!-- apiref:toctree:start -->
+```{toctree}
+:maxdepth: 2
+:hidden:
+
+ts_04_vector_models/fitting_a_var_and_choosing_the_lag_order
+ts_04_vector_models/impulse_responses_and_variance_decompositions
+ts_04_vector_models/granger_tests
+ts_04_vector_models/the_rank_of_a_cointegrated_system
+ts_04_vector_models/the_error_correction_model
+```
 <!-- apiref:toctree:end -->

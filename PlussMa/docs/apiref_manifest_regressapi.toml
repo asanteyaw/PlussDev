@@ -1,0 +1,261 @@
+# apiref_manifest_regressapi.toml -- the regression API reference.
+
+[framework.regress_api]
+title = "Regression"
+nav_title = "Regression API"
+nav_prefix = "api/regression/"
+root_page = "api/plussma_regression.html"
+summary = "Least-squares, generalized-linear, quantile and polynomial regression over Series data."
+include = "<pluss/ma.h>"
+header = ""
+
+[[family]]
+path = "regression/least_squares"
+page = "api/regression/least_squares.md"
+title = "Least squares"
+maxdepth = 2
+children = ["least_squares/OLSCovarianceType", "least_squares/OLSOptions", "least_squares/OLSFitResult", "least_squares/ols_fit", "least_squares/ols_predict", "least_squares/ols_summary", "least_squares/print_ols_summary"]
+
+[[symbol]]
+qualname = "regression::OLSCovarianceType"
+kind = "options"
+family = "regression/least_squares"
+page = "api/regression/least_squares/OLSCovarianceType.md"
+summary = "Selects the covariance estimator used for OLS uncertainty estimates."
+fields = ["Nonrobust"]
+
+[[symbol]]
+qualname = "regression::OLSOptions"
+kind = "options"
+family = "regression/least_squares"
+page = "api/regression/least_squares/OLSOptions.md"
+summary = "Controls confidence level, intercept handling, missing rows, conditioning, weights and labels."
+fields = ["alpha", "add_intercept", "drop_missing", "rcond", "weights", "response_name", "predictor_names", "covariance"]
+
+[[symbol]]
+qualname = "regression::OLSFitResult"
+kind = "options"
+family = "regression/least_squares"
+page = "api/regression/least_squares/OLSFitResult.md"
+summary = "Carries fitted parameters, uncertainty, residual diagnostics and model metadata."
+fields = ["coefficients", "std_errors", "t_values", "p_values", "conf_int", "covariance", "fitted_values", "residuals", "nobs", "rank", "k_params", "num_predictors", "dropped_observations", "df_model", "df_resid", "alpha", "mse", "rmse", "sse", "ssr", "sst", "rsquared", "adj_rsquared", "f_stat", "f_pvalue", "log_likelihood", "aic", "bic", "durbin_watson", "omnibus", "omnibus_pvalue", "jarque_bera", "jarque_bera_pvalue", "skewness", "kurtosis", "condition_number", "smallest_eig", "has_intercept", "covariance_type", "response_name", "coefficient_names", "warnings"]
+
+[[symbol]]
+qualname = "regression::ols_fit"
+kind = "function"
+family = "regression/least_squares"
+page = "api/regression/least_squares/ols_fit.md"
+summary = "Fits an ordinary or case-weighted least-squares regression."
+
+[[symbol]]
+qualname = "regression::ols_predict"
+kind = "function"
+family = "regression/least_squares"
+page = "api/regression/least_squares/ols_predict.md"
+summary = "Evaluates a fitted OLS model on new predictor rows."
+
+[[symbol]]
+qualname = "regression::ols_summary"
+kind = "function"
+family = "regression/least_squares"
+page = "api/regression/least_squares/ols_summary.md"
+summary = "Formats a fitted OLS result as a statistical summary string."
+
+[[symbol]]
+qualname = "regression::print_ols_summary"
+kind = "function"
+family = "regression/least_squares"
+page = "api/regression/least_squares/print_ols_summary.md"
+summary = "Writes the OLS statistical summary directly to a stream."
+
+[[family]]
+path = "regression/glm"
+page = "api/regression/glm.md"
+title = "Generalised linear models"
+maxdepth = 2
+children = ["glm/GLMFamily", "glm/GLMLink", "glm/GLMPredictionType", "glm/GLMOptions", "glm/GLMFitResult", "glm/glm_fit", "glm/glm_predict", "glm/glm_summary", "glm/print_glm_summary"]
+
+[[symbol]]
+qualname = "regression::GLMFamily"
+kind = "options"
+family = "regression/glm"
+page = "api/regression/glm/GLMFamily.md"
+summary = "Selects the distribution of the response: Normal, Binomial or Poisson."
+fields = ["Normal", "Binomial", "Poisson"]
+
+[[symbol]]
+qualname = "regression::GLMLink"
+kind = "options"
+family = "regression/glm"
+page = "api/regression/glm/GLMLink.md"
+summary = "Selects the link between the mean and the linear predictor."
+fields = ["Canonical", "Identity", "Log", "Logit"]
+
+[[symbol]]
+qualname = "regression::GLMPredictionType"
+kind = "options"
+family = "regression/glm"
+page = "api/regression/glm/GLMPredictionType.md"
+summary = "Chooses whether glm_predict returns the mean or the linear predictor."
+fields = ["Mean", "Linear"]
+
+[[symbol]]
+qualname = "regression::GLMOptions"
+kind = "options"
+family = "regression/glm"
+page = "api/regression/glm/GLMOptions.md"
+summary = "Controls the family, link, level, iteration limits, weights, offset and labels of a GLM fit."
+fields = ["family", "link", "alpha", "add_intercept", "drop_missing", "rcond", "max_iter", "tol", "weights", "offset", "response_name", "predictor_names"]
+
+[[symbol]]
+qualname = "regression::GLMFitResult"
+kind = "options"
+family = "regression/glm"
+page = "api/regression/glm/GLMFitResult.md"
+summary = "Carries coefficients, uncertainty, fitted values, deviance-based fit measures and iteration outcome."
+fields = ["coefficients", "std_errors", "z_values", "p_values", "conf_int", "covariance", "fitted_values", "linear_predictor", "residuals", "nobs", "rank", "k_params", "num_predictors", "dropped_observations", "df_model", "df_resid", "iterations", "alpha", "dispersion", "deviance", "null_deviance", "log_likelihood", "aic", "bic", "pseudo_rsquared", "condition_number", "converged", "has_intercept", "family", "link", "response_name", "coefficient_names", "warnings"]
+
+[[symbol]]
+qualname = "regression::glm_fit"
+kind = "function"
+family = "regression/glm"
+page = "api/regression/glm/glm_fit.md"
+summary = "Fits a generalised linear model by iteratively reweighted least squares."
+
+[[symbol]]
+qualname = "regression::glm_predict"
+kind = "function"
+family = "regression/glm"
+page = "api/regression/glm/glm_predict.md"
+summary = "Evaluates a fitted GLM on new rows, as the mean or the linear predictor."
+
+[[symbol]]
+qualname = "regression::glm_summary"
+kind = "function"
+family = "regression/glm"
+page = "api/regression/glm/glm_summary.md"
+summary = "Formats a fitted GLM as a statistical report string."
+
+[[symbol]]
+qualname = "regression::print_glm_summary"
+kind = "function"
+family = "regression/glm"
+page = "api/regression/glm/print_glm_summary.md"
+summary = "Writes the GLM report directly to a stream."
+
+[[family]]
+path = "regression/quantile"
+page = "api/regression/quantile.md"
+title = "Quantile regression"
+maxdepth = 2
+children = ["quantile/QuantileCovariance", "quantile/QuantileOptions", "quantile/QuantileFitResult", "quantile/quantile_fit", "quantile/quantile_predict", "quantile/quantile_summary", "quantile/print_quantile_summary"]
+
+[[symbol]]
+qualname = "regression::QuantileCovariance"
+kind = "options"
+family = "regression/quantile"
+page = "api/regression/quantile/QuantileCovariance.md"
+summary = "Selects the covariance estimator behind quantile-regression standard errors: Robust or Iid."
+fields = ["Robust", "Iid"]
+
+[[symbol]]
+qualname = "regression::QuantileOptions"
+kind = "options"
+family = "regression/quantile"
+page = "api/regression/quantile/QuantileOptions.md"
+summary = "Controls the quantile, covariance estimator, level, iteration controls, weights and labels of a quantile fit."
+fields = ["tau", "covariance", "alpha", "add_intercept", "drop_missing", "rcond", "max_iter", "tol", "eps", "weights", "response_name", "predictor_names"]
+
+[[symbol]]
+qualname = "regression::QuantileFitResult"
+kind = "options"
+family = "regression/quantile"
+page = "api/regression/quantile/QuantileFitResult.md"
+summary = "Carries coefficients, uncertainty, fitted quantiles, check-loss measures and iteration outcome."
+fields = ["coefficients", "std_errors", "t_values", "p_values", "conf_int", "covariance", "fitted_values", "residuals", "nobs", "rank", "k_params", "num_predictors", "dropped_observations", "df_model", "df_resid", "iterations", "tau", "alpha", "objective", "objective_null", "pseudo_rsquared", "residual_density0", "converged", "has_intercept", "response_name", "coefficient_names", "warnings"]
+
+[[symbol]]
+qualname = "regression::quantile_fit"
+kind = "function"
+family = "regression/quantile"
+page = "api/regression/quantile/quantile_fit.md"
+summary = "Fits a linear model for one conditional quantile by minimising the check loss."
+
+[[symbol]]
+qualname = "regression::quantile_predict"
+kind = "function"
+family = "regression/quantile"
+page = "api/regression/quantile/quantile_predict.md"
+summary = "Evaluates a fitted quantile regression on new predictor rows."
+
+[[symbol]]
+qualname = "regression::quantile_summary"
+kind = "function"
+family = "regression/quantile"
+page = "api/regression/quantile/quantile_summary.md"
+summary = "Formats a fitted quantile regression as a statistical report string."
+
+[[symbol]]
+qualname = "regression::print_quantile_summary"
+kind = "function"
+family = "regression/quantile"
+page = "api/regression/quantile/print_quantile_summary.md"
+summary = "Writes the quantile-regression report directly to a stream."
+
+[[family]]
+path = "regression/polynomial"
+page = "api/regression/polynomial.md"
+title = "Polynomial regression"
+maxdepth = 2
+children = ["polynomial/PolyOptions", "polynomial/PolyFitResult", "polynomial/poly_expand", "polynomial/poly_fit", "polynomial/poly_predict", "polynomial/poly_summary", "polynomial/print_poly_summary"]
+
+[[symbol]]
+qualname = "regression::PolyOptions"
+kind = "options"
+family = "regression/polynomial"
+page = "api/regression/polynomial/PolyOptions.md"
+summary = "Controls the degree, cross terms, intercept, level, weights and labels of a polynomial fit."
+fields = ["degree", "add_intercept", "include_cross", "drop_missing", "rcond", "alpha", "weights", "response_name", "predictor_names"]
+
+[[symbol]]
+qualname = "regression::PolyFitResult"
+kind = "options"
+family = "regression/polynomial"
+page = "api/regression/polynomial/PolyFitResult.md"
+summary = "Carries the least-squares fit of the expanded design and the record of the expansion."
+fields = ["ols", "degree", "include_cross", "base_predictor_names"]
+
+[[symbol]]
+qualname = "regression::poly_expand"
+kind = "function"
+family = "regression/polynomial"
+page = "api/regression/polynomial/poly_expand.md"
+summary = "Builds the polynomial terms, and optionally the cross terms, of one or more predictors."
+
+[[symbol]]
+qualname = "regression::poly_fit"
+kind = "function"
+family = "regression/polynomial"
+page = "api/regression/polynomial/poly_fit.md"
+summary = "Fits a polynomial regression by least squares on the expanded predictors."
+
+[[symbol]]
+qualname = "regression::poly_predict"
+kind = "function"
+family = "regression/polynomial"
+page = "api/regression/polynomial/poly_predict.md"
+summary = "Evaluates a fitted polynomial regression at new predictor values."
+
+[[symbol]]
+qualname = "regression::poly_summary"
+kind = "function"
+family = "regression/polynomial"
+page = "api/regression/polynomial/poly_summary.md"
+summary = "Formats a fitted polynomial regression as a statistical report string."
+
+[[symbol]]
+qualname = "regression::print_poly_summary"
+kind = "function"
+family = "regression/polynomial"
+page = "api/regression/polynomial/print_poly_summary.md"
+summary = "Writes the polynomial-regression report directly to a stream."

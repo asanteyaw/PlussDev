@@ -24,7 +24,7 @@ int main() {
   // The drift of g(X) = X^2 from Ito's lemma, divided by g: the exponential growth rate of E[g(X)].
   const pluss::Series point = pluss::make_series(std::vector<double>{x0}, {1}).to(f64);
   const auto d = point.calc.diff.ito([](const pluss::Series& s) { return s.mul(s); }, point.mul(mu_c), point.mul(sg));
-  const double rate = d.drift.item<double>() / (x0 * x0);
+  const double rate = d.drift.squeeze().item<double>() / (x0 * x0);
   std::cout << std::fixed << std::setprecision(5);
   std::cout << "growth rate of E[X^2] from Ito's lemma: " << rate << "  (2 mu + sigma^2 = " << 2 * mu_c + sg * sg << ")\n";
 
@@ -54,3 +54,12 @@ predicted E[X_T^2] = 2.19711
 simulated mean     = 2.19433  (standard error 0.00705)
 ```
 The rate from the lemma is 0.42250, equal to `2μ + σ²`. The prediction 2.19711 and the simulated 2.19433 differ by 0.00278, less than the standard error 0.00705.
+
+<!-- apiref:nav:start -->
+<div class="pluss-inline-prev-next">
+  <a class="prev-link" href="the_stratonovich_convention.html">
+    <span class="label">Previous</span>
+    <span class="title">The Stratonovich convention</span>
+  </a>
+</div>
+<!-- apiref:nav:end -->
