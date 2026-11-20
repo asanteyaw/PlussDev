@@ -173,6 +173,7 @@ CLASS_CONFIG = {
         'title': 'DataFramePlotAccessor API Reference',
         'subtitle': 'Practical DataFramePlotAccessor API Reference',
         'intro': 'This page documents the public plotting accessor returned by `DataFrame::plot()` and `Atlas::plot()`.',
+        'binder': 'plot()',
     },
     'DataFrameSqlAccessor': {
         'header': ROOT / 'PlussMic/src/table/sql/DataFrameSql.h',
@@ -748,6 +749,7 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
         'DataFrameTimelineAccessor',
         'DataFrameLabelAccessor',
         'DataFrameFeatureAxisAccessor',
+        'DataFramePlotAccessor',
         'DataFramePlot3DAccessor',
         'DataFrameTsAccessor',
         'DataFrameSortBuilder',

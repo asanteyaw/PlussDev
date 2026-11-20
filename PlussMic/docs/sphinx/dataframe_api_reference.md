@@ -21,6 +21,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 - `tl()` -> [`DataFrameTimelineAccessor`](dataframe_timeline_accessor_api_reference.md)
 - `labels()` -> [`DataFrameLabelAccessor`](dataframe_label_accessor_api_reference.md)
 - `feataxis()` -> [`DataFrameFeatureAxisAccessor`](dataframe_feataxis_accessor_api_reference.md)
+- `plot()` -> [`DataFramePlotAccessor`](dataframe_plot_api_reference.md)
 - `plot3d()` -> [`DataFramePlot3DAccessor`](dataframe_plot3d_accessor_api_reference.md)
 - `ts()` -> [`DataFrameTsAccessor`](dataframe_ts_accessor_api_reference.md)
 - `sort()` -> [`DataFrameSortBuilder`](dataframe_sort_accessor_api_reference.md)
@@ -35,6 +36,7 @@ dataframe_note_accessor_api_reference
 dataframe_timeline_accessor_api_reference
 dataframe_label_accessor_api_reference
 dataframe_feataxis_accessor_api_reference
+dataframe_plot_api_reference
 dataframe_plot3d_accessor_api_reference
 dataframe_ts_accessor_api_reference
 dataframe_sort_accessor_api_reference
