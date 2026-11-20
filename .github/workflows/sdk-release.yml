@@ -160,9 +160,7 @@ jobs:
           name: PlussII Transient
           prerelease: true
           make_latest: false
-          body: |
-            Transient is the latest validated source build. It may change between Steady releases.
-            All five archives passed their platform build and distribution checks for commit ${{ github.sha }}.
+          body_path: docs/releases/transient.md
           files: |
             release-assets/plussii-cpp-*.zip
             release-assets/SHA256SUMS.txt

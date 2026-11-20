@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# Series::StatAccessor API Reference
+# stat
 
 [Back to Series API Reference](series_api_reference.md)
 

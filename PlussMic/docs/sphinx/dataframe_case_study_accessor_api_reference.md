@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# DataFrameCaseStudyAccessor API Reference
+# case_study
 
 `DataFrame::case_study()` returns a lightweight accessor for selecting cases without
 mixing row selectors into the root `DataFrame` overload set. The accessor keeps a

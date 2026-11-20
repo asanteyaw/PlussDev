@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# Timeline Index Accessor API Reference
+# index
 
 [Back to PlussQit API Reference](../api_reference.md)
 

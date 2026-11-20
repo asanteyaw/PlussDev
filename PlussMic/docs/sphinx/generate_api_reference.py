@@ -10402,6 +10402,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     accept_set = set(args.accept)
 
+    for parent, children in ACCESSOR_CHILDREN.items():
+        for child in children:
+            if not CLASS_CONFIG[child].get('binder'):
+                raise ValueError(f'{parent}: {child} needs its public entry method in CLASS_CONFIG.binder')
+
     extracted: dict[str, list[Method]] = {}
     skipped_classes: set[str] = set()
     for class_name, cfg in CLASS_CONFIG.items():

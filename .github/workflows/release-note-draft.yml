@@ -1,0 +1,26 @@
+name: Draft release notes
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Track changes since the last Steady release
+        run: python3 tools/release_notes.py --output release-notes-draft.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes-draft-${{ github.sha }}
+          path: release-notes-draft.md

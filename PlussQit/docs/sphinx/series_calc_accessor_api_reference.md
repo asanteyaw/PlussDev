@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# Series::CalcAccessor API Reference
+# calc
 
 [Back to Series API Reference](series_api_reference.md)
 

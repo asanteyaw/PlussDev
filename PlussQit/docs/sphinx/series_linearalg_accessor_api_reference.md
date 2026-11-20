@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# Series::LinearAlgAccessor API Reference
+# linearalg
 
 [Back to Series API Reference](series_api_reference.md)
 

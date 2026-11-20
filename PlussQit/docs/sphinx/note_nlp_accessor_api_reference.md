@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-# Note NLP Accessor API Reference
+# nlp
 
 [Back to Note API Reference](note_api_reference)
 

@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# Series::AntidiffAccessor API Reference
+# antidiff
 
 [Back to Series API Reference](series_api_reference.md)
 

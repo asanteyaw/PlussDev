@@ -1,5 +1,5 @@
 <!-- pluss-hand-authored -->
-# Note Regex Accessor API Reference
+# regex
 
 [Back to Note API Reference](note_api_reference)
 

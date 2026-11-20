@@ -3798,6 +3798,7 @@ static Series logit_impl(const Series& self, std::optional<double> eps = std::nu
 }
 
 static Series nextafter_impl(const Series& self, const Series& other) {
+#if defined(PLUSS_HAS_MPS) && PLUSS_HAS_MPS
   if (self.platform() == Platform::MPS) {
     // float32 kernel on the IEEE bit pattern (MPS has no float64).
     const Series fa = self.to(ScalarType::Float32).contiguous();
@@ -3806,6 +3807,7 @@ static Series nextafter_impl(const Series& self, const Series& other) {
     native::mps::nextafter(fa, fb, out);
     return out;
   }
+#endif
   // float32 inputs step in float32 (the neighbour one float32 ulp away), not in double.
   if (self.scalar_type() == ScalarType::Float32 && other.scalar_type() == ScalarType::Float32) {
     auto shape32 = SeriesIterator::broadcast_shape(self.sizes(), other.sizes());

@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# Note TeX Accessor API Reference
+# tex
 
 [Back to Note API Reference](note_api_reference)
 
