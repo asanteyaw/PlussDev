@@ -1,4 +1,4 @@
-# DataFrameTsWindowAccessor API Reference
+# window
 
 This page documents the public rolling-window aggregator returned by `DataFrame::ts().window(...)`.
 

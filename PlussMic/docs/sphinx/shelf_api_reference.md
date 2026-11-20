@@ -16,11 +16,11 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `Shelf` exposes nested accessors, each with its own method pages and sidebar:
 
-- `label()` -> [`ShelfLabelAccessor`](shelf_label_accessor_api_reference.md)
-- `nt()` -> [`ShelfNoteAccessor`](shelf_note_accessor_api_reference.md)
-- `tl()` -> [`ShelfTimelineAccessor`](shelf_timeline_accessor_api_reference.md)
-- `ts()` -> [`TimeSeriesAccessor`](shelf_ts_accessor_api_reference.md)
-- `plot()` -> [`ShelfPlotAccessor`](shelf_plot_api_reference.md)
+- `label()` -> [`label`](shelf_label_accessor_api_reference.md)
+- `nt()` -> [`nt`](shelf_note_accessor_api_reference.md)
+- `tl()` -> [`tl`](shelf_timeline_accessor_api_reference.md)
+- `ts()` -> [`ts`](shelf_ts_accessor_api_reference.md)
+- `plot()` -> [`plot`](shelf_plot_api_reference.md)
 
 ```{toctree}
 :hidden:

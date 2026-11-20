@@ -1,4 +1,4 @@
-# AxelCastAccessor API Reference
+# cast
 
 This page documents the public casting accessor returned by `Axel::fields(keys).cast()`, applied across the depth stack.
 

@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# LocusQuery API Reference
+# query
 
 `LocusQuery` is the SQL accessor returned by
 [`Locus::query()`](api/locus/query.md). Every catalog key becomes a table name in

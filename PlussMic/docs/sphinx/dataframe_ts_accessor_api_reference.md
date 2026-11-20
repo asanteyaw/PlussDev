@@ -1,4 +1,4 @@
-# DataFrameTsAccessor API Reference
+# ts
 
 This page documents the public time-series accessor returned by `DataFrame::ts()`.
 
@@ -16,8 +16,8 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `DataFrameTsAccessor` exposes nested accessors, each with its own method pages and sidebar:
 
-- `ts().window(...)` -> [`DataFrameTsWindowAccessor`](dataframe_ts_window_accessor_api_reference.md)
-- `ts().resample(...)` -> [`DataFrameTsResampler`](dataframe_ts_resampler_api_reference.md)
+- `ts().window(...)` -> [`window`](dataframe_ts_window_accessor_api_reference.md)
+- `ts().resample(...)` -> [`resample`](dataframe_ts_resampler_api_reference.md)
 
 ```{toctree}
 :hidden:

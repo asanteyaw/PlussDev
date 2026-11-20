@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# LocusQueryPrepared API Reference
+# prepare
 
 `LocusQueryPrepared` owns a Locus workspace, a statement template, and the SQL
 options captured when [`Locus::query(options)`](api/locus/query.md) was called.

@@ -1,4 +1,4 @@
-# DataFrameSqlAccessor API Reference
+# sql
 
 This page documents the public SQL accessor returned by `DataFrame::sql()`.
 

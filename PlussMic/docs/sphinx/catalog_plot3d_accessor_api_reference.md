@@ -1,4 +1,4 @@
-# CatalogPlot3DAccessor API Reference
+# plot3d
 
 This page documents the public 3D plotting accessor returned by `Catalog::plot3d()`.
 

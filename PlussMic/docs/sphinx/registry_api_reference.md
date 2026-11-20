@@ -17,7 +17,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 `Registry` exposes:
 
 - `fields(keys)` -> `Registry` projection
-- `fieldaxis()` -> [`RegistryFieldAxisAccessor`](registry_fieldaxis_accessor_api_reference.md)
+- `fieldaxis()` -> [`fieldaxis`](registry_fieldaxis_accessor_api_reference.md)
 - `cast()`, `nt()`, `tl()` -> nested accessors over the current registry
 
 ```{toctree}

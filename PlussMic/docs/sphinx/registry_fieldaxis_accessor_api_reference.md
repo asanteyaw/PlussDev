@@ -1,4 +1,4 @@
-# RegistryFieldAxisAccessor API Reference
+# fieldaxis
 
 This page documents the public field-name-matching accessor returned by `Registry::fieldaxis()`.
 

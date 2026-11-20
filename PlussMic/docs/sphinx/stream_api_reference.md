@@ -16,12 +16,12 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `Stream` exposes nested accessors, each with its own method pages and sidebar:
 
-- `plot()` -> [`StreamPlotAccessor`](stream_plot_accessor_api_reference.md)
-- `cast()` -> [`StreamCastAccessor`](stream_cast_accessor_api_reference.md)
-- `nt()` -> [`StreamNoteAccessor`](stream_note_accessor_api_reference.md)
-- `tl()` -> [`StreamTimelineAccessor`](stream_timeline_accessor_api_reference.md)
-- `ts()` -> [`StreamTimeSeriesAccessor`](stream_ts_accessor_api_reference.md)
-- `lbl()` -> [`StreamLabelAccessor`](stream_lbl_accessor_api_reference.md)
+- `plot()` -> [`plot`](stream_plot_accessor_api_reference.md)
+- `cast()` -> [`cast`](stream_cast_accessor_api_reference.md)
+- `nt()` -> [`nt`](stream_note_accessor_api_reference.md)
+- `tl()` -> [`tl`](stream_timeline_accessor_api_reference.md)
+- `ts()` -> [`ts`](stream_ts_accessor_api_reference.md)
+- `lbl()` -> [`lbl`](stream_lbl_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:

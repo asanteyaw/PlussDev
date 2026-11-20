@@ -16,13 +16,13 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `Catalog` exposes nested accessors, each with its own method pages and sidebar:
 
-- `plot()` -> [`CatalogPlotAccessor`](catalog_plot_accessor_api_reference.md)
-- `plot3d()` -> [`CatalogPlot3DAccessor`](catalog_plot3d_accessor_api_reference.md)
-- `nt()` -> [`CatalogNoteAccessor`](catalog_note_accessor_api_reference.md)
-- `tl()` -> [`CatalogTimelineAccessor`](catalog_timeline_accessor_api_reference.md)
-- `ts()` -> [`CatalogTimeSeriesAccessor`](catalog_ts_accessor_api_reference.md)
-- `cast()` -> [`CatalogCastAccessor`](catalog_cast_accessor_api_reference.md)
-- `keyaxis()` -> [`CatalogKeyAxisAccessor`](catalog_keyaxis_accessor_api_reference.md)
+- `plot()` -> [`plot`](catalog_plot_accessor_api_reference.md)
+- `plot3d()` -> [`plot3d`](catalog_plot3d_accessor_api_reference.md)
+- `nt()` -> [`nt`](catalog_note_accessor_api_reference.md)
+- `tl()` -> [`tl`](catalog_timeline_accessor_api_reference.md)
+- `ts()` -> [`ts`](catalog_ts_accessor_api_reference.md)
+- `cast()` -> [`cast`](catalog_cast_accessor_api_reference.md)
+- `keyaxis()` -> [`keyaxis`](catalog_keyaxis_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:

@@ -1,4 +1,4 @@
-# CatalogTimelineAccessor API Reference
+# tl
 
 This page documents the public timestamp-feature accessor returned by `Catalog::tl()`, applied across every key in the catalog.
 

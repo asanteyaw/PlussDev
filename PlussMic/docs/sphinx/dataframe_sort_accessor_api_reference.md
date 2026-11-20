@@ -1,4 +1,4 @@
-# DataFrameSortBuilder API Reference
+# sort
 
 This page documents the value-ordering workflow entered via `DataFrame::sort()` and continued through `DataFrameSortBuilder`.
 

@@ -16,16 +16,20 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `DataFrame` exposes nested accessors, each with its own method pages and sidebar:
 
-- `case_study()` -> [`DataFrameCaseStudyAccessor`](dataframe_case_study_accessor_api_reference.md)
-- `nt()` -> [`DataFrameNoteAccessor`](dataframe_note_accessor_api_reference.md)
-- `tl()` -> [`DataFrameTimelineAccessor`](dataframe_timeline_accessor_api_reference.md)
-- `labels()` -> [`DataFrameLabelAccessor`](dataframe_label_accessor_api_reference.md)
-- `feataxis()` -> [`DataFrameFeatureAxisAccessor`](dataframe_feataxis_accessor_api_reference.md)
-- `plot()` -> [`DataFramePlotAccessor`](dataframe_plot_api_reference.md)
-- `plot3d()` -> [`DataFramePlot3DAccessor`](dataframe_plot3d_accessor_api_reference.md)
-- `ts()` -> [`DataFrameTsAccessor`](dataframe_ts_accessor_api_reference.md)
-- `sort()` -> [`DataFrameSortBuilder`](dataframe_sort_accessor_api_reference.md)
-- `contingency(...)` -> [`ContingencyTable`](dataframe_contingency_accessor_api_reference.md)
+- `case_study()` -> [`case_study`](dataframe_case_study_accessor_api_reference.md)
+- `nt()` -> [`nt`](dataframe_note_accessor_api_reference.md)
+- `tl()` -> [`tl`](dataframe_timeline_accessor_api_reference.md)
+- `labels()` -> [`labels`](dataframe_label_accessor_api_reference.md)
+- `feataxis()` -> [`feataxis`](dataframe_feataxis_accessor_api_reference.md)
+- `cast()` -> [`cast`](dataframe_cast_accessor_api_reference.md)
+- `group()` -> [`group`](dataframe_group_accessor_api_reference.md)
+- `plot()` -> [`plot`](dataframe_plot_api_reference.md)
+- `plot3d()` -> [`plot3d`](dataframe_plot3d_accessor_api_reference.md)
+- `sql()` -> [`sql`](dataframe_sql_accessor_api_reference.md)
+- `prep_sql()` -> [`prep_sql`](dataframe_sql_prepared_api_reference.md)
+- `ts()` -> [`ts`](dataframe_ts_accessor_api_reference.md)
+- `sort()` -> [`sort`](dataframe_sort_accessor_api_reference.md)
+- `contingency(...)` -> [`contingency`](dataframe_contingency_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:
@@ -36,8 +40,12 @@ dataframe_note_accessor_api_reference
 dataframe_timeline_accessor_api_reference
 dataframe_label_accessor_api_reference
 dataframe_feataxis_accessor_api_reference
+dataframe_cast_accessor_api_reference
+dataframe_group_accessor_api_reference
 dataframe_plot_api_reference
 dataframe_plot3d_accessor_api_reference
+dataframe_sql_accessor_api_reference
+dataframe_sql_prepared_api_reference
 dataframe_ts_accessor_api_reference
 dataframe_sort_accessor_api_reference
 dataframe_contingency_accessor_api_reference

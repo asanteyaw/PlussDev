@@ -1,4 +1,4 @@
-# DataFrameGroupBuilder API Reference
+# group
 
 This page documents the public grouped-workflow surface entered via `DataFrame::group()` -- the `DataFrameGroupBuilder` returned by `group()` itself, and the `DataFrameGrouped` handle returned by its `.by(...)`.
 

@@ -1,4 +1,4 @@
-# StreamNoteAccessor API Reference
+# nt
 
 This page documents the public text-processing accessor returned by `Stream::nt()`.
 

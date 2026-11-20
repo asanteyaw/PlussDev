@@ -1,4 +1,4 @@
-# AtlasTsResampler API Reference
+# resample
 
 This page documents the public time-based resampling accessor returned by `Atlas::ts().resample(...)`, applied frame-by-frame across the stack.
 

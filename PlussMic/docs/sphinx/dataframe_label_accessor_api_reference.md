@@ -1,4 +1,4 @@
-# DataFrameLabelAccessor API Reference
+# labels
 
 This page documents the public case-label accessor returned by `DataFrame::labels()`.
 

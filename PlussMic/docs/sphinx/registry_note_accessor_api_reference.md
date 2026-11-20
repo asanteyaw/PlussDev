@@ -1,4 +1,4 @@
-# RegistryNoteAccessor API Reference
+# nt
 
 This page documents the public text-processing accessor returned by `Registry::fields(keys).nt()`.
 

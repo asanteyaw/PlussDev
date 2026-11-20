@@ -1,4 +1,4 @@
-# NexusTraverse API Reference
+# from
 
 This page documents the public `NexusTraverse` surface — the fluent join-graph
 builder returned by [`Nexus::from(table)`](nexus_api_reference.md).

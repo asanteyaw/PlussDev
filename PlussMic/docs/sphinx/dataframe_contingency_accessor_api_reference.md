@@ -1,4 +1,4 @@
-# ContingencyTable API Reference
+# contingency
 
 This page documents the retained `ContingencyTable` object returned by `DataFrame::contingency(...)`.
 

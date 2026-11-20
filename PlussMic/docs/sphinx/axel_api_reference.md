@@ -17,7 +17,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 `Axel` exposes:
 
 - `fields(keys)` -> `Axel` projection
-- `fieldaxis()` -> [`AxelFieldAxisAccessor`](axel_fieldaxis_accessor_api_reference.md)
+- `fieldaxis()` -> [`fieldaxis`](axel_fieldaxis_accessor_api_reference.md)
 - `cast()`, `nt()`, `tl()` -> nested accessors over the current axel
 
 ```{toctree}

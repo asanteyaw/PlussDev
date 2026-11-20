@@ -1,4 +1,4 @@
-# DataFrameTsResampler API Reference
+# resample
 
 This page documents the public time-based resampling accessor returned by `DataFrame::ts().resample(...)`.
 

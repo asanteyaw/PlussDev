@@ -1,4 +1,4 @@
-# AtlasLabelAccessor API Reference
+# label
 
 This page documents the public depth-label accessor returned by `Atlas::label()`.
 

@@ -1,4 +1,4 @@
-# NexusQuery API Reference
+# query
 
 This page documents the public `NexusQuery` surface returned by
 [`Nexus::query()`](nexus_api_reference.md).

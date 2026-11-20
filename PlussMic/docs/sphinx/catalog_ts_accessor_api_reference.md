@@ -1,4 +1,4 @@
-# CatalogTimeSeriesAccessor API Reference
+# ts
 
 This page documents the public time-series accessor returned by `Catalog::ts()`, applied across every key in the catalog.
 

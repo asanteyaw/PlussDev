@@ -1,4 +1,4 @@
-# StreamLabelAccessor API Reference
+# lbl
 
 This page documents the public label accessor returned by `Stream::lbl()`.
 

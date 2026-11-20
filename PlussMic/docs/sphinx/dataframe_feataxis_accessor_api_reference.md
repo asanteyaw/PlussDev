@@ -1,4 +1,4 @@
-# DataFrameFeatureAxisAccessor API Reference
+# feataxis
 
 This page documents the public feature-name-axis accessor returned by `DataFrame::feataxis()`.
 

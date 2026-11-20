@@ -181,6 +181,7 @@ CLASS_CONFIG = {
         'title': 'DataFrameSqlAccessor API Reference',
         'subtitle': 'Practical DataFrameSqlAccessor API Reference',
         'intro': 'This page documents the public SQL accessor returned by `DataFrame::sql()`.',
+        'binder': 'sql()',
     },
     'DataFrameSqlPrepared': {
         'header': ROOT / 'PlussMic/src/table/sql/DataFrameSql.h',
@@ -188,6 +189,7 @@ CLASS_CONFIG = {
         'title': 'DataFrameSqlPrepared API Reference',
         'subtitle': 'Practical DataFrameSqlPrepared API Reference',
         'intro': 'This page documents the public prepared-statement helper returned by `DataFrame::prep_sql()` or `DataFrameSqlAccessor::prepare()`.',
+        'binder': 'prep_sql()',
     },
     'DataFrameNoteAccessor': {
         'header': ROOT / 'PlussMic/src/table/DataFrame.h',
@@ -749,8 +751,12 @@ ACCESSOR_CHILDREN: dict[str, list[str]] = {
         'DataFrameTimelineAccessor',
         'DataFrameLabelAccessor',
         'DataFrameFeatureAxisAccessor',
+        'DataFrameCastAccessor',
+        'DataFrameGroupBuilder',
         'DataFramePlotAccessor',
         'DataFramePlot3DAccessor',
+        'DataFrameSqlAccessor',
+        'DataFrameSqlPrepared',
         'DataFrameTsAccessor',
         'DataFrameSortBuilder',
         'ContingencyTable',
@@ -9019,6 +9025,13 @@ def example_for(class_name: str, method: Method) -> str:
     raise RuntimeError(f'Unhandled class {class_name}')
 
 
+def reference_display_title(cfg: dict) -> str:
+    """Name accessor references for the method used to enter them."""
+    binder = cfg.get('binder', '')
+    methods = re.findall(r'([A-Za-z_]\w*)\s*\(', binder)
+    return methods[-1] if methods else cfg['title']
+
+
 def build_page(class_name: str, methods: list[Method]) -> str:
     def extra_sections_for_method(method: Method) -> list[str]:
         n = method.name
@@ -9963,7 +9976,7 @@ def build_page(class_name: str, methods: list[Method]) -> str:
     for m in methods:
         grouped.setdefault(m.name, []).append(m)
     lines = [
-        f'# {cfg["title"]}',
+        f'# {reference_display_title(cfg)}',
         '',
         cfg['intro'],
         '',
@@ -10120,7 +10133,7 @@ def build_method_index_page(class_name: str, methods: list[Method]) -> str:
     ordered_names = ordered_method_names(methods)
 
     lines = [
-        f'# {cfg["title"]}',
+        f'# {reference_display_title(cfg)}',
         '',
         cfg['intro'],
         '',
@@ -10164,7 +10177,7 @@ def build_method_index_page(class_name: str, methods: list[Method]) -> str:
             '`Registry` exposes:',
             '',
             '- `fields(keys)` -> `Registry` projection',
-            '- `fieldaxis()` -> [`RegistryFieldAxisAccessor`](registry_fieldaxis_accessor_api_reference.md)',
+            '- `fieldaxis()` -> [`fieldaxis`](registry_fieldaxis_accessor_api_reference.md)',
             '- `cast()`, `nt()`, `tl()` -> nested accessors over the current registry',
             '',
         ])
@@ -10175,7 +10188,7 @@ def build_method_index_page(class_name: str, methods: list[Method]) -> str:
             '`Axel` exposes:',
             '',
             '- `fields(keys)` -> `Axel` projection',
-            '- `fieldaxis()` -> [`AxelFieldAxisAccessor`](axel_fieldaxis_accessor_api_reference.md)',
+            '- `fieldaxis()` -> [`fieldaxis`](axel_fieldaxis_accessor_api_reference.md)',
             '- `cast()`, `nt()`, `tl()` -> nested accessors over the current axel',
             '',
         ])
@@ -10187,7 +10200,7 @@ def build_method_index_page(class_name: str, methods: list[Method]) -> str:
             child_cfg = CLASS_CONFIG[child]
             binder = child_cfg.get('binder', '')
             label = f'`{binder}`' if binder else f'`{child}`'
-            lines.append(f"- {label} -> [`{child}`]({child_cfg['output'].stem}.md)")
+            lines.append(f"- {label} -> [`{reference_display_title(child_cfg)}`]({child_cfg['output'].stem}.md)")
         lines.append('')
 
     lines.extend([
@@ -10349,7 +10362,7 @@ def write_api_nav_manifest(extracted: dict[str, list[Method]]) -> None:
         if class_name not in PER_METHOD_CLASSES:
             continue
         payload[class_name] = {
-            'title': cfg.get('nav_title', class_name),
+            'title': reference_display_title(cfg),
             'slug': METHOD_PAGE_DIR[class_name],
             'landing': f"{cfg['output'].stem}.html",
             'methods': ordered_method_names(methods_for_index(extracted, class_name)),

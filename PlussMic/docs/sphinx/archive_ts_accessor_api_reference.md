@@ -1,4 +1,4 @@
-# ArchiveTimeSeriesAccessor API Reference
+# ts
 
 This page documents the public time-series accessor returned by `Archive::ts()`, applied across every depth level.
 

@@ -16,12 +16,12 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `Archive` exposes nested accessors, each with its own method pages and sidebar:
 
-- `plot()` -> [`ArchivePlotAccessor`](archive_plot_accessor_api_reference.md)
-- `label()` -> [`ArchiveLabelAccessor`](archive_label_accessor_api_reference.md)
-- `keyaxis()` -> [`ArchiveKeyAxisAccessor`](archive_keyaxis_accessor_api_reference.md)
-- `cast()` -> [`ArchiveCastAccessor`](archive_cast_accessor_api_reference.md)
-- `tl()` -> [`ArchiveTimelineAccessor`](archive_timeline_accessor_api_reference.md)
-- `ts()` -> [`ArchiveTimeSeriesAccessor`](archive_ts_accessor_api_reference.md)
+- `plot()` -> [`plot`](archive_plot_accessor_api_reference.md)
+- `label()` -> [`label`](archive_label_accessor_api_reference.md)
+- `keyaxis()` -> [`keyaxis`](archive_keyaxis_accessor_api_reference.md)
+- `cast()` -> [`cast`](archive_cast_accessor_api_reference.md)
+- `tl()` -> [`tl`](archive_timeline_accessor_api_reference.md)
+- `ts()` -> [`ts`](archive_ts_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:

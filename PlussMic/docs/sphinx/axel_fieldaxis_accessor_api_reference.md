@@ -1,4 +1,4 @@
-# AxelFieldAxisAccessor API Reference
+# fieldaxis
 
 This page documents the public field-name-matching accessor returned by `Axel::fieldaxis()`, applied across the depth stack.
 

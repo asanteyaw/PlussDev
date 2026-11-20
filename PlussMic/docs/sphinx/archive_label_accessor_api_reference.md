@@ -1,4 +1,4 @@
-# ArchiveLabelAccessor API Reference
+# label
 
 This page documents the public depth-label accessor returned by `Archive::label()`.
 

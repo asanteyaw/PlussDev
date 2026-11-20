@@ -16,9 +16,9 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `Slot` exposes nested accessors, each with its own method pages and sidebar:
 
-- `cast()` -> [`SlotCastAccessor`](slot_cast_accessor_api_reference.md)
-- `nt()` -> [`SlotNoteAccessor`](slot_note_accessor_api_reference.md)
-- `tl()` -> [`SlotTimelineAccessor`](slot_timeline_accessor_api_reference.md)
+- `cast()` -> [`cast`](slot_cast_accessor_api_reference.md)
+- `nt()` -> [`nt`](slot_note_accessor_api_reference.md)
+- `tl()` -> [`tl`](slot_timeline_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:

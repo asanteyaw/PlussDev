@@ -1,4 +1,4 @@
-# RegistryCastAccessor API Reference
+# cast
 
 This page documents the public casting accessor returned by `Registry::fields(keys).cast()`.
 

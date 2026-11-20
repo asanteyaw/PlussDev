@@ -1,4 +1,4 @@
-# CatalogKeyAxisAccessor API Reference
+# keyaxis
 
 This page documents the public key-name-matching accessor returned by `Catalog::keyaxis()`.
 

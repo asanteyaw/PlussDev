@@ -1,4 +1,4 @@
-# CatalogNoteAccessor API Reference
+# nt
 
 This page documents the public text-processing accessor returned by `Catalog::nt()`, applied across every key in the catalog.
 

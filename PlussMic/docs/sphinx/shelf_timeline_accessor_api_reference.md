@@ -1,4 +1,4 @@
-# ShelfTimelineAccessor API Reference
+# tl
 
 This page documents the public timestamp-payload accessor returned by `Shelf::tl()`.
 

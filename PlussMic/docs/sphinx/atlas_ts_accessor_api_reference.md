@@ -1,4 +1,4 @@
-# AtlasTsAccessor API Reference
+# ts
 
 This page documents the public time-series accessor returned by `Atlas::ts()`, applied frame-by-frame across the stack.
 
@@ -16,7 +16,7 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `AtlasTsAccessor` exposes nested accessors, each with its own method pages and sidebar:
 
-- `ts().resample(...)` -> [`AtlasTsResampler`](atlas_ts_resampler_api_reference.md)
+- `ts().resample(...)` -> [`resample`](atlas_ts_resampler_api_reference.md)
 
 ```{toctree}
 :hidden:

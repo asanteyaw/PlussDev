@@ -1,4 +1,4 @@
-# SlotNoteAccessor API Reference
+# nt
 
 This page documents the public text-processing accessor returned by `Slot::nt()`.
 

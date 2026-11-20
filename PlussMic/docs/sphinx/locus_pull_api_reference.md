@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# LocusPull API Reference
+# pull
 
 `LocusPull` is the root-grain feature builder returned by
 [`Locus::pull(root)`](api/locus/pull.md). Plain `take()` specifications follow

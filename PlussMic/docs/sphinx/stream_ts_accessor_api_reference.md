@@ -1,4 +1,4 @@
-# StreamTimeSeriesAccessor API Reference
+# ts
 
 This page documents the public time-series accessor returned by `Stream::ts()`.
 

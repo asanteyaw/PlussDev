@@ -1,4 +1,4 @@
-# TimeSeriesAccessor API Reference
+# ts
 
 This page documents the public time-series accessor returned by `Shelf::ts()`.
 

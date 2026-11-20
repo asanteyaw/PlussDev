@@ -1,4 +1,4 @@
-# AxelNoteAccessor API Reference
+# nt
 
 This page documents the public text-processing accessor returned by `Axel::fields(keys).nt()`, applied across the depth stack.
 

@@ -1,4 +1,4 @@
-# StreamPlotAccessor API Reference
+# plot
 
 This page documents the public plotting accessor returned by `Stream::plot()`.
 

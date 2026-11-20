@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# LocusTraverse API Reference
+# from
 
 `LocusTraverse` is the immutable join-plan builder returned by
 [`Locus::from(table)`](api/locus/from.md). It begins at one named catalog,

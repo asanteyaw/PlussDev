@@ -1,6 +1,6 @@
 <!-- pluss-hand-authored -->
 
-# LocusPullAgg API Reference
+# agg
 
 `LocusPullAgg` is the table-scoped reducer returned by
 [`LocusPull::agg(table)`](api/locus-pull/agg.md). It borrows the owning

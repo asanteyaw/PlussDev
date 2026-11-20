@@ -1,4 +1,4 @@
-# ArchiveTimelineAccessor API Reference
+# tl
 
 This page documents the public timestamp-feature accessor returned by `Archive::tl()`, applied across every depth level.
 

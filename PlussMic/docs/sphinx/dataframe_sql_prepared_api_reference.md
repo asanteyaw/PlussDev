@@ -1,4 +1,4 @@
-# DataFrameSqlPrepared API Reference
+# prep_sql
 
 This page documents the public prepared-statement helper returned by `DataFrame::prep_sql()` or `DataFrameSqlAccessor::prepare()`.
 

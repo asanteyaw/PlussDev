@@ -1,4 +1,4 @@
-# ShelfNoteAccessor API Reference
+# nt
 
 This page documents the public string-payload accessor returned by `Shelf::nt()`.
 

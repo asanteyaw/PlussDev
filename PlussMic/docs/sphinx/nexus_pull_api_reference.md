@@ -1,4 +1,4 @@
-# NexusPull API Reference
+# pull
 
 This page documents the public `NexusPull` and `NexusPullAgg` surface — the
 fluent root-grain feature builder returned by

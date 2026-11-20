@@ -1,4 +1,4 @@
-# ShelfLabelAccessor API Reference
+# label
 
 This page documents the public 1D case-label accessor returned by `Shelf::label()`.
 

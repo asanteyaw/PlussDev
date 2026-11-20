@@ -1,4 +1,4 @@
-# DataFrameNoteAccessor API Reference
+# nt
 
 This page documents the public string-feature accessor returned by `DataFrame::nt()`.
 

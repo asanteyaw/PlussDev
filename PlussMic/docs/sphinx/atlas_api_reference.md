@@ -16,10 +16,10 @@ The sidebar lists methods alphabetically. You can also use the search box to jum
 
 `Atlas` exposes nested accessors, each with its own method pages and sidebar:
 
-- `label()` -> [`AtlasLabelAccessor`](atlas_label_accessor_api_reference.md)
-- `tl()` -> [`AtlasTimelineAccessor`](atlas_timeline_accessor_api_reference.md)
-- `ts()` -> [`AtlasTsAccessor`](atlas_ts_accessor_api_reference.md)
-- `plot()` -> [`AtlasPlotAccessor`](atlas_plot_accessor_api_reference.md)
+- `label()` -> [`label`](atlas_label_accessor_api_reference.md)
+- `tl()` -> [`tl`](atlas_timeline_accessor_api_reference.md)
+- `ts()` -> [`ts`](atlas_ts_accessor_api_reference.md)
+- `plot()` -> [`plot`](atlas_plot_accessor_api_reference.md)
 
 ```{toctree}
 :hidden:

@@ -1,4 +1,4 @@
-# AtlasTimelineAccessor API Reference
+# tl
 
 This page documents the public timestamp-feature accessor returned by `Atlas::tl()`, applied frame-by-frame across the stack.
 

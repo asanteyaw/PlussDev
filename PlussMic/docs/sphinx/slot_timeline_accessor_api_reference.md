@@ -1,4 +1,4 @@
-# SlotTimelineAccessor API Reference
+# tl
 
 This page documents the public timestamp-feature accessor returned by `Slot::tl()`.
 
